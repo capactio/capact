@@ -15,6 +15,7 @@ The repository has the following structure:
   │ └── och                     # OCH server
   │
   ├── docs                      # Documentation related to the project
+  │ └── internal                # Investigations, proof of concepts and other internal documents and files.
   │
   ├── hack                      # Scripts used by the Voltron developers
   │
