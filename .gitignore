@@ -32,6 +32,9 @@ atlassian-ide-plugin.xml
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
+# Coverage tests output
+coverage.txt
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
@@ -40,3 +43,7 @@ atlassian-ide-plugin.xml
 /Godeps/
 
 # End of https://www.toptal.com/developers/gitignore/api/go
+
+### Others ###
+/bin/
+/tmp/
