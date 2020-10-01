@@ -57,6 +57,7 @@ Create nested workflows with different depth levels:
 kubectl apply -n argo -f ./experiments/nested2.yaml
 kubectl apply -n argo -f ./experiments/nested3.yaml
 kubectl apply -n argo -f ./experiments/nested10.yaml
+kubectl apply -n argo -f ./experiments/nested15.yaml
 ```
 
 Wait for the workflows to finish:
@@ -91,7 +92,7 @@ The workflow succeeds, accessing global parameter and artifact from different ne
 Observe the behavior when Argo Workflow contains infinite loop of workflows:
 
 ```bash
-kubectl apply -n argo -f ./experiments/infinity-loop.yaml 
+kubectl apply -n argo -f ./experiments/infinite-loop.yaml 
 ```
 
 The Workflow Controller crashes with exit code 137 (Reason: Error), which means it receives SIGKILL signal. Issue for Argo is [already reported](https://github.com/argoproj/argo/issues/4180), as the Workflow Controller should detect infinite loop and fail fast.
@@ -134,6 +135,7 @@ kind delete cluster
 
 - Artifacts are stored in TAR archive, compressed with gzip. They can be not only files, but also directories. Artifact is saved under `{bucket}/{workflow_name}/{pod-name-which-saves-artifact}/{artifact-name}.tgz` path.
 - When deleting Argo Workflow, artifacts on MinIO [are not cleaned up](https://github.com/argoproj/argo/issues/3390).
+- There is no way to take all global artifacts from a workflow as an input to a step. To achieve uploading artifacts to OCH, we may access MinIO `{bucket}/{workflow_name}` directory and find all artifacts (`.tgz` files) in subdirectories.
 
 ### Logs
 
@@ -141,12 +143,12 @@ kind delete cluster
 
 ### Nested Workflows
 
-- Nested workflows workes fine, at least for depth up to 10. There is no strict depth limit in Argo documentation.
+- Nested workflows work fine, at least for depth up to 10. In Argo template resolving logic [there is a code which should limit nested template references to 10](https://github.com/argoproj/argo/blob/06c4bd60cf2dc85362b3370acd44e4bc3977dcbc/workflow/templateresolution/context.go#L194). Even if the experiment with nested 15 workflows works fine, it may be probably a bug. Issue for Argo is [already reported](https://github.com/argoproj/argo/issues/4180).
 - If a given nested workflow just passes input and output, no Pods are scheduled for the given depth level. For the workflow with depth 10, 4 containers are scheduled - just the ones user specified in workflow.
     
   **NOTE:** In case we switch from Argo in the future to more generic approach, we would need to schedule as many containers as the nested workflow depth, as every nested workflow will be a separate workflow.
 
-- Inputs and outputs are scoped to a given template (that is, given workflow depth). For example, passing input from Workflow depth level 1 to Workflow depth level 3 is not possible. However, you can expose an output parameter or artifact to global scope with [`globalName`](https://argoproj.github.io/argo/swagger/#ioargoprojworkflowv1alpha1artifact) property.
+- Inputs and outputs are scoped to a given template (that is, given workflow depth). Passing input from Workflow depth level 1 to Workflow depth level 3 is not possible. However, you can expose an output parameter or artifact to global scope with [`globalName`](https://argoproj.github.io/argo/swagger/#ioargoprojworkflowv1alpha1artifact) property.
 - Argo Workflow Controller doesn't detect infinity loop in Workflows and it crashes while running such workflow.
 
 ### Others
