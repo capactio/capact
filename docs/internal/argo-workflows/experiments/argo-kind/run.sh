@@ -4,7 +4,7 @@ set -e
 SCRIPT_PATH=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 NAMESPACE=argo
 
-minikube start --driver=hyperkit
+kind create cluster
 
 echo "Creating namespace '${NAMESPACE}'..."
 kubectl create ns ${NAMESPACE} || true
@@ -16,4 +16,4 @@ do
 done
 
 echo "Install Argo with MinIO in '${NAMESPACE}' namespace"
-kubectl apply -n ${NAMESPACE} -f https://raw.githubusercontent.com/argoproj/argo/stable/manifests/quick-start-minimal.yaml
+kubectl apply -n ${NAMESPACE} -f ${SCRIPT_PATH}/argo-minimal-kind.yaml

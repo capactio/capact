@@ -9,13 +9,13 @@ The document describes various experiments with Argo Workflows. The experiments 
 
 ## Usage
 
+Install Argo and MinIO stable version on Minikube. After successful installation you can run experiments described in the document.
+
 In order to run Minikube with Argo and MinIO installed, execute the following script:
 
 ```bash
 ./run.sh
 ```
-
-After successful installation you can run experiments described below.
 
 ### Argo UI
 
@@ -82,11 +82,32 @@ Observe the behavior when Argo Workflow contains infinity loop of workflows:
 kubectl apply -n argo -f ./workflows/infinity-loop.yaml 
 ```
 
+### Argo on kind
+
+In order to run kind with Argo and MinIO installed, execute the following script:
+
+```bash
+./experiments/argo-kind/run.sh
+```
+
+Run [Artifacts](#artifacts) workflow experiment example and observe how it fails.
+
+To have workflow succeeded, run modified Artifacts experiment:
+
+```bash
+kubectl apply -n argo -f ./workflows/artifacts-volumes.yaml 
+```
+
 ## Cleanup
 
 To delete the Minikube cluster, run the following command:
 ```bash
 minikube delete
+```
+
+If you ran the [Argo on kind](#argo-on-kind) experiment, run the following command:
+```bash
+kind delete cluster
 ```
 
 ## Findings
@@ -109,3 +130,13 @@ minikube delete
 
 - Inputs and outputs are scoped to a given template (that is, given workflow depth). For example, passing input from Workflow depth level 1 to Workflow depth level 3 is not possible.
 - Argo Workflow Controller doesn't detect infinity loop in Workflows and it crashes while running such workflow.
+
+### Others
+
+- [Argo doesn't work on Kind with default Docker executor](https://github.com/argoproj/argo/issues/2376). It is because [kind uses containerd](https://github.com/kubernetes-sigs/kind/issues/508#issuecomment-490745016). The workaround is to use different [Argo Workflow Executor](https://argoproj.github.io/argo/workflow-executors) - `k8sapi`. However, the workflows would need to be adjusted, as with `k8sapi` executor output artifacts can only be saved on volumes (such as `emptyDir`). Modified workflow with `emptyDir` volume volumeMounts for containers works on both Workflow Executors.
+
+  ```yaml
+  message: 'invalid spec: templates.artifact-example.steps[0].generate-artifact templates.whalesay.outputs.artifacts.hello-art:
+     k8sapi executor does not support outputs from base image layer. must use emptyDir'
+  phase: Failed
+   ```
