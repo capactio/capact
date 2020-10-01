@@ -14,6 +14,9 @@ The repository has the following structure:
   │ ├── k8s-engine              # Kubernetes Voltron engine
   │ └── och                     # OCH server
   │
+  ├── deploy                    # Deployment configurations and templates
+  │ └── kubernetes              # Kubernetes related deployment (Helm charts, CRDs etc.)
+  │
   ├── docs                      # Documentation related to the project
   │
   ├── hack                      # Scripts used by the Voltron developers
@@ -60,6 +63,14 @@ make test-unit
 make test-lint
 ```
 
+To run integration test on [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/), execute the following command:
+
+```bash
+make test-integration
+```
+
+> **NOTE:** The required dependency (kind, Helm) can be installed by the script when you export `SKIP_DEPS_INSTALLATION=true` environment variable. By default, dependency installation is skipped.  
+
 ### Verify the code
 
 To check if the code is correct and you can push it, use the `make` command. It builds the application, runs tests, checks the status of the vendored libraries, runs the static code analysis, and checks if the formatting of the code is correct.
@@ -68,7 +79,9 @@ To check if the code is correct and you can push it, use the `make` command. It 
 
 To generate the unit test coverage HTML report, execute the following command: 
 
-    make cover-html
+```bash
+make cover-html
+```
 
 > **NOTE:** The default browser with the generated report opens automatically.
 

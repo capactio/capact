@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+#
+# This scripts runs linters to ensure the correctness of the Voltron Go codebase.
+#
+# Golangci-lint dependencies can be installed on-demand.
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.
@@ -9,7 +13,7 @@ readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 readonly ROOT_PATH=${CURRENT_DIR}/..
 readonly GOLANGCI_LINT_VERSION="v1.31.0"
 
-source "${CURRENT_DIR}/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
+source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 golangci::install() {
   shout "Install the golangci-lint in version ${GOLANGCI_LINT_VERSION}"
