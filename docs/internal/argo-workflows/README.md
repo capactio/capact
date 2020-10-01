@@ -76,6 +76,16 @@ kubectl apply -n argo -f ./experiments/input-different-depth-lvl.yaml
 
 The workflow fails with message `unable to resolve references: Unable to resolve: {{steps.generate1.outputs.artifacts.out-artifact}}`, because inputs and outputs are scoped to a given template.
 
+#### Passing output from depth level 3 to depth level 1 
+
+Observe the behavior when workflow tries to read input from nested workflow output without :
+
+```bash
+kubectl apply -n argo -f ./experiments/output-different-depth-lvl.yaml
+```
+
+The workflow succeeds, accessing global parameter and artifact from different nested step.
+
 #### Infinite loop
 
 Observe the behavior when Argo Workflow contains infinite loop of workflows:
@@ -136,7 +146,7 @@ kind delete cluster
     
   **NOTE:** In case we switch from Argo in the future to more generic approach, we would need to schedule as many containers as the nested workflow depth, as every nested workflow will be a separate workflow.
 
-- Inputs and outputs are scoped to a given template (that is, given workflow depth). For example, passing input from Workflow depth level 1 to Workflow depth level 3 is not possible.
+- Inputs and outputs are scoped to a given template (that is, given workflow depth). For example, passing input from Workflow depth level 1 to Workflow depth level 3 is not possible. However, you can expose an output parameter or artifact to global scope with [`globalName`](https://argoproj.github.io/argo/swagger/#ioargoprojworkflowv1alpha1artifact) property.
 - Argo Workflow Controller doesn't detect infinity loop in Workflows and it crashes while running such workflow.
 
 ### Others
@@ -148,3 +158,5 @@ kind delete cluster
      k8sapi executor does not support outputs from base image layer. must use emptyDir'
   phase: Failed
    ```
+- Argo is able to run [Cron Workflows](https://argoproj.github.io/argo/cron-workflows/), which may be useful in future for us as there are some plans to have cronjob-like Actions.
+- There is a pattern of running [Workflow of workflows](https://argoproj.github.io/argo/workflow-of-workflows/), however at this point it doesn't seem to bring any value for us. This is what we will do, but in a generic way using dedicated containers.
