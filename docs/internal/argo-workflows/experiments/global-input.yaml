@@ -3,11 +3,11 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  name: input-different-depth-lvl
+  name: global-input
 spec:
-  entrypoint: nested-workflow-3
+  entrypoint: global-input
   templates:
-    - name: nested-workflow-3
+    - name: global-input
       steps:
         - - name: generate1
             template: generate1

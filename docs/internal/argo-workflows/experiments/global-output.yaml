@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
-  name: output-different-depth-lvl
+  name: global-output
 spec:
-  entrypoint: output-different-depth-lvl
+  entrypoint: global-output
 
   templates:
-  - name: output-different-depth-lvl
+  - name: global-output
     steps:
     - - name: nested
         template: nested-level1

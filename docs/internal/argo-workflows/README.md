@@ -66,22 +66,22 @@ kubectl get workflow -n argo -w
 
 All workflows succeed. You can use [Argo UI](#argo-ui) to observe workflow execution results.
 
-#### Passing input from depth level 1 to depth level 3 
+#### Global input: Passing input from depth level 1 to depth level 3 
 
 Observe the behavior when nested workflow tries to read input from parent workflow:
 
 ```bash
-kubectl apply -n argo -f ./experiments/input-different-depth-lvl.yaml
+kubectl apply -n argo -f ./experiments/global-input.yaml
 ```
 
 The workflow fails with message `unable to resolve references: Unable to resolve: {{steps.generate1.outputs.artifacts.out-artifact}}`, because inputs and outputs are scoped to a given template.
 
-#### Passing output from depth level 3 to depth level 1 
+#### Global output: Passing output from depth level 3 to depth level 1 
 
 Observe the behavior when workflow tries to read input from nested workflow output without :
 
 ```bash
-kubectl apply -n argo -f ./experiments/output-different-depth-lvl.yaml
+kubectl apply -n argo -f ./experiments/global-output.yaml
 ```
 
 The workflow succeeds, accessing global parameter and artifact from different nested step.
