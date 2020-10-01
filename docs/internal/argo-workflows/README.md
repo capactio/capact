@@ -1,11 +1,11 @@
 # Argo Workflows investigation
 
-The document describes various experiments with Argo Workflows. The experiments are helpful for future development of Built-in Runner based on Argo.
+The document describes various experiments with Argo Workflows. The experiments are helpful for future development of built-in Runner based on Argo.
 
 ## Prerequisites
 
 - Minikube
-- Docker
+- Docker - For running Argo on kind experiment
 
 ## Usage
 
@@ -36,10 +36,10 @@ This is the default Argo example with artifacts. It's a good start to observe ho
 To execute the workflow, run the following command:
 
 ```bash
-kubectl apply -n argo -f ./workflows/artifacts.yaml 
+kubectl apply -n argo -f ./experiments/artifacts.yaml 
 ```
 
-Expose MinIO UI:
+The workflow succeeds. Expose MinIO UI:
 
 ```bash
 kubectl port-forward minio -n argo 9000:9000
@@ -54,9 +54,9 @@ Access the [MinIO UI](http://localhost:9000). Log in with `admin/password` crede
 Create nested workflows with different depth levels:
 
 ```bash
-kubectl apply -n argo -f ./workflows/nested2.yaml
-kubectl apply -n argo -f ./workflows/nested3.yaml
-kubectl apply -n argo -f ./workflows/nested10.yaml
+kubectl apply -n argo -f ./experiments/nested2.yaml
+kubectl apply -n argo -f ./experiments/nested3.yaml
+kubectl apply -n argo -f ./experiments/nested10.yaml
 ```
 
 Wait for the workflows to finish:
@@ -64,23 +64,27 @@ Wait for the workflows to finish:
 kubectl get workflow -n argo -w
 ```
 
-You can use [Argo UI](#argo-ui) to observe workflow execution results.
+All workflows succeed. You can use [Argo UI](#argo-ui) to observe workflow execution results.
 
 #### Passing input from depth level 1 to depth level 3 
 
 Observe the behavior when nested workflow tries to read input from parent workflow:
 
 ```bash
-kubectl apply -n argo -f ./workflows/input-different-depth-lvl.yaml
+kubectl apply -n argo -f ./experiments/input-different-depth-lvl.yaml
 ```
 
-#### Infinity loop
+The workflow fails with message `unable to resolve references: Unable to resolve: {{steps.generate1.outputs.artifacts.out-artifact}}`, because inputs and outputs are scoped to a given template.
 
-Observe the behavior when Argo Workflow contains infinity loop of workflows:
+#### Infinite loop
+
+Observe the behavior when Argo Workflow contains infinite loop of workflows:
 
 ```bash
-kubectl apply -n argo -f ./workflows/infinity-loop.yaml 
+kubectl apply -n argo -f ./experiments/infinity-loop.yaml 
 ```
+
+The Workflow Controller crashes with exit code 137 (Reason: Error), which means it receives SIGKILL signal. Issue for Argo is [already reported](https://github.com/argoproj/argo/issues/4180), as the Workflow Controller should detect infinite loop and fail fast.
 
 ### Argo on kind
 
@@ -90,13 +94,17 @@ In order to run kind with Argo and MinIO installed, execute the following script
 ./experiments/argo-kind/run.sh
 ```
 
-Run [Artifacts](#artifacts) workflow experiment example and observe how it fails.
+To make Argo work on kind, the [`k8sapi` Workflow Executor](https://argoproj.github.io/argo/workflow-executors) is used. 
 
-To have workflow succeeded, run modified Artifacts experiment:
+Run [Artifacts](#artifacts) workflow experiment example and observe how it fails with error `kubelet executor does not support outputs from base image layer. must use emptyDir`.
+
+To make it succeeded, run modified Artifacts experiment:
 
 ```bash
-kubectl apply -n argo -f ./workflows/artifacts-volumes.yaml 
+kubectl apply -n argo -f ./experiments/artifacts-volumes.yaml 
 ```
+
+Every Argo workflow would need to use container volumeMounts to be able to run on kind with `k8sapi` executor.
 
 ## Cleanup
 

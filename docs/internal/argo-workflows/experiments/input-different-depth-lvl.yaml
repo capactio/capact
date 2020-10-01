@@ -39,7 +39,7 @@ spec:
         command: [sh, -c]
         args: ["
         cowsay hello world 1 | tee /tmp/my-output-artifact.txt &&
-        echo 'my-output-paramete1' > /tmp/my-output-parameter.txt
+        echo 'my-output-parameter1' > /tmp/my-output-parameter.txt
       "]
       outputs:
         parameters:
