@@ -99,23 +99,17 @@ The Workflow Controller crashes with exit code 137 (Reason: Error), which means 
 
 ### Argo on kind
 
-In order to run kind with Argo and MinIO installed, execute the following script:
+In order to run kind with Argo and MinIO installed, a different [Workflow executor](https://argoproj.github.io/argo/workflow-executors) is needed. 
+
+With `k8sapi` executor, all workflow experiments fail with error `kubelet executor does not support outputs from base image layer. must use emptyDir`. Every Argo workflow would need to use container volumeMounts to be able to run on kind with `k8sapi` executor. For example, see the `./experiments/artifacts-volumes.yaml` file, which contains modification of the [Artifacts](#artifacts) experiment.
+
+However, there is alternative Executor - [`pns` Workflow Executor](https://argoproj.github.io/argo/workflow-executors/#process-namespace-sharing-pns). To install Argo and MinIO on kind with the executor, run the following command:
 
 ```bash
-./experiments/argo-kind/run.sh
+./experiments/argo-kind/run.sh 
 ```
 
-To make Argo work on kind, the [`k8sapi` Workflow Executor](https://argoproj.github.io/argo/workflow-executors) is used. 
-
-Run [Artifacts](#artifacts) workflow experiment example and observe how it fails with error `kubelet executor does not support outputs from base image layer. must use emptyDir`.
-
-To make it succeeded, run modified Artifacts experiment:
-
-```bash
-kubectl apply -n argo -f ./experiments/artifacts-volumes.yaml 
-```
-
-Every Argo workflow would need to use container volumeMounts to be able to run on kind with `k8sapi` executor.
+Run experiments and see the how they behave the same way like on Minikube.
 
 ## Cleanup
 
@@ -153,12 +147,17 @@ kind delete cluster
 
 ### Others
 
-- [Argo doesn't work on Kind with default Docker executor](https://github.com/argoproj/argo/issues/2376). It is because [kind uses containerd](https://github.com/kubernetes-sigs/kind/issues/508#issuecomment-490745016). The workaround is to use different [Argo Workflow Executor](https://argoproj.github.io/argo/workflow-executors) - `k8sapi`. However, the workflows would need to be adjusted, as with `k8sapi` executor output artifacts can only be saved on volumes (such as `emptyDir`). Modified workflow with `emptyDir` volume volumeMounts for containers works on both Workflow Executors.
+- [Argo doesn't work on Kind with default Docker executor](https://github.com/argoproj/argo/issues/2376). It is because [kind uses containerd](https://github.com/kubernetes-sigs/kind/issues/508#issuecomment-490745016), similarly to `k3s` (and in a result also `k3d`).
+  
+  The workaround is to use different [Argo Workflow Executor](https://argoproj.github.io/argo/workflow-executors), such as`k8sapi`. However, for `k8sapi` and `kubelet` executors, the workflows would need to be adjusted, as the output artifacts can only be saved on volumes (such as `emptyDir`). Modified workflow with `emptyDir` volume volumeMounts for containers works on both Workflow Executors.
 
   ```yaml
   message: 'invalid spec: templates.artifact-example.steps[0].generate-artifact templates.whalesay.outputs.artifacts.hello-art:
      k8sapi executor does not support outputs from base image layer. must use emptyDir'
   phase: Failed
    ```
+
+  There is also another executor - [`pns`](https://argoproj.github.io/argo/workflow-executors/#process-namespace-sharing-pns) which doesn't require workflow modifications. It is immature, but has the lowest number of cons. At some point the `docker` executor could be treated as a security issue anyway. From a short investigation of executors, it might be the best fit for our case.
+
 - Argo is able to run [Cron Workflows](https://argoproj.github.io/argo/cron-workflows/), which may be useful in future for us as there are some plans to have cronjob-like Actions.
 - There is a pattern of running [Workflow of workflows](https://argoproj.github.io/argo/workflow-of-workflows/), however at this point it doesn't seem to bring any value for us. This is what we will do, but in a generic way using dedicated containers.

@@ -486,7 +486,7 @@ data:
     enabled: true
     path: /metrics
     port: 9090
-  containerRuntimeExecutor: k8sapi # ADDED THIS LINE
+  containerRuntimeExecutor: pns # ADDED THIS LINE
 kind: ConfigMap
 metadata:
   name: workflow-controller-configmap
