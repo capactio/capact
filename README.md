@@ -122,7 +122,7 @@ If you want to build and push Docker image for a single component, follow these 
     make build-test-image-e2e
     ```
 
-3. Push build Docker image to registry:
+3. Push the built Docker image to a registry:
 
     For application defined under [cmd](./cmd) package use it names, e.g. for `och`:
     ```bash
