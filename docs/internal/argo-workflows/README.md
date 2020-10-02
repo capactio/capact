@@ -4,8 +4,8 @@ The document describes various experiments with Argo Workflows. The experiments 
 
 ## Prerequisites
 
-- Minikube
-- Docker - For running Argo on kind experiment
+- [Minikube](https://kubernetes.io/docs/setup/learning-environment/minikube/)
+- [Kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation) for running [Argo on kind](#argo-on-kind) experiment
 
 ## Usage
 
