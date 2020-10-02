@@ -108,7 +108,7 @@ If you want to build all Docker images with your changes and push them to a regi
     make push-all-images
     ```
 
-If you want to build Docker images and push it for a single component, follow these steps:
+If you want to build and push Docker image for a single component, follow these steps:
 
 1. Build a specific Docker image:
     
