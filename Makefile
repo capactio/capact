@@ -67,3 +67,14 @@ test-integration:
 cover-html: test-unit
 	go tool cover -html=./coverage.txt
 .PHONY: cover-html
+
+#
+# Developer helpers
+#
+dev-cluster:
+	./hack/run-dev-cluster.sh
+.PHONY: dev-cluster
+
+dev-cluster-update:
+	./hack/run-dev-cluster-update.sh
+.PHONY: dev-cluster-update

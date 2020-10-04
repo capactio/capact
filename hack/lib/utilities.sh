@@ -29,8 +29,8 @@ dump_logs() {
 #  - KIND_VERSION
 #  - INSTALL_DIR
 #
-# usage: env INSTALL_DIR=/tmp KIND_VERSION=v0.4.0 install::local::kind
-install::local::kind() {
+# usage: env INSTALL_DIR=/tmp KIND_VERSION=v0.4.0 host::install::kind
+host::install::kind() {
     mkdir -p "${INSTALL_DIR}/bin"
     export PATH="${INSTALL_DIR}/bin:${PATH}"
 
@@ -103,8 +103,8 @@ host::arch() {
 #  - HELM_VERSION
 #  - INSTALL_DIR
 #
-# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 install::local::kind
-install::local::helm() {
+# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 host::install::kind
+host::install::helm() {
     mkdir -p "${INSTALL_DIR}/bin"
     export PATH="${INSTALL_DIR}/bin:${PATH}"
 
@@ -123,7 +123,8 @@ install::local::helm() {
 #
 # 'kind'(kubernetes-in-docker) functions
 #
-readonly KIND_CLUSTER_NAME="kind-ci-voltron"
+# Required environments variables for all 'kind' commands:
+# - KIND_CLUSTER_NAME
 
 kind::create_cluster() {
     shout "- Create k8s cluster..."
@@ -159,4 +160,51 @@ docker::list_images() {
 #   $1 - image list
 docker::delete_images() {
   docker rmi $1
+}
+
+
+#
+# Volton functions
+#
+
+# Required envs:
+#  - DOCKER_PUSH_REPOSITORY
+#  - DOCKER_TAG
+#  - REPO_DIR
+#  - VOLTRON_NAMESPACE
+#  - VOLTRON_RELEASE_NAME
+#
+# Optional envs:
+#  - UPDATE - if specified then,
+voltron::install::from_sources() {
+    pushd "${REPO_DIR}" || return
+
+    shout "- Building Voltron image from sources..."
+    make build-all-images
+
+    REFERENCE_FILTER="$DOCKER_PUSH_REPOSITORY/*:$DOCKER_TAG"
+    shout "- Loading Voltron image into kind cluster... [reference filter: $REFERENCE_FILTER]"
+    names=$(docker::list_images "$REFERENCE_FILTER")
+    kind::load_images "$names"
+
+    shout "- Deleting local Docker Voltron images..."
+    docker::delete_images "$names"
+
+    shout "- Installing Voltron via helm chart from sources..."
+    helm "$(voltron::install::detect_command)" ${VOLTRON_RELEASE_NAME} ./deploy/kubernetes/voltron \
+        --create-namespace \
+        --namespace=${VOLTRON_NAMESPACE} \
+        --set global.containerRegistry.path=$DOCKER_PUSH_REPOSITORY \
+        --set global.containerRegistry.overrideTag=$DOCKER_TAG \
+        --wait
+
+    popd || return
+}
+
+voltron::install::detect_command() {
+  if [[ "${UPDATE:-x}" == "true" ]]; then
+    echo "upgrade"
+    return
+  fi
+  echo "install"
 }

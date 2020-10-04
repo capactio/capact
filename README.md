@@ -85,6 +85,23 @@ make cover-html
 
 > **NOTE:** The default browser with the generated report opens automatically.
 
+### Run development local cluster on `kind` 
+
+To create a `kind` cluster with preinstalled Voltron components, execute the following command:
+```
+make dev-cluster
+```
+
+> **NOTE:** To delete the development cluster, run: `kind delete cluster --name kind-dev-voltron`
+
+#### Update images
+
+To build Voltron Docker images with your changes and update them on dev cluster, execute the following command:
+
+```
+make dev-cluster-update
+```
+
 ### Build and push Docker images
 
 If you want to build all Docker images with your changes and push them to a registry, follow these steps:
