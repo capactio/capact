@@ -50,7 +50,7 @@ voltron::test::execute() {
 main() {
     shout "Starting integration test..."
 
-    if [[ "${SKIP_DEPS_INSTALLATION}" == "" ]]; then
+    if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
         export INSTALL_DIR=${TMP_DIR} KIND_VERSION=${STABLE_KIND_VERSION} HELM_VERSION=${STABLE_HELM_VERSION}
         host::install::kind
         host::install::helm

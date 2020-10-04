@@ -11,16 +11,16 @@ import (
 
 // Config holds application related configuration
 type Config struct {
-	OCHMode string
+	HubMode string
 	Port    int
 }
 
 var (
-	ochMode = map[string]string{
+	hubMode = map[string]string{
 		"local":  "OCH Local - OK",
 		"public": "OCH Public - OK",
 	}
-	errWrongOchMode = fmt.Errorf("OCH mode needs to be specified. Possible options: %s", strings.Join(keys(ochMode), ", "))
+	errWrongHubMode = fmt.Errorf("hub mode needs to be specified. Possible options: %s", strings.Join(keys(hubMode), ", "))
 )
 
 func main() {
@@ -28,9 +28,9 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	msg, found := ochMode[cfg.OCHMode]
+	msg, found := hubMode[cfg.HubMode]
 	if !found {
-		exitOnError(errWrongOchMode, "while validating OCH mode")
+		exitOnError(errWrongHubMode, "while validating hub mode")
 	}
 
 	http.HandleFunc("/statusz", func(w http.ResponseWriter, _ *http.Request) {

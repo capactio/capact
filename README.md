@@ -69,7 +69,7 @@ To run integration test on [`kind`](https://kind.sigs.k8s.io/docs/user/quick-sta
 make test-integration
 ```
 
-> **NOTE:** The required dependency (kind, Helm) can be installed by the script when you export `SKIP_DEPS_INSTALLATION=true` environment variable. By default, dependency installation is skipped.  
+> **NOTE:** The required dependency (kind, Helm) can be installed by the script when you export `SKIP_DEPS_INSTALLATION=false` environment variable. By default, dependency installation is skipped.  
 
 ### Verify the code
 

@@ -36,7 +36,7 @@ spec:
           env:
             - name: APP_PORT
               value: "8080"
-            - name: APP_OCH_MODE
+            - name: APP_HUB_MODE
               value: "public"
           ports:
             - name: http

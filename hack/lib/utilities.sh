@@ -175,7 +175,7 @@ docker::delete_images() {
 #  - VOLTRON_RELEASE_NAME
 #
 # Optional envs:
-#  - UPDATE - if specified then,
+#  - UPDATE - if specified then, Helm charts are updated
 voltron::install::from_sources() {
     pushd "${REPO_DIR}" || return
 

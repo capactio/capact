@@ -3,11 +3,6 @@ image:
   name: och
   pullPolicy: IfNotPresent
 
-och:
-  type: public # public, local
-
-  public:
-
 replicaCount: 1
 
 imagePullSecrets: []
