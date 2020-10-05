@@ -14,7 +14,7 @@ spec:
         template: consume-globals
 
   # Template which produces a global parameter and artifact
-  - name: global-output
+  - name: output-globals
     container:
       image: alpine:3.7
       command: [sh, -c]
@@ -76,5 +76,5 @@ spec:
   - name: nested-level2
     steps:
       - - name: save-artifacts
-          template: global-output
+          template: output-globals
 

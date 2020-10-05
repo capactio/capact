@@ -1,3 +1,5 @@
+# This is the `artifacts.yaml` experiment modified to run with `k8sapi` executor.
+
 apiVersion: argoproj.io/v1alpha1
 kind: Workflow
 metadata:
