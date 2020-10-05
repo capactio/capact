@@ -1,0 +1,11 @@
+# Default values for voltron.
+global:
+  containerRegistry:
+    path: gcr.io/projectvoltron
+    # Overrides the image tag for all Voltron component. Default is the sub-chart appVersion.
+    overrideTag: "latest"
+
+integrationTest:
+  image:
+    name: e2e-test
+    pullPolicy: IfNotPresent
