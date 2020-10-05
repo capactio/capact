@@ -1,0 +1,36 @@
+{
+  "apiVersion": "ocf.projectvoltron.dev/0.1.0",
+  "kind": "Type",
+  "metadata": {
+    "name": "cloudFoundry",
+    "prefix": "cap.type.platform",
+    "displayName": "",
+    "description": "",
+    "maintainers": [
+      {
+        "email": "foo@example.com",
+        "name": "Foo Bar",
+        "url": "https://foo.bar"
+      },
+      {
+        "email": "foo@example.com",
+        "name": "Foo Bar",
+        "url": "https://foo.bar"
+      }
+    ],
+    "documentationURL": "https://codex.wordpress.org/",
+    "supportURL": "https://example.org/online-support",
+    "iconURL": "https://s.w.org/favicon.ico"
+  },
+  "revision": "0.0.1",
+  "signature": "foo",
+  "spec": {
+    "additionalRefs": [
+      "cap.core.type.platform"
+    ],
+    "jsonSchema": {
+      "ref": "!!!oneOff!!!",
+      "value": "{\n    \"$schema\": \"http://json-schema.org/draft-07/schema\",\n    \"$id\": \"http://example.com/example.json\",\n    \"type\": \"object\",\n    \"title\": \"The root schema\",\n    \"description\": \"The root schema comprises the entire JSON document.\",\n    \"default\": {},\n    \"examples\": [\n        {\n            \"version\": \"2.1.0\"\n        }\n    ],\n    \"required\": [\n        \"version\"\n    ],\n    \"properties\": {\n        \"version\": {\n            \"$id\": \"#/properties/version\",\n            \"type\": \"string\",\n            \"title\": \"The version schema\",\n            \"description\": \"An explanation about the purpose of this instance.\",\n            \"default\": \"\",\n            \"examples\": [\n                \"2.1.0\"\n            ]\n        }\n    },\n    \"additionalProperties\": true\n}"
+    }
+  }
+}

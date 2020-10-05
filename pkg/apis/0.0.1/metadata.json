@@ -1,0 +1,29 @@
+{
+  "apiVersion": "ocf.projectvoltron.dev/0.1.0",
+  "kind": "RepoMetadata",
+  "metadata": {
+    "description": "OCH repository",
+    "name": "metadata",
+    "prefix": "cap.core"
+  },
+  "spec": {
+    "caKey": "foo",
+    "implementation": {
+      "appVersion": {
+        "semVerTaggingStrategy": {
+          "latest": {
+            "pointsTo": "Stable"
+          }
+        }
+      }
+    },
+    "ocfVersion": {
+      "default": "0.2.0",
+      "supported": [
+        "0.1.0",
+        "0.2.0"
+      ]
+    },
+    "ochVersion": "0.1.0"
+  }
+}

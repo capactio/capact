@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "http://example.com/example.json",
+  "type": "object",
+  "title": "The common fields for all OCF manifests",
+  "examples": [
+    {
+      "revision": "0.0.1",
+      "ocfVersion": "0.0.1",
+      "signature": "foo"
+    }
+  ],
+  "required": [
+    "revision",
+    "signature",
+    "ocfVersion",
+    "kind"
+  ],
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "const": "0.0.1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "const": "Type",
+      "title": "The OCF Type object name"
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "title": "Version of the manifest content in the SemVer format.",
+      "description": "Version of the manifest content in the SemVer format.",
+      "default": "",
+      "examples": [
+        "0.0.1"
+      ]
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "string",
+      "title": "Ensures the authenticity and integrity of a given manifest.",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "default": "",
+      "examples": [
+        "foo"
+      ]
+    }
+  }
+}
