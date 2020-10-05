@@ -109,7 +109,7 @@ However, there is alternative Executor - [`pns` Workflow Executor](https://argop
 ./experiments/argo-kind/run.sh 
 ```
 
-Run experiments and see the how they behave the same way like on Minikube.
+Run experiments and see how they behave the same way as on Minikube.
 
 ## Cleanup
 
@@ -137,7 +137,7 @@ kind delete cluster
 
 ### Nested Workflows
 
-- Nested workflows work fine, at least for depth up to 10. In Argo template resolving logic [there is a code which should limit nested template references to 10](https://github.com/argoproj/argo/blob/06c4bd60cf2dc85362b3370acd44e4bc3977dcbc/workflow/templateresolution/context.go#L194). Even if the experiment with nested 15 workflows works fine, it may be probably a bug. Issue for Argo is [already reported](https://github.com/argoproj/argo/issues/4180).
+- Nested workflows work fine, at least for depth up to 10.In Argo template resolving logic [there is a code which should limit nested template references to 10](https://github.com/argoproj/argo/blob/06c4bd60cf2dc85362b3370acd44e4bc3977dcbc/workflow/templateresolution/context.go#L194). Even if the experiment with nested 15 workflows works fine, it may be probably a bug, or it relates to the `templateRef` usage. Anyway, even while running workflows with `templateRef`, the number of depth level was still 0. I asked about it in an issue [#4180](https://github.com/argoproj/argo/issues/4180), to double check how it should work.
 - If a given nested workflow just passes input and output, no Pods are scheduled for the given depth level. For the workflow with depth 10, 4 containers are scheduled - just the ones user specified in workflow.
     
   **NOTE:** In case we switch from Argo in the future to more generic approach, we would need to schedule as many containers as the nested workflow depth, as every nested workflow will be a separate workflow.
@@ -147,7 +147,7 @@ kind delete cluster
 
 ### Others
 
-- [Argo doesn't work on Kind with default Docker executor](https://github.com/argoproj/argo/issues/2376). It is because [kind uses containerd](https://github.com/kubernetes-sigs/kind/issues/508#issuecomment-490745016), similarly to `k3s` (and in a result also `k3d`).
+- [Argo doesn't work on Kind with default Docker executor](https://github.com/argoproj/argo/issues/2376). It is because [kind uses containerd](https://github.com/kubernetes-sigs/kind/issues/508#issuecomment-490745016), similarly to `k3s` (and in a result also `k3d`; only the [k3s-dind](https://github.com/unboundedsystems/k3s-dind) modification worked with Docker executor).
   
   The workaround is to use different [Argo Workflow Executor](https://argoproj.github.io/argo/workflow-executors), such as`k8sapi`. However, for `k8sapi` and `kubelet` executors, the workflows would need to be adjusted, as the output artifacts can only be saved on volumes (such as `emptyDir`). Modified workflow with `emptyDir` volume volumeMounts for containers works on both Workflow Executors.
 
@@ -161,3 +161,19 @@ kind delete cluster
 
 - Argo is able to run [Cron Workflows](https://argoproj.github.io/argo/cron-workflows/), which may be useful in future for us as there are some plans to have cronjob-like Actions.
 - There is a pattern of running [Workflow of workflows](https://argoproj.github.io/argo/workflow-of-workflows/), however at this point it doesn't seem to bring any value for us. This is what we will do, but in a generic way using dedicated containers.
+
+## Decision
+
+### Argo as a built-in Runner
+
+We will use Argo as a built-in Runner. For MVP every Runner will resolve to a container, which will create Argo Workflow Custom Resource, explicitly or implicitly. 
+In a result, we can utilize Argo's artifact support, [retry strategy](https://argoproj.github.io/argo/fields/#retrystrategy), as well as the UI for running workflows.
+Argo doesn't seem to have issues or limitations preventing us from using it as a built-in Runner.
+
+## The `pns` as a Argo workflow executor
+
+We will use `pns` workflow executor both for development and production usage.
+
+The `pns` executor is immature, and there are some issues around, such as [#1256](https://github.com/argoproj/argo/issues/1256) or [#3705](https://github.com/argoproj/argo/issues/3705). However, there is no better workflow executor which runs both on `kind` and production clusters. Also, it seems to be the best compromise between security and functionality.
+
+In future, if we encounter issues with our real-life workflow examples, we may revisit the decision, and switch to other solution. For example, we could switch to default `docker` executor and use `minikube` for development usage.
