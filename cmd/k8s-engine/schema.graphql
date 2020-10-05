@@ -1,0 +1,79 @@
+
+# TODO: Directive for User authorization
+# TODO: logs are out of scope, right?
+
+scalar Timestamp
+scalar Any
+
+input ActionCreateInput {
+    name: String
+}
+
+input ActionUpdateInput {
+    name: String
+}
+
+type Action {
+    id: ID!
+    name: String!
+
+    spec: ActionSpec
+    status: ActionStatus
+}
+
+type ActionSpec {
+
+
+
+    createdBy: UserInfo
+    runBy: UserInfo # in other words: approved by. However, "approvedBy" would require `approveAction` mutation.
+    cancelledBy: UserInfo
+
+#    # The following fields won't be a part of GraphQL API, however they will reside in the Action CR spec.
+#    readyToRun: Boolean!
+#    cancelled: Boolean!
+}
+
+type ActionStatus {
+    condition: ActionStatusCondition!
+    timestamp: Timestamp!
+    message: String
+
+    renderedAction: Any # resolver which reads from ConfigMap with rendered workflow
+    output: Any # resolver which reads from ConfigMap with rendered workflow
+
+}
+
+type UserInfo {
+    username: String!
+    groups: [String!]!
+    extra: Any
+}
+
+input ActionFilter {
+    condition: ActionStatusCondition
+}
+
+enum ActionStatusCondition {
+    INITIAL,
+    BEING_RENDERED,
+    READY_TO_RUN, # PENDING_APPROVAL/RENDERED? PENDING_APPROVAL would require `approveAction` mutation
+    RUNNING,
+    BEING_CANCELLED,
+    CANCELLED,
+    SUCCEEDED,
+    FAILED
+}
+
+type Query {
+    action(id: ID!): Action
+    actions(filter: [ActionFilter!]): [Action!]!
+}
+
+type Mutation {
+    createAction(in: ActionCreateInput): Action!
+    runAction(id: ID!): Action!
+    cancelAction(id: ID!): Action!
+    updateAction(id: ID!, in: ActionUpdateInput): Action!
+    deleteAction(id: ID!): Action!
+}
