@@ -1,16 +1,30 @@
-
-# TODO: Directive for User authorization
-# TODO: logs are out of scope, right?
-
 scalar Timestamp
 scalar Any
 
 input ActionCreateInput {
     name: String
+    spec: ActionSpecInput
 }
 
 input ActionUpdateInput {
     name: String
+    spec: ActionSpecInput
+}
+
+input ActionSpecInput {
+    input: ActionSpecInputInput
+    action: String # full path for the Implementation or Interface
+}
+
+input ActionSpecInputInput {
+    parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
+    artifacts: [ArtifactInput!]
+}
+
+input ArtifactInput {
+    name: String!
+    type: String!
+    value: Any # it may be null when a given artifact is optional
 }
 
 type Action {
@@ -22,16 +36,19 @@ type Action {
 }
 
 type ActionSpec {
+    input: ActionInput # resolver which reads from Secret/ConfigMap
+    output: ActionOutput
 
-
+    action: String # full path for the Implementation or Interface
+    renderedAction: Any
 
     createdBy: UserInfo
     runBy: UserInfo # in other words: approved by. However, "approvedBy" would require `approveAction` mutation.
     cancelledBy: UserInfo
 
-#    # The following fields won't be a part of GraphQL API, however they will reside in the Action CR spec.
-#    readyToRun: Boolean!
-#    cancelled: Boolean!
+    #    # The following fields won't be a part of GraphQL API, however they will reside in the Action CR spec.
+    #    readyToRun: Boolean!
+    #    cancelled: Boolean!
 }
 
 type ActionStatus {
@@ -39,9 +56,31 @@ type ActionStatus {
     timestamp: Timestamp!
     message: String
 
-    renderedAction: Any # resolver which reads from ConfigMap with rendered workflow
-    output: Any # resolver which reads from ConfigMap with rendered workflow
+    runner: Any # status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
+}
 
+type ActionInput {
+    parameters: Any # validated against JSON schema from Interface
+    artifacts: [Artifact!]!
+    # ConfigMap/Secret ref is not exposed via GraphQL API
+}
+
+type ActionOutput {
+    parameters: Any # validated against JSON schema from Interface
+    artifacts: [Artifact!]!
+
+    # ConfigMap/Secret ref is not exposed via GraphQL API
+}
+
+type Artifact {
+    name: String!
+    type: String! # corresponding Type
+    value: Any
+    necessity: ArtifactNecessity!
+}
+
+enum ArtifactNecessity {
+    REQUIRED, OPTIONAL
 }
 
 type UserInfo {
@@ -75,5 +114,8 @@ type Mutation {
     runAction(id: ID!): Action!
     cancelAction(id: ID!): Action!
     updateAction(id: ID!, in: ActionUpdateInput): Action!
+    updateActionInput(id: ID!, in: ActionSpecInputInput): Action! # it will be used for providing optional artifacts
     deleteAction(id: ID!): Action!
 }
+
+# TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58
