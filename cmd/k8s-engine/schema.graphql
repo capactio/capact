@@ -1,22 +1,13 @@
 scalar Timestamp
 scalar Any
 
-input ActionCreateInput {
-    name: String
-    spec: ActionSpecInput
+input ActionDetailsInput {
+    name: String!
+    input: ActionInputData
+    action: String! # full path for the Implementation or Interface
 }
 
-input ActionUpdateInput {
-    name: String
-    spec: ActionSpecInput
-}
-
-input ActionSpecInput {
-    input: ActionSpecInputInput
-    action: String # full path for the Implementation or Interface
-}
-
-input ActionSpecInputInput {
+input ActionInputData { # TODO: Better name
     parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
     artifacts: [ArtifactInput!]
 }
@@ -31,11 +22,6 @@ type Action {
     id: ID!
     name: String!
 
-    spec: ActionSpec
-    status: ActionStatus
-}
-
-type ActionSpec {
     input: ActionInput # resolver which reads from Secret/ConfigMap
     output: ActionOutput
 
@@ -49,6 +35,8 @@ type ActionSpec {
     #    # The following fields won't be a part of GraphQL API, however they will reside in the Action CR spec.
     #    readyToRun: Boolean!
     #    cancelled: Boolean!
+
+    status: ActionStatus
 }
 
 type ActionStatus {
@@ -62,6 +50,7 @@ type ActionStatus {
 type ActionInput {
     parameters: Any # validated against JSON schema from Interface
     artifacts: [Artifact!]!
+
     # ConfigMap/Secret ref is not exposed via GraphQL API
 }
 
@@ -110,11 +99,11 @@ type Query {
 }
 
 type Mutation {
-    createAction(in: ActionCreateInput): Action!
+    createAction(in: ActionDetailsInput): Action!
     runAction(id: ID!): Action!
     cancelAction(id: ID!): Action!
-    updateAction(id: ID!, in: ActionUpdateInput): Action!
-    updateActionInput(id: ID!, in: ActionSpecInputInput): Action! # it will be used for providing optional artifacts
+    updateAction(id: ID!, in: ActionDetailsInput): Action!
+    updateActionInput(id: ID!, in: ActionInputData): Action! # it is usedbe used to provide optional artifacts in each step of workflow render
     deleteAction(id: ID!): Action!
 }
 
