@@ -7,34 +7,30 @@ input ActionDetailsInput {
     action: String! # full path for the Implementation or Interface
 }
 
-input ActionInputData { # TODO: Better name
+input ActionInputData {
     parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
-    artifacts: [ArtifactInput!]
+    artifacts: [InputArtifactData!]
 }
 
-input ArtifactInput {
-    name: String!
-    type: String!
-    value: Any # it may be null when a given artifact is optional
+input InputArtifactData {
+    alias: String!
+    typeInstancePath: String! # Full path of the TypeInstance
 }
 
 type Action {
     id: ID!
     name: String!
+    createdAt: Timestamp!
 
     input: ActionInput # resolver which reads from Secret/ConfigMap
     output: ActionOutput
 
-    action: String # full path for the Implementation or Interface
+    action: String! # full path for the Implementation or Interface
     renderedAction: Any
 
     createdBy: UserInfo
-    runBy: UserInfo # in other words: approved by. However, "approvedBy" would require `approveAction` mutation.
+    runBy: UserInfo
     cancelledBy: UserInfo
-
-    #    # The following fields won't be a part of GraphQL API, however they will reside in the Action CR spec.
-    #    readyToRun: Boolean!
-    #    cancelled: Boolean!
 
     status: ActionStatus
 }
@@ -49,23 +45,27 @@ type ActionStatus {
 
 type ActionInput {
     parameters: Any # validated against JSON schema from Interface
-    artifacts: [Artifact!]!
-
-    # ConfigMap/Secret ref is not exposed via GraphQL API
+    artifacts: [InputArtifact!]!
 }
 
 type ActionOutput {
     parameters: Any # validated against JSON schema from Interface
-    artifacts: [Artifact!]!
-
-    # ConfigMap/Secret ref is not exposed via GraphQL API
+    artifacts: [OutputArtifact!]!
 }
 
-type Artifact {
-    name: String!
-    type: String! # corresponding Type
-    value: Any
+type InputArtifact {
+    alias: String!
+    typeInstancePath: String! # Full path of the TypeInstance
+    typePath: String! # Full path of the corresponding Type
+    value: Any # resolver for TypeInstance value
     necessity: ArtifactNecessity!
+}
+
+type OutputArtifact {
+    name: String!
+    typeInstancePath: String! # Full path of the TypeInstance
+    typePath: String! # Full path of the corresponding Type
+    value: Any # resolver for TypeInstance value
 }
 
 enum ArtifactNecessity {
@@ -85,7 +85,7 @@ input ActionFilter {
 enum ActionStatusCondition {
     INITIAL,
     BEING_RENDERED,
-    READY_TO_RUN, # PENDING_APPROVAL/RENDERED? PENDING_APPROVAL would require `approveAction` mutation
+    READY_TO_RUN,
     RUNNING,
     BEING_CANCELLED,
     CANCELLED,
