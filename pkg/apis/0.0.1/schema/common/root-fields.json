@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "http://example.com/example.json",
   "type": "object",
-  "title": "The common fields for all OCF manifests",
+  "title": "The common root fields for all OCF manifests",
   "examples": [
     {
       "revision": "0.0.1",
@@ -22,29 +22,26 @@
       "const": "0.0.1"
     },
     "kind": {
+      "$comment": "TODO: How to restrict kind to a given name",
       "$id": "#/properties/kind",
-      "const": "Type",
-      "title": "The OCF Type object name"
+      "title": "The OCF manifest kind"
     },
     "revision": {
       "$id": "#/properties/revision",
       "type": "string",
       "title": "Version of the manifest content in the SemVer format.",
-      "description": "Version of the manifest content in the SemVer format.",
-      "default": "",
-      "examples": [
-        "0.0.1"
-      ]
+      "description": "Version of the manifest content in the SemVer format."
     },
     "signature": {
       "$id": "#/properties/signature",
-      "type": "string",
+      "type": "object",
       "title": "Ensures the authenticity and integrity of a given manifest.",
       "description": "Ensures the authenticity and integrity of a given manifest.",
-      "default": "",
-      "examples": [
-        "foo"
-      ]
+      "properties": {
+        "och": {
+          "type": "string"
+        }
+      }
     }
   }
 }

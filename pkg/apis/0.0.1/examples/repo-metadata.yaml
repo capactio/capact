@@ -1,0 +1,30 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: RepoMetadata
+metadata:
+  prefix: cap.core # Computed during fetching the manifest
+  name: metadata
+  description: OCH repository
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  ochVersion: 0.1.0
+  ocfVersion:
+    default: 0.2.0
+    supported:
+      - 0.1.0
+      - 0.2.0
+  caKey: "foo"
+  implementation:
+    appVersion:
+      semVerTaggingStrategy:
+        latest:
+          pointsTo: Stable # enum: Stable, Edge
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

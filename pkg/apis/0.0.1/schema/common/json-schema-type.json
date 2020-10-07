@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "#/properties/spec/properties/jsonSchema",
   "type": "object",
-  "title": "The JSONSchema definition.",
+  "title": "The common JSONSchema definition.",
   "description": "The JSONSchema definition.",
   "properties": {
     "ref": {

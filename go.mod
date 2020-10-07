@@ -3,6 +3,7 @@ module projectvoltron.dev/voltron
 go 1.15
 
 require (
+	github.com/a-h/generate v0.0.0-20190312091541-e59c34d33fb3 // indirect
 	github.com/ghodss/yaml v1.0.0
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/stretchr/testify v1.6.1

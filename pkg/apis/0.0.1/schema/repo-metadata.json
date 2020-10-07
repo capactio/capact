@@ -1,0 +1,148 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The OCF Vendor manifest schema",
+  "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
+  "required": [
+    "metadata",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+    },
+    {
+      "properties": {
+        "metadata": {
+          "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+        },
+        "spec": {
+          "$id": "#/properties/spec",
+          "type": "object",
+          "title": "The spec schema",
+          "description": "A container for the repository metadata definition.",
+          "additionalProperties": false,
+          "required": [
+            "caKey",
+            "ocfVersion",
+            "ochVersion"
+          ],
+          "properties": {
+            "caKey": {
+              "$id": "#/properties/spec/properties/caKey",
+              "type": "string",
+              "title": "The caKey schema",
+              "description": "Defines the Certificate Authority (CA) key which is used to check if OCF manifest contains a signature which has that CA in chain. If yes, then we can trust it and use its definition.",
+              "default": "",
+              "$comment": "WARNING: This field can change after resolving issue for signing and validating ocf manifest."
+            },
+            "implementation": {
+              "$id": "#/properties/spec/properties/implementation",
+              "type": "object",
+              "title": "The implementation schema",
+              "description": "Holds configuration for the OCF Implementation entities.",
+              "examples": [
+                {
+                  "appVersion": {
+                    "semVerTaggingStrategy": {
+                      "latest": {
+                        "pointsTo": "Stable"
+                      }
+                    }
+                  }
+                }
+              ],
+              "properties": {
+                "appVersion": {
+                  "$id": "#/properties/spec/properties/implementation/properties/appVersion",
+                  "type": "object",
+                  "title": "The appVersion schema",
+                  "description": "Defines the configuration for the appVersion field.",
+                  "properties": {
+                    "semVerTaggingStrategy": {
+                      "$id": "#/properties/spec/properties/implementation/properties/appVersion/properties/semVerTaggingStrategy",
+                      "type": "object",
+                      "title": "The semVerTaggingStrategy schema",
+                      "description": "Defines the tagging strategy.",
+                      "required": [
+                        "latest"
+                      ],
+                      "properties": {
+                        "latest": {
+                          "$id": "#/properties/spec/properties/implementation/properties/appVersion/properties/semVerTaggingStrategy/properties/latest",
+                          "type": "object",
+                          "title": "The latest schema",
+                          "description": "Defines the strategy for which version the tag Latest should be applied. You configure this while running OCH.",
+                          "properties": {
+                            "pointsTo": {
+                              "$id": "#/properties/spec/properties/implementation/properties/appVersion/properties/semVerTaggingStrategy/properties/latest/properties/pointsTo",
+                              "type": "string",
+                              "title": "The pointsTo schema",
+                              "description": "An explanation about the purpose of this instance.",
+                              "enum": [
+                                "Stable",
+                                "Edge"
+                              ]
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "ocfVersion": {
+              "$id": "#/properties/spec/properties/ocfVersion",
+              "type": "object",
+              "title": "The ocfVersion schema",
+              "description": "Holds information about supported OCF versions in OCH server.",
+              "examples": [
+                {
+                  "default": "0.2.0",
+                  "supported": [
+                    "0.1.0",
+                    "0.2.0"
+                  ]
+                }
+              ],
+              "required": [
+                "default",
+                "supported"
+              ],
+              "properties": {
+                "default": {
+                  "$id": "#/properties/spec/properties/ocfVersion/properties/default",
+                  "type": "string",
+                  "title": "The default schema",
+                  "description": "The default OCF version that is supported by the OCH. It should be the stored version."
+                },
+                "supported": {
+                  "$id": "#/properties/spec/properties/ocfVersion/properties/supported",
+                  "type": "array",
+                  "title": "The supported schema",
+                  "description": "The supported OCF version that OCH is able to serve. In general, the OCH takes the stored version and converts it to the supported one.",
+                  "additionalItems": false,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "ochVersion": {
+              "$id": "#/properties/spec/properties/ochVersion",
+              "type": "string",
+              "title": "The ochVersion schema",
+              "description": "Defines the OCH version in SemVer2 format."
+            }
+          }
+        }
+      }
+    }
+  ]
+}

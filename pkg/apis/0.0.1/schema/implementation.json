@@ -1,0 +1,271 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The OCF Type manifest schema",
+  "description": "Primitive, that holds the JSONSchema which describes that Type. It’s also used for validation. There are core and custom Types. Type can be also a composition of other Types.",
+  "definitions": {
+    "requireEntity": {
+      "type": "object",
+      "required": [
+        "name",
+        "revision"
+      ],
+      "properties": {
+        "value": {
+          "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/constraints",
+          "type": "object",
+          "title": "The constraints schema",
+          "description": "An explanation about the purpose of this instance."
+        },
+        "name": {
+          "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/name",
+          "type": "string",
+          "title": "The name schema",
+          "description": "An explanation about the purpose of this instance."
+        },
+        "revision": {
+          "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/revision",
+          "type": "string",
+          "title": "The revision schema",
+          "description": "An explanation about the purpose of this instance."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "metadata",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+    },
+    {
+      "properties": {
+        "metadata": {
+          "$id": "#/properties/metadata",
+          "type": "object",
+          "title": "The metadata schema",
+          "allOf": [
+            {
+              "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+            },
+            {
+              "required": [
+                "license"
+              ],
+              "properties": {
+                "tags": {
+                  "$id": "#/properties/metadata/properties/tags",
+                  "type": "object",
+                  "title": "The tags schema",
+                  "description": "The tags is a list of key value, OCF Tags. Describes the OCF Implementation (provides generic categorization) and are used to filter out a specific Implementation.",
+                  "patternProperties": {
+                    "^[a-zA-Z.]+$": {
+                      "type": "object",
+                      "required": [
+                        "revision"
+                      ],
+                      "properties": {
+                        "revision": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "license": {
+                  "$id": "#/properties/metadata/properties/license",
+                  "type": "object",
+                  "description": "This entry allows you to specify a license, so people know how they are permitted to use it, and what kind of restrictions you are placing on it.",
+                  "oneOf": [
+                    {
+                      "required": [
+                        "name"
+                      ],
+                      "properties": {
+                        "name": {
+                          "$id": "#/properties/metadata/properties/license/name",
+                          "type": "string",
+                          "description": "If you are using a common license such as BSD-2-Clause or MIT, add a current SPDX license identifier for the license you’re using e.g. BSD-3-Clause. If your package is licensed under multiple common licenses, use an SPDX license expression syntax version 2.0 string, e.g. (ISC OR GPL-3.0)"
+                        }
+                      }
+                    },
+                    {
+                      "required": [
+                        "ref"
+                      ],
+                      "properties": {
+                        "ref": {
+                          "$id": "#/properties/metadata/properties/license/ref",
+                          "type": "string",
+                          "description": "If you are using a license that hasn’t been assigned an SPDX identifier, or if you are using a custom license, use the direct link to the license file e.g. https://raw.githubusercontent.com/project/v1/license.md. The resource under given link MUST be immutable and publicly accessible."
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "spec": {
+          "$id": "#/properties/spec",
+          "type": "object",
+          "title": "The spec schema",
+          "description": "An explanation about the purpose of this instance.",
+          "required": [
+            "appVersion",
+            "implements",
+            "action"
+          ],
+          "properties": {
+            "appVersion": {
+              "$id": "#/properties/spec/properties/appVersion",
+              "type": "string",
+              "title": "The appVersion schema",
+              "description": "The supported application versions in SemVer2 format.",
+              "additionalProperties": false
+            },
+            "implements": {
+              "$id": "#/properties/spec/properties/implements",
+              "type": "array",
+              "title": "The implements schema",
+              "description": "Defines what kind of interfaces this implementation fulfills.",
+              "additionalItems": false,
+              "items": {
+                "$id": "#/properties/spec/properties/implements/items",
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "$id": "#/properties/spec/properties/implements/items/anyOf/0/properties/name",
+                    "type": "string",
+                    "title": "The name schema",
+                    "description": "The Interface name, for example cap.interfaces.db.mysql.install"
+                  },
+                  "revision": {
+                    "$id": "#/properties/spec/properties/implements/items/anyOf/0/properties/revision",
+                    "type": "string",
+                    "title": "The revision schema",
+                    "description": "The Interface revision.",
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "requires": {
+              "$id": "#/properties/spec/properties/requires",
+              "type": "object",
+              "title": "The requires schema",
+              "description": "List of the system prerequisites that need to be present on the cluster. There has to be an Instance for every concrete type.",
+              "patternProperties": {
+                "^[a-zA-Z.]+$": {
+                  "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform",
+                  "type": "object",
+                  "title": "The prefix schema",
+                  "description": "Prefix MUST be an abstract node and represents a core abstract Type e.g. cap.core.type.platform. Custom Types are not allowed.",
+                  "properties": {
+                    "oneOf": {
+                      "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf",
+                      "type": "array",
+                      "title": "The oneOf schema",
+                      "description": "An explanation about the purpose of this instance.",
+                      "additionalItems": false,
+                      "items": {
+                        "$id": "#/properties/spec/properties/requires/properties/oneOf",
+                        "$ref": "#/definitions/requireEntity"
+                      }
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "imports": {
+              "$id": "#/properties/spec/properties/imports",
+              "type": "array",
+              "title": "The imports schema",
+              "description": "List of external Interfaces that this Implementation requires to be able to execute the action.",
+              "additionalItems": false,
+              "items": {
+                "$id": "#/properties/imports/items",
+                "type": "object",
+                "required": [
+                  "name",
+                  "methods"
+                ],
+                "properties": {
+                  "name": {
+                    "$id": "#/properties/imports/items/0/properties/name",
+                    "type": "string",
+                    "title": "The name schema",
+                    "description": "The name of the group that holds specific actions that you want to import, for example cap.interfaces.db.mysql"
+                  },
+                  "alias": {
+                    "$id": "#/properties/imports/items/0/properties/alias",
+                    "type": "string",
+                    "title": "The alias schema",
+                    "description": "The alias for the full name of the imported group name. It can be used later in the workflow definition instead of using full name."
+                  },
+                  "appVersion": {
+                    "$id": "#/properties/imports/items/0/properties/appVersion",
+                    "type": "string",
+                    "title": "The appVersion schema",
+                    "description": "The supported application versions in SemVer2 format.",
+                    "examples": [
+                      "5.6.x, 5.7.x"
+                    ]
+                  },
+                  "methods": {
+                    "$id": "#/properties/imports/items/0/properties/methods",
+                    "type": "array",
+                    "title": "The methods schema",
+                    "description": "The list of all required actions’ names that must be imported.",
+                    "additionalItems": false,
+                    "items": {
+                      "$id": "#/properties/imports/items/0/properties/methods/items",
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "action": {
+              "$id": "#/properties/spec/properties/action",
+              "type": "object",
+              "title": "The action schema",
+              "description": "An explanation about the purpose of this instance.",
+              "required": [
+                "args",
+                "type"
+              ],
+              "properties": {
+                "args": {
+                  "$id": "#/properties/spec/properties/action/properties/args",
+                  "type": "object",
+                  "title": "The args schema",
+                  "description": "Holds all parameters that should be passed to the selected runner, for example repoUrl, or chartName for the Helm3 runner."
+                },
+                "type": {
+                  "$id": "#/properties/spec/properties/action/properties/type",
+                  "type": "string",
+                  "title": "The type schema",
+                  "description": "The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

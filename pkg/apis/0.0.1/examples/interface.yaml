@@ -1,0 +1,31 @@
+ocfVersion: 0.0.1
+revision: 0.1.2
+kind: Interface
+metadata:
+  prefix: cap.interface.cms.wordpress # Computed during fetching the manifest
+  name: install
+  description: WordPress installation
+  documentationURL: https://examples.com/docs
+  supportURL: https://example.com/online-support
+  iconURL: https://examples.com/favicon.ico
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  input:
+    jsonSchema:
+      ref:
+        name: cap.type.cms.wordpress.install-input
+        revision: "1.0.x, 2.0.x"
+  output:
+    jsonSchema:
+      ref:
+        name: cap.type.cms.wordpress.install-output
+        revision: "1.0.x"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
