@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "local": {
+      "includes": [
+        "./local/**"
+      ]
+    },
+    "public": {
+      "includes": [
+        "./public/**"
+      ]
+    }
+  }
+}
