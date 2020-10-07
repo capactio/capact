@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://projectvoltron.dev/schemas/implementation.json",
   "type": "object",
   "title": "The OCF Type manifest schema",
   "description": "Primitive, that holds the JSONSchema which describes that Type. It’s also used for validation. There are core and custom Types. Type can be also a composition of other Types.",
@@ -14,20 +15,20 @@
         "value": {
           "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/constraints",
           "type": "object",
-          "title": "The constraints schema",
-          "description": "An explanation about the purpose of this instance."
+          "title": "The value schema",
+          "description": "Holds the configuration constraints for the given entry. It needs to be valid against the Type JSONSchema."
         },
         "name": {
           "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/name",
           "type": "string",
           "title": "The name schema",
-          "description": "An explanation about the purpose of this instance."
+          "description": "The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom Type then it MUST be defined as full path to that Type. Custom Type MUST extend the abstract node which is defined as a root prefix for that entry."
         },
         "revision": {
           "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf/items/anyOf/0/properties/revision",
           "type": "string",
           "title": "The revision schema",
-          "description": "An explanation about the purpose of this instance."
+          "description": "The revision version of the given Type."
         }
       },
       "additionalProperties": false
@@ -39,7 +40,7 @@
   ],
   "allOf": [
     {
-      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+      "$ref": "file://schema/common/root-fields.json"
     },
     {
       "properties": {
@@ -49,7 +50,7 @@
           "title": "The metadata schema",
           "allOf": [
             {
-              "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+              "$ref": "file://schema/common/metadata.json"
             },
             {
               "required": [
@@ -115,7 +116,7 @@
           "$id": "#/properties/spec",
           "type": "object",
           "title": "The spec schema",
-          "description": "An explanation about the purpose of this instance.",
+          "description": "A container for the Implementation specification definition.",
           "required": [
             "appVersion",
             "implements",
@@ -172,13 +173,32 @@
                   "description": "Prefix MUST be an abstract node and represents a core abstract Type e.g. cap.core.type.platform. Custom Types are not allowed.",
                   "properties": {
                     "oneOf": {
-                      "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform/properties/oneOf",
+                      "$id": "#/properties/spec/properties/requires/properties/oneOf",
                       "type": "array",
                       "title": "The oneOf schema",
-                      "description": "An explanation about the purpose of this instance.",
+                      "description": "Exactly one of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                       "additionalItems": false,
                       "items": {
-                        "$id": "#/properties/spec/properties/requires/properties/oneOf",
+                        "$ref": "#/definitions/requireEntity"
+                      }
+                    },
+                    "allOf": {
+                      "$id": "#/properties/spec/properties/requires/properties/allOf",
+                      "type": "array",
+                      "title": "The allOf schema",
+                      "description": "All of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
+                      "additionalItems": false,
+                      "items": {
+                        "$ref": "#/definitions/requireEntity"
+                      }
+                    },
+                    "anyOf": {
+                      "$id": "#/properties/spec/properties/requires/properties/anyOf",
+                      "type": "array",
+                      "title": "The anyOf schema",
+                      "description": "Any (one or more) of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
+                      "additionalItems": false,
+                      "items": {
                         "$ref": "#/definitions/requireEntity"
                       }
                     }
@@ -230,7 +250,6 @@
                     "description": "The list of all required actions’ names that must be imported.",
                     "additionalItems": false,
                     "items": {
-                      "$id": "#/properties/imports/items/0/properties/methods/items",
                       "type": "string"
                     }
                   }

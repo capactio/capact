@@ -2,19 +2,19 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
   "title": "The OCF Tag manifest schema",
-  "description": "Primitive, that holds the JSONSchema which describes that Type. It’s also used for validation. There are core and custom Types. Type can be also a composition of other Types.",
+  "description": "Tag is a primitive, which is used to categorize Implementations.  You can use Tags to find and filter Implementations.",
   "required": [
     "metadata",
     "spec"
   ],
   "allOf": [
     {
-      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+      "$ref": "file://schema/common/root-fields.json"
     },
     {
       "properties": {
         "metadata": {
-          "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+          "$ref": "file://schema/common/metadata.json"
         },
         "spec": {
           "$id": "#/properties/spec",
@@ -28,11 +28,6 @@
               "type": "array",
               "title": "List of the full path of additional parent nodes the Tag is attached to.",
               "description": "List of the full path of additional parent nodes the Tag is attached to. The parent nodes MUST reside under “cap.core.tag” or “cap.tag” subtree. The connection means that the Tag becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.",
-              "examples": [
-                [
-                  "cap.core.tag.workload"
-                ]
-              ],
               "additionalProperties": false,
               "additionalItems": false,
               "uniqueItems": true,

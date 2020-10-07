@@ -8,7 +8,7 @@ export GOPROXY = https://proxy.golang.org
 DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron
 DOCKER_TAG ?= latest
 
-all: build-all-images test-unit test-lint
+all: build-all-images test-spec test-unit test-lint
 .PHONY: all
 
 #
@@ -59,6 +59,10 @@ test-unit:
 test-lint:
 	./hack/run-lint.sh
 .PHONY: test-lint
+
+test-spec:
+	go test -v ocf-spec/0.0.1/examples/example_test.go
+.PHONY: test-spec
 
 test-integration:
 	./hack/run-test-integration.sh

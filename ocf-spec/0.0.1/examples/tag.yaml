@@ -3,7 +3,7 @@ revision: 0.0.1
 kind: Tag
 metadata:
   name: stateless
-  prefix: cap.tag.workload
+  prefix: cap.tag.workload  # Computed during fetching the manifest
   displayName: Stateless Workload
   description: -|
     A stateless application does not preserve its state and saves no data
@@ -20,8 +20,6 @@ metadata:
       url: https://examples.com/foo/bar
 spec:
   # Additional refs gives you an option to extend other parent node.
-  # The connection means that the Type becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.
-  # Read more in OCF Draft: https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit#heading=h.y5sdg4ptnct9
   additionalRefs:
     - cap.core.tag.workload
 

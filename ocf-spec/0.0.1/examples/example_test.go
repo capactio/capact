@@ -14,43 +14,41 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-const kindPropertyName = "kind"
-
 // TestExampleSuccess in the future will be removed and replaced with
 // a ocftool validate command executed against all examples.
 // TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
 func TestExampleSuccess(t *testing.T) {
 	// Temp hack, as the $ref in schemas is a relative path.
 	// We need to wait with 'https' $ref until the schema will be public.
-	mustChDirToRoot(t)
+	mustChDirToRootVersion(t)
 
 	tests := map[string]struct {
 		jsonSchemaPath string
 		manifestPath   string
 	}{
 		"Type Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/type.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/type.yaml",
+			jsonSchemaPath: "schema/type.json",
+			manifestPath:   "examples/type.yaml",
 		},
 		"Tag Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/tag.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/tag.yaml",
+			jsonSchemaPath: "schema/tag.json",
+			manifestPath:   "examples/tag.yaml",
 		},
 		"Vendor Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/vendor.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/vendor.yaml",
+			jsonSchemaPath: "schema/vendor.json",
+			manifestPath:   "examples/vendor.yaml",
 		},
 		"Repo Metadata Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/repo-metadata.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/repo-metadata.yaml",
+			jsonSchemaPath: "schema/repo-metadata.json",
+			manifestPath:   "examples/repo-metadata.yaml",
 		},
 		"Interface Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/interface.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/interface.yaml",
+			jsonSchemaPath: "schema/interface.json",
+			manifestPath:   "examples/interface.yaml",
 		},
 		"Implementation Example should be valid": {
-			jsonSchemaPath: "pkg/apis/0.0.1/schema/implementation.json",
-			manifestPath:   "pkg/apis/0.0.1/examples/implementation.yaml",
+			jsonSchemaPath: "schema/implementation.json",
+			manifestPath:   "examples/implementation.yaml",
 		},
 	}
 	for tn, tc := range tests {
@@ -86,16 +84,6 @@ func documentLoader(path string) (gojsonschema.JSONLoader, error) {
 		return nil, err
 	}
 
-	//kind, found := obj[kindPropertyName]
-	//if !found {
-	//	return nil, "", fmt.Errorf("%s property not found", kindPropertyName)
-	//}
-	//
-	//kindStr, ok := kind.(string)
-	//if !ok {
-	//	return nil, "", fmt.Errorf("%s property cannot cast to string", kindPropertyName)
-	//}
-
 	return gojsonschema.NewGoLoader(obj), nil
 }
 
@@ -110,11 +98,11 @@ func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
 	}
 }
 
-func mustChDirToRoot(t *testing.T) {
+func mustChDirToRootVersion(t *testing.T) {
 	t.Helper()
 
 	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../../../..")
+	dir := path.Join(path.Dir(filename), "../")
 	err := os.Chdir(dir)
 	if err != nil {
 		t.Fatal(err.Error())

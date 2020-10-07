@@ -1,5 +1,6 @@
 {
-  "$id": "#/properties/metadata",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://projectvoltron.dev/schemas/common/metadata.json",
   "type": "object",
   "title": "The common metadata schema for OCF manifest",
   "description": "A container for the OCF metadata definitions.",
@@ -19,6 +20,7 @@
       ]
     },
     "prefix": {
+      "$comment": "TODO: How to restrict prefix to be set only by controller?",
       "$id": "#/properties/metadata/properties/prefix",
       "type": "string",
       "title": "The prefix value is automatically set when storing manifest in OCH.",
@@ -64,49 +66,44 @@
       "additionalItems": false,
       "items": {
         "$id": "#/properties/metadata/properties/maintainers/items",
-        "anyOf": [
+        "type": "object",
+        "title": "Holds contact information.",
+        "examples": [
           {
-            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0",
-            "type": "object",
-            "title": "Holds contact information.",
-            "examples": [
-              {
-                "email": "foo@example.com",
-                "name": "Foo Bar",
-                "url": "https://example.com"
-              }
-            ],
-            "required": [
-              "email"
-            ],
-            "properties": {
-              "email": {
-                "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/email",
-                "type": "string",
-                "title": "Email address of the person.",
-                "examples": [
-                  "foo@example.com"
-                ]
-              },
-              "name": {
-                "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/name",
-                "type": "string",
-                "title": "Name of the person.",
-                "examples": [
-                  "Foo Bar"
-                ]
-              },
-              "url": {
-                "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/url",
-                "type": "string",
-                "title": "URL of the person’s site.",
-                "examples": [
-                  "https://example.com"
-                ]
-              }
-            }
+            "email": "foo@example.com",
+            "name": "Foo Bar",
+            "url": "https://example.com"
           }
-        ]
+        ],
+        "required": [
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/email",
+            "type": "string",
+            "title": "Email address of the person.",
+            "examples": [
+              "foo@example.com"
+            ]
+          },
+          "name": {
+            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/name",
+            "type": "string",
+            "title": "Name of the person.",
+            "examples": [
+              "Foo Bar"
+            ]
+          },
+          "url": {
+            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/url",
+            "type": "string",
+            "title": "URL of the person’s site.",
+            "examples": [
+              "https://example.com"
+            ]
+          }
+        }
       }
     },
     "documentationURL": {

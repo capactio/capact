@@ -9,18 +9,18 @@
   ],
   "allOf": [
     {
-      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+      "$ref": "file://schema/common/root-fields.json"
     },
     {
       "properties": {
         "metadata": {
-          "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+          "$ref": "file://schema/common/metadata.json"
         },
         "spec": {
           "$id": "#/properties/spec",
           "type": "object",
           "title": "The spec schema",
-          "description": "A container for the Vendor specification definition.",
+          "description": "A container for the Interface specification definition.",
           "additionalProperties": false,
           "required": [
             "input",
@@ -31,13 +31,13 @@
               "$id": "#/properties/spec/properties/input",
               "type": "object",
               "title": "The input schema",
-              "description": "An explanation about the purpose of this instance.",
+              "description": "The input schema for Interface action.",
               "required": [
                 "jsonSchema"
               ],
               "properties": {
                 "jsonSchema": {
-                  "$ref": "file://pkg/apis/0.0.1/schema/common/json-schema-type.json"
+                  "$ref": "file://schema/common/json-schema-type.json"
                 }
               },
               "additionalProperties": false
@@ -46,13 +46,13 @@
               "$id": "#/properties/spec/properties/output",
               "type": "object",
               "title": "The output schema",
-              "description": "An explanation about the purpose of this instance.",
+              "description": "The output schema for Interface action.",
               "required": [
                 "jsonSchema"
               ],
               "properties": {
                 "jsonSchema": {
-                  "$ref": "file://pkg/apis/0.0.1/schema/common/json-schema-type.json"
+                  "$ref": "file://schema/common/json-schema-type.json"
                 }
               },
               "additionalProperties": false

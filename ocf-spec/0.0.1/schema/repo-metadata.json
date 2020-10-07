@@ -9,18 +9,18 @@
   ],
   "allOf": [
     {
-      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+      "$ref": "file://schema/common/root-fields.json"
     },
     {
       "properties": {
         "metadata": {
-          "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+          "$ref": "file://schema/common/metadata.json"
         },
         "spec": {
           "$id": "#/properties/spec",
           "type": "object",
           "title": "The spec schema",
-          "description": "A container for the repository metadata definition.",
+          "description": "A container for the RepoMetadata definition.",
           "additionalProperties": false,
           "required": [
             "caKey",
@@ -33,7 +33,6 @@
               "type": "string",
               "title": "The caKey schema",
               "description": "Defines the Certificate Authority (CA) key which is used to check if OCF manifest contains a signature which has that CA in chain. If yes, then we can trust it and use its definition.",
-              "default": "",
               "$comment": "WARNING: This field can change after resolving issue for signing and validating ocf manifest."
             },
             "implementation": {

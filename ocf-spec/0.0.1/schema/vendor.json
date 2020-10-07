@@ -9,12 +9,12 @@
   ],
   "allOf": [
     {
-      "$ref": "file://pkg/apis/0.0.1/schema/common/root-fields.json"
+      "$ref": "file://schema/common/root-fields.json"
     },
     {
       "properties": {
         "metadata": {
-          "$ref": "file://pkg/apis/0.0.1/schema/common/metadata.json"
+          "$ref": "file://schema/common/metadata.json"
         },
         "spec": {
           "$id": "#/properties/spec",
@@ -31,11 +31,6 @@
               "type": "object",
               "title": "The federation schema",
               "description": "Holds configuration for vendor federation.",
-              "examples": [
-                {
-                  "uri": "https://och.projectvoltron.dev"
-                }
-              ],
               "required": [
                 "uri"
               ],
@@ -44,11 +39,7 @@
                   "$id": "#/properties/federation/properties/uri",
                   "type": "string",
                   "title": "The uri schema",
-                  "description": "The URI of the external OCH.",
-                  "default": "",
-                  "examples": [
-                    "https://och.projectvoltron.dev"
-                  ]
+                  "description": "The URI of the external OCH."
                 }
               },
               "additionalProperties": false
