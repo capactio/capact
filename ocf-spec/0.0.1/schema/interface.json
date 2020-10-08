@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The OCF Vendor manifest schema",
+  "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
+  "required": [
+    "metadata",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "$ref": "file://schema/common/root-fields.json"
+    },
+    {
+      "properties": {
+        "metadata": {
+          "$ref": "file://schema/common/metadata.json"
+        },
+        "spec": {
+          "$id": "#/properties/spec",
+          "type": "object",
+          "title": "The spec schema",
+          "description": "A container for the Interface specification definition.",
+          "additionalProperties": false,
+          "required": [
+            "input",
+            "output"
+          ],
+          "properties": {
+            "input": {
+              "$id": "#/properties/spec/properties/input",
+              "type": "object",
+              "title": "The input schema",
+              "description": "The input schema for Interface action.",
+              "required": [
+                "jsonSchema"
+              ],
+              "properties": {
+                "jsonSchema": {
+                  "$ref": "file://schema/common/json-schema-type.json"
+                }
+              },
+              "additionalProperties": false
+            },
+            "output": {
+              "$id": "#/properties/spec/properties/output",
+              "type": "object",
+              "title": "The output schema",
+              "description": "The output schema for Interface action.",
+              "required": [
+                "jsonSchema"
+              ],
+              "properties": {
+                "jsonSchema": {
+                  "$ref": "file://schema/common/json-schema-type.json"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        }
+      }
+    }
+  ]
+}

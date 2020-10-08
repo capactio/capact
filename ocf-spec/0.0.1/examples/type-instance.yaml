@@ -1,0 +1,14 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: TypeInstance
+metadata:
+  name: kubernetes
+  prefix: cap.instance.type.platform  # Computed during fetching the manifest
+spec:
+  typeRef: cap.core.type.platform.kubernetes
+  value:
+    version: v1.15.1
+
+# Should have a signature here? Who should sign that?
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

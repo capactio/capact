@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://projectvoltron.dev/schemas/common/root-fields.json",
+  "type": "object",
+  "title": "The common root fields for all OCF manifests",
+  "required": [
+    "revision",
+    "signature",
+    "ocfVersion",
+    "kind"
+  ],
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "type": "string",
+      "const": "0.0.1"
+    },
+    "kind": {
+      "$comment": "TODO: How to restrict kind to a given name",
+      "$id": "#/properties/kind",
+      "type": "string",
+      "title": "The OCF manifest kind",
+      "enum": [
+        "Type",
+        "TypeInstance",
+        "RepoMetadata",
+        "Tag",
+        "Vendor",
+        "Interface",
+        "Implementation"
+      ]
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+      "title": "Version of the manifest content in the SemVer format.",
+      "description": "Version of the manifest content in the SemVer format."
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "object",
+      "title": "Ensures the authenticity and integrity of a given manifest.",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "required": [
+        "och"
+      ],
+      "properties": {
+        "och": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

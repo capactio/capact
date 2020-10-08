@@ -1,0 +1,24 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: Vendor
+metadata:
+  prefix: cap.vendor  # Computed during fetching the manifest
+  name: voltron
+  description: Project Voltron OCH
+  displayName: Project Voltron OCH
+  documentationURL: https://examples.com/docs
+  supportURL: https://example.com/online-support
+  iconURL: https://examples.com/favicon.ico
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  federation:
+    uri: https://och.projectvoltron.dev
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

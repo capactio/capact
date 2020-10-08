@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "title": "The OCF Type manifest schema",
+  "description": "Primitive, that holds the JSONSchema which describes that Type. It’s also used for validation. There are core and custom Types. Type can be also a composition of other Types.",
+  "required": [
+    "metadata",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "$ref": "file://schema/common/root-fields.json"
+    },
+    {
+      "properties": {
+        "metadata": {
+          "$ref": "file://schema/common/metadata.json"
+        },
+        "spec": {
+          "$id": "#/properties/spec",
+          "type": "object",
+          "title": "The spec schema",
+          "description": "A container for the Type specification definition.",
+          "required": [
+            "jsonSchema"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "jsonSchema": {
+              "$ref": "file://schema/common/json-schema-type.json"
+            },
+            "additionalRefs": {
+              "$id": "#/properties/spec/properties/additionalRefs",
+              "type": "array",
+              "title": "List of the full path of additional parent nodes the Type is attached to.",
+              "description": "List of the full path of additional parent nodes the Type is attached to. The parent nodes MUST reside under “cap.core.type” or “cap.type” subtree. The connection means that the Type becomes a child of the referenced parent nodes. In a result, the Type has multiple parents.",
+              "additionalProperties": false,
+              "additionalItems": false,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "title": "Full path of additional parent nodes the Type is attached to."
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

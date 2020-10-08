@@ -1,0 +1,27 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: Tag
+metadata:
+  name: stateless
+  prefix: cap.tag.workload  # Computed during fetching the manifest
+  displayName: Stateless Workload
+  description: -|
+    A stateless application does not preserve its state and saves no data
+    to persistent storage — all user and session data stays with the client.
+  documentationURL: https://examples.com/docs
+  supportURL: https://example.com/online-support
+  iconURL: https://examples.com/favicon.ico
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  # Additional refs gives you an option to extend other parent node.
+  additionalRefs:
+    - cap.core.tag.workload
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

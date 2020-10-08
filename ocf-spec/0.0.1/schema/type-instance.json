@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://projectvoltron.dev/schemas/type-instance.json",
+  "type": "object",
+  "title": "The root schema",
+  "description": "The root schema comprises the entire JSON document.",
+  "required": [
+    "metadata",
+    "spec"
+  ],
+  "allOf": [
+    {
+      "$ref": "file://schema/common/root-fields.json"
+    },
+    {
+      "properties": {
+        "metadata": {
+          "type": "object",
+          "required": [
+            "name",
+            "prefix"
+          ],
+          "properties": {
+            "name": {
+              "$id": "#/properties/metadata/properties/name",
+              "type": "string",
+              "title": "The name of OCF manifest.",
+              "description": "The name of OCF manifest that uniquely identifies this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name."
+            },
+            "prefix": {
+              "$comment": "TODO: How to restrict prefix to be set only by controller?",
+              "$id": "#/properties/metadata/properties/prefix",
+              "type": "string",
+              "title": "The prefix value is automatically set when storing manifest in OCH.",
+              "description": "The prefix value is automatically computed and set when storing manifest in OCH."
+            }
+          }
+        },
+        "spec": {
+          "$id": "#/properties/spec",
+          "type": "object",
+          "title": "The spec schema",
+          "description": "A container for the TypeInstance specification definition.",
+          "required": [
+            "typeRef",
+            "value"
+          ],
+          "properties": {
+            "typeRef": {
+              "$id": "#/properties/spec/properties/createdFrom",
+              "type": "string",
+              "title": "The createdFromRef schema",
+              "description": "The full path to the Type form which this instance was created."
+            },
+            "value": {
+              "$id": "#/properties/spec/properties/value",
+              "type": "object",
+              "title": "The value schema",
+              "description": "Holds the configuration constraints for the given Type. It needs to be valid against the Type JSONSchema."
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  ]
+}

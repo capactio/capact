@@ -1,0 +1,28 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: Type
+metadata:
+  name: kubernetes
+  prefix: cap.type.platform  # Computed during fetching the manifest
+  displayName: Kubernetes Platform
+  description: This Type indicates that a given platform is a Kubernetes installation.
+  documentationURL: https://examples.com/docs
+  supportURL: https://example.com/online-support
+  iconURL: https://examples.com/favicon.ico
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  additionalRefs:
+    - cap.core.type.platform
+  jsonSchema:
+    ref:
+      name: cap.type.platform.generic.versionConfig
+      revision: 1.0.x, 1.1.x
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
