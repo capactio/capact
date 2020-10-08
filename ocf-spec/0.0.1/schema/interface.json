@@ -1,65 +1,90 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "title": "The OCF Vendor manifest schema",
   "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
   "required": [
+    "ocfVersion",
+    "kind",
+    "revision",
+    "signature",
     "metadata",
     "spec"
   ],
-  "allOf": [
-    {
-      "$ref": "file://schema/common/root-fields.json"
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "type": "string",
+      "const": "0.0.1"
     },
-    {
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "enum": [
+        "Interface"
+      ]
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+      "description": "Version of the manifest content in the SemVer format."
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "object",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "required": [
+        "och"
+      ],
       "properties": {
-        "metadata": {
-          "$ref": "file://schema/common/metadata.json"
-        },
-        "spec": {
-          "$id": "#/properties/spec",
+        "och": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+    },
+    "spec": {
+      "$id": "#/properties/spec",
+      "type": "object",
+      "description": "A container for the Interface specification definition.",
+      "additionalProperties": false,
+      "required": [
+        "input",
+        "output"
+      ],
+      "properties": {
+        "input": {
+          "$id": "#/properties/spec/properties/input",
           "type": "object",
-          "title": "The spec schema",
-          "description": "A container for the Interface specification definition.",
-          "additionalProperties": false,
+          "description": "The input schema for Interface action.",
           "required": [
-            "input",
-            "output"
+            "jsonSchema"
           ],
           "properties": {
-            "input": {
-              "$id": "#/properties/spec/properties/input",
-              "type": "object",
-              "title": "The input schema",
-              "description": "The input schema for Interface action.",
-              "required": [
-                "jsonSchema"
-              ],
-              "properties": {
-                "jsonSchema": {
-                  "$ref": "file://schema/common/json-schema-type.json"
-                }
-              },
-              "additionalProperties": false
-            },
-            "output": {
-              "$id": "#/properties/spec/properties/output",
-              "type": "object",
-              "title": "The output schema",
-              "description": "The output schema for Interface action.",
-              "required": [
-                "jsonSchema"
-              ],
-              "properties": {
-                "jsonSchema": {
-                  "$ref": "file://schema/common/json-schema-type.json"
-                }
-              },
-              "additionalProperties": false
+            "jsonSchema": {
+              "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
             }
-          }
+          },
+          "additionalProperties": false
+        },
+        "output": {
+          "$id": "#/properties/spec/properties/output",
+          "type": "object",
+          "description": "The output schema for Interface action.",
+          "required": [
+            "jsonSchema"
+          ],
+          "properties": {
+            "jsonSchema": {
+              "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+            }
+          },
+          "additionalProperties": false
         }
       }
     }
-  ]
+  }
 }

@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/iosafety"
-
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vrischmann/envconfig"
+
+	"projectvoltron.dev/voltron/pkg/httputil"
+	"projectvoltron.dev/voltron/pkg/iosafety"
 )
 
 type Config struct {

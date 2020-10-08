@@ -57,8 +57,14 @@ func TestExampleSuccess(t *testing.T) {
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
+			sl := gojsonschema.NewSchemaLoader()
+			dataCommon := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "schema/data.json"))
+			err := sl.AddSchemas(dataCommon)
+			require.NoError(t, err)
+
 			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", tc.jsonSchemaPath))
-			schema, err := gojsonschema.NewSchema(schemaLoader)
+			//schema, err := gojsonschema.NewSchema(schemaLoader)
+			schema, err := sl.Compile(schemaLoader)
 			require.NoError(t, err, "while creating schema validator")
 
 			manifest, err := documentLoader(tc.manifestPath)
@@ -73,10 +79,6 @@ func TestExampleSuccess(t *testing.T) {
 	}
 }
 
-// The NewBytesLoader is used.
-// Other option is to unmarshal to map[string]interface{} and use the NewGoLoader
-// but we need to deal with the diff between JSON and YAML manually.
-// For now is enough to use a external lib for doing that.
 func documentLoader(path string) (gojsonschema.JSONLoader, error) {
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {

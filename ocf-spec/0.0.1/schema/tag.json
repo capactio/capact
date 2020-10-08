@@ -1,44 +1,70 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "title": "The OCF Tag manifest schema",
   "description": "Tag is a primitive, which is used to categorize Implementations.  You can use Tags to find and filter Implementations.",
   "required": [
+    "ocfVersion",
+    "kind",
+    "revision",
+    "signature",
     "metadata",
     "spec"
   ],
-  "allOf": [
-    {
-      "$ref": "file://schema/common/root-fields.json"
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "type": "string",
+      "const": "0.0.1"
     },
-    {
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "enum": [
+        "Tag"
+      ]
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+      "description": "Version of the manifest content in the SemVer format."
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "object",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "required": [
+        "och"
+      ],
       "properties": {
-        "metadata": {
-          "$ref": "file://schema/common/metadata.json"
-        },
-        "spec": {
-          "$id": "#/properties/spec",
-          "type": "object",
-          "title": "The spec schema",
-          "description": "A container for the Tag specification definition.",
+        "och": {
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+    },
+    "spec": {
+      "$id": "#/properties/spec",
+      "type": "object",
+      "description": "A container for the Tag specification definition.",
+      "additionalProperties": false,
+      "properties": {
+        "additionalRefs": {
+          "$id": "#/properties/spec/properties/additionalRefs",
+          "type": "array",
+          "description": "List of the full path of additional parent nodes the Tag is attached to. The parent nodes MUST reside under “cap.core.tag” or “cap.tag” subtree. The connection means that the Tag becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.",
           "additionalProperties": false,
-          "properties": {
-            "additionalRefs": {
-              "$id": "#/properties/spec/properties/additionalRefs",
-              "type": "array",
-              "title": "List of the full path of additional parent nodes the Tag is attached to.",
-              "description": "List of the full path of additional parent nodes the Tag is attached to. The parent nodes MUST reside under “cap.core.tag” or “cap.tag” subtree. The connection means that the Tag becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.",
-              "additionalProperties": false,
-              "additionalItems": false,
-              "uniqueItems": true,
-              "items": {
-                "type": "string",
-                "title": "Full path of additional parent nodes the Tag is attached to."
-              }
-            }
+          "additionalItems": false,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "description": "Full path of additional parent nodes the Tag is attached to."
           }
         }
       }
     }
-  ]
+  }
 }

@@ -8,7 +8,3 @@ spec:
   typeRef: cap.core.type.platform.kubernetes
   value:
     version: v1.15.1
-
-# Should have a signature here? Who should sign that?
-signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
