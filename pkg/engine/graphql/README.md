@@ -19,11 +19,11 @@ The advanced mode of rendering Action is when user can provide optional artifact
 1. User creates Action with `createAction` mutation, providing Implementation or Interface path (e.g. `cap.interface.cms.wordpress.install`), input parameters and artifacts (required and optional for the root Action).
 1. Engine saves Action details and sets its state to `INITIAL`.
 1. Engine detects new Action and changes status to `BEING_RENDERED`.
-1. In loop:
-    1. Once Engine resolves nested Action and if there are optional artifacts specified that can be provided, the Action status changes to `ADVANCED_MODE_RENDERING_ITERATION`.
-    1. User fetches Action with `action(id)` query and checks optional artifacts which can be provided under `Action.renderingAdvancedMode.artifactsForRenderingIteration`.
-    1. User continues Action rendering with `continueAdvancedRendering` mutation. In the mutation input, user can specify optional artifacts.
-1. Once Engine resolves all nested Implementations, the status changes to `READY_TO_RUN`. From now on, user is able run the rendered Action.
+1. In loop, until Engine resolves all nested Actions:
+    1. Engine resolves nested Action and if there are optional artifacts specified that can be provided, the Action status changes to `ADVANCED_MODE_RENDERING_ITERATION`.
+    1. User fetches Action with `action(id)` query and checks optional artifacts which can be provided in the iteration under `Action.renderingAdvancedMode.artifactsForRenderingIteration`.
+    1. User continues Action rendering with `continueAdvancedRendering` mutation. In the mutation input, user can specify optional artifacts for a given rendering iteration.
+1. Once Engine resolves all nested Actions, the status changes to `READY_TO_RUN`. From now on, user is able run the rendered Action.
 
 
 ## Running Action
