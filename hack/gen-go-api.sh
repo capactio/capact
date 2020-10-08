@@ -23,22 +23,24 @@ VOLTRON_RELEASE_NAME="voltron"
 
 main() {
     shout "Generating Go struct from OCF JSON Schemas..."
-
     OUTPUT="pkg/sdk/apis/0.0.1/types/types.go"
-    rm -f "$REPO_ROOT_DIR/$OUTPUT"
 
-    quicktype -l go -s schema --package types \
-      -S ./ocf-spec/0.0.1/schema/common/metadata.json -S ./ocf-spec/0.0.1/schema/common/json-schema-type.json \
-      --src ./ocf-spec/0.0.1/schema/interface.json \
-      --src ./ocf-spec/0.0.1/schema/implementation.json \
-      --src ./ocf-spec/0.0.1/schema/repo-metadata.json \
-      --src ./ocf-spec/0.0.1/schema/tag.json \
-      --src ./ocf-spec/0.0.1/schema/type.json \
-      --src ./ocf-spec/0.0.1/schema/type-instance.json \
-      --src ./ocf-spec/0.0.1/schema/vendor.json \
-      -o "$OUTPUT"
+    pushd "${REPO_ROOT_DIR}"
+    rm -f "$OUTPUT"
+
+    docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
+      -S /local/ocf-spec/0.0.1/schema/common/metadata.json -S /local/ocf-spec/0.0.1/schema/common/json-schema-type.json \
+      --src /local/ocf-spec/0.0.1/schema/interface.json \
+      --src /local/ocf-spec/0.0.1/schema/implementation.json \
+      --src /local/ocf-spec/0.0.1/schema/repo-metadata.json \
+      --src /local/ocf-spec/0.0.1/schema/tag.json \
+      --src /local/ocf-spec/0.0.1/schema/type.json \
+      --src /local/ocf-spec/0.0.1/schema/type-instance.json \
+      --src /local/ocf-spec/0.0.1/schema/vendor.json \
+      -o "/local/$OUTPUT"
 
 
+    popd
     shout "Generation completed successfully."
 }
 
