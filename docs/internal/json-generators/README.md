@@ -6,9 +6,6 @@ we are usign the const, one, ... patternProperties
 
 - get rid of the title, if present then it is sued for 
 
-I've reviewed paweł pull request, and we also have a discussion about the rendering flow
-I've finished creating JSON Schemas for all OCF manifests
-Currently, I'm doing research. 
 Currently, we cannot find any library to support the `patternProperties`, `const`, `allOf`, `anyOf` and `oneOf` features. The possible workaround it to:
 - convert JSON Schema to protobufs and then to Go struct
 - convert JSON Schema to Open API 3.0 and then to Go struct

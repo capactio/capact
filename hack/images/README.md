@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains a list of images used in Voltron project.
+This folder contains a list of infra images used in Voltron project.
 
 ### Project structure
 

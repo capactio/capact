@@ -73,7 +73,7 @@ test-lint:
 .PHONY: test-lint
 
 test-spec:
-	go test -v ocf-spec/0.0.1/examples/example_test.go -t test-spec-examples
+	go test -v --tags=ocfexamples ocf-spec/0.0.1/examples/examples_test.go
 .PHONY: test-spec
 
 test-integration:

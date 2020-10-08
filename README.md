@@ -83,7 +83,7 @@ To check if the code is correct and you can push it, use the `make` command. It 
 To generate the unit test coverage HTML report, execute the following command: 
 
 ```bash
-make cover-html
+make test-cover-html
 ```
 
 > **NOTE:** The default browser with the generated report opens automatically.
@@ -155,3 +155,11 @@ If you want to build and push Docker image for a single component, follow these 
     ```
 
 > **NOTE:** Registry can be configured exactly in the same way as specified in the previous section.
+
+
+###
+
+for a specific version:
+```bash
+env OCF_VERSION=0.0.2 make gen-go-api
+```

@@ -12,10 +12,7 @@ set -E         # needs to be set if we want the ERR trap
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly ROOT_PATH=${CURRENT_DIR}/..
 
-source "${CURRENT_DIR}/lib/utilities.sh" || {
-  echo 'Cannot load CI utilities.'
-  exit 1
-}
+source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 pushd "${ROOT_PATH}" >/dev/null
 
