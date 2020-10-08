@@ -14,6 +14,7 @@ Client input of Action details, that are used for create and update Action opera
 input ActionDetailsInput {
     input: ActionInputData
     action: String! # full path for the Implementation or Interface
+    advancedMode: Boolean = false
 }
 
 """
@@ -21,7 +22,7 @@ Client input that modifies input of a given Action
 """
 input ActionInputData {
     parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
-    artifacts: [InputArtifactData!]
+    artifacts: [InputArtifactData!] # required and optional artifacts from root workflow
 }
 
 """
@@ -44,12 +45,18 @@ type Action {
 
     action: String! # full path for the Implementation or Interface
     renderedAction: Any
+    advancedMode: ActionAdvancedMode
 
     createdBy: UserInfo
     runBy: UserInfo
     cancelledBy: UserInfo
 
     status: ActionStatus
+}
+
+type ActionAdvancedMode {
+    enabled: Boolean!
+    artifactsForRenderingIteration: [InputArtifact!]!
 }
 
 """
@@ -91,11 +98,9 @@ Describes input artifact of an Action
 """
 type InputArtifact {
     alias: String!
-    location: String! # e.g. /mysql.install
     typePath: String! # Full path of the corresponding Type
     typeInstanceID: ID
     value: Any # resolver for TypeInstance value
-    required: Boolean!
 }
 
 """
@@ -130,6 +135,7 @@ Current state of the Action
 enum ActionStatusCondition {
     INITIAL,
     BEING_RENDERED,
+    ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional artifacts discovered. User has to provide input artifacts
     READY_TO_RUN,
     RUNNING,
     BEING_CANCELLED,
@@ -148,7 +154,7 @@ type Mutation {
     runAction(id: ID!): Action!
     cancelAction(id: ID!): Action!
     updateAction(id: ID!, in: ActionDetailsInput): Action!
-    updateActionInput(id: ID!, in: ActionInputData): Action! # it is used to provide optional artifacts in each step of workflow render
+    provideArtifactsForRenderingIteration(actionID: ID!, in: [InputArtifactData!]!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
     deleteAction(id: ID!): Action!
 }
 
