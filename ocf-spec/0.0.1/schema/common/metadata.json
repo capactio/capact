@@ -20,7 +20,7 @@
       ]
     },
     "prefix": {
-      "$comment": "TODO: How to restrict prefix to be set only by controller?",
+      "$comment": "Value set by user is ignored and this field is always managed by OCH",
       "$id": "#/properties/metadata/properties/prefix",
       "type": "string",
       "title": "The prefix value is automatically set when storing manifest in OCH.",
