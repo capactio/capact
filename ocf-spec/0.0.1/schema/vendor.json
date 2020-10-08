@@ -37,6 +37,7 @@
               "properties": {
                 "uri": {
                   "$id": "#/properties/federation/properties/uri",
+                  "format": "uri",
                   "type": "string",
                   "title": "The uri schema",
                   "description": "The URI of the external OCH."

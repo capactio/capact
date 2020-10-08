@@ -38,7 +38,7 @@ func TestExampleSuccess(t *testing.T) {
 			jsonSchemaPath: "schema/vendor.json",
 			manifestPath:   "examples/vendor.yaml",
 		},
-		"Repo Metadata Example should be valid": {
+		"RepoMetadata Example should be valid": {
 			jsonSchemaPath: "schema/repo-metadata.json",
 			manifestPath:   "examples/repo-metadata.yaml",
 		},

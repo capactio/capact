@@ -5,7 +5,7 @@ metadata:
   name: kubernetes
   prefix: cap.instance.type.platform  # Computed during fetching the manifest
 spec:
-  createdFromRef: cap.core.type.platform.kubernets
+  typeRef: cap.core.type.platform.kubernetes
   value:
     version: v1.15.1
 

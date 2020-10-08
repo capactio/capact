@@ -22,6 +22,8 @@ The repository has the following structure:
   │
   ├── hack                      # Scripts used by the Voltron developers
   │
+  ├── ocf-spec                  # Open Capability Format Specification
+  │
   ├── pkg                       # Component related logic.
   │ ├── db-populator            # Populates Voltron entities to graph database.
   │ ├── engine                  # Voltron platform-agnostic engine.

@@ -19,11 +19,22 @@
       "$comment": "TODO: How to restrict kind to a given name",
       "$id": "#/properties/kind",
       "type": "string",
-      "title": "The OCF manifest kind"
+      "title": "The OCF manifest kind",
+      "enum": [
+        "Type",
+        "TypeInstance",
+        "RepoMetadata",
+        "Tag",
+        "Vendor",
+        "Interface",
+        "Implementation"
+      ]
     },
     "revision": {
       "$id": "#/properties/revision",
       "type": "string",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
       "title": "Version of the manifest content in the SemVer format.",
       "description": "Version of the manifest content in the SemVer format."
     },

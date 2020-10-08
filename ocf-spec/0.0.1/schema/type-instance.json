@@ -42,11 +42,11 @@
           "title": "The spec schema",
           "description": "A container for the TypeInstance specification definition.",
           "required": [
-            "createdFromRef",
+            "typeRef",
             "value"
           ],
           "properties": {
-            "createdFromRef": {
+            "typeRef": {
               "$id": "#/properties/spec/properties/createdFrom",
               "type": "string",
               "title": "The createdFromRef schema",

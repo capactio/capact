@@ -63,7 +63,7 @@
                   "title": "The tags schema",
                   "description": "The tags is a list of key value, OCF Tags. Describes the OCF Implementation (provides generic categorization) and are used to filter out a specific Implementation.",
                   "patternProperties": {
-                    "^[a-zA-Z.]+$": {
+                    "^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$": {
                       "type": "object",
                       "required": [
                         "revision"
@@ -166,7 +166,7 @@
               "title": "The requires schema",
               "description": "List of the system prerequisites that need to be present on the cluster. There has to be an Instance for every concrete type.",
               "patternProperties": {
-                "^[a-zA-Z.]+$": {
+                "^([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9]$": {
                   "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform",
                   "type": "object",
                   "title": "The prefix schema",

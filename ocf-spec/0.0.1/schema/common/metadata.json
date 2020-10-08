@@ -64,6 +64,7 @@
         ]
       ],
       "additionalItems": false,
+      "minItems": 1,
       "items": {
         "$id": "#/properties/metadata/properties/maintainers/items",
         "type": "object",
@@ -81,33 +82,27 @@
         "properties": {
           "email": {
             "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/email",
+            "format": "email",
             "type": "string",
-            "title": "Email address of the person.",
-            "examples": [
-              "foo@example.com"
-            ]
+            "title": "Email address of the person."
           },
           "name": {
             "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/name",
             "type": "string",
-            "title": "Name of the person.",
-            "examples": [
-              "Foo Bar"
-            ]
+            "title": "Name of the person."
           },
           "url": {
             "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/url",
+            "format": "iri",
             "type": "string",
-            "title": "URL of the person’s site.",
-            "examples": [
-              "https://example.com"
-            ]
+            "title": "URL of the person’s site."
           }
         }
       }
     },
     "documentationURL": {
       "$id": "#/properties/metadata/properties/documentationURL",
+      "format": "uri",
       "type": "string",
       "title": "Link to documentation page for the OCF manifest.",
       "description": "Link to documentation page for the OCF manifest.",
@@ -117,6 +112,7 @@
     },
     "supportURL": {
       "$id": "#/properties/metadata/properties/supportURL",
+      "format": "uri",
       "type": "string",
       "title": "Link to support page for the OCF manifest.",
       "description": "Link to support page for the OCF manifest.",
@@ -126,6 +122,7 @@
     },
     "iconURL": {
       "$id": "#/properties/metadata/properties/iconURL",
+      "format": "uri",
       "type": "string",
       "title": "The URL to an icon or a data URL containing an icon.",
       "description": "The URL to an icon or a data URL containing an icon.",
