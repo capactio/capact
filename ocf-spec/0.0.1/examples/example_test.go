@@ -50,6 +50,10 @@ func TestExampleSuccess(t *testing.T) {
 			jsonSchemaPath: "schema/implementation.json",
 			manifestPath:   "examples/implementation.yaml",
 		},
+		"TypeInstance Example should be valid": {
+			jsonSchemaPath: "schema/type-instance.json",
+			manifestPath:   "examples/type-instance.yaml",
+		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
