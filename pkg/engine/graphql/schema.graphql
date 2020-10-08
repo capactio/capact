@@ -14,7 +14,7 @@ Client input of Action details, that are used for create and update Action opera
 input ActionDetailsInput {
     input: ActionInputData
     action: String! # full path for the Implementation or Interface
-    advancedMode: Boolean = false
+    advancedRendering: Boolean = false # Enables advance rendering mode of Action
 }
 
 """
@@ -45,7 +45,7 @@ type Action {
 
     action: String! # full path for the Implementation or Interface
     renderedAction: Any
-    advancedMode: ActionAdvancedMode
+    renderingAdvancedMode: ActionRenderingAdvancedMode
 
     createdBy: UserInfo
     runBy: UserInfo
@@ -54,9 +54,12 @@ type Action {
     status: ActionStatus
 }
 
-type ActionAdvancedMode {
+"""
+Properties related to Action advanced rendering
+"""
+type ActionRenderingAdvancedMode {
     enabled: Boolean!
-    artifactsForRenderingIteration: [InputArtifact!]!
+    artifactsForRenderingIteration: [InputArtifact!]! # Optional Artifacts for current rendering iteration
 }
 
 """
@@ -101,6 +104,7 @@ type InputArtifact {
     typePath: String! # Full path of the corresponding Type
     typeInstanceID: ID
     value: Any # resolver for TypeInstance value
+    optional: Boolean!
 }
 
 """
@@ -130,6 +134,13 @@ input ActionFilter {
 }
 
 """
+Input used for continuing Action rendering in advanced mode.
+"""
+input AdvancedModeContinueRenderingInput {
+    artifacts: [InputArtifactData!] # optional artifacts for a given rendering iteration
+}
+
+"""
 Current state of the Action
 """
 enum ActionStatusCondition {
@@ -154,7 +165,7 @@ type Mutation {
     runAction(id: ID!): Action!
     cancelAction(id: ID!): Action!
     updateAction(id: ID!, in: ActionDetailsInput): Action!
-    provideArtifactsForRenderingIteration(actionID: ID!, in: [InputArtifactData!]!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
+    continueAdvancedRendering(actionID: ID!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
     deleteAction(id: ID!): Action!
 }
 
