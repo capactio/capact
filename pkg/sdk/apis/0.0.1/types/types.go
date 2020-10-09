@@ -129,7 +129,7 @@ type Maintainer struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type InterfaceSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the Interface specification definition.
@@ -198,7 +198,7 @@ type TagValue struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type ImplementationSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the Implementation specification definition.
@@ -256,7 +256,7 @@ type RepoMetadata struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type RepoMetadataSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the RepoMetadata definition.
@@ -307,7 +307,7 @@ type Tag struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type TagSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the Tag specification definition.
@@ -329,7 +329,7 @@ type Type struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type TypeSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the Type specification definition.
@@ -372,7 +372,7 @@ type Vendor struct {
 
 // Ensures the authenticity and integrity of a given manifest.
 type VendorSignature struct {
-	Och string `json:"och"`
+	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
 // A container for the Vendor specification definition.

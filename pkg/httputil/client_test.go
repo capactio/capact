@@ -1,24 +1,26 @@
 package httputil_test
 
 import (
-	"github.com/stretchr/testify/assert"
 	"net/http"
-	"projectvoltron.dev/voltron/pkg/httputil"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"projectvoltron.dev/voltron/pkg/httputil"
 )
 
 func TestNewClient(t *testing.T) {
 	tests := map[string]struct {
-		timeout time.Duration
+		timeout              time.Duration
 		skipCertVerification bool
 	}{
 		"Respect given timeout and skips cert verification": {
-			timeout: time.Second,
+			timeout:              time.Second,
 			skipCertVerification: true,
 		},
 		"Respect given timeout and DOES NOT skip cert verification": {
-			timeout: time.Second,
+			timeout:              time.Second,
 			skipCertVerification: false,
 		},
 	}

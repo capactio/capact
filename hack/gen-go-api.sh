@@ -26,7 +26,8 @@ main() {
     rm -f "$OUTPUT"
 
     docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
-      -S /local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json -S /local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json \
+      --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json \
+      --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json \
       --src /local/ocf-spec/${OCF_VERSION}/schema/interface.json \
       --src /local/ocf-spec/${OCF_VERSION}/schema/implementation.json \
       --src /local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json \

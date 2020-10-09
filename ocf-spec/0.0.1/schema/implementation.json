@@ -67,6 +67,7 @@
       ],
       "properties": {
         "och": {
+          "description": "The signature signed with the HUB key.",
           "type": "string"
         }
       }

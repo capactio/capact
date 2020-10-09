@@ -47,7 +47,6 @@ func TestDrainWhenLimitReached(t *testing.T) {
 	require.NoError(t, err)
 }
 
-
 func TestDrainEmptyReader(t *testing.T) {
 	// when
 	err := iosafety.DrainReader(nil)

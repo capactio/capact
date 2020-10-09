@@ -163,7 +163,7 @@ Last update: Apr 22, 2020
 
 Github: https://github.com/quicktype/quicktype
 
-Last release:  Dec 19, 2017
+Last release: Sep 5, 2020
 
 Last update: Oct 6, 2020 
 
