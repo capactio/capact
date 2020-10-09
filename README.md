@@ -10,7 +10,7 @@ The repository has the following structure:
 
 ```
   ├── cmd
-  │ ├── gateway                 # GraphQL Gateway that consolidates all Voltron GraphQL APIs in one endpoint.
+  │ ├── gateway                 # GraphQL Gateway that consolidates all Voltron GraphQL APIs in one endpoint
   │ ├── k8s-engine              # Kubernetes Voltron engine
   │ └── och                     # OCH server
   │
@@ -18,25 +18,25 @@ The repository has the following structure:
   │ └── kubernetes              # Kubernetes related deployment (Helm charts, CRDs etc.)
   │
   ├── docs                      # Documentation related to the project
-  │ └── internal                # Investigations, proof of concepts and other internal documents and files.
+  │ └── investigation           # Investigations and proof of concepts files
   │
   ├── hack                      # Scripts used by the Voltron developers
   │
   ├── ocf-spec                  # Open Capability Format Specification
   │
   ├── pkg                       # Component related logic.
-  │ ├── db-populator            # Populates Voltron entities to graph database.
-  │ ├── engine                  # Voltron platform-agnostic engine.
+  │ ├── db-populator            # Populates Voltron entities to graph database
+  │ ├── engine                  # Voltron platform-agnostic engine
   │ ├── gateway                 # GraphQL Gateway
   │ ├── och                     # Open Capability Hub server 
   │ ├── runner                  # Voltron runners, e.g. Argo Workflow runner, Helm runner etc.
-  │ └── sdk                     # SDK for Voltron eco-system.
+  │ └── sdk                     # SDK for Voltron eco-system
   │
   │── test                      # Cross-functional test suites
   │
   ├── Dockerfile                # Dockerfile template to build applications and tests images
   │
-  └── go.mod                    # Manages Go dependency. There is single dependency management across all components in this monorepo.
+  └── go.mod                    # Manages Go dependency. There is single dependency management across all components in this monorepo
 ```
 
 ## Development
