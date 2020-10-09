@@ -82,13 +82,13 @@ gojsonschema -p types ./ocf-spec/0.0.1/schema/implementation.json > ./docs/inves
 
 The output is [available here](./assets/gojsonschema/_implementation.go).
 
-##### Pros 
+#### Pros 
 
 1. The generated boilerplate struct is smaller and more readable than the schema-generate.
 2. Support dedicated Marhshal/Unmarshal methods.
 3. Expose options to customize to Go struct output
 
-##### Cons 
+#### Cons 
 
 1. Fail fast during Unmarshal action. If first element in struct is invalid then rest elements are not checked.
 2. Does not support `additionalItems` field, returns error:
@@ -116,13 +116,13 @@ schema-generate ./ocf-spec/0.0.1/schema/implementation.json > ./docs/investigati
 
 The output is [available here](./assets/schema-generate/_implementation.go).
 
-##### Pros
+#### Pros
  
 1. Checks for all validation problems during Unmarhal action.
 2. Support dedicate Marshal/Unmarshal methods.
 3. Expose options to customize to Go struct output
 
-##### Cons 
+#### Cons 
 
 1. Generates a lof of boilerplate.
 2. Struct are named by the description.  
@@ -140,7 +140,7 @@ Last release: none
 
 Last update: Apr 22, 2020
 
-##### Pros
+#### Pros
 
 1. Fixes bugs and adds features:
     - Add UnmarshalJSONIterator to OneOfStringNull
@@ -150,7 +150,7 @@ Last update: Apr 22, 2020
     - Use jsoniter.ValueType instead of our own DataType
     - Implements a omit empty mechanism
 
-##### Cons
+#### Cons
 
 1. Generates a lof of boilerplate.
 2. Struct are named by the description.
