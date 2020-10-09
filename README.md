@@ -157,7 +157,7 @@ If you want to build and push Docker image for a single component, follow these 
 > **NOTE:** Registry can be configured exactly in the same way as specified in the previous section.
 
 
-#### Generate code Go structs from OCF JSON Schemas manifests 
+### Generate code Go structs from OCF JSON Schemas manifests 
 
 This project uses the [quicktype](https://github.com/quicktype/quicktype) library, which improves development by 
 generating Go code from the [JSON Schemas](ocf-spec/0.0.1/schema).
