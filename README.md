@@ -169,7 +169,7 @@ make gen-go-api
 
 To generate the Go structs for a specific OCF version, execute the following command:
 ```bash
-env OCF_VERSION={VERSION} make gen-go-api
+OCF_VERSION={VERSION} make gen-go-api
 ```
 
 > **NOTE:** Go structs are generated in [`pkg/sdk/apis`](./pkg/sdk/apis) package.
