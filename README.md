@@ -157,9 +157,19 @@ If you want to build and push Docker image for a single component, follow these 
 > **NOTE:** Registry can be configured exactly in the same way as specified in the previous section.
 
 
-###
+#### Generate code Go structs from OCF JSON Schemas manifests 
 
-for a specific version:
+This project uses the [quicktype](https://github.com/quicktype/quicktype) library, which improves development by 
+generating Go code from the [JSON Schemas](ocf-spec/0.0.1/schema).
+
+Each time the specification is changed you can regenerate the Go struct. To do this, execute the following command:
 ```bash
-env OCF_VERSION=0.0.2 make gen-go-api
+make gen-go-api
 ```
+
+To generate the Go structs for a specific OCF version, execute the following command:
+```bash
+env OCF_VERSION={VERSION} make gen-go-api
+```
+
+> **NOTE:** Go structs are generated in [`pkg/sdk/apis`](./pkg/sdk/apis) package.
