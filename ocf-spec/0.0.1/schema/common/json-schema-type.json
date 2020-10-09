@@ -2,7 +2,6 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://projectvoltron.dev/schemas/common/json-schema-type.json",
   "type": "object",
-  "title": "The common JSONSchema definition.",
   "description": "The JSONSchema definition.",
   "properties": {
     "ref": {

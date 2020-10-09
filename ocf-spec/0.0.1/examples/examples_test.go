@@ -1,11 +1,10 @@
+// +build ocfexamples
+
 package examples
 
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path"
-	"runtime"
 	"testing"
 
 	"github.com/ghodss/yaml"
@@ -18,47 +17,50 @@ import (
 // a ocftool validate command executed against all examples.
 // TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
 func TestExampleSuccess(t *testing.T) {
-	// Temp hack, as the $ref in schemas is a relative path.
-	// We need to wait with 'https' $ref until the schema will be public.
-	mustChDirToRootVersion(t)
+	sl := gojsonschema.NewSchemaLoader()
+	dataCommon := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/json-schema-type.json"))
+	require.NoError(t, sl.AddSchemas(dataCommon))
+	dataCommon2 := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
+	require.NoError(t, sl.AddSchemas(dataCommon2))
 
 	tests := map[string]struct {
 		jsonSchemaPath string
 		manifestPath   string
 	}{
 		"Type Example should be valid": {
-			jsonSchemaPath: "schema/type.json",
-			manifestPath:   "examples/type.yaml",
+			jsonSchemaPath: "../schema/type.json",
+			manifestPath:   "type.yaml",
 		},
 		"Tag Example should be valid": {
-			jsonSchemaPath: "schema/tag.json",
-			manifestPath:   "examples/tag.yaml",
+			jsonSchemaPath: "../schema/tag.json",
+			manifestPath:   "tag.yaml",
 		},
 		"Vendor Example should be valid": {
-			jsonSchemaPath: "schema/vendor.json",
-			manifestPath:   "examples/vendor.yaml",
+			jsonSchemaPath: "../schema/vendor.json",
+			manifestPath:   "vendor.yaml",
 		},
 		"RepoMetadata Example should be valid": {
-			jsonSchemaPath: "schema/repo-metadata.json",
-			manifestPath:   "examples/repo-metadata.yaml",
+			jsonSchemaPath: "../schema/repo-metadata.json",
+			manifestPath:   "repo-metadata.yaml",
 		},
 		"Interface Example should be valid": {
-			jsonSchemaPath: "schema/interface.json",
-			manifestPath:   "examples/interface.yaml",
+			jsonSchemaPath: "../schema/interface.json",
+			manifestPath:   "interface.yaml",
 		},
 		"Implementation Example should be valid": {
-			jsonSchemaPath: "schema/implementation.json",
-			manifestPath:   "examples/implementation.yaml",
+			jsonSchemaPath: "../schema/implementation.json",
+			manifestPath:   "implementation.yaml",
 		},
 		"TypeInstance Example should be valid": {
-			jsonSchemaPath: "schema/type-instance.json",
-			manifestPath:   "examples/type-instance.yaml",
+			jsonSchemaPath: "../schema/type-instance.json",
+			manifestPath:   "type-instance.yaml",
 		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", tc.jsonSchemaPath))
-			schema, err := gojsonschema.NewSchema(schemaLoader)
+			//schema, err := gojsonschema.NewSchema(schemaLoader)
+			schema, err := sl.Compile(schemaLoader)
 			require.NoError(t, err, "while creating schema validator")
 
 			manifest, err := documentLoader(tc.manifestPath)
@@ -73,10 +75,6 @@ func TestExampleSuccess(t *testing.T) {
 	}
 }
 
-// The NewBytesLoader is used.
-// Other option is to unmarshal to map[string]interface{} and use the NewGoLoader
-// but we need to deal with the diff between JSON and YAML manually.
-// For now is enough to use a external lib for doing that.
 func documentLoader(path string) (gojsonschema.JSONLoader, error) {
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -99,16 +97,5 @@ func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
 		for _, desc := range result.Errors() {
 			t.Errorf("- %s\n", desc.String())
 		}
-	}
-}
-
-func mustChDirToRootVersion(t *testing.T) {
-	t.Helper()
-
-	_, filename, _, _ := runtime.Caller(0)
-	dir := path.Join(path.Dir(filename), "../")
-	err := os.Chdir(dir)
-	if err != nil {
-		t.Fatal(err.Error())
 	}
 }

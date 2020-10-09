@@ -10,7 +10,7 @@ The repository has the following structure:
 
 ```
   ├── cmd
-  │ ├── gateway                 # GraphQL Gateway that consolidates all Voltron GraphQL APIs in one endpoint.
+  │ ├── gateway                 # GraphQL Gateway that consolidates all Voltron GraphQL APIs in one endpoint
   │ ├── k8s-engine              # Kubernetes Voltron engine
   │ └── och                     # OCH server
   │
@@ -18,25 +18,25 @@ The repository has the following structure:
   │ └── kubernetes              # Kubernetes related deployment (Helm charts, CRDs etc.)
   │
   ├── docs                      # Documentation related to the project
-  │ └── internal                # Investigations, proof of concepts and other internal documents and files.
+  │ └── investigation           # Investigations and proof of concepts files
   │
   ├── hack                      # Scripts used by the Voltron developers
   │
   ├── ocf-spec                  # Open Capability Format Specification
   │
   ├── pkg                       # Component related logic.
-  │ ├── db-populator            # Populates Voltron entities to graph database.
-  │ ├── engine                  # Voltron platform-agnostic engine.
+  │ ├── db-populator            # Populates Voltron entities to graph database
+  │ ├── engine                  # Voltron platform-agnostic engine
   │ ├── gateway                 # GraphQL Gateway
   │ ├── och                     # Open Capability Hub server 
   │ ├── runner                  # Voltron runners, e.g. Argo Workflow runner, Helm runner etc.
-  │ └── sdk                     # SDK for Voltron eco-system.
+  │ └── sdk                     # SDK for Voltron eco-system
   │
   │── test                      # Cross-functional test suites
   │
   ├── Dockerfile                # Dockerfile template to build applications and tests images
   │
-  └── go.mod                    # Manages Go dependency. There is single dependency management across all components in this monorepo.
+  └── go.mod                    # Manages Go dependency. There is single dependency management across all components in this monorepo
 ```
 
 ## Development
@@ -83,7 +83,7 @@ To check if the code is correct and you can push it, use the `make` command. It 
 To generate the unit test coverage HTML report, execute the following command: 
 
 ```bash
-make cover-html
+make test-cover-html
 ```
 
 > **NOTE:** The default browser with the generated report opens automatically.
@@ -155,3 +155,21 @@ If you want to build and push Docker image for a single component, follow these 
     ```
 
 > **NOTE:** Registry can be configured exactly in the same way as specified in the previous section.
+
+
+#### Generate code Go structs from OCF JSON Schemas manifests 
+
+This project uses the [quicktype](https://github.com/quicktype/quicktype) library, which improves development by 
+generating Go code from the [JSON Schemas](ocf-spec/0.0.1/schema).
+
+Each time the specification is changed you can regenerate the Go struct. To do this, execute the following command:
+```bash
+make gen-go-api
+```
+
+To generate the Go structs for a specific OCF version, execute the following command:
+```bash
+OCF_VERSION={VERSION} make gen-go-api
+```
+
+> **NOTE:** Go structs are generated in [`pkg/sdk/apis`](./pkg/sdk/apis) package.

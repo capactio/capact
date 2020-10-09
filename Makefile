@@ -16,12 +16,13 @@ all: build-all-images test-spec test-unit test-lint
 #
 APPS = gateway k8s-engine och
 TESTS = e2e
+INFRA = json-go-gen
 
 # All images
-build-all-images: $(addprefix build-app-image-,$(APPS)) $(addprefix build-test-image-,$(TESTS))
+build-all-images: $(addprefix build-app-image-,$(APPS)) $(addprefix build-test-image-,$(TESTS)) $(addprefix build-infra-image-,$(INFRA))
 .PHONY: build-all-images
 
-push-all-images: $(addprefix push-app-image-,$(APPS)) $(addprefix push-test-image-,$(TESTS))
+push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA))
 .PHONY: push-all-images
 
 # App images
@@ -49,6 +50,17 @@ push-test-image-%:
 	docker push $(DOCKER_PUSH_REPOSITORY)/$(APP)-test:$(DOCKER_TAG)
 .PHONY: push-test-image
 
+# Infra images
+build-infra-image-%:
+	$(eval APP := $*)
+	docker build -t $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f ./hack/images/$(APP)/Dockerfile .
+.PHONY: build-infra-image
+
+push-infra-image-%:
+	$(eval APP := $*)
+	docker push $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
+.PHONY: push-infra-image
+
 #
 # Test
 #
@@ -61,16 +73,16 @@ test-lint:
 .PHONY: test-lint
 
 test-spec:
-	go test -v ocf-spec/0.0.1/examples/example_test.go
+	go test -v --tags=ocfexamples ocf-spec/0.0.1/examples/examples_test.go
 .PHONY: test-spec
 
 test-integration:
 	./hack/run-test-integration.sh
 .PHONY: test-integration
 
-cover-html: test-unit
+test-cover-html: test-unit
 	go tool cover -html=./coverage.txt
-.PHONY: cover-html
+.PHONY: test-cover-html
 
 #
 # Developer helpers
@@ -82,3 +94,11 @@ dev-cluster:
 dev-cluster-update:
 	./hack/run-dev-cluster-update.sh
 .PHONY: dev-cluster-update
+
+
+#
+# Generators
+#
+gen-go-api:
+	./hack/gen-go-api.sh
+.PHONY: gen-go-api

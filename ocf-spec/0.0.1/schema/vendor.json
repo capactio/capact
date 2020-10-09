@@ -1,53 +1,79 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "title": "The OCF Vendor manifest schema",
   "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
   "required": [
+    "ocfVersion",
+    "kind",
+    "revision",
+    "signature",
     "metadata",
     "spec"
   ],
-  "allOf": [
-    {
-      "$ref": "file://schema/common/root-fields.json"
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "type": "string",
+      "const": "0.0.1"
     },
-    {
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "enum": [
+        "Vendor"
+      ]
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+      "description": "Version of the manifest content in the SemVer format."
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "object",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "required": [
+        "och"
+      ],
       "properties": {
-        "metadata": {
-          "$ref": "file://schema/common/metadata.json"
-        },
-        "spec": {
-          "$id": "#/properties/spec",
+        "och": {
+          "description": "The signature signed with the HUB key.",
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+    },
+    "spec": {
+      "$id": "#/properties/spec",
+      "type": "object",
+      "description": "A container for the Vendor specification definition.",
+      "additionalProperties": false,
+      "required": [
+        "federation"
+      ],
+      "properties": {
+        "federation": {
+          "$id": "#/properties/federation",
           "type": "object",
-          "title": "The spec schema",
-          "description": "A container for the Vendor specification definition.",
-          "additionalProperties": false,
+          "description": "Holds configuration for vendor federation.",
           "required": [
-            "federation"
+            "uri"
           ],
           "properties": {
-            "federation": {
-              "$id": "#/properties/federation",
-              "type": "object",
-              "title": "The federation schema",
-              "description": "Holds configuration for vendor federation.",
-              "required": [
-                "uri"
-              ],
-              "properties": {
-                "uri": {
-                  "$id": "#/properties/federation/properties/uri",
-                  "format": "uri",
-                  "type": "string",
-                  "title": "The uri schema",
-                  "description": "The URI of the external OCH."
-                }
-              },
-              "additionalProperties": false
+            "uri": {
+              "$id": "#/properties/federation/properties/uri",
+              "format": "uri",
+              "type": "string",
+              "description": "The URI of the external OCH."
             }
-          }
+          },
+          "additionalProperties": false
         }
       }
     }
-  ]
+  }
 }
