@@ -17,11 +17,12 @@ import (
 // a ocftool validate command executed against all examples.
 // TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
 func TestExampleSuccess(t *testing.T) {
+	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
-	dataCommon := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/json-schema-type.json"))
-	require.NoError(t, sl.AddSchemas(dataCommon))
-	dataCommon2 := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
-	require.NoError(t, sl.AddSchemas(dataCommon2))
+	common := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/json-schema-type.json"))
+	require.NoError(t, sl.AddSchemas(common))
+	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
+	require.NoError(t, sl.AddSchemas(common))
 
 	tests := map[string]struct {
 		jsonSchemaPath string
@@ -58,18 +59,19 @@ func TestExampleSuccess(t *testing.T) {
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
+			// given
 			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", tc.jsonSchemaPath))
-			//schema, err := gojsonschema.NewSchema(schemaLoader)
 			schema, err := sl.Compile(schemaLoader)
 			require.NoError(t, err, "while creating schema validator")
 
 			manifest, err := documentLoader(tc.manifestPath)
 			require.NoError(t, err, "while loading manifest")
 
-			// set root schema name?
+			// when
 			result, err := schema.Validate(manifest)
 			require.NoError(t, err, "while validating object against JSON Schema")
 
+			// then
 			assertResultIsValid(t, result)
 		})
 	}
