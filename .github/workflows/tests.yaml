@@ -29,6 +29,7 @@ jobs:
           make test-lint
         env:
           RUN_ON_CI: true
+          GO111MODULE: on
 
       - name: run unit tests
         run: make test-unit
