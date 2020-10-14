@@ -11,7 +11,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       
-        - name: build image
+      - name: build image
         run: |
           export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           echo $DOCKER_TAG
