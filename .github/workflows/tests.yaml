@@ -31,7 +31,7 @@ jobs:
           echo ${GOPATH} 
           go version
           ls -la
-          #mkdir ${HOME}/go
+          golangci-lint run ./...
           make test-lint
         env:
           RUN_ON_CI: true
