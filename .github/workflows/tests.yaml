@@ -10,6 +10,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+        - name: build image
+        run: |
+          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
+          echo $DOCKER_TAG
+          exit
 
       - name: Setup golang
         uses: actions/setup-go@v2
@@ -22,7 +28,7 @@ jobs:
 
       - name: build image
         run: |
-          export TAG=test
+          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           make build-all-images
         env:
           DEFAULT_BRANCH: devops-20201014
