@@ -26,6 +26,8 @@ jobs:
       - name: run linting
         run: | 
           echo ${RUN_ON_CI}
+          echo ${GO111MODULE}
+          go version
           make test-lint
         env:
           RUN_ON_CI: true
