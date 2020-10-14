@@ -27,7 +27,7 @@ jobs:
         run: | 
           echo ${RUN_ON_CI}
           echo ${GO111MODULE}
-          env
+          env |grep PATH
           echo ${GOPATH} 
           go version
           make test-lint
