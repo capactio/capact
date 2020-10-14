@@ -10,7 +10,11 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      -name: Setup golang
         uses: actions/setup-go@v2
+
+      -name: build image
         run: export TAG=test
         run: Makefile build-all-images
         env:
