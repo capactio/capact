@@ -22,7 +22,9 @@ jobs:
         uses: actions/setup-go@v2
 
       - name: run linting
-        run: make test-lint
+        run:  |
+          ls -la 
+          make test-lint
 
       - name: run unit tests
         run: make test-unit
