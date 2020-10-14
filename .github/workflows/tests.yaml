@@ -32,11 +32,12 @@ jobs:
           # go version
           # ls -la
           golangci-lint run ./...
-          make test-lint
+          go test -v ./...
+          #make test-lint
         env:
           RUN_ON_CI: true
           GO111MODULE: on
-          GOPATH: /home/runner/go
+          #GOPATH: /home/runner/go
 
       - name: run unit tests
         run: make test-unit
