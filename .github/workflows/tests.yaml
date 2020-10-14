@@ -30,6 +30,7 @@ jobs:
           env |grep PATH
           echo ${GOPATH} 
           go version
+          ls -la
           make test-lint
         env:
           RUN_ON_CI: true
