@@ -59,14 +59,23 @@ go mod download
 
 ### Run tests
 
-To run all unit and lint tests, execute the following command:
+To run all unit tests, execute:
 
 ```bash
 make test-unit
+```
+
+To run lint tests, execute:
+
+```bash
 make test-lint
 ```
 
-To run integration test on [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/), execute the following command:
+To fix reported issues, execute `make fix-lint-issues`.
+  
+> **NOTE:** The golangci-lint dependency can be installed by the script when you export `SKIP_DEPS_INSTALLATION=false` environment variable. By default, installation is skipped.  
+
+To run integration test on [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/), execute:
 
 ```bash
 make test-integration
@@ -80,7 +89,7 @@ To check if the code is correct and you can push it, use the `make` command. It 
 
 ### Test coverage
 
-To generate the unit test coverage HTML report, execute the following command: 
+To generate the unit test coverage HTML report, execute: 
 
 ```bash
 make test-cover-html
@@ -90,7 +99,7 @@ make test-cover-html
 
 ### Run development local cluster on `kind` 
 
-To create a `kind` cluster with preinstalled Voltron components, execute the following command:
+To create a `kind` cluster with preinstalled Voltron components, execute:
 ```
 make dev-cluster
 ```
@@ -99,7 +108,7 @@ make dev-cluster
 
 #### Update images
 
-To build Voltron Docker images with your changes and update them on dev cluster, execute the following command:
+To build Voltron Docker images with your changes and update them on dev cluster, execute:
 
 ```
 make dev-cluster-update
@@ -162,12 +171,12 @@ If you want to build and push Docker image for a single component, follow these 
 This project uses the [quicktype](https://github.com/quicktype/quicktype) library, which improves development by 
 generating Go code from the [JSON Schemas](ocf-spec/0.0.1/schema).
 
-Each time the specification is changed you can regenerate the Go struct. To do this, execute the following command:
+Each time the specification is changed you can regenerate the Go struct. To do this, execute:
 ```bash
 make gen-go-api
 ```
 
-To generate the Go structs for a specific OCF version, execute the following command:
+To generate the Go structs for a specific OCF version, execute:
 ```bash
 OCF_VERSION={VERSION} make gen-go-api
 ```
