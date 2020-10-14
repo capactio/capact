@@ -10,51 +10,52 @@ set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
 readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-readonly ROOT_PATH=${CURRENT_DIR}/..
+readonly ROOT_PATH=$(cd "${CURRENT_DIR}/.." && pwd)
 readonly GOLANGCI_LINT_VERSION="v1.31.0"
 
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
-golangci::install() {
-  shout "Install the golangci-lint in version ${GOLANGCI_LINT_VERSION}"
-  curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | bash -s -- -b "$GOPATH"/bin ${GOLANGCI_LINT_VERSION}
+SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
-  echo -e "${GREEN}√ install golangci-lint${NC}"
+golangci::install() {
+    readonly INSTALL_DIR=$(mktemp -d)
+    mkdir -p "${INSTALL_DIR}/bin"
+    export PATH="${INSTALL_DIR}/bin:${PATH}"
+
+    shout "Install the golangci-lint ${GOLANGCI_LINT_VERSION} locally to a tempdir..."
+    curl -sfSL -o ${INSTALL_DIR}/golangci-lint.sh https://install.goreleaser.com/github.com/golangci/golangci-lint.sh
+    chmod 700 ${INSTALL_DIR}/golangci-lint.sh
+
+    ${INSTALL_DIR}/golangci-lint.sh -b "${INSTALL_DIR}/bin" ${GOLANGCI_LINT_VERSION}
+
+    echo -e "${GREEN}√ install golangci-lint${NC}"
 }
 
 golangci::run_checks() {
-  GOT_VER=$(golangci-lint version --format=short 2>&1)
-  if [[ "v${GOT_VER}" != "${GOLANGCI_LINT_VERSION}" ]]; then
-    echo -e "${RED}✗ golangci-lint version mismatch, expected ${GOLANGCI_LINT_VERSION}, available ${GOT_VER} ${NC}"
+  if [ -z "$(command -v golangci-lint)" ]; then
+    echo "golangci-lint not found locally. Execute script with env variable SKIP_DEPS_INSTALLATION=false"
     exit 1
   fi
 
   shout "Run golangci-lint checks"
-  LINTS=(
-    # default golangci-lint lints
-    deadcode errcheck gosimple govet ineffassign staticcheck \
-    structcheck typecheck unused varcheck \
-    # additional lints
-    golint gofmt misspell gochecknoinits unparam scopelint gosec goimports
-  )
 
-  ENABLE=$(sed 's/ /,/g' <<< "${LINTS[@]}")
-
-  golangci-lint --tests=false --disable-all "$(golangci::fix_on_local)" --enable="${ENABLE}" run "${ROOT_PATH}/..."
+  # shellcheck disable=SC2046
+  golangci-lint run $(golangci::fix_if_requested) "${ROOT_PATH}/..."
 
   echo -e "${GREEN}√ run golangci-lint${NC}"
 }
 
-golangci::fix_on_local() {
-  if [[ "${RUN_ON_CI:-x}" == "true" ]]; then
-    return
+golangci::fix_if_requested() {
+  if [[ "${LINT_FORCE_FIX:-x}" == "true" ]]; then
+    echo --fix
   fi
-  echo "--fix"
 }
 
 main() {
-  if [[ "${RUN_ON_CI:-x}" == "true" ]]; then
-    golangci::install
+  if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
+      golangci::install
+  else
+      echo "Skipping golangci-lint installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
 
   golangci::run_checks
