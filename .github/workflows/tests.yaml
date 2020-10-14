@@ -1,6 +1,13 @@
 name: Build-Images
 
-on: push
+on: 
+  push:
+    paths:
+    - '**.go'
+    - '**.graphql'
+    - '**.yaml'
+    branches:    
+    - 'devops-20201014'
 
 jobs:
   build-image:
@@ -10,12 +17,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: build image
-        run: |
-          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-          echo $DOCKER_TAG
-          exit
 
       - name: Setup golang
         uses: actions/setup-go@v2
