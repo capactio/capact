@@ -17,7 +17,7 @@ jobs:
       - name: build image
         run: |
           export TAG=test
-          Makefile build-all-images
+          make build-all-images
         env:
           DEFAULT_BRANCH: devops-20201014
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
