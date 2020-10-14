@@ -31,6 +31,7 @@ jobs:
           # echo ${GOPATH} 
           # go version
           # ls -la
+          go mod download
           golangci-lint run ./...
           go test -v ./...
           #make test-lint
