@@ -15,9 +15,9 @@ jobs:
         uses: actions/setup-go@v2
 
       - name: build image
-        run: 
-        - export TAG=test
-        - Makefile build-all-images
+        run: |
+          export TAG=test
+          Makefile build-all-images
         env:
           DEFAULT_BRANCH: devops-20201014
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
