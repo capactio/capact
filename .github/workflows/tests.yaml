@@ -11,9 +11,9 @@ jobs:
       - name: Checkout code
       - uses: actions/checkout@v2
       - uses: actions/setup-go@v2
-      - run: export TAG=test
-      - run: Makefile build-all-images
-      - env:
+        run: export TAG=test
+        run: Makefile build-all-images
+        env:
           DEFAULT_BRANCH: devops-20201014
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
