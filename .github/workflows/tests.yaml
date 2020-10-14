@@ -31,11 +31,12 @@ jobs:
           echo ${GOPATH} 
           go version
           ls -la
-          mkdir ${HOME}/go
+          #mkdir ${HOME}/go
           make test-lint
         env:
           RUN_ON_CI: true
           GO111MODULE: on
+          GOPATH: /home/runner/go
 
       - name: run unit tests
         run: make test-unit
