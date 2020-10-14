@@ -14,6 +14,12 @@ jobs:
       - name: Setup golang
         uses: actions/setup-go@v2
 
+      - name: run linting
+        run: make test-lint
+
+      - name: run unit tests
+        run: make test-unit
+
       - name: build image
         run: |
           export TAG=test
