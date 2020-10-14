@@ -25,12 +25,12 @@ jobs:
 
       - name: run linting
         run: | 
-          echo ${RUN_ON_CI}
-          echo ${GO111MODULE}
-          env |grep PATH
-          echo ${GOPATH} 
-          go version
-          ls -la
+          # echo ${RUN_ON_CI}
+          # echo ${GO111MODULE}
+          # env |grep PATH
+          # echo ${GOPATH} 
+          # go version
+          # ls -la
           golangci-lint run ./...
           make test-lint
         env:
