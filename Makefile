@@ -8,12 +8,13 @@ export GOPROXY = https://proxy.golang.org
 DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron
 DOCKER_TAG ?= latest
 
-all: build-all-images test-spec test-unit test-lint
+all: generate build-all-images test-spec test-unit test-lint
 .PHONY: all
 
-#
-# Build components
-#
+############
+# Building #
+############
+
 APPS = gateway k8s-engine och
 TESTS = e2e
 INFRA = json-go-gen
@@ -61,9 +62,10 @@ push-infra-image-%:
 	docker push $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
 .PHONY: push-infra-image
 
-#
-# Test
-#
+###########
+# Testing #
+###########
+
 test-unit:
 	./hack/run-test-unit.sh
 .PHONY: test-unit
@@ -80,13 +82,32 @@ test-integration:
 	./hack/run-test-integration.sh
 .PHONY: test-integration
 
+test-k8s-controller:
+	./hack/run-test-k8s-controller.sh
+.PHONY: test-controller
+
 test-cover-html: test-unit
 	go tool cover -html=./coverage.txt
 .PHONY: test-cover-html
 
-#
-# Developer helpers
-#
+##############
+# Generating #
+##############
+
+generate: gen-go-api-from-ocf-spec gen-k8s-resources
+.PHONY: generate
+
+gen-go-api-from-ocf-spec:
+	./hack/gen-go-api-from-ocf-spec.sh
+.PHONY: gen-go-api
+
+gen-k8s-resources:
+	./hack/gen-k8s-resources.sh
+.PHONY: gen-k8s-resources
+
+###############
+# Development #
+###############
 dev-cluster:
 	./hack/run-dev-cluster.sh
 .PHONY: dev-cluster
@@ -98,10 +119,3 @@ dev-cluster-update:
 fix-lint-issues:
 	LINT_FORCE_FIX=true ./hack/run-lint.sh
 .PHONY: fix-lint
-
-#
-# Generators
-#
-gen-go-api:
-	./hack/gen-go-api.sh
-.PHONY: gen-go-api

@@ -33,7 +33,7 @@ func main() {
 		exitOnError(errWrongHubMode, "while validating hub mode")
 	}
 
-	http.HandleFunc("/statusz", func(w http.ResponseWriter, _ *http.Request) {
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := w.Write([]byte(msg)); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

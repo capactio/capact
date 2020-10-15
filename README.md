@@ -24,9 +24,11 @@ The repository has the following structure:
   │
   ├── ocf-spec                  # Open Capability Format Specification
   │
-  ├── pkg                       # Component related logic.
+  ├── pkg                       # Component related logic
   │ ├── db-populator            # Populates Voltron entities to graph database
-  │ ├── engine                  # Voltron platform-agnostic engine
+  │ ├── engine                  # Voltron engine
+  │ │ ├── api                   # Engine platform-agnostic api 
+  │ │ └── k8s                   # Code related to k8s platform engine implementation 
   │ ├── gateway                 # GraphQL Gateway
   │ ├── och                     # Open Capability Hub server 
   │ ├── runner                  # Voltron runners, e.g. Argo Workflow runner, Helm runner etc.
@@ -173,12 +175,12 @@ generating Go code from the [JSON Schemas](ocf-spec/0.0.1/schema).
 
 Each time the specification is changed you can regenerate the Go struct. To do this, execute:
 ```bash
-make gen-go-api
+make gen-go-api-from-ocf-spec
 ```
 
 To generate the Go structs for a specific OCF version, execute:
 ```bash
-OCF_VERSION={VERSION} make gen-go-api
+OCF_VERSION={VERSION} make gen-go-api-from-ocf-spec
 ```
 
 > **NOTE:** Go structs are generated in [`pkg/sdk/apis`](./pkg/sdk/apis) package.

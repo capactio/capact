@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script rebuilds Docker iamges from sources and upgrades Voltron Helm chart installed on cluster.
+# This script rebuilds Docker images from sources and upgrades Voltron Helm chart installed on cluster.
 #
 
 # standard bash error handling
@@ -13,7 +13,6 @@ readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 readonly TMP_DIR=$(mktemp -d)
 
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
 
 VOLTRON_NAMESPACE="voltron"
 VOLTRON_RELEASE_NAME="voltron"
@@ -21,7 +20,7 @@ VOLTRON_RELEASE_NAME="voltron"
 main() {
     shout "Update development local cluster..."
 
-    export UPDATE=true DOCKER_TAG=dev DOCKER_PUSH_REPOSITORY="local" REPO_DIR=$REPO_ROOT_DIR KIND_CLUSTER_NAME="kind-dev-voltron"
+    export UPDATE=true DOCKER_TAG="dev-$RANDOM" DOCKER_PUSH_REPOSITORY="local" REPO_DIR=$REPO_ROOT_DIR KIND_CLUSTER_NAME="kind-dev-voltron"
     voltron::install::from_sources
 
     shout "Development local cluster updated successfully."
