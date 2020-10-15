@@ -20,7 +20,7 @@ OCF_VERSION="${OCF_VERSION:-"0.0.1"}"
 
 main() {
     shout "Generating Go struct from OCF JSON Schemas..."
-    OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.go"
+    OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
 
     pushd "${REPO_ROOT_DIR}"
     rm -f "$OUTPUT"

@@ -1,0 +1,30 @@
+run:
+  tests: false
+  skip-files:
+    - ".*\\.gen\\.go$"
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - structcheck
+    - typecheck
+    - unused
+    - varcheck
+    - golint
+    - gofmt
+    - misspell
+    - gochecknoinits
+    - unparam
+    - scopelint
+    - gosec
+    - goimports
+    - whitespace
+    - bodyclose
+    - gocyclo
+
+  fast: false

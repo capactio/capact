@@ -95,6 +95,9 @@ dev-cluster-update:
 	./hack/run-dev-cluster-update.sh
 .PHONY: dev-cluster-update
 
+fix-lint-issues:
+	LINT_FORCE_FIX=true ./hack/run-lint.sh
+.PHONY: fix-lint
 
 #
 # Generators
