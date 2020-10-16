@@ -26,12 +26,6 @@ jobs:
           echo ${GO_VERSION}
           echo ${TEST}
 
-      - name: test setup
-        run: |
-          echo ${GO_VERSION}
-          echo ${TEST}
-          exit 1
-
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
