@@ -52,4 +52,5 @@ jobs:
           export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           gcloud auth configure-docker -q
           make push-all-images
+          echo qqq
 
