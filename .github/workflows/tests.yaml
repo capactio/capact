@@ -16,11 +16,12 @@ jobs:
 
     steps:    
       - name: Checkout code
+        run: export PROJECT_ID=projectvoltron
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
-          project_id: projectvoltron
+          project_id: ${{ env.PROJECT_ID }}
           export_default_credentials: true
 
       # - name: pull & push
@@ -57,4 +58,4 @@ jobs:
           export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           gcloud auth configure-docker -q
           make push-all-images
-          echo "finished"
+
