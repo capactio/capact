@@ -32,7 +32,7 @@ jobs:
 
       - name: Run linting
         run: | 
-          go mod download
+          echo qqq
           make test-lint
         env:
           SKIP_DEPS_INSTALLATION: false
