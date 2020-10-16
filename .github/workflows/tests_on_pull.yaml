@@ -1,11 +1,7 @@
 name: Build-Images
 
 on: 
-  push:
-    paths:
-    - '**.go'
-    - '**.graphql'
-    - '**.yaml'
+  pull:
     branches:    
     - 'devops-20201014'
 
@@ -15,41 +11,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Environment setup
-        run: |
-          pwd
-          ls -la
-          echo ${GO-VERSION}
-          . ./env_setup.sh
-      
       - name: Checkout code
         uses: actions/checkout@v2
 
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
-          go-version: ${GO-VERSION}
+          go-version: '^1.15.2'
 
-      - name: Run linting
+      - name: run linting
         run: | 
-          pwd
-          go version
-          echo ${TEST}
+          # echo ${RUN_ON_CI}
+          # echo ${GO111MODULE}
+          # env |grep PATH
+          # echo ${GOPATH} 
+          # go version
+          # ls -la
           go mod download
+          # golangci-lint run ./...
+          # go test -v ./...
           make test-lint
         env:
           RUN_ON_CI: true
           GO111MODULE: on
           GOPATH: /home/runner/go
 
-      - name: Run unit tests
+      - name: run unit tests
         run: make test-unit
 
       - name: build image
         run: |
-          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
+          export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
           make build-all-images
-        #env:
+        env:
+          PR_NUMBER: ${{ github.event.number }}
+
           #DEFAULT_BRANCH: devops-20201014
           #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         
