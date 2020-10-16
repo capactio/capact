@@ -17,17 +17,20 @@ jobs:
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          project_id: projectvoltron
-          export_default_credentials: true
+      # - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      #   with:
+      #     service_account_key: ${{ secrets.GCR_CREDS }}
+      #     project_id: projectvoltron
+      #     export_default_credentials: true
 
       - name: pull & push
         run: |
+          echo "${{ secrets.GCR_CREDS }}" >gcr.json
+          cat ./gcr.json | docker login -u _json_key --password-stdin 
           docker pull gcr.io/projectvoltron/och:latest
-          docker tag  gcr.io/projectvoltron/och:latest gcr.io/projectvoltron/och:test3
+          docker tag  gcr.io/projectvoltron/och:latest gcr.io/projectvoltron/och:test5
           docker image ls
+          exit 1
           gcloud auth configure-docker -q
           docker push gcr.io/projectvoltron/och:test3         
           exit 1
