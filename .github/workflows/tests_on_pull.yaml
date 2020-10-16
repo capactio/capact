@@ -52,5 +52,7 @@ jobs:
           export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
           gcloud auth configure-docker -q
           make push-all-images
+        env:
+          PR_NUMBER: ${{ github.event.number }}
 
         
