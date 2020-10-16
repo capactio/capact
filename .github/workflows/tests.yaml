@@ -17,7 +17,7 @@ jobs:
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           project_id: projectvoltron
