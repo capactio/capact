@@ -1,6 +1,10 @@
 name: Pull-Images
 
-on: pull_request
+on: 
+  pull_request:
+     branches:
+       - master
+       - 'devops-20201014'
 
 
 jobs:
