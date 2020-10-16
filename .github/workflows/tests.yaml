@@ -24,6 +24,7 @@ jobs:
           ls -la
           . ./env_setup.sh
           echo ${GO-VERSION}
+          echo ${TEST}
           exit 1
  
 
