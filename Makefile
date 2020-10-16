@@ -86,6 +86,10 @@ test-k8s-controller:
 	./hack/run-test-k8s-controller.sh
 .PHONY: test-controller
 
+test-generated:
+	./hack/run-test-generated.sh
+.PHONY: test-generated
+
 test-cover-html: test-unit
 	go tool cover -html=./coverage.txt
 .PHONY: test-cover-html
