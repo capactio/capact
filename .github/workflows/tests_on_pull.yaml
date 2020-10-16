@@ -2,8 +2,7 @@ name: Pull-Images
 
 on:
   pull_request: 
-    branches:    
-    - 'devops-20201014'
+
 
 jobs:
   build-image:
