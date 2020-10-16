@@ -15,12 +15,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Environment setup
-        run: |
-          pwd
-          ls -la
-          echo ${GO-VERSION}
-          . ./env_setup.sh
+      # - name: Environment setup
+      #   run: |
+      #     pwd
+      #     ls -la
+      #     echo ${GO-VERSION}
+      #     . ./env_setup.sh
       
       - name: Checkout code
         uses: actions/checkout@v2
@@ -32,15 +32,13 @@ jobs:
 
       - name: Run linting
         run: | 
-          pwd
-          go version
-          echo ${TEST}
           go mod download
           make test-lint
         env:
-          RUN_ON_CI: true
-          GO111MODULE: on
-          GOPATH: /home/runner/go
+          SKIP_DEPS_INSTALLATION=false
+          # RUN_ON_CI: true
+          # GO111MODULE: on
+          # GOPATH: /home/runner/go
 
       - name: Run unit tests
         run: make test-unit
