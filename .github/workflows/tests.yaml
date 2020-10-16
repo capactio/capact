@@ -23,19 +23,19 @@ jobs:
           pwd
           ls -la
           . ./env_setup.sh
-          echo ${GO-VERSION}
+          echo ${GO_VERSION}
           echo ${TEST}
-          exit 1
- 
+
 
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.15.2'
+          go-version: ${GO_VERSION}
 
       - name: Run linting
         run: | 
-          echo qqqq
+          go version
+          exit 1
           make test-lint
         env:
           SKIP_DEPS_INSTALLATION: false
