@@ -18,14 +18,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Environment setup
-        run: |
-          pwd
-          ls -la
-          . ./env_setup.sh
-          echo ${GO_VERSION}
-          echo ${TEST}
-
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
@@ -33,14 +25,9 @@ jobs:
 
       - name: Run linting
         run: | 
-          go version
-          exit 1
           make test-lint
         env:
           SKIP_DEPS_INSTALLATION: false
-          # RUN_ON_CI: true
-          # GO111MODULE: on
-          # GOPATH: /home/runner/go
 
       - name: Run unit tests
         run: make test-unit
@@ -49,7 +36,8 @@ jobs:
         run: |
           export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           make build-all-images
-        #env:
-          #DEFAULT_BRANCH: devops-20201014
-          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
+
+      - name: push image
+        run: |
+          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
+          make push-all-images
