@@ -18,7 +18,7 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	http.HandleFunc("/statusz", func(w http.ResponseWriter, _ *http.Request) {
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		if _, err := w.Write([]byte("GraphQL Voltron Gateway - OK")); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

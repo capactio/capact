@@ -12,7 +12,7 @@ spec:
       image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.integrationTest.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
       env:
         - name: STATUS_ENDPOINTS
-          value: "http://voltron-engine.{{.Release.Namespace}}.svc.cluster.local/statusz,http://voltron-gateway.{{.Release.Namespace}}.svc.cluster.local/statusz,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/statusz,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/statusz"
+          value: "http://voltron-engine.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/healthz"
       command:
         - /app
       args:

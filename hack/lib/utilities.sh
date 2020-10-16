@@ -24,6 +24,35 @@ dump_logs() {
     kubectl cluster-info dump --namespace=${DUMP_NAMESPACE} --output-directory=${LOGS_DIR}
 }
 
+# Installs kubebuilder dependency locally.
+# Required envs:
+#  - KUBEBUILDER_VERSION
+#  - INSTALL_DIR
+#
+# usage: env INSTALL_DIR=/tmp KUBEBUILDER_VERSION=v0.4.0 host::install::kubebuilder
+host::install::kubebuilder() {
+  shout "Install the kubebuilder ${KUBEBUILDER_VERSION} locally to a tempdir..."
+
+  export KUBEBUILDER_ASSETS="${INSTALL_DIR}/kubebuilder/bin"
+
+  os=$(host::os)
+  arch=$(host::arch)
+  name="kubebuilder_${KUBEBUILDER_VERSION}_${os}_${arch}"
+
+  pushd "${INSTALL_DIR}" || return
+
+  # download the release
+  curl -L -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBEBUILDER_VERSION}/${name}.tar.gz"
+
+  # extract the archive
+  tar -zxvf ${name}.tar.gz
+  mv ${name} kubebuilder
+
+  popd || return
+
+  echo -e "${GREEN}√ install kubebuilder${NC}"
+}
+
 # Installs kind dependency locally.
 # Required envs:
 #  - KIND_VERSION
