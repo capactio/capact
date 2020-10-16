@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
     - 'devops-20201014'
+    - 'master'
 
 
 jobs:
