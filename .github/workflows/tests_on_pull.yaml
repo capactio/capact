@@ -1,7 +1,7 @@
-name: Build-Images
+name: Pull-Images
 
 on: 
-  pull:
+  pull_request:     
     branches:    
     - 'devops-20201014'
 
@@ -21,15 +21,7 @@ jobs:
 
       - name: run linting
         run: | 
-          # echo ${RUN_ON_CI}
-          # echo ${GO111MODULE}
-          # env |grep PATH
-          # echo ${GOPATH} 
-          # go version
-          # ls -la
           go mod download
-          # golangci-lint run ./...
-          # go test -v ./...
           make test-lint
         env:
           RUN_ON_CI: true
@@ -39,6 +31,9 @@ jobs:
       - name: run unit tests
         run: make test-unit
 
+      - name: run unit tests
+        run: make test-unit
+        
       - name: build image
         run: |
           export DOCKER_TAG=PR-$(echo ${PR_NUMBER})

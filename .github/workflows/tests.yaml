@@ -49,6 +49,9 @@ jobs:
       - name: Run unit tests
         run: make test-unit
 
+      - name: Run generation
+        run: make gen-go-api
+        
       - name: build image
         run: |
           export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
