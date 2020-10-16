@@ -22,7 +22,9 @@ jobs:
         run: |
           docker pull gcr.io/projectvoltron/och:latest
           docker tag  gcr.io/projectvoltron/och:latest gcr.io/projectvoltron/och:test3
-          gcloud auth activate-service-account --key-file ${{secrets.GCR_CREDS}}
+          echo ${{secrets.GCR_CREDS}} >gcr.json
+          cat gcr.json
+          gcloud auth activate-service-account --key-file gcr.json
           docker push gcr.io/projectvoltron/och:test3
           exit 1
 
