@@ -2,10 +2,6 @@ name: Pull-Images
 
 on:
   pull_request: 
-    paths:
-    - '**.go'
-    - '**.graphql'
-    - '**.yaml'
     branches:    
     - 'devops-20201014'
 
