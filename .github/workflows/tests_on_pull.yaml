@@ -1,7 +1,11 @@
 name: Pull-Images
 
-on: 
-  pull_request:     
+on:
+  pull_request: 
+    paths:
+    - '**.go'
+    - '**.graphql'
+    - '**.yaml'
     branches:    
     - 'devops-20201014'
 
@@ -9,38 +13,46 @@ jobs:
   build-image:
     name: Build docker image
     runs-on: ubuntu-latest
+    env: 
+      PROJECT_ID: projectvoltron
 
-    steps:
+    steps:    
       - name: Checkout code
         uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          project_id: ${{ env.PROJECT_ID }}
+          export_default_credentials: true
 
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
-          go-version: '^1.15.2'
+          go-version: ${{secrets.GO_VERSION}}
 
-      - name: run linting
+      - name: Run linting
         run: | 
-          go mod download
           make test-lint
         env:
-          RUN_ON_CI: true
-          GO111MODULE: on
-          GOPATH: /home/runner/go
+          SKIP_DEPS_INSTALLATION: false
 
-      - name: run unit tests
+      - name: Run unit tests
         run: make test-unit
 
-      - name: run unit tests
-        run: make test-unit
-        
+      - name: Run generation
+        run: make gen-go-api
+      
       - name: build image
         run: |
           export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
           make build-all-images
         env:
           PR_NUMBER: ${{ github.event.number }}
+      
+      - name: push image
+        run: |
+          export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
+          gcloud auth configure-docker -q
+          make push-all-images
 
-          #DEFAULT_BRANCH: devops-20201014
-          #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         

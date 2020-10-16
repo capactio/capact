@@ -25,16 +25,6 @@ jobs:
           project_id: ${{ env.PROJECT_ID }}
           export_default_credentials: true
 
-      # - name: pull & push
-      #   run: |
-      #     docker pull gcr.io/projectvoltron/och:latest
-      #     docker tag  gcr.io/projectvoltron/och:latest gcr.io/projectvoltron/och:test3
-      #     docker image ls
-      #     gcloud auth configure-docker -q
-      #     docker push gcr.io/projectvoltron/och:test3         
-      #     exit 1
-
-
       - name: Setup golang
         uses: actions/setup-go@v2
         with:
