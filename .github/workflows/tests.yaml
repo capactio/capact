@@ -13,10 +13,11 @@ jobs:
   build-image:
     name: Build docker image
     runs-on: ubuntu-latest
+    env: 
+      PROJECT_ID: projectvoltron
 
     steps:    
       - name: Checkout code
-        run: export PROJECT_ID=projectvoltron
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
