@@ -14,16 +14,18 @@ jobs:
     name: Build docker image
     runs-on: ubuntu-latest
 
-    steps:
-      # - name: Environment setup
-      #   run: |
-      #     pwd
-      #     ls -la
-      #     echo ${GO-VERSION}
-      #     . ./env_setup.sh
-      
+    steps:    
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Environment setup
+        run: |
+          pwd
+          ls -la
+          . ./env_setup.sh
+          echo ${GO-VERSION}
+          exit 1
+ 
 
       - name: Setup golang
         uses: actions/setup-go@v2
