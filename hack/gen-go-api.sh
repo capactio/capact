@@ -20,12 +20,12 @@ OCF_VERSION="${OCF_VERSION:-"0.0.1"}"
 
 main() {
     shout "Generating Go struct from OCF JSON Schemas..."
-    OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
+    export OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
 
     pushd "${REPO_ROOT_DIR}"
     rm -f "$OUTPUT"
 
-    docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
+    docker run -v "$PWD:/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
       --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json \
       --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json \
       --src /local/ocf-spec/${OCF_VERSION}/schema/interface.json \
