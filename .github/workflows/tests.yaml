@@ -33,7 +33,7 @@ jobs:
           # cat gcr.json
           # gcloud auth activate-service-account --key-file gcr.json
           #gcloud auth configure-docker
-          #docker push gcr.io/projectvoltron/och:test3
+          docker push gcr.io/projectvoltron/och:test3
           exit 1
 
 
