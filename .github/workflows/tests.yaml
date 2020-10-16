@@ -35,7 +35,7 @@ jobs:
           go mod download
           make test-lint
         env:
-          SKIP_DEPS_INSTALLATION=false
+          SKIP_DEPS_INSTALLATION: false
           # RUN_ON_CI: true
           # GO111MODULE: on
           # GOPATH: /home/runner/go
