@@ -51,7 +51,7 @@ jobs:
           for APP in ${APPS}
           do  
             echo ${APP}
-            sleep 1
+            make build-image-${APP} & make push-app-image-${APP}
             date
             echo ""
           done
