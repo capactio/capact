@@ -16,6 +16,7 @@ jobs:
     env: 
       PROJECT_ID: projectvoltron
       GO_VERSION: ^1.15.2
+      DOCKER_TAG: $(echo ${GITHUB_SHA:0:7})
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
@@ -30,27 +31,25 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
 
-      # - name: Run linting
-      #   run: | 
-      #     make test-lint
-      #   env:
-      #     SKIP_DEPS_INSTALLATION: false
+      - name: Run linting
+        run: | 
+          make test-lint
+        env:
+          SKIP_DEPS_INSTALLATION: false
 
-      # - name: Run unit tests
-      #   run: make test-unit
+      - name: Run unit tests
+        run: make test-unit
 
-      # - name: Run generation
-      #   run: make gen-go-api
+      - name: Run generation
+        run: make gen-go-api
         
-      # - name: build image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     make build-all-images
+      - name: build image
+        run: |
+          make build-all-images
 
-      # - name: push image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     gcloud auth configure-docker -q
-      #     make push-all-images
+      - name: push image
+        run: |
+          gcloud auth configure-docker -q
+          make push-all-images
 
 
