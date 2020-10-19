@@ -1,62 +1,62 @@
-name: Pull-Images
+# name: Pull-Images
 
-on: 
-  pull_request:
-    paths:
-    - '**.go'
-    - '**.graphql'
-    - '**.yaml'
-    branches:
-    - 'devops-20201014'
-    - 'master'
+# on: 
+#   pull_request:
+#     paths:
+#     - '**.go'
+#     - '**.graphql'
+#     - '**.yaml'
+#     branches:
+#     - 'devops-20201014'
+#     - 'master'
 
 
-jobs:
-  build-image:
-    name: Build docker image
-    runs-on: ubuntu-latest
-    env: 
-      PROJECT_ID: projectvoltron
+# jobs:
+#   build-image:
+#     name: Build docker image
+#     runs-on: ubuntu-latest
+#     env: 
+#       PROJECT_ID: projectvoltron
 
-    steps:    
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          project_id: ${{ env.PROJECT_ID }}
-          export_default_credentials: true
+#     steps:    
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+#       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+#         with:
+#           service_account_key: ${{ secrets.GCR_CREDS }}
+#           project_id: ${{ env.PROJECT_ID }}
+#           export_default_credentials: true
 
-      - name: Setup golang
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{secrets.GO_VERSION}}
+#       - name: Setup golang
+#         uses: actions/setup-go@v2
+#         with:
+#           go-version: ${{secrets.GO_VERSION}}
 
-      - name: Run linting
-        run: | 
-          make test-lint
-        env:
-          SKIP_DEPS_INSTALLATION: false
+#       - name: Run linting
+#         run: | 
+#           make test-lint
+#         env:
+#           SKIP_DEPS_INSTALLATION: false
 
-      - name: Run unit tests
-        run: make test-unit
+#       - name: Run unit tests
+#         run: make test-unit
 
-      - name: Run generation
-        run: make gen-go-api
+#       - name: Run generation
+#         run: make gen-go-api
       
-      - name: build image
-        run: |
-          export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
-          make build-all-images
-        env:
-          PR_NUMBER: ${{ github.event.number }}
+#       - name: build image
+#         run: |
+#           export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
+#           make build-all-images
+#         env:
+#           PR_NUMBER: ${{ github.event.number }}
       
-      - name: push image
-        run: |
-          export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
-          gcloud auth configure-docker -q
-          make push-all-images
-        env:
-          PR_NUMBER: ${{ github.event.number }}
+#       - name: push image
+#         run: |
+#           export DOCKER_TAG=PR-$(echo ${PR_NUMBER})
+#           gcloud auth configure-docker -q
+#           make push-all-images
+#         env:
+#           PR_NUMBER: ${{ github.event.number }}
 
         
