@@ -19,12 +19,14 @@ import (
 func TestExampleSuccess(t *testing.T) {
 	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
-	common := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/json-schema-type.json"))
-	require.NoError(t, sl.AddSchemas(common))
-	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
-	require.NoError(t, sl.AddSchemas(common))
-	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata-tags.json"))
-	require.NoError(t, sl.AddSchemas(common))
+
+	schemaRefPaths := []string{
+		"../schema/common/json-schema-type.json",
+		"../schema/common/metadata.json",
+		"../schema/common/metadata-tags.json",
+	}
+	err := loadCommonSchemas(sl, schemaRefPaths)
+	require.NoError(t, err, "while loading common schemas")
 
 	tests := map[string]struct {
 		jsonSchemaPath string
@@ -106,4 +108,14 @@ func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
 			t.Errorf("- %s\n", desc.String())
 		}
 	}
+}
+
+func loadCommonSchemas(schemaLoader *gojsonschema.SchemaLoader, paths []string) error {
+	var jsonLoaders []gojsonschema.JSONLoader
+	for _, path := range paths {
+		jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
+		jsonLoaders = append(jsonLoaders, jsonLoader)
+	}
+
+	return schemaLoader.AddSchemas(jsonLoaders...)
 }
