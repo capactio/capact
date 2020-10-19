@@ -24,7 +24,7 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GCR_CREDS }}
 
-      - name: setup env
+      - name: Setup env
         run: |
           . ./env_setup.sh
           echo ${{ github.event.number }}
@@ -46,7 +46,7 @@ jobs:
       - name: Run generation
         run: make gen-go-api
         
-      - name: build & push image
+      - name: Build & push image
         run: |
           for APP in ${APPS}
           do
