@@ -51,7 +51,7 @@ jobs:
           for APP in ${APPS}
           do
           echo "Building and pushing ${APP}"
-          make build-app-image-${APP} && make push-app-image-${APP}
+          make build-app-image-och && make push-app-image-och
           done
           
 
