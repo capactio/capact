@@ -1,58 +1,58 @@
-name: Run-Integration-Tests
+# name: Run-Integration-Tests
 
-on: 
-  push:
-    paths:
-    - '**.go'
-    - '**.graphql'
-    - '**.yaml'
-    branches:    
-    - 'devops-20201014'
+# on: 
+#   push:
+#     paths:
+#     - '**.go'
+#     - '**.graphql'
+#     - '**.yaml'
+#     branches:    
+#     - 'devops-20201014'
 
-jobs:
-  build-image:
-    name: Integration tests
-    runs-on: ubuntu-latest
-    env: 
-      PROJECT_ID: projectvoltron
-      GO_VERSION: ^1.15.2
+# jobs:
+#   build-image:
+#     name: Integration tests
+#     runs-on: ubuntu-latest
+#     env: 
+#       PROJECT_ID: projectvoltron
+#       GO_VERSION: ^1.15.2
       
-    steps:    
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          project_id: ${{ env.PROJECT_ID }}
-          export_default_credentials: true
+#     steps:    
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+#       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+#         with:
+#           service_account_key: ${{ secrets.GCR_CREDS }}
+#           project_id: ${{ env.PROJECT_ID }}
+#           export_default_credentials: true
 
-      - name: Setup golang
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
+#       - name: Setup golang
+#         uses: actions/setup-go@v2
+#         with:
+#           go-version: ${{env.GO_VERSION}}
 
-      - name: Run unit tests
-        run: | 
-          export DOCKER_TAG=d49953f
-          make test-integration
-        env:
-          SKIP_DEPS_INSTALLATION: false
+#       - name: Run unit tests
+#         run: | 
+#           export DOCKER_TAG=d49953f
+#           make test-integration
+#         env:
+#           SKIP_DEPS_INSTALLATION: false
 
-      # - name: Run unit tests
-      #   run: make test-unit
+#       # - name: Run unit tests
+#       #   run: make test-unit
 
-      # - name: Run generation
-      #   run: make gen-go-api
+#       # - name: Run generation
+#       #   run: make gen-go-api
         
-      # - name: build image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     make build-all-images
+#       # - name: build image
+#       #   run: |
+#       #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
+#       #     make build-all-images
 
-      # - name: push image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     gcloud auth configure-docker -q
-      #     make push-all-images
+#       # - name: push image
+#       #   run: |
+#       #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
+#       #     gcloud auth configure-docker -q
+#       #     make push-all-images
 
 
