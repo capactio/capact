@@ -58,15 +58,5 @@ jobs:
       - name: Archive build images log
         uses: actions/upload-artifact@v2
         with:
-          name: Docker-logs
-          path: *.log
-
-          
-
-
-      # - name: push image
-      #   run: |
-      #     gcloud auth configure-docker --project ${PROJECT_ID} -q
-      #     make push-all-images
-
-
+          name: docker-logs
+          path: /*.log
