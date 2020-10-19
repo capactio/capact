@@ -13,11 +13,12 @@ jobs:
   build-image:
     name: Build docker image
     runs-on: ubuntu-latest
-    env: 
-      PROJECT_ID: projectvoltron
-      GO_VERSION: ^1.15.2
+
       
     steps:    
+      - name: setup env
+        run: . ./env_setup.sh
+
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
@@ -45,12 +46,10 @@ jobs:
         
       - name: build image
         run: |
-          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           make build-all-images
 
       - name: push image
         run: |
-          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           gcloud auth configure-docker -q
           make push-all-images
 
