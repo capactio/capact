@@ -12,3 +12,13 @@ spec:
     revision: 1.0.0
   value:
     version: "1.18.10"
+  instrumentation:
+    metrics:
+      url: https://foo.bar:3000/metrics
+      regex: "^(go_gc_duration_seconds|go_goroutines|go_memstats_alloc_bytes|go_memstats_heap_alloc_bytes)$"
+      dashboards:
+        - url: https://grafana.foo.bar/d/foo/bar"
+        - url: https://grafana.foo.bar/d/baz/qux"
+    health:
+      url: https://foo.bar/healthz
+      method: GET

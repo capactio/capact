@@ -56,7 +56,7 @@
             "tags": {
               "$id": "#/properties/metadata/properties/tags",
               "type": "object",
-              "description": "The tags is a list of key value, OCF Tags. They provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
+              "description": "The tags is a list of key value, OCF Tags. It provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
               "additionalProperties": {
                 "type": "object",
                 "required": [

@@ -43,7 +43,7 @@
         "tags": {
           "$id": "#/properties/metadata/properties/tags",
           "type": "object",
-          "description": "The tags is a list of key value, OCF Tags. They provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
+          "description": "The tags is a list of key value, OCF Tags. It provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
           "additionalProperties": {
             "type": "object",
             "required": [
@@ -95,7 +95,75 @@
         "value": {
           "$id": "#/properties/spec/properties/value",
           "type": "object",
-          "description": "Holds the configuration constraints for the given Type. It needs to be valid against the Type JSONSchema."
+          "description": "Holds the JSON object for a given TypeInstance with arbitrary data. It needs to be valid against the Type JSONSchema."
+        },
+        "instrumentation": {
+          "$id": "#/properties/spec/properties/instrumentation",
+          "description": "Holds the details about instrumentation for given Type Instance",
+          "type": "object",
+          "properties": {
+            "metrics": {
+              "$id": "#/properties/spec/properties/instrumentation/metrics",
+              "description": "Details about metrics exposed for a given TypeInstance",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/url",
+                  "description": "URL of metrics endpoint",
+                  "type": "string",
+                  "format": "uri"
+                },
+                "regex": {
+                  "type": "string",
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/regex",
+                  "description": "Regex for exposed metrics"
+                },
+                "dashboards": {
+                  "type": "array",
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards",
+                  "description": "Metrics dashboards",
+                  "items": [
+                    {
+                      "properties": {
+                        "url": {
+                          "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards/0/url",
+                          "description": "URL of metrics dashboard",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            "health": {
+              "$id": "#/properties/spec/properties/instrumentation/health",
+              "description": "Details about health of a given TypeInstance",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "$id": "#/properties/spec/properties/instrumentation/health/url",
+                  "description": "URL of health endpoint",
+                  "type": "string",
+                  "format": "uri"
+                },
+                "method": {
+                  "$id": "#/properties/spec/properties/instrumentation/health/method",
+                  "description": "Method of HTTP request",
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST"
+                  ]
+                }
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false
