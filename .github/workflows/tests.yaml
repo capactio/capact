@@ -51,7 +51,8 @@ jobs:
           for APP in ${APPS}
           do  
             echo ${APP}
-            make build-app-image-${APP} && make push-app-image-${APP} >build_${APP}.log 2>&1 &
+            make build-app-image-${APP} >build_${APP}.log 2>&1 \
+            && make push-app-image-${APP} >build_${APP}.log 2>&1 &
           done
           wait
 
