@@ -10,10 +10,11 @@ set -o pipefail
 readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 
+# shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 voltron::generate() {
-  pushd $REPO_ROOT_DIR
+  pushd "$REPO_ROOT_DIR"
   make generate
   popd
 }

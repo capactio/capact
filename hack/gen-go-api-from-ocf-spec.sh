@@ -13,11 +13,13 @@ set -E         # needs to be set if we want the ERR trap
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
 
+# shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 OCF_VERSION="${OCF_VERSION:-"0.0.1"}"
 
-REPORT_FILENAME="${REPO_ROOT_DIR}/tmp/gen_go_api_issues.txt"
+REPORT_FILE_DIR="${REPO_ROOT_DIR}/tmp"
+REPORT_FILENAME="${REPORT_FILE_DIR}/gen_go_api_issues.txt"
 KNOWN_VIOLATION_FILENAME="${CURRENT_DIR}/gen_go_api_issue_exceptions.txt"
 
 check_for_unknown_issues() {
@@ -36,22 +38,23 @@ check_for_unknown_issues() {
 gen_go_api_from_ocf_specs() {
   shout "Generating Go struct from OCF JSON Schemas..."
   OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
+  mkdir -p "${REPORT_FILE_DIR}"
 
   pushd "${REPO_ROOT_DIR}"
   rm -f "$OUTPUT"
 
   docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
-      --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json \
-      --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json \
-      --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/interface.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/implementation.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/tag.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/type.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/type-instance.json \
-    --src /local/ocf-spec/${OCF_VERSION}/schema/vendor.json \
-    -o "/local/$OUTPUT" 2>${REPORT_FILENAME}
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/interface.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/implementation.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/tag.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/type.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/type-instance.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \
+    -o "/local/$OUTPUT" 2> "${REPORT_FILENAME}"
 
   popd
   shout "Generation completed successfully."

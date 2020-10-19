@@ -17,7 +17,9 @@ readonly TMP_DIR=$(mktemp -d)
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
+# shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.' exit 1; }
+# shellcheck source=./hack/lib/deps_ver.sh
 source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load CI utilities.' exit 1; }
 
 cleanup() {
@@ -33,7 +35,7 @@ host::install::controller-gen() {
     export PATH="${TMP_DIR}/bin:${PATH}"
     export GOBIN="${TMP_DIR}/bin"
 
-    pushd $TMP_DIR >/dev/null
+    pushd "$TMP_DIR" >/dev/null
 
     go mod init tmp
     go get sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN
@@ -57,8 +59,8 @@ main() {
 
   controller-gen object crd:trivialVersions=true rbac:roleName=k8s-engine-role \
     paths="$REPO_ROOT_DIR/..." \
-    output:crd:artifacts:config=$CRDS_OUTPUT \
-    output:rbac:artifacts:config=$RBAC_OUTPUT
+    output:crd:artifacts:config="$CRDS_OUTPUT" \
+    output:rbac:artifacts:config="$RBAC_OUTPUT"
 
   echo "CRDs manifests saved in $CRDS_OUTPUT"
   echo "RBAC manifest saved in $RBAC_OUTPUT"
