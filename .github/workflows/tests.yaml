@@ -25,7 +25,8 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          PROJECT_ID: ${{ env.PROJECT_ID }}
+          project_id: ${{ env.PROJECT_ID }}
+          service_account_key: ${{ secrets.GCR_CREDS }}
 
       - name: setup env
         run: . ./env_setup.sh
