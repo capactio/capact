@@ -85,11 +85,7 @@
           ],
           "properties": {
             "tags": {
-              "allOf": [
-                {
-                  "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
-                }
-              ]
+              "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
             },
             "license": {
               "$id": "#/properties/metadata/properties/license",

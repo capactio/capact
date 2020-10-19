@@ -41,11 +41,7 @@
           "description": "The unique identifier of a given TypeInstance."
         },
         "tags": {
-          "allOf": [
-            {
-              "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
-            }
-          ]
+          "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
         }
       },
       "additionalProperties": false

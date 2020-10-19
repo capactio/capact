@@ -184,6 +184,9 @@ type License struct {
 	Ref  *string `json:"ref,omitempty"` // If you are using a license that hasn’t been assigned an SPDX identifier, or if you are; using a custom license, use the direct link to the license file e.g.; https://raw.githubusercontent.com/project/v1/license.md. The resource under given link; MUST be immutable and publicly accessible.
 }
 
+// The tag object contains OCF Tags references. It provides generic categorization for
+// Implementations, Types and TypeInstances. Tags are used to filter out a specific
+// Implementation.
 type MetadataTag struct {
 	Revision string `json:"revision"`// The exact Tag revision.
 }

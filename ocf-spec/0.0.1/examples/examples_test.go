@@ -111,11 +111,13 @@ func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
 }
 
 func loadCommonSchemas(schemaLoader *gojsonschema.SchemaLoader, paths []string) error {
-	var jsonLoaders []gojsonschema.JSONLoader
 	for _, path := range paths {
 		jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
-		jsonLoaders = append(jsonLoaders, jsonLoader)
+		err := schemaLoader.AddSchemas(jsonLoader)
+		if err != nil {
+			return err
+		}
 	}
 
-	return schemaLoader.AddSchemas(jsonLoaders...)
+	return nil
 }

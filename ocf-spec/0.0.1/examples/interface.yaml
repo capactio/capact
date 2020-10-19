@@ -27,7 +27,7 @@ spec:
               "revision": "1.0.0"
             }
           },
-          "allOf": [ { "$ref": "#/$ocf/inputType" } ]
+          "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
         }
   output:
     jsonSchema:
@@ -40,7 +40,7 @@ spec:
               "revision": "1.0.0"
             }
           },
-          "allOf": [ { "$ref": "#/$ocf/outputType" } ]
+          "allOf": [ { "$ref": "#/$ocfRefs/outputType" } ]
         }
 
 
