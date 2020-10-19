@@ -48,6 +48,7 @@ jobs:
         
       - name: Build & push image
         run: |
+          gcloud auth configure-docker --project ${PROJECT_ID} -q
           make build-app-image-och && make push-app-image-och
 
           
