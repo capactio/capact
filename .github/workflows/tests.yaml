@@ -48,11 +48,8 @@ jobs:
         
       - name: Build & push image
         run: |
-          for APP in ${APPS}
-          do
-          echo "Building and pushing ${APP}"
           make build-app-image-och && make push-app-image-och
-          done
+
           
 
 
