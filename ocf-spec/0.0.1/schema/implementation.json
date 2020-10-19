@@ -256,7 +256,23 @@
                 "description": "The list of all required actions’ names that must be imported.",
                 "additionalItems": false,
                 "items": {
-                  "type": "string"
+                  "type": "object",
+                  "required": [
+                    "name"
+                  ],
+                  "properties": {
+                    "name": {
+                      "$id": "#/properties/imports/items/0/properties/methods/0/name",
+                      "type": "string",
+                      "description": "The name of the action for a given Interface group, e.g. install"
+                    },
+                    "revision": {
+                      "$id": "#/properties/imports/items/0/properties/methods/0/revision",
+                      "type": "string",
+                      "description": "Revision of the Interface for a given action. If not specified, the latest revision is used."
+                    }
+                  },
+                  "additionalProperties": false
                 }
               }
             },
