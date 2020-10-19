@@ -16,7 +16,7 @@ jobs:
     env: 
       PROJECT_ID: projectvoltron
       GO_VERSION: ^1.15.2
-      DOCKER_TAG: $(echo ${GITHUB_SHA:0:7})
+      
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
@@ -45,15 +45,13 @@ jobs:
         
       - name: build image
         run: |
+          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           make build-all-images
-        env: 
-          DOCKER_TAG: {{ env.GITHUB_SHA }}
 
       - name: push image
         run: |
+          export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
           gcloud auth configure-docker -q
           make push-all-images
-        env: 
-          DOCKER_TAG: {{ env.GITHUB_SHA }}
 
 
