@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://projectvoltron.dev/schemas/type-instance.json",
   "type": "object",
-  "description": "The root schema comprises the entire JSON document.",
+  "description": "TypeInstance is an instance a given Type. It stores JSON object that is valid against JSON Schema from Type.",
   "required": [
     "ocfVersion",
     "kind",
