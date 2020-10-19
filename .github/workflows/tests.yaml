@@ -13,6 +13,8 @@ jobs:
   build-image:
     name: Build docker image
     runs-on: ubuntu-latest
+    env:
+      PROJECT_ID: projectvoltron
 
       
     steps:    
@@ -23,6 +25,7 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
+          PROJECT_ID: ${{ env.PROJECT_ID }}
 
       - name: setup env
         run: . ./env_setup.sh
