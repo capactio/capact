@@ -47,13 +47,13 @@ jobs:
         run: |
           make build-all-images
         env: 
-          DOCKER_TAG: {{ env.GITHUB_SHA:0:7 }}
+          DOCKER_TAG: {{ env.GITHUB_SHA }}
 
       - name: push image
         run: |
           gcloud auth configure-docker -q
           make push-all-images
         env: 
-          DOCKER_TAG: {{ env.GITHUB_SHA:0:7 }}
+          DOCKER_TAG: {{ env.GITHUB_SHA }}
 
 
