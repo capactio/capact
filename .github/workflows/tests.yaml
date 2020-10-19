@@ -44,6 +44,8 @@ jobs:
 
       - name: Run generation
         run: make test-generated
+        env:
+          SKIP_DEPS_INSTALLATION: false
         
       - name: Build & push image
         run: |
