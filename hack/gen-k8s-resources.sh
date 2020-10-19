@@ -47,9 +47,8 @@ main() {
   if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
     host::install::controller-gen
   else
-    echo "Skipping golangci-lint installation cause SKIP_DEPS_INSTALLATION is set to true."
+    echo "Skipping controller-gen installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
-
 
   shout "Generating Kubernetes related resources..."
 
