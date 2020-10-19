@@ -17,13 +17,13 @@ metadata:
       name: Foo Bar
       url: https://examples.com/foo/bar
   tags:
-    cap.core.tag.environment.cloud:
-      revision: "1.0.1"
+    cap.tag.cncf.graduated:
+      revision: "1.0.0"
 spec:
   additionalRefs:
     - cap.core.type.platform
   jsonSchema:
-    value: -|
+    value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "$id": "http://example.com/example.json",

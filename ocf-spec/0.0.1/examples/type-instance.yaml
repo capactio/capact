@@ -1,17 +1,14 @@
 ocfVersion: 0.0.1
-revision: 0.0.1
+resourceVersion: 2
 kind: TypeInstance
 metadata:
-  name: kubernetes
-  prefix: cap.instance.type.platform  # Computed during fetching the manifest
+  id: 461a1c83-6054-43dd-8a4c-49acde791699
   tags:
-    cap.core.tag.workload.stateless:
-      revision: "1.0.1"
+    cap.tag.cncf.graduated:
+      revision: "1.0.0"
 spec:
   typeRef:
     path: cap.core.type.platform.kubernetes
     revision: 1.0.0
-  value: -|
-    {
-      "version": "1.18.10"
-    }
+  value:
+    version: "1.18.10"

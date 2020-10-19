@@ -87,7 +87,7 @@
             "tags": {
               "$id": "#/properties/metadata/properties/tags",
               "type": "object",
-              "description": "The tags is a list of key value, OCF Tags. Describes the OCF Implementation (provides generic categorization) and are used to filter out a specific Implementation.",
+              "description": "The tags is a list of key value, OCF Tags. They provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
               "additionalProperties": {
                 "type": "object",
                 "required": [
@@ -95,6 +95,8 @@
                 ],
                 "properties": {
                   "revision": {
+                    "minLength": 5,
+                    "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
                     "description": "The exact Tag revision.",
                     "type": "string"
                   }
@@ -228,11 +230,11 @@
             "$id": "#/properties/imports/items",
             "type": "object",
             "required": [
-              "interfaceGroupName",
+              "interfaceGroupPath",
               "methods"
             ],
             "properties": {
-              "interfaceGroupName": {
+              "interfaceGroupPath": {
                 "$id": "#/properties/imports/items/0/properties/name",
                 "type": "string",
                 "description": "The name of the Interface Group that contains specific actions that you want to import, for example cap.interfaces.db.mysql"
@@ -269,6 +271,8 @@
                     "revision": {
                       "$id": "#/properties/imports/items/0/properties/methods/0/revision",
                       "type": "string",
+                      "minLength": 5,
+                      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
                       "description": "Revision of the Interface for a given action. If not specified, the latest revision is used."
                     }
                   },

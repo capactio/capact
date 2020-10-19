@@ -32,22 +32,33 @@
     "metadata": {
       "type": "object",
       "required": [
-        "name",
-        "prefix"
+        "id"
       ],
       "properties": {
-        "name": {
-          "$id": "#/properties/metadata/properties/name",
+        "id": {
+          "$id": "#/properties/metadata/properties/id",
           "type": "string",
-          "description": "The name of OCF manifest that uniquely identifies this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name."
+          "description": "The unique identifier of a given TypeInstance."
         },
-        "prefix": {
-          "$comment": "TODO: How to restrict prefix to be set only by controller?",
-          "$id": "#/properties/metadata/properties/prefix",
-          "type": "string",
-          "description": "The prefix value is automatically computed and set when storing manifest in OCH."
+        "tags": {
+          "$id": "#/properties/metadata/properties/tags",
+          "type": "object",
+          "description": "The tags is a list of key value, OCF Tags. They provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "revision"
+            ],
+            "properties": {
+              "revision": {
+                "description": "The exact Tag revision.",
+                "type": "string"
+              }
+            }
+          }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "spec": {
       "$id": "#/properties/spec",
@@ -59,9 +70,27 @@
       ],
       "properties": {
         "typeRef": {
-          "$id": "#/properties/spec/properties/createdFrom",
-          "type": "string",
-          "description": "The full path to the Type form which this instance was created."
+          "$id": "#/properties/spec/properties/typeRef",
+          "type": "object",
+          "description": "The full path to the Type form which this instance was created.",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$id": "#/properties/spec/properties/typeRef/0/path",
+              "type": "string",
+              "description": "Path of a given Type"
+            },
+            "revision": {
+              "$id": "#/properties/spec/properties/typeRef/0/revision",
+              "type": "string",
+              "description": "Version of the manifest content in the SemVer format.",
+              "minLength": 5,
+              "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$"
+            }
+          },
+          "additionalProperties": false
         },
         "value": {
           "$id": "#/properties/spec/properties/value",
