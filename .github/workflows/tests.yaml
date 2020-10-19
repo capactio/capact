@@ -43,7 +43,7 @@ jobs:
         run: make test-unit
 
       - name: Run generation
-        run: make gen-go-api
+        run: make test-generated
         
       - name: Build & push image
         run: |
