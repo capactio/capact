@@ -1,6 +1,6 @@
 # Internal documentation
 
-The directory contains investigations, proof of concepts and other documents and files.
+The directory contains investigations and proof of concepts files.
 
 This directory contains the following documents:
 
