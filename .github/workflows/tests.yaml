@@ -55,6 +55,7 @@ jobs:
             && make push-app-image-${APP} >build_${APP}.log 2>&1 &
           done
           wait
+          find . -name "*.log"
 
       - name: Archive build images log
         uses: actions/upload-artifact@v2
