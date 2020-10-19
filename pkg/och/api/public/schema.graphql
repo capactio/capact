@@ -260,6 +260,11 @@ type ImplementationImport {
 
 type ImplementationImportMethod {
     name: NodeName!
+
+    """
+    If not provided, latest revision for a given Type is used
+    """
+    revision: Version
 }
 
 type ImplementationAction {
