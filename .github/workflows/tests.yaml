@@ -1,4 +1,4 @@
-name: Build-Images
+name: Build-and-unit-tests
 
 on: 
   push:
@@ -89,19 +89,3 @@ jobs:
         env:
           SKIP_DEPS_INSTALLATION: false
 
-      # - name: Run unit tests
-      #   run: make test-unit
-
-      # - name: Run generation
-      #   run: make gen-go-api
-        
-      # - name: build image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     make build-all-images
-
-      # - name: push image
-      #   run: |
-      #     export DOCKER_TAG=$(echo ${GITHUB_SHA:0:7})
-      #     gcloud auth configure-docker -q
-      #     make push-all-images
