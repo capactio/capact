@@ -41,10 +41,10 @@ jobs:
       - name: Run unit tests
         run: make test-unit
 
-      - name: Run generation
-        run: make test-generated
-        env:
-          SKIP_DEPS_INSTALLATION: false
+      # - name: Run generation
+      #   run: make test-generated
+      #   env:
+      #     SKIP_DEPS_INSTALLATION: false
 
       - name: Build & push image
         run: |
