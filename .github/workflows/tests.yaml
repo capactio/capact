@@ -16,14 +16,16 @@ jobs:
 
       
     steps:    
-      # - name: setup env
-      #   run: . ./env_setup.sh
+
 
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
+
+      - name: setup env
+        run: . ./env_setup.sh
 
       - name: Setup golang
         uses: actions/setup-go@v2
