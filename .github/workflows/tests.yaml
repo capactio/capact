@@ -51,11 +51,15 @@ jobs:
           for APP in ${APPS}
           do  
             echo ${APP}
-            make build-app-image-${APP} && make push-app-image-${APP} &
-            date
-            echo ""
+            make build-app-image-${APP} && make push-app-image-${APP} & >build_${APP}.log 2>&1
           done
           wait
+
+      - name: Archive build images log
+        uses: actions/upload-artifact@v2
+        with:
+          name: Docker-logs
+          path: *.log
 
           
 
