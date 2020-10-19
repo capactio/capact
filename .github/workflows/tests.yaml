@@ -29,10 +29,10 @@ jobs:
           . ./env_setup.sh
 
 
-      - name: Setup golang
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
+      # - name: Setup golang
+      #   uses: actions/setup-go@v2
+      #   with:
+      #     go-version: ${{env.GO_VERSION}}
 
       # - name: Run linting
       #   run: | 
@@ -49,10 +49,11 @@ jobs:
       - name: Build & push image
         run: |
           for APP in ${APPS}
-          do  echo ${APP}
-          sleep 1
-          date
-          echo ""
+          do  
+            echo ${APP}
+            sleep 1
+            date
+            echo ""
           done
 
           
