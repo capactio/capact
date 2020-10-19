@@ -115,6 +115,9 @@
                   "description": "Metrics dashboards",
                   "items": [
                     {
+                      "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards/0",
+                      "description": "Stores details of a metrics dashboard",
+                      "type": "object",
                       "properties": {
                         "url": {
                           "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards/0/url",
