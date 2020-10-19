@@ -16,13 +16,45 @@ metadata:
     - email: foo@example.com
       name: Foo Bar
       url: https://examples.com/foo/bar
+  tags:
+    cap.core.tag.environment.cloud:
+      revision: "1.0.1"
 spec:
   additionalRefs:
     - cap.core.type.platform
   jsonSchema:
-    ref:
-      name: cap.type.platform.generic.versionConfig
-      revision: 1.0.x, 1.1.x
+    value: -|
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "http://example.com/example.json",
+        "type": "object",
+        "title": "The Kubernetes schema",
+        "description": "The root schema comprises the entire JSON document.",
+        "default": { },
+        "examples": [
+          {
+            "version": "1.19.0"
+          }
+        ],
+        "required": [
+            "version"
+        ],
+        "properties": {
+          "version": {
+            "$id": "#/properties/version",
+            "type": "string",
+            "minLength": 5,
+            "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+            "title": "Kubernetes version",
+            "description": "Kubernetes version",
+            "default": "",
+            "examples": [
+                "1.19.0"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

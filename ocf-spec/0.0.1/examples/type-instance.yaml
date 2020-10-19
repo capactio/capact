@@ -4,7 +4,14 @@ kind: TypeInstance
 metadata:
   name: kubernetes
   prefix: cap.instance.type.platform  # Computed during fetching the manifest
+  tags:
+    cap.core.tag.workload.stateless:
+      revision: "1.0.1"
 spec:
-  typeRef: cap.core.type.platform.kubernetes
-  value:
-    version: v1.15.1
+  typeRef:
+    path: cap.core.type.platform.kubernetes
+    revision: 1.0.0
+  value: -|
+    {
+      "version": "1.18.10"
+    }

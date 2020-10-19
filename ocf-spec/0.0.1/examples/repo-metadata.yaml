@@ -19,7 +19,6 @@ spec:
     supported:
       - 0.1.0
       - 0.2.0
-  caKey: "foo"
   implementation:
     appVersion:
       semVerTaggingStrategy:

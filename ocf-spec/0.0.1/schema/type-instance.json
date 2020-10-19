@@ -6,7 +6,7 @@
   "required": [
     "ocfVersion",
     "kind",
-    "revision",
+    "resourceVersion",
     "metadata",
     "spec"
   ],
@@ -23,12 +23,11 @@
         "TypeInstance"
       ]
     },
-    "revision": {
-      "$id": "#/properties/revision",
-      "type": "string",
-      "minLength": 5,
-      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
-      "description": "Version of the manifest content in the SemVer format."
+    "resourceVersion": {
+      "$id": "#/properties/resourceVersion",
+      "type": "integer",
+      "minimum": 1,
+      "description": "Resource version of the manifest content. Every time the manifest content changes, the resource version is updated automatically on server side."
     },
     "metadata": {
       "type": "object",

@@ -44,6 +44,10 @@ func TestExampleSuccess(t *testing.T) {
 			jsonSchemaPath: "../schema/repo-metadata.json",
 			manifestPath:   "repo-metadata.yaml",
 		},
+		"InterfaceGroup Example should be valid": {
+			jsonSchemaPath: "../schema/interface-group.json",
+			manifestPath:   "interface-group.yaml",
+		},
 		"Interface Example should be valid": {
 			jsonSchemaPath: "../schema/interface.json",
 			manifestPath:   "interface.yaml",

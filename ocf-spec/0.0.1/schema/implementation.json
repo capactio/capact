@@ -11,7 +11,7 @@
         "revision"
       ],
       "properties": {
-        "value": {
+        "valueConstraints": {
           "$id": "#/properties/spec/properties/value",
           "type": "object",
           "description": "Holds the configuration constraints for the given entry. It needs to be valid against the Type JSONSchema."
@@ -24,7 +24,7 @@
         "revision": {
           "$id": "#/properties/spec/properties/revision",
           "type": "string",
-          "description": "The revision version of the given Type."
+          "description": "The exact revision of the given Type."
         }
       },
       "additionalProperties": false
@@ -95,6 +95,7 @@
                 ],
                 "properties": {
                   "revision": {
+                    "description": "The exact Tag revision.",
                     "type": "string"
                   }
                 }
@@ -171,7 +172,7 @@
               "revision": {
                 "$id": "#/properties/spec/properties/implements/items/anyOf/0/properties/revision",
                 "type": "string",
-                "description": "The Interface revision.",
+                "description": "The exact Interface revision.",
                 "additionalProperties": false
               }
             },
@@ -227,14 +228,14 @@
             "$id": "#/properties/imports/items",
             "type": "object",
             "required": [
-              "name",
+              "interfaceGroupName",
               "methods"
             ],
             "properties": {
-              "name": {
+              "interfaceGroupName": {
                 "$id": "#/properties/imports/items/0/properties/name",
                 "type": "string",
-                "description": "The name of the group that holds specific actions that you want to import, for example cap.interfaces.db.mysql"
+                "description": "The name of the Interface Group that contains specific actions that you want to import, for example cap.interfaces.db.mysql"
               },
               "alias": {
                 "$id": "#/properties/imports/items/0/properties/alias",
@@ -268,7 +269,7 @@
           "description": "An explanation about the purpose of this instance.",
           "required": [
             "args",
-            "type"
+            "runnerInterface"
           ],
           "properties": {
             "args": {
@@ -276,10 +277,10 @@
               "type": "object",
               "description": "Holds all parameters that should be passed to the selected runner, for example repoUrl, or chartName for the Helm3 runner."
             },
-            "type": {
+            "runnerInterface": {
               "$id": "#/properties/spec/properties/action/properties/type",
               "type": "string",
-              "description": "The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run"
+              "description": "The Interface of a Runner, which handles the execution, for example, cap.interface.runner.helm3.run"
             }
           },
           "additionalProperties": false
