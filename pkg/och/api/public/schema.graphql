@@ -145,6 +145,7 @@ type RepoOCFVersion {
 
 type InterfaceGroup {
     metadata: GenericMetadata!
+    signature: Signature!
     interfaces(filter: InterfaceFilter): [Interface!]!
 }
 
