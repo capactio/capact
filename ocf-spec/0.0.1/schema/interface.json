@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
+  "description": "Interface defines an action signature. It describes the action name, input, and output parameters.",
   "required": [
     "ocfVersion",
     "kind",

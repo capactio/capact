@@ -45,7 +45,20 @@
       }
     },
     "metadata": {
-      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+      "$id": "#/properties/metadata",
+      "type": "object",
+      "allOf": [
+        {
+          "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+        },
+        {
+          "properties": {
+            "tags": {
+              "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
+            }
+          }
+        }
+      ]
     },
     "spec": {
       "$id": "#/properties/spec",
@@ -73,5 +86,6 @@
         }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }
