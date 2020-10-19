@@ -48,7 +48,8 @@ jobs:
         
       - name: Build & push image
         run: |
-           for APP in ${APPS}; do  echo ${APP}; sleep 1;date; echo ""; done
+          date 
+
 
           
 
