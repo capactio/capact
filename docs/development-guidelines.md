@@ -5,7 +5,7 @@ In order to contribute to this project, please follow all listed guidelines in t
 ## Architecture
 
 Our architecture leans on [12factor.net](https://www.12factor.net/) principles and is designed to be platform agnostic. 
-There should be strong separation between generic Voltron business logic and implementation which is platform specific such as Kubernetes, CloudFoundry, OpenShift, and similar. 
+There should be strong separation between generic Voltron business logic and platform-specific implementation, such as Kubernetes, CloudFoundry, OpenShift, and similar.  
 
 ## Development tools
 

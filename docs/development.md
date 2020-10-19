@@ -1,6 +1,6 @@
 # Development
 
-Read this document to learn how to develop the project. Please also follow guidelines defined in [this](guidelines.md) document.
+Read this document to learn how to develop the project. Please also follow guidelines defined in [this](development-guidelines.md) document.
 
 ## Table of Contents
 
@@ -31,7 +31,7 @@ Read this document to learn how to develop the project. Please also follow guide
 * [Docker](https://www.docker.com/)
 * Make
 
-All helper scripts support the `SKIP_DEPS_INSTALLATION` environment variable flag.
+Helper scripts may introduce additional dependencies. However, all helper scripts support the `SKIP_DEPS_INSTALLATION` environment variable flag.
 **By default, flag is set to `true`**, so all scripts try to use tools installed on your local machine as this speed up the process.
 If you do not want to install any additional tools, or you want to ensure reproducible scripts 
 results export `SKIP_DEPS_INSTALLATION=false`, so the proper tool version will be automatically installed and used. 
@@ -128,6 +128,20 @@ kind delete cluster --name kind-dev-voltron
 
 ## Build and push Docker images
 
+There are a Make targets dedicated to build and push Voltron Docker images.
+
+We have images for:
+- application defined under [cmd](../cmd) directory
+- tests defined under [test](../test) directory
+- infra tools defined under [/hack/images](../hack/images) directory 
+
+The default build and push configuration can be change via environment variables. For example:
+
+```bash
+export DOCKER_PUSH_REPOSITORY=gcr.io/projectvoltron/
+export DOCKER_TAG=latest
+```
+
 ### All components
 
 To build all Docker images with your changes and push them to a registry, follow these steps.
@@ -138,14 +152,7 @@ To build all Docker images with your changes and push them to a registry, follow
     make build-all-images 
     ```
 
-2. Configure environment variables pointing to your registry, for example:
-
-    ```bash
-    export DOCKER_PUSH_REPOSITORY=gcr.io/projectvoltron/
-    export DOCKER_TAG=latest
-    ```
-
-3. Push the Docker images to registry:
+2. Push the Docker images to registry:
 
     ```bash
     make push-all-images
@@ -178,8 +185,6 @@ If you want to build and push Docker image for a single component, follow these 
     ```bash
     make push-test-image-e2e
     ```
-
-> **NOTE:** Registry can be configured exactly in the same way as specified in the previous section.
 
 ## Generators
 
