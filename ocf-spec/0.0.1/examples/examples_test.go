@@ -23,6 +23,8 @@ func TestExampleSuccess(t *testing.T) {
 	require.NoError(t, sl.AddSchemas(common))
 	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
 	require.NoError(t, sl.AddSchemas(common))
+	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata-tags.json"))
+	require.NoError(t, sl.AddSchemas(common))
 
 	tests := map[string]struct {
 		jsonSchemaPath string

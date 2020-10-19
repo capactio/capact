@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://projectvoltron.dev/schemas/common/metadata-tags.json",
+  "type": "object",
+  "description": "The tags is a list of key value, OCF Tags. It provides generic categorization for Implementations, Types and TypeInstances. They are used to filter out a specific Implementation.",
+  "additionalProperties": {
+    "type": "object",
+    "required": [
+      "revision"
+    ],
+    "properties": {
+      "revision": {
+        "minLength": 5,
+        "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+        "description": "The exact Tag revision.",
+        "type": "string"
+      }
+    }
+  }
+}
