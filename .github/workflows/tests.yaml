@@ -50,7 +50,7 @@ jobs:
           for APP in ${APPS}
           do  
             echo ${APP}
-            make build-image-${APP} && make push-app-image-${APP}
+            make build-app-image-${APP} && make push-app-image-${APP}
             date
             echo ""
           done
