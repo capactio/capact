@@ -17,43 +17,42 @@ jobs:
 
       
     steps:    
-
-
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          project_id: ${{ env.PROJECT_ID }}
           service_account_key: ${{ secrets.GCR_CREDS }}
 
       - name: setup env
-        run: . ./env_setup.sh
+        run: |
+          . ./env_setup.sh
+          echo ${{ github.event.number }}
 
-      - name: Setup golang
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
+      # - name: Setup golang
+      #   uses: actions/setup-go@v2
+      #   with:
+      #     go-version: ${{env.GO_VERSION}}
 
-      - name: Run linting
-        run: | 
-          make test-lint
-        env:
-          SKIP_DEPS_INSTALLATION: false
+      # - name: Run linting
+      #   run: | 
+      #     make test-lint
+      #   env:
+      #     SKIP_DEPS_INSTALLATION: false
 
-      - name: Run unit tests
-        run: make test-unit
+      # - name: Run unit tests
+      #   run: make test-unit
 
-      - name: Run generation
-        run: make gen-go-api
+      # - name: Run generation
+      #   run: make gen-go-api
         
-      - name: build image
-        run: |
-          make build-all-images
+      # - name: build image
+      #   run: |
+      #     make build-all-images
 
-      - name: push image
-        run: |
-          gcloud auth configure-docker --project ${PROJECT_ID} -q
-          make push-all-images
+      # - name: push image
+      #   run: |
+      #     gcloud auth configure-docker --project ${PROJECT_ID} -q
+      #     make push-all-images
 
 
