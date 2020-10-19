@@ -4,7 +4,7 @@
 # and execute end-to-end Voltron tests.
 #
 # It requires Docker to be installed.
-# Dependencies such as Helm v3 and kind can be installed on demand.
+# Dependencies such as kubebuilder can be installed on demand.
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.

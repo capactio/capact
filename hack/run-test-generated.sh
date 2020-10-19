@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This is a helper script for validating if generators were executed and results were committed
+# This is a helper script for validating if generators were executed and results were committed.
 #
 
 set -o nounset
@@ -35,7 +35,7 @@ git::detect_dirty_state() {
       "
       exit 1
   else
-      echo "No issues detected. Have a nice day :-)"
+      echo -e "${GREEN}√ No issues detected. Have a nice day :-)${NC}"
   fi
 }
 

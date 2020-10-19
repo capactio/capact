@@ -10,36 +10,56 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
 
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 OCF_VERSION="${OCF_VERSION:-"0.0.1"}"
 
-main() {
-    shout "Generating Go struct from OCF JSON Schemas..."
-    OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
+REPORT_FILENAME="${REPO_ROOT_DIR}/tmp/gen_go_api_issues.txt"
+KNOWN_VIOLATION_FILENAME="${CURRENT_DIR}/gen_go_api_issue_exceptions.txt"
 
-    pushd "${REPO_ROOT_DIR}"
-    rm -f "$OUTPUT"
+check_for_unknown_issues() {
+  shout "Checking for unknown generate issues..."
 
-    docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
+  if ! diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"; then
+    echo "Error:
+    API rules check failed. Reported violations \"${REPORT_FILENAME}\" differ from known violations \"${KNOWN_VIOLATION_FILENAME}\".
+    Please fix API source file if new violation is detected, or update known violations \"${KNOWN_VIOLATION_FILENAME}\" if existing violation is being fixed."
+    exit 1
+  fi
+
+  echo -e "${GREEN}√ No issues detected. Have a nice day :-)${NC}"
+}
+
+gen_go_api_from_ocf_specs() {
+  shout "Generating Go struct from OCF JSON Schemas..."
+  OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
+
+  pushd "${REPO_ROOT_DIR}"
+  rm -f "$OUTPUT"
+
+  docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
       --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json \
       --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json \
       --additional-schema /local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/interface.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/implementation.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/tag.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/type.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/type-instance.json \
-      --src /local/ocf-spec/${OCF_VERSION}/schema/vendor.json \
-      -o "/local/$OUTPUT"
+    --src /local/ocf-spec/${OCF_VERSION}/schema/interface.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/implementation.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/tag.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/type.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/type-instance.json \
+    --src /local/ocf-spec/${OCF_VERSION}/schema/vendor.json \
+    -o "/local/$OUTPUT" 2>${REPORT_FILENAME}
 
+  popd
+  shout "Generation completed successfully."
+}
 
-    popd
-    shout "Generation completed successfully."
+main() {
+  gen_go_api_from_ocf_specs
+  check_for_unknown_issues
 }
 
 main

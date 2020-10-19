@@ -3,7 +3,7 @@
 # This script generates the K8s related resources
 # such as manifests (CRD, RBAC etc.) and code (DeepCopy, DeepCopyInto etc.)
 #
-# `controller-gen` binary is installed if not available.
+# Dependencies such as `controller-gen` binary can be installed on demand.
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.
