@@ -13,8 +13,7 @@ jobs:
   build-image:
     name: Build docker image
     runs-on: ubuntu-latest
-    env:
-      PROJECT_ID: projectvoltron
+
 
       
     steps:    
@@ -54,7 +53,7 @@ jobs:
 
       - name: push image
         run: |
-          gcloud auth configure-docker -q
+          gcloud auth configure-docker --project ${PROJECT_ID} -q
           make push-all-images
 
 
