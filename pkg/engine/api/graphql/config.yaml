@@ -1,0 +1,20 @@
+schema: schema.graphql
+
+# Let gqlgen know where to put the generated server
+exec:
+  filename: schema_gen.go
+  package: graphql
+
+# Let gqlgen know where to the generated models (if any)
+model:
+  filename: models_gen.go
+  package: graphql
+
+# Optional turns on binding to field names by tag provided
+struct_tag: json
+
+# Tell gqlgen about any existing models you want to reuse for
+# graphql. These normally come from the db or a remote api.
+models:
+  Timestamp:
+    model: "projectvoltron.dev/voltron/pkg/engine/api/graphql.Timestamp"

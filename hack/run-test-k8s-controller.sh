@@ -38,7 +38,7 @@ main() {
 
     shout "Starting k8s controller tests..."
 
-    go test -v --tags=controllertests "${REPO_ROOT_DIR}/pkg/engine/k8s/controllers/..."
+    go test -v --tags=controllertests "${REPO_ROOT_DIR}/internal/k8s-engine/controller/..."
 
     shout "K8s controller tests completed successfully."
 }

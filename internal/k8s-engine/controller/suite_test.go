@@ -1,6 +1,6 @@
 //+build controllertests
 
-package controllers
+package controller
 
 import (
 	"path/filepath"
@@ -28,7 +28,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
-const CRD_DIRECTORY = "../../../../deploy/kubernetes/voltron/crds"
+const CRD_DIRECTORY = "../../../deploy/kubernetes/voltron/crds"
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)

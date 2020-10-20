@@ -29,7 +29,7 @@ cleanup() {
 trap cleanup EXIT
 
 host::install::controller-gen() {
-    shout "Install the controller-gen ${STABLE_CONTROLLER_GEN} locally to a tempdir..."
+    shout "Install the controller-gen ${STABLE_CONTROLLER_GEN_VERSION} locally to a tempdir..."
     mkdir -p "${TMP_DIR}/bin"
 
     export PATH="${TMP_DIR}/bin:${PATH}"
@@ -38,7 +38,7 @@ host::install::controller-gen() {
     pushd "$TMP_DIR" >/dev/null
 
     go mod init tmp
-    go get sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN
+    go get sigs.k8s.io/controller-tools/cmd/controller-gen@STABLE_CONTROLLER_GEN_VERSION
 
     popd >/dev/null
 
