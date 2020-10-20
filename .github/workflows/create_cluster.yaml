@@ -26,19 +26,27 @@ jobs:
         run: |
           gcloud auth list
           . ./env_setup.sh
+          kubectl || helm
 
-      - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
+      # - name: Setup terraform
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform
   
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve
+
+      # - name: Get cluster credentials
+      #   run: | 
+      #     gcloud container clusters get-credentials voltron-dev1 --zone=europe-west3
+
+
+
   #     - name: Run unit tests
   #       run: make test-unit
 
