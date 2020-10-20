@@ -44,6 +44,7 @@ jobs:
         run: | 
           gcloud container clusters get-credentials voltron-dev1 --zone=europe-west3
           kubectl cluster-info
+          date
 
 
 
