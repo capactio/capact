@@ -6,7 +6,7 @@ ARG BUILD_CMD="go build"
 
 WORKDIR /projectvoltron.dev/voltron
 
-ADD . .
+COPY . .
 RUN CGO_ENABLED=0 GOARCH=amd64 $BUILD_CMD -ldflags "-s -w" -o /bin/$COMPONENT $SOURCE_PATH
 
 FROM scratch
