@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-set -e
-
 srcPaths=()
 POSITIONAL=()
 while [[ $# -gt 0 ]]
@@ -31,8 +29,15 @@ do
 done
 set -- "${POSITIONAL[@]}" # restore positional parameters
 
-
+exitCode=0
 for path in "${srcPaths[@]}"
 do
-  graphql-schema-linter "${linterArgs}" "${path}"
+  echo "- Linting ${path}..."
+  graphql-schema-linter ${linterArgs} "${path}"
+  lastExitCode=$?
+  if [ $lastExitCode -ne 0 ]; then
+    exitCode=${lastExitCode}
+  fi
 done
+
+exit ${exitCode}
