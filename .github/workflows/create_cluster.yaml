@@ -1,0 +1,90 @@
+name: Build-and-unit-tests
+
+on: 
+  push:
+    paths:
+    - '**.yaml'
+    branches:    
+    - 'devops-20201014'
+
+jobs:
+  create-cluster:
+    name: Create new cluste
+    runs-on: ubuntu-latest
+
+
+      
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
+
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+
+      - name: Setup terraform
+        run: | 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
+          terraform -help
+
+
+  #     - name: Run unit tests
+  #       run: make test-unit
+
+  #     # - name: Run generation
+  #     #   run: make test-generated
+  #     #   env:
+  #     #     SKIP_DEPS_INSTALLATION: false
+        
+  #     - name: Build & push image
+  #       run: |
+  #         gcloud auth configure-docker --project ${PROJECT_ID} -q
+  #         for APP in ${APPS}
+  #         do  
+  #           echo ${APP} 
+  #           make build-app-image-${APP} >build_${APP}.log 2>&1 \
+  #           && make push-app-image-${APP} >push_${APP}.log 2>&1 &
+  #         done
+  #         wait
+  #         cat build_*.log
+  #         cat push_*.log
+
+  #     - name: Archive build images log
+  #       uses: actions/upload-artifact@v2
+  #       with:
+  #         name: docker-logs
+  #         path: ./*.log
+
+  # integration-tests:
+  #   name: Integration tests
+  #   runs-on: ubuntu-latest
+  #   needs: build-image     
+  #   steps:    
+  #     - name: Checkout code
+  #       uses: actions/checkout@v2
+  #     - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+  #       with:
+  #         service_account_key: ${{ secrets.GCR_CREDS }}
+  #         export_default_credentials: true
+
+  #     - name: Setup env
+  #       run: |
+  #         . ./env_setup.sh
+
+  #     - name: Setup golang
+  #       uses: actions/setup-go@v2
+  #       with:
+  #         go-version: ${{env.GO_VERSION}}
+
+  #     - name: Run unit tests
+  #       run: | 
+  #         make test-integration
+  #       env:
+  #         SKIP_DEPS_INSTALLATION: false
+
