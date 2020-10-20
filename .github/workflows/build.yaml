@@ -44,7 +44,9 @@ jobs:
 
       - name: Run generation
         run: |
-          git status --porcelain
+          FILE=$(git status --porcelain |awk '{ print $2 }')
+          echo ${FILE}
+          find . -name ${FILE}
 #          make test-generated
         env:
           SKIP_DEPS_INSTALLATION: false
