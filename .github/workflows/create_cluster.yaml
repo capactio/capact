@@ -27,26 +27,25 @@ jobs:
       - name: Setup env
         run: |
           . ./env_setup.sh
-          helm version
-
-      - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
+ 
+      # - name: Setup terraform
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform
   
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve
 
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./*.tfstate
+      # - name: Archive terraform state
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: cluster-tfstate
+      #     path: ./terraform/*.tfstate
   
       - name: Get cluster credentials
         run: | 
@@ -56,8 +55,11 @@ jobs:
         run: | 
           sudo snap install yq
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_location} | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
+          echo ${AUTHORIZED}
           AUTHORIZED=$(echo ${AUTHORIZED} | tr '-' ',' | sed 's/^,//g;s/ //g')
+          echo ${AUTHORIZED}
           AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl icanhazip.com))
+          echo ${AUTHORIZED}
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
           --master-authorized-networks $AUTHORIZED  
           kubectl cluster-info
