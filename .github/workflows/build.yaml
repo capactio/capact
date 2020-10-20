@@ -57,10 +57,9 @@ jobs:
         APP: [gateway, k8s-engine, och]
 
       steps:
-        - run: |
-            gcloud auth configure-docker --project ${PROJECT_ID} -q
-            make build-app-image-${{ matrix.APP }}
-            make push-app-image-${{ matrix.APP }}
+        - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
+        - run: make build-app-image-${{ matrix.APP }}
+        - run: make push-app-image-${{ matrix.APP }}
 
 
             
