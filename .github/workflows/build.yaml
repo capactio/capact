@@ -1,37 +1,37 @@
-# name: Build-and-unit-tests
+name: Build-and-unit-tests
 
-# on: 
-#   push:
-#     paths:
-#     - '**.go'
-#     - '**.graphql'
-#     - '**.yaml'
-#     branches:    
-#     - 'devops-20201014'
+on: 
+  push:
+    paths:
+    - '**.go'
+    - '**.graphql'
+    - '**.yaml'
+    branches:    
+    - 'devops-20201014'
 
-# jobs:
-#   build-image:
-#     name: Build docker image
-#     runs-on: ubuntu-latest
+jobs:
+  build-image:
+    name: Build docker image
+    runs-on: ubuntu-latest
 
 
       
-#     steps:    
-#       - name: Checkout code
-#         uses: actions/checkout@v2
-#       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-#         with:
-#           export_default_credentials: true
-#           service_account_key: ${{ secrets.GCR_CREDS }}
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
 
-#       - name: Setup env
-#         run: |
-#           . ./env_setup.sh
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
 
-#       - name: Setup golang
-#         uses: actions/setup-go@v2
-#         with:
-#           go-version: ${{env.GO_VERSION}}
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
 
 #       - name: Run linting
 #         run: | 
@@ -42,10 +42,12 @@
 #       - name: Run unit tests
 #         run: make test-unit
 
-#       # - name: Run generation
-#       #   run: make test-generated
-#       #   env:
-#       #     SKIP_DEPS_INSTALLATION: false
+      - name: Run generation
+        run: |
+          git status --porcelain
+#          make test-generated
+        env:
+          SKIP_DEPS_INSTALLATION: false
         
 #       - name: Build & push image
 #         run: |
