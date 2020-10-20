@@ -27,42 +27,42 @@ jobs:
       - name: Setup env
         run: |
           . ./env_setup.sh
-          sudo snap install yq
-          yq
+          helm version
 
-
-  #     - name: Setup terraform
-  #       run: | 
-  #         curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-  #         sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-  #         sudo apt-get update && sudo apt-get install terraform
+      - name: Setup terraform
+        run: | 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
   
-  #     - name: Create cluster
-  #       run: | 
-  #         gcloud config set project ${PROJECT_ID}
-  #         cd terraform
-  #         terraform init
-  #         terraform apply -auto-approve
+      - name: Create cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
 
-  #     - name: Get cluster credentials
-  #       run: | 
-  #         gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_location}
+      - name: Archive terraform state
+        uses: actions/upload-artifact@v2
+        with:
+          name: cluster-tfstate
+          path: ./*.tfstate
+  
+      - name: Get cluster credentials
+        run: | 
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_location}
           
-  #     - name: Network enable
-  #       run: | 
-  #         sudo snap install yq
-  #         AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_location} | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
-  #         AUTHORIZED=$(echo ${AUTHORIZED} | tr '-' ',' | sed 's/^,//g;s/ //g')
-  #         AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl icanhazip.com))
-  #         gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
-  #         --master-authorized-networks $AUTHORIZED  
-  #         kubectl cluster-info
+      - name: Network enable
+        run: | 
+          sudo snap install yq
+          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_location} | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr '-' ',' | sed 's/^,//g;s/ //g')
+          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl icanhazip.com))
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
+          --master-authorized-networks $AUTHORIZED  
+          kubectl cluster-info
 
-  #     - name: Archive terraform state
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: cluster-tfstate
-  #         path: ./*.tfstate
+
           
 
 
