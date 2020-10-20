@@ -58,7 +58,7 @@ golangci::fix_if_requested() {
   fi
 }
 
-docker::run_dockerfile_checks() {
+dockerfile::run_checks() {
   shout "Run hadolint Dockerfile checks"
   docker run --rm -i hadolint/hadolint < "${ROOT_PATH}/Dockerfile"
   echo -e "${GREEN}√ run hadolint${NC}"
@@ -73,6 +73,17 @@ shellcheck::run_checks() {
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
+graphql::run_checks() {
+  shout "Run graphql-schema-linter checks"
+
+  docker run --rm -v "$ROOT_PATH":/repo -w=/repo gcr.io/projectvoltron/infra/graphql-schema-linter:0.1.0 \
+    --src ./pkg/engine/api/schema.graphql \
+    --src ./pkg/och/api/local/schema.graphql \
+    --src ./pkg/och/api/public/schema.graphql \
+    --linter-args "-c ./ --format compact"
+  echo -e "${GREEN}√ run graphql-schema-linter${NC}"
+}
+
 main() {
   if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
       host::install::golangci
@@ -82,9 +93,11 @@ main() {
 
   golangci::run_checks
 
-  docker::run_dockerfile_checks
+  dockerfile::run_checks
 
   shellcheck::run_checks
+
+  graphql::run_checks
 }
 
 main
