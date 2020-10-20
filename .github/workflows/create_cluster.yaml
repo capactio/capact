@@ -55,14 +55,9 @@ jobs:
       - name: Network enable
         run: | 
           sudo snap install yq
-          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_location} | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
-          echo ${AUTHORIZED}
-          AUTHORIZED=$(echo ${AUTHORIZED} | tr '-' ',' | sed 's/^,//g;s/ //g')
-          echo ${AUTHORIZED}
-          AUTHORIZED=$(printf "%s/32" "${AUTHORIZED}" $(curl icanhazip.com))
-          echo ${AUTHORIZED}
+          AUTHORIZED=$(printf "%s/32" $(curl icanhazip.com))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
-          --master-authorized-networks $AUTHORIZED  
+          --master-authorized-networks ${AUTHORIZED}
           kubectl cluster-info
 
 
