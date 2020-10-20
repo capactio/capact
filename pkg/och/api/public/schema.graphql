@@ -379,8 +379,6 @@ type Query {
     tag(path: NodePath!): Tag
 }
 
-type Mutation {
-    # No mutations for now, as all resources are populated with DB populator
-}
+# No mutations for now, as all resources are populated with DB populator
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
