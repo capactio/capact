@@ -9,7 +9,7 @@ on:
 
 jobs:
   create-cluster:
-    name: Create new cluste
+    name: Create new cluster
     runs-on: ubuntu-latest
 
 
@@ -20,7 +20,7 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          service_account_key: ${{ secrets.GCR_CREDS }}
+          service_account_key: ${{ secrets.GKE_CREDS }}
 
       - name: Setup env
         run: |
@@ -31,9 +31,10 @@ jobs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get update && sudo apt-get install terraform
-          terraform -help
-
-
+  
+      - name: Create cluster
+        run: | 
+          gcloud help 
   #     - name: Run unit tests
   #       run: make test-unit
 
