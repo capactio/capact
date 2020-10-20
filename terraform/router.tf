@@ -1,12 +1,12 @@
 resource "google_compute_router" "gcr_router" {
   project = var.project
-  name    = var.cluster-name
+  name    = var.cluster_name
   network = google_compute_network.gcn_vpc.name
   
 }
 
 resource "google_compute_router_nat" "gcrn_nat" {
-  name                               = var.cluster-name
+  name                               = var.cluster_name
   project                            = var.project
   router                             = google_compute_router.gcr_router.name
   region                             = google_compute_router.gcr_router.region

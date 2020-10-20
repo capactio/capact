@@ -10,3 +10,6 @@ else
   PR_NUMBER=$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')
   echo "DOCKER_TAG=PR-$(echo ${PR_NUMBER})" >>$GITHUB_ENV
 fi
+
+echo "TF_VAR_cluster_name=voltron-dev1" >>$GITHUB_ENV
+echo "TF_VAR_location=europe-west3" >>$GITHUB_ENV

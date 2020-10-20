@@ -42,9 +42,26 @@ jobs:
 
       - name: Get cluster credentials
         run: | 
-          gcloud container clusters get-credentials voltron-dev1 --zone=europe-west3
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_location}
+          
+      - name: Network enable
+        run: | 
+          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_location} | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr '-' ',' | sed 's/^,//g;s/ //g')
+          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl icanhazip.com))
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
+          --master-authorized-networks $AUTHORIZED  
           kubectl cluster-info
-          date
+
+      - name: Archive terraform state
+        uses: actions/upload-artifact@v2
+        with:
+          name: cluster-tfstate
+          path: ./*.tfstate
+          
+
+
+          # list authorized networks
 
 
 

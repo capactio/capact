@@ -12,7 +12,7 @@
 # # }
 
 resource "google_compute_firewall" "gcf-default-allow-http-and-https" {
-  name    = "gke-allow-http-s-${var.cluster-name}"
+  name    = "gke-allow-http-s-${var.cluster_name}"
   project = var.project
   network = google_compute_network.gcn_vpc.name
 

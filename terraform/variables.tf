@@ -2,7 +2,7 @@ provider "google" {
   region  = "europe-west3"
 }
 
-variable "cluster-name" {
+variable "cluster_name" {
   default = "voltron-dev1"
   type    = string
 }

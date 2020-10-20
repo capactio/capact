@@ -1,5 +1,5 @@
 resource "google_container_cluster" gcc-cls {
-  name               = var.cluster-name
+  name               = var.cluster_name
   location           = var.location
   project            = var.project
   network            = google_compute_network.gcn_vpc.name
