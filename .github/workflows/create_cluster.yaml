@@ -28,6 +28,11 @@ jobs:
         run: |
           . ./env_setup.sh
           echo "commit for rollback purposes"
+
+      - name: Checkout code to point of time
+        uses: actions/checkout@v2
+        with:
+          ref: 
  
       # - name: Setup terraform
       #   run: | 
@@ -58,7 +63,7 @@ jobs:
           AUTHORIZED=$(printf "%s/32" $(curl icanhazip.com))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_location} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-          kubectl cluster-info
+          
 
 
           
