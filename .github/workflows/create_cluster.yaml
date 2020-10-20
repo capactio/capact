@@ -24,20 +24,21 @@ jobs:
 
       - name: Setup env
         run: |
+          gcloud auth list
           . ./env_setup.sh
 
-      - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
+      # - name: Setup terraform
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform
   
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve
   #     - name: Run unit tests
   #       run: make test-unit
 
