@@ -34,7 +34,10 @@ jobs:
   
       - name: Create cluster
         run: | 
-          gcloud help 
+          gcloud config set project ${PROJECT_ID}
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
   #     - name: Run unit tests
   #       run: make test-unit
 
