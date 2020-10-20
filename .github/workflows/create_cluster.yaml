@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code to point of time
         uses: actions/checkout@v2
         with:
-          ref: 
+          ref: d7d4c346aa37d5dbb6bcca7a8cfa0f0ebde54a7b
  
       # - name: Setup terraform
       #   run: | 
