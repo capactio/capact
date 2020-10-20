@@ -25,24 +25,25 @@ jobs:
       - name: Setup env
         run: |
           . ./env_setup.sh
-          helm
 
-      # - name: Setup terraform
-      #   run: | 
-      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-      #     sudo apt-get update && sudo apt-get install terraform
+
+      - name: Setup terraform
+        run: | 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
   
-      # - name: Create cluster
-      #   run: | 
-      #     gcloud config set project ${PROJECT_ID}
-      #     cd terraform
-      #     terraform init
-      #     terraform apply -auto-approve
+      - name: Create cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
 
-      # - name: Get cluster credentials
-      #   run: | 
-      #     gcloud container clusters get-credentials voltron-dev1 --zone=europe-west3
+      - name: Get cluster credentials
+        run: | 
+          gcloud container clusters get-credentials voltron-dev1 --zone=europe-west3
+          kubectl cluster-info
 
 
 
