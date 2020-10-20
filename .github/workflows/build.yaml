@@ -57,6 +57,12 @@ jobs:
         APP: [gateway, k8s-engine, och]
 
       steps:
+        - name: Checkout code
+          uses: actions/checkout@v2
+        - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+          with:
+            service_account_key: ${{ secrets.GCR_CREDS }}
+            export_default_credentials: true
         - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
         - run: make build-app-image-${{ matrix.APP }}
         - run: make push-app-image-${{ matrix.APP }}
