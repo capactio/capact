@@ -13,4 +13,4 @@ fi
 
 echo "TF_VAR_cluster_name=voltron-dev1" >>$GITHUB_ENV
 echo "TF_VAR_location=europe-west3" >>$GITHUB_ENV
-echo "SHA=d7d4c346aa37d5dbb6bcca7a8cfa0f0ebde54a7b" >>$GITHUB_ENV
+echo "" >>$GITHUB_ENV
