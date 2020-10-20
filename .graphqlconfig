@@ -1,0 +1,19 @@
+{
+  "projects": {
+    "engine": {
+      "includes": [
+        "./pkg/engine/api/**"
+      ]
+    },
+    "localOCH": {
+      "includes": [
+        "./pkg/och/api/local/**"
+      ]
+    },
+    "publicOCH": {
+      "includes": [
+        "./pkg/och/api/public/**"
+      ]
+    }
+  }
+}
