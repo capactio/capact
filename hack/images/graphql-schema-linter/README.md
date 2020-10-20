@@ -18,7 +18,7 @@ docker build -t graphql-schema-linter .
 
 You can configure the linter script passing the following arguments:
 
-| Flag                        | Optional | Description                                                                                     |
-| --------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| `--src "{path-to-schema}`   | No       | Path to GraphQL schema to validate. You can use the flag multiple times to lint multiple files. |
-| `--linter-args "{options}"` | No       | Additional arguments for `graphql-schema-linter`.                                              |
+| Flag                      | Required | Description                                                                                                      |
+| ------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------- |
+| `--src "{path-to-schema}` | Yes      | Path to GraphQL schema to validate. You can use the flag multiple times to lint multiple files.                  |
+| `--linter-arg "{option}"` | Yes      | Additional argument for `graphql-schema-linter`. You can use the flag multiple times to pass multiple arguments. |
