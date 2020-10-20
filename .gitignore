@@ -46,3 +46,4 @@ coverage.txt
 
 ### Others ###
 /tmp/
+[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*

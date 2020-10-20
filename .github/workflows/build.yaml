@@ -47,6 +47,7 @@ jobs:
           FILE=$(git status --porcelain |awk '{ print $2 }')
           echo ${FILE}
           find . -name ${FILE}
+          echo qqq
 #          make test-generated
         env:
           SKIP_DEPS_INSTALLATION: false
