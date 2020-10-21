@@ -53,7 +53,7 @@ jobs:
     needs: entry-tests
     outputs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
-      matrix-test: ${{ steps.set-matrix-tests.outputs.matrix }}
+      matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
       matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
 
     steps:
