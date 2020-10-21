@@ -8,18 +8,39 @@ metadata:
   creationTimestamp: null
   name: actions.core.projectvoltron.dev
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.path
+    description: Interface/Implementation path of the Action
+    name: Path
+    type: string
+  - JSONPath: .spec.run
+    description: If the Action is approved to run
+    name: Run
+    type: boolean
+  - JSONPath: .status.phase
+    description: Status of the Action
+    name: Status
+    type: string
+  - JSONPath: .status.executedAt
+    description: When the Action execution was started
+    format: date-time
+    name: Age
+    type: date
   group: core.projectvoltron.dev
   names:
     kind: Action
     listKind: ActionList
     plural: actions
+    shortNames:
+    - ac
     singular: action
   scope: Namespaced
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: Action is the Schema for the actions API
+      description: Action describes user intention to resolve & execute a given Interface
+        or Implementation.
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -34,34 +55,61 @@ spec:
         metadata:
           type: object
         spec:
-          description: ActionSpec describes user intention to resolve & execute a
-            given Interface or Implementation.
+          description: ActionSpec contains configuration properties for a given Action
+            to execute.
           properties:
             advancedRendering:
+              description: AdvancedRendering holds are properties related to Action
+                advanced rendering mode.
               properties:
                 enabled:
+                  description: Enabled specifies if the advanced rendering mode is
+                    enabled.
                   type: boolean
                 renderingIteration:
+                  description: RenderingIteration holds properties for rendering iteration
+                    in advanced rendering mode.
                   properties:
+                    continue:
+                      description: Continue specified the user intention to continue
+                        rendering using the provided InputArtifacts. As the input
+                        artifacts are optional, user may continue rendering with empty
+                        list of InputArtifacts.
+                      type: boolean
                     inputArtifacts:
+                      description: InputArtifacts contains Input Artifacts passed
+                        for current rendering iteration.
                       items:
+                        description: InputArtifact holds input artifact reference,
+                          which is in fact TypeInstance.
                         properties:
                           alias:
+                            description: Alias refers to input artifact name used
+                              in rendered Action.
                             type: string
                           typeInstanceID:
+                            description: TypeInstanceID is a unique identifier for
+                              the TypeInstance used as input artifact.
                             type: string
                           typePath:
+                            description: TypePath is full path for the Type manifest
+                              related to a given artifact (TypeInstance).
+                            minLength: 3
                             type: string
                         type: object
                       type: array
                   type: object
               type: object
+            cancel:
+              description: Cancel specifies whether the Action execution should be
+                cancelled.
+              type: boolean
             inputRef:
               description: InputRef contains reference to resource with Action input.
               properties:
                 secretRef:
-                  description: LocalObjectReference contains enough information to
-                    let you locate the referenced object inside the same namespace.
+                  description: SecretRef stores reference to Secret in the same namespace
+                    the Action CR is created.
                   properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -70,44 +118,66 @@ spec:
                   type: object
               type: object
             path:
-              description: Full path for the Implementation or Interface manifest
+              description: Path contains full path for Implementation or Interface
+                manifest.
+              minLength: 3
               type: string
             renderedActionOverride:
-              description: RawMessage is a raw encoded JSON value. It implements Marshaler
-                and Unmarshaler and can be used to delay JSON decoding or precompute
-                a JSON encoding.
+              description: RenderedActionOverride contains optional rendered Action
+                that overrides the one rendered by Engine.
               format: byte
               type: string
             run:
+              description: Run specifies whether the Action is approved to be executed.
+                Engine won't execute fully rendered Action until the field is set
+                to `true`. If the Action is not fully rendered, and this field is
+                set to `true`, Engine executes a given Action instantly after it is
+                resolved.
               type: boolean
           type: object
         status:
           description: ActionStatus defines the observed state of Action.
           properties:
             advancedRendering:
+              description: AdvancedRendering describes status related to advanced
+                rendering mode.
               properties:
                 renderingIteration:
+                  description: RenderingIteration describes status related to current
+                    rendering iteration.
                   properties:
                     inputArtifactsToProvide:
+                      description: InputArtifactsToProvide describes which input artifacts
+                        might be provided in a given rendering iteration.
                       items:
+                        description: InputArtifact holds input artifact reference,
+                          which is in fact TypeInstance.
                         properties:
                           alias:
+                            description: Alias refers to input artifact name used
+                              in rendered Action.
                             type: string
                           typeInstanceID:
+                            description: TypeInstanceID is a unique identifier for
+                              the TypeInstance used as input artifact.
                             type: string
                           typePath:
+                            description: TypePath is full path for the Type manifest
+                              related to a given artifact (TypeInstance).
+                            minLength: 3
                             type: string
                         type: object
                       type: array
                   type: object
               type: object
             builtInRunner:
-              description: BuiltinRunnerStatus holds data related to built-in Runner
-                that runs the Action.
+              description: BuiltinRunner holds data related to built-in Runner that
+                runs the Action.
               properties:
                 interface:
                   description: Interface is a full path of built-in Runner Interface
                     manifest.
+                  minLength: 3
                   type: string
                 status:
                   description: StatusRef contains reference to resource with built-in
@@ -116,8 +186,7 @@ spec:
                   type: string
               type: object
             cancelledBy:
-              description: UserInfo holds the information about the user needed to
-                implement the user.Info interface.
+              description: CancelledBy holds user data which cancelled a given Action.
               properties:
                 extra:
                   additionalProperties:
@@ -142,11 +211,8 @@ spec:
                     active users.
                   type: string
               type: object
-            condition:
-              type: string
             createdBy:
-              description: UserInfo holds the information about the user needed to
-                implement the user.Info interface.
+              description: CreatedBy holds user data which created a given Action.
               properties:
                 extra:
                   additionalProperties:
@@ -171,14 +237,20 @@ spec:
                     active users.
                   type: string
               type: object
+            executedAt:
+              description: ExecutedAt holds timestamp of the moment when Engine started
+                execution of the Action.
+              format: date-time
+              type: string
             message:
+              description: Message provides a readable description of the Action state.
               type: string
             outputRef:
               description: OutputRef contains reference to resource with Action output.
               properties:
                 secretRef:
-                  description: LocalObjectReference contains enough information to
-                    let you locate the referenced object inside the same namespace.
+                  description: SecretRef stores reference to Secret in the same namespace
+                    the Action CR is created.
                   properties:
                     name:
                       description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
@@ -186,15 +258,16 @@ spec:
                       type: string
                   type: object
               type: object
+            phase:
+              description: ActionPhase describes in which state is the Action to execute.
+              type: string
             renderedAction:
-              description: RawMessage is a raw encoded JSON value. It implements Marshaler
-                and Unmarshaler and can be used to delay JSON decoding or precompute
-                a JSON encoding.
+              description: RenderedAction contains partially or fully rendered Action
+                to be executed.
               format: byte
               type: string
             runBy:
-              description: UserInfo holds the information about the user needed to
-                implement the user.Info interface.
+              description: RunBy holds user data which run a given Action.
               properties:
                 extra:
                   additionalProperties:
@@ -219,8 +292,6 @@ spec:
                     active users.
                   type: string
               type: object
-          required:
-          - condition
           type: object
       type: object
   version: v1alpha1

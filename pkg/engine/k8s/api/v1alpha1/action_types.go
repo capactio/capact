@@ -8,11 +8,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TODO: kubebuilder printcolumn
 // TODO: add validation
 // TODO: To consider status conditions?
 // TODO: Update example
-// TODO: Update sample engine code
 
 // NOTE: json tags are required. Any new fields you add must have json tags for the fields to be serialized.
 // Important: Run "make gen-k8s-resources" to regenerate code after modifying this file.
@@ -33,7 +31,7 @@ type ActionSpec struct {
 
 	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
 	// +optional
-	RenderedActionOverride *json.RawMessage `json:"renderedActionOverride,omitempty"`
+	RenderedActionOverride json.RawMessage `json:"renderedActionOverride,omitempty"`
 
 	// Run specifies whether the Action is approved to be executed.
 	// Engine won't execute fully rendered Action until the field is set to `true`.
@@ -64,6 +62,10 @@ type RenderingIterationSpec struct {
 	// InputArtifacts contains Input Artifacts passed for current rendering iteration.
 	// +optional
 	InputArtifacts *[]InputArtifact `json:"inputArtifacts,omitempty"`
+
+	// Continue specifies the user intention to continue rendering using the provided InputArtifacts.
+	// As the input artifacts are optional, user may continue rendering with empty list of InputArtifacts.
+	Continue bool `json:"continue,omitempty"`
 }
 
 // InputArtifact holds input artifact reference, which is in fact TypeInstance.
@@ -106,10 +108,14 @@ type ActionStatus struct {
 
 	// RenderedAction contains partially or fully rendered Action to be executed.
 	// +optional
-	RenderedAction *json.RawMessage `json:"renderedAction,omitempty"`
+	RenderedAction json.RawMessage `json:"renderedAction,omitempty"`
 
 	// AdvancedRendering describes status related to advanced rendering mode.
 	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
+
+	// ExecutedAt holds timestamp of the moment when Engine started execution of the Action.
+	// +optional
+	ExecutedAt *metav1.Time `json:"executedAt,omitempty"`
 
 	// CreatedBy holds user data which created a given Action.
 	// +optional
@@ -158,7 +164,7 @@ type BuiltinRunnerStatus struct {
 
 	// StatusRef contains reference to resource with built-in Runner status data.
 	// +optional
-	Status *json.RawMessage `json:"status,omitempty"`
+	Status json.RawMessage `json:"status,omitempty"`
 }
 
 // NodePath defines full path for a given manifest, e.g. Implementation or Interface.
@@ -182,6 +188,11 @@ const (
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=ac
+// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.path",description="Interface/Implementation path of the Action"
+// +kubebuilder:printcolumn:name="Run",type="boolean",JSONPath=".spec.run",description="If the Action is approved to run"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase",description="Status of the Action"
+// +kubebuilder:printcolumn:name="Age",type="date",format="date-time",JSONPath=".status.executedAt",description="When the Action execution was started"
 
 // Action describes user intention to resolve & execute a given Interface or Implementation.
 type Action struct {
