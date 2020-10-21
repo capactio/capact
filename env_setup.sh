@@ -16,4 +16,4 @@ echo "TF_VAR_location=europe-west3" >>$GITHUB_ENV
 echo "" >>$GITHUB_ENV
 
 echo APPS="name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}" >>$GITHUB_ENV
-#echo APPS="name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}"
+
