@@ -5,7 +5,12 @@ export GO111MODULE = on
 # enable consistent Go 1.12/1.13 GOPROXY behavior.
 export GOPROXY = https://proxy.golang.org
 
-DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron
+if [ -n "$PR_NUMBER" ];
+then
+  DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron/pr
+else 
+  DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron
+fi
 DOCKER_TAG ?= latest
 
 all: generate build-all-images test-spec test-unit test-lint
