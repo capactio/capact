@@ -15,9 +15,28 @@ type ActionSpec struct {
 
 // ActionStatus defines the observed state of Action
 type ActionStatus struct {
+	Condition ActionCondition
+	Message *string
+
+
+
 	// Foo is an example field of Action.
 	Foo string `json:"foo,omitempty"`
 }
+
+type ActionCondition string
+
+const (
+	InitialActionCondition                        ActionCondition = "Initial"
+	BeingRenderedActionCondition                  ActionCondition = "BeingRendered"
+	AdvancedModeRenderingIterationActionCondition ActionCondition = "AdvancedModeRenderingIteration"
+	ReadyToRunActionCondition                     ActionCondition = "ReadyToRun"
+	RunningActionCondition                        ActionCondition = "Running"
+	BeingCancelledActionCondition                 ActionCondition = "BeingCancelled"
+	CancelledActionCondition                      ActionCondition = "Cancelled"
+	SucceededActionCondition                      ActionCondition = "Succeeded"
+	FailedActionCondition                         ActionCondition = "Failed"
+)
 
 // +kubebuilder:object:root=true
 
