@@ -6,6 +6,7 @@ on:
     - '**.go'
     - '**.graphql'
     - '**.yaml'
+    - '**.sh'
     branches:    
     - 'devops-20201014'
 
