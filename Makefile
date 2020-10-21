@@ -5,7 +5,7 @@ export GO111MODULE = on
 # enable consistent Go 1.12/1.13 GOPROXY behavior.
 export GOPROXY = https://proxy.golang.org
 
-if [ -n "$PR_NUMBER" ];
+if [ -n "$PR_NUMBER" ]
 then
   DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron/pr
 else 
