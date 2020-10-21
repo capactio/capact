@@ -53,8 +53,10 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
+    - id: check
+      run: echo ${APPS}>qqq && cat qqq
     - id: set-matrix
-      run: echo ${APPS}
+      run: echo "::set-output ${APPS}"
   
   build:
     name: Build ${{ matrix.APP }}
