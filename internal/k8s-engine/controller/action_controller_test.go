@@ -1,6 +1,6 @@
 //+build controllertests
 
-package controllers
+package controller
 
 import (
 	"context"

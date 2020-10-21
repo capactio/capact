@@ -34,8 +34,12 @@ spec:
           image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: APP_HEALTHZ_ADDR
+            - name: APP_GRAPH_QL_ADDR
               value: ":8080"
+            - name: APP_METRICS_ADDR
+              value: ":8081"
+            - name: APP_HEALTHZ_ADDR
+              value: ":8082"
             - name: APP_LOGGER_DEV_MODE
               value: "true"
           ports:
@@ -45,11 +49,11 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: 8082
           readinessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: 8082
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

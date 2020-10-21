@@ -1,6 +1,7 @@
 # Engine GraphQL API
 
-The following document describes interaction between client and Engine using GraphQL API.
+The following document describes interaction between client and Engine using GraphQL API. 
+The Engine GraphQL API schema is located in [pkg/engine/api/graphql/schema.graphql](../pkg/engine/api/graphql/schema.graphql) file.
 
 ## Rendering Action in basic mode
 

@@ -224,3 +224,18 @@ Each time the Go code related to K8s controller is change, you need to update ge
 ```bash
 make gen-k8s-resources
 ```
+
+### Generate code from GraphQL schema
+
+This project uses the [GQLGen](https://github.com/99designs/gqlgen) library, which generates the Go struct and server from GraphQL schema definition.
+
+In Voltron project we have three GraphQL schemas:
+- [Engine](../pkg/engine/api/graphql/schema.graphql)
+- [Local OCH](../pkg/och/api/local/schema.graphql)
+- [Public OCH](../pkg/och/api/public/schema.graphql)
+
+Each time the GraphQL schema is change, you need to update generated resources. To do this, execute:
+
+```bash
+make gen-graphql-resources
+```
