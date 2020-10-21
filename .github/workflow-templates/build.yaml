@@ -7,8 +7,8 @@ on:
     - '**.graphql'
     - '**.yaml'
     - '**.sh'
-    branches:    
-    - 'devops-20201014'
+    branches: [ $default-branch ]
+
 
 jobs:
   entry-tests:
