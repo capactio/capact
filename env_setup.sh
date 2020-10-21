@@ -1,6 +1,7 @@
 #!/bin/bash
 echo "GO_VERSION=^1.15.2" >>$GITHUB_ENV
 echo "PROJECT_ID=projectvoltron" >>$GITHUB_ENV
+echo "LINT_TIMEOUT=2m" >>$GITHUB_ENV
 
 
 if [ "${GITHUB_EVENT_NAME}" = "push" ]

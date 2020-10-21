@@ -14,6 +14,7 @@ readonly ROOT_PATH=$(cd "${CURRENT_DIR}/.." && pwd)
 readonly GOLANGCI_LINT_VERSION="v1.31.0"
 readonly TMP_DIR=$(mktemp -d)
 
+LINT_TIMEOUT=${LINT_TIMEOUT:-2m}
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
@@ -46,7 +47,7 @@ golangci::run_checks() {
   shout "Run golangci-lint checks"
 
   # shellcheck disable=SC2046
-  golangci-lint run --timeout=2m $(golangci::fix_if_requested) "${ROOT_PATH}/..."
+  golangci-lint run --timeout=${LINT_TIMEOUT} $(golangci::fix_if_requested) "${ROOT_PATH}/..."
 
   echo -e "${GREEN}√ run golangci-lint${NC}"
 }
