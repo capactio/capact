@@ -51,7 +51,7 @@ type Action {
     """
     Full path for the Implementation or Interface
     """
-    action: String!
+    path: NodePath!
 
     renderedAction: Any
     renderingAdvancedMode: ActionRenderingAdvancedMode

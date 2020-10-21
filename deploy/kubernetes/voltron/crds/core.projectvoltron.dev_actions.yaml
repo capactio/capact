@@ -34,25 +34,193 @@ spec:
         metadata:
           type: object
         spec:
-          description: ActionSpec defines the desired state of Action
+          description: ActionSpec describes user intention to resolve & execute a
+            given Interface or Implementation.
           properties:
-            foo:
-              description: Foo is an example field of Action.
+            advancedRendering:
+              properties:
+                enabled:
+                  type: boolean
+                renderingIteration:
+                  properties:
+                    inputArtifacts:
+                      items:
+                        properties:
+                          alias:
+                            type: string
+                          typeInstanceID:
+                            type: string
+                          typePath:
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+              type: object
+            inputRef:
+              description: InputRef contains reference to resource with Action input.
+              properties:
+                secretRef:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+              type: object
+            path:
+              description: Full path for the Implementation or Interface manifest
               type: string
+            renderedActionOverride:
+              description: RawMessage is a raw encoded JSON value. It implements Marshaler
+                and Unmarshaler and can be used to delay JSON decoding or precompute
+                a JSON encoding.
+              format: byte
+              type: string
+            run:
+              type: boolean
           type: object
         status:
-          description: ActionStatus defines the observed state of Action
+          description: ActionStatus defines the observed state of Action.
           properties:
+            advancedRendering:
+              properties:
+                renderingIteration:
+                  properties:
+                    inputArtifactsToProvide:
+                      items:
+                        properties:
+                          alias:
+                            type: string
+                          typeInstanceID:
+                            type: string
+                          typePath:
+                            type: string
+                        type: object
+                      type: array
+                  type: object
+              type: object
+            builtInRunner:
+              description: BuiltinRunnerStatus holds data related to built-in Runner
+                that runs the Action.
+              properties:
+                interface:
+                  description: Interface is a full path of built-in Runner Interface
+                    manifest.
+                  type: string
+                status:
+                  description: StatusRef contains reference to resource with built-in
+                    Runner status data.
+                  format: byte
+                  type: string
+              type: object
+            cancelledBy:
+              description: UserInfo holds the information about the user needed to
+                implement the user.Info interface.
+              properties:
+                extra:
+                  additionalProperties:
+                    description: ExtraValue masks the value so protobuf can generate
+                    items:
+                      type: string
+                    type: array
+                  description: Any additional information provided by the authenticator.
+                  type: object
+                groups:
+                  description: The names of groups this user is a part of.
+                  items:
+                    type: string
+                  type: array
+                uid:
+                  description: A unique value that identifies this user across time.
+                    If this user is deleted and another user by the same name is added,
+                    they will have different UIDs.
+                  type: string
+                username:
+                  description: The name that uniquely identifies this user among all
+                    active users.
+                  type: string
+              type: object
             condition:
               type: string
-            foo:
-              description: Foo is an example field of Action.
-              type: string
+            createdBy:
+              description: UserInfo holds the information about the user needed to
+                implement the user.Info interface.
+              properties:
+                extra:
+                  additionalProperties:
+                    description: ExtraValue masks the value so protobuf can generate
+                    items:
+                      type: string
+                    type: array
+                  description: Any additional information provided by the authenticator.
+                  type: object
+                groups:
+                  description: The names of groups this user is a part of.
+                  items:
+                    type: string
+                  type: array
+                uid:
+                  description: A unique value that identifies this user across time.
+                    If this user is deleted and another user by the same name is added,
+                    they will have different UIDs.
+                  type: string
+                username:
+                  description: The name that uniquely identifies this user among all
+                    active users.
+                  type: string
+              type: object
             message:
               type: string
+            outputRef:
+              description: OutputRef contains reference to resource with Action output.
+              properties:
+                secretRef:
+                  description: LocalObjectReference contains enough information to
+                    let you locate the referenced object inside the same namespace.
+                  properties:
+                    name:
+                      description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                        TODO: Add other useful fields. apiVersion, kind, uid?'
+                      type: string
+                  type: object
+              type: object
+            renderedAction:
+              description: RawMessage is a raw encoded JSON value. It implements Marshaler
+                and Unmarshaler and can be used to delay JSON decoding or precompute
+                a JSON encoding.
+              format: byte
+              type: string
+            runBy:
+              description: UserInfo holds the information about the user needed to
+                implement the user.Info interface.
+              properties:
+                extra:
+                  additionalProperties:
+                    description: ExtraValue masks the value so protobuf can generate
+                    items:
+                      type: string
+                    type: array
+                  description: Any additional information provided by the authenticator.
+                  type: object
+                groups:
+                  description: The names of groups this user is a part of.
+                  items:
+                    type: string
+                  type: array
+                uid:
+                  description: A unique value that identifies this user across time.
+                    If this user is deleted and another user by the same name is added,
+                    they will have different UIDs.
+                  type: string
+                username:
+                  description: The name that uniquely identifies this user among all
+                    active users.
+                  type: string
+              type: object
           required:
           - condition
-          - message
           type: object
       type: object
   version: v1alpha1
