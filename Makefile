@@ -98,7 +98,7 @@ test-cover-html: test-unit
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources
 .PHONY: generate
 
 gen-go-api-from-ocf-spec:

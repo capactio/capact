@@ -6,7 +6,7 @@ Open Capability Hub can be run in two modes: public and local. In a result, Grap
 
 ## Public API
 
-[Public OCH](../pkg/och/api/public/schema.graphql) API contains GraphQL operations for the following entities:
+Public OCH API contains GraphQL operations for the following entities:
 - RepoMetadata
 - InterfaceGroup
 - Interface
@@ -20,7 +20,7 @@ To see full GraphQL schema, open the [`schema.graphql`](../pkg/och/api/public/sc
  
 ## Local API
 
-[Local OCH](../pkg/och/api/local/schema.graphql) API contains GraphQL operations for managing TypeInstances.
+Local OCH API contains GraphQL operations for managing TypeInstances.
 
 To see full GraphQL schema, open the [`schema.graphql`](../pkg/och/api/local/schema.graphql) file.
 
