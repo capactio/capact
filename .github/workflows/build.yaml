@@ -50,11 +50,11 @@ jobs:
   
   build:
     runs-on: ubuntu-latest
-    needs: build-image  
+    needs: entry-tests  
     strategy:
       matrix:
-#        APP: [gateway, k8s-engine, och]
-        APP: [ ${{ env.APPS }}]
+        APP: [gateway, k8s-engine, och]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
