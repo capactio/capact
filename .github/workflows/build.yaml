@@ -62,8 +62,8 @@ jobs:
       run: echo ${APPS}>qqq && cat qqq
     - name: set-matrix
       run: | 
-        echo '::set-output name=matrix::{\"include\":[{\"APP":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}'
-#        echo "::set-output ${APPS}"
+        echo "::set-output name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}"
+
 
   
   build:
