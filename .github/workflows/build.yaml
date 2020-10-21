@@ -151,7 +151,7 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: build-*   
+    needs: [build-app, build-infra, build-tests]    
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
