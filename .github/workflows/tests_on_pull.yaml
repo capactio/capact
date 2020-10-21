@@ -1,4 +1,4 @@
-# name: Pull-Images
+# name: PR build
 
 # on: 
 #   pull_request:
