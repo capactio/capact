@@ -56,6 +56,8 @@ main() {
   gqlgen generate --verbose --config ./config.yaml
   popd
 
+  # TODO(https://cshark.atlassian.net/browse/SV-100): Add generation for OCH
+
   shout "Generation completed successfully."
 }
 

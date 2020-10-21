@@ -90,6 +90,7 @@ func main() {
 
 // The server will stop running when the channel is closed.
 // graphQLServer function blocks until the channel is closed or an error occurs.
+// TODO(https://cshark.atlassian.net/browse/SV-100): probably should be extracted to be reusable.
 func graphQLServer(cfg Config) manager.RunnableFunc {
 	gqlCfg := graphql.Config{
 		Resolvers: domaingraphql.NewRootResolver(),
