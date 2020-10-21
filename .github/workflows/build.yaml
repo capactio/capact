@@ -53,9 +53,11 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-    - id: check
+    - name: setup env
+      run: . ./env_setup.sh
+    - name: check
       run: echo ${APPS}>qqq && cat qqq
-    - id: set-matrix
+    - name: set-matrix
       run: echo "::set-output ${APPS}"
   
   build:
