@@ -1,0 +1,174 @@
+name: Master build
+
+on: 
+  push:
+    paths:
+    - '**.go'
+    - '**.graphql'
+    - '**.yaml'
+    - '**.sh'
+    branches:    
+    - 'devops-20201014'
+
+jobs:
+  entry-tests:
+    name: Lint, Unit, Generation Tests
+    runs-on: ubuntu-latest
+      
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
+
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+
+      - name: Run linting
+        run: | 
+          make test-lint
+        env:
+          SKIP_DEPS_INSTALLATION: false
+
+      - name: Run unit tests
+        run: make test-unit
+
+      - name: Run generation
+        run: |
+          make test-generated
+        env:
+          SKIP_DEPS_INSTALLATION: false
+  
+  
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    needs: entry-tests
+    outputs:
+      matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
+      matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
+      matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: setup env
+        run: . ./env_setup.sh
+      - id: set-matrix-app
+        run: echo "::set-output ${APPS}"
+      - id: set-matrix-test
+        run: echo "::set-output ${TESTS}"
+      - id: set-matrix-infra
+        run: echo "::set-output ${INFRAS}"
+
+
+  build-app:
+    name: Build ${{ matrix.APP }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix 
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          export_default_credentials: true
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
+      - run: make build-app-image-${{ matrix.APP }}
+      - run: make push-app-image-${{ matrix.APP }}
+
+
+  build-tests:
+    name: Build ${{ matrix.TEST }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix 
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          export_default_credentials: true
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
+      - run: make build-test-image-${{ matrix.TEST }}
+      - run: make push-test-image-${{ matrix.TEST }}
+
+  build-infra:
+    name: Build ${{ matrix.INFRA }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix 
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          export_default_credentials: true
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
+      - run: make build-infra-image-${{ matrix.INFRA }}
+      - run: make push-infra-image-${{ matrix.INFRA }}
+
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: [build-app, build-infra, build-tests]    
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          export_default_credentials: true
+
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+
+      - name: Run unit tests
+        run: | 
+          make test-integration
+        env:
+          SKIP_DEPS_INSTALLATION: false
+
