@@ -19,5 +19,5 @@ echo "" >>$GITHUB_ENV
 echo APPS="name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}" >>$GITHUB_ENV
 echo TESTS="name=matrix::{\"include\":[{\"TEST\":\"e2e\"}]}" >>$GITHUB_ENV
 echo INFRAS="name=matrix::{\"include\":[{\"INFRA\":\"json-go-gen\"}]}" >>$GITHUB_ENV
-echo qqq
+
 
