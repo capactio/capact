@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "GO_VERSION=^1.15.2" >>$GITHUB_ENV
 echo "PROJECT_ID=projectvoltron" >>$GITHUB_ENV
-echo "APPS=gateway, k8s-engine, och" >>$GITHUB_ENV
+
 
 if [ "${GITHUB_EVENT_NAME}" = "push" ]
 then
@@ -14,3 +14,5 @@ fi
 echo "TF_VAR_cluster_name=voltron-dev1" >>$GITHUB_ENV
 echo "TF_VAR_location=europe-west3" >>$GITHUB_ENV
 echo "" >>$GITHUB_ENV
+
+export APPS="::set-output name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}"
