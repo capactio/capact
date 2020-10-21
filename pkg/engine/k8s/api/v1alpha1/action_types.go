@@ -10,7 +10,7 @@ import (
 // TODO: kubebuilder printcolumn
 // TODO: add comments to every field
 // TODO: add validation
-// TODO: status conditions?
+// TODO: To consider status conditions?
 
 // NOTE: json tags are required. Any new fields you add must have json tags for the fields to be serialized.
 // Important: Run "make gen-k8s-resources" to regenerate code after modifying this file.
@@ -63,7 +63,7 @@ type ActionIORef struct {
 // ActionStatus defines the observed state of Action.
 type ActionStatus struct {
 
-	Condition ActionCondition `json:"condition"`
+	Phase ActionPhase `json:"phase,omitempty"`
 
 	Message *string `json:"message,omitempty"`
 
@@ -106,18 +106,18 @@ type BuiltinRunnerStatus struct {
 
 type NodePath string
 
-type ActionCondition string
+type ActionPhase string
 
 const (
-	InitialActionCondition                        ActionCondition = "Initial"
-	BeingRenderedActionCondition                  ActionCondition = "BeingRendered"
-	AdvancedModeRenderingIterationActionCondition ActionCondition = "AdvancedModeRenderingIteration"
-	ReadyToRunActionCondition                     ActionCondition = "ReadyToRun"
-	RunningActionCondition                        ActionCondition = "Running"
-	BeingCancelledActionCondition                 ActionCondition = "BeingCancelled"
-	CancelledActionCondition                      ActionCondition = "Cancelled"
-	SucceededActionCondition                      ActionCondition = "Succeeded"
-	FailedActionCondition                         ActionCondition = "Failed"
+	InitialActionPhase                        ActionPhase = "Initial"
+	BeingRenderedActionPhase                  ActionPhase = "BeingRendered"
+	AdvancedModeRenderingIterationActionPhase ActionPhase = "AdvancedModeRenderingIteration"
+	ReadyToRunActionPhase                     ActionPhase = "ReadyToRun"
+	RunningActionPhase                        ActionPhase = "Running"
+	BeingCancelledActionPhase                 ActionPhase = "BeingCancelled"
+	CancelledActionPhase                      ActionPhase = "Cancelled"
+	SucceededActionPhase                      ActionPhase = "Succeeded"
+	FailedActionPhase                         ActionPhase = "Failed"
 )
 
 // +kubebuilder:object:root=true
