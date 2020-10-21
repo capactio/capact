@@ -112,7 +112,7 @@ make dev-cluster
 
 ### Rebuild Docker images and update cluster
 
-To rebuild Docker images and upgrade Helm chart on dev cluster with new images, execute:
+To rebuild all Docker images and upgrade Helm chart on dev cluster with new images, execute:
 
 ```bash
 make dev-cluster-update
@@ -231,8 +231,8 @@ This project uses the [GQLGen](https://github.com/99designs/gqlgen) library, whi
 
 In Voltron project we have three GraphQL schemas:
 - [Engine](../pkg/engine/api/graphql/schema.graphql)
-- [Local OCH](../pkg/och/api/local/schema.graphql)
-- [Public OCH](../pkg/och/api/public/schema.graphql)
+- [Local OCH](../pkg/och/api/graphql/local/schema.graphql)
+- [Public OCH](../pkg/och/api/graphql/public/schema.graphql)
 
 Each time the GraphQL schema is change, you need to update generated resources. To do this, execute:
 

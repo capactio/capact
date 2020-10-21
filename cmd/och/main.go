@@ -1,61 +1,72 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
-	"strings"
 
 	"github.com/vrischmann/envconfig"
+	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+
+	"projectvoltron.dev/voltron/internal/graphqlutil"
+	"projectvoltron.dev/voltron/internal/healthz"
+	"projectvoltron.dev/voltron/internal/och"
 )
 
 // Config holds application related configuration
 type Config struct {
-	HubMode string
-	Port    int
+	//OCHMode represents the possible modes for OCH
+	OCHMode och.Mode
+	// GraphQLAddr is the TCP address the GraphQL endpoint binds to.
+	GraphQLAddr string `envconfig:"default=:8080"`
+	// HealthzAddr is the TCP address the health probes endpoint binds to.
+	HealthzAddr string `envconfig:"default=:8082"`
+	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
+	// and logging information, etc).
+	LoggerDevMode bool `envconfig:"default=false"`
 }
 
-var (
-	hubMode = map[string]string{
-		"local":  "OCH Local - OK",
-		"public": "OCH Public - OK",
-	}
-	errWrongHubMode = fmt.Errorf("hub mode needs to be specified. Possible options: %s", strings.Join(keys(hubMode), ", "))
-)
-
 func main() {
+	// init config
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	msg, found := hubMode[cfg.HubMode]
-	if !found {
-		exitOnError(errWrongHubMode, "while validating hub mode")
+	stop := signals.SetupSignalHandler()
+
+	// setup logger
+	var logCfg zap.Config
+	if cfg.LoggerDevMode {
+		logCfg = zap.NewDevelopmentConfig()
+	} else {
+		logCfg = zap.NewProductionConfig()
 	}
 
-	http.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
-		if _, err := w.Write([]byte(msg)); err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-		}
-	})
+	logger, err := logCfg.Build()
+	exitOnError(err, "while creating zap logger")
 
-	addr := fmt.Sprintf(":%d", cfg.Port)
-	log.Printf("Starting server on %s", addr)
+	// healthz server
+	hsvr := healthz.NewHTTPServer(logger, cfg.HealthzAddr, cfg.OCHMode.String())
 
-	err = http.ListenAndServe(addr, nil)
-	exitOnError(err, "while starting HTTP server")
+	// GraphQL server
+	gsvr := graphqlutil.NewHTTPServer(
+		logger,
+		och.GraphQLSchema(cfg.OCHMode),
+		cfg.GraphQLAddr,
+		cfg.OCHMode.String(),
+	)
+
+	// start servers
+	parallelServers := new(errgroup.Group)
+	parallelServers.Go(func() error { return hsvr.Start(stop) })
+	parallelServers.Go(func() error { return gsvr.Start(stop) })
+
+	err = parallelServers.Wait()
+	exitOnError(err, "while waiting for servers to finish gracefully")
 }
 
 func exitOnError(err error, context string) {
 	if err != nil {
 		log.Fatalf("%s: %v", context, err)
 	}
-}
-
-func keys(in map[string]string) []string {
-	var out []string
-	for k := range in {
-		out = append(out, k)
-	}
-	return out
 }

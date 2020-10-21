@@ -6,13 +6,13 @@ import (
 	"strconv"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/scalar"
+	"projectvoltron.dev/voltron/internal/graphqlutil"
 )
 
 type Timestamp time.Time
 
 func (t *Timestamp) UnmarshalGQL(v interface{}) error {
-	tmpStr, err := scalar.ConvertToString(v)
+	tmpStr, err := graphqlutil.ConvertToString(v)
 	if err != nil {
 		return err
 	}

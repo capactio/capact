@@ -1,14 +1,9 @@
 package main
 
 import (
-	"context"
 	"log"
-	"net/http"
 
-	"github.com/99designs/gqlgen/graphql/handler"
-	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/gorilla/mux"
-	"github.com/pkg/errors"
+	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -16,8 +11,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"projectvoltron.dev/voltron/internal/graphqlutil"
 	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
@@ -52,8 +47,10 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
+	logger := zap.NewRaw(zap.UseDevMode(cfg.LoggerDevMode))
+
 	// setup controller
-	ctrl.SetLogger(zap.New(zap.UseDevMode(cfg.LoggerDevMode)))
+	ctrl.SetLogger(zapr.NewLogger(logger))
 
 	err = clientgoscheme.AddToScheme(scheme)
 	exitOnError(err, "while adding k8s scheme")
@@ -79,44 +76,18 @@ func main() {
 	exitOnError(err, "while adding healthz check")
 
 	// setup graphql server
-	err = mgr.Add(graphQLServer(cfg))
+	execSchema := graphql.NewExecutableSchema(graphql.Config{
+		Resolvers: domaingraphql.NewRootResolver(),
+	})
+
+	gsvr := graphqlutil.NewHTTPServer(logger, execSchema, cfg.GraphQLAddr, "Engine GraphQL API")
+	err = mgr.Add(gsvr)
 	exitOnError(err, "while adding GraphQL server")
 
 	// start
 	setupLog.Info("starting manager")
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	exitOnError(err, "while running manager")
-}
-
-// The server will stop running when the channel is closed.
-// graphQLServer function blocks until the channel is closed or an error occurs.
-// TODO(https://cshark.atlassian.net/browse/SV-100): probably should be extracted to be reusable.
-func graphQLServer(cfg Config) manager.RunnableFunc {
-	gqlCfg := graphql.Config{
-		Resolvers: domaingraphql.NewRootResolver(),
-	}
-	executableSchema := graphql.NewExecutableSchema(gqlCfg)
-
-	mainRouter := mux.NewRouter()
-	mainRouter.HandleFunc("/", playground.Handler("Voltron Engine API", "/graphql"))
-	mainRouter.Handle("/graphql", handler.NewDefaultServer(executableSchema)).Methods("POST")
-
-	return func(stop <-chan struct{}) error {
-		srv := &http.Server{Addr: cfg.GraphQLAddr, Handler: mainRouter}
-		go func() {
-			<-stop
-			// We received an interrupt signal, shut down.
-			if err := srv.Shutdown(context.Background()); err != nil {
-				ctrl.Log.WithName("HTTP Server").Error(err, "shutting down HTTP server")
-			}
-		}()
-
-		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
-			return errors.Wrap(err, "while starting HTTP server")
-		}
-
-		return nil
-	}
 }
 
 func exitOnError(err error, context string) {

@@ -19,6 +19,7 @@ type ActionReconciler struct {
 	Log logr.Logger
 }
 
+// NewActionReconciler returns the ActionReconciler instance
 func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
 	return &ActionReconciler{Client: client, Log: log}
 }
@@ -27,6 +28,7 @@ func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconcile
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=create
 
+// Reconcile handles the reconcile logic for the Action CR.
 func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	var (
 		ctx = context.Background()
