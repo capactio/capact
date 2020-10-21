@@ -3,4 +3,4 @@ kind: Action
 metadata:
   name: "hakuna-matata"
 spec:
-  foo: "testing"
+  path: "cap.interface.database.mysql.install"

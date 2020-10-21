@@ -1,6 +1,7 @@
-<!-- TODO: Move this document -->
+# Engine Kubernetes API
 
-# Action CRD
+> **NOTE**: This document is incomplete. Please come back later.
+<!-- TODO: Consider conditions in status? Or describe why we didn't go with that approach right now -->
 
 The following document lists all decisions regarding Action Custom Resource Definition.
 
