@@ -54,7 +54,7 @@ jobs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
     - id: set-matrix
-      run: echo "::set-output name=matrix::{\"include\":[{\"APP\":\"gateway\",\"k8s-engine\":\"och\"}]}"
+      run: echo "::set-output name=matrix::{\"include\":[{\"APP\":\"gateway\"},{\"APP\":\"k8s-engine\"},{\"APP\":\"och\"}]}"
   
   build:
     name: Build ${{ matrix.APP }}
