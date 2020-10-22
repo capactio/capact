@@ -24,7 +24,7 @@ To install Voltron, run the following steps:
     ```bash
     helm install voltron ./chart \
             --create-namespace \
-            -n=voltron-system
+            -n voltron-system
     ```
 
 
@@ -43,7 +43,7 @@ To upgrade Voltron installation, do the following steps:
 1. Upgrade Voltron Helm chart:
     
     ```bash
-    helm upgrade voltron ./chart -n=voltron-system 
+    helm upgrade voltron ./chart -n voltron-system 
     ```
 
 ## Uninstall
