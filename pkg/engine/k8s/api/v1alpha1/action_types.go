@@ -54,7 +54,7 @@ type ActionSpec struct {
 
 	// AdvancedRendering holds properties related to Action advanced rendering mode.
 	// +optional
-	AdvancedRendering AdvancedRendering `json:"advancedRendering,omitempty"`
+	AdvancedRendering *AdvancedRendering `json:"advancedRendering,omitempty"`
 
 	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
 	// +optional
@@ -65,12 +65,12 @@ type ActionSpec struct {
 	// If the Action is not fully rendered, and this field is set to `true`, Engine executes a given Action instantly after it is resolved.
 	// +optional
 	// +kubebuilder:default=false
-	Run bool `json:"run"`
+	Run *bool `json:"run,omitempty"`
 
 	// Cancel specifies whether the Action execution should be cancelled.
 	// +optional
 	// +kubebuilder:default=false
-	Cancel bool `json:"cancel"`
+	Cancel *bool `json:"cancel,omitempty"`
 }
 
 // AdvancedRendering holds are properties related to Action advanced rendering mode.
@@ -82,7 +82,7 @@ type AdvancedRendering struct {
 
 	// RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 	// +optional
-	RenderingIteration RenderingIteration `json:"renderingIteration"`
+	RenderingIteration *RenderingIteration `json:"renderingIteration,omitempty"`
 }
 
 // RenderingIteration holds properties for rendering iteration in advanced rendering mode.
@@ -128,7 +128,7 @@ type ActionStatus struct {
 
 	// Runner holds data related to Runner that runs the Action.
 	// +optional
-	Runner RunnerStatus `json:"builtInRunner,omitempty"`
+	Runner *RunnerStatus `json:"builtInRunner,omitempty"`
 
 	// OutputRef contains reference to resource with Action output.
 	// +optional
