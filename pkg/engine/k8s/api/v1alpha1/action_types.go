@@ -155,6 +155,10 @@ type ActionStatus struct {
 	// CancelledBy holds user data which cancelled a given Action.
 	// +optional
 	CancelledBy *v1beta1.UserInfo `json:"cancelledBy,omitempty"`
+
+	// ObservedGeneration reflects the generation of the most recently observed Action.
+	// +optional
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // AdvancedRenderingStatus describes status related to advanced rendering mode.

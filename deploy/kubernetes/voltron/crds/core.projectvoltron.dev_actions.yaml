@@ -195,6 +195,10 @@ spec:
               message:
                 description: Message provides a readable description of the Action phase.
                 type: string
+              observedGeneration:
+                description: ObservedGeneration reflects the generation of the most recently observed Action.
+                format: int64
+                type: integer
               outputRef:
                 description: OutputRef contains reference to resource with Action output.
                 properties:
