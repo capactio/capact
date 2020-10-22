@@ -111,7 +111,7 @@ spec:
                 type: string
               renderedActionOverride:
                 description: RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
-                type: Any
+                type: object
               run:
                 default: false
                 description: Run specifies whether the Action is approved to be executed. Engine won't execute fully rendered Action until the field is set to `true`. If the Action is not fully rendered, and this field is set to `true`, Engine executes a given Action instantly after it is resolved.
@@ -145,19 +145,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                type: object
-              builtInRunner:
-                description: Runner holds data related to Runner that runs the Action.
-                properties:
-                  interface:
-                    description: Interface is a full path of Runner Interface manifest.
-                    minLength: 3
-                    type: string
-                  status:
-                    description: StatusRef contains reference to resource with arbitrary Runner status data.
-                    type: Any
-                required:
-                - interface
                 type: object
               cancelledBy:
                 description: CancelledBy holds user data which cancelled a given Action.
@@ -237,7 +224,7 @@ spec:
                 type: string
               renderedAction:
                 description: RenderedAction contains partially or fully rendered Action to be executed.
-                type: Any
+                type: object
               runBy:
                 description: RunBy holds user data which run a given Action.
                 properties:
@@ -260,6 +247,19 @@ spec:
                   username:
                     description: The name that uniquely identifies this user among all active users.
                     type: string
+                type: object
+              runner:
+                description: Runner holds data related to Runner that runs the Action.
+                properties:
+                  interface:
+                    description: Interface is a full path of Runner Interface manifest.
+                    minLength: 3
+                    type: string
+                  status:
+                    description: StatusRef contains reference to resource with arbitrary Runner status data.
+                    type: object
+                required:
+                - interface
                 type: object
             required:
             - phase

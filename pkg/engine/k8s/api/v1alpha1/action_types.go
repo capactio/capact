@@ -2,7 +2,7 @@
 package v1alpha1
 
 import (
-	"encoding/json"
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"k8s.io/api/authentication/v1beta1"
 	v1 "k8s.io/api/core/v1"
@@ -58,7 +58,7 @@ type ActionSpec struct {
 
 	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
 	// +optional
-	RenderedActionOverride json.RawMessage `json:"renderedActionOverride,omitempty"`
+	RenderedActionOverride *runtime.RawExtension `json:"renderedActionOverride,omitempty"`
 
 	// Run specifies whether the Action is approved to be executed.
 	// Engine won't execute fully rendered Action until the field is set to `true`.
@@ -118,6 +118,8 @@ type ActionIORef struct {
 // ActionStatus defines the observed state of Action.
 type ActionStatus struct {
 
+	// TODO: To investigate why the status phase is not initially filled with the default value; OpenAPI schema is correctly rendered
+
 	// ActionPhase describes in which state is the Action to execute.
 	// +kubebuilder:default=Initial
 	Phase ActionPhase `json:"phase"`
@@ -128,7 +130,7 @@ type ActionStatus struct {
 
 	// Runner holds data related to Runner that runs the Action.
 	// +optional
-	Runner *RunnerStatus `json:"builtInRunner,omitempty"`
+	Runner *RunnerStatus `json:"runner,omitempty"`
 
 	// OutputRef contains reference to resource with Action output.
 	// +optional
@@ -136,7 +138,7 @@ type ActionStatus struct {
 
 	// RenderedAction contains partially or fully rendered Action to be executed.
 	// +optional
-	RenderedAction json.RawMessage `json:"renderedAction,omitempty"`
+	RenderedAction *runtime.RawExtension `json:"renderedAction,omitempty"`
 
 	// AdvancedRendering describes status related to advanced rendering mode.
 	// +optional
@@ -190,7 +192,7 @@ type RunnerStatus struct {
 
 	// StatusRef contains reference to resource with arbitrary Runner status data.
 	// +optional
-	Status json.RawMessage `json:"status,omitempty"`
+	Status *runtime.RawExtension `json:"status,omitempty"`
 }
 
 // NodePath defines full path for a given manifest, e.g. Implementation or Interface.
