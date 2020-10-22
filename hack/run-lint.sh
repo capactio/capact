@@ -78,8 +78,8 @@ graphql::run_checks() {
 
   docker run --rm -v "$ROOT_PATH":/repo -w=/repo gcr.io/projectvoltron/infra/graphql-schema-linter:0.1.0 \
     --src ./pkg/engine/api/graphql/schema.graphql \
-    --src ./pkg/och/api/local/schema.graphql \
-    --src ./pkg/och/api/public/schema.graphql \
+    --src ./pkg/och/api/graphql/public/schema.graphql \
+    --src ./pkg/och/api/graphql/local/schema.graphql \
     --linter-args "-c ./ --format compact"
   echo -e "${GREEN}√ run graphql-schema-linter${NC}"
 }

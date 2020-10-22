@@ -1,8 +1,10 @@
-package scalar
+package graphqlutil
 
 import "github.com/pkg/errors"
 
-func ConvertToString(in interface{}) (string, error) {
+// ScalarToString tries to convert a given empty interface to string type.
+// Returns error if conversion is not possible.
+func ScalarToString(in interface{}) (string, error) {
 	if in == nil {
 		return "", errors.New("input should not be nil")
 	}

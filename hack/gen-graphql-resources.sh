@@ -21,26 +21,26 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.' e
 source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load CI utilities.' exit 1; }
 
 cleanup() {
-    rm -rf "${TMP_DIR}"
+  rm -rf "${TMP_DIR}"
 }
 
 trap cleanup EXIT
 
 host::install::gqlgen() {
-    shout "Install the gqlgen ${STABLE_GQLGEN_VERSION} locally to a tempdir..."
-    mkdir -p "${TMP_DIR}/bin"
+  shout "Install the gqlgen ${STABLE_GQLGEN_VERSION} locally to a tempdir..."
+  mkdir -p "${TMP_DIR}/bin"
 
-    export PATH="${TMP_DIR}/bin:${PATH}"
-    export GOBIN="${TMP_DIR}/bin"
+  export PATH="${TMP_DIR}/bin:${PATH}"
+  export GOBIN="${TMP_DIR}/bin"
 
-    pushd "$TMP_DIR" >/dev/null
+  pushd "$TMP_DIR" >/dev/null
 
-    go mod init tmp
-    go get github.com/99designs/gqlgen@$STABLE_GQLGEN_VERSION
+  go mod init tmp
+  go get github.com/99designs/gqlgen@$STABLE_GQLGEN_VERSION
 
-    popd >/dev/null
+  popd >/dev/null
 
-    echo -e "${GREEN}√ install gqlgen${NC}"
+  echo -e "${GREEN}√ install gqlgen${NC}"
 }
 
 main() {
@@ -50,13 +50,20 @@ main() {
     echo "Skipping gqlgen installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
 
-  shout "Generating Engine GraphQL related resources..."
+  shout "Generating Volron GraphQL related resources..."
 
-  pushd "${REPO_ROOT_DIR}/pkg/engine/api/graphql"
-  gqlgen generate --verbose --config ./config.yaml
-  popd
+  readonly apiPaths=(
+    "/pkg/engine/api/graphql"
+    "/pkg/och/api/graphql/public"
+    "/pkg/och/api/graphql/local"
+  )
 
-  # TODO(https://cshark.atlassian.net/browse/SV-100): Add generation for OCH
+  for path in "${apiPaths[@]}"; do
+    echo "- Processing ${path}..."
+    pushd "${REPO_ROOT_DIR}$path" > /dev/null
+    gqlgen generate --verbose --config ./config.yaml
+    popd > /dev/null
+  done
 
   shout "Generation completed successfully."
 }
