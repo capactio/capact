@@ -82,10 +82,10 @@ type ActionStatus {
 }
 
 """
-Additional Action status from the built-in Runner
+Additional Action status from the Runner
 """
 type RunnerStatus {
-    interface: NodePath! # Path of the built-in Runner Interface
+    interface: NodePath! # Path of the Runner Interface
     status: Any # status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 }
 

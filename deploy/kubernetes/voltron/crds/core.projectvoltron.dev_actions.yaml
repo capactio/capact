@@ -21,8 +21,8 @@ spec:
     description: Status of the Action
     name: Status
     type: string
-  - JSONPath: .status.executedAt
-    description: When the Action execution was started
+  - JSONPath: .metadata.creationTimestamp
+    description: When the Action was created
     format: date-time
     name: Age
     type: date
@@ -59,10 +59,11 @@ spec:
             to execute.
           properties:
             advancedRendering:
-              description: AdvancedRendering holds are properties related to Action
-                advanced rendering mode.
+              description: AdvancedRendering holds properties related to Action advanced
+                rendering mode.
               properties:
                 enabled:
+                  default: false
                   description: Enabled specifies if the advanced rendering mode is
                     enabled.
                   type: boolean
@@ -71,7 +72,8 @@ spec:
                     in advanced rendering mode.
                   properties:
                     continue:
-                      description: Continue specified the user intention to continue
+                      default: false
+                      description: Continue specifies the user intention to continue
                         rendering using the provided InputArtifacts. As the input
                         artifacts are optional, user may continue rendering with empty
                         list of InputArtifacts.
@@ -91,16 +93,19 @@ spec:
                             description: TypeInstanceID is a unique identifier for
                               the TypeInstance used as input artifact.
                             type: string
-                          typePath:
-                            description: TypePath is full path for the Type manifest
-                              related to a given artifact (TypeInstance).
-                            minLength: 3
-                            type: string
+                        required:
+                        - alias
+                        - typeInstanceID
                         type: object
                       type: array
+                  required:
+                  - continue
                   type: object
+              required:
+              - enabled
               type: object
             cancel:
+              default: false
               description: Cancel specifies whether the Action execution should be
                 cancelled.
               type: boolean
@@ -116,6 +121,8 @@ spec:
                         TODO: Add other useful fields. apiVersion, kind, uid?'
                       type: string
                   type: object
+              required:
+              - secretRef
               type: object
             path:
               description: Path contains full path for Implementation or Interface
@@ -128,12 +135,15 @@ spec:
               format: byte
               type: string
             run:
+              default: false
               description: Run specifies whether the Action is approved to be executed.
                 Engine won't execute fully rendered Action until the field is set
                 to `true`. If the Action is not fully rendered, and this field is
                 set to `true`, Engine executes a given Action instantly after it is
                 resolved.
               type: boolean
+          required:
+          - path
           type: object
         status:
           description: ActionStatus defines the observed state of Action.
@@ -161,29 +171,27 @@ spec:
                             description: TypeInstanceID is a unique identifier for
                               the TypeInstance used as input artifact.
                             type: string
-                          typePath:
-                            description: TypePath is full path for the Type manifest
-                              related to a given artifact (TypeInstance).
-                            minLength: 3
-                            type: string
+                        required:
+                        - alias
+                        - typeInstanceID
                         type: object
                       type: array
                   type: object
               type: object
             builtInRunner:
-              description: BuiltinRunner holds data related to built-in Runner that
-                runs the Action.
+              description: Runner holds data related to Runner that runs the Action.
               properties:
                 interface:
-                  description: Interface is a full path of built-in Runner Interface
-                    manifest.
+                  description: Interface is a full path of Runner Interface manifest.
                   minLength: 3
                   type: string
                 status:
-                  description: StatusRef contains reference to resource with built-in
+                  description: StatusRef contains reference to resource with arbitrary
                     Runner status data.
                   format: byte
                   type: string
+              required:
+              - interface
               type: object
             cancelledBy:
               description: CancelledBy holds user data which cancelled a given Action.
@@ -237,13 +245,8 @@ spec:
                     active users.
                   type: string
               type: object
-            executedAt:
-              description: ExecutedAt holds timestamp of the moment when Engine started
-                execution of the Action.
-              format: date-time
-              type: string
             message:
-              description: Message provides a readable description of the Action state.
+              description: Message provides a readable description of the Action phase.
               type: string
             outputRef:
               description: OutputRef contains reference to resource with Action output.
@@ -257,9 +260,22 @@ spec:
                         TODO: Add other useful fields. apiVersion, kind, uid?'
                       type: string
                   type: object
+              required:
+              - secretRef
               type: object
             phase:
+              default: Initial
               description: ActionPhase describes in which state is the Action to execute.
+              enum:
+              - Initial
+              - BeingRendered
+              - AdvancedModeRenderingIteration
+              - ReadyToRun
+              - Running
+              - BeingCancelled
+              - Cancelled
+              - Succeeded
+              - Failed
               type: string
             renderedAction:
               description: RenderedAction contains partially or fully rendered Action
@@ -292,6 +308,8 @@ spec:
                     active users.
                   type: string
               type: object
+          required:
+          - phase
           type: object
       type: object
   version: v1alpha1

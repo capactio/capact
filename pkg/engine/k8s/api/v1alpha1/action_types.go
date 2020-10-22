@@ -3,6 +3,7 @@ package v1alpha1
 
 import (
 	"encoding/json"
+
 	"k8s.io/api/authentication/v1beta1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -11,19 +12,49 @@ import (
 // NOTE: json tags are required. Any new fields you add must have json tags for the fields to be serialized.
 // Important: Run "make gen-k8s-resources" to regenerate code after modifying this file.
 
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=ac
+// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.path",description="Interface/Implementation path of the Action"
+// +kubebuilder:printcolumn:name="Run",type="boolean",JSONPath=".spec.run",description="If the Action is approved to run"
+// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase",description="Status of the Action"
+// +kubebuilder:printcolumn:name="Age",type="date",format="date-time",JSONPath=".metadata.creationTimestamp",description="When the Action was created"
+
+// Action describes user intention to resolve & execute a given Interface or Implementation.
+type Action struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   ActionSpec   `json:"spec,omitempty"`
+	Status ActionStatus `json:"status,omitempty"`
+}
+
+// +kubebuilder:object:root=true
+
+// ActionList contains a list of Action
+type ActionList struct {
+	metav1.TypeMeta `json:",inline"`
+	metav1.ListMeta `json:"metadata,omitempty"`
+	Items           []Action `json:"items"`
+}
+
+func init() { //nolint:gochecknoinits
+	SchemeBuilder.Register(&Action{}, &ActionList{})
+}
+
 // ActionSpec contains configuration properties for a given Action to execute.
 type ActionSpec struct {
 
 	// Path contains full path for Implementation or Interface manifest.
-	Path NodePath `json:"path,omitempty"`
+	Path NodePath `json:"path"`
 
 	// InputRef contains reference to resource with Action input.
 	// +optional
 	InputRef *ActionIORef `json:"inputRef,omitempty"`
 
-	// AdvancedRendering holds are properties related to Action advanced rendering mode.
+	// AdvancedRendering holds properties related to Action advanced rendering mode.
 	// +optional
-	AdvancedRendering AdvancedRenderingSpec `json:"advancedRendering,omitempty"`
+	AdvancedRendering AdvancedRendering `json:"advancedRendering,omitempty"`
 
 	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
 	// +optional
@@ -33,27 +64,29 @@ type ActionSpec struct {
 	// Engine won't execute fully rendered Action until the field is set to `true`.
 	// If the Action is not fully rendered, and this field is set to `true`, Engine executes a given Action instantly after it is resolved.
 	// +optional
-	Run bool `json:"run,omitempty"`
+	// +kubebuilder:default=false
+	Run bool `json:"run"`
 
 	// Cancel specifies whether the Action execution should be cancelled.
 	// +optional
-	Cancel bool `json:"cancel,omitempty"`
+	// +kubebuilder:default=false
+	Cancel bool `json:"cancel"`
 }
 
-// AdvancedRenderingSpec holds are properties related to Action advanced rendering mode.
-type AdvancedRenderingSpec struct {
+// AdvancedRendering holds are properties related to Action advanced rendering mode.
+type AdvancedRendering struct {
 
 	// Enabled specifies if the advanced rendering mode is enabled.
-	// +optional
-	Enabled bool `json:"enabled,omitempty"`
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled"`
 
 	// RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 	// +optional
-	RenderingIteration RenderingIterationSpec `json:"renderingIteration,omitempty"`
+	RenderingIteration RenderingIteration `json:"renderingIteration"`
 }
 
-// RenderingIterationSpec holds properties for rendering iteration in advanced rendering mode.
-type RenderingIterationSpec struct {
+// RenderingIteration holds properties for rendering iteration in advanced rendering mode.
+type RenderingIteration struct {
 
 	// InputArtifacts contains Input Artifacts passed for current rendering iteration.
 	// +optional
@@ -61,42 +94,41 @@ type RenderingIterationSpec struct {
 
 	// Continue specifies the user intention to continue rendering using the provided InputArtifacts.
 	// As the input artifacts are optional, user may continue rendering with empty list of InputArtifacts.
-	Continue bool `json:"continue,omitempty"`
+	// +kubebuilder:default=false
+	Continue bool `json:"continue"`
 }
 
 // InputArtifact holds input artifact reference, which is in fact TypeInstance.
 type InputArtifact struct {
 
 	// Alias refers to input artifact name used in rendered Action.
-	Alias string `json:"alias,omitempty"`
-
-	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
-	TypePath NodePath `json:"typePath,omitempty"`
+	Alias string `json:"alias"`
 
 	// TypeInstanceID is a unique identifier for the TypeInstance used as input artifact.
-	TypeInstanceID string `json:"typeInstanceID,omitempty"`
+	TypeInstanceID string `json:"typeInstanceID"`
 }
 
 // ActionIORef holds references to resources where Action input or output is stored.
 type ActionIORef struct {
 
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
-	// +optional
-	SecretRef *v1.LocalObjectReference `json:"secretRef,omitempty"`
+	SecretRef v1.LocalObjectReference `json:"secretRef"`
 }
 
 // ActionStatus defines the observed state of Action.
 type ActionStatus struct {
 
 	// ActionPhase describes in which state is the Action to execute.
-	Phase ActionPhase `json:"phase,omitempty"`
+	// +kubebuilder:default=Initial
+	Phase ActionPhase `json:"phase"`
 
-	// Message provides a readable description of the Action state.
+	// Message provides a readable description of the Action phase.
 	// +optional
 	Message *string `json:"message,omitempty"`
 
-	// BuiltinRunner holds data related to built-in Runner that runs the Action.
-	BuiltinRunner BuiltinRunnerStatus `json:"builtInRunner,omitempty"`
+	// Runner holds data related to Runner that runs the Action.
+	// +optional
+	Runner RunnerStatus `json:"builtInRunner,omitempty"`
 
 	// OutputRef contains reference to resource with Action output.
 	// +optional
@@ -107,11 +139,8 @@ type ActionStatus struct {
 	RenderedAction json.RawMessage `json:"renderedAction,omitempty"`
 
 	// AdvancedRendering describes status related to advanced rendering mode.
-	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
-
-	// ExecutedAt holds timestamp of the moment when Engine started execution of the Action.
 	// +optional
-	ExecutedAt *metav1.Time `json:"executedAt,omitempty"`
+	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
 
 	// CreatedBy holds user data which created a given Action.
 	// +optional
@@ -146,19 +175,20 @@ type RenderingIterationStatus struct {
 type InputArtifactToProvide struct {
 
 	// Alias refers to input artifact name used in rendered Action.
-	Alias string `json:"alias,omitempty"`
+	// +kubebuilder:validation:MinLength=1
+	Alias string `json:"alias"`
 
 	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
-	TypePath NodePath `json:"typePath,omitempty"`
+	TypePath NodePath `json:"typePath"`
 }
 
-// BuiltinRunnerStatus holds data related to built-in Runner that runs the Action.
-type BuiltinRunnerStatus struct {
+// RunnerStatus holds data related to built-in Runner that runs the Action.
+type RunnerStatus struct {
 
-	// Interface is a full path of built-in Runner Interface manifest.
-	Interface NodePath `json:"interface,omitempty"`
+	// Interface is a full path of Runner Interface manifest.
+	Interface NodePath `json:"interface"`
 
-	// StatusRef contains reference to resource with built-in Runner status data.
+	// StatusRef contains reference to resource with arbitrary Runner status data.
 	// +optional
 	Status json.RawMessage `json:"status,omitempty"`
 }
@@ -168,6 +198,7 @@ type BuiltinRunnerStatus struct {
 type NodePath string
 
 // ActionPhase describes in which state is the Action to execute.
+// +kubebuilder:validation:Enum=Initial;BeingRendered;AdvancedModeRenderingIteration;ReadyToRun;Running;BeingCancelled;Cancelled;Succeeded;Failed
 type ActionPhase string
 
 const (
@@ -181,33 +212,3 @@ const (
 	SucceededActionPhase                      ActionPhase = "Succeeded"
 	FailedActionPhase                         ActionPhase = "Failed"
 )
-
-// +kubebuilder:object:root=true
-// +kubebuilder:subresource:status
-// +kubebuilder:resource:shortName=ac
-// +kubebuilder:printcolumn:name="Path",type="string",JSONPath=".spec.path",description="Interface/Implementation path of the Action"
-// +kubebuilder:printcolumn:name="Run",type="boolean",JSONPath=".spec.run",description="If the Action is approved to run"
-// +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase",description="Status of the Action"
-// +kubebuilder:printcolumn:name="Age",type="date",format="date-time",JSONPath=".status.executedAt",description="When the Action execution was started"
-
-// Action describes user intention to resolve & execute a given Interface or Implementation.
-type Action struct {
-	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"metadata,omitempty"`
-
-	Spec   ActionSpec   `json:"spec,omitempty"`
-	Status ActionStatus `json:"status,omitempty"`
-}
-
-// +kubebuilder:object:root=true
-
-// ActionList contains a list of Action
-type ActionList struct {
-	metav1.TypeMeta `json:",inline"`
-	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []Action `json:"items"`
-}
-
-func init() { //nolint:gochecknoinits
-	SchemeBuilder.Register(&Action{}, &ActionList{})
-}
