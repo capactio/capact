@@ -1,0 +1,20 @@
+apiVersion: core.projectvoltron.dev/v1alpha1
+kind: Action
+metadata:
+  name: "all-fields"
+spec:
+  path: "cap.interface.database.mysql.install"
+  inputRef:
+    secretRef:
+      name: "secret-data"
+  advancedRendering:
+    enabled: true
+    renderingIteration:
+      inputArtifacts:
+        - alias: foo
+          typeInstanceID: fee33a5e-d957-488a-86bd-5dacd4120312
+        - alias: bar
+          typeInstanceID: 563a79eb-7417-4e11-aa4b-d93076c04e48
+      continue: true
+  run: true
+  cancel: false
