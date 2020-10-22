@@ -1,6 +1,6 @@
 apiVersion: core.projectvoltron.dev/v1alpha1
 kind: Action
 metadata:
-  name: "hakuna-matata"
+  name: "minimal"
 spec:
-  foo: "testing"
+  path: "cap.interface.database.mysql.install"
