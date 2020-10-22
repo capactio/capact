@@ -6,6 +6,8 @@ The following document lists all decisions regarding Engine Kubernetes API.
 
 The following sections lists all agreements regarding Custom Resource Definitions.
 
+### Installation
+
 ### Scope
 
 Initially we go with only namespace-scoped Action resource. In the future, we may introduce cluster-wide ClusterAction.

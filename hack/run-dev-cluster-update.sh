@@ -14,7 +14,7 @@ readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
-VOLTRON_NAMESPACE="voltron"
+VOLTRON_NAMESPACE="voltron-system"
 VOLTRON_RELEASE_NAME="voltron"
 
 main() {

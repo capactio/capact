@@ -12,7 +12,8 @@ set -E         # needs to be set if we want the ERR trap
 
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
-readonly UMBRELLA_CHART="${REPO_ROOT_DIR}/deploy/kubernetes/voltron"
+readonly K8S_DEPLOY_DIR="${REPO_ROOT_DIR}/deploy/kubernetes"
+readonly UMBRELLA_CHART="${K8S_DEPLOY_DIR}/voltron"
 readonly TMP_DIR=$(mktemp -d)
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
@@ -54,7 +55,7 @@ main() {
 
   shout "Generating Kubernetes related resources..."
 
-  CRDS_OUTPUT="${UMBRELLA_CHART}/crds"
+  CRDS_OUTPUT="${K8S_DEPLOY_DIR}/crds"
   RBAC_OUTPUT="${UMBRELLA_CHART}/charts/engine/templates"
 
   controller-gen object crd:trivialVersions=true rbac:roleName=k8s-engine-role \

@@ -18,7 +18,7 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 # shellcheck source=./hack/lib/deps_ver.sh
 source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
 
-VOLTRON_NAMESPACE="voltron"
+VOLTRON_NAMESPACE="voltron-system"
 VOLTRON_RELEASE_NAME="voltron"
 
 main() {
