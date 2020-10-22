@@ -62,6 +62,9 @@ main() {
     output:crd:artifacts:config="$CRDS_OUTPUT" \
     output:rbac:artifacts:config="$RBAC_OUTPUT"
 
+  # Replacing hardcoded version of CRD resource
+  sed -i '' 's/apiextensions.k8s.io\/v1beta1/apiextensions.k8s.io\/v1/' ${CRDS_OUTPUT}/*
+
   echo "CRDs manifests saved in $CRDS_OUTPUT"
   echo "RBAC manifest saved in $RBAC_OUTPUT"
 
