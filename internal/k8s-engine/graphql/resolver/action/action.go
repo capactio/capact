@@ -61,7 +61,7 @@ func dummyAction(id string) *graphql.Action {
 				},
 			},
 		},
-		Action:         "deploy",
+		Path:         "deploy",
 		RenderedAction: nil,
 		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
 			Enabled: false,
@@ -76,7 +76,7 @@ func dummyAction(id string) *graphql.Action {
 			Condition: graphql.ActionStatusConditionRunning,
 			Timestamp: graphql.Timestamp(time.Now()),
 			Runner: &graphql.RunnerStatus{
-				Type: "cap.type.runner.argo",
+				Interface: "cap.type.runner.argo",
 				Status: struct {
 					ArgoWorkflowRef string
 				}{
