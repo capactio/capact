@@ -13,13 +13,13 @@ import (
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
-// ActionReconciler reconciles a Action object
+// ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
 	Log logr.Logger
 }
 
-// NewActionReconciler returns the ActionReconciler instance
+// NewActionReconciler returns the ActionReconciler instance.
 func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
 	return &ActionReconciler{Client: client, Log: log}
 }

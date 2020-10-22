@@ -18,8 +18,8 @@ const (
 	LocalMode Mode = "local"
 )
 
-// IsValid returns errors if Mode is unknown.
-func (h Mode) IsValid() error {
+// Validate returns errors if Mode is unknown.
+func (h Mode) Validate() error {
 	switch h {
 	case PublicMode, LocalMode:
 		return nil
@@ -30,7 +30,7 @@ func (h Mode) IsValid() error {
 // Unmarshal fulfils the envconfig interface for unmarshaling.
 func (h *Mode) Unmarshal(s string) error {
 	hub := Mode(s)
-	if err := hub.IsValid(); err != nil {
+	if err := hub.Validate(); err != nil {
 		return err
 	}
 	*h = hub

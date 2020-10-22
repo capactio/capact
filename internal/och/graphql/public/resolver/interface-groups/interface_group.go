@@ -25,10 +25,10 @@ func dummyInterfaceGroup() *gqlpublicapi.InterfaceGroup {
 	return &gqlpublicapi.InterfaceGroup{
 		Metadata: &gqlpublicapi.GenericMetadata{
 			Name:        "wordpress",
-			Prefix:      ptr.String("cap.interface.cms"),           // TODO(mszostok): shouldn't we made this field required?
-			Path:        ptr.String("cap.interface.cms.wordpress"), // TODO(mszostok): shouldn't we made this field required?
+			Prefix:      ptr.String("cap.interface.cms"),
+			Path:        ptr.String("cap.interface.cms.wordpress"),
 			DisplayName: ptr.String("Wordpress"),
-			Description: "Wordpress Application", // TODO(mszostok): shouldn't be optional?
+			Description: "Wordpress Application",
 			Maintainers: []*gqlpublicapi.Maintainer{
 				{
 					Name:  ptr.String("Foo Bar"),

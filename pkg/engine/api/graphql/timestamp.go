@@ -12,7 +12,7 @@ import (
 type Timestamp time.Time
 
 func (t *Timestamp) UnmarshalGQL(v interface{}) error {
-	tmpStr, err := graphqlutil.ConvertToString(v)
+	tmpStr, err := graphqlutil.ScalarToString(v)
 	if err != nil {
 		return err
 	}
