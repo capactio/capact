@@ -17,15 +17,12 @@ readonly TMP_DIR=$(mktemp -d)
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
-# shellcheck source=./hack/lib/deps_ver.sh
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 DUMP_CLUSTER_INFO="${DUMP_CLUSTER_INFO:-false}"
-
-VOLTRON_NAMESPACE="voltron"
-VOLTRON_RELEASE_NAME="voltron"
 
 HELM_TEST_TIMEOUT="10m"
 
@@ -53,21 +50,27 @@ main() {
     shout "Starting integration test..."
 
     if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
-        export INSTALL_DIR=${TMP_DIR} KIND_VERSION=${STABLE_KIND_VERSION} HELM_VERSION=${STABLE_HELM_VERSION}
+        export INSTALL_DIR=${TMP_DIR}
+        export KIND_VERSION=${STABLE_KIND_VERSION}
+        export HELM_VERSION=${STABLE_HELM_VERSION}
         host::install::kind
         host::install::helm
     else
         echo "Skipping kind and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
     fi
 
-    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}} KUBECONFIG="${TMP_DIR}/kubeconfig" KIND_CLUSTER_NAME="kind-ci-voltron"
+    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
+    export KUBECONFIG="${TMP_DIR}/kubeconfig"
+    export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
     kind::create_cluster
 
     # Cluster is already created, and all below operation are performed against that cluster,
     # so we should dump cluster info for debugging purpose in case of any error
     DUMP_CLUSTER_INFO=true
 
-    export DOCKER_TAG=$RANDOM DOCKER_PUSH_REPOSITORY="local" REPO_DIR=$REPO_ROOT_DIR
+    export DOCKER_TAG=$RANDOM
+    export DOCKER_PUSH_REPOSITORY="local"
+    export REPO_DIR=$REPO_ROOT_DIR
     voltron::install::from_sources
 
     voltron::test::execute

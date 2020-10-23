@@ -156,11 +156,12 @@ host::install::helm() {
 # - KIND_CLUSTER_NAME
 
 kind::create_cluster() {
-    shout "- Create k8s cluster..."
+    shout "- Creating K8s cluster..."
     kind create cluster --name=${KIND_CLUSTER_NAME} --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
 }
 
 kind::delete_cluster() {
+    shout "- Deleting K8s cluster..."
     kind delete cluster --name=${KIND_CLUSTER_NAME}
 }
 
@@ -191,9 +192,8 @@ docker::delete_images() {
   docker rmi $1
 }
 
-
 #
-# Volton functions
+# Voltron functions
 #
 
 # Required envs:
@@ -206,6 +206,8 @@ docker::delete_images() {
 # Optional envs:
 #  - UPDATE - if specified then, Helm charts are updated
 voltron::install::from_sources() {
+    readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
+
     pushd "${REPO_DIR}" || return
 
     shout "- Building Voltron image from sources..."
@@ -219,8 +221,11 @@ voltron::install::from_sources() {
     shout "- Deleting local Docker Voltron images..."
     docker::delete_images "$names"
 
-    shout "- Installing Voltron via helm chart from sources..."
-    helm "$(voltron::install::detect_command)" ${VOLTRON_RELEASE_NAME} ./deploy/kubernetes/voltron \
+    shout "- Applying Voltron CRDs..."
+    kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
+
+    shout "- Installing Voltron Helm chart from sources..."
+    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}"/chart \
         --create-namespace \
         --namespace=${VOLTRON_NAMESPACE} \
         --set global.containerRegistry.path=$DOCKER_PUSH_REPOSITORY \

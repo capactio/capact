@@ -17,8 +17,8 @@ SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.' exit 1; }
-# shellcheck source=./hack/lib/deps_ver.sh
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load CI utilities.' exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
 
 cleanup() {
   rm -rf "${TMP_DIR}"

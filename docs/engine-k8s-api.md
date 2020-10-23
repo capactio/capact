@@ -6,6 +6,17 @@ The following document lists all decisions regarding Engine Kubernetes API.
 
 The following sections lists all agreements regarding Custom Resource Definitions.
 
+### Installation
+
+For CRD installation we considered the following approaches:
+- Using [Helm `crds` directory](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#method-1-let-helm-do-it-for-you) with manual or automatic CRD upgrade
+- [CRDs in a separate Helm chart](https://helm.sh/docs/chart_best_practices/custom_resource_definitions/#method-2-separate-charts)
+- Kubernetes Job that installs and upgrades CRDs on Helm hooks 
+- Manual CRD installation and upgrade
+
+We chose the manual CRD management, because it is the simplest and the most flexible solution. In community there is no agreement how the CRD cycle should be handled, and manual CRD management enables users to have full control on the upgrade behavior.
+If there will be some breaking changes in CRDS between public releases, we will describe the manual migration process in release notes. In the future, we may consider some automated scripts/tools to make the migration process easier.
+
 ### Scope
 
 Initially we go with only namespace-scoped Action resource. In the future, we may introduce cluster-wide ClusterAction.

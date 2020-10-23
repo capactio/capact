@@ -17,8 +17,8 @@ readonly TMP_DIR=$(mktemp -d)
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
-# shellcheck source=./hack/lib/deps_ver.sh
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
@@ -30,7 +30,8 @@ trap cleanup EXIT
 
 main() {
     if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
-        export INSTALL_DIR=${TMP_DIR} KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
+        export INSTALL_DIR=${TMP_DIR}
+        export KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
         host::install::kubebuilder
     else
         echo "Skipping kubebuilder installation cause SKIP_DEPS_INSTALLATION is set to true."

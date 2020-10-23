@@ -61,7 +61,7 @@ func dummyAction(id string) *graphql.Action {
 				},
 			},
 		},
-		Path:         "deploy",
+		Path:           "deploy",
 		RenderedAction: nil,
 		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
 			Enabled: false,
