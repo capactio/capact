@@ -15,19 +15,19 @@ readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
-# shellcheck source=./hack/lib/deps_ver.sh
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
-
-VOLTRON_NAMESPACE="voltron-system"
-VOLTRON_RELEASE_NAME="voltron"
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 main() {
     shout "Starting development local cluster..."
 
-    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}} KIND_CLUSTER_NAME="kind-dev-voltron"
+    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
+    export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     kind::create_cluster
 
-    export DOCKER_TAG=dev DOCKER_PUSH_REPOSITORY="local" REPO_DIR=$REPO_ROOT_DIR
+    export DOCKER_TAG=dev
+    export DOCKER_PUSH_REPOSITORY="local"
+    export REPO_DIR=$REPO_ROOT_DIR
     voltron::install::from_sources
 
     shout "Development local cluster created successfully."

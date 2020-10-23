@@ -191,7 +191,6 @@ docker::delete_images() {
   docker rmi $1
 }
 
-
 #
 # Voltron functions
 #
