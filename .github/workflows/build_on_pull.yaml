@@ -2,6 +2,7 @@ name:  PR build
 
 on: 
   pull_request:
+    types: [assigned, opened, synchronize, reopened]
     paths:
     - '**.go'
     - '**.graphql'
