@@ -35,22 +35,20 @@ jobs:
       - name: Run linting
         run: | 
           make test-lint
-        env:
-          SKIP_DEPS_INSTALLATION: false
 
-      - name: Run unit tests
+      - name: Run integration tests
         run: make test-unit
 
       - name: Run generation
         run: |
           make test-generated
-        env:
-          SKIP_DEPS_INSTALLATION: false
-  
+
+      - name: Run k8s-controller
+        run: |
+          make test-k8s-controller
   
   prepare-matrix:
     runs-on: ubuntu-latest
-    needs: entry-tests
     outputs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
       matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
@@ -166,9 +164,7 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
 
-      - name: Run unit tests
+      - name: Run integratio tests
         run: | 
           make test-integration
-        env:
-          SKIP_DEPS_INSTALLATION: false
 

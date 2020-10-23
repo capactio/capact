@@ -1,8 +1,0 @@
-{
-    "name": "Voltron Build Workflow ON PR",
-    "description": "Voltron Build CI ON PR workflow template.",
-    "iconName": "lnr-rocket",
-    "categories": [
-        "Go"
-    ]
-}
