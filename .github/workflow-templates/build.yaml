@@ -164,9 +164,8 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
 
-      - name: Run unit tests
+      - name: Run integration tests
         run: | 
           make test-integration
         env:
           SKIP_DEPS_INSTALLATION: false
-
