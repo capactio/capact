@@ -13,7 +13,7 @@ set -E         # needs to be set if we want the ERR trap
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
 readonly K8S_DEPLOY_DIR="${REPO_ROOT_DIR}/deploy/kubernetes"
-readonly UMBRELLA_CHART="${K8S_DEPLOY_DIR}/voltron"
+readonly UMBRELLA_CHART="${K8S_DEPLOY_DIR}/chart"
 readonly TMP_DIR=$(mktemp -d)
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}

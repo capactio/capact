@@ -30,7 +30,8 @@ trap cleanup EXIT
 
 main() {
     if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
-        export INSTALL_DIR=${TMP_DIR} KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
+        export INSTALL_DIR=${TMP_DIR}
+        export KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
         host::install::kubebuilder
     else
         echo "Skipping kubebuilder installation cause SKIP_DEPS_INSTALLATION is set to true."

@@ -156,11 +156,12 @@ host::install::helm() {
 # - KIND_CLUSTER_NAME
 
 kind::create_cluster() {
-    shout "- Create k8s cluster..."
+    shout "- Creating K8s cluster..."
     kind create cluster --name=${KIND_CLUSTER_NAME} --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
 }
 
 kind::delete_cluster() {
+    shout "- Deleting K8s cluster..."
     kind delete cluster --name=${KIND_CLUSTER_NAME}
 }
 
