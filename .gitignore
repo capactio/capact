@@ -46,4 +46,6 @@ coverage.txt
 
 ### Others ###
 /tmp/
+
+#this is due to file created by authentication to GCP GoogleCloudPlatform/github-actions/setup-gcloud@master
 /[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*
