@@ -22,12 +22,12 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v2
-      # - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-      #   with:
-      #     export_default_credentials: true
-      #     service_account_key: ${{ secrets.GCR_CREDS }}
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
 
-      
+
 
       - name: files
         run: |
