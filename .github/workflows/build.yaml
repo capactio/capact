@@ -16,6 +16,10 @@ jobs:
     runs-on: ubuntu-latest
       
     steps:    
+      - name: files1
+        run: |
+          ls -la
+
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
