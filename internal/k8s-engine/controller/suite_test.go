@@ -28,7 +28,7 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
-const CRD_DIRECTORY = "../../../deploy/kubernetes/voltron/crds"
+const CRD_DIRECTORY = "../../../deploy/kubernetes/crds"
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
