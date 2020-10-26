@@ -1,0 +1,18 @@
+kube-prometheus-stack:
+  commonLabels:
+    voltron.dev/scrape-metrics: "true"
+
+  # Deploy a Prometheus instance
+  prometheus:
+    ## Settings affecting prometheusSpec
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#prometheusspec
+    prometheusSpec:
+      serviceMonitorSelector:
+        matchLabels:
+          voltron.dev/scrape-metrics: "true"
+  grafana:
+    sidecar:
+      dashboards:
+        # If specified, the sidecar will search for dashboard config-maps inside this namespace.
+        # Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces
+        searchNamespace: ALL
