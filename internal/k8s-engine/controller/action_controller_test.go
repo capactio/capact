@@ -45,7 +45,7 @@ var _ = Describe("Action Controller", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: corev1alpha1.ActionSpec{
-					Foo: "bar",
+					Path: "bar",
 				},
 			}
 
