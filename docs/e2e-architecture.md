@@ -74,7 +74,8 @@ SDK can be used by Users to interact with Voltron components in a programmatic w
 
 On the following diagram, User executes the WordPress install Action using UI.
 
+![Sequence diagram for WordPress install Action](assets/action-sequence-diagram.svg)
 
 ## TODO
-- Describe components
-- Update detailed diagram
+- Describe all components
+- Update detailed sequence diagram
