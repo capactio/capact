@@ -70,8 +70,8 @@ ingress:
   path: /
         
   hosts:
-    - qqq.org
+    - gateway.dev.cluster.projectvoltron.dev
   tls: 
-    - secretName: qqq.org
+    - secretName: gateway-tls
       hosts:
-        - qqq.org
+        - gateway.dev.cluster.projectvoltron.dev

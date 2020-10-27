@@ -30,16 +30,16 @@ resource "google_compute_firewall" "gcf-default-allow-http-and-https" {
 # }
 
 # #ok
-# resource "google_compute_firewall" "gcf-allow-tcp" {
-#   name    = "gke-allow-master-${var.cluster-name}"
-#   project = var.project
-#   network = google_compute_network.gcn_vpc.name
-#   source_ranges = ["172.16.10.0/28"]
+resource "google_compute_firewall" "gcf-allow-tcp" {
+  name    = "gke-allow-master-${var.cluster_name}"
+  project = var.project
+  network = google_compute_network.gcn_vpc.name
+  source_ranges = ["172.16.10.0/28"]
 
-#   allow {
-#     protocol = "tcp"
-#     ports    = ["443","10250"]
-#   }
+  allow {
+    protocol = "tcp"
+    ports    = ["443","10250", "80"]
+  }
 
 
 # }

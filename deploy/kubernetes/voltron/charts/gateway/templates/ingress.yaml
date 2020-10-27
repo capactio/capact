@@ -1,3 +1,4 @@
+{{- $fullName := include "gateway.fullname" . -}}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -9,39 +10,26 @@ metadata:
     kubernetes.io/tls-acme: "{{ .Values.ingress.annotations.tls_acme }}"
     cert-manager.io/cluster-issuer: "{{ .Values.ingress.annotations.issuer }}"
     acmechallengetype: "{{ .Values.ingress.annotations.acmechallengetype }}"
- apiVersion: networking.k8s.io/v1beta1
-  spec:
-    # rules:
-    #   - host: www.example.com
-    #     http:
-    #       paths:
-    #         - backend:
-    #             serviceName: {{ include "gateway.fullname" . }}
-    #             servicePort: 80
-    #           path: {{ .Values.ingress.path }}
-    # This section is only required if TLS is to be enabled for the Ingress
-    {{- if .Values.ingress.tls }}
-    tls:
-      {{- range .Values.ingress.tls }}
-      - hosts:
-      {{- range .hosts }}
-        - {{ . }}
-      {{- end }}
-        secretName: {{ .secretName }}
-      {{- end }}
+spec:
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- range .Values.ingress.tls }}
+    - hosts:
+    {{- range .hosts }}
+      - {{ . }}
     {{- end }}
-    rules:
-    {{- range .Values.ingress.hosts }}
+      secretName: {{ .secretName }}
+    {{- end }}
+  {{- end }}
+  rules:
+  {{- range .Values.ingress.hosts }}
     - host: {{ . }}
       http:
         paths:
-          - path: {{ .Values.ingress.path }}
-            backend:
-              serviceName: {{ include "gateway.fullname" . }}
-              servicePort: http
+          - backend:
+              serviceName: {{ $fullName }}
+              servicePort: 80
+            path: {{ $.Values.ingress.path }}
+
     {{- end }}
-    
-    
-    # tls:
-    #     - hosts:  {{ .Values.ingress.tls.hosts }}
-    #       secretName: {{ .Values.ingress.tls.secretName }}
+
