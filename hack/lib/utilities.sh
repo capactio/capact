@@ -233,6 +233,12 @@ voltron::install::from_sources() {
     shout "- Deleting local Docker Voltron images..."
     docker::delete_images "$names"
 
+    if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
+      echo "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
+    else
+      voltron::install::monitoring
+    fi
+
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
@@ -245,6 +251,14 @@ voltron::install::from_sources() {
         --wait
 
     popd || return
+}
+
+voltron::install::monitoring() {
+    shout "- Installing monitoring Helm chart..."
+    helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/monitoring" \
+        --create-namespace \
+        --namespace="monitoring"
+        # --wait (not waiting as Helm Charts installation takes additional ~3minutes. To proceed further we need only monitoring CRDs.
 }
 
 voltron::install::detect_command() {

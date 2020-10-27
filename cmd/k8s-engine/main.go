@@ -36,6 +36,8 @@ type Config struct {
 	HealthzAddr string `envconfig:"default=:8082"`
 	// EnableLeaderElection for controller manager. Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool `envconfig:"default=false"`
+	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
+	MaxConcurrentReconciles int `envconfig:"default=1"`
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
@@ -68,7 +70,7 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"))
-	err = actionCtrl.SetupWithManager(mgr)
+	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 
 	// setup instrumentation
