@@ -40,9 +40,7 @@ resource "google_compute_firewall" "gcf-allow-tcp" {
     protocol = "tcp"
     ports    = ["443","10250", "80"]
   }
-
-
-# }
+}
 
 # # resource "google_compute_firewall" "gcf-default-allow-ssh" {
 # #   name    = "gcf-allow-ssh-${var.cluster-name}"
@@ -83,4 +81,3 @@ resource "google_compute_firewall" "gcf-allow-tcp" {
 #     protocol = "sctp"
 #   }
 # }
-

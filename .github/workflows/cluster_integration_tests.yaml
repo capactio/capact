@@ -1,9 +1,7 @@
 name: periodiccluster-integration-tests
 on:
   schedule:
-    - cron:  '* 9,21 * * *'
-    branches:    
-    - 'devops-*'
+  - cron:  '* 9,21 * * *'
 
 jobs:
   integration-tests:
