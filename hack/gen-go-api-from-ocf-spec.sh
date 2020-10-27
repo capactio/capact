@@ -21,14 +21,18 @@ OCF_VERSION="${OCF_VERSION:-"0.0.1"}"
 REPORT_FILE_DIR="${REPO_ROOT_DIR}/tmp"
 REPORT_FILENAME="${REPORT_FILE_DIR}/gen_go_api_issues.txt"
 KNOWN_VIOLATION_FILENAME="${CURRENT_DIR}/gen_go_api_issue_exceptions.txt"
+JSON_GO_GEN_IMAGE=gcr.io/projectvoltron/infra/json-go-gen:0.1.0
 
 check_for_unknown_issues() {
   shout "Checking for unknown generate issues..."
 
   if ! diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"; then
     echo "Error:
-    API rules check failed. Reported violations \"${REPORT_FILENAME}\" differ from known violations \"${KNOWN_VIOLATION_FILENAME}\".
-    Please fix API source file if new violation is detected, or update known violations \"${KNOWN_VIOLATION_FILENAME}\" if existing violation is being fixed."
+    API rules check failed. Reported violations \"${REPORT_FILENAME}\" differ from known violations \"${KNOWN_VIOLATION_FILENAME}\"."
+    
+    diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"
+
+    echo "Please fix API source file if new violation is detected, or update known violations \"${KNOWN_VIOLATION_FILENAME}\" if existing violation is being fixed."
     exit 1
   fi
 
@@ -43,7 +47,8 @@ gen_go_api_from_ocf_specs() {
   pushd "${REPO_ROOT_DIR}"
   rm -f "$OUTPUT"
 
-  docker run -v "${PWD}:/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
+  docker pull "${JSON_GO_GEN_IMAGE}"
+  docker run -v "${PWD}:/local" "${JSON_GO_GEN_IMAGE}" -l go -s schema --package types \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \

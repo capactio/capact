@@ -48,7 +48,7 @@ golangci::run_checks() {
   shout "Run golangci-lint checks"
 
   # shellcheck disable=SC2046
-  golangci-lint run --timeout=${LINT_TIMEOUT} $(golangci::fix_if_requested) "${ROOT_PATH}/..."
+  golangci-lint run --timeout="${LINT_TIMEOUT}" $(golangci::fix_if_requested) "${ROOT_PATH}/..."
 
   echo -e "${GREEN}√ run golangci-lint${NC}"
 }
