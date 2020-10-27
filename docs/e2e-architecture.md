@@ -10,26 +10,33 @@ The following diagram visualizes all components in the system:
 
 ![Components](assets/components.svg)
 
+### OCF
+
+Open Capability Format is not a component per-se, but it's also an important part of the system. OCF is a specification of manifests for every entity in the system.
+It is stored in a form of multiple JSON Schema files. From the JSON schemas all internal [SDK](#sdk) Go structs are generated.
+
+OCF manifests are stored in [OCH](#och).
+
 ### UI
 
 UI is the easy way to manage Actions and consume [OCH](#och) content.
 
 It exposes the following functionalities:
-- See available Implementations for a given system, grouped by InterfaceGroups and Interfaces,
-- See the available TypeInstances, along with theirs status and metrics,
-- Render & execute Actions, with advanced rendering mode support.
+- see available Implementations for a given system, grouped by InterfaceGroups and Interfaces,
+- see the available TypeInstances, along with theirs status and metrics,
+- render and execute Actions, with advanced rendering mode support.
 
-Underneath, UI does all HTTP requests to [Gateway](#gateway).
+UI does all HTTP requests to [Gateway](#gateway).
 
-UI may be deployed outside Kubernetes.
+UI may be deployed outside the Kubernetes cluster with core Voltron components.
 
 ### CLI
 
-CLI is command line tool which makes easier with working the OCF manifests.
+CLI is command line tool which makes easier with working the [OCF](#ocf) manifests.
 
 Currently, CLI exposes the following features:
 - validates OCF manifests against the OCF JSON Schemas,
-- signs OCF manifests that are loaded by OCH. 
+- signs OCF manifests that are loaded by [OCH](#och). 
 
 CLI utilizes [SDK](#sdk).
 
@@ -38,11 +45,11 @@ CLI utilizes [SDK](#sdk).
 Gateway is a GraphQL reverse proxy. It aggregates multiple remote GraphQL schemas into a single endpoint. It enables UI to have a single destination for all GraphQL operations.
 
 Based on the GraphQL operation, it forwards the query or mutation to a corresponding service:
-- Engine - for Action CRUD operations,
-- Local OCH - for TypeInstance CRUD operations,
-- Public OCH - for read operations for all other manifests apart except TypeInstance.
+- [Engine](#engine) - for Action CRUD operations,
+- Local [OCH](#och) - for TypeInstance CRUD operations,
+- Public [OCH](#och) - for read operations for all other manifests apart except TypeInstance.
 
-It also runs an additional GraphQL server, which exposes single mutation to change URL for Public OCH API aggregated by Gateway.
+It also runs an additional GraphQL server, which exposes single mutation to change URL for Public [OCH](#och) API aggregated by Gateway.
 
 ### Engine
 
@@ -53,14 +60,14 @@ It composes of two modules:
 - GraphQL API server, which exposes platform-agnostic API for managing Actions.
 
 Engine consumes both local and public OCH APIs via single Gateway endpoint:
-- to resolve Action prerequisites based on TypeInstances, it uses Local OCH API,
-- to resolve other manifests such as Interface or Implementation, it uses Public OCH API.
+- to resolve Action prerequisites based on TypeInstances, it uses Local [OCH](#och) API,
+- to resolve other manifests such as Interface or Implementation, it uses Public [OCH](#och) API.
 
-Engine utilizes [SDK](#sdk). To execute Actions, it uses [Argo](https://github.com/argoproj/argo).
+Engine utilizes [SDK](#sdk). To execute Actions, it uses Kubernetes Jobs, that executes [Argo](https://github.com/argoproj/argo) workflows.
 
 ### OCH
 
-Open Capability Hub stores OCF manifests and exposes API to access and manage them. It uses graph database as a storage for the data.
+Open Capability Hub stores [OCF](#ocf) manifests and exposes API to access and manage them. It uses graph database as a storage for the data.
 
 OCH works in two modes:
 - Local OCH exposes GraphQL API for managing TypeInstances (create, read, delete operations),
@@ -72,7 +79,7 @@ OCH utilizes [SDK](#sdk).
 
 ### SDK
 
-SDK is a Go library with low-level and high-level functions used by Engine, OCH and CLI.
+SDK is a Go library with low-level and high-level functions used by [Engine](#engine), [OCH](#och) and [CLI](#cli).
 
 SDK can be used by Users to interact with Voltron components in a programmatic way.
 
