@@ -2,13 +2,15 @@ name:  PR build
 
 on: 
   pull_request:
-    types: [ opened, synchronize, reopened]
+    types: [opened, synchronize, reopened]
     paths:
     - '**.go'
     - '**.graphql'
+    - '.github/workflows/**'
+    - '**.sh'
+    - 'Makefile'
     branches: 
     - 'master'
-
 
 jobs:
   entry-tests:
@@ -23,11 +25,11 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GCR_CREDS }}
 
-      - name: Setup env
+      - name: Setup environment
         run: |
           . ./env_setup.sh
 
-      - name: Setup golang
+      - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -42,11 +44,6 @@ jobs:
       - name: Run generation
         run: |
           make test-generated
-
-      - name: Run k8s-controller
-        run: |
-          make test-k8s-controller
-  
   
   prepare-matrix:
     runs-on: ubuntu-latest
@@ -82,10 +79,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
           . ./env_setup.sh
-      - name: Setup golang
+      - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -108,10 +105,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
           . ./env_setup.sh
-      - name: Setup golang
+      - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -133,10 +130,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
           . ./env_setup.sh
-      - name: Setup golang
+      - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -156,17 +153,20 @@ jobs:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
 
-      - name: Setup env
+      - name: Setup environment
         run: |
           . ./env_setup.sh
 
-      - name: Setup golang
+      - name: Setup Golang
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
 
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+
       - name: Run integration tests
         run: | 
           make test-integration
-
 
