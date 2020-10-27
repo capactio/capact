@@ -2,12 +2,11 @@ name:  PR build
 
 on: 
   pull_request:
-    types: [assigned, opened, synchronize, reopened]
+    types: [ opened, synchronize, reopened]
     paths:
     - '**.go'
     - '**.graphql'
     branches: 
-    - 'devops-20201014'
     - 'master'
 
 
