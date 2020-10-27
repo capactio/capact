@@ -10,11 +10,9 @@ The following diagram visualizes all components in the system:
 
 ![Components](assets/components.svg)
 
-To learn about responsibilities for every components, read the subsections.
-
 ### UI
 
-UI is the easy way to manage Actions, TypeInstances and use the public OCH content.
+UI is the easy way to manage Actions and consume [OCH](#och) content.
 
 It exposes the following functionalities:
 - See available Implementations for a given system, grouped by InterfaceGroups and Interfaces,
@@ -30,7 +28,7 @@ UI may be deployed outside Kubernetes.
 CLI is command line tool which makes easier with working the OCF manifests.
 
 Currently, CLI exposes the following features:
-- validates OCF manifests against the OCF JSON Schemas
+- validates OCF manifests against the OCF JSON Schemas,
 - signs OCF manifests that are loaded by OCH. 
 
 CLI utilizes [SDK](#sdk).
@@ -48,19 +46,29 @@ It also runs an additional GraphQL server, which exposes single mutation to chan
 
 ### Engine
 
+Engine is responsible for validating, rendering and executing Actions.
+
+It composes of two modules:
+- Kubernetes operator, which handles Action validation, rendering and execution based on Action Custom Resources,
+- GraphQL API server, which exposes platform-agnostic API for managing Actions.
+
+Engine consumes both local and public OCH APIs via single Gateway endpoint:
+- to resolve Action prerequisites based on TypeInstances, it uses Local OCH API,
+- to resolve other manifests such as Interface or Implementation, it uses Public OCH API.
+
 Engine utilizes [SDK](#sdk).
-
-#### GraphQL API
-
-#### Kubernetes Controller
 
 ### OCH
 
+Open Capability Hub stores OCF manifests and exposes API to access and manage them. It uses graph database as a storage for the data.
+
+OCH works in two modes:
+- Local OCH exposes GraphQL API for managing TypeInstances (create, read, delete operations),
+- Public OCH, which exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
+
+Manifests for Public OCH are populated with DB Populator, which directly populates the graph database with manifests from a given directory structure.
+
 OCH utilizes [SDK](#sdk).
-
-#### Local
-
-#### Public
 
 ### SDK
 
@@ -70,12 +78,10 @@ SDK can be used by Users to interact with Voltron components in a programmatic w
 
 ## Detailed interaction
 
+The section contains detailed interaction diagrams, to understand how the system works in a higher level of detail.
+
 ### Executing Action
 
 On the following diagram, User executes the WordPress install Action using UI.
 
 ![Sequence diagram for WordPress install Action](assets/action-sequence-diagram.svg)
-
-## TODO
-- Describe all components
-- Update detailed sequence diagram
