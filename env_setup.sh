@@ -33,3 +33,4 @@ echo "GET_IP_SERVICE=icanhazip.com" >>$GITHUB_ENV
 echo "NAMESPACE=voltron" >>$GITHUB_ENV
 echo "SERVICES=gateway engine och-public och-local" >>$GITHUB_ENV
 echo "HELM_TEST_TIMEOUT=10m"  >>$GITHUB_ENV
+echo "CERT_MGR_TIMEOUT=120" >>$GITHUB_ENV

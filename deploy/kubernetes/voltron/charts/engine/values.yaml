@@ -45,3 +45,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+global:
+  containerRegistry:
+    path: gcr.io/projectvoltron
