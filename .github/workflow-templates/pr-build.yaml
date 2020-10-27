@@ -30,7 +30,7 @@ jobs:
 
       - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
 
       - name: Setup Golang
         uses: actions/setup-go@v2
@@ -60,7 +60,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: setup env
-        run: . ./env_setup.sh
+        run: . ./hack/ci/setup-env.sh
       - id: set-matrix-app
         run: echo "::set-output ${APPS}"
       - id: set-matrix-test
@@ -84,7 +84,7 @@ jobs:
           export_default_credentials: true
       - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -109,7 +109,7 @@ jobs:
           export_default_credentials: true
       - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -134,7 +134,7 @@ jobs:
           export_default_credentials: true
       - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
       - name: Setup Golang
         uses: actions/setup-go@v2
         with:
@@ -157,7 +157,7 @@ jobs:
 
       - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
 
       - name: Setup Golang
         uses: actions/setup-go@v2
