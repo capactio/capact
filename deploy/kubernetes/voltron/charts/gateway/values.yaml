@@ -71,5 +71,4 @@ ingress:
         
   tls:
     - secretName: qqq
-      hosts:
-        - qqq
+      hosts:  qqq
