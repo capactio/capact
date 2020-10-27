@@ -16,7 +16,7 @@ metadata:
         http:
           paths:
             - backend:
-                serviceName: {{ $fullName }}
+                serviceName: {{ include "gateway.fullname" . }}
                 servicePort: 80
               path: {{ .Values.ingress.path }}
     # This section is only required if TLS is to be enabled for the Ingress
