@@ -4,7 +4,7 @@
 # and execute end-to-end Voltron tests.
 #
 # It requires Docker to be installed.
-# Dependencies such as Helm v3 and kind can be installed on demand.
+# Dependencies such as kubebuilder can be installed on demand.
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.
@@ -15,8 +15,10 @@ readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 readonly TMP_DIR=$(mktemp -d)
 
+# shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
-source "${CURRENT_DIR}/lib/deps_ver.sh" || { echo 'Cannot load dependencies versions.'; exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
@@ -28,7 +30,8 @@ trap cleanup EXIT
 
 main() {
     if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
-        export INSTALL_DIR=${TMP_DIR} KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
+        export INSTALL_DIR=${TMP_DIR}
+        export KUBEBUILDER_VERSION=${STABLE_KUBEBUILDER_VERSION}
         host::install::kubebuilder
     else
         echo "Skipping kubebuilder installation cause SKIP_DEPS_INSTALLATION is set to true."
@@ -36,7 +39,7 @@ main() {
 
     shout "Starting k8s controller tests..."
 
-    go test -v --tags=controllertests ${REPO_ROOT_DIR}/pkg/engine/k8s/controllers/...
+    go test -v --tags=controllertests "${REPO_ROOT_DIR}/internal/k8s-engine/controller/..."
 
     shout "K8s controller tests completed successfully."
 }

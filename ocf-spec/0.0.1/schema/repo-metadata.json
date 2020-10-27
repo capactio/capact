@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "Remote OCH repositories can be mounted under the vendor sub-tree in the local repository. OCF Vendor manifest stores connection details of the external OCH, such as URI of the repository (base path) or federation strategy.",
+  "description": "RepoMetadata stores metadata about the Open Capability Hub.",
   "required": [
     "ocfVersion",
     "kind",
@@ -53,17 +53,10 @@
       "description": "A container for the RepoMetadata definition.",
       "additionalProperties": false,
       "required": [
-        "caKey",
         "ocfVersion",
         "ochVersion"
       ],
       "properties": {
-        "caKey": {
-          "$id": "#/properties/spec/properties/caKey",
-          "type": "string",
-          "description": "Defines the Certificate Authority (CA) key which is used to check if OCF manifest contains a signature which has that CA in chain. If yes, then we can trust it and use its definition.",
-          "$comment": "WARNING: This field can change after resolving issue for signing and validating ocf manifest."
-        },
         "implementation": {
           "$id": "#/properties/spec/properties/implementation",
           "type": "object",

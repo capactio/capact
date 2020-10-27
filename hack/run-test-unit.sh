@@ -12,6 +12,7 @@ set -E         # needs to be set if we want the ERR trap
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly ROOT_PATH=${CURRENT_DIR}/..
 
+# shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 pushd "${ROOT_PATH}" >/dev/null
@@ -46,9 +47,10 @@ function test::go_modules() {
 
 function test::unit() {
   shout "? go test"
-  go test -race -coverprofile="${ROOT_PATH}/coverage.txt" ./...
+
   # Check if tests passed
-  if [[ $? != 0 ]]; then
+  if ! go test -race -coverprofile="${ROOT_PATH}/coverage.txt" ./...;
+ then
     echo -e "${RED}✗ go test\n${NC}"
     exit 1
   else

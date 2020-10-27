@@ -2,11 +2,11 @@
   "$schema": "http://json-schema.org/draft-07/schema",
   "$id": "https://projectvoltron.dev/schemas/type-instance.json",
   "type": "object",
-  "description": "The root schema comprises the entire JSON document.",
+  "description": "TypeInstance is an instance a given Type. It stores JSON object that is valid against JSON Schema from Type.",
   "required": [
     "ocfVersion",
     "kind",
-    "revision",
+    "resourceVersion",
     "metadata",
     "spec"
   ],
@@ -23,32 +23,28 @@
         "TypeInstance"
       ]
     },
-    "revision": {
-      "$id": "#/properties/revision",
-      "type": "string",
-      "minLength": 5,
-      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
-      "description": "Version of the manifest content in the SemVer format."
+    "resourceVersion": {
+      "$id": "#/properties/resourceVersion",
+      "type": "integer",
+      "minimum": 1,
+      "description": "Resource version of the manifest content. Every time the manifest content changes, the resource version is updated automatically on server side."
     },
     "metadata": {
       "type": "object",
       "required": [
-        "name",
-        "prefix"
+        "id"
       ],
       "properties": {
-        "name": {
-          "$id": "#/properties/metadata/properties/name",
+        "id": {
+          "$id": "#/properties/metadata/properties/id",
           "type": "string",
-          "description": "The name of OCF manifest that uniquely identifies this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name."
+          "description": "The unique identifier of a given TypeInstance."
         },
-        "prefix": {
-          "$comment": "TODO: How to restrict prefix to be set only by controller?",
-          "$id": "#/properties/metadata/properties/prefix",
-          "type": "string",
-          "description": "The prefix value is automatically computed and set when storing manifest in OCH."
+        "tags": {
+          "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "spec": {
       "$id": "#/properties/spec",
@@ -60,14 +56,103 @@
       ],
       "properties": {
         "typeRef": {
-          "$id": "#/properties/spec/properties/createdFrom",
-          "type": "string",
-          "description": "The full path to the Type form which this instance was created."
+          "$id": "#/properties/spec/properties/typeRef",
+          "type": "object",
+          "description": "The full path to the Type form which this instance was created.",
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$id": "#/properties/spec/properties/typeRef/0/path",
+              "type": "string",
+              "description": "Path of a given Type"
+            },
+            "revision": {
+              "$id": "#/properties/spec/properties/typeRef/0/revision",
+              "type": "string",
+              "description": "Version of the manifest content in the SemVer format.",
+              "minLength": 5,
+              "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$"
+            }
+          },
+          "additionalProperties": false
         },
         "value": {
           "$id": "#/properties/spec/properties/value",
           "type": "object",
-          "description": "Holds the configuration constraints for the given Type. It needs to be valid against the Type JSONSchema."
+          "description": "Holds the JSON object for a given TypeInstance with arbitrary data. It needs to be valid against the Type JSONSchema."
+        },
+        "instrumentation": {
+          "$id": "#/properties/spec/properties/instrumentation",
+          "description": "Holds the details about instrumentation for given Type Instance",
+          "type": "object",
+          "properties": {
+            "metrics": {
+              "$id": "#/properties/spec/properties/instrumentation/metrics",
+              "description": "Details about metrics exposed for a given TypeInstance",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/url",
+                  "description": "URL of metrics endpoint",
+                  "type": "string",
+                  "format": "uri"
+                },
+                "regex": {
+                  "type": "string",
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/regex",
+                  "description": "Regex for exposed metrics"
+                },
+                "dashboards": {
+                  "type": "array",
+                  "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards",
+                  "description": "Metrics dashboards",
+                  "items": [
+                    {
+                      "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards/0",
+                      "description": "Stores details of a metrics dashboard",
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "$id": "#/properties/spec/properties/instrumentation/metrics/dashboards/0/url",
+                          "description": "URL of metrics dashboard",
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            "health": {
+              "$id": "#/properties/spec/properties/instrumentation/health",
+              "description": "Details about health of a given TypeInstance",
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "url": {
+                  "$id": "#/properties/spec/properties/instrumentation/health/url",
+                  "description": "URL of health endpoint",
+                  "type": "string",
+                  "format": "uri"
+                },
+                "method": {
+                  "$id": "#/properties/spec/properties/instrumentation/health/method",
+                  "description": "Method of HTTP request",
+                  "type": "string",
+                  "enum": [
+                    "GET",
+                    "POST"
+                  ]
+                }
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

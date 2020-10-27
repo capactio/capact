@@ -17,7 +17,7 @@ all: generate build-all-images test-spec test-unit test-lint
 
 APPS = gateway k8s-engine och
 TESTS = e2e
-INFRA = json-go-gen
+INFRA = json-go-gen graphql-schema-linter
 
 # All images
 build-all-images: $(addprefix build-app-image-,$(APPS)) $(addprefix build-test-image-,$(TESTS)) $(addprefix build-infra-image-,$(INFRA))
@@ -52,9 +52,11 @@ push-test-image-%:
 .PHONY: push-test-image
 
 # Infra images
+INFRA_IMAGES_DIR = ./hack/images
+
 build-infra-image-%:
 	$(eval APP := $*)
-	docker build -t $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f ./hack/images/$(APP)/Dockerfile .
+	docker build -t $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f $(INFRA_IMAGES_DIR)/$(APP)/Dockerfile $(INFRA_IMAGES_DIR)/$(APP)
 .PHONY: build-infra-image
 
 push-infra-image-%:
@@ -98,7 +100,7 @@ test-cover-html: test-unit
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources
 .PHONY: generate
 
 gen-go-api-from-ocf-spec:
@@ -109,9 +111,14 @@ gen-k8s-resources:
 	./hack/gen-k8s-resources.sh
 .PHONY: gen-k8s-resources
 
+gen-graphql-resources:
+	./hack/gen-graphql-resources.sh
+.PHONY: gen-graphql-resources
+
 ###############
 # Development #
 ###############
+
 dev-cluster:
 	./hack/run-dev-cluster.sh
 .PHONY: dev-cluster

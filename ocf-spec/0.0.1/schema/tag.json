@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "Tag is a primitive, which is used to categorize Implementations.  You can use Tags to find and filter Implementations.",
+  "description": "Tag is a primitive, which is used to categorize Implementations. You can use Tags to find and filter Implementations.",
   "required": [
     "ocfVersion",
     "kind",
