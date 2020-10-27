@@ -43,7 +43,7 @@ gen_go_api_from_ocf_specs() {
   pushd "${REPO_ROOT_DIR}"
   rm -f "$OUTPUT"
 
-  docker run -v "$(PWD):/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
+  docker run -v "${PWD}:/local" gcr.io/projectvoltron/infra/json-go-gen:0.1.0 -l go -s schema --package types \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \

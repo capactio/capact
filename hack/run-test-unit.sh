@@ -28,7 +28,7 @@ function print_info() {
   echo -e "${INVERTED}"
   echo "USER: ${USER}"
   echo "PATH: ${PATH}"
-  echo "GOPATH: ${GOPATH}"
+  echo "GOPATH: ${GOPATH:-"unknown"}"
   echo -e "${NC}"
 }
 
