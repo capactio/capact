@@ -56,7 +56,7 @@ Engine consumes both local and public OCH APIs via single Gateway endpoint:
 - to resolve Action prerequisites based on TypeInstances, it uses Local OCH API,
 - to resolve other manifests such as Interface or Implementation, it uses Public OCH API.
 
-Engine utilizes [SDK](#sdk).
+Engine utilizes [SDK](#sdk). To execute Actions, it uses [Argo](https://github.com/argoproj/argo).
 
 ### OCH
 
@@ -83,5 +83,7 @@ The section contains detailed interaction diagrams, to understand how the system
 ### Executing Action
 
 On the following diagram, User executes the WordPress install Action using UI.
+
+> **NOTE:** To make the diagram more readable, Gateway component was excluded. Every operation proxied by Gateway is described with __(via Gateway)__ phrase.
 
 ![Sequence diagram for WordPress install Action](assets/action-sequence-diagram.svg)
