@@ -69,6 +69,9 @@ ingress:
 
   path: /
         
-  tls:
-    - secretName: qqq
-      hosts:  qqq
+  hosts:
+    - qqq.org
+  tls: 
+    - secretName: qqq.org
+      hosts:
+        - qqq.org
