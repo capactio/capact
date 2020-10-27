@@ -12,10 +12,22 @@ readonly STABLE_KUBEBUILDER_VERSION=1.0.8
 readonly STABLE_GQLGEN_VERSION=v0.13.0
 
 #
-# Constant values across all scripts
+# Kubernetes installation
 #
 
 readonly VOLTRON_NAMESPACE="voltron-system"
 readonly VOLTRON_RELEASE_NAME="voltron"
 readonly KIND_DEV_CLUSTER_NAME="kind-dev-voltron"
 readonly KIND_CI_CLUSTER_NAME="kind-ci-voltron"
+
+#
+# OCF
+#
+
+readonly DEFAULT_OCF_VERSION="0.0.1"
+
+#
+# Infra images
+#
+
+readonly JSON_GO_GEN_IMAGE="gcr.io/projectvoltron/infra/json-go-gen:0.1.0"
