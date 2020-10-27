@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ include "gateway.fullname" . }}
+  labels:
+    {{- include "gateway.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: "{{ .Values.ingress.annotations.class }}"  
+    kubernetes.io/tls-acme: "{{ .Values.ingress.annotations.tls_acme }}"
+    cert-manager.io/cluster-issuer: "{{ .Values.ingress.annotations.issuer }}"
+    acmechallengetype: "{{ .Values.ingress.annotations.acmechallengetype }}"
+ apiVersion: networking.k8s.io/v1beta1
+  spec:
+    rules:
+      - host: www.example.com
+        http:
+          paths:
+            - backend:
+                serviceName: {{ $fullName }}
+                servicePort: 80
+              path: {{ .Values.ingress.path }}
+    # This section is only required if TLS is to be enabled for the Ingress
+    tls:
+        - hosts:
+            - {{ .Values.ingress.tls.hosts }}
+          secretName: {{ .Values.ingress.tls.secretName }}

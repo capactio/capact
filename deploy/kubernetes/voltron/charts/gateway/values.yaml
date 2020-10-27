@@ -58,18 +58,18 @@ global:
   containerRegistry:
     path: gcr.io/projectvoltron
 
-# ingress:
-#   enabled: true
-#   redirect: 
-#   annotations:
-#     tls_acme: "true"
-#     class: "nginx"    
-#     issuer: "letsencrypt"
-#     acmechallengetype: "http01"
+ingress:
+  enabled: true
+  redirect: 
+  annotations:
+    tls_acme: "true"
+    class: "nginx"    
+    issuer: "letsencrypt"
+    acmechallengetype: "http01"
 
-#   path: /
+  path: /
         
-#   tls:
-#     - secretName: qqq
-#       hosts:
-#         - qqq
+  tls:
+    - secretName: qqq
+      hosts:
+        - qqq
