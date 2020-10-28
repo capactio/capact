@@ -1,9 +1,18 @@
+#!/usr/bin/env bash
+
 #
 # Library of useful utilities for CI purposes.
 #
+
+# To enforce readonly values for colors, shellcheck validation is disabled, as some of them may be not used (yet).
+
+# shellcheck disable=SC2034
 readonly RED='\033[0;31m'
+# shellcheck disable=SC2034
 readonly GREEN='\033[0;32m'
+# shellcheck disable=SC2034
 readonly INVERTED='\033[7m'
+# shellcheck disable=SC2034
 readonly NC='\033[0m' # No Color
 
 # Prints first argument as header. Additionally prints current date.
@@ -18,10 +27,10 @@ shout() {
 
 dump_logs() {
     LOGS_DIR=${ARTIFACTS:-./tmp}/logs
-    mkdir -p ${LOGS_DIR}
+    mkdir -p "${LOGS_DIR}"
 
     echo "Dumping logs from namespace ${DUMP_NAMESPACE} into ${LOGS_DIR}"
-    kubectl cluster-info dump --namespace=${DUMP_NAMESPACE} --output-directory=${LOGS_DIR}
+    kubectl cluster-info dump --namespace="${DUMP_NAMESPACE}" --output-directory="${LOGS_DIR}"
 }
 
 # Installs kubebuilder dependency locally.
@@ -45,8 +54,8 @@ host::install::kubebuilder() {
   curl -L -O "https://github.com/kubernetes-sigs/kubebuilder/releases/download/v${KUBEBUILDER_VERSION}/${name}.tar.gz"
 
   # extract the archive
-  tar -zxvf ${name}.tar.gz
-  mv ${name} kubebuilder
+  tar -zxvf "${name}".tar.gz
+  mv "${name}" kubebuilder
 
   popd || return
 
@@ -140,10 +149,10 @@ host::install::helm() {
     pushd "${INSTALL_DIR}" || return
 
     shout "- Install helm ${HELM_VERSION} locally to a tempdir..."
-    curl -fsSL -o ${INSTALL_DIR}/get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
-    chmod 700 ${INSTALL_DIR}/get_helm.sh
+    curl -fsSL -o "${INSTALL_DIR}"/get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+    chmod 700 "${INSTALL_DIR}"/get_helm.sh
     env HELM_INSTALL_DIR="${INSTALL_DIR}/bin" ./get_helm.sh \
-        --version ${HELM_VERSION} \
+        --version "${HELM_VERSION}" \
         --no-sudo
 
     popd || return
@@ -157,19 +166,19 @@ host::install::helm() {
 
 kind::create_cluster() {
     shout "- Creating K8s cluster..."
-    kind create cluster --name=${KIND_CLUSTER_NAME} --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
+    kind create cluster --name="${KIND_CLUSTER_NAME}" --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
 }
 
 kind::delete_cluster() {
     shout "- Deleting K8s cluster..."
-    kind delete cluster --name=${KIND_CLUSTER_NAME}
+    kind delete cluster --name="${KIND_CLUSTER_NAME}"
 }
 
 # Arguments:
 #   $1 - list of docker images in format "name:tag [name:tag...]"
 kind::load_images() {
   for id in $1; do
-    kind load docker-image $id --name=${KIND_CLUSTER_NAME}
+    kind load docker-image "$id" --name="${KIND_CLUSTER_NAME}"
   done
 }
 
@@ -183,13 +192,16 @@ kind::load_images() {
 docker::list_images() {
   names=$(docker image ls --filter=reference="$1" --format="{{.Repository}}:{{.Tag}}")
 
-  echo $names
+  echo "$names"
 }
 
 # Arguments:
 #   $1 - image list
 docker::delete_images() {
-  docker rmi $1
+  # images have to be passed as multiple arguments
+  # shellcheck disable=SC2206
+  images=($1)
+  docker rmi "${images[@]}"
 }
 
 #
@@ -227,9 +239,9 @@ voltron::install::from_sources() {
     shout "- Installing Voltron Helm chart from sources..."
     helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}"/chart \
         --create-namespace \
-        --namespace=${VOLTRON_NAMESPACE} \
-        --set global.containerRegistry.path=$DOCKER_PUSH_REPOSITORY \
-        --set global.containerRegistry.overrideTag=$DOCKER_TAG \
+        --namespace="${VOLTRON_NAMESPACE}" \
+        --set global.containerRegistry.path="$DOCKER_PUSH_REPOSITORY" \
+        --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
         --wait
 
     popd || return
