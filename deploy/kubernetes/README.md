@@ -25,7 +25,7 @@ To install Voltron, run the following steps:
     helm install monitoring ./monitoring --create-namespace -n monitoring
     ```
    
-   > **NOTE:** This installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
+      > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
    Installed Voltron components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
    For more information check [metrics](../../docs/metrics.md) document.
 

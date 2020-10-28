@@ -954,7 +954,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Queue durations",
+      "title": "Queue work item durations",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1150,7 +1150,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Average number of items in queue during 1 minute",
+      "title": "Average number of new items added to queue during 1 minute",
       "tooltip": {
         "shared": true,
         "sort": 0,

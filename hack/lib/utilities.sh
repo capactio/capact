@@ -242,7 +242,7 @@ voltron::install::from_sources() {
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
-    shout "- Installing Voltron Helm chart from sources..."
+    shout "- Installing Voltron Helm chart from sources [wait: true]..."
     helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}"/chart \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
@@ -254,11 +254,11 @@ voltron::install::from_sources() {
 }
 
 voltron::install::monitoring() {
-    shout "- Installing monitoring Helm chart..."
+    # not waiting as Helm Charts installation takes additional ~3 minutes. To proceed further we need only monitoring CRDs.
+    shout "- Installing monitoring Helm chart [wait: false]..."
     helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/monitoring" \
         --create-namespace \
         --namespace="monitoring"
-        # --wait (not waiting as Helm Charts installation takes additional ~3minutes. To proceed further we need only monitoring CRDs.
 }
 
 voltron::install::detect_command() {

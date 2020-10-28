@@ -253,16 +253,16 @@ make gen-graphql-resources
 
 ## Instrumentation
 
-This section describes the development of Voltron components instrumentation. 
+This section describes the approach for Voltron components instrumentation.  
 
 ### Enable metrics scrape 
 
-We are using Prometheus Operator, so you need to create a ServiceMonitor with `voltron.dev/scrape-metrics: "true"` label to enable metrics scrapping. ServiceMonitor can be created in any Namespace.
+We use Prometheus Operator for monitoring. To enable metrics scraping, you need to create a ServiceMonitor with `voltron.dev/scrape-metrics: "true"` label. ServiceMonitor can be created in any Namespace.
 Check [Engine metrics.yaml](../deploy/kubernetes/chart/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
 
 ### Add Grafana Dashboard
 
-We have a dashboard sidecar container enabled for Grafana deployment. This sidecar watches all ConfigMaps in the cluster and filters out the ones with a label `grafana_dashboard: "1"`. Changes to the ConfigMaps are monitored and the imported dashboards are deleted/updated.
+To make the Grafana dashboard management easier, we use Grafana Dashboard sidecar. It watches all ConfigMaps in the cluster with a label `grafana_dashboard: "1"`. Changes to the ConfigMaps are monitored and the imported dashboards are updated or deleted accordingly.
 
 A recommendation is to use one ConfigMap per dashboard as Grafana doesn't handle multiple dashboards properly. Additionally, we keep dashboards as JSON files in a separate folder and load them into ConfigMap using `Files.Get` Helm command. As a result:
 
@@ -301,4 +301,9 @@ kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80
 ```
 
 
-Now you can open your browser at http://localhost:3000 to access the Grafana instance.
+Now you can open your browser at http://localhost:3000 to access the Grafana instance. To log in, use: 
+
+```
+username: admin
+password: admin
+```

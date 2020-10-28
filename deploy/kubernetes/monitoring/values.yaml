@@ -11,6 +11,7 @@ kube-prometheus-stack:
         matchLabels:
           voltron.dev/scrape-metrics: "true"
   grafana:
+    adminPassword: admin
     sidecar:
       dashboards:
         # If specified, the sidecar will search for dashboard config-maps inside this namespace.
