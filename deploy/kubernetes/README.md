@@ -22,7 +22,7 @@ To install Voltron, run the following steps:
 1. **[Optional]** Install monitoring stack:
 
     ```bash
-    helm install monitoring ./monitoring --create-namespace -n monitoring
+    helm install monitoring ./charts/monitoring --create-namespace -n monitoring
     ```
    
       > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
@@ -32,7 +32,7 @@ To install Voltron, run the following steps:
 1. Install Voltron Helm chart:
     
     ```bash
-    helm install voltron ./chart --create-namespace -n voltron-system
+    helm install voltron ./charts/voltron --create-namespace -n voltron-system
     ```
 
 ## Upgrade
@@ -50,7 +50,7 @@ To upgrade Voltron installation, do the following steps:
 1. Upgrade Voltron Helm chart:
     
     ```bash
-    helm upgrade voltron ./chart -n voltron-system 
+    helm upgrade voltron ./charts/voltron -n voltron-system 
     ```
 
 ## Uninstall

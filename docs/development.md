@@ -258,7 +258,7 @@ This section describes the approach for Voltron components instrumentation.
 ### Enable metrics scrape 
 
 We use Prometheus Operator for monitoring. To enable metrics scraping, you need to create a ServiceMonitor with `voltron.dev/scrape-metrics: "true"` label. ServiceMonitor can be created in any Namespace.
-Check [Engine metrics.yaml](../deploy/kubernetes/chart/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
+Check [Engine metrics.yaml](../deploy/kubernetes/charts/voltron/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
 
 ### Add Grafana Dashboard
 
@@ -270,7 +270,7 @@ A recommendation is to use one ConfigMap per dashboard as Grafana doesn't handle
 * No escaping is needed for double curly brackets. 
 * IDE can still support JSON formatting/validation.
 
-Check the [Engine Helm chart](../deploy/kubernetes/chart/charts/engine) for a reference on how to store and load the dashboards from JSON to ConfigMap.
+Check the [Engine Helm chart](../deploy/kubernetes/charts/voltron/charts/engine) for a reference on how to store and load the dashboards from JSON to ConfigMap.
 
 > **CAUTION:** The size of a ConfigMap is limited to 1MB.
 
