@@ -74,7 +74,7 @@ dockerfile::run_checks() {
 shellcheck::run_checks() {
   shout "Run shellcheck checks"
 
-  docker run --rm -v "$ROOT_PATH":/mnt koalaman/shellcheck:stable -x ./hack/**/*.sh
+  docker run --rm -v "$ROOT_PATH":/mnt -w /mnt koalaman/shellcheck-alpine:stable sh -c "find ./ -name '*.sh' | xargs shellcheck -x"
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
