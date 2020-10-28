@@ -19,6 +19,10 @@ SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
+
+GRAPHQL_SCHEMA_LINTER_IMAGE="gcr.io/projectvoltron/infra/graphql-schema-linter:${GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION}"
 
 cleanup() {
     rm -rf "${TMP_DIR}"
@@ -70,14 +74,14 @@ dockerfile::run_checks() {
 shellcheck::run_checks() {
   shout "Run shellcheck checks"
 
-  docker run --rm -v "$ROOT_PATH":/mnt koalaman/shellcheck:stable -x ./hack/*.sh
+  docker run --rm -v "$ROOT_PATH":/mnt koalaman/shellcheck:stable -x ./hack/**/*.sh
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
 graphql::run_checks() {
   shout "Run graphql-schema-linter checks"
 
-  docker run --rm -v "$ROOT_PATH":/repo -w=/repo gcr.io/projectvoltron/infra/graphql-schema-linter:0.1.0 \
+  docker run --rm -v "$ROOT_PATH":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
     --src ./pkg/engine/api/graphql/schema.graphql \
     --src ./pkg/och/api/graphql/public/schema.graphql \
     --src ./pkg/och/api/graphql/local/schema.graphql \

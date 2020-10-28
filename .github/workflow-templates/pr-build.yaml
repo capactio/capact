@@ -32,7 +32,7 @@ jobs:
         run: |
           . ./hack/ci/setup-env.sh
 
-      - name: Setup Golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -44,7 +44,7 @@ jobs:
       - name: Run unit tests
         run: make test-unit
 
-      - name: Test
+      - name: Check generated files
         run: |
           make test-generated
 
@@ -85,7 +85,7 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -110,7 +110,7 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -135,7 +135,7 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -159,7 +159,7 @@ jobs:
         run: |
           . ./hack/ci/setup-env.sh
 
-      - name: Setup Golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -168,6 +168,6 @@ jobs:
         run: |
           make test-k8s-controller
 
-      - name: Run integration tests
+      - name: Run cross-functional integration tests
         run: |
           make test-integration

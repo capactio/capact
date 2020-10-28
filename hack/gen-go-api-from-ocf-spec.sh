@@ -12,13 +12,13 @@ set -E         # needs to be set if we want the ERR trap
 
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
-
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 # shellcheck source=./hack/lib/const.sh
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
 
 OCF_VERSION="${OCF_VERSION:-$DEFAULT_OCF_VERSION}"
+JSON_GO_GEN_IMAGE="gcr.io/projectvoltron/infra/json-go-gen:${JSON_GO_GEN_IMAGE_VERSION}"
 
 REPORT_FILE_DIR="${REPO_ROOT_DIR}/tmp"
 REPORT_FILENAME="${REPORT_FILE_DIR}/gen_go_api_issues.txt"
@@ -48,6 +48,8 @@ gen_go_api_from_ocf_specs() {
   pushd "${REPO_ROOT_DIR}"
   rm -f "$OUTPUT"
 
+  # Docker pull related logs are outputted to stderr.
+  # To avoid putting them to report file, pulling the image is done in a separate command.
   docker pull "${JSON_GO_GEN_IMAGE}"
   docker run -v "${PWD}:/local" "${JSON_GO_GEN_IMAGE}" -l go -s schema --package types \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \

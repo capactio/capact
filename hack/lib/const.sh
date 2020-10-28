@@ -27,7 +27,8 @@ readonly KIND_CI_CLUSTER_NAME="kind-ci-voltron"
 readonly DEFAULT_OCF_VERSION="0.0.1"
 
 #
-# Infra images
+# Infra
 #
 
-readonly JSON_GO_GEN_IMAGE="gcr.io/projectvoltron/infra/json-go-gen:0.1.0"
+readonly JSON_GO_GEN_IMAGE_VERSION="0.1.0"
+readonly GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION="0.1.0"
