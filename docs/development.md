@@ -305,5 +305,5 @@ Now you can open your browser at http://localhost:3000 to access the Grafana ins
 
 ```
 username: admin
-password: admin
+password: okon
 ```
