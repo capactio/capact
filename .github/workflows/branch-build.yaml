@@ -166,4 +166,4 @@ jobs:
 
       - name: Run cross-functional integration tests
         run: |
-          make test-integration
+          BUILD_IMAGES=false make test-integration

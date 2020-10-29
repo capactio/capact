@@ -1,2 +1,10 @@
-/deploy
-/hack
+# Ignore everything
+**
+
+# Allow go directories
+!/cmd
+!/internal
+!/pkg
+!/test
+!/go.mod
+!/go.sum
