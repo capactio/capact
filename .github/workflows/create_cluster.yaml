@@ -102,7 +102,7 @@ jobs:
           do  
             kubectl get secret ${SERVICE}-tls -n ${NAMESPACE} -o yaml >secret-${SERVICE}.yaml
           done
-          gsutil cp secret*.yaml gs://
+          gsutil cp secret*.yaml gs://${BUCKET}
 
 
           
