@@ -33,7 +33,7 @@ exitCode=0
 for path in "${srcPaths[@]}"
 do
   echo "- Linting ${path}..."
-  graphql-schema-linter ${linterArgs} "${path}"
+  graphql-schema-linter "${linterArgs}" "${path}"
   lastExitCode=$?
   if [ $lastExitCode -ne 0 ]; then
     exitCode=${lastExitCode}

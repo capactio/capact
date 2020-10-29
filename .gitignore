@@ -47,5 +47,6 @@ coverage.txt
 ### Others ###
 /tmp/
 
-#this is due to file created by authentication to GCP GoogleCloudPlatform/github-actions/setup-gcloud@master
+# UUID file created by `setup-gcloud` GitHub Action when `export_default_credentials` is enabled
+# Read more at https://github.com/GoogleCloudPlatform/github-actions/tree/master/setup-gcloud
 /[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*-[a-f,0-9]*

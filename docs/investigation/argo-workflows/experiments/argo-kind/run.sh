@@ -16,4 +16,4 @@ do
 done
 
 echo "Install Argo with MinIO in '${NAMESPACE}' namespace"
-kubectl apply -n ${NAMESPACE} -f ${SCRIPT_PATH}/argo-minimal-kind.yaml
+kubectl apply -n ${NAMESPACE} -f "${SCRIPT_PATH}/argo-minimal-kind.yaml"

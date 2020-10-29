@@ -19,6 +19,10 @@ SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
+# shellcheck source=./hack/lib/const.sh
+source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
+
+GRAPHQL_SCHEMA_LINTER_IMAGE="gcr.io/projectvoltron/infra/graphql-schema-linter:${GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION}"
 
 cleanup() {
     rm -rf "${TMP_DIR}"
@@ -48,7 +52,7 @@ golangci::run_checks() {
   shout "Run golangci-lint checks"
 
   # shellcheck disable=SC2046
-  golangci-lint run --timeout=${LINT_TIMEOUT} $(golangci::fix_if_requested) "${ROOT_PATH}/..."
+  golangci-lint run --timeout="${LINT_TIMEOUT}" $(golangci::fix_if_requested) "${ROOT_PATH}/..."
 
   echo -e "${GREEN}√ run golangci-lint${NC}"
 }
@@ -65,19 +69,27 @@ dockerfile::run_checks() {
   echo -e "${GREEN}√ run hadolint${NC}"
 }
 
+shellcheck::files_to_check() {
+  pushd "$ROOT_PATH" > /dev/null
+  paths=$(find . -name '*.sh')
+  popd > /dev/null
+
+  echo "$paths"
+}
 
 # In the future we can add support for auto fix: https://github.com/koalaman/shellcheck/issues/1220
 shellcheck::run_checks() {
   shout "Run shellcheck checks"
 
-  docker run --rm -v "$ROOT_PATH":/mnt koalaman/shellcheck:stable -x ./hack/*.sh
+  # shellcheck disable=SC2046
+  docker run --rm -v "$ROOT_PATH":/mnt -w /mnt koalaman/shellcheck:stable -x $(shellcheck::files_to_check)
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
 graphql::run_checks() {
   shout "Run graphql-schema-linter checks"
 
-  docker run --rm -v "$ROOT_PATH":/repo -w=/repo gcr.io/projectvoltron/infra/graphql-schema-linter:0.1.0 \
+  docker run --rm -v "$ROOT_PATH":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
     --src ./pkg/engine/api/graphql/schema.graphql \
     --src ./pkg/och/api/graphql/public/schema.graphql \
     --src ./pkg/och/api/graphql/local/schema.graphql \

@@ -1,21 +1,26 @@
-name:  PR build
+name: PR build
 
-on: 
+on:
   pull_request:
-    types: [ opened, synchronize, reopened]
+    types:
+      - opened
+      - synchronize
+      - reopened
     paths:
-    - '**.go'
-    - '**.graphql'
-    branches: 
-    - 'master'
-
+      - "**.go"
+      - "**.graphql"
+      - ".github/workflows/**"
+      - "**.sh"
+      - "Makefile"
+    branches:
+      - "master"
 
 jobs:
   entry-tests:
-    name: Lint, Unit, Generation Tests
+    name: Lint and test code
     runs-on: ubuntu-latest
-      
-    steps:    
+
+    steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
@@ -23,32 +28,28 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GCR_CREDS }}
 
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
 
-      - name: Setup golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
 
       - name: Run linting
-        run: | 
+        run: |
           make test-lint
 
       - name: Run unit tests
         run: make test-unit
 
-      - name: Run generation
+      - name: Check generated files
         run: |
           make test-generated
 
-      - name: Run k8s-controller
-        run: |
-          make test-k8s-controller
-  
-  
   prepare-matrix:
+    name: Prepare components build matrix
     runs-on: ubuntu-latest
     outputs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
@@ -59,7 +60,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: setup env
-        run: . ./env_setup.sh
+        run: . ./hack/ci/setup-env.sh
       - id: set-matrix-app
         run: echo "::set-output ${APPS}"
       - id: set-matrix-test
@@ -67,11 +68,10 @@ jobs:
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
 
-
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
-    needs: prepare-matrix 
+    needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
 
@@ -82,10 +82,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
-      - name: Setup golang
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -93,11 +93,10 @@ jobs:
       - run: make build-app-image-${{ matrix.APP }}
       - run: make push-app-image-${{ matrix.APP }}
 
-
   build-tests:
     name: Build ${{ matrix.TEST }}
     runs-on: ubuntu-latest
-    needs: prepare-matrix 
+    needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
 
@@ -108,10 +107,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
-      - name: Setup golang
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -122,7 +121,7 @@ jobs:
   build-infra:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
-    needs: prepare-matrix 
+    needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
 
@@ -133,10 +132,10 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
-      - name: Setup golang
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -147,8 +146,8 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: [build-app, build-infra, build-tests]    
-    steps:    
+    needs: [build-app, build-infra, build-tests]
+    steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
@@ -156,17 +155,19 @@ jobs:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
 
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
 
-      - name: Setup golang
+      - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
 
-      - name: Run integration tests
-        run: | 
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+
+      - name: Run cross-functional integration tests
+        run: |
           make test-integration
-
-
