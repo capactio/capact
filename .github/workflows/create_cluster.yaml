@@ -100,7 +100,7 @@ jobs:
         run: | 
           for SERVICE in gateway
           do  
-            kubectl get secret ${SERVICE} -n ${NAMESPACE} -o yaml >secret-${SERVICE}.yaml
+            kubectl get secret ${SERVICE}-tls -n ${NAMESPACE} -o yaml >secret-${SERVICE}.yaml
           done
           gsutil cp secret*.yaml gs://
 
