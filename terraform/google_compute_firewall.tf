@@ -38,7 +38,7 @@ resource "google_compute_firewall" "gcf-allow-tcp" {
 
   allow {
     protocol = "tcp"
-    ports    = ["443","10250", "80"]
+    ports    = ["443","10250", "80", "8443"]
   }
 }
 
