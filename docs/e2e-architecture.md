@@ -12,7 +12,7 @@ The following diagram visualizes all components in the system:
 
 ### OCF
 
-Open Capability Format is not a component per-se, but it's also an important part of the system. OCF is a specification of manifests for every entity in the system.
+Open Capability Format (OCF) is not a component per-se, but it's also an important part of the system. OCF is a specification of manifests for every entity in the system.
 It is stored in a form of multiple JSON Schema files. From the JSON schemas all internal [SDK](#sdk) Go structs are generated.
 
 OCF manifests are stored in [OCH](#och).
@@ -27,8 +27,6 @@ It exposes the following functionalities:
 - render and execute Actions, with advanced rendering mode support.
 
 UI does all HTTP requests to [Gateway](#gateway).
-
-UI may be deployed outside the Kubernetes cluster with core Voltron components.
 
 ### CLI
 
@@ -45,35 +43,33 @@ CLI utilizes [SDK](#sdk).
 Gateway is a GraphQL reverse proxy. It aggregates multiple remote GraphQL schemas into a single endpoint. It enables UI to have a single destination for all GraphQL operations.
 
 Based on the GraphQL operation, it forwards the query or mutation to a corresponding service:
-- [Engine](#engine) - for Action CRUD operations,
-- Local [OCH](#och) - for TypeInstance CRUD operations,
-- Public [OCH](#och) - for read operations for all other manifests apart except TypeInstance.
+- [Engine](#engine) - for CRUD operations on Actions,
+- Local [OCH](#och) - for create, read, delete operations on TypeInstances,
+- Public [OCH](#och) - for read operations for all other manifests except for TypeInstance.
 
 It also runs an additional GraphQL server, which exposes single mutation to change URL for Public [OCH](#och) API aggregated by Gateway.
 
 ### Engine
 
-Engine is responsible for validating, rendering and executing Actions.
+Engine is responsible for validating, rendering and executing Actions. Action describes user intention in platform-agnostic way - which Interface or Implementation to run with a given input parameters and artifacts. For Kubernetes implementation, we use Kubernetes Custom Resources to store Action data.
 
-It composes of two modules:
-- Kubernetes operator, which handles Action validation, rendering and execution based on Action Custom Resources,
-- GraphQL API server, which exposes platform-agnostic API for managing Actions.
+Engine composes of two modules:
+- GraphQL API server, which exposes platform-agnostic API for managing Actions,
+- Kubernetes operator, which handles Action validation, rendering and execution based on Action Custom Resources `spec` property.
 
-Engine consumes both local and public OCH APIs via single Gateway endpoint:
-- to resolve Action prerequisites based on TypeInstances, it uses Local [OCH](#och) API,
-- to resolve other manifests such as Interface or Implementation, it uses Public [OCH](#och) API.
+To resolve Actions, Engine uses GraphQL queries for TypeInstances, Interface and Implementations through Gateway.
 
 Engine utilizes [SDK](#sdk). To execute Actions, it uses Kubernetes Jobs, that executes [Argo](https://github.com/argoproj/argo) workflows.
 
 ### OCH
 
-Open Capability Hub stores [OCF](#ocf) manifests and exposes API to access and manage them. It uses graph database as a storage for the data.
+Open Capability Hub (OCH) stores [OCF](#ocf) manifests and exposes API to access and manage them. It uses graph database as a storage for the data.
 
 OCH works in two modes:
 - Local OCH exposes GraphQL API for managing TypeInstances (create, read, delete operations),
 - Public OCH, which exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
 
-Manifests for Public OCH are populated with DB Populator, which directly populates the graph database with manifests from a given directory structure.
+Every manifest for Public OCH has to be signed with [CLI](#cli). Signed manifests are populated with DB Populator, which populates the graph database directly from a given directory structure.
 
 OCH utilizes [SDK](#sdk).
 
@@ -91,6 +87,6 @@ The section contains detailed interaction diagrams, to understand how the system
 
 On the following diagram, User executes the WordPress install Action using UI.
 
-> **NOTE:** To make the diagram more readable, Gateway component was excluded. Every operation proxied by Gateway is described with __(via Gateway)__ phrase.
+> **NOTE:** To make the diagram more readable, some details have been omitted, such as User impersonation setup or details about watching built-in Runner status. Also, the Gateway component was excluded. Every operation proxied by Gateway is described with _(via Gateway)_ phrase.
 
 ![Sequence diagram for WordPress install Action](assets/action-sequence-diagram.svg)
