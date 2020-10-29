@@ -165,5 +165,7 @@ jobs:
           make test-k8s-controller
 
       - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
         run: |
-          BUILD_IMAGES=false make test-integration
+          make test-integration
