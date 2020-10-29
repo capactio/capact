@@ -4,6 +4,9 @@ image:
   name: k8s-engine
   pullPolicy: IfNotPresent
 
+controller:
+  metricsPort: "8081"
+
 replicaCount: 1
 
 imagePullSecrets: []

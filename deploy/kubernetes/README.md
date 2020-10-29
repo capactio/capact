@@ -19,12 +19,21 @@ To install Voltron, run the following steps:
    kubectl apply -f ./crds
    ``` 
 
+1. **[Optional]** Install monitoring stack:
+
+    ```bash
+    helm install monitoring ./charts/monitoring --create-namespace -n monitoring
+    ```
+   
+    > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
+    Installed Voltron components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
+    For more information check [instrumentation](../../docs/development.md#instrumentation) section.
+
 1. Install Voltron Helm chart:
     
     ```bash
-    helm install voltron ./chart --create-namespace -n voltron-system
+    helm install voltron ./charts/voltron --create-namespace -n voltron-system
     ```
-
 
 ## Upgrade
 
@@ -41,7 +50,7 @@ To upgrade Voltron installation, do the following steps:
 1. Upgrade Voltron Helm chart:
     
     ```bash
-    helm upgrade voltron ./chart -n voltron-system 
+    helm upgrade voltron ./charts/voltron -n voltron-system 
     ```
 
 ## Uninstall

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: monitoring
+description: A Helm chart for Voltron monitoring stack
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: kube-prometheus-stack
+    version: "10.1.x"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: kubePrometheusStack.enabled

@@ -12,6 +12,8 @@ Read this document to learn how to develop the project. Please also follow guide
   * [Unit tests](#unit-tests)
   * [Lint tests](#lint-tests)
   * [Integration tests](#integration-tests)
+    + [Cross-functional](#cross-functional)
+  * [K8s controller](#k8s-controller)
 - [Development cluster](#development-cluster)
   * [Create a cluster and install components](#create-a-cluster-and-install-components)
   * [Rebuild Docker images and update cluster](#rebuild-docker-images-and-update-cluster)
@@ -20,8 +22,15 @@ Read this document to learn how to develop the project. Please also follow guide
   * [All components](#all-components)
   * [Single component](#single-component)
 - [Generators](#generators)
-  * [Generate Go code from OCF JSON Schemas](#generate-go-code-from-ocf-json-schemas)
+  * [Generate Go code from the OCF JSON Schemas](#generate-go-code-from-the-ocf-json-schemas)
   * [Generate K8s resources](#generate-k8s-resources)
+  * [Generate code from GraphQL schema](#generate-code-from-graphql-schema)
+- [Instrumentation](#instrumentation)
+  * [Enable metrics scrape](#enable-metrics-scrape)
+  * [Add Grafana Dashboard](#add-grafana-dashboard)
+  * [Access Prometheus and Grafana](#access-prometheus-and-grafana)
+    + [Prometheus](#prometheus)
+    + [Grafana](#grafana)
 
 <!-- tocstop -->
 
@@ -109,6 +118,8 @@ To create the development cluster and install all components, execute:
 ```bash
 make dev-cluster
 ```
+
+> **NOTE:** By default, the monitoring stack is installed. Export environment variable `DISABLE_MONITORING_INSTALLATION=true` to disable monitoring installation.
 
 ### Rebuild Docker images and update cluster
 
@@ -238,4 +249,61 @@ Each time the GraphQL schema is change, you need to update generated resources. 
 
 ```bash
 make gen-graphql-resources
+```
+
+## Instrumentation
+
+This section describes the approach for Voltron components instrumentation.  
+
+### Enable metrics scrape 
+
+We use Prometheus Operator for monitoring. To enable metrics scraping, you need to create a ServiceMonitor with `voltron.dev/scrape-metrics: "true"` label. ServiceMonitor can be created in any Namespace.
+Check [Engine metrics.yaml](../deploy/kubernetes/charts/voltron/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
+
+### Add Grafana Dashboard
+
+To make the Grafana dashboard management easier, we use Grafana Dashboard sidecar. It watches all ConfigMaps in the cluster with a label `grafana_dashboard: "1"`. Changes to the ConfigMaps are monitored and the imported dashboards are updated or deleted accordingly.
+
+A recommendation is to use one ConfigMap per dashboard as Grafana doesn't handle multiple dashboards properly. Additionally, we keep dashboards as JSON files in a separate folder and load them into ConfigMap using `Files.Get` Helm command. As a result:
+
+* Dashboard is more readable.
+* No escaping is needed for double curly brackets. 
+* IDE can still support JSON formatting/validation.
+
+Check the [Engine Helm chart](../deploy/kubernetes/charts/voltron/charts/engine) for a reference on how to store and load the dashboards from JSON to ConfigMap.
+
+> **CAUTION:** The size of a ConfigMap is limited to 1MB.
+
+Useful materials when creating Grafana dashboards:
+- [List of Prometheus query functions with description](https://prometheus.io/docs/prometheus/latest/querying/functions/#functions)
+- [Histogram queries how-to](https://prometheus.io/docs/practices/histograms/)
+
+### Access Prometheus and Grafana
+
+If you installed the Voltron with monitoring enabled, the Prometheus and Grafana are not exposed using Ingress. You can access them by forwarding Service ports to your localhost. 
+
+#### Prometheus
+
+Forward the Prometheus server to your localhost: 
+
+```bash
+kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090
+```
+
+Now can open your browser at http://localhost:9090. In the Prometheus dashboard, you can query on the metrics, see all the predefined alerts and Prometheus targets.
+
+#### Grafana 
+
+Forward the Grafana server to your localhost: 
+
+```bash
+kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80
+```
+
+
+Now you can open your browser at http://localhost:3000 to access the Grafana instance. To log in, use: 
+
+```
+username: admin
+password: okon
 ```
