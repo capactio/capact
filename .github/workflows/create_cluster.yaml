@@ -72,29 +72,29 @@ jobs:
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
 
-      - name: Install dependencies in cluster
-        run: | 
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo update
-          helm install ingress-nginx ingress-nginx/ingress-nginx
-          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-          sleep ${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml
+      # - name: Install dependencies in cluster
+      #   run: | 
+      #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      #     helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+      #     helm repo add jetstack https://charts.jetstack.io
+      #     helm repo update
+      #     helm install ingress-nginx ingress-nginx/ingress-nginx
+      #     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+      #     sleep ${CERT_MGR_TIMEOUT}
+      #     kubectl apply -f terraform/yaml/cluster-issuer.yaml
 
       # - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
       #   run: |   
       #     kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
 
       
-      - name: Install services
-        run: | 
-          for SERVICE in ${SERVICES}
-          do  
-            helm install ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
-            --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
-          done
+      # - name: Install services
+      #   run: | 
+      #     for SERVICE in ${SERVICES}
+      #     do  
+      #       helm install ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
+      #       --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
+      #     done
 
       - name: Store secrets
         run: | 
