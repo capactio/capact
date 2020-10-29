@@ -217,7 +217,7 @@ docker::delete_images() {
 #
 # Optional envs:
 #  - UPDATE - if specified then, Helm charts are updated
-voltron::install::chart() {
+voltron::install::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
     shout "- Applying Voltron CRDs..."
@@ -231,7 +231,7 @@ voltron::install::chart() {
 
     shout "- Installing Voltron Helm chart from sources [wait: true]..."
 
-    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}"/chart \
+    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="$DOCKER_REPOSITORY" \

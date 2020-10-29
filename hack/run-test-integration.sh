@@ -76,7 +76,7 @@ main() {
       voltron::update::images_on_kind
     fi
 
-    voltron::install::chart
+    voltron::install::charts
 
     voltron::test::execute
     # Test completed successfully. We do not have to dump cluster info

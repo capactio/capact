@@ -29,7 +29,7 @@ main() {
     export DOCKER_REPOSITORY="local"
     export REPO_DIR=$REPO_ROOT_DIR
     voltron::update::images_on_kind
-    voltron::install::chart
+    voltron::install::charts
 
     shout "Development local cluster created successfully."
 }
