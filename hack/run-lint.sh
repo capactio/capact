@@ -69,12 +69,20 @@ dockerfile::run_checks() {
   echo -e "${GREEN}√ run hadolint${NC}"
 }
 
+shellcheck::files_to_check() {
+  pushd "$ROOT_PATH" > /dev/null
+  paths=$(find . -name '*.sh')
+  popd > /dev/null
+
+  echo "$paths"
+}
 
 # In the future we can add support for auto fix: https://github.com/koalaman/shellcheck/issues/1220
 shellcheck::run_checks() {
   shout "Run shellcheck checks"
 
-  docker run --rm -v "$ROOT_PATH":/mnt -w /mnt koalaman/shellcheck-alpine:stable sh -c "find ./ -name '*.sh' | xargs shellcheck -x"
+  # shellcheck disable=SC2046
+  docker run --rm -v "$ROOT_PATH":/mnt -w /mnt koalaman/shellcheck:stable -x $(shellcheck::files_to_check)
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
