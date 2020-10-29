@@ -167,3 +167,39 @@ jobs:
         run: | 
           make test-integration
 
+    update-cluster:
+    name: Update cluster
+    runs-on: ubuntu-latest
+    needs: [ integration-tests ] 
+
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+ 
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+ 
+      - name: Get cluster credentials
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}
+          
+      - name: Network enable
+        run: | 
+          sudo snap install yq
+          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
+          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl ${GET_IP_SERVICE}))
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
+          --master-authorized-networks ${AUTHORIZED}
+    
+      - name: Upgrade services
+        run: | 
+          for SERVICE in ${SERVICES}
+          do  
+            helm upgrade ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
+            --set global.containerRegistry.overrideTag=${DOCKER_TAG} --namespace ${NAMESPACE}
+          done
+
+

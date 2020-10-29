@@ -21,6 +21,7 @@ echo INFRAS="name=matrix::{\"include\":[{\"INFRA\":\"json-go-gen\"}]}" >>$GITHUB
 #IMAGE_TAG is the TAG which you assign when you recreate the cluster
 export NAME=dev3
 export REGION=europe-north1
+export BUCKET=projectvoltron_le
 echo "IMAGE_TAG=adea064" >>$GITHUB_ENV
 echo "TF_VAR_region=${REGION}" >>$GITHUB_ENV
 echo "TF_VAR_cluster_name=voltron-${NAME}" >>$GITHUB_ENV
@@ -34,3 +35,4 @@ echo "NAMESPACE=voltron" >>$GITHUB_ENV
 echo "SERVICES=gateway engine och-public och-local" >>$GITHUB_ENV
 echo "HELM_TEST_TIMEOUT=10m"  >>$GITHUB_ENV
 echo "CERT_MGR_TIMEOUT=120" >>$GITHUB_ENV
+echo "BUCKET=${BUCKET}" >>$GITHUB_ENV

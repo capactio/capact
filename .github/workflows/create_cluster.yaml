@@ -42,24 +42,24 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GKE_CREDS }}
           
-      - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
+      # - name: Setup terraform
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform
   
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve
 
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./terraform/*.tfstate
+      # - name: Archive terraform state
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: cluster-tfstate
+      #     path: ./terraform/*.tfstate
   
       - name: Get cluster credentials
         run: | 
@@ -72,92 +72,40 @@ jobs:
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
 
-      - name: Install dependencies in cluster
-        run: | 
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo update
-          helm install ingress-nginx ingress-nginx/ingress-nginx
-          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-          sleep ${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml
+      # - name: Install dependencies in cluster
+      #   run: | 
+      #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      #     helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+      #     helm repo add jetstack https://charts.jetstack.io
+      #     helm repo update
+      #     helm install ingress-nginx ingress-nginx/ingress-nginx
+      #     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+      #     sleep ${CERT_MGR_TIMEOUT}
+      #     kubectl apply -f terraform/yaml/cluster-issuer.yaml
 
-      - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
-        run: |   
-          kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
+      # - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
+      #   run: |   
+      #     kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
 
       
-      - name: Install services
+      # - name: Install services
+      #   run: | 
+      #     for SERVICE in ${SERVICES}
+      #     do  
+      #       helm install ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
+      #       --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
+      #     done
+
+      - name: Store secrets
         run: | 
-          for SERVICE in ${SERVICES}
+          for SERVICE in gateway
           do  
-            helm install ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
-            --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
+            kubectl get secret ${SERVICE} -n ${NAMESPACE} -o yaml >secret-${SERVICE}.yaml
           done
+          gsutil cp secret*.yaml gs://
 
 
           
 
 
           
-
-
-#   #         # list authorized networks
-
-
-
-#   # #     - name: Run unit tests
-#   # #       run: make test-unit
-
-#   # #     # - name: Run generation
-#   # #     #   run: make test-generated
-#   # #     #   env:
-#   # #     #     SKIP_DEPS_INSTALLATION: false
-        
-#   # #     - name: Build & push image
-#   # #       run: |
-#   # #         gcloud auth configure-docker --project ${PROJECT_ID} -q
-#   # #         for APP in ${APPS}
-#   # #         do  
-#   # #           echo ${APP} 
-#   # #           make build-app-image-${APP} >build_${APP}.log 2>&1 \
-#   # #           && make push-app-image-${APP} >push_${APP}.log 2>&1 &
-#   # #         done
-#   # #         wait
-#   # #         cat build_*.log
-#   # #         cat push_*.log
-
-#   # #     - name: Archive build images log
-#   # #       uses: actions/upload-artifact@v2
-#   # #       with:
-#   # #         name: docker-logs
-#   # #         path: ./*.log
-
-#   # # integration-tests:
-#   # #   name: Integration tests
-#   # #   runs-on: ubuntu-latest
-#   # #   needs: build-image     
-#   # #   steps:    
-#   # #     - name: Checkout code
-#   # #       uses: actions/checkout@v2
-#   # #     - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-#   # #       with:
-#   # #         service_account_key: ${{ secrets.GCR_CREDS }}
-#   # #         export_default_credentials: true
-
-#   # #     - name: Setup env
-#   # #       run: |
-#   # #         . ./env_setup.sh
-
-#   # #     - name: Setup golang
-#   # #       uses: actions/setup-go@v2
-#   # #       with:
-#   # #         go-version: ${{env.GO_VERSION}}
-
-#   # #     - name: Run unit tests
-#   # #       run: | 
-#   # #         make test-integration
-#   # #       env:
-#   # #         SKIP_DEPS_INSTALLATION: false
-
