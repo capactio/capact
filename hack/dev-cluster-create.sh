@@ -21,13 +21,14 @@ source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; e
 main() {
     shout "Starting development local cluster..."
 
+    export REPO_DIR=$REPO_ROOT_DIR
+
     export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     kind::create_cluster
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
-    export REPO_DIR=$REPO_ROOT_DIR
     voltron::update::images_on_kind
     voltron::install::charts
 

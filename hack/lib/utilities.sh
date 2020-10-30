@@ -163,10 +163,14 @@ host::install::helm() {
 #
 # Required environments variables for all 'kind' commands:
 # - KIND_CLUSTER_NAME
-
+#  - REPO_DIR
 kind::create_cluster() {
     shout "- Creating K8s cluster..."
-    kind create cluster --name="${KIND_CLUSTER_NAME}" --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
+    kind create cluster \
+      --name="${KIND_CLUSTER_NAME}" \
+      --image="kindest/node:${KUBERNETES_VERSION}" \
+      --config "${REPO_DIR}/hack/kind.config.yaml" \
+      --wait=5m
 }
 
 kind::delete_cluster() {

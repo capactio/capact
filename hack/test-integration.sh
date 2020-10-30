@@ -59,6 +59,8 @@ main() {
         echo "Skipping kind and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
     fi
 
+    export REPO_DIR=$REPO_ROOT_DIR
+
     export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KUBECONFIG="${TMP_DIR}/kubeconfig"
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
@@ -67,8 +69,6 @@ main() {
     # Cluster is already created, and all below operation are performed against that cluster,
     # so we should dump cluster info for debugging purpose in case of any error
     DUMP_CLUSTER_INFO=true
-
-    export REPO_DIR=$REPO_ROOT_DIR
 
     if [[ "${BUILD_IMAGES:-"true"}" == "true" ]]; then
       export DOCKER_TAG=$RANDOM
