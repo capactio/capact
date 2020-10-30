@@ -44,4 +44,5 @@ Current setup is as follows.
 It means in current setup every *.txt file pushed in data directory will be encrypted.
 If you need to encrypt other files in other directory, you have to create there .gittatributes file and apply there proper rules like  for *.txt in given example. Pls. do not forget to add the last line as it prevents .gitattributes file to be encrypted.
 
-Keys ......
+To decrypt the data locally you need to use either symetric key or I need to add your keys.
+The procedure of decrypting files and working in team with that is perfectly described here -->https://buddy.works/guides/git-crypt#working-in-team-with-git-crypt
