@@ -6,6 +6,7 @@ on:
     - '**.go'
     - '**.graphql'
     - '**.yaml'
+    - '**.sh'
     branches: 
     - 'devops-*'
 
@@ -177,6 +178,11 @@ jobs:
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCR_CREDS }}
+          export_default_credentials: true
+
  
       - name: Setup env
         run: |

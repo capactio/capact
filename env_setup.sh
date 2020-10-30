@@ -3,9 +3,11 @@
 export "GO_VERSION=^1.15.2"
 export "PROJECT_ID=projectvoltron"
 export "LINT_TIMEOUT=2m"
+export "SKIP_DEPS_INSTALLATION=false"
 echo "GO_VERSION=${GO_VERSION}" >>$GITHUB_ENV
 echo "PROJECT_ID=${PROJECT_ID}" >>$GITHUB_ENV
 echo "LINT_TIMEOUT=${LINT_TIMEOUT}" >>$GITHUB_ENV
+echo "SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION}" >>$GITHUB_ENV
 
 #Setup docker image tag upon event
 if [ "${GITHUB_EVENT_NAME}" = "push" ]
