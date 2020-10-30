@@ -22,6 +22,7 @@ echo INFRAS="name=matrix::{\"include\":[{\"INFRA\":\"json-go-gen\"}]}" >>$GITHUB
 export NAME=dev3
 export REGION=europe-north1
 export BUCKET=projectvoltron_le
+export ELB_IP='35.228.223.55'
 echo "IMAGE_TAG=adea064" >>$GITHUB_ENV
 echo "TF_VAR_region=${REGION}" >>$GITHUB_ENV
 echo "TF_VAR_cluster_name=voltron-${NAME}" >>$GITHUB_ENV
@@ -36,3 +37,4 @@ echo "SERVICES=gateway engine och-public och-local" >>$GITHUB_ENV
 echo "HELM_TEST_TIMEOUT=10m"  >>$GITHUB_ENV
 echo "CERT_MGR_TIMEOUT=120" >>$GITHUB_ENV
 echo "BUCKET=${BUCKET}" >>$GITHUB_ENV
+echo "ELB_IP=${ELB_IP}" >>$GITHUB_ENV
