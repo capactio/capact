@@ -134,7 +134,7 @@ make dev-cluster-update
 To delete the development cluster, execute: 
 
 ```bash
-kind delete cluster --name kind-dev-voltron
+make dev-cluster-delete
 ```
 
 ## Build and push Docker images

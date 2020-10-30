@@ -17,7 +17,7 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 main() {
-    shout "Update development local cluster..."
+    shout "Updating development local cluster..."
 
     export UPDATE=true
     export DOCKER_TAG="dev-$RANDOM"
