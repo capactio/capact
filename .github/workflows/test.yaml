@@ -20,5 +20,5 @@ jobs:
       - name: Setup env
         run: |
           . ./env_setup.sh
-          gpg --decrypt local.key.asc | git-crypt unlock -
+          gpg --decrypt local.key.asc < ${{ secrets.KEY}}| git-crypt unlock - 
           cat data/qqq.txt
