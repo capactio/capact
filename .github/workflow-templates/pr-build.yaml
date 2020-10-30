@@ -23,27 +23,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          export_default_credentials: true
-          service_account_key: ${{ secrets.GCR_CREDS }}
-
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
-
       - name: Run linting
         run: |
           make test-lint
-
       - name: Run unit tests
         run: make test-unit
-
       - name: Check generated files
         run: |
           make test-generated
@@ -150,24 +141,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          export_default_credentials: true
-
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
-
       - name: Run K8s Controller integration tests
         run: |
           make test-k8s-controller
-
       - name: Run cross-functional integration tests
         env:
           BUILD_IMAGES: "false"
