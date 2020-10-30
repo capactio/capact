@@ -21,7 +21,9 @@ jobs:
         run: |
           . ./env_setup.sh
           sudo apt-get update -y && sudo apt-get install -y git-crypt
-          echo ${{ secrets.KEY }}
-          echo "12345678" |gpg --batch --yes --passphrase-fd 0 local.key.asc
-          git-crypt unlock /home/runner/.gnupg/pubring.kbx 
+          printf "$GIT_CRYPT_KEY" | base64 --decode > ./private.key
+          cat ./private.key
+          git-crypt unlock ./private.key
           cat data/qqq.txt
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
