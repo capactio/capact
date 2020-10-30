@@ -3,7 +3,7 @@ name: Master build
 on: 
   push:
     paths:
-    - '**.txt'
+    - '**.yaml'
     branches: 
     - 'devops-*'
 
@@ -21,5 +21,6 @@ jobs:
         run: |
           . ./env_setup.sh
           sudo apt-get update -y && sudo apt-get install -y git-crypt
-          gpg --decrypt local.key.asc < ${{ secrets.KEY}}| git-crypt unlock - 
+          echo ${{ secrets.KEY }}
+          gpg --decrypt local.key.asc --passphrase 12345678 --batch| git-crypt unlock - 
           cat data/qqq.txt
