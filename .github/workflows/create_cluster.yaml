@@ -81,7 +81,7 @@ jobs:
           helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           sleep ${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml
+          kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
 
       # - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
       #   run: |   
