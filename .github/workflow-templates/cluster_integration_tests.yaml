@@ -1,7 +1,7 @@
 name: periodiccluster-integration-tests
 on:
   schedule:
-  - cron:  '*/5 * * * *'
+  - cron:  '* 9,21 * * *'
 
 jobs:
   integration-tests:
