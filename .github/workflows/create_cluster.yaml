@@ -1,23 +1,15 @@
 name: Build-cluster-and-deploy
 
-on: 
-  push:
-    paths:
-    - '**.yaml'
-    - '**.sh'
-    branches:    
-    - 'devops-*'
 # to be triggerred manually but to nable that it must exist on default branch of repo
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
 #https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
-#
-# on: 
-#   workflow_dispatch:
-#     inputs:
-#       SHA:
-#         description: Git Ref (Optional)    
-#         required: false
+on: 
+  workflow_dispatch:
+    inputs:
+      SHA:
+        description: Git Ref (Optional)    
+        required: false
 
 jobs:
   create-cluster:
@@ -82,11 +74,6 @@ jobs:
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           sleep ${CERT_MGR_TIMEOUT}
           kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
-
-      # - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
-      #   run: |   
-      #     kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
-
       
       - name: Install services
         run: | 
@@ -98,7 +85,7 @@ jobs:
 
       - name: Store secrets
         run: | 
-          sleep 120
+          sleep 300
           for SERVICE in gateway
           do  
             kubectl get secret ${SERVICE}-tls -n ${NAMESPACE} -o yaml >secret-${SERVICE}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
