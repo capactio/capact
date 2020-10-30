@@ -135,6 +135,10 @@ dev-cluster-update:
 	./hack/run-dev-cluster-update.sh
 .PHONY: dev-cluster-update
 
+dev-cluster-delete:
+	./hack/run-dev-cluster-delete.sh
+.PHONY: dev-cluster-delete
+
 fix-lint-issues:
 	LINT_FORCE_FIX=true ./hack/run-lint.sh
 .PHONY: fix-lint
