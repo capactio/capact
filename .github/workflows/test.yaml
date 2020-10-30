@@ -22,5 +22,5 @@ jobs:
           . ./env_setup.sh
           sudo apt-get update -y && sudo apt-get install -y git-crypt
           echo ${{ secrets.KEY }}
-          gpg --decrypt local.key.asc --passphrase 12345678 --batch| git-crypt unlock - 
+          gpg --batch --decrypt local.key.asc --passphrase 12345678 --batch| git-crypt unlock - 
           cat data/qqq.txt
