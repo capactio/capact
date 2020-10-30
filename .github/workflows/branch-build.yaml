@@ -5,7 +5,9 @@ on:
     paths:
     - '**.go'
     - '**.graphql'
-    branches: [ $default-branch ]
+    - '**.yaml'
+    branches: 
+    - 'devops-*'
 
 
 jobs:
