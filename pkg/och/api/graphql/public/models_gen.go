@@ -58,7 +58,7 @@ type ImplementationImport struct {
 
 type ImplementationImportMethod struct {
 	Name string `json:"name"`
-	// If not provided, latest revision for a given Type is used
+	// If not provided, latest revision for a given Interface is used
 	Revision *string `json:"revision"`
 }
 
@@ -216,8 +216,8 @@ type TagFilter struct {
 }
 
 type TagFilterInput struct {
-	Rule *FilterRule `json:"rule"`
 	Path string      `json:"path"`
+	Rule *FilterRule `json:"rule"`
 	// If not provided, latest revision for a given Tag is used
 	Revision *string `json:"revision"`
 }

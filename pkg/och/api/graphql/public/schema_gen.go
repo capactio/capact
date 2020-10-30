@@ -1397,7 +1397,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "schema.graphql", Input: `scalar Any
+	{Name: "schema.graphql", Input: `"""
+Arbitrary data
+"""
+scalar Any
 
 """
 Full path of a given node, e.g. cap.core.type.platform.kubernetes
@@ -1469,17 +1472,18 @@ input TypeReferenceInput {
 }
 
 input TagFilterInput {
-    rule: FilterRule = INCLUDE
     path: NodePath!
+    rule: FilterRule = INCLUDE
 
     """
     If not provided, latest revision for a given Tag is used
     """
-    revision: String
+    revision: Version
 }
 
 enum FilterRule {
-    INCLUDE, EXCLUDE
+    INCLUDE
+    EXCLUDE
 }
 
 input InterfaceGroupFilter {
@@ -1662,7 +1666,7 @@ type ImplementationImportMethod {
     name: NodeName!
 
     """
-    If not provided, latest revision for a given Type is used
+    If not provided, latest revision for a given Interface is used
     """
     revision: Version
 }
@@ -8108,14 +8112,6 @@ func (ec *executionContext) unmarshalInputTagFilterInput(ctx context.Context, ob
 
 	for k, v := range asMap {
 		switch k {
-		case "rule":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rule"))
-			it.Rule, err = ec.unmarshalOFilterRule2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐFilterRule(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "path":
 			var err error
 
@@ -8124,11 +8120,19 @@ func (ec *executionContext) unmarshalInputTagFilterInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
+		case "rule":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rule"))
+			it.Rule, err = ec.unmarshalOFilterRule2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐFilterRule(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "revision":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-			it.Revision, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

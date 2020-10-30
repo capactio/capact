@@ -15,9 +15,10 @@ type CreateTypeInstanceInput struct {
 }
 
 type TagFilterInput struct {
-	Path     string      `json:"path"`
-	Revision string      `json:"revision"`
-	Rule     *FilterRule `json:"rule"`
+	Path string      `json:"path"`
+	Rule *FilterRule `json:"rule"`
+	// If not provided, latest revision for a given Tag is used
+	Revision *string `json:"revision"`
 }
 
 type TagReference struct {
