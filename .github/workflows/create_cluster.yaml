@@ -83,9 +83,9 @@ jobs:
           sleep ${CERT_MGR_TIMEOUT}
           kubectl apply -f terraform/yaml/cluster-issuer.yaml
 
-      - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
-        run: |   
-          kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
+      # - name: issue  with nginx ingress not resolved https://github.com/kubernetes/ingress-nginx/issues/5401
+      #   run: |   
+      #     kubectl delete ValidatingWebhookConfiguration ingress-nginx-admission
 
       
       - name: Install services
