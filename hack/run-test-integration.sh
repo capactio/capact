@@ -68,10 +68,15 @@ main() {
     # so we should dump cluster info for debugging purpose in case of any error
     DUMP_CLUSTER_INFO=true
 
-    export DOCKER_TAG=$RANDOM
-    export DOCKER_PUSH_REPOSITORY="local"
     export REPO_DIR=$REPO_ROOT_DIR
-    voltron::install::from_sources
+
+    if [[ "${BUILD_IMAGES:-"true"}" == "true" ]]; then
+      export DOCKER_TAG=$RANDOM
+      export DOCKER_REPOSITORY="local"
+      voltron::update::images_on_kind
+    fi
+
+    voltron::install::charts
 
     voltron::test::execute
     # Test completed successfully. We do not have to dump cluster info

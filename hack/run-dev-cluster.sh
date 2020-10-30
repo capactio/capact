@@ -26,9 +26,10 @@ main() {
     kind::create_cluster
 
     export DOCKER_TAG=dev
-    export DOCKER_PUSH_REPOSITORY="local"
+    export DOCKER_REPOSITORY="local"
     export REPO_DIR=$REPO_ROOT_DIR
-    voltron::install::from_sources
+    voltron::update::images_on_kind
+    voltron::install::charts
 
     shout "Development local cluster created successfully."
 }

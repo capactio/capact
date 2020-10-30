@@ -13,7 +13,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - "master"
+      - "$default-branch"
 
 jobs:
   entry-tests:
@@ -169,5 +169,7 @@ jobs:
           make test-k8s-controller
 
       - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
         run: |
           make test-integration

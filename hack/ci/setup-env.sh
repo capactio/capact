@@ -14,7 +14,7 @@ then
 else
   PR_NUMBER=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
   echo "DOCKER_TAG=PR-${PR_NUMBER}" >> "$GITHUB_ENV"
-  echo "DOCKER_PUSH_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
 fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure

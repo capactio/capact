@@ -209,7 +209,7 @@ docker::delete_images() {
 #
 
 # Required envs:
-#  - DOCKER_PUSH_REPOSITORY
+#  - DOCKER_REPOSITORY
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - VOLTRON_NAMESPACE
@@ -217,40 +217,27 @@ docker::delete_images() {
 #
 # Optional envs:
 #  - UPDATE - if specified then, Helm charts are updated
-voltron::install::from_sources() {
+voltron::install::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
-
-    pushd "${REPO_DIR}" || return
-
-    shout "- Building Voltron image from sources..."
-    make build-all-images
-
-    REFERENCE_FILTER="$DOCKER_PUSH_REPOSITORY/*:$DOCKER_TAG"
-    shout "- Loading Voltron image into kind cluster... [reference filter: $REFERENCE_FILTER]"
-    names=$(docker::list_images "$REFERENCE_FILTER")
-    kind::load_images "$names"
-
-    shout "- Deleting local Docker Voltron images..."
-    docker::delete_images "$names"
-
-    if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
-      echo "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
-    else
-      voltron::install::monitoring
-    fi
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
+    if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
+      shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
+    else
+      voltron::install::monitoring
+    fi
+
     shout "- Installing Voltron Helm chart from sources [wait: true]..."
-    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}"/charts/voltron \
+    echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
+
+    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
-        --set global.containerRegistry.path="$DOCKER_PUSH_REPOSITORY" \
+        --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
         --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
         --wait
-
-    popd || return
 }
 
 voltron::install::monitoring() {
@@ -259,6 +246,27 @@ voltron::install::monitoring() {
     helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
         --create-namespace \
         --namespace="monitoring"
+}
+
+# Required envs:
+#  - DOCKER_REPOSITORY
+#  - DOCKER_TAG
+#  - REPO_DIR
+voltron::update::images_on_kind() {
+    pushd "${REPO_DIR}" || return
+
+    shout "- Building Voltron apps and tests images from sources..."
+    make build-all-apps-images build-all-tests-images
+
+    REFERENCE_FILTER="$DOCKER_REPOSITORY/*:$DOCKER_TAG"
+    shout "- Loading Voltron image into kind cluster... [reference filter: $REFERENCE_FILTER]"
+    names=$(docker::list_images "$REFERENCE_FILTER")
+    kind::load_images "$names"
+
+    shout "- Deleting local Docker Voltron images..."
+    docker::delete_images "$names"
+
+    popd || return
 }
 
 voltron::install::detect_command() {
