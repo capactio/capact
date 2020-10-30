@@ -1,0 +1,31 @@
+name: Master build
+
+on: 
+  push:
+    paths:
+    - '**.txt'
+    branches: 
+    - 'devops-*'
+
+
+jobs:
+  entry-tests:
+    name: Lint, Unit, Generation Tests
+    runs-on: ubuntu-latest
+      
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
+      - name: Unlock secrets
+        uses: sliteteam/github-action-git-crypt-unlock@1.0.2
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
+
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+          cat data/qqq.txt
