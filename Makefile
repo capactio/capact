@@ -77,11 +77,11 @@ push-infra-image-%:
 ###########
 
 test-unit:
-	./hack/run-test-unit.sh
+	./hack/test-unit.sh
 .PHONY: test-unit
 
 test-lint:
-	./hack/run-lint.sh
+	./hack/lint.sh
 .PHONY: test-lint
 
 test-spec:
@@ -89,15 +89,15 @@ test-spec:
 .PHONY: test-spec
 
 test-integration:
-	./hack/run-test-integration.sh
+	./hack/test-integration.sh
 .PHONY: test-integration
 
 test-k8s-controller:
-	./hack/run-test-k8s-controller.sh
+	./hack/test-k8s-controller.sh
 .PHONY: test-controller
 
 test-generated:
-	./hack/run-test-generated.sh
+	./hack/test-generated.sh
 .PHONY: test-generated
 
 test-cover-html: test-unit
@@ -128,17 +128,17 @@ gen-graphql-resources:
 ###############
 
 dev-cluster:
-	./hack/run-dev-cluster.sh
+	./hack/dev-cluster-create.sh
 .PHONY: dev-cluster
 
 dev-cluster-update:
-	./hack/run-dev-cluster-update.sh
+	./hack/dev-cluster-update.sh
 .PHONY: dev-cluster-update
 
 dev-cluster-delete:
-	./hack/run-dev-cluster-delete.sh
+	./hack/dev-cluster-delete.sh
 .PHONY: dev-cluster-delete
 
 fix-lint-issues:
-	LINT_FORCE_FIX=true ./hack/run-lint.sh
+	LINT_FORCE_FIX=true ./hack/lint.sh
 .PHONY: fix-lint

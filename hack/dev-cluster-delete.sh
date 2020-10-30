@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script deletes kind development cluster.
+# This script deletes kind cluster. If cluster name is not provided, it uses development cluster name.
 #
 
 # standard bash error handling
