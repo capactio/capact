@@ -8,12 +8,12 @@ ARG BUILD_CMD="go build"
 
 WORKDIR /projectvoltron.dev/voltron
 
-# Use frontend syntax to cache dependencies.
+# Use experimental frontend syntax to cache dependencies.
 COPY go.mod go.sum ./
 RUN --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
-# Use frontend syntax to cache go build.
+# Use experimental frontend syntax to cache go build.
 # Replace `COPY . .` with `--mount=target=.` to speed up as we do not need them to persist in the final image.
 # https://github.com/moby/buildkit/blob/master/frontend/dockerfile/docs/experimental.md
 RUN --mount=target=. \

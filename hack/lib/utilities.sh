@@ -224,12 +224,13 @@ voltron::install::charts() {
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
-      echo "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
+      shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
       voltron::install::monitoring
     fi
 
     shout "- Installing Voltron Helm chart from sources [wait: true]..."
+    echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
 
     helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --create-namespace \
