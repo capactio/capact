@@ -11,6 +11,7 @@ EOT
 if [ "${GITHUB_EVENT_NAME}" = "push" ]
 then
   echo "DOCKER_TAG=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron" >> "$GITHUB_ENV"
 else
   PR_NUMBER=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
   echo "DOCKER_TAG=PR-${PR_NUMBER}" >> "$GITHUB_ENV"
