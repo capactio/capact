@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/gorilla/mux"
 	"github.com/nautilus/gateway"
 	"github.com/nautilus/graphql"
@@ -12,7 +13,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 	"projectvoltron.dev/voltron/internal/healthz"
-	"projectvoltron.dev/voltron/internal/wait"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 
@@ -21,11 +21,12 @@ import (
 
 // Config holds application related configuration.
 type Config struct {
-	// HealthzAddr is the TCP address the health probes endpoint binds to.
 	// GraphQLAddr is the TCP address the GraphQL endpoint binds to.
 	GraphQLAddr string `envconfig:"default=:8080"`
+
 	// HealthzAddr is the TCP address the health probes endpoint binds to.
 	HealthzAddr string `envconfig:"default=:8082"`
+
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
@@ -40,8 +41,11 @@ type IntrospectionConfig struct {
 	// Endpoints have to be separated by comma, e.g. `http://localhost:3000/graphql,http://localhost:3001/graphql`
 	GraphQLEndpoints []string
 
-	// Timeout defines maximum time to wait for successful GraphQL schema introspection for all GraphQL endpoints.
-	Timeout time.Duration `envconfig:"default=2m"`
+	// Attempts specifies how many attempts are done to successfully introspect GraphQL schemas for provided endpoints.
+	Attempts uint `envconfig:"default=120"`
+
+	// RetryDelay defines how many time it should wait before new attempt to introspect schemas.
+	RetryDelay time.Duration `envconfig:"default=1s"`
 }
 
 const appName = "gateway"
@@ -61,8 +65,10 @@ func main() {
 		logCfg = zap.NewProductionConfig()
 	}
 
-	logger, err := logCfg.Build()
+	unnamedLogger, err := logCfg.Build()
 	exitOnError(err, "while creating zap logger")
+
+	logger := unnamedLogger.Named(appName)
 
 	parallelServers := new(errgroup.Group)
 
@@ -71,7 +77,7 @@ func main() {
 	parallelServers.Go(func() error { return healthzServer.Start(stop) })
 
 	// graphql server
-	schemas, err := introspectGraphQLSchemas(stop, logger, cfg.Introspection)
+	schemas, err := introspectGraphQLSchemas(logger, cfg.Introspection)
 	exitOnError(err, "while introspecting GraphQL schemas")
 
 	gqlServer, err := setupGatewayServerFromSchemas(logger, schemas, cfg.GraphQLAddr)
@@ -83,33 +89,37 @@ func main() {
 	exitOnError(err, "while waiting for servers to finish gracefully")
 }
 
-func introspectGraphQLSchemas(stopCh <-chan struct{}, log *zap.Logger, cfg IntrospectionConfig) ([]*graphql.RemoteSchema, error) {
+func introspectGraphQLSchemas(log *zap.Logger, cfg IntrospectionConfig) ([]*graphql.RemoteSchema, error) {
 	log.Info("Introspecting GraphQL schemas",
 		zap.Strings("URLs", cfg.GraphQLEndpoints),
-		zap.Duration("timeout", cfg.Timeout),
+		zap.Uint("attempts", cfg.Attempts),
+		zap.Duration("retry delay", cfg.RetryDelay),
 	)
 
 	var schemas []*graphql.RemoteSchema
 	var err error
-	err = wait.NoMoreThan(
-		stopCh,
+
+	err = retry.Do(
 		func() error {
 			schemas, err = graphql.IntrospectRemoteSchemas(cfg.GraphQLEndpoints...)
 			return errors.Wrap(err, "while introspecting schemas")
 		},
-		cfg.Timeout,
-		func(err error) {
-			log.Debug("Tick error", zap.Error(err))
-		},
+		retry.OnRetry(func(n uint, err error) {
+			log.Debug("Retry attempt", zap.Uint("attempt no", n+1), zap.Error(err))
+		}),
+		retry.Attempts(cfg.Attempts),
+		retry.Delay(cfg.RetryDelay),
+		retry.DelayType(retry.FixedDelay),
+		retry.LastErrorOnly(true),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while introspecting schemas with retry")
 	}
 
 	return schemas, nil
 }
 
-func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, addr string) (*httputil.Server, error) {
+func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, addr string) (httputil.StartableServer, error) {
 	log.Info("Setting up gateway GraphQL server")
 	gw, err := gateway.New(schemas)
 	if err != nil {
@@ -122,7 +132,7 @@ func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSch
 	router.HandleFunc("/graphql", gw.PlaygroundHandler).Methods(http.MethodGet, http.MethodPost)
 
 	gqlServer := httputil.NewStartableServer(
-		log.Named(appName).With(zap.String("server", "graphql")),
+		log.With(zap.String("server", "graphql")),
 		addr,
 		router,
 	)

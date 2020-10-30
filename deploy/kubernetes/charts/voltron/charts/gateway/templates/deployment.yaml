@@ -42,8 +42,10 @@ spec:
               value: "true"
             - name: APP_INTROSPECTION_GRAPH_QL_ENDPOINTS
               value: "http://voltron-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/graphql,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/graphql,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/graphql"
-            - name: APP_INTROSPECTION_TIMEOUT
-              value: "2m"
+            - name: APP_INTROSPECTION_ATTEMPTS
+              value: "120"
+            - name: APP_INTROSPECTION_RETRY_DELAY
+              value: "1s"
           ports:
             - name: http
               containerPort: 8080
