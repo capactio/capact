@@ -1,28 +1,28 @@
-name: Master build
+name: Decrypt Example
 
 on: 
   push:
     paths:
-    - '**.yaml'
+    - '**.txt'
     branches: 
     - 'devops-*'
 
 
 jobs:
   entry-tests:
-    name: Git crypt tests
+    name: Git crypt PoC
     runs-on: ubuntu-latest
       
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Setup env
+      - name: Setup env & decrypt
         run: |
           . ./env_setup.sh
           sudo apt-get update -y && sudo apt-get install -y git-crypt
-          printf "$GIT_CRYPT_KEY" | base64 -d > ./private.key
-          git-crypt unlock ./private.key
+          printf "${GIT_CRYPT_KEY}" | base64 -d > ./ci.key
+          git-crypt unlock ./ci.key
           cat data/qqq.txt
         env:
           GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}
