@@ -1,0 +1,19 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "gateway.fullname" . }}
+  labels:
+  {{- include "gateway.labels" . | nindent 4 }}
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "gateway.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end}}

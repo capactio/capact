@@ -255,14 +255,15 @@ voltron::install::monitoring() {
 }
 
 voltron::install::ingress_controller() {
+    # waiting as admission webhooks server is required to be available during further installation steps
     readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/dev-cluster-ingress-nginx.overrides.yaml"
-    # Not waiting as there are no resources required for further installation
-    shout "- Installing Ingress NGINX controller Helm chart [wait: false]..."
+    shout "- Installing Ingress NGINX controller Helm chart [wait: true]..."
     echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
-    helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/monitoring" \
+    helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
         --create-namespace \
         --namespace="ingress-nginx" \
-        -f "${INGRESS_CTRL_OVERRIDES}"
+        -f "${INGRESS_CTRL_OVERRIDES}" \
+        --wait
 }
 
 # Required envs:

@@ -53,3 +53,7 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+ingress:
+  enabled: true
+  host: "gateway"
