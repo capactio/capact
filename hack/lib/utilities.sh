@@ -227,6 +227,8 @@ voltron::install::charts() {
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
+    voltron::install::ingress_controller
+
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
@@ -250,6 +252,17 @@ voltron::install::monitoring() {
     helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
         --create-namespace \
         --namespace="monitoring"
+}
+
+voltron::install::ingress_controller() {
+    readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/dev-cluster-ingress-nginx.overrides.yaml"
+    # Not waiting as there are no resources required for further installation
+    shout "- Installing Ingress NGINX controller Helm chart [wait: false]..."
+    echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
+    helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/monitoring" \
+        --create-namespace \
+        --namespace="ingress-nginx" \
+        -f "${INGRESS_CTRL_OVERRIDES}"
 }
 
 # Required envs:
