@@ -31,6 +31,7 @@ main() {
     export DOCKER_REPOSITORY="local"
     voltron::update::images_on_kind
     voltron::install::charts
+    voltron::install::update_hosts
 
     shout "Development local cluster created successfully."
 }

@@ -7,7 +7,8 @@ metadata:
   {{- include "gateway.labels" . | nindent 4 }}
 spec:
   rules:
-    - http:
+    - host: "{{ .Values.ingress.host}}.{{ .Values.global.domainName }}"
+      http:
         paths:
           - path: /
             pathType: Prefix

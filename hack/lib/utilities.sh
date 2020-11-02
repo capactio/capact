@@ -257,13 +257,30 @@ voltron::install::monitoring() {
 voltron::install::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/dev-cluster-ingress-nginx.overrides.yaml"
-    shout "- Installing Ingress NGINX controller Helm chart [wait: true]..."
+    shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
     echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
     helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
         --create-namespace \
         --namespace="ingress-nginx" \
         -f "${INGRESS_CTRL_OVERRIDES}" \
         --wait
+
+    echo -e "\n- Waiting for Ingress Controller to be ready...\n"
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=90s
+}
+
+voltron::install::update_hosts() {
+  shout "- Updating /etc/hosts..."
+  readonly DOMAIN="voltron.local"
+  readonly VOLTRON_HOSTS=("gateway")
+
+  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
+  HOSTS_FILE="/etc/hosts"
+
+  grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null
 }
 
 # Required envs:
