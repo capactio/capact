@@ -3,5 +3,3 @@ resource "google_compute_network" "gcn_vpc" {
   project = var.project
   auto_create_subnetworks = false
 }
-
-#TO DO PEERINGI i PRIVATE SERVICE CONNECTION

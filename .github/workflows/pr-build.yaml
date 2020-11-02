@@ -7,7 +7,6 @@ on:
     - '**.go'
     - '**.graphql'
     branches: 
-    - 'devops-20201014'
     - 'master'
 
 
