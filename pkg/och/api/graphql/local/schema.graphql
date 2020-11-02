@@ -1,3 +1,6 @@
+"""
+Arbitrary data
+"""
 scalar Any
 
 """
@@ -6,7 +9,7 @@ Full path of a given node, e.g. cap.core.type.platform.kubernetes
 scalar NodePath
 
 """
-Version in semantic versioning
+Version in semantic versioning, e.g. 1.1.0
 """
 scalar Version
 
@@ -51,12 +54,12 @@ input TagReferenceInput {
   """
   If not provided, latest revision for a given Tag is used
   """
-  revision: String
+  revision: Version
 }
 
 type TagReference {
   path: NodePath!
-  revision: String!
+  revision: Version!
 }
 
 type TypeInstanceInstrumentation {
@@ -97,8 +100,12 @@ enum HTTPRequestMethod {
 
 input TagFilterInput {
   path: NodePath!
-  revision: String!
   rule: FilterRule = INCLUDE
+
+  """
+  If not provided, latest revision for a given Tag is used
+  """
+  revision: Version
 }
 
 enum FilterRule {

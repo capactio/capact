@@ -34,8 +34,18 @@ spec:
           image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: APP_PORT
-              value: "8080"
+            - name: APP_GRAPH_QL_ADDR
+              value: ":8080"
+            - name: APP_HEALTHZ_ADDR
+              value: ":8082"
+            - name: APP_LOGGER_DEV_MODE
+              value: "true"
+            - name: APP_INTROSPECTION_GRAPH_QL_ENDPOINTS
+              value: "http://voltron-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/graphql,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/graphql,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/graphql"
+            - name: APP_INTROSPECTION_ATTEMPTS
+              value: "120"
+            - name: APP_INTROSPECTION_RETRY_DELAY
+              value: "1s"
           ports:
             - name: http
               containerPort: 8080
@@ -43,11 +53,11 @@ spec:
           livenessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: 8082
           readinessProbe:
             httpGet:
               path: /healthz
-              port: http
+              port: 8082
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

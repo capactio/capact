@@ -1,3 +1,6 @@
+"""
+Arbitrary data
+"""
 scalar Any
 
 """
@@ -70,17 +73,18 @@ input TypeReferenceInput {
 }
 
 input TagFilterInput {
-    rule: FilterRule = INCLUDE
     path: NodePath!
+    rule: FilterRule = INCLUDE
 
     """
     If not provided, latest revision for a given Tag is used
     """
-    revision: String
+    revision: Version
 }
 
 enum FilterRule {
-    INCLUDE, EXCLUDE
+    INCLUDE
+    EXCLUDE
 }
 
 input InterfaceGroupFilter {
@@ -263,7 +267,7 @@ type ImplementationImportMethod {
     name: NodeName!
 
     """
-    If not provided, latest revision for a given Type is used
+    If not provided, latest revision for a given Interface is used
     """
     revision: Version
 }

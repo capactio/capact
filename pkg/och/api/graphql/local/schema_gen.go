@@ -398,7 +398,10 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "schema.graphql", Input: `scalar Any
+	{Name: "schema.graphql", Input: `"""
+Arbitrary data
+"""
+scalar Any
 
 """
 Full path of a given node, e.g. cap.core.type.platform.kubernetes
@@ -406,7 +409,7 @@ Full path of a given node, e.g. cap.core.type.platform.kubernetes
 scalar NodePath
 
 """
-Version in semantic versioning
+Version in semantic versioning, e.g. 1.1.0
 """
 scalar Version
 
@@ -451,12 +454,12 @@ input TagReferenceInput {
   """
   If not provided, latest revision for a given Tag is used
   """
-  revision: String
+  revision: Version
 }
 
 type TagReference {
   path: NodePath!
-  revision: String!
+  revision: Version!
 }
 
 type TypeInstanceInstrumentation {
@@ -497,8 +500,12 @@ enum HTTPRequestMethod {
 
 input TagFilterInput {
   path: NodePath!
-  revision: String!
   rule: FilterRule = INCLUDE
+
+  """
+  If not provided, latest revision for a given Tag is used
+  """
+  revision: Version
 }
 
 enum FilterRule {
@@ -1022,7 +1029,7 @@ func (ec *executionContext) _TagReference_revision(ctx context.Context, field gr
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstance_metadata(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
@@ -2807,19 +2814,19 @@ func (ec *executionContext) unmarshalInputTagFilterInput(ctx context.Context, ob
 			if err != nil {
 				return it, err
 			}
-		case "revision":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-			it.Revision, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "rule":
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rule"))
 			it.Rule, err = ec.unmarshalOFilterRule2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐFilterRule(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "revision":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
+			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2847,7 +2854,7 @@ func (ec *executionContext) unmarshalInputTagReferenceInput(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-			it.Revision, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
