@@ -4,6 +4,7 @@ on:
   push:
     paths:
     - '**.txt'
+    - '**.yaml'
     branches: 
     - 'devops-*'
 
