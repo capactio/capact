@@ -19,3 +19,4 @@ controller:
     enabled: false
   extraArgs:
     publish-status-address: localhost
+    # TODO: Set self-signed certificate with `default-ssl-certificate: "<namespace>/<secret_name>"`
