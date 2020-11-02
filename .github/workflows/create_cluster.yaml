@@ -71,16 +71,16 @@ jobs:
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
 
-      - name: Install dependencies in cluster
-        run: | 
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo update
-          helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
-          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-          sleep ${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
+      # - name: Install dependencies in cluster
+      #   run: | 
+      #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+      #     helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+      #     helm repo add jetstack https://charts.jetstack.io
+      #     helm repo update
+      #     helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
+      #     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+      #     sleep ${CERT_MGR_TIMEOUT}
+      #     kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
       
       - name: Install services
         run: | 
@@ -96,7 +96,7 @@ jobs:
           i=0
           while : 
             do 
-              if (( $(kubectl get secret -n voltron |grep "\-tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
+              if (( $(kubectl get secret -n voltron |grep "kubernetes.io/tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
                 then echo "All secrets created"
                 break
               fi
@@ -110,7 +110,7 @@ jobs:
               fi
             done
 
-          echo "Getting following secrets $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
+          printf "Getting following secrets \n $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
           for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
           do  
             kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
