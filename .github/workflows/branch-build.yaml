@@ -8,7 +8,7 @@ on:
     - '**.yaml'
     - '**.sh'
     branches: 
-    - 'devops-'
+    - 'devops-*'
 
 
 jobs:
