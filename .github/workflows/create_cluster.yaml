@@ -41,24 +41,24 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GKE_CREDS }}
           
-      - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
+      # - name: Setup terraform
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform
   
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd terraform
-          terraform init
-          terraform apply -auto-approve
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd terraform
+      #     terraform init
+      #     terraform apply -auto-approve
 
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./terraform/*.tfstate
+      # - name: Archive terraform state
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: cluster-tfstate
+      #     path: ./terraform/*.tfstate
   
       - name: Get cluster credentials
         run: | 
