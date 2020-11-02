@@ -4,19 +4,13 @@ name: Build-cluster-and-deploy
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
 #https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
-# on: 
-#   workflow_dispatch:
-#     inputs:
-#       SHA:
-#         description: Git Ref (Optional)    
-#         required: false
 on: 
-  push:
-    paths:
-    - '**.go'
-    - '**.yaml'
-    branches: 
-    - 'devops-*'
+  workflow_dispatch:
+    inputs:
+      SHA:
+        description: Git Ref (Optional)    
+        required: false
+
 
 jobs:
   create-cluster:
@@ -41,24 +35,24 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GKE_CREDS }}
           
-      # - name: Setup terraform
-      #   run: | 
-      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-      #     sudo apt-get update && sudo apt-get install terraform
+      - name: Setup terraform
+        run: | 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform
   
-      # - name: Create cluster
-      #   run: | 
-      #     gcloud config set project ${PROJECT_ID}
-      #     cd terraform
-      #     terraform init
-      #     terraform apply -auto-approve
+      - name: Create cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd terraform
+          terraform init
+          terraform apply -auto-approve
 
-      # - name: Archive terraform state
-      #   uses: actions/upload-artifact@v2
-      #   with:
-      #     name: cluster-tfstate
-      #     path: ./terraform/*.tfstate
+      - name: Archive terraform state
+        uses: actions/upload-artifact@v2
+        with:
+          name: cluster-tfstate
+          path: ./terraform/*.tfstate
   
       - name: Get cluster credentials
         run: | 
@@ -71,16 +65,17 @@ jobs:
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
 
-      # - name: Install dependencies in cluster
-      #   run: | 
-      #     helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-      #     helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-      #     helm repo add jetstack https://charts.jetstack.io
-      #     helm repo update
-      #     helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
-      #     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-      #     sleep ${CERT_MGR_TIMEOUT}
-      #     kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
+      - name: Install dependencies in cluster
+        run: | 
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+          helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
+          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+          sleep ${CERT_MGR_TIMEOUT}
+          kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
+          kubectl apply -f terraform/yaml/cluster-issuer.yaml
       
       - name: Install services
         run: | 
@@ -90,6 +85,8 @@ jobs:
             --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
           done
 
+# In  below step the SERVICES is set again, as in current state engine service crashes, so the certificate
+# will never be produced for that.
       - name: Store secrets
         run: | 
           export SERVICES="gateway och-public och-local"
@@ -97,7 +94,7 @@ jobs:
           while : 
             do 
               if (( $(kubectl get secret -n voltron |grep "kubernetes.io/tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
-                then echo "All secrets created"
+                then echo "***All secrets created***"
                 break
               fi
               echo "All secrets STILL NOT created"
@@ -110,7 +107,7 @@ jobs:
               fi
             done
 
-          printf "Getting following secrets \n $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
+          printf "Getting following secrets \n$(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
           for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
           do  
             kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml

@@ -87,3 +87,9 @@ The following steps are necessarry to checkout the code, setup go environment, a
           export_default_credentials: true
 ```
 Pls. remember to update env_setup.sh file accordingly.
+
+### Let's encrypt certificates
+Currently the CI/CD building cluster creates both Certificates Issuers (stag & prod) for Let's Encrypt. 
+Current setup is that the certificates are issued with STAG LE. To switch it to PROD in every values.yaml file you have to adapt .ingress.annotations.issuer and set it to letsencrypt (it is letsencrypt-stag currently).
+
+

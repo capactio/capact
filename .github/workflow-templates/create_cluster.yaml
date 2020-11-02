@@ -11,6 +11,7 @@ on:
         description: Git Ref (Optional)    
         required: false
 
+
 jobs:
   create-cluster:
     name: Create new cluster
@@ -74,6 +75,7 @@ jobs:
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           sleep ${CERT_MGR_TIMEOUT}
           kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
+          kubectl apply -f terraform/yaml/cluster-issuer.yaml
       
       - name: Install services
         run: | 
@@ -83,11 +85,31 @@ jobs:
             --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
           done
 
+# In  below step the SERVICES is set again, as in current state engine service crashes, so the certificate
+# will never be produced for that.
       - name: Store secrets
         run: | 
-          sleep 300
-          for SERVICE in gateway
+          export SERVICES="gateway och-public och-local"
+          i=0
+          while : 
+            do 
+              if (( $(kubectl get secret -n voltron |grep "kubernetes.io/tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
+                then echo "***All secrets created***"
+                break
+              fi
+              echo "All secrets STILL NOT created"
+              sleep 30
+              i=$((i+1))
+              if (( ${i} == 5 ))
+                then 
+                echo "Secrets STILL NOT READY, pls. check that."
+                break
+              fi
+            done
+
+          printf "Getting following secrets \n$(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
+          for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
           do  
-            kubectl get secret ${SERVICE}-tls -n ${NAMESPACE} -o yaml >secret-${SERVICE}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
+            kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
           done
           gsutil cp secret*.yaml gs://${BUCKET}
