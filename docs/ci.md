@@ -3,7 +3,7 @@ This document elaborates on jobs created to automate the process of development/
 It touches the matter of encrypting files in repo, which was a part of the task
 
 ### Entry information
-In main foldera file called env_setup.sh exists. This setups the environment for every job.
+In main folder file called env_setup.sh exists. This setups the environment for every job.
 
 ## PR pipeline
 The job is defined in file pr-build.yaml. This is executed on pull request while it is: opened, synchronize or reopened. The branch related is master.
@@ -46,3 +46,44 @@ If you need to encrypt other files in other directory, you have to create there 
 
 To decrypt the data locally you need to use either symetric key or I need to add your keys.
 The procedure of decrypting files and working in team with that is perfectly described here -->https://buddy.works/guides/git-crypt#working-in-team-with-git-crypt
+
+Currently a file decrypt.yaml shows how to decrypt an encrypted file.
+
+## Cookbook new pipeline related.
+To create a new pipeline you must follow the rules of syntax related to GitHub Actions.
+In short take one of the current job defined in .github/workflows in *.yaml. Rename it. Update the:
+.name
+.jobs.<jobs-name>
+.jobs.<jobs-name>.name
+.jobs.<jobs-name>.step.name
+Update the steps accordingly to actions you want to execute.
+
+The following steps are necessarry to checkout the code, setup go environment, authorize to GCR and GKE in case they are necesary.
+```
+    steps:    
+      #Checkout code & GCR authorization
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GCR_CREDS }}
+
+      - name: Setup env
+        run: |
+          . ./env_setup.sh
+
+      - name: Setup golang
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+
+      #Checkout coud & GKE authorization
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_CREDS }}
+          export_default_credentials: true
+```
+Pls. remember to update env_setup.sh file accordingly.
