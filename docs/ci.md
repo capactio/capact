@@ -10,7 +10,7 @@ The job is defined in file pr-build.yaml. This is executed on pull request while
 It is executed while *.go or *.graphql file is commited.
 
 It builds the services images and pushes them to appropriate repository and location i.e.
-gcr.io/projectvoltron/pr/<<service-name>>:PR-<<pr-number>>
+gcr.io/projectvoltron/pr/\<service-name\>:PR-\<pr-number\>
 Additionally it executes all tests on related services.
 
 ## Build pipeline
@@ -18,14 +18,14 @@ The job is defined in file branch-build.yaml. This is executed on push to master
 It is executed while *.go or *.graphql file is commited to master branch.
 
 It builds the services images and pushes them to appropriate repository and location i.e.
-gcr.io/projectvoltron/<<service-name>>:<<sha-number>>
+gcr.io/projectvoltron/\<service-name\>:\<sha-number\>
 Additionally it executes all tests on related services and updates the existing cluster.
 
 ## Create cluster pipeline
 The job is defined in file create_cluster.yaml. This is executed on manual trigger.
 
 It builds the services images and pushes them to appropriate repository and location i.e.
-gcr.io/projectvoltron/<<service-name>>:<<image-tag>>
+gcr.io/projectvoltron/\<service-name\>:\<image-tag\>
 As image tag it takes env variable ${IMAGE_TAG} and restores the repo state to provided SHA upon job execution.
 Additionally it executes all tests on related services, creates new cluster according to provided values in env_setup.sh, install all dependencies on it and install services.
 
