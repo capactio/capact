@@ -186,6 +186,17 @@ kind::load_images() {
   done
 }
 
+kind::version() {
+  echo "v$(kind version -q)"
+}
+
+#
+# 'helm' functions
+#
+helm::version(){
+  helm version --short -c | tr -d  'Client: '
+}
+
 
 #
 # Docker functions
@@ -348,4 +359,34 @@ voltron::install::detect_command() {
     return
   fi
   echo "install"
+}
+
+
+# Arguments:
+#   $1 - minimal required version
+#   $2 - version to check
+voltron::version_supported(){
+  min_version="$1"
+  current_version="$2"
+  printf '%s\n%s\n' "$current_version" "$min_version" | sort -rVC
+}
+
+voltron::validate::tools() {
+  local current_kind_version
+  local current_helm_version
+  local wrong_versions
+
+  current_kind_version=$(kind::version)
+  current_helm_version=$(helm::version)
+  wrong_versions=false
+
+  if ! voltron::version_supported "${STABLE_KIND_VERSION}" "${current_kind_version}"; then
+    wrong_versions=true
+    echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
+  fi
+  if ! voltron::version_supported "${STABLE_HELM_VERSION}" "${current_helm_version}"; then
+      wrong_versions=true
+      echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"
+  fi
+  [ ${wrong_versions} == false ]
 }
