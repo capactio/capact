@@ -17,10 +17,9 @@ jobs:
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Setup env & decrypt
+      - name: Setup environment & decrypt
         run: |
-          . ./env_setup.sh
+          . ./hack/ci/setup-env.sh
           sudo apt-get update -y && sudo apt-get install -y git-crypt
           printf "${GIT_CRYPT_KEY}" | base64 -d > ./ci.key
           git-crypt unlock ./ci.key

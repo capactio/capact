@@ -20,51 +20,42 @@ jobs:
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
- 
-      - name: Setup env
+      - name: Setup environment
         run: |
-          . ./env_setup.sh
-
+          . ./hack/ci/setup-env.sh
       - name: Checkout code to point of time
         uses: actions/checkout@v2
         with:
           ref: ${{ env.SHA }}
-
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          service_account_key: ${{ secrets.GKE_CREDS }}
-          
+          service_account_key: ${{ secrets.GKE_CREDS }}        
       - name: Setup terraform
         run: | 
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform
-  
+          sudo apt-get update && sudo apt-get install terraform 
       - name: Create cluster
         run: | 
           gcloud config set project ${PROJECT_ID}
           cd terraform
           terraform init
           terraform apply -auto-approve
-
       - name: Archive terraform state
         uses: actions/upload-artifact@v2
         with:
           name: cluster-tfstate
           path: ./terraform/*.tfstate
-  
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
-          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}
-          
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}         
       - name: Network enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-
       - name: Install dependencies in cluster
         run: | 
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
@@ -75,8 +66,7 @@ jobs:
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           sleep ${CERT_MGR_TIMEOUT}
           kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml
-      
+          kubectl apply -f terraform/yaml/cluster-issuer.yaml     
       - name: Install services
         run: | 
           for SERVICE in ${SERVICES}
@@ -106,7 +96,6 @@ jobs:
                 break
               fi
             done
-
           printf "Getting following secrets \n$(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
           for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
           do  
