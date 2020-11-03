@@ -162,7 +162,7 @@ host::install::helm() {
 # 'kind'(kubernetes-in-docker) functions
 #
 # Required environments variables for all 'kind' commands:
-# - KIND_CLUSTER_NAME
+#  - KIND_CLUSTER_NAME
 #  - REPO_DIR
 kind::create_cluster() {
     shout "- Creating K8s cluster..."
@@ -285,7 +285,7 @@ voltron::install::update_hosts() {
 
 voltron::install:trust_self_signed_cert() {
   shout "- Trusting self-signed TLS certificate..."
-  CERT_PATH="${REPO_DIR}/hack/kind/domain.crt"
+  CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
   OS="$(uname)"
 
   echo "Certificate path: ${CERT_PATH}"
