@@ -14,11 +14,13 @@ This document describes the approach for handling the TypeInstances (artifacts) 
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
-- [Draft](#draft)
-  * [User Stories](#user-stories)
+  * [Use cases](#use-cases)
+    + [Required and optional input TypeInstances](#required-and-optional-input-typeinstances)
     + [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
-- [Consequences](#consequences)
-- [Alternatives](#alternatives)
+    + [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
+    + [Handle optional input TypeInstances](#handle-optional-input-typeinstances)
+  * [Consequences](#consequences)
+- [TODO](#todo)
 
 <!-- tocstop -->
 
@@ -27,22 +29,23 @@ Motivation
 
 The Voltron projects enables users easily define Actions that depends on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions. All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose we introduced the TypeInstance entity which is stored in Local OCH.
 
-Currently, we struggle with defining flow for passing, creating and deleting the TypeInstances. As a result, we cannot estimate work for artifacts implementation.  
+Currently, we struggle with defining flow for passing, creating and deleting the TypeInstances. As a result, we cannot estimate work for artifacts implementation.
 
 ### Goal
 
--	Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.
--	Define how to populate Action Workflow with input TypeInstances.
+-	[Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.](#identify-action-behavior-createdeleteupsertupdategetlist)
+-	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
 -	Define how to upload the generated TypeInstance from Action workflow to Local OCH.
--	Define how Action Workflow can delete the TypeInstance from Local OCH.
--	Define how to specify relations between generated TypeInstances.
--	Define where the required and optional input TypeInstances should be defined. On Interface or on Implementation?
--	Define how to override optional input TypeInstances. For example, pass already existing database.
+-	Define how Action can delete the TypeInstance from Local OCH.
+-	Define how to specify relations between generated TypeInstances by a given Action.
+-	[Define how the required and optional input TypeInstances should be defined.](#required-and-optional-input-typeinstances)
+-	[Define how to handle optional input TypeInstances. For example, pass already existing database.](#handle-optional-input-typeinstances)
 
 ### Non-goal
 
 -	Provide a working POC. Currently, we are in the early stage and providing POC is to complex as we do not have implemented the base logic.  
 -	Define how to store the TypeInstance in Local OCH with the preservation of Type composition.
+-	Define the final syntax for Action Workflow. This will be done in a separate task with taking into account the Argo Workflow syntax.  
 
 Proposal
 --------
@@ -52,46 +55,75 @@ General notes:
 1.	The required input TypeInstances (artifacts) are defined on Interfaces only.
 2.	The optional input TypeInstances are defined on Implementation only.
 3.	The input and output TypeInstances always have a name. This solves problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
-4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Alpha and GA.
+4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Alpha and GA. Can be considered once again after GA as this won't be a breaking change.
 
-Draft
------
+### Use cases
+
+#### Required and optional input TypeInstances
+
+**Actors**
+
+-	Action Developer
+
+**Suggested solution**
+
+We have the Interface entity which defines the input and output parameters which becomes Action signature.
+
+The **required** input TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangable and do not introduce new requirements.
+
+The **optional** input TypeInstances should be defined on Implementation. Only Implementation knows that something can be swapped out, e.g. user can pass an existing database and defined workflow can handle such situation and reuse the given database instead of creating a new one.
+
+Syntax for Interface:
 
 ```yaml
-ocfVersion: 0.0.1
-revision: 0.1.2
 kind: Interface
 metadata:
   prefix: cap.interface.cms.wordpress
   name: install
-  description: WordPress installation
 spec:
   input: 
     jsonSchema: # input schema, holds information that can be specified by user e.g. db size, name etc. 
       ref: cap.type.cms.wordpress.install-input:1.0.1
-    typeInstances: # all required (artifacts)
+    typeInstances: # all bellow entities are required and need to be passed to Implementation
       # pass as an input one instance of cap.type.cms.wordpress.config Type based on ID that user should provide.
-      - name: backend_db # needs to be used in Implementation
+      backend_db: # unique name that needs to be used in Implementation
         type: cap.type.db.mysql.config
-        permission: readWrite # based on that we can 
+        permission: readWrite
       # pass as an input all available instances of cap.type.cms.wordpress.config Type
-      - name: all_available_db
+      all_available_db:
         type: []cap.type.db.mysql.config
         permission: readWrite
   output:
     typeInstances: # it's an TypeInstance that is created as a result of executed action
-      - name: wp_config 
+      wp_config: 
         type: cap.type.cms.wordpress.config
-
-signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
 
-### User Stories
+Sytanx for Implementation:
+
+```yaml
+WIP
+```
+
+**Alternatives**
+
+There is an option to define `typeInstances` as a list instead of map:
+
+```yaml
+    typeInstances:
+      - name: backend_db
+        type: cap.type.db.mysql.config
+        permission: readWrite 
+      - name: all_available_db
+        type: []cap.type.db.mysql.config
+        permission: readWrite
+```
+
+Unfortunately, in that way we cannot easily enforce that the names won't be repeated, and we cannot benefit from native YAML support.
 
 #### Identify Action behavior (create/delete/upsert/update/get/list)
 
-**Roles**
+**Actors**
 
 -	Action Developer
 -	Action User
@@ -114,51 +146,62 @@ Identified operations:
 Use the information from the Input/Output property defined in Interface.
 
 -	Get operation
-    ```yaml
-    input: 
-      typeInstances:
-        - name: backend_db
-          type: cap.type.db.mysql.config
-          permission: read 
-    ```
-    
+
+	```yaml
+	input: 
+	  typeInstances:
+	    - name: backend_db
+	      type: cap.type.db.mysql.config
+	      permission: read 
+	```
+
 -	List operation
-    ```yaml
-    input: 
-      typeInstances:
-        - name: backend_db
-          type: []cap.type.db.mysql.config # <- identifies a list of objects
-          permission: read 
-    ```
+
+	```yaml
+	input: 
+	  typeInstances:
+	    - name: backend_db
+	      type: []cap.type.db.mysql.config # <- identifies a list of objects
+	      permission: read 
+	```
+
 -	Create operation
-    ```yaml
-    output: 
-      typeInstances:
-        - name: wp_config
-          type: cap.type.cms.wordpress.config
-    ```
+
+	```yaml
+	output: 
+	  typeInstances:
+	    - name: wp_config
+	      type: cap.type.cms.wordpress.config
+	```
+
 -	Delete operation
-    ```yaml
-    To be figure out.
-    ```
+
+	```yaml
+	To be figure out.
+	```
+
 -	Update operation
-    ```yaml
-    input: 
-      typeInstances:
-        - name: backend_db
-          type: []cap.type.db.mysql.config # <- identifies a list of objects
-          permission: read 
-    ```
+
+	```yaml
+	input: 
+	  typeInstances:
+	    - name: backend_db
+	      type: []cap.type.db.mysql.config # <- identifies a list of objects
+	      permission: read 
+	```
+
 -	Upsert
-    ```yaml
-    Do we really need that?
-    ```
+
+	```yaml
+	Do we really need that?
+	```
 
 **Alternatives**
 
 **Use Tags on Interface**
 
 Example:
+
 ```yaml
 kind: Interface
 metadata:
@@ -171,10 +214,10 @@ metadata:
 
 This seams to be simpler and more explicit but at the same time it is redundant, as we need to define that also per artifacts.
 
-
-**Introduce dedicated Action types**  
+**Introduce dedicated Action types**
 
 Example:
+
 ```yaml
 typeInstances:
  cap.core.action.register: # such instance is produced
@@ -189,35 +232,178 @@ typeInstances:
 
 This seems to be quite verbose and increase the overall boilerplate which is already huge.
 
+#### Populate an Action with the input TypeInstances
 
+**Actors**
 
-Consequences
-------------
+-	Voltron Engine
+
+**Suggested solution**
+
+If Action requires input TypeIntstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{workflow.outputs.artifacts.db_config}}`.
+
+The global Argo artifacts seams to be an only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
+
+**Implementation workflow**
+
+```yaml
+action:
+type: argo.run
+args:
+  workflow:
+    steps:
+      - name: mysql-create-db
+        inputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+**Rendered Implementation workflow**
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    - name: downloads-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+      outputs:
+        # export a global artifact. The artifact will be programatically available in the completed
+        # workflow object under: workflow.outputs.artifacts
+        # globalName corresponds to the name defined in Interface `spec.input.typeInstances` section.
+        artifacts:
+        - name: mysql-config
+          path: /tmp/mysql-config
+          globalName: mysql-config
+  
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+```
+
+#### Handle optional input TypeInstances
+
+**Actor**
+
+-	Action workflow developer
+
+**Background**
+
+Based on the solution from [this](#required-and-optional-input-typeinstances) section, the optional artifacts are defined on Implementation. User is able to pass the optional TypeInstance during the render process. The workflow developer should be able to handle that situation and if a given TypeInstance is available then skip a given step(s).
+
+**Suggested solution**
+
+Introduce the template language that can be used by Action workflow developer. This can be resolved during the render action by Voltron Engine.
+
+**Implementation workflow**
+
+```yaml
+action:
+type: argo.run
+args:
+  workflow:
+    steps:
+      {{ if input.typeInstances.mysql-config == nil }}
+      - name: mysql-install
+        outputs:
+          artifacts:
+            - name: "mysql-config"
+      {{ endif}}
+      - name: mysql-create-db
+        inputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+**Rendered Implementation workflow when `input.typeInstances.mysql-config` was passed by user**
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    - name: downloads-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+      outputs:
+        # export a global artifact. The artifact will be programatically available in the completed
+        # workflow object under: workflow.outputs.artifacts
+        # globalName corresponds to the name defined in Interface `spec.input.typeInstances` section.
+        artifacts:
+        - name: mysql-config
+          path: /tmp/mysql-config
+          globalName: mysql-config
+  
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+```
+
+**Rendered Implementation workflow when `input.typeInstances.mysql-config` wasn't passed by user**
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    - name: mysql-install
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-install:0.0.1
+      outputs:
+        artifacts:
+        - name: mysql-config
+          path: /tmp/mysql-config
+          globalName: mysql-config
+
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+```
+
+**Alternatives**
+
+Instead of giving Action developer option to use the template language we can determine that directly during render action. Step could be automatically removed if the artifact name specified as an output of the action matches with the one which was passed to the Actions. Unfortunately, this solution hides a lot and do not support more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed.
+
+### Consequences
 
 Once approved, these are the consequences:
 
--	remove JSON param output from Interface (in the end, Interface will have input params, input artifacts and output artifacts)
+-	remove JSON output from Interface
+-	update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax  
 
-# TODO
+TODO
+----
 
 1.	Is the implementation allowed to register more objects than those listed in the interface? How to validate that? Output artifacts are defined both on Interface and Implementation?
 
 2.	Is the implementation allowed to register less object than those listed in the interface? How to validate that?
 
-3.	How artifacts can be overridden in Implementation (e.g. specify already existing db) (Define how to override TypeInstances defined in Action workflow.) Define the optional artifacts on Implementation level with required aliases?
+3.	Is the implementation allowed to register object which extends the type defined on Interface? How to allow that? Can be validated behind the scene?
 
-4.	Define how to upload the generated TypeInstance from Action workflow to Local OCH.
+4.	How and when to delete the instance from local OCH?
 
-5.	Define how to specify relations between generated TypeInstances.
+5.	Define relations between artifacts (Artifacts group in the manifest?)
 
-6.	How and when to delete the instance from local OCH?
-
-7.	How to populate workflow with the instances from the local OCH Saving/loading artifacts - Docker images that can be used in Argo workflow as steps? Input: user-friendly output + artifacts
-
-8.	Optional vs required artifacts Examples: Required: db config when creating new database user Optional: db config for existing database when installing Wordpress
-
-9.	After GA: Artifacts permissions: read/write
-
-defining relations between artifacts (Artifacts group?) is allowed in the manifests by user
-
-nice to have: if possible, unify the artifacts definition with requires section
+6.	nice to have: if possible, unify the artifacts' definition with requires section
