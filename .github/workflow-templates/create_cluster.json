@@ -1,0 +1,8 @@
+{
+    "name": "Voltron Branch Build Workflow",
+    "description": "Voltron create cluster build workflow template.",
+    "iconName": "lnr-rocket",
+    "categories": [
+        "Go"
+    ]
+}

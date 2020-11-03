@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1beta1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-stag
+spec:
+  acme:
+    email: hosting@qqq.org
+    privateKeySecretRef:
+      name: letsencrypt
+    server: https://acme-staging-v02.api.letsencrypt.org/directory
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
