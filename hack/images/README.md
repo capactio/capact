@@ -11,5 +11,6 @@ This folder contains a list of infra images used in Voltron project.
 The structure of the folder looks as follows:
 
 ```
-  └── json-go-gen           # The image that contains quicktype to generates Go struct from JSON Schemas
+  ├── json-go-gen            # The image that contains quicktype to generates Go struct from JSON Schemas
+  └── graphql-schema-linter  # The image that contains graphql-schema-linter to lint GraphQL files
 ```

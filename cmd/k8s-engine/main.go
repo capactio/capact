@@ -1,8 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
+	"net/http"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/gorilla/mux"
+	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -10,9 +16,12 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
+	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
+	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
+	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/controllers"
 )
 
 var (
@@ -24,10 +33,12 @@ var (
 type Config struct {
 	// LeaderElectionNamespace determines the namespace in which the leader election configmap will be created.
 	LeaderElectionNamespace string `envconfig:"optional"`
+	// GraphQLAddr is the TCP address the GraphQL endpoint binds to.
+	GraphQLAddr string `envconfig:"default=:8080"`
 	// MetricsAddr is the TCP address the metric endpoint binds to.
 	MetricsAddr string `envconfig:"default=:8081"`
 	// HealthzAddr is the TCP address the health probes endpoint binds to.
-	HealthzAddr string
+	HealthzAddr string `envconfig:"default=:8082"`
 	// EnableLeaderElection for controller manager. Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool `envconfig:"default=false"`
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
@@ -36,10 +47,12 @@ type Config struct {
 }
 
 func main() {
+	// init configuration
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
+	// setup controller
 	ctrl.SetLogger(zap.New(zap.UseDevMode(cfg.LoggerDevMode)))
 
 	err = clientgoscheme.AddToScheme(scheme)
@@ -57,18 +70,53 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	err = (&controllers.ActionReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Action"),
-	}).SetupWithManager(mgr)
+	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"))
+	err = actionCtrl.SetupWithManager(mgr)
 	exitOnError(err, "while creating controller")
 
+	// setup instrumentation
 	err = mgr.AddHealthzCheck("ping", healthz.Ping)
 	exitOnError(err, "while adding healthz check")
 
+	// setup graphql server
+	err = mgr.Add(graphQLServer(cfg))
+	exitOnError(err, "while adding GraphQL server")
+
+	// start
 	setupLog.Info("starting manager")
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	exitOnError(err, "while running manager")
+}
+
+// The server will stop running when the channel is closed.
+// graphQLServer function blocks until the channel is closed or an error occurs.
+// TODO(https://cshark.atlassian.net/browse/SV-100): probably should be extracted to be reusable.
+func graphQLServer(cfg Config) manager.RunnableFunc {
+	gqlCfg := graphql.Config{
+		Resolvers: domaingraphql.NewRootResolver(),
+	}
+	executableSchema := graphql.NewExecutableSchema(gqlCfg)
+
+	mainRouter := mux.NewRouter()
+	mainRouter.HandleFunc("/", playground.Handler("Voltron Engine API", "/graphql"))
+	mainRouter.Handle("/graphql", handler.NewDefaultServer(executableSchema)).Methods("POST")
+
+	return func(stop <-chan struct{}) error {
+		srv := &http.Server{Addr: cfg.GraphQLAddr, Handler: mainRouter}
+		go func() {
+			<-stop
+			// We received an interrupt signal, shut down.
+			if err := srv.Shutdown(context.Background()); err != nil {
+				ctrl.Log.WithName("HTTP Server").Error(err, "shutting down HTTP server")
+			}
+		}()
+
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			return errors.Wrap(err, "while starting HTTP server")
+		}
+
+		return nil
+	}
 }
 
 func exitOnError(err error, context string) {

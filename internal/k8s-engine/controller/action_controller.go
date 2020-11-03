@@ -1,4 +1,4 @@
-package controllers
+package controller
 
 import (
 	"context"
@@ -17,6 +17,10 @@ import (
 type ActionReconciler struct {
 	client.Client
 	Log logr.Logger
+}
+
+func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete

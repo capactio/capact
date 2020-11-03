@@ -2,10 +2,9 @@
 
 ## Overview
 
-This folder contains the image with tools useful for generating the Go struct from JSON Schemas.
+This folder contains Docker image with a tool that generates the Go struct from JSON Schemas.
 
-The image consists of:
-- quicktype
+The Docker image consists of `quicktype` tool, installed globally.
 
 ## Installation
 

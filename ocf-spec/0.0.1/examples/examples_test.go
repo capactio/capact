@@ -19,10 +19,14 @@ import (
 func TestExampleSuccess(t *testing.T) {
 	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
-	common := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/json-schema-type.json"))
-	require.NoError(t, sl.AddSchemas(common))
-	common = gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", "../schema/common/metadata.json"))
-	require.NoError(t, sl.AddSchemas(common))
+
+	schemaRefPaths := []string{
+		"../schema/common/json-schema-type.json",
+		"../schema/common/metadata.json",
+		"../schema/common/metadata-tags.json",
+	}
+	err := loadCommonSchemas(sl, schemaRefPaths)
+	require.NoError(t, err, "while loading common schemas")
 
 	tests := map[string]struct {
 		jsonSchemaPath string
@@ -43,6 +47,10 @@ func TestExampleSuccess(t *testing.T) {
 		"RepoMetadata Example should be valid": {
 			jsonSchemaPath: "../schema/repo-metadata.json",
 			manifestPath:   "repo-metadata.yaml",
+		},
+		"InterfaceGroup Example should be valid": {
+			jsonSchemaPath: "../schema/interface-group.json",
+			manifestPath:   "interface-group.yaml",
 		},
 		"Interface Example should be valid": {
 			jsonSchemaPath: "../schema/interface.json",
@@ -100,4 +108,16 @@ func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
 			t.Errorf("- %s\n", desc.String())
 		}
 	}
+}
+
+func loadCommonSchemas(schemaLoader *gojsonschema.SchemaLoader, paths []string) error {
+	for _, path := range paths {
+		jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
+		err := schemaLoader.AddSchemas(jsonLoader)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

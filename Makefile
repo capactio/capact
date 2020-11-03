@@ -98,7 +98,7 @@ test-cover-html: test-unit
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources
 .PHONY: generate
 
 gen-go-api-from-ocf-spec:
@@ -109,9 +109,14 @@ gen-k8s-resources:
 	./hack/gen-k8s-resources.sh
 .PHONY: gen-k8s-resources
 
+gen-graphql-resources:
+	./hack/gen-graphql-resources.sh
+.PHONY: gen-graphql-resources
+
 ###############
 # Development #
 ###############
+
 dev-cluster:
 	./hack/run-dev-cluster.sh
 .PHONY: dev-cluster

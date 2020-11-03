@@ -96,9 +96,8 @@ func (r *Vendor) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-// Remote OCH repositories can be mounted under the vendor sub-tree in the local repository.
-// OCF Vendor manifest stores connection details of the external OCH, such as URI of the
-// repository (base path) or federation strategy.
+// Interface defines an action signature. It describes the action name, input, and output
+// parameters.
 type Interface struct {
 	Kind       InterfaceKind      `json:"kind"`      
 	Metadata   InterfaceMetadata  `json:"metadata"`  
@@ -145,14 +144,7 @@ type Input struct {
 
 // The JSONSchema definition.
 type JSONSchema struct {
-	Ref   *TheRefSchema `json:"ref,omitempty"`  // Reference to JSON Schema definition object, for example, cap.type.db.mysql.config
-	Value *string       `json:"value,omitempty"`// Inline JSON Schema definition for the parameters.
-}
-
-// Reference to JSON Schema definition object, for example, cap.type.db.mysql.config
-type TheRefSchema struct {
-	Name     string `json:"name"`    // Reference to OCF Type for example, cap.type.db.mysql.config
-	Revision string `json:"revision"`
+	Value string `json:"value"`// Inline JSON Schema definition for the parameters.
 }
 
 // The output schema for Interface action.
@@ -173,16 +165,16 @@ type Implementation struct {
 
 // A container for the OCF metadata definitions.
 type ImplementationMetadata struct {
-	Description      string              `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
-	DisplayName      *string             `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
-	DocumentationURL *string             `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
-	IconURL          *string             `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
-	Maintainers      []Maintainer        `json:"maintainers"`               // The list of maintainers with contact information.
-	Name             string              `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
-	Prefix           *string             `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
-	SupportURL       *string             `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
-	License          License             `json:"license"`                   // This entry allows you to specify a license, so people know how they are permitted to use; it, and what kind of restrictions you are placing on it.
-	Tags             map[string]TagValue `json:"tags,omitempty"`            // The tags is a list of key value, OCF Tags. Describes the OCF Implementation (provides; generic categorization) and are used to filter out a specific Implementation.
+	Description      string                 `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
+	DisplayName      *string                `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
+	DocumentationURL *string                `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
+	IconURL          *string                `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
+	Maintainers      []Maintainer           `json:"maintainers"`               // The list of maintainers with contact information.
+	Name             string                 `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
+	Prefix           *string                `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	SupportURL       *string                `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
+	License          License                `json:"license"`                   // This entry allows you to specify a license, so people know how they are permitted to use; it, and what kind of restrictions you are placing on it.
+	Tags             map[string]MetadataTag `json:"tags,omitempty"`            
 }
 
 // This entry allows you to specify a license, so people know how they are permitted to use
@@ -192,8 +184,11 @@ type License struct {
 	Ref  *string `json:"ref,omitempty"` // If you are using a license that hasn’t been assigned an SPDX identifier, or if you are; using a custom license, use the direct link to the license file e.g.; https://raw.githubusercontent.com/project/v1/license.md. The resource under given link; MUST be immutable and publicly accessible.
 }
 
-type TagValue struct {
-	Revision string `json:"revision"`
+// The tag object contains OCF Tags references. It provides generic categorization for
+// Implementations, Types and TypeInstances. Tags are used to filter out a specific
+// Implementation.
+type MetadataTag struct {
+	Revision string `json:"revision"`// The exact Tag revision.
 }
 
 // Ensures the authenticity and integrity of a given manifest.
@@ -212,20 +207,25 @@ type ImplementationSpec struct {
 
 // An explanation about the purpose of this instance.
 type Action struct {
-	Args map[string]interface{} `json:"args"`// Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
-	Type string                 `json:"type"`// The Interface or Implementation of a runner, which handles the execution, for example,; cap.interface.runner.helm3.run
+	Args            map[string]interface{} `json:"args"`           // Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
+	RunnerInterface string                 `json:"runnerInterface"`// The Interface of a Runner, which handles the execution, for example,; cap.interface.runner.helm3.run
 }
 
 type Implement struct {
 	Name     string  `json:"name"`              // The Interface name, for example cap.interfaces.db.mysql.install
-	Revision *string `json:"revision,omitempty"`// The Interface revision.
+	Revision *string `json:"revision,omitempty"`// The exact Interface revision.
 }
 
 type Import struct {
-	Alias      *string  `json:"alias,omitempty"`     // The alias for the full name of the imported group name. It can be used later in the; workflow definition instead of using full name.
-	AppVersion *string  `json:"appVersion,omitempty"`// The supported application versions in SemVer2 format.
-	Methods    []string `json:"methods"`             // The list of all required actions’ names that must be imported.
-	Name       string   `json:"name"`                // The name of the group that holds specific actions that you want to import, for example; cap.interfaces.db.mysql
+	Alias              *string         `json:"alias,omitempty"`     // The alias for the full name of the imported group name. It can be used later in the; workflow definition instead of using full name.
+	AppVersion         *string         `json:"appVersion,omitempty"`// The supported application versions in SemVer2 format.
+	InterfaceGroupPath string          `json:"interfaceGroupPath"`  // The name of the Interface Group that contains specific actions that you want to import,; for example cap.interfaces.db.mysql
+	Methods            []MethodElement `json:"methods"`             // The list of all required actions’ names that must be imported.
+}
+
+type MethodElement struct {
+	Name     string  `json:"name"`              // The name of the action for a given Interface group, e.g. install
+	Revision *string `json:"revision,omitempty"`// Revision of the Interface for a given action. If not specified, the latest revision is; used.
 }
 
 // Prefix MUST be an abstract node and represents a core abstract Type e.g.
@@ -237,14 +237,12 @@ type Require struct {
 }
 
 type RequireEntity struct {
-	Name     string                 `json:"name"`           // The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom; Type then it MUST be defined as full path to that Type. Custom Type MUST extend the; abstract node which is defined as a root prefix for that entry.
-	Revision string                 `json:"revision"`       // The revision version of the given Type.
-	Value    map[string]interface{} `json:"value,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema.
+	Name             string                 `json:"name"`                      // The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom; Type then it MUST be defined as full path to that Type. Custom Type MUST extend the; abstract node which is defined as a root prefix for that entry.
+	Revision         string                 `json:"revision"`                  // The exact revision of the given Type.
+	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema.
 }
 
-// Remote OCH repositories can be mounted under the vendor sub-tree in the local repository.
-// OCF Vendor manifest stores connection details of the external OCH, such as URI of the
-// repository (base path) or federation strategy.
+// RepoMetadata stores metadata about the Open Capability Hub.
 type RepoMetadata struct {
 	Kind       RepoMetadataKind      `json:"kind"`      
 	Metadata   InterfaceMetadata     `json:"metadata"`  
@@ -261,7 +259,6 @@ type RepoMetadataSignature struct {
 
 // A container for the RepoMetadata definition.
 type RepoMetadataSpec struct {
-	CAKey          string               `json:"caKey"`                   // Defines the Certificate Authority (CA) key which is used to check if OCF manifest; contains a signature which has that CA in chain. If yes, then we can trust it and use its; definition.
 	Implementation *ImplementationClass `json:"implementation,omitempty"`// Holds configuration for the OCF Implementation entities.
 	OcfVersion     OcfVersion           `json:"ocfVersion"`              // Holds information about supported OCF versions in OCH server.
 	OchVersion     string               `json:"ochVersion"`              // Defines the OCH version in SemVer2 format.
@@ -294,8 +291,8 @@ type OcfVersion struct {
 	Supported []string `json:"supported"`// The supported OCF version that OCH is able to serve. In general, the OCH takes the stored; version and converts it to the supported one.
 }
 
-// Tag is a primitive, which is used to categorize Implementations.  You can use Tags to
-// find and filter Implementations.
+// Tag is a primitive, which is used to categorize Implementations. You can use Tags to find
+// and filter Implementations.
 type Tag struct {
 	Kind       TagKind           `json:"kind"`      
 	Metadata   InterfaceMetadata `json:"metadata"`  
@@ -319,12 +316,25 @@ type TagSpec struct {
 // validation. There are core and custom Types. Type can be also a composition of other
 // Types.
 type Type struct {
-	Kind       TypeKind          `json:"kind"`      
-	Metadata   InterfaceMetadata `json:"metadata"`  
-	OcfVersion string            `json:"ocfVersion"`
-	Revision   string            `json:"revision"`  // Version of the manifest content in the SemVer format.
-	Signature  TypeSignature     `json:"signature"` // Ensures the authenticity and integrity of a given manifest.
-	Spec       TypeSpec          `json:"spec"`      // A container for the Type specification definition.
+	Kind       TypeKind      `json:"kind"`      
+	Metadata   TypeMetadata  `json:"metadata"`  
+	OcfVersion string        `json:"ocfVersion"`
+	Revision   string        `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Signature  TypeSignature `json:"signature"` // Ensures the authenticity and integrity of a given manifest.
+	Spec       TypeSpec      `json:"spec"`      // A container for the Type specification definition.
+}
+
+// A container for the OCF metadata definitions.
+type TypeMetadata struct {
+	Description      string                 `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
+	DisplayName      *string                `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
+	DocumentationURL *string                `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
+	IconURL          *string                `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
+	Maintainers      []Maintainer           `json:"maintainers"`               // The list of maintainers with contact information.
+	Name             string                 `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
+	Prefix           *string                `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	SupportURL       *string                `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
+	Tags             map[string]MetadataTag `json:"tags,omitempty"`            
 }
 
 // Ensures the authenticity and integrity of a given manifest.
@@ -338,24 +348,56 @@ type TypeSpec struct {
 	JSONSchema     JSONSchema `json:"jsonSchema"`              
 }
 
-// The root schema comprises the entire JSON document.
+// TypeInstance is an instance a given Type. It stores JSON object that is valid against
+// JSON Schema from Type.
 type TypeInstance struct {
-	Kind       TypeInstanceKind     `json:"kind"`      
-	Metadata   TypeInstanceMetadata `json:"metadata"`  
-	OcfVersion string               `json:"ocfVersion"`
-	Revision   string               `json:"revision"`  // Version of the manifest content in the SemVer format.
-	Spec       TypeInstanceSpec     `json:"spec"`      // A container for the TypeInstance specification definition.
+	Kind            TypeInstanceKind     `json:"kind"`           
+	Metadata        TypeInstanceMetadata `json:"metadata"`       
+	OcfVersion      string               `json:"ocfVersion"`     
+	ResourceVersion int64                `json:"resourceVersion"`// Resource version of the manifest content. Every time the manifest content changes, the; resource version is updated automatically on server side.
+	Spec            TypeInstanceSpec     `json:"spec"`           // A container for the TypeInstance specification definition.
 }
 
 type TypeInstanceMetadata struct {
-	Name   string `json:"name"`  // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
-	Prefix string `json:"prefix"`// The prefix value is automatically computed and set when storing manifest in OCH.
+	ID   string                 `json:"id"`            // The unique identifier of a given TypeInstance.
+	Tags map[string]MetadataTag `json:"tags,omitempty"`
 }
 
 // A container for the TypeInstance specification definition.
 type TypeInstanceSpec struct {
-	TypeRef string                 `json:"typeRef"`// The full path to the Type form which this instance was created.
-	Value   map[string]interface{} `json:"value"`  // Holds the configuration constraints for the given Type. It needs to be valid against the; Type JSONSchema.
+	Instrumentation *Instrumentation       `json:"instrumentation,omitempty"`// Holds the details about instrumentation for given Type Instance
+	TypeRef         TypeRef                `json:"typeRef"`                  // The full path to the Type form which this instance was created.
+	Value           map[string]interface{} `json:"value"`                    // Holds the JSON object for a given TypeInstance with arbitrary data. It needs to be valid; against the Type JSONSchema.
+}
+
+// Holds the details about instrumentation for given Type Instance
+type Instrumentation struct {
+	Health  *Health  `json:"health,omitempty"` // Details about health of a given TypeInstance
+	Metrics *Metrics `json:"metrics,omitempty"`// Details about metrics exposed for a given TypeInstance
+}
+
+// Details about health of a given TypeInstance
+type Health struct {
+	Method *MethodEnum `json:"method,omitempty"`// Method of HTTP request
+	URL    *string     `json:"url,omitempty"`   // URL of health endpoint
+}
+
+// Details about metrics exposed for a given TypeInstance
+type Metrics struct {
+	Dashboards []Dashboard `json:"dashboards,omitempty"`// Metrics dashboards
+	Regex      *string     `json:"regex,omitempty"`     // Regex for exposed metrics
+	URL        *string     `json:"url,omitempty"`       // URL of metrics endpoint
+}
+
+// Stores details of a metrics dashboard
+type Dashboard struct {
+	URL *string `json:"url,omitempty"`// URL of metrics dashboard
+}
+
+// The full path to the Type form which this instance was created.
+type TypeRef struct {
+	Path     string  `json:"path"`              // Path of a given Type
+	Revision *string `json:"revision,omitempty"`// Version of the manifest content in the SemVer format.
 }
 
 // Remote OCH repositories can be mounted under the vendor sub-tree in the local repository.
@@ -420,6 +462,13 @@ const (
 type TypeInstanceKind string
 const (
 	KindTypeInstance TypeInstanceKind = "TypeInstance"
+)
+
+// Method of HTTP request
+type MethodEnum string
+const (
+	Get MethodEnum = "GET"
+	Post MethodEnum = "POST"
 )
 
 type VendorKind string

@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "type": "object",
+  "description": "InterfaceGroup stores metadata for a group of Interfaces.",
+  "required": [
+    "ocfVersion",
+    "kind",
+    "signature",
+    "metadata"
+  ],
+  "properties": {
+    "ocfVersion": {
+      "$id": "#/properties/ocfVersion",
+      "type": "string",
+      "const": "0.0.1"
+    },
+    "kind": {
+      "$id": "#/properties/kind",
+      "type": "string",
+      "enum": [
+        "InterfaceGroup"
+      ]
+    },
+    "signature": {
+      "$id": "#/properties/signature",
+      "type": "object",
+      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "required": [
+        "och"
+      ],
+      "properties": {
+        "och": {
+          "description": "The signature signed with the HUB key.",
+          "type": "string"
+        }
+      }
+    },
+    "metadata": {
+      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+    }
+  }
+}

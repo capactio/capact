@@ -4,41 +4,14 @@
   "type": "object",
   "description": "The JSONSchema definition.",
   "properties": {
-    "ref": {
-      "type": "object",
-      "title": "The ref schema",
-      "description": "Reference to JSON Schema definition object, for example, cap.type.db.mysql.config",
-      "required": [
-        "name",
-        "revision"
-      ],
-      "properties": {
-        "name": {
-          "description": "Reference to OCF Type for example, cap.type.db.mysql.config",
-          "type": "string"
-        },
-        "revision": {
-          "type": "string"
-        }
-      }
-    },
     "value": {
       "type": "string",
-      "title": "Inline JSON Schema definition for the parameters.",
+      "title": "Inline JSON Schema definition for the parameters. It may contain external references to JSON schemas in Types",
       "description": "Inline JSON Schema definition for the parameters."
     }
   },
   "additionalProperties": false,
-  "oneOf": [
-    {
-      "required": [
-        "ref"
-      ]
-    },
-    {
-      "required": [
-        "value"
-      ]
-    }
+  "required": [
+    "value"
   ]
 }
