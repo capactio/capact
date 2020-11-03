@@ -1,1 +1,13 @@
 ingress-nginx: {} # put all "ingress-nginx" chart related values here
+#  # For example, to use default TLS certificate from values below, uncomment:
+#  controller:
+#    config:
+#      ssl-redirect: true
+#    extraArgs:
+#      default-ssl-certificate: "ingress-nginx/default-ssl-cert"
+
+tlsCertificate:
+  create: false
+  name: "default-ssl-cert"
+  crt: ""
+  key: ""
