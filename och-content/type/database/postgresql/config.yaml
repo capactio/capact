@@ -1,0 +1,84 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  displayName: PostgreSQL config
+  description: Defines configuration for PostgreSQL
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  tags:
+    cap.core.tag.workload.stateful:
+      revision: "0.1.0"
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "cap.type.database.postgresql.config",
+        "type": "object",
+        "title": "The schema for PostgreSQL configuration",
+        "examples": [
+          {
+            "superuser": {
+              "username": "username",
+              "password": "password"
+            },
+            "defaultDBName": "default_db",
+            "connectionURI": "postgresql://host/database"
+          }
+        ],
+        "required": [
+            "superuser",
+            "defaultDBName",
+            "connectionURI"
+        ],
+        "$ocfRefs": {
+          "uri": {
+            "name": "cap.core.type.networking.uri",
+            "revision": "0.1.0"
+          }
+        },
+        "properties": {
+          "superuser": {
+            "$id": "#/properties/superuser",
+            "type": "object",
+            "title": "Defines superuser details",
+            "required": [
+                "username",
+                "password"
+            ],
+            "properties": {
+              "username": {
+                "$id": "#/properties/superuser/properties/username",
+                "type": "string",
+                "title": "Create the specified user with superuser power and a database with the same name.",
+                "default": "postgres"
+              },
+              "password": {
+                "$id": "#/properties/superuser/properties/password",
+                "type": "string",
+                "title": "Sets the superuser password for PostgreSQL"
+              }
+            },
+            "additionalProperties": false
+          },
+          "defaultDBName": {
+            "$id": "#/properties/defaultDBName",
+            "type": "string",
+            "title": "Defines a different name for the default database that is created"
+          },
+          "connectionURI": {
+            "$ref": "#/$ocfRefs/uri"
+          }
+        },
+        "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

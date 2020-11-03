@@ -10,7 +10,7 @@ export DOCKER_BUILDKIT = 1
 DOCKER_REPOSITORY ?= gcr.io/projectvoltron
 DOCKER_TAG ?= latest
 
-all: generate build-all-images test-spec test-unit test-lint
+all: generate build-all-images test-ocf-manifests test-unit test-lint
 .PHONY: all
 
 ############
@@ -84,9 +84,9 @@ test-lint:
 	./hack/lint.sh
 .PHONY: test-lint
 
-test-spec:
-	go test -v --tags=ocfexamples ocf-spec/0.0.1/examples/examples_test.go
-.PHONY: test-spec
+test-ocf-manifests:
+	./hack/test-ocf-manifests.sh
+.PHONY: test-ocf-manifests
 
 test-integration:
 	./hack/test-integration.sh

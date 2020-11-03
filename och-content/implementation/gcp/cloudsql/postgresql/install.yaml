@@ -1,0 +1,100 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.bitnami.postgresql # Computed during fetching the manifest
+  name: install
+  displayName: Install PostgreSQL database
+  description: Action which installs PostgreSQL database via Helm chart
+  documentationURL: https://github.com/bitnami/charts
+  supportURL: https://bitnami.com
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  tags:
+    cap.tag.cloud.provider.gcp:
+      revision: "0.1.0"
+
+spec:
+# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
+# Requires `gcp-sa` of type cap.type.gcp.auth.service-account artifact
+# Outputs additionally cap.type.gcp.cloudsql.instance artifact
+
+  appVersion: "10,11,12,13"
+
+  implements:
+    - name: cap.interface.database.postgresql.install
+      revision: "0.1.0"
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: "0.1.0"
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.gcp
+      alias: gcp
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: workflow
+        templates:
+          - name: workflow
+            steps:
+              - - name: provision
+                  template: provision
+              - - name: produce-config
+                  template: produce-config
+
+          - name: provision
+            outputs:
+              artifacts:
+                - name: cloudsql-instance
+                  globalName: cloudsql-instance
+                  path: "/out/cloudsql-instance"
+            container:
+# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
+#                      {{ .inlineAction(`
+#                          runnerInterface: gcp.run
+#                          args:
+#                            group: "sql"
+#                            command: "create"
+#                            generateName: true
+#                            configuration:
+#                              tier: "db-g1-small"
+#                              databaseVersion: "POSTGRES_{{ .Context.appVersion }}"
+#                              region: "us-central"
+#                        `) }}
+          - name: produce-config
+            inputs:
+              artifacts:
+                - name: cloudsql-instance
+                  path: "/in/cloudsql-instance"
+            outputs:
+              artifacts:
+                - name: postgresql-config
+                  globalName: postgresql-config
+                  path: "/out/postgresql-config"
+            container:
+              image: gcr.io/projectvoltron/postgresql-config-producer:0.1.0
+              command: [ "run.sh" ]
+              args:
+                - --cloudsql-instance-path
+                - "{{`{{inputs.artifacts.cloudsql-instance.path}}`}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -1,0 +1,69 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.runner.gcp # Computed during fetching the manifest
+  name: run
+  license:
+    name: "Apache 2.0"
+  displayName: Run Action for Google Cloud Platform Runner
+  description: Running GCP operations
+  documentationURL: https://cloud.google.com/sdk/gcloud/reference
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "318.x.x" # version of the gcloud CLI
+
+  implements:
+    - name: cap.core.interface.runner.generic.run
+      revision: "0.1.0"
+    - name: cap.interface.runner.helm.run
+      revision: "0.1.0"
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: "0.1.0"
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
+# Requires `gcp-sa` artifact
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: gcp
+        templates:
+          - name: gcp
+            inputs:
+              artifacts:
+              - name: gcp-sa
+                path: /gcp/sa.json
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/out/helm-release"
+            container:
+              image: gcr.io/projectvoltron/gcp-runner:0.1.0
+              command: [ "run.sh" ]
+              args:
+                - --params
+                - "{{ .Input.parameters }}"
+                - --credentials-path
+                - "{{`{{inputs.artifacts.gcp-sa.path}}`}}"
+
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -1,0 +1,68 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: instance
+  prefix: cap.type.gcp.cloudsql  # Computed during fetching the manifest
+  displayName: Google Cloud Platform CloudSQL instance
+  description: Defines CloudSQL instance in Google Cloud Platform
+  documentationURL: https://cloud.google.com/sql
+  supportURL: https://cloud.google.com/sql
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  tags:
+    cap.tag.cloud.provider.gcp:
+      revision: "0.1.0"
+spec:
+  # Based on https://cloud.google.com/sql/docs/postgres/instance-info#rest-v1beta4
+  # and https://cloud.google.com/sql/docs/mysql/instance-info#rest-v1beta4
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "$id": "cap.type.gcp.cloudsql.instance",
+        "type": "object",
+        "title": "The schema for GCP CloudSQL instance",
+        "examples": [
+          {
+            "name": "instance-id",
+            "project": "project-id",
+            "region": "asia-east1",
+            "databaseVersion": "MYSQL_5_7"
+          }
+        ],
+        "required": [
+            "name",
+            "project",
+            "region",
+            "databaseVersion"
+        ],
+        "properties": {
+          "name": {
+            "$id": "#/properties/name",
+            "type": "string",
+            "title": "The instance name"
+          },
+          "project": {
+            "$id": "#/properties/project",
+            "type": "string",
+            "title": "The project name"
+          },
+          "region": {
+            "$id": "#/properties/region",
+            "type": "string",
+            "title": "The region name"
+          },
+          "databaseVersion": {
+            "$id": "#/properties/databaseVersion",
+            "type": "string",
+            "title": "The database version"
+          }
+        },
+        "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

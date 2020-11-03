@@ -1,0 +1,140 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.attlasian.jira # Computed during fetching the manifest
+  name: install
+  displayName: Install Jira
+  description: Action which installs Jira via Helm chart
+  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
+  supportURL: https://mox.sh/helm/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
+  # Optional input: postgresql-db
+  # Outputs additionally:
+  # - postgresql artifact
+  # - helm chart artifact for Jira
+
+  appVersion: "7.x.x, 8.x.x"
+
+  implements:
+    - name: cap.interface.productivity.jira.install
+      revision: "0.1.0"
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: "0.1.0"
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: workflow
+        templates:
+          - name: workflow
+            steps:
+  #           {{ if ! .Input.typeInstances.postgresql-db }}
+              - - name: install-db
+                  template: install-db
+  #           {{ endif }}
+              - - name: install-jira
+                  template: install-jira
+                  arguments:
+                    artifacts:
+                      - name: postgresql-db
+                        from: "{{workflow.outputs.artifacts.postgresql-db}}"
+              - - name: produce-jira-config
+                  template: produce-config
+                  arguments:
+                    artifacts:
+                      - name: helm-release
+                        from: "{{workflow.outputs.artifacts.helm-release}}"
+
+          - name: install-db
+            outputs:
+              artifacts:
+                - name: postgresql-db
+                  globalName: postgresql-db
+                  path: "/out/postgresql-db"
+            container: |-
+              {{ actionFrom: postgresql.install }}
+
+          - name: install-jira
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/out/helm-release"
+            container:
+#            {{ inlineAction:
+#                 runnerInterface: helm.run
+#                 args:
+#                   command: "install"
+#                   generateName: true
+#                   namespace: "{{ .Context.namespace }}"
+#                   chart:
+#                     name: "postgresql"
+#                     repo: "https://charts.bitnami.com/bitnami"
+#                   values:
+#                     image:
+#                       tag: "{{ .Context.appVersion }}"
+#                       postgresql:
+#                         enabled: false # do not install Postgres along the Jira installation
+#                       databaseConnection:
+#                         host: jira-software-db
+#                         port: 5432
+#                         user: jirauser
+#                         password: "CHANGEME"
+#                         database: "dbname"
+#                     ingress:
+#                       enabled: true
+#                       ingress:
+#                         hosts:
+#                           - host: "{{ .Input.parameters.host }}"
+#                             paths: [ ]}
+          - name: produce-config
+            inputs:
+              artifacts:
+                - name: helm-release
+                  path: "/in/helm-release"
+            outputs:
+              artifacts:
+                - name: jira-config
+                  globalName: jira-config
+                  path: "/out/jira-config"
+            container:
+              image: gcr.io/projectvoltron/jira-config-producer:0.1.0
+              command: [ "run.sh" ]
+              args:
+                - --helm-release-path
+                - "{{`{{inputs.artifacts.helm-release.path}}`}}"
+
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

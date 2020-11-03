@@ -84,6 +84,12 @@
             }
           },
           "additionalProperties": false
+        },
+        "abstract": {
+          "$id": "#/properties/spec/properties/abstract",
+          "type": "boolean",
+          "default": false,
+          "description": "If true, the Interface cannot be implemented."
         }
       }
     }

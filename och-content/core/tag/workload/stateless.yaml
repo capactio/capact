@@ -1,0 +1,20 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Tag
+metadata:
+  name: stateless
+  prefix: cap.core.tag.workload  # Computed during fetching the manifest
+  displayName: Stateless Workload
+  description: A stateless application does not preserve its state and saves no data to persistent storage — all user and session data stays with the client.
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  iconURL: https://projectvoltron.dev/favicon.ico
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec: {}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

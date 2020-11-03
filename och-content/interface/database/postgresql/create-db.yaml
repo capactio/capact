@@ -1,0 +1,50 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.database.postgresql # Computed during fetching the manifest
+  name: create-db
+  displayName: "Create Database"
+  description: "Create database for existing PostgreSQL installation"
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
+# Required artifact cap.type.database.postgresql.config",
+
+spec:
+  input:
+    jsonSchema:
+      value: |-
+        {
+          "$schema": "http://json-schema.org/draft-07/schema",
+          "$ocfRefs": {
+            "inputType": {
+              "name": "cap.type.database.postgresql.database-input",
+              "revision": "0.1.0"
+            }
+          },
+          "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+        }
+  output:
+    jsonSchema:
+      value: |-
+        {
+          "$schema": "http://json-schema.org/draft-07/schema",
+          "$ocfRefs": {
+            "inputType": {
+              "name": "cap.type.database.postgresql.database",
+              "revision": "0.1.0"
+            }
+          },
+          "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+        }
+
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

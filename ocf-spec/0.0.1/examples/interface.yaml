@@ -23,7 +23,7 @@ spec:
           "$schema": "http://json-schema.org/draft-07/schema",
           "$ocfRefs": {
             "inputType": {
-              "name": "cap.type.cms.wordpress.install-output",
+              "name": "cap.type.cms.wordpress.install-input",
               "revision": "1.0.0"
             }
           },

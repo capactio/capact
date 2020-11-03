@@ -133,8 +133,9 @@ type InterfaceSignature struct {
 
 // A container for the Interface specification definition.
 type InterfaceSpec struct {
-	Input  Input  `json:"input"` // The input schema for Interface action.
-	Output Output `json:"output"`// The output schema for Interface action.
+	Abstract *bool  `json:"abstract,omitempty"`// If true, the Interface cannot be implemented.
+	Input    Input  `json:"input"`             // The input schema for Interface action.
+	Output   Output `json:"output"`            // The output schema for Interface action.
 }
 
 // The input schema for Interface action.

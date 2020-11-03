@@ -1,0 +1,18 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: InterfaceGroup
+metadata:
+  prefix: cap.interface.productivity # Computed during fetching the manifest
+  name: jira
+  displayName: "Jira"
+  description: "The #1 software development tool used by agile teams"
+  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
+  supportURL: https://www.atlassian.com/software/jira
+  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  maintainers:
+    - email: team@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
