@@ -14,6 +14,7 @@ IMAGE_TAG=adea064
 GET_IP_SERVICE=ifconfig.me
 NAMESPACE=voltron
 HELM_TEST_TIMEOUT=10m
+HELM_CHARTS_PATH=deploy/kubernetes/charts/voltron/charts
 CERT_MGR_TIMEOUT=120
 TF_VAR_region=europe-north1
 TF_VAR_cluster_name=voltron-${NAME}
