@@ -32,6 +32,7 @@ main() {
     voltron::update::images_on_kind
     voltron::install::charts
     voltron::install::update_hosts
+    voltron::install:trust_self_signed_cert
 
     shout "Development local cluster created successfully."
 }

@@ -169,7 +169,7 @@ kind::create_cluster() {
     kind create cluster \
       --name="${KIND_CLUSTER_NAME}" \
       --image="kindest/node:${KUBERNETES_VERSION}" \
-      --config "${REPO_DIR}/hack/kind.config.yaml" \
+      --config "${REPO_DIR}/hack/kind/config.yaml" \
       --wait=5m
 }
 
@@ -256,7 +256,7 @@ voltron::install::monitoring() {
 
 voltron::install::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
-    readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/dev-cluster-ingress-nginx.overrides.yaml"
+    readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/kind/overrides.ingress-nginx.yaml"
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
     echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
     helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
@@ -281,6 +281,28 @@ voltron::install::update_hosts() {
   HOSTS_FILE="/etc/hosts"
 
   grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null
+}
+
+voltron::install:trust_self_signed_cert() {
+  shout "- Trusting self-signed TLS certificate..."
+  CERT_PATH="${REPO_DIR}/hack/kind/domain.crt"
+  OS="$(uname)"
+
+  echo "Certificate path: ${CERT_PATH}"
+  echo "Detected OS: ${OS}"
+
+  case $OS in
+    'Linux')
+      sudo cp "${CERT_PATH}" /usr/local/share/ca-certificates/
+      sudo update-ca-certificates
+      ;;
+    'Darwin')
+      sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
+      ;;
+    *)
+      echo "Unsupported operating system. Please manually set the certificate ${CERT_PATH} as trusted for your OS."
+      ;;
+  esac
 }
 
 # Required envs:
