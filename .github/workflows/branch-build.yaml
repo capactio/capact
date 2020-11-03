@@ -184,7 +184,7 @@ jobs:
         run: | 
           for SERVICE in ${SERVICES}
           do  
-            helm upgrade ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
+            helm upgrade ${SERVICE} ${HELM_CHARTS_PATH}/${SERVICE} -f ${HELM_CHARTS_PATH}/${SERVICE}/values.yaml \
             --set global.containerRegistry.overrideTag=${DOCKER_TAG} --namespace ${NAMESPACE}
           done
 

@@ -71,7 +71,7 @@ jobs:
         run: | 
           for SERVICE in ${SERVICES}
           do  
-            helm install ${SERVICE} deploy/kubernetes/voltron/charts/${SERVICE} -f deploy/kubernetes/voltron/charts/${SERVICE}/values.yaml \
+            helm install ${SERVICE} ${HELM_CHARTS_PATH}/${SERVICE} -f ${HELM_CHARTS_PATH}/${SERVICE}/values.yaml \
             --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
           done
 
