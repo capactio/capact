@@ -27,9 +27,9 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 Motivation
 ----------
 
-The Voltron projects enables users easily define Actions that depends on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions. All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose we introduced the TypeInstance entity which is stored in Local OCH.
+The Voltron projects enable users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions. All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local OCH.
 
-Currently, we struggle with defining flow for passing, creating and deleting the TypeInstances. As a result, we cannot estimate work for artifacts implementation.
+Currently, we struggle with defining flow for passing, creating, and deleting the TypeInstances. As a result, we cannot estimate work for artifacts implementation.
 
 ### Goal
 
@@ -39,13 +39,13 @@ Currently, we struggle with defining flow for passing, creating and deleting the
 -	Define how Action can delete the TypeInstance from Local OCH.
 -	Define how to specify relations between generated TypeInstances by a given Action.
 -	[Define how the required and optional input TypeInstances should be defined.](#required-and-optional-input-typeinstances)
--	[Define how to handle optional input TypeInstances. For example, pass already existing database.](#handle-optional-input-typeinstances)
+-	[Define how to handle optional input TypeInstances. For example, pass an already existing database.](#handle-optional-input-typeinstances)
 
 ### Non-goal
 
--	Provide a working POC. Currently, we are in the early stage and providing POC is to complex as we do not have implemented the base logic.  
+-	Provide a working POC. Currently, we are in the early stage, and providing POC is too complex as we do not have implemented the base logic.  
 -	Define how to store the TypeInstance in Local OCH with the preservation of Type composition.
--	Define the final syntax for Action Workflow. This will be done in a separate task with taking into account the Argo Workflow syntax.  
+-	Define the final syntax for Action Workflow. This will be done in a separate task by taking into account the Argo Workflow syntax.  
 
 Proposal
 --------
@@ -54,7 +54,7 @@ General notes:
 
 1.	The required input TypeInstances (artifacts) are defined on Interfaces only.
 2.	The optional input TypeInstances are defined on Implementation only.
-3.	The input and output TypeInstances always have a name. This solves problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
+3.	The input and output TypeInstances always have a name. This solves the problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
 4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Alpha and GA. Can be considered once again after GA as this won't be a breaking change.
 
 ### Use cases
@@ -67,11 +67,11 @@ General notes:
 
 **Suggested solution**
 
-We have the Interface entity which defines the input and output parameters which becomes Action signature.
+We have the Interface entity which defines the input and output parameters which become Action signature.
 
-The **required** input TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangable and do not introduce new requirements.
+The **required** input TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangeable and do not introduce new requirements.
 
-The **optional** input TypeInstances should be defined on Implementation. Only Implementation knows that something can be swapped out, e.g. user can pass an existing database and defined workflow can handle such situation and reuse the given database instead of creating a new one.
+The **optional** input TypeInstances should be defined on Implementation. The only Implementation knows that something can be swapped out, e.g. users can pass an existing database and defined workflow can handle such a situation and reuse the given database instead of creating a new one.
 
 Syntax for Interface:
 
@@ -88,11 +88,11 @@ spec:
       # pass as an input one instance of cap.type.cms.wordpress.config Type based on ID that user should provide.
       backend_db: # unique name that needs to be used in Implementation
         type: cap.type.db.mysql.config
-        permission: readWrite
+        permissions: ["read", "update"]
       # pass as an input all available instances of cap.type.cms.wordpress.config Type
       all_available_db:
         type: []cap.type.db.mysql.config
-        permission: readWrite
+        permissions: ["read", "update"]
   output:
     typeInstances: # it's an TypeInstance that is created as a result of executed action
       wp_config: 
@@ -113,13 +113,13 @@ There is an option to define `typeInstances` as a list instead of map:
     typeInstances:
       - name: backend_db
         type: cap.type.db.mysql.config
-        permission: readWrite 
+        permissions: ["read", "update"] 
       - name: all_available_db
         type: []cap.type.db.mysql.config
-        permission: readWrite
+        permissions: ["read", "update"]
 ```
 
-Unfortunately, in that way we cannot easily enforce that the names won't be repeated, and we cannot benefit from native YAML support.
+Unfortunately, in that way, we cannot easily enforce that the names won't be repeated, and we cannot benefit from native YAML syntax support.
 
 #### Identify Action behavior (create/delete/upsert/update/get/list)
 
@@ -130,7 +130,7 @@ Unfortunately, in that way we cannot easily enforce that the names won't be repe
 
 **Background**
 
-There should be an easy way to define the Action behavior. It's necessary because our Engine needs to know how to handle specified TypeInstances. Additionally, this is used on UI to filter actions which are not depended on other TypeInstances, e.g. Actions is not upgrade, delete, etc.
+There should be an easy way to define Action behavior. It's necessary because our Engine needs to know how to handle specified TypeInstances. Additionally, this is used on UI to filter actions that are not dependent on other TypeInstances, e.g. Actions is not upgrade, delete, etc.
 
 Identified operations:
 
@@ -143,7 +143,14 @@ Identified operations:
 
 **Suggested solution**
 
-Use the information from the Input/Output property defined in Interface.
+Use the information from the Input/Output property defined in Interface. Permission allows us to determine Action behavior.
+
+| Permission | Description                                                                           |
+|------------|---------------------------------------------------------------------------------------|
+| `read`     | Specify that the input artifact is in read-only mode.                                 |
+| `create`   | This is automatically set for output artifacts. Core Action stores them in Local OCH. |
+| `update`   | Specify that the input artifact is modified in Action.                                |
+| `delete`   | Specify that the input artifact is deleted by Action.                                 |
 
 -	Get operation
 
@@ -152,7 +159,7 @@ Use the information from the Input/Output property defined in Interface.
 	  typeInstances:
 	    - name: backend_db
 	      type: cap.type.db.mysql.config
-	      permission: read 
+	      permissions: ["read"] 
 	```
 
 -	List operation
@@ -162,7 +169,7 @@ Use the information from the Input/Output property defined in Interface.
 	  typeInstances:
 	    - name: backend_db
 	      type: []cap.type.db.mysql.config # <- identifies a list of objects
-	      permission: read 
+	      permissions: ["read"] 
 	```
 
 -	Create operation
@@ -177,7 +184,11 @@ Use the information from the Input/Output property defined in Interface.
 -	Delete operation
 
 	```yaml
-	To be figure out.
+	input: 
+	  typeInstances:
+	    - name: backend_db
+	      type: cap.type.db.mysql.config
+	      permissions: ["delete"] 
 	```
 
 -	Update operation
@@ -186,8 +197,8 @@ Use the information from the Input/Output property defined in Interface.
 	input: 
 	  typeInstances:
 	    - name: backend_db
-	      type: []cap.type.db.mysql.config # <- identifies a list of objects
-	      permission: read 
+	      type: cap.type.db.mysql.config
+	      permissions: ["read", "update"] 
 	```
 
 -	Upsert
@@ -230,7 +241,7 @@ typeInstances:
    - type: cap.type.database.mysql.config
 ```
 
-This seems to be quite verbose and increase the overall boilerplate which is already huge.
+This seems to be quite verbose and increases the overall boilerplate which is already huge.
 
 #### Populate an Action with the input TypeInstances
 
@@ -242,7 +253,7 @@ This seems to be quite verbose and increase the overall boilerplate which is alr
 
 If Action requires input TypeIntstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{workflow.outputs.artifacts.db_config}}`.
 
-The global Argo artifacts seams to be an only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
+The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 
 **Implementation workflow**
 
@@ -289,6 +300,7 @@ spec:
           from: "{{workflow.outputs.artifacts.mysql-config}}"
 ```
 
+
 #### Handle optional input TypeInstances
 
 **Actor**
@@ -297,11 +309,11 @@ spec:
 
 **Background**
 
-Based on the solution from [this](#required-and-optional-input-typeinstances) section, the optional artifacts are defined on Implementation. User is able to pass the optional TypeInstance during the render process. The workflow developer should be able to handle that situation and if a given TypeInstance is available then skip a given step(s).
+Based on the solution from [this](#required-and-optional-input-typeinstances) section, the optional artifacts are defined on Implementation. The user is able to pass the optional TypeInstance during the render process. The workflow developer should be able to handle that situation and if a given TypeInstance is available then skip a given step(s).
 
 **Suggested solution**
 
-Introduce the template language that can be used by Action workflow developer. This can be resolved during the render action by Voltron Engine.
+Introduce the template language that can be used by Action workflow developers. This can be resolved during the render action by Voltron Engine.
 
 **Implementation workflow**
 
@@ -384,7 +396,7 @@ spec:
 
 **Alternatives**
 
-Instead of giving Action developer option to use the template language we can determine that directly during render action. Step could be automatically removed if the artifact name specified as an output of the action matches with the one which was passed to the Actions. Unfortunately, this solution hides a lot and do not support more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed.
+Instead of giving the Action developer the option to use the template language we can determine that directly during render action. The step could be automatically removed if the artifact name specified as an output of the action matches with the one which was passed to the Actions. Unfortunately, this solution hides a lot and does not support a more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed.
 
 ### Consequences
 
@@ -398,7 +410,7 @@ TODO
 
 1.	Is the implementation allowed to register more objects than those listed in the interface? How to validate that? Output artifacts are defined both on Interface and Implementation?
 
-2.	Is the implementation allowed to register less object than those listed in the interface? How to validate that?
+2.	Is the implementation allowed to register fewer objects than those listed in the interface? How to validate that?
 
 3.	Is the implementation allowed to register object which extends the type defined on Interface? How to allow that? Can be validated behind the scene?
 
