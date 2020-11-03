@@ -43,13 +43,13 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Action struct {
-		Action                func(childComplexity int) int
 		CancelledBy           func(childComplexity int) int
 		CreatedAt             func(childComplexity int) int
 		CreatedBy             func(childComplexity int) int
 		ID                    func(childComplexity int) int
 		Input                 func(childComplexity int) int
 		Output                func(childComplexity int) int
+		Path                  func(childComplexity int) int
 		RenderedAction        func(childComplexity int) int
 		RenderingAdvancedMode func(childComplexity int) int
 		RunBy                 func(childComplexity int) int
@@ -108,8 +108,8 @@ type ComplexityRoot struct {
 	}
 
 	RunnerStatus struct {
-		Status func(childComplexity int) int
-		Type   func(childComplexity int) int
+		Interface func(childComplexity int) int
+		Status    func(childComplexity int) int
 	}
 
 	UserInfo struct {
@@ -146,13 +146,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
-
-	case "Action.action":
-		if e.complexity.Action.Action == nil {
-			break
-		}
-
-		return e.complexity.Action.Action(childComplexity), true
 
 	case "Action.cancelledBy":
 		if e.complexity.Action.CancelledBy == nil {
@@ -195,6 +188,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Action.Output(childComplexity), true
+
+	case "Action.path":
+		if e.complexity.Action.Path == nil {
+			break
+		}
+
+		return e.complexity.Action.Path(childComplexity), true
 
 	case "Action.renderedAction":
 		if e.complexity.Action.RenderedAction == nil {
@@ -453,19 +453,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Actions(childComplexity, args["filter"].([]*ActionFilter)), true
 
+	case "RunnerStatus.interface":
+		if e.complexity.RunnerStatus.Interface == nil {
+			break
+		}
+
+		return e.complexity.RunnerStatus.Interface(childComplexity), true
+
 	case "RunnerStatus.status":
 		if e.complexity.RunnerStatus.Status == nil {
 			break
 		}
 
 		return e.complexity.RunnerStatus.Status(childComplexity), true
-
-	case "RunnerStatus.type":
-		if e.complexity.RunnerStatus.Type == nil {
-			break
-		}
-
-		return e.complexity.RunnerStatus.Type(childComplexity), true
 
 	case "UserInfo.extra":
 		if e.complexity.UserInfo.Extra == nil {
@@ -563,6 +563,11 @@ Arbitrary data
 scalar Any
 
 """
+Full path of a given node, e.g. cap.core.type.platform.kubernetes
+"""
+scalar NodePath
+
+"""
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
 input ActionDetailsInput {
@@ -588,7 +593,7 @@ input InputArtifactData {
 }
 
 """
-Action describes user intention to resolve & execute a given Implementation
+Action describes user intention to resolve & execute a given Interface or Implementation.
 """
 type Action {
     id: ID!
@@ -597,7 +602,11 @@ type Action {
     input: ActionInput # resolver which reads from Secret/ConfigMap
     output: ActionOutput
 
-    action: String! # full path for the Implementation or Interface
+    """
+    Full path for the Implementation or Interface
+    """
+    path: NodePath!
+
     renderedAction: Any
     renderingAdvancedMode: ActionRenderingAdvancedMode
 
@@ -627,10 +636,10 @@ type ActionStatus {
 }
 
 """
-Additional Action status from the built-in Runner
+Additional Action status from the Runner
 """
 type RunnerStatus {
-    type: String! # Type of a runner
+    interface: NodePath! # Path of the Runner Interface
     status: Any # status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 }
 
@@ -655,7 +664,7 @@ Describes input artifact of an Action
 """
 type InputArtifact {
     alias: String!
-    typePath: String! # Full path of the corresponding Type
+    typePath: NodePath! # Full path of the corresponding Type
     typeInstanceID: ID
     value: Any # resolver for TypeInstance value
     optional: Boolean!
@@ -667,7 +676,7 @@ Describes output artifact of an Action
 type OutputArtifact {
     name: String!
     typeInstanceID: ID!
-    typePath: String! # Full path of the corresponding Type
+    typePath: NodePath! # Full path of the corresponding Type
     value: Any # resolver for TypeInstance value
 }
 
@@ -1057,7 +1066,7 @@ func (ec *executionContext) _Action_output(ctx context.Context, field graphql.Co
 	return ec.marshalOActionOutput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionOutput(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Action_action(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
+func (ec *executionContext) _Action_path(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1075,7 +1084,7 @@ func (ec *executionContext) _Action_action(ctx context.Context, field graphql.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Action, nil
+		return obj.Path, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1089,7 +1098,7 @@ func (ec *executionContext) _Action_action(ctx context.Context, field graphql.Co
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Action_renderedAction(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
@@ -1689,7 +1698,7 @@ func (ec *executionContext) _InputArtifact_typePath(ctx context.Context, field g
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputArtifact_typeInstanceID(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
@@ -2145,7 +2154,7 @@ func (ec *executionContext) _OutputArtifact_typePath(ctx context.Context, field 
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _OutputArtifact_value(ctx context.Context, field graphql.CollectedField, obj *OutputArtifact) (ret graphql.Marshaler) {
@@ -2332,7 +2341,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RunnerStatus_type(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _RunnerStatus_interface(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -2350,7 +2359,7 @@ func (ec *executionContext) _RunnerStatus_type(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Type, nil
+		return obj.Interface, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2364,7 +2373,7 @@ func (ec *executionContext) _RunnerStatus_type(ctx context.Context, field graphq
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
@@ -3753,8 +3762,8 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 			out.Values[i] = ec._Action_input(ctx, field, obj)
 		case "output":
 			out.Values[i] = ec._Action_output(ctx, field, obj)
-		case "action":
-			out.Values[i] = ec._Action_action(ctx, field, obj)
+		case "path":
+			out.Values[i] = ec._Action_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4109,8 +4118,8 @@ func (ec *executionContext) _RunnerStatus(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RunnerStatus")
-		case "type":
-			out.Values[i] = ec._RunnerStatus_type(ctx, field, obj)
+		case "interface":
+			out.Values[i] = ec._RunnerStatus_interface(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4557,6 +4566,21 @@ func (ec *executionContext) marshalNInputArtifact2ᚖprojectvoltronᚗdevᚋvolt
 func (ec *executionContext) unmarshalNInputArtifactData2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputArtifactData(ctx context.Context, v interface{}) (*InputArtifactData, error) {
 	res, err := ec.unmarshalInputInputArtifactData(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNNodePath2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNNodePath2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) marshalNOutputArtifact2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐOutputArtifactᚄ(ctx context.Context, sel ast.SelectionSet, v []*OutputArtifact) graphql.Marshaler {

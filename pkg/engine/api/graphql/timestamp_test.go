@@ -1,4 +1,4 @@
-package graphql
+package graphql_test
 
 import (
 	"bytes"
@@ -7,15 +7,17 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 )
 
 func TestTimestampUnmarshalGQL(t *testing.T) {
 	//given
-	var timestamp Timestamp
+	var timestamp graphql.Timestamp
 	fixTime := "2002-10-02T10:00:00-05:00"
 	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00-05:00")
 	assert.NoError(t, err)
-	expectedTimestamp := Timestamp(parsedTime)
+	expectedTimestamp := graphql.Timestamp(parsedTime)
 
 	//when
 	err = timestamp.UnmarshalGQL(fixTime)
@@ -28,7 +30,7 @@ func TestTimestampUnmarshalGQL(t *testing.T) {
 func TestTimestampUnmarshalGQLError(t *testing.T) {
 	t.Run("invalid input", func(t *testing.T) {
 		//given
-		var timestamp Timestamp
+		var timestamp graphql.Timestamp
 		invalidInput := 123
 
 		//when
@@ -37,12 +39,11 @@ func TestTimestampUnmarshalGQLError(t *testing.T) {
 		//then
 		require.Error(t, err)
 		assert.Empty(t, timestamp)
-
 	})
 
 	t.Run("can't parse time", func(t *testing.T) {
 		//given
-		var timestamp Timestamp
+		var timestamp graphql.Timestamp
 		invalidTime := "invalid time"
 
 		//when
@@ -51,7 +52,6 @@ func TestTimestampUnmarshalGQLError(t *testing.T) {
 		//then
 		require.Error(t, err)
 		assert.Empty(t, timestamp)
-
 	})
 }
 
@@ -59,7 +59,7 @@ func TestTimestampMarshalGQL(t *testing.T) {
 	//given
 	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00-05:00")
 	assert.NoError(t, err)
-	fixTimestamp := Timestamp(parsedTime)
+	fixTimestamp := graphql.Timestamp(parsedTime)
 	expectedTimestamp := `"2002-10-02T10:00:00-05:00"`
 	buf := bytes.Buffer{}
 
@@ -72,7 +72,7 @@ func TestTimestampMarshalGQL(t *testing.T) {
 
 func TestTimestampUmarshalJSON(t *testing.T) {
 	// given
-	ts := &Timestamp{}
+	ts := &graphql.Timestamp{}
 
 	// when
 	err := ts.UnmarshalJSON([]byte(`"2002-10-02T10:00:00-05:00"`))

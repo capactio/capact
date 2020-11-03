@@ -28,7 +28,11 @@ var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
 
-const CRD_DIRECTORY = "../../../deploy/kubernetes/voltron/crds"
+const (
+	crdDirectory = "../../../deploy/kubernetes/crds"
+	maxConcurrentReconciles = 1
+)
+
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -44,7 +48,7 @@ var _ = BeforeSuite(func(done Done) {
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
 		ErrorIfCRDPathMissing: true,
-		CRDDirectoryPaths:     []string{toOSPath(CRD_DIRECTORY)},
+		CRDDirectoryPaths:     []string{toOSPath(crdDirectory)},
 	}
 
 	var err error
@@ -67,7 +71,7 @@ var _ = BeforeSuite(func(done Done) {
 	err = (&ActionReconciler{
 		Client: k8sManager.GetClient(),
 		Log:    ctrl.Log.WithName("controllers").WithName("Action"),
-	}).SetupWithManager(k8sManager)
+	}).SetupWithManager(k8sManager, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

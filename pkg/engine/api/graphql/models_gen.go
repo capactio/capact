@@ -8,13 +8,14 @@ import (
 	"strconv"
 )
 
-// Action describes user intention to resolve & execute a given Implementation
+// Action describes user intention to resolve & execute a given Interface or Implementation.
 type Action struct {
-	ID                    string                       `json:"id"`
-	CreatedAt             Timestamp                    `json:"createdAt"`
-	Input                 *ActionInput                 `json:"input"`
-	Output                *ActionOutput                `json:"output"`
-	Action                string                       `json:"action"`
+	ID        string        `json:"id"`
+	CreatedAt Timestamp     `json:"createdAt"`
+	Input     *ActionInput  `json:"input"`
+	Output    *ActionOutput `json:"output"`
+	// Full path for the Implementation or Interface
+	Path                  string                       `json:"path"`
 	RenderedAction        interface{}                  `json:"renderedAction"`
 	RenderingAdvancedMode *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
 	CreatedBy             *UserInfo                    `json:"createdBy"`
@@ -95,10 +96,10 @@ type OutputArtifact struct {
 	Value          interface{} `json:"value"`
 }
 
-// Additional Action status from the built-in Runner
+// Additional Action status from the Runner
 type RunnerStatus struct {
-	Type   string      `json:"type"`
-	Status interface{} `json:"status"`
+	Interface string      `json:"interface"`
+	Status    interface{} `json:"status"`
 }
 
 // Stores user information

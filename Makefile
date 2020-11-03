@@ -4,8 +4,10 @@
 export GO111MODULE = on
 # enable consistent Go 1.12/1.13 GOPROXY behavior.
 export GOPROXY = https://proxy.golang.org
+# enable the BuildKit builder in the Docker CLI.
+export DOCKER_BUILDKIT = 1
 
-DOCKER_PUSH_REPOSITORY ?= gcr.io/projectvoltron
+DOCKER_REPOSITORY ?= gcr.io/projectvoltron
 DOCKER_TAG ?= latest
 
 all: generate build-all-images test-spec test-unit test-lint
@@ -17,10 +19,16 @@ all: generate build-all-images test-spec test-unit test-lint
 
 APPS = gateway k8s-engine och
 TESTS = e2e
-INFRA = json-go-gen
+INFRA = json-go-gen graphql-schema-linter
 
 # All images
-build-all-images: $(addprefix build-app-image-,$(APPS)) $(addprefix build-test-image-,$(TESTS)) $(addprefix build-infra-image-,$(INFRA))
+build-all-apps-images: $(addprefix build-app-image-,$(APPS))
+.PHONY: build-all-apps-images
+
+build-all-tests-images: $(addprefix build-test-image-,$(TESTS))
+.PHONY: build-all-tests-images
+
+build-all-images: build-all-apps-images build-all-tests-images $(addprefix build-infra-image-,$(INFRA))
 .PHONY: build-all-images
 
 push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA))
@@ -29,12 +37,12 @@ push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-ima
 # App images
 build-app-image-%:
 	$(eval APP := $*)
-	docker build --build-arg COMPONENT=$(APP) -t $(DOCKER_PUSH_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+	docker build --build-arg COMPONENT=$(APP) -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-%
 
 push-app-image-%:
 	$(eval APP := $*)
-	docker push $(DOCKER_PUSH_REPOSITORY)/$(APP):$(DOCKER_TAG)
+	docker push $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
 .PHONY: push-apps-images-%
 
 # Test images
@@ -43,23 +51,25 @@ build-test-image-%:
 	docker build --build-arg COMPONENT=$(APP) \
 		--build-arg BUILD_CMD="go test -v -c" \
 		--build-arg SOURCE_PATH="./test/$(APP)/$(APP)_test.go" \
-		-t $(DOCKER_PUSH_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) .
+		-t $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) .
 .PHONY: build-test-image
 
 push-test-image-%:
 	$(eval APP := $*)
-	docker push $(DOCKER_PUSH_REPOSITORY)/$(APP)-test:$(DOCKER_TAG)
+	docker push $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG)
 .PHONY: push-test-image
 
 # Infra images
+INFRA_IMAGES_DIR = ./hack/images
+
 build-infra-image-%:
 	$(eval APP := $*)
-	docker build -t $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f ./hack/images/$(APP)/Dockerfile .
+	docker build -t $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f $(INFRA_IMAGES_DIR)/$(APP)/Dockerfile $(INFRA_IMAGES_DIR)/$(APP)
 .PHONY: build-infra-image
 
 push-infra-image-%:
 	$(eval APP := $*)
-	docker push $(DOCKER_PUSH_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
+	docker push $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
 .PHONY: push-infra-image
 
 ###########
@@ -67,11 +77,11 @@ push-infra-image-%:
 ###########
 
 test-unit:
-	./hack/run-test-unit.sh
+	./hack/test-unit.sh
 .PHONY: test-unit
 
 test-lint:
-	./hack/run-lint.sh
+	./hack/lint.sh
 .PHONY: test-lint
 
 test-spec:
@@ -79,15 +89,15 @@ test-spec:
 .PHONY: test-spec
 
 test-integration:
-	./hack/run-test-integration.sh
+	./hack/test-integration.sh
 .PHONY: test-integration
 
 test-k8s-controller:
-	./hack/run-test-k8s-controller.sh
+	./hack/test-k8s-controller.sh
 .PHONY: test-controller
 
 test-generated:
-	./hack/run-test-generated.sh
+	./hack/test-generated.sh
 .PHONY: test-generated
 
 test-cover-html: test-unit
@@ -118,13 +128,17 @@ gen-graphql-resources:
 ###############
 
 dev-cluster:
-	./hack/run-dev-cluster.sh
+	./hack/dev-cluster-create.sh
 .PHONY: dev-cluster
 
 dev-cluster-update:
-	./hack/run-dev-cluster-update.sh
+	./hack/dev-cluster-update.sh
 .PHONY: dev-cluster-update
 
+dev-cluster-delete:
+	./hack/dev-cluster-delete.sh
+.PHONY: dev-cluster-delete
+
 fix-lint-issues:
-	LINT_FORCE_FIX=true ./hack/run-lint.sh
+	LINT_FORCE_FIX=true ./hack/lint.sh
 .PHONY: fix-lint

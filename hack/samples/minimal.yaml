@@ -1,0 +1,6 @@
+apiVersion: core.projectvoltron.dev/v1alpha1
+kind: Action
+metadata:
+  name: "minimal"
+spec:
+  path: "cap.interface.database.mysql.install"

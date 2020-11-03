@@ -2,17 +2,17 @@
   "projects": {
     "engine": {
       "includes": [
-        "./pkg/engine/api/**"
+        "./pkg/engine/api/graphql/**"
       ]
     },
     "localOCH": {
       "includes": [
-        "./pkg/och/api/local/**"
+        "./pkg/och/api/graphql/local/**"
       ]
     },
     "publicOCH": {
       "includes": [
-        "./pkg/och/api/public/**"
+        "./pkg/och/api/graphql/public/**"
       ]
     }
   }

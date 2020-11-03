@@ -1,0 +1,72 @@
+# Default values for engine.
+
+image:
+  name: k8s-engine
+  pullPolicy: IfNotPresent
+
+controller:
+  metricsPort: "8081"
+
+replicaCount: 1
+
+imagePullSecrets: []
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+resources:
+   limits:
+     cpu: 100m
+     memory: 32Mi
+   requests:
+     cpu: 80m
+     memory: 16Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+global:
+  containerRegistry:
+    path: gcr.io/projectvoltron
+
+ingress:
+  enabled: true
+  redirect: 
+  annotations:
+    tls_acme: "true"
+    class: "nginx"    
+    issuer: "letsencrypt-stag"
+    acmechallengetype: "http01"
+
+  path: /
+        
+  hosts:
+    - engine.dev.cluster.projectvoltron.dev
+  tls: 
+    - secretName: och-public-tls
+      hosts:
+        - engine.dev.cluster.projectvoltron.dev

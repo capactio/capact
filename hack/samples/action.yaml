@@ -1,6 +1,0 @@
-apiVersion: core.projectvoltron.dev/v1alpha1
-kind: Action
-metadata:
-  name: "hakuna-matata"
-spec:
-  foo: "testing"

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 name: Master build
 
 on: 
@@ -50,6 +51,47 @@ jobs:
   
   
   prepare-matrix:
+=======
+name: Branch build
+
+on:
+  push:
+    paths:
+      - "**.go"
+      - "**.graphql"
+      - ".github/workflows/**"
+      - "**.sh"
+      - "Makefile"
+    branches:
+      - $default-branch
+
+jobs:
+  entry-tests:
+    name: Lint and test code
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run linting
+        run: |
+          make test-lint
+      - name: Run unit tests
+        run: make test-unit
+      - name: Check generated files
+        run: |
+          make test-generated
+
+  prepare-matrix:
+    name: Prepare components build matrix
+>>>>>>> master
     runs-on: ubuntu-latest
     outputs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
@@ -60,7 +102,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: setup env
+<<<<<<< HEAD
         run: . ./env_setup.sh
+=======
+        run: . ./hack/ci/setup-env.sh
+>>>>>>> master
       - id: set-matrix-app
         run: echo "::set-output ${APPS}"
       - id: set-matrix-test
@@ -68,11 +114,18 @@ jobs:
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
 
+<<<<<<< HEAD
 
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
     needs: prepare-matrix 
+=======
+  build-app:
+    name: Build ${{ matrix.APP }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+>>>>>>> master
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
 
@@ -83,10 +136,17 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
+<<<<<<< HEAD
       - name: Setup env
         run: |
           . ./env_setup.sh
       - name: Setup golang
+=======
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+>>>>>>> master
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -94,11 +154,18 @@ jobs:
       - run: make build-app-image-${{ matrix.APP }}
       - run: make push-app-image-${{ matrix.APP }}
 
+<<<<<<< HEAD
 
   build-tests:
     name: Build ${{ matrix.TEST }}
     runs-on: ubuntu-latest
     needs: prepare-matrix 
+=======
+  build-tests:
+    name: Build ${{ matrix.TEST }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+>>>>>>> master
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
 
@@ -109,10 +176,17 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
+<<<<<<< HEAD
       - name: Setup env
         run: |
           . ./env_setup.sh
       - name: Setup golang
+=======
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+>>>>>>> master
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -123,7 +197,11 @@ jobs:
   build-infra:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: prepare-matrix 
+=======
+    needs: prepare-matrix
+>>>>>>> master
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
 
@@ -134,10 +212,17 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCR_CREDS }}
           export_default_credentials: true
+<<<<<<< HEAD
       - name: Setup env
         run: |
           . ./env_setup.sh
       - name: Setup golang
+=======
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+>>>>>>> master
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
@@ -148,6 +233,7 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: [build-app, build-infra, build-tests]    
     steps:    
       - name: Checkout code
@@ -211,3 +297,24 @@ jobs:
           done
 
 
+=======
+    needs: [build-app, build-infra, build-tests]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+      - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
+        run: |
+          make test-integration
+>>>>>>> master

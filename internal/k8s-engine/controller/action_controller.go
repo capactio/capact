@@ -9,16 +9,18 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller"
 
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
-// ActionReconciler reconciles a Action object
+// ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
 	Log logr.Logger
 }
 
+// NewActionReconciler returns the ActionReconciler instance.
 func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
 	return &ActionReconciler{Client: client, Log: log}
 }
@@ -27,6 +29,7 @@ func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconcile
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=create
 
+// Reconcile handles the reconcile logic for the Action CR.
 func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	var (
 		ctx = context.Background()
@@ -76,8 +79,11 @@ func (r *ActionReconciler) dummyJob(action corev1alpha1.Action) batchv1.Job {
 	}
 }
 
-func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentReconciles int) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1alpha1.Action{}).
+		WithOptions(controller.Options{
+			MaxConcurrentReconciles: maxConcurrentReconciles,
+		}).
 		Complete(r)
 }
