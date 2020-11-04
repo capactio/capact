@@ -18,6 +18,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
     + [Required and optional input TypeInstances](#required-and-optional-input-typeinstances)
     + [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
     + [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
+    + [Delete the TypeInstance from Local OCH by Action.](#delete-the-typeinstance-from-local-och-by-action)
     + [Handle optional input TypeInstances](#handle-optional-input-typeinstances)
   * [Consequences](#consequences)
 - [TODO](#todo)
@@ -36,7 +37,7 @@ Currently, we struggle with defining flow for passing, creating, and deleting th
 -	[Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.](#identify-action-behavior-createdeleteupsertupdategetlist)
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
 -	Define how to upload the generated TypeInstance from Action workflow to Local OCH.
--	Define how Action can delete the TypeInstance from Local OCH.
+-	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
 -	Define how to specify relations between generated TypeInstances by a given Action.
 -	[Define how the required and optional input TypeInstances should be defined.](#required-and-optional-input-typeinstances)
 -	[Define how to handle optional input TypeInstances. For example, pass an already existing database.](#handle-optional-input-typeinstances)
@@ -300,6 +301,83 @@ spec:
           from: "{{workflow.outputs.artifacts.mysql-config}}"
 ```
 
+#### Delete the TypeInstance from Local OCH by Action.
+
+**Actors**
+
+-	Voltron Engine
+
+**Suggested solution**
+
+Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` permission. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have `delete` permission.
+
+**Example**
+
+Interface:
+
+```yaml
+kind: Interface
+metadata:
+  prefix: cap.interface.db.mysql
+  name: uninstall
+spec:
+  input: 
+    typeInstances:
+      mysql-config:
+        type: cap.type.db.mysql.config
+        permissions: ["read", "delete"]
+```
+
+Implementation workflow:
+
+```yaml
+action:
+type: argo.run
+args:
+  workflow:
+    steps:
+      - name: mysql-delete-db
+        inputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+Rendered Implementation workflow:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    # Download artifacts from Local OCH
+    - name: downloads-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+      outputs:
+        artifacts:
+        - name: mysql-config
+          path: /tmp/mysql-config
+          globalName: mysql-config
+    # Steps from Implementation workflow
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+    # Deletes artifacts from Local OCH 
+    - name: delete-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+```
 
 #### Handle optional input TypeInstances
 
@@ -414,8 +492,6 @@ TODO
 
 3.	Is the implementation allowed to register object which extends the type defined on Interface? How to allow that? Can be validated behind the scene?
 
-4.	How and when to delete the instance from local OCH?
+4.	Define relations between artifacts (Artifacts group in the manifest?)
 
-5.	Define relations between artifacts (Artifacts group in the manifest?)
-
-6.	nice to have: if possible, unify the artifacts' definition with requires section
+5.	nice to have: if possible, unify the artifacts' definition with requires section
