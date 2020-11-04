@@ -35,13 +35,13 @@ main() {
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
       shout "Skipping updating /etc/hosts cause DISABLE_HOSTS_UPDATE is set to true."
     else
-      voltron::update::hosts
+      host::update::voltron_hosts
     fi
 
     if [[ "${DISABLE_ADDING_TRUSTED_CERT:-"false"}" == "true" ]]; then
       shout "Skipping setting self-signed TLS certificate as trusted cause DISABLE_ADDING_TRUSTED_CERT is set to true."
     else
-      voltron::install:trust_self_signed_cert
+      host::install:trust_self_signed_cert
     fi
 
     shout "Development local cluster created successfully."

@@ -273,7 +273,7 @@ voltron::install::ingress_controller() {
 }
 
 # Updates /etc/hosts with all Voltron subdomains.
-voltron::update::hosts() {
+host::update::voltron_hosts() {
   shout "- Updating /etc/hosts..."
   readonly DOMAIN="voltron.local"
   readonly VOLTRON_HOSTS=("gateway")
@@ -281,14 +281,14 @@ voltron::update::hosts() {
   LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
   HOSTS_FILE="/etc/hosts"
 
-  grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null
+  grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
 }
 
 # Sets self-signed wildcard TLS certificate as trusted
 #
 # Required envs:
 #  - REPO_DIR
-voltron::install:trust_self_signed_cert() {
+host::install:trust_self_signed_cert() {
   shout "- Trusting self-signed TLS certificate..."
   CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
   OS="$(host::os)"
