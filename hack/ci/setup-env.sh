@@ -2,6 +2,9 @@
 
 echo "Setting up CI environmental variables..."
 export NAME="dev3"
+export APPS="gateway k8s-engine och"
+export TESTS="e2e"
+export INFRAS="json-go-gen"
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.15.2
 SKIP_DEPS_INSTALLATION=false
@@ -37,17 +40,15 @@ else
   echo "DOCKER_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
 fi
 
-APPS="gateway k8s-engine och"
+
 APPS=$(echo 'name=matrix::{"include":['; for APP in ${APPS}; do echo {\"APP\":\"${APP}\"},; done; echo ']}' |tr -d "\n")
 export APPS=$(echo ${APPS} |sed 's/}, ]/} ]/g' )
 echo "APPS=${APPS}" >>"$GITHUB_ENV"
 
-TESTS="e2e"
 TESTS=$(echo 'name=matrix::{"include":['; for TEST in ${TESTS}; do echo {\"TEST\":\"${TEST}\"},; done; echo ']}' |tr -d "\n")
 export TESTS=$(echo ${TESTS} |sed 's/}, ]/} ]/g' )
 echo "TESTS=${TESTS}" >>"$GITHUB_ENV"
 
-INFRAS="json-go-gen"
 INFRAS=$(echo 'name=matrix::{"include":['; for INFRA in ${INFRAS}; do echo {\"INFRA\":\"${INFRA}\"},; done; echo ']}' |tr -d "\n")
 export INFRAS=$(echo ${INFRAS} |sed 's/}, ]/} ]/g' )
 echo "INFRAS=${INFRAS}" >>"$GITHUB_ENV"
