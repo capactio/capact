@@ -272,7 +272,8 @@ voltron::install::ingress_controller() {
       --timeout=90s
 }
 
-voltron::install::update_hosts() {
+# Updates /etc/hosts with all Voltron subdomains.
+voltron::update::hosts() {
   shout "- Updating /etc/hosts..."
   readonly DOMAIN="voltron.local"
   readonly VOLTRON_HOSTS=("gateway")
@@ -283,24 +284,28 @@ voltron::install::update_hosts() {
   grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null
 }
 
+# Sets self-signed wildcard TLS certificate as trusted
+#
+# Required envs:
+#  - REPO_DIR
 voltron::install:trust_self_signed_cert() {
   shout "- Trusting self-signed TLS certificate..."
   CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
-  OS="$(uname)"
+  OS="$(host::os)"
 
   echo "Certificate path: ${CERT_PATH}"
   echo "Detected OS: ${OS}"
 
   case $OS in
-    'Linux')
+    'linux')
       sudo cp "${CERT_PATH}" /usr/local/share/ca-certificates/
       sudo update-ca-certificates
       ;;
-    'Darwin')
+    'darwin')
       sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
       ;;
     *)
-      echo "Unsupported operating system. Please manually set the certificate ${CERT_PATH} as trusted for your OS."
+      echo "Please manually set the certificate ${CERT_PATH} as trusted for your OS."
       ;;
   esac
 }
