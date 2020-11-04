@@ -5,6 +5,7 @@ export NAME="dev3"
 export APPS="gateway k8s-engine och"
 export TESTS="e2e"
 export INFRAS="json-go-gen"
+
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.15.2
 SKIP_DEPS_INSTALLATION=false
