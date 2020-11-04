@@ -362,13 +362,14 @@ voltron::install::detect_command() {
 }
 
 
-# Arguments:
-#   $1 - minimal required version
-#   $2 - version to check
+# Installs kind and helm dependencies locally.
+# Required envs:
+#  - MINIMAL_VERSION
+#  - CURRENT_VERSION
+#
+# usage: env MINIMAL_VERSION=v3.3.4 CURRENT_VERSION=v2.16.9 voltron::version_supported
 voltron::version_supported(){
-  min_version="$1"
-  current_version="$2"
-  printf '%s\n%s\n' "$current_version" "$min_version" | sort -rVC
+  printf '%s\n%s\n' "$CURRENT_VERSION" "$MINIMAL_VERSION" | sort -rVC
 }
 
 voltron::validate::tools() {
@@ -380,11 +381,11 @@ voltron::validate::tools() {
   current_helm_version=$(helm::version)
   wrong_versions=false
 
-  if ! voltron::version_supported "${STABLE_KIND_VERSION}" "${current_kind_version}"; then
+  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" voltron::version_supported; then
     wrong_versions=true
     echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
   fi
-  if ! voltron::version_supported "${STABLE_HELM_VERSION}" "${current_helm_version}"; then
+  if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" voltron::version_supported; then
       wrong_versions=true
       echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"
   fi
