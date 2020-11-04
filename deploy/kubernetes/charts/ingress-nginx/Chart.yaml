@@ -1,0 +1,13 @@
+apiVersion: v2
+name: ingress-controller
+description: A Helm chart for Nginx Ingress Controller for Voltron installation
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: ingress-nginx
+    version: "3.7.x"
+    repository: https://kubernetes.github.io/ingress-nginx
+    condition: ingress.enabled

@@ -21,15 +21,28 @@ source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; e
 main() {
     shout "Starting development local cluster..."
 
+    export REPO_DIR=$REPO_ROOT_DIR
+
     export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     kind::create_cluster
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
-    export REPO_DIR=$REPO_ROOT_DIR
     voltron::update::images_on_kind
     voltron::install::charts
+
+    if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
+      shout "Skipping updating /etc/hosts cause DISABLE_HOSTS_UPDATE is set to true."
+    else
+      host::update::voltron_hosts
+    fi
+
+    if [[ "${DISABLE_ADDING_TRUSTED_CERT:-"false"}" == "true" ]]; then
+      shout "Skipping setting self-signed TLS certificate as trusted cause DISABLE_ADDING_TRUSTED_CERT is set to true."
+    else
+      host::install:trust_self_signed_cert
+    fi
 
     shout "Development local cluster created successfully."
 }

@@ -1,0 +1,4 @@
+Thank you for installing Voltron components.
+
+Here is the list of exposed services:
+- Gateway GraphQL Playground: https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}

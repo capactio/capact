@@ -162,11 +162,15 @@ host::install::helm() {
 # 'kind'(kubernetes-in-docker) functions
 #
 # Required environments variables for all 'kind' commands:
-# - KIND_CLUSTER_NAME
-
+#  - KIND_CLUSTER_NAME
+#  - REPO_DIR
 kind::create_cluster() {
     shout "- Creating K8s cluster..."
-    kind create cluster --name="${KIND_CLUSTER_NAME}" --image="kindest/node:${KUBERNETES_VERSION}" --wait=5m
+    kind create cluster \
+      --name="${KIND_CLUSTER_NAME}" \
+      --image="kindest/node:${KUBERNETES_VERSION}" \
+      --config "${REPO_DIR}/hack/kind/config.yaml" \
+      --wait=5m
 }
 
 kind::delete_cluster() {
@@ -223,6 +227,8 @@ voltron::install::charts() {
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
+    voltron::install::ingress_controller
+
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
@@ -246,6 +252,62 @@ voltron::install::monitoring() {
     helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
         --create-namespace \
         --namespace="monitoring"
+}
+
+voltron::install::ingress_controller() {
+    # waiting as admission webhooks server is required to be available during further installation steps
+    readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/kind/overrides.ingress-nginx.yaml"
+    shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
+    echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
+    helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
+        --create-namespace \
+        --namespace="ingress-nginx" \
+        -f "${INGRESS_CTRL_OVERRIDES}" \
+        --wait
+
+    echo -e "\n- Waiting for Ingress Controller to be ready...\n"
+    kubectl wait --namespace ingress-nginx \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=controller \
+      --timeout=90s
+}
+
+# Updates /etc/hosts with all Voltron subdomains.
+host::update::voltron_hosts() {
+  shout "- Updating /etc/hosts..."
+  readonly DOMAIN="voltron.local"
+  readonly VOLTRON_HOSTS=("gateway")
+
+  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
+  HOSTS_FILE="/etc/hosts"
+
+  grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
+}
+
+# Sets self-signed wildcard TLS certificate as trusted
+#
+# Required envs:
+#  - REPO_DIR
+host::install:trust_self_signed_cert() {
+  shout "- Trusting self-signed TLS certificate..."
+  CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
+  OS="$(host::os)"
+
+  echo "Certificate path: ${CERT_PATH}"
+  echo "Detected OS: ${OS}"
+
+  case $OS in
+    'linux')
+      sudo cp "${CERT_PATH}" /usr/local/share/ca-certificates/
+      sudo update-ca-certificates
+      ;;
+    'darwin')
+      sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
+      ;;
+    *)
+      echo "Please manually set the certificate ${CERT_PATH} as trusted for your OS."
+      ;;
+  esac
 }
 
 # Required envs:
