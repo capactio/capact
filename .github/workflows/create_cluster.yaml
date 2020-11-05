@@ -1,15 +1,23 @@
 name: Build-cluster-and-deploy
-
+  push:
+    paths:
+      - "**.go"
+      - "**.graphql"
+      - ".github/workflows/**"
+      - "**.sh"
+      - "Makefile"
+    branches:
+      - 'devops-*'
 # to be triggerred manually but to enable that it must exist on default branch of repo
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
 #https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
-on: 
-  workflow_dispatch:
-    inputs:
-      SHA:
-        description: Git Ref (Optional)    
-        required: false
+# on: 
+#   workflow_dispatch:
+#     inputs:
+#       SHA:
+#         description: Git Ref (Optional)    
+#         required: false
 
 
 jobs:
