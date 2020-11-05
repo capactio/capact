@@ -334,11 +334,19 @@ spec:
 
 Actors
 
--	Voltron Engine
+-	Action Developer
 
 #### Suggested solution
 
-Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` permission. In the same way, we can handle the uploading of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`.
+The Voltron Engine could add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when Action developer wants to upload additional TypeInstances. As a result, the best option for now it that the Action Developer is able to use core upload action to define which TypeInstances should be uploaded.
+
+Restrictions:
+
+-	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances can be exactly the same as those defined in Interface or being an extension thereof.
+
+-	Implementation is allowed to upload more TypeInstances than those listed in the Interface.
+
+> **NOTE:** For the Alhpa and GA Engine doesn't validate above restrictions.
 
 <details> <summary>Example</summary>
 
@@ -364,38 +372,25 @@ type: argo.run
 args:
   workflow:
     steps:
-      - name: mysql-create-db
+      - name: gcp-create-service-account
+        actionFrom: cap.interfaces.gcp.create-service-account
+        outputs:
+          artifacts:
+            - name: "gcp-sa"
+      - name: create-cloud-sql
+        actionFrom: cap.interfaces.gcp.create-cloud-sql
+        inputs:
+          artifacts:
+            - name: "gcp-sa"
         outputs:
           artifacts:
             - name: "mysql-config"
-```
-
-Rendered Implementation workflow:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  generateName: mysql-create-db-
-spec:
-  entrypoint: work
-  templates:
-    # Steps from Implementation workflow
-    - name: mysql-create-db
-      container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
-      outputs:
-        artifacts:
-          - name: mysql-config
-            path: /tmp/mysql-config
-    # Deletes artifacts from Local OCH 
-    - name: upload-instances
-      container:
-        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
-      arguments:
-        artifacts:
-        - name: mysql-config
-          from: "{{steps.mysql-create-db.outputs.artifacts.mysql-config}}"
+      - name: upload-instances
+        actionFrom: cap.core.actions.upload-type-instances
+        inputs:
+          artifacts:
+            - name: "gcp-sa" # or "{{ steps.gcp-create-service-account.outputs.artifacts.gcp-sa }}"
+            - name: "mysql-config"
 ```
 
 </details>
@@ -656,11 +651,11 @@ Once approved, these are the consequences:
 Open Questions
 --------------
 
-1.	Is the implementation allowed to register more objects than those listed in the interface? How to validate that? Output artifacts are defined both on Interface and Implementation?
+1.	Is the implementation allowed to register more objects than those listed in the interface? Yes
 
-2.	Is the implementation allowed to register fewer objects than those listed in the interface? How to validate that?
+2.	Is the implementation allowed to register fewer objects than those listed in the interface? No, but for Alpha and GA Engine doesn't validate that.
 
-3.	Is the implementation allowed to register object which extends the type defined on Interface? How to allow that? Can be validated behind the scene?
+3.	Is the implementation allowed to register object which extends the type defined on Interface? Yes
 
 4.	Define relations between artifacts (Artifacts group in the manifest?)
 
