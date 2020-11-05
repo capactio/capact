@@ -1,4 +1,4 @@
-name: Master build
+name: Default branch build
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - "master"
+      - $default-branch
 
 jobs:
   entry-tests:
@@ -180,11 +180,11 @@ jobs:
           AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl ${GET_IP_SERVICE}))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-      - name: Upgrade services
+      - name: Upgrade components
         run: | 
-          for SERVICE in ${SERVICES}
+          for COMPONENT in ${COMPONENTS}
           do  
-            helm upgrade ${SERVICE} ${HELM_CHARTS_PATH}/${SERVICE} -f ${HELM_CHARTS_PATH}/${SERVICE}/values.yaml \
+            helm upgrade ${COMPONENT} ${HELM_CHARTS_PATH}/${COMPONENT} -f ${HELM_CHARTS_PATH}/${COMPONENT}/values.yaml \
             --set global.containerRegistry.overrideTag=${DOCKER_TAG} --namespace ${NAMESPACE}
           done
 

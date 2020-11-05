@@ -30,5 +30,4 @@ spec:
               serviceName: {{ $fullName }}
               servicePort: 80
             path: {{ $.Values.ingress.path }}
-
     {{- end }}
