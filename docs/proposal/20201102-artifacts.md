@@ -99,11 +99,11 @@ spec:
       # pass as an input one instance of cap.type.cms.wordpress.config Type based on ID that user should provide.
       backend_db: # unique name that needs to be used in Implementation
         type: cap.type.db.mysql.config
-        permissions: ["read", "update"]
+        verbs: ["read", "update"]
       # pass as an input all available instances of cap.type.cms.wordpress.config Type
       all_available_db:
         type: []cap.type.db.mysql.config
-        permissions: ["read", "update"]
+        verbs: ["read", "update"]
   output:
     typeInstances: # it's an TypeInstance that is created as a result of executed action
       wp_config: 
@@ -126,10 +126,10 @@ There is an option to define `typeInstances` as a list instead of map:
     typeInstances:
       - name: backend_db
         type: cap.type.db.mysql.config
-        permissions: ["read", "update"] 
+        verbs: ["read", "update"] 
       - name: all_available_db
         type: []cap.type.db.mysql.config
-        permissions: ["read", "update"]
+        verbs: ["read", "update"]
 ```
 
 Unfortunately, in that way, we cannot easily enforce that the names won't be repeated, and we cannot benefit from native YAML syntax support.
@@ -154,14 +154,14 @@ Identified operations:
 
 #### Suggested solution
 
-Use the information from the Input/Output property defined in Interface. Permission allows us to determine Action behavior.
+Use the information from the Input/Output property defined in Interface. For each TypeInstance we can define `verbs` property to specify what kind of operation will be executed against that TypeInstance. Base on that we can determine Action behavior.
 
-| Permission | Description                                                                           |
-|------------|---------------------------------------------------------------------------------------|
-| `read`     | Specify that the input artifact is in read-only mode.                                 |
-| `create`   | This is automatically set for output artifacts. Core Action stores them in Local OCH. |
-| `update`   | Specify that the input artifact is modified in Action.                                |
-| `delete`   | Specify that the input artifact is deleted by Action.                                 |
+| Verbs    | Description                                                                           |
+|----------|---------------------------------------------------------------------------------------|
+| `read`   | Specify that the input artifact is in read-only mode.                                 |
+| `create` | This is automatically set for output artifacts. Core Action stores them in Local OCH. |
+| `update` | Specify that the input artifact is modified in Action.                                |
+| `delete` | Specify that the input artifact is deleted by Action.                                 |
 
 <details> <summary>Example</summary>
 
@@ -172,7 +172,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 	  typeInstances:
 	    - name: backend_db
 	      type: cap.type.db.mysql.config
-	      permissions: ["read"] 
+	      verbs: ["read"] 
 	```
 
 -	List operation
@@ -182,7 +182,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 	  typeInstances:
 	    - name: backend_db
 	      type: []cap.type.db.mysql.config # <- identifies a list of objects
-	      permissions: ["read"] 
+	      verbs: ["read"] 
 	```
 
 -	Create operation
@@ -201,7 +201,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 	  typeInstances:
 	    - name: backend_db
 	      type: cap.type.db.mysql.config
-	      permissions: ["delete"] 
+	      verbs: ["delete"] 
 	```
 
 -	Update operation
@@ -211,7 +211,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 	  typeInstances:
 	    - name: backend_db
 	      type: cap.type.db.mysql.config
-	      permissions: ["read", "update"] 
+	      verbs: ["read", "update"] 
 	```
 
 -	Upsert
@@ -226,7 +226,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 
 1.	We can use tags defined on Interfaces to explicitly mark its behaviour.
 
-	<details> <summary>Example</summary>
+	<details> <summary>Details</summary>
 
 	```yaml
 	kind: Interface
@@ -244,7 +244,7 @@ Use the information from the Input/Output property defined in Interface. Permiss
 
 2.	We can introduce dedicated Action types
 
-	<details> <summary>Example</summary>
+	<details> <summary>Details</summary>
 
 	```yaml
 	kind: Interface
@@ -266,6 +266,22 @@ Use the information from the Input/Output property defined in Interface. Permiss
 	```
 
 	This seems to be quite verbose and increases the overall boilerplate which is already huge.
+
+	</details>
+
+3.	We can use `permissions` instead of `verbs`
+
+	<details> <summary>Details</summary>
+
+	```yaml
+	input: 
+	  typeInstances:
+	    - name: backend_db
+	      type: []cap.type.db.mysql.config
+	      verbs: ["read"] 
+	```
+
+	With the `permissions` name it's not so easy to explain that it affect the rendered workflow and e.g. based on that Engine is injecting some steps automatically as describe [here](#populate-an-action-with-the-input-typeinstances).
 
 	</details>
 
@@ -469,7 +485,7 @@ Actors
 
 #### Suggested solution
 
-Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` permission. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have `delete` permission.
+Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` verb. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have `delete` verb.
 
 <details> <summary>Example</summary>
 
@@ -485,7 +501,7 @@ spec:
     typeInstances:
       mysql-config:
         type: cap.type.db.mysql.config
-        permissions: ["read", "delete"]
+        verbs: ["read", "delete"]
 ```
 
 Implementation workflow:
