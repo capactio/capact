@@ -10,28 +10,29 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 <!-- toc -->
 
-  * [Motivation](#motivation)
-    + [Goal](#goal)
-    + [Non-goal](#non-goal)
-  * [Proposal](#proposal)
-    + [Required and optional input TypeInstances](#required-and-optional-input-typeinstances)
-      - [Suggested solution](#suggested-solution)
-      - [Alternatives](#alternatives)
-    + [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
-      - [Suggested solution](#suggested-solution-1)
-      - [Alternatives](#alternatives-1)
-    + [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
-      - [Suggested solution](#suggested-solution-2)
-    + [Upload TypeInstance to Local OCH](#upload-typeinstance-to-local-och)
-      - [Suggested solution](#suggested-solution-3)
-      - [Alternatives](#alternatives-2)
-    + [Delete the TypeInstance from Local OCH by Action](#delete-the-typeinstance-from-local-och-by-action)
-      - [Suggested solution](#suggested-solution-4)
-    + [Handle optional input TypeInstances](#handle-optional-input-typeinstances)
-      - [Suggested solution](#suggested-solution-5)
-      - [Alternatives](#alternatives-3)
+- [Motivation](#motivation)
+  * [Goal](#goal)
+  * [Non-goal](#non-goal)
+- [Proposal](#proposal)
+  * [Required input TypeInstances](#required-input-typeinstances)
+    + [Suggested solution](#suggested-solution)
+    + [Alternatives](#alternatives)
+  * [Handle optional input TypeInstances](#handle-optional-input-typeinstances)
+    + [Suggested solution](#suggested-solution-1)
+    + [Alternatives](#alternatives-1)
+  * [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
+    + [Suggested solution](#suggested-solution-2)
+    + [Alternatives](#alternatives-2)
+  * [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
+    + [Suggested solution](#suggested-solution-3)
+  * [Upload Action artifacts to Local OCH](#upload-action-artifacts-to-local-och)
+    + [Suggested solution](#suggested-solution-4)
+    + [Alternatives](#alternatives-3)
+  * [Delete the TypeInstance from Local OCH by Action](#delete-the-typeinstance-from-local-och-by-action)
+    + [Suggested solution](#suggested-solution-5)
+  * [Specify relations between generated artifacts](#specify-relations-between-generated-artifacts)
+    + [Suggested solution](#suggested-solution-6)
 - [Consequences](#consequences)
-  * [Open Questions](#open-questions)
 
 <!-- tocstop -->
 
@@ -47,10 +48,10 @@ Currently, we struggle with defining flow for passing, creating, and deleting th
 -	[Define how to handle required input TypeInstances.](#required-and-optional-input-typeinstances)
 -	[Define how to handle optional input TypeInstances. For example, pass an already existing database.](#handle-optional-input-typeinstances)
 -	[Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.](#identify-action-behavior-createdeleteupsertupdategetlist)
--	Define how to specify relations between generated TypeInstances by a given Action.
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
--	[Define how to upload the generated TypeInstance from Action workflow to Local OCH.](#upload-typeinstance-to-local-och)
+-	[Define how to upload the generated artifacts from Action workflow to Local OCH.](#upload-typeinstance-to-local-och)
 -	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
+-	[Define how to specify relations between generated artifacts.](#specify-relations-between-generated-artifacts)
 
 ### Non-goal
 
@@ -95,16 +96,20 @@ metadata:
   name: install
 spec:
   input: 
-    jsonSchema: # input schema, holds information that can be specified by user e.g. db size, name etc. 
-      ref: cap.type.cms.wordpress.install-input:1.0.1
+    parameters: # holds information that can be specified by user e.g. db size, name etc. 
+      jsonSchema: |-
+        {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            }
+          }
+        }
     typeInstances: # all bellow entities are required and need to be passed to Implementation
       # pass as an input one instance of cap.type.cms.wordpress.config Type based on ID that user should provide.
       backend_db: # unique name that needs to be used in Implementation
         type: cap.type.db.mysql.config
-        verbs: ["read", "update"]
-      # pass as an input all available instances of cap.type.cms.wordpress.config Type
-      all_available_db:
-        type: []cap.type.db.mysql.config
         verbs: ["read", "update"]
   output:
     typeInstances: # it's an TypeInstance that is created as a result of executed action
@@ -122,9 +127,6 @@ There is an option to define `typeInstances` as a list instead of map:
     typeInstances:
       - name: backend_db
         type: cap.type.db.mysql.config
-        verbs: ["read", "update"] 
-      - name: all_available_db
-        type: []cap.type.db.mysql.config
         verbs: ["read", "update"]
 ```
 
@@ -136,9 +138,9 @@ Actors
 
 -	Action developer
 
-Only Implementation knows that something can be swapped out e.g. defined workflow can handle situation when user passes existing database and reuse it instead of creating a new one. As a result,     the **optional** input TypeInstances should be defined on Implementation.  
+Only Implementation knows that something can be swapped out e.g. defined workflow can handle situation when user passes existing database and reuse it instead of creating a new one. As a result, the **optional** input TypeInstances should be defined on Implementation.
 
-Specifying optional input TypeInstance on Implementation, cause that user is able to discover and pass optional TypeInstance only during the render process of a specific Implementation. 
+Specifying optional input TypeInstance on Implementation, cause that user is able to discover and pass optional TypeInstance only during the render process of a specific Implementation.
 
 We also need to take into account that the workflow developer should be able to handle optional TypeInstances and if a given TypeInstance is available then skip a given step(s).
 
@@ -531,7 +533,7 @@ spec:
 
 </details>
 
-### Upload TypeInstance to Local OCH
+### Upload Action artifacts to Local OCH
 
 Actors
 
@@ -741,17 +743,42 @@ spec:
 
 </details>
 
+### Specify relations between generated artifacts
+
+Actors
+
+-	Action developer
+
+If we will know the relations between the TypeInstance e.g. that Jira instance is using a given database we easily show the graph with those relations and based on that user can detect dependencies and also if downtime of a given component can affect other part of the system.
+
+TODO: Discuss that topic with team.
+
+Should Interface be able to declare multiple output TypeInstances? If not, can we assume (for Alpha and GA) that the TypeInstance defined as the output on Interface is the main one, and the rest of created TypeInstances in Implementation are just its children?
+
+If Interface can return multiple output should we introduce a new property on Interface and Implementation that allows developers to define dependencies using DAG?
+
+```yaml
+  # names are equal to the names of the input/output artifacts. In that way during saving artifact in Local OCH 
+  # we can also create a proper edges.
+  relations:
+    worpdress_config: # artifact name
+      uses: # names of all artifacts that WP config depends on
+        - mysql_config
+        - ingress_config
+    mysql_config: # artifact name
+      uses:
+        - gcp_sa
+```
+
+#### Suggested solution
+
+🚧 Under construction please come back soon 🚧
+
 Consequences
 ------------
 
 Once approved, these are the consequences:
 
--	remove JSON output from Interface
--	update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax  
-
-Open Questions
---------------
-
-4.	Define relations between artifacts (Artifacts group in the manifest?)
-
-5.	nice to have: if possible, unify the artifacts' definition with requires section
+-	Remove JSON output from Interface.
+-   Rename the `input.jsonSchema` on Interface to `input.parameters.jsonSchema`.
+-	Update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax.
