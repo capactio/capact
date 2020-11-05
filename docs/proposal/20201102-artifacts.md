@@ -36,7 +36,7 @@ Currently, we struggle with defining flow for passing, creating, and deleting th
 
 -	[Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.](#identify-action-behavior-createdeleteupsertupdategetlist)
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
--	Define how to upload the generated TypeInstance from Action workflow to Local OCH.
+-	[Define how to upload the generated TypeInstance from Action workflow to Local OCH.](#upload-typeinstance-to-local-och)
 -	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
 -	Define how to specify relations between generated TypeInstances by a given Action.
 -	[Define how the required and optional input TypeInstances should be defined.](#required-and-optional-input-typeinstances)
@@ -300,8 +300,145 @@ spec:
         - name: mysql-config
           from: "{{workflow.outputs.artifacts.mysql-config}}"
 ```
+#### Upload TypeInstance to Local OCH
 
-#### Delete the TypeInstance from Local OCH by Action.
+**Actors**
+
+-	Voltron Engine
+
+##### Suggested solution
+
+Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` permission. In the same way, we can handle the uploading of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`.
+
+**Example**
+
+Interface:
+
+```yaml
+kind: Interface
+metadata:
+  prefix: cap.interface.db.mysql
+  name: install
+spec:
+  output: 
+    typeInstances:
+      mysql-config:
+        type: cap.type.db.mysql.config
+```
+
+Implementation workflow:
+
+```yaml
+action:
+type: argo.run
+args:
+  workflow:
+    steps:
+      - name: mysql-create-db
+        outputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+Rendered Implementation workflow:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    # Steps from Implementation workflow
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      outputs:
+        artifacts:
+          - name: mysql-config
+            path: /tmp/mysql-config
+    # Deletes artifacts from Local OCH 
+    - name: upload-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{steps.mysql-create-db.outputs.artifacts.mysql-config}}"
+```  
+
+**Alternatives**
+
+For the Implementation which does not want to register more TypeInstances than those which are defined in the Interface, we could automatically add an upload step for them.
+
+**Example**
+
+
+<details>
+  <summary>Click to expand</summary>
+
+Interface:
+
+```yaml
+kind: Interface
+metadata:
+  prefix: cap.interface.db.mysql
+  name: install
+spec:
+  output: 
+    typeInstances:
+      mysql-config:
+        type: cap.type.db.mysql.config
+```
+
+Implementation workflow:
+
+```yaml
+action:
+type: argo.run
+args:
+  workflow:
+    steps:
+      - name: mysql-create-db
+        outputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+Rendered Implementation workflow:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    # Steps from Implementation workflow
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      outputs:
+        artifacts:
+          - name: mysql-config
+            path: /tmp/mysql-config
+    # Deletes artifacts from Local OCH 
+    - name: upload-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{steps.mysql-create-db.outputs.artifacts.mysql-config}}"
+```
+
+The problem is that it doubles the path of execution in Engine renderer. It seems to be just bells and whistles which can be added later if needed. 
+
+</details>
+
+#### Delete the TypeInstance from Local OCH by Action
 
 **Actors**
 
@@ -483,7 +620,7 @@ Once approved, these are the consequences:
 -	remove JSON output from Interface
 -	update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax  
 
-TODO
+Open Questions
 ----
 
 1.	Is the implementation allowed to register more objects than those listed in the interface? How to validate that? Output artifacts are defined both on Interface and Implementation?
