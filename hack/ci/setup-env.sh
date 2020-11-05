@@ -26,7 +26,7 @@ TF_VAR_google_compute_network_name=vpc-network-${NAME}
 TF_VAR_google_compute_subnetwork_name=subnetwork-${NAME}
 TF_VAR_node_pool_name=node-pool-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name1=gke-pods-${NAME}
-TF_VAR_google_compute_subnetwork_secondary_ip_range_name2=gke-COMPONENTs-${NAME}
+TF_VAR_google_compute_subnetwork_secondary_ip_range_name2=gke-services-${NAME}
 COMPONENTS="gateway engine och-public och-local"
 EOT
 
