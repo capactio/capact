@@ -16,7 +16,9 @@ General overview of the proposal and section with ToC
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
-  * [User Stories](#user-stories)
+  * [User Story](#user-story)
+    + [Suggested solution](#suggested-solution)
+    + [Alternatives](#alternatives)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
@@ -31,11 +33,13 @@ Motivation
 Proposal
 --------
 
-### User Stories
+### User Story
 
-**Suggested solution**
+#### Suggested solution
 
-**Alternatives** <!--
+#### Alternatives
+
+<!--
 What other approaches did you consider, and why did you rule them out? These do
 not need to be as detailed as the proposal, but should include enough
 information to express the idea and why it was not acceptable.
