@@ -24,8 +24,7 @@ Additionally it executes all tests on related services and updates the existing 
 ## Create cluster pipeline
 The job is defined in file create_cluster.yaml. This is executed on manual trigger.
 
-It builds the services images and pushes them to appropriate repository and location i.e.
-gcr.io/projectvoltron/\<service-name\>:\<image-tag\>  
+It uses already existing images. 
 As image tag it takes env variable ${IMAGE_TAG} and restores the repo state to provided SHA upon job execution.  
 Additionally it executes all tests on related services, creates new cluster according to provided values in above mentioned setup-env.sh, install all dependencies on it and install services.
 
