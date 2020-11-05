@@ -68,11 +68,15 @@ General notes:
 3.	The input and output TypeInstances always have a name. This solves the problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
 4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Alpha and GA. Can be considered once again after GA as this won't be a breaking change.
 
+Terminology
+
+1.	Output objects returned by steps are named **artifacts**. Artifacts becoming TypeInstance when are uploaded to Local OCH.
+
 ### Required and optional input TypeInstances
 
 Actors
 
--	Action Developer
+-	Action developer
 
 #### Suggested solution
 
@@ -112,9 +116,7 @@ spec:
 
 Sytanx for Implementation:
 
-```yaml
-TBD
-```
+This part is defined in [Handle optional input TypeInstance](#handle-optional-input-typeinstances) section because it is also connected with the process of removing steps from the workflow.
 
 </details>
 
@@ -138,8 +140,8 @@ Unfortunately, in that way, we cannot easily enforce that the names won't be rep
 
 Actors
 
--	Action Developer
--	Action User
+-	Action developer
+-	Action user
 
 There should be an easy way to define Action behavior. It's necessary because our Engine needs to know how to handle specified TypeInstances. Additionally, this is used on UI to filter actions that are not dependent on other TypeInstances, e.g. Actions is not upgrade, delete, etc.
 
@@ -217,7 +219,7 @@ Use the information from the Input/Output property defined in Interface. For eac
 -	Upsert
 
 	```yaml
-	Do we really need that?
+	TODO: Do we really need that?
 	```
 
 </details>
@@ -350,7 +352,7 @@ spec:
 
 Actors
 
--	Action Developer
+-	Action developer
 
 #### Suggested solution
 
@@ -463,10 +465,9 @@ spec:
         artifacts:
           - name: mysql-config
             path: /tmp/mysql-config
-    # Deletes artifacts from Local OCH 
     - name: upload-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
+        image: gcr.io/projectvoltron/type-instance-uploader:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -561,7 +562,7 @@ spec:
 
 Actors
 
--	Action workflow developer
+-	Action developer
 
 Based on the solution from [this](#required-and-optional-input-typeinstances) section, the optional artifacts are defined on Implementation. The user is able to pass the optional TypeInstance during the render process. The workflow developer should be able to handle that situation and if a given TypeInstance is available then skip a given step(s).
 
@@ -569,29 +570,48 @@ Based on the solution from [this](#required-and-optional-input-typeinstances) se
 
 Introduce the template language that can be used by Action workflow developers. This can be resolved during the render action by Voltron Engine.
 
+**TODO:** Discuss template syntax with team. How we can make it as simple as possible?
+
 <details> <summary>Example</summary>
 
 Implementation workflow:
 
 ```yaml
-action:
-type: argo.run
-args:
-  workflow:
-    steps:
-      {{ if input.typeInstances.mysql-config == nil }}
-      - name: mysql-install
-        outputs:
-          artifacts:
-            - name: "mysql-config"
-      {{ endif}}
-      - name: mysql-create-db
-        inputs:
-          artifacts:
-            - name: "mysql-config"
+kind: Implementation
+# ...
+spec:
+  # Workflow Developer needs to specify optional input TypeInstances 
+  input:
+    optionalTypeInstances: # names need to be different from those define under spec.input.typeInstances in Interface
+      mysql-config: 
+        type: cap.type.db.mysql.config
+        verbs: ["read", "update"]
+  
+  action:
+    type: argo.run
+    args:
+      workflow:
+        steps:
+          {{ if input.optionalTypeInstance.mysql-config == nil }}
+          - name: gcp-create-service-account
+            outputs:
+              artifacts:
+                - name: "gcp-sa"
+          - name: create-cloud-sql
+            inputs:
+              artifacts:
+                - name: "gcp-sa"
+            outputs:
+              artifacts:
+                - name: "mysql-config"
+          {{ endif}}
+          - name: mysql-create-db
+            inputs:
+              artifacts:
+                - name: "mysql-config"
 ```
 
-Rendered Implementation workflow when `input.typeInstances.mysql-config` was passed by user:
+Rendered Implementation workflow when `input.optionalTypeInstances.mysql-config` was passed by user:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -610,7 +630,6 @@ spec:
         # globalName corresponds to the name defined in Interface `spec.input.typeInstances` section.
         artifacts:
         - name: mysql-config
-          path: /tmp/mysql-config
           globalName: mysql-config
   
     - name: mysql-create-db
@@ -632,15 +651,24 @@ metadata:
 spec:
   entrypoint: work
   templates:
-    - name: mysql-install
+    - name: gcp-create-service-account
       container:
-        image: gcr.io/projectvoltron/actions/mysql-install:0.0.1
+        image: gcr.io/google-och/actions/gcp-create-service-account:0.0.1
+      outputs:
+        artifacts:
+        - name: gcp-sa
+    - name: create-cloud-sql
+      container:
+        image: gcr.io/google-och/actions/create-cloud-sql:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{steps.gcp-create-service-account.outputs.artifacts.gcp-sa}}"
       outputs:
         artifacts:
         - name: mysql-config
-          path: /tmp/mysql-config
+          # Global as this is mentioned as optional input, so it can be also populated from Local OCH by initial step
           globalName: mysql-config
-
     - name: mysql-create-db
       container:
         image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
@@ -654,7 +682,66 @@ spec:
 
 #### Alternatives
 
-Instead of giving the Action developer the option to use the template language we can determine that directly during render action. The step could be automatically removed if the artifact name specified as an output of the action matches with the one which was passed to the Actions. Unfortunately, this solution hides a lot and does not support a more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed.
+Instead of giving the Action developer the option to use the template language we can determine that directly during render action. The step could be automatically removed if the artifact name specified as an output of the action matches with the one which was passed to the Actions. Unfortunately, this solution hides a lot and does not support a more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed. Additional, problem can be with the steps that produce more than one TypeInstance.
+
+<details> <summary>Example</summary>
+
+Implementation workflow:
+
+```yaml
+action:
+  type: argo.run
+  args:
+    workflow:
+      steps:
+      - name: gcp-create-service-account
+        outputs:
+          artifacts:
+            - name: "gcp-sa"
+      - name: create-cloud-sql
+        inputs:
+          artifacts:
+            - name: "gcp-sa"
+        outputs:
+          artifacts:
+            - name: "mysql-config"
+      - name: mysql-create-db
+        inputs:
+          artifacts:
+            - name: "mysql-config"
+```
+
+Rendered Implementation workflow when `input.typeInstances.mysql-config` was passed by user:
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: mysql-create-db-
+spec:
+  entrypoint: work
+  templates:
+    - name: downloads-instances
+      container:
+        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+      outputs:
+        artifacts:
+        - name: mysql-config
+          path: /tmp/mysql-config
+          globalName: mysql-config
+  
+    - name: mysql-create-db
+      container:
+        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+      arguments:
+        artifacts:
+        - name: mysql-config
+          from: "{{workflow.outputs.artifacts.mysql-config}}"
+```
+
+Engine removes automatically the step which produces the passed TypeInstance and automatically removes not needed steps such as `gcp-create-service-account` because the only consumer of its output TypeInstance was removed. This logic should take into account that some steps can produce TypeInstance which doesn't have to be consumed e.g. generates report. In such case it should be garbage collected.
+
+</details>
 
 Consequences
 ============
