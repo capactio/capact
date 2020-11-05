@@ -1,7 +1,7 @@
 Handling TypeInstances in Interfaces and Implementations
 ========================================================
 
-Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
+Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/)\)
 
 Overview
 --------
@@ -62,16 +62,20 @@ Currently, we struggle with defining flow for passing, creating, and deleting th
 Proposal
 --------
 
-General notes:
+Terminology
 
-1.	The required input TypeInstances (artifacts) are defined on Interfaces only.
+| Term             | Definition                                                                                                                        |
+|------------------|-----------------------------------------------------------------------------------------------------------------------------------|
+| Artifacts        | Output object returned by steps in a given workflow.                                                                              |
+| TypeInstance     | An instance of a given Type that is stored in the Local OCH. Artifacts uploaded from workflow to Local OCH becomes TypeInstances. |
+| Action developer | Person who defines the `action` property in Implementation manifest.                                                              |
+
+General notes
+
+1.	The required input TypeInstances are defined on Interfaces only.
 2.	The optional input TypeInstances are defined on Implementation only.
 3.	The input and output TypeInstances always have a name. This solves the problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
 4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Alpha and GA. Can be considered once again after GA as this won't be a breaking change.
-
-Terminology
-
-1.	Output objects returned by steps are named **artifacts**. Artifacts becoming TypeInstance when are uploaded to Local OCH.
 
 ### Required input TypeInstances
 
@@ -81,7 +85,7 @@ Actors
 
 #### Suggested solution
 
-We have the Interface entity which defines the input and output parameters. To fulfil a given Interface, Implementation needs to accept the same input and returns the same output parameters.
+We have the Interface entity which defines the input and output parameters. To fulfill a given Interface, Implementation needs to accept the same input and returns the same output parameters.
 
 The **required** input TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangeable and do not introduce new requirements.
 
@@ -121,7 +125,7 @@ spec:
 
 #### Alternatives
 
-There is an option to define `typeInstances` as a list instead of map:
+There is an option to define `typeInstances` as a list instead of a map:
 
 ```yaml
     typeInstances:
@@ -138,17 +142,17 @@ Actors
 
 -	Action developer
 
-Only Implementation knows that something can be swapped out e.g. defined workflow can handle situation when user passes existing database and reuse it instead of creating a new one. As a result, the **optional** input TypeInstances should be defined on Implementation.
+Only Implementation knows that something can be swapped out e.g. defined workflow can handle the situation when a user passes the existing database and reuse it instead of creating a new one. As a result, the **optional** input TypeInstances should be defined on Implementation.
 
 Specifying optional input TypeInstance on Implementation, cause that user is able to discover and pass optional TypeInstance only during the render process of a specific Implementation.
 
-We also need to take into account that the workflow developer should be able to handle optional TypeInstances and if a given TypeInstance is available then skip a given step(s).
+We also need to take into account that the action developer should be able to handle optional TypeInstances and if a given TypeInstance is available then skip a given step(s).
 
 #### Suggested solution
 
-Introduce the new property `input.optionalTypeInstances` and template language that can be used by Action workflow developers. The Voltron Engine needs to handle optional TypeInstances and render final manifest based on the template syntax.
+Introduce the new property `input.optionalTypeInstances` and template language that can be used by Action workflow developers. The Voltron Engine needs to handle optional TypeInstances and render the final manifest based on the template syntax.
 
-**TODO:** Discuss template syntax with team. How we can make it as simple as possible?
+**TODO:** Discuss template syntax with the team. How we can make it as simple as possible?
 
 <details> <summary>Example</summary>
 
@@ -189,7 +193,7 @@ spec:
                 - name: "mysql-config"
 ```
 
-Rendered Implementation workflow when `input.optionalTypeInstances.mysql-config` was passed by user:
+Rendered Implementation workflow when `input.optionalTypeInstance.mysql-config` was specified by user:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -219,7 +223,7 @@ spec:
           from: "{{workflow.outputs.artifacts.mysql-config}}"
 ```
 
-Rendered Implementation workflow when `input.typeInstances.mysql-config` wasn't passed by user:
+Rendered Implementation workflow when `input.optionalTypeInstance.mysql-config` wasn't specified by user:
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -260,7 +264,7 @@ spec:
 
 #### Alternatives
 
-Instead of giving the Action developer the option to use the template language we can determine that directly during the render process. The step could be automatically removed if the artifact name specified as an output of the given step matches with the one which was passed to the Action. Unfortunately, this solution hides a lot and does not support a more complex scenario e.g. a given step outputs more that one artifact or workflow developer wants to remove more steps when a given TypeInstance was passed.
+Instead of giving the Action developer the option to use the template language we can determine that directly during the render process. The step could be automatically removed if the artifact name specified as an output of the given step matches with the one which was passed to the Action. Unfortunately, this solution hides a lot and does not support a more complex scenario e.g. a given step outputs more that one artifact or action developer wants to remove more steps when a given TypeInstance was passed.
 
 <details> <summary>Example</summary>
 
@@ -317,7 +321,7 @@ spec:
           from: "{{workflow.outputs.artifacts.mysql-config}}"
 ```
 
-Engine removes automatically the step which produces the passed TypeInstance and automatically removes not needed steps such as `gcp-create-service-account` because the only consumer of its output TypeInstance was removed. This logic should take into account that some steps can produce TypeInstance which doesn't have to be consumed e.g. generates report. In such case it should be garbage collected.
+Engine removes automatically the step which produces the passed TypeInstance and automatically removes not needed steps such as `gcp-create-service-account` because the only consumer of its output TypeInstance was removed. This logic should take into account that some steps can produce TypeInstance which doesn't have to be consumed e.g. generates a report. In such a case it should be garbage collected.
 
 </details>
 
@@ -780,5 +784,5 @@ Consequences
 Once approved, these are the consequences:
 
 -	Remove JSON output from Interface.
--   Rename the `input.jsonSchema` on Interface to `input.parameters.jsonSchema`.
+-	Rename the `input.jsonSchema` on Interface to `input.parameters.jsonSchema`.
 -	Update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax.
