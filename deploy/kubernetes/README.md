@@ -19,6 +19,12 @@ To install Voltron, run the following steps:
    kubectl apply -f ./crds
    ``` 
 
+1. Install NGINX Ingress Controller:
+    
+    ```bash
+   helm install ingress-nginx ./ingress-nginx --create-namespace -n=ingress-nginx
+   ```
+   
 1. **[Optional]** Install monitoring stack:
 
     ```bash
