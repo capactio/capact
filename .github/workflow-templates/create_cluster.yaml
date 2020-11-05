@@ -1,6 +1,6 @@
 name: Build-cluster-and-deploy
 
-# to be triggerred manually but to nable that it must exist on default branch of repo
+# to be triggerred manually but to enable that it must exist on default branch of repo
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
 #https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
@@ -39,7 +39,7 @@ jobs:
       - name: Create cluster
         run: | 
           gcloud config set project ${PROJECT_ID}
-          cd terraform
+          cd hack/ci/terraform
           terraform init
           terraform apply -auto-approve
       - name: Archive terraform state
@@ -58,28 +58,27 @@ jobs:
           --master-authorized-networks ${AUTHORIZED}
       - name: Install dependencies in cluster
         run: | 
-          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-          helm repo add stable https://kubernetes-charts.storage.googleapis.com/
           helm repo add jetstack https://charts.jetstack.io
           helm repo update
-          helm install ingress-nginx ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${ELB_IP}
+          helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-          sleep ${CERT_MGR_TIMEOUT}
+          echo -e "\n- Waiting for Cert Manager to be ready...\n"
+          kubectl wait --namespace cert-manager \
+          --for=condition=ready pod \
+          --selector=app.kubernetes.io/instance=cert-manager \
+          --timeout=${CERT_MGR_TIMEOUT}
           kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
           kubectl apply -f terraform/yaml/cluster-issuer.yaml     
       - name: Install services
         run: | 
-          for SERVICE in ${SERVICES}
-          do  
-            helm install ${SERVICE} ${HELM_CHARTS_PATH}/${SERVICE} -f ${HELM_CHARTS_PATH}/${SERVICE}/values.yaml \
-            --set global.containerRegistry.overrideTag=${IMAGE_TAG} --namespace ${NAMESPACE} --create-namespace
-          done
+          helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
+          --set global.containerRegistry.overrideTag=${IMAGE_TAG}
 
 # In  below step the SERVICES is set again, as in current state engine service crashes, so the certificate
 # will never be produced for that.
       - name: Store secrets
         run: | 
-          export SERVICES="gateway och-public och-local"
+          export SERVICES="gateway"
           i=0
           while : 
             do 

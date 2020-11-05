@@ -53,29 +53,3 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-global:
-  containerRegistry:
-    path: gcr.io/projectvoltron
-
-global:
-  containerRegistry:
-    path: gcr.io/projectvoltron
-
-ingress:
-  enabled: true
-  redirect: 
-  annotations:
-    tls_acme: "true"
-    class: "nginx"    
-    issuer: "letsencrypt-stag"
-    acmechallengetype: "http01"
-
-  path: /
-        
-  hosts:
-    - och-local.dev.cluster.projectvoltron.dev
-  tls: 
-    - secretName: och-local-tls
-      hosts:
-        - och-local.dev.cluster.projectvoltron.dev

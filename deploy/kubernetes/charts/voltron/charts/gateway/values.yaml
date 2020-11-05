@@ -54,10 +54,6 @@ tolerations: []
 
 affinity: {}
 
-global:
-  containerRegistry:
-    path: gcr.io/projectvoltron
-
 ingress:
   enabled: true
   redirect: 

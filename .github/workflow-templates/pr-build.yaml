@@ -35,9 +35,6 @@ jobs:
       - name: Check generated files
         run: |
           make test-generated
-      - name: Run k8s-controller
-        run: |
-          make test-k8s-controller
 
   prepare-matrix:
     name: Prepare components build matrix
