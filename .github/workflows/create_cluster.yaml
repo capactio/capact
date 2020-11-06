@@ -7,6 +7,7 @@ on:
     - ".github/workflows/**"
     - "**.sh"
     - "Makefile"
+    - "**.yaml"
     branches:
     - 'devops-*'
 # to be triggerred manually but to enable that it must exist on default branch of repo
@@ -18,6 +19,9 @@ on:
 #     inputs:
 #       SHA:
 #         description: Git Ref (Optional)    
+#         required: false
+#       IMAGE_TAG:
+#         description: Docker Image Tag (Optional)    
 #         required: false
 
 
@@ -48,7 +52,7 @@ jobs:
       # - name: Create cluster
       #   run: | 
       #     gcloud config set project ${PROJECT_ID}
-      #     cd hack/ci/terraform
+      #     cd ${TERRAFORM_PATH}
       #     terraform init
       #     terraform apply -auto-approve
       # - name: Archive terraform state
@@ -76,8 +80,8 @@ jobs:
           --for=condition=ready pod \
           --selector=app.kubernetes.io/instance=cert-manager \
           --timeout=${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml     
+          kubectl apply -f ${TERRAFORM_PATH}/yaml/cluster-issuer-stag.yaml
+          kubectl apply -f ${TERRAFORM_PATH}/yaml/cluster-issuer.yaml     
       - name: Install services
         run: | 
           helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
