@@ -80,6 +80,8 @@ jobs:
           --for=condition=ready pod \
           --selector=app.kubernetes.io/instance=cert-manager \
           --timeout=${CERT_MGR_TIMEOUT}
+          pwd
+          ls -la
           cd ${TERRAFORM_PATH}
           kubectl apply -f yaml/cluster-issuer-stag.yaml
           kubectl apply -f yaml/cluster-issuer.yaml     
@@ -133,6 +135,7 @@ jobs:
           . ./hack/ci/setup-env.sh
       - name: Network cleanup and enable
         run: | 
+          gcloud config set project ${PROJECT_ID}
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks
           
