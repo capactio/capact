@@ -115,3 +115,24 @@ jobs:
             kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
           done
           gsutil cp secret*.yaml gs://${BUCKET}
+
+  network-cleanup:
+    name: Network access cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ create-cluster ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_CREDS }}
+          export_default_credentials: true
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Network cleanup and enable
+        run: | 
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks
+          
