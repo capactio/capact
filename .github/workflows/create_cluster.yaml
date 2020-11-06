@@ -73,6 +73,9 @@ jobs:
         run: | 
           pwd
           ls -la
+          cd hack
+          ls -la
+          cd terraform
           cd ${TERRAFORM_PATH}
           helm repo add jetstack https://charts.jetstack.io
           helm repo update
