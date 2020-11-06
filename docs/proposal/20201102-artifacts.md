@@ -1,7 +1,7 @@
 Handling TypeInstances in Interfaces and Implementations
 ========================================================
 
-Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/)\)
+Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
 
 Overview
 --------
@@ -332,7 +332,7 @@ Actors
 -	Action developer
 -	Action user
 
-There should be an easy way to define Action behavior. It's necessary because our Engine needs to know how to handle specified TypeInstances. Additionally, this is used on UI to filter actions that are not dependent on other TypeInstances, e.g. Actions is not upgrade, delete, etc.
+There should be an easy way to define Action behavior. It's necessary because our Engine needs to know how to handle specified TypeInstances. Additionally, this is used on UI to filter actions that are not dependent on other TypeInstances, e.g. Actions is not `upgrade`, `delete`, etc.
 
 Identified operations:
 
@@ -345,7 +345,7 @@ Identified operations:
 
 #### Suggested solution
 
-Use the information from the Input/Output property defined in Interface. For each TypeInstance we can define `verbs` property to specify what kind of operation will be executed against that TypeInstance. Base on that we can determine Action behavior.
+Use the information from the `input`/`output` property defined in Interface. For each TypeInstance we can define `verbs` property to specify what kind of operation will be executed against that TypeInstance. Base on that we can determine Action behavior.
 
 | Verbs    | Description                                                                           |
 |----------|---------------------------------------------------------------------------------------|
@@ -415,7 +415,7 @@ Use the information from the Input/Output property defined in Interface. For eac
 
 #### Alternatives
 
-1.	We can use tags defined on Interfaces to explicitly mark its behaviour.
+1.	We can use tags defined on Interfaces to explicitly mark its behavior.
 
 	<details> <summary>Details</summary>
 
@@ -429,11 +429,11 @@ Use the information from the Input/Output property defined in Interface. For eac
 	# ...
 	```
 
-	This seams to be simpler and more explicit but at the same time it is redundant, as we need to define that also per TypeInstances.
+	This seems to be simpler and more explicit but at the same time, it is redundant, as we need to define that also per TypeInstances.
 
 	</details>
 
-2.	We can introduce dedicated Action types
+2.	We can introduce dedicated Action types.
 
 	<details> <summary>Details</summary>
 
@@ -460,7 +460,7 @@ Use the information from the Input/Output property defined in Interface. For eac
 
 	</details>
 
-3.	We can use `permissions` instead of `verbs`
+3.	We can use `permissions` instead of `verbs`.
 
 	<details> <summary>Details</summary>
 
@@ -472,7 +472,7 @@ Use the information from the Input/Output property defined in Interface. For eac
 	      verbs: ["read"] 
 	```
 
-	With the `permissions` name it's not so easy to explain that it affect the rendered workflow and e.g. based on that Engine is injecting some steps automatically as describe [here](#populate-an-action-with-the-input-typeinstances).
+	With the `permissions` name, it's not so easy to explain that it affects the rendered workflow, and e.g. based on that Engine is injecting some steps automatically as describe [here](#populate-an-action-with-the-input-typeinstances).
 
 	</details>
 
@@ -484,11 +484,26 @@ Actors
 
 #### Suggested solution
 
-If Action requires input TypeIntstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{workflow.outputs.artifacts.db_config}}`.
+If Action requires input TypeInstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{workflow.outputs.artifacts.<name>}}`.
 
 The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 
 <details> <summary>Example</summary>
+
+Interface:
+
+```yaml
+kind: Interface
+metadata:
+  prefix: cap.interface.db.mysql
+  name: create-db
+spec:
+  input: 
+    typeInstances:
+      mysql-config:
+        type: cap.type.db.mysql.config
+        verbs: ["read"]
+```
 
 Implementation workflow:
 
@@ -545,11 +560,11 @@ Actors
 
 #### Suggested solution
 
-The Voltron Engine could add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when Action developer wants to upload additional TypeInstances. As a result, the best option for now it that the Action Developer is able to use core upload action to define which TypeInstances should be uploaded.
+The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Action developer wants to upload additional TypeInstances. As a result, the best option, for now, is that the Action Developer is able to use core upload action to define which TypeInstances should be uploaded.
 
 Restrictions:
 
--	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances can be exactly the same as those defined in Interface or being an extension thereof.
+-	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances MUST be exactly the same as those defined in Interface or being an extension thereof.
 
 -	Implementation is allowed to upload more TypeInstances than those listed in the Interface.
 
@@ -663,7 +678,7 @@ spec:
           from: "{{steps.mysql-create-db.outputs.artifacts.mysql-config}}"
 ```
 
-The problem is that it doubles the path of execution in Engine renderer. It seems to be just bells and whistles which can be added later if needed.
+The problem is that it doubles the path of execution in the Engine renderer. It seems to be just bells and whistles which can be added later if needed.
 
 </details>
 
@@ -675,7 +690,7 @@ Actors
 
 #### Suggested solution
 
-Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` verb. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have `delete` verb.
+Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` verb. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have a `delete` verb.
 
 <details> <summary>Example</summary>
 
@@ -728,7 +743,7 @@ spec:
           path: /tmp/mysql-config
           globalName: mysql-config
     # Steps from Implementation workflow
-    - name: mysql-create-db
+    - name: mysql-delete-db
       container:
         image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
       arguments:
@@ -753,13 +768,13 @@ Actors
 
 -	Action developer
 
-If we will know the relations between the TypeInstance e.g. that Jira instance is using a given database we easily show the graph with those relations and based on that user can detect dependencies and also if downtime of a given component can affect other part of the system.
+If we will know the relations between the TypeInstance e.g. that Jira instance is using a given database we can easily show the graph with those relations and based on that user can detect dependencies and also if downtime of a given component can affect other parts of the system.
 
-TODO: Discuss that topic with team.
+**TODO:** Discuss that topic with the team.
 
 Should Interface be able to declare multiple output TypeInstances? If not, can we assume (for Alpha and GA) that the TypeInstance defined as the output on Interface is the main one, and the rest of created TypeInstances in Implementation are just its children?
 
-If Interface can return multiple output should we introduce a new property on Interface and Implementation that allows developers to define dependencies using DAG?
+If Interface can return multiple outputs should we introduce a new property on Interface and Implementation that allows developers to define dependencies?
 
 ```yaml
   # names are equal to the names of the input/output artifacts. In that way during saving artifact in Local OCH 
