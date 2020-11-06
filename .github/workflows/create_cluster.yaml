@@ -52,14 +52,14 @@ jobs:
       # - name: Create cluster
       #   run: | 
       #     gcloud config set project ${PROJECT_ID}
-      #     cd ${TERRAFORM_PATH}
+      #     cd hack/ci/terraform
       #     terraform init
       #     terraform apply -auto-approve
       # - name: Archive terraform state
       #   uses: actions/upload-artifact@v2
       #   with:
       #     name: cluster-tfstate
-      #     path: ./terraform/*.tfstate
+      #     path: ./hack/ci/terraform/*.tfstate
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
@@ -71,9 +71,6 @@ jobs:
           --master-authorized-networks ${AUTHORIZED}
       - name: Install dependencies in cluster
         run: | 
-          cd ${TERRAFORM_PATH}
-          pwd
-          ls -la
           helm repo add jetstack https://charts.jetstack.io
           helm repo update
           helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
@@ -85,7 +82,7 @@ jobs:
           --timeout=${CERT_MGR_TIMEOUT}
           pwd
           ls -la
-          cd ${TERRAFORM_PATH}
+          cd hack/ci/terraform
           kubectl apply -f yaml/cluster-issuer-stag.yaml
           kubectl apply -f yaml/cluster-issuer.yaml     
       - name: Install services

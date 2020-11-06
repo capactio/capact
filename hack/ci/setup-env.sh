@@ -28,7 +28,6 @@ TF_VAR_node_pool_name=node-pool-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name1=gke-pods-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name2=gke-services-${NAME}
 COMPONENTS="gateway engine och-public och-local"
-TERRAFORM_PATH="hack/ci/terraform"
 EOT
 
 
