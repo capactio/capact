@@ -71,12 +71,9 @@ jobs:
           --master-authorized-networks ${AUTHORIZED}
       - name: Install dependencies in cluster
         run: | 
+          cd hack/ci/terraform
           pwd
           ls -la
-          cd hack
-          cd ci
-          ls -la
-          cd terraform
           helm repo add jetstack https://charts.jetstack.io
           helm repo update
           helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
