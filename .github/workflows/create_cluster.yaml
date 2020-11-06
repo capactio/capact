@@ -76,15 +76,13 @@ jobs:
           helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
-          kubectl wait --namespace cert-manager \
-          --for=condition=ready pod \
-          --selector=app.kubernetes.io/instance=cert-manager \
-          --timeout=${CERT_MGR_TIMEOUT}
+          kubectl -n cert-manager rollout status deploy/cert-manager-webhook
+          sleep 20
           cd hack/ci/terraform
           pwd
           ls -la
-          kubectl apply -f yaml/cluster-issuer-stag.yaml --request-timeout ${CERT_ISSUER_TIMEOUT}
-          kubectl apply -f yaml/cluster-issuer.yaml --request-timeout ${CERT_ISSUER_TIMEOUT}
+          kubectl apply -f yaml/cluster-issuer-stag.yaml
+          kubectl apply -f yaml/cluster-issuer.yaml
       - name: Install services
         run: | 
           helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
