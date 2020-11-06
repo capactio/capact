@@ -71,7 +71,7 @@ jobs:
           --master-authorized-networks ${AUTHORIZED}
       - name: Install dependencies in cluster
         run: | 
-          cd hack/ci/terraform
+          cd ${TERRAFORM_PATH}
           pwd
           ls -la
           helm repo add jetstack https://charts.jetstack.io
