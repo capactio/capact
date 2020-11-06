@@ -80,8 +80,9 @@ jobs:
           --for=condition=ready pod \
           --selector=app.kubernetes.io/instance=cert-manager \
           --timeout=${CERT_MGR_TIMEOUT}
-          kubectl apply -f ${TERRAFORM_PATH}/yaml/cluster-issuer-stag.yaml
-          kubectl apply -f ${TERRAFORM_PATH}/yaml/cluster-issuer.yaml     
+          cd ${TERRAFORM_PATH}
+          kubectl apply -f yaml/cluster-issuer-stag.yaml
+          kubectl apply -f yaml/cluster-issuer.yaml     
       - name: Install services
         run: | 
           helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
