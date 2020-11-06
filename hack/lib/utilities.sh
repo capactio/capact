@@ -289,8 +289,9 @@ host::update::voltron_hosts() {
 # Required envs:
 #  - REPO_DIR
 host::install:trust_self_signed_cert() {
-  shout "- Trusting self-signed TLS certificate..."
-  CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
+  shout "- Trusting self-signed TLS certificate if not already trusted..."
+  CERT_FILE="voltron.local.crt"
+  CERT_PATH="${REPO_DIR}/hack/kind/${CERT_FILE}"
   OS="$(host::os)"
 
   echo "Certificate path: ${CERT_PATH}"
@@ -298,10 +299,20 @@ host::install:trust_self_signed_cert() {
 
   case $OS in
     'linux')
-      sudo cp "${CERT_PATH}" /usr/local/share/ca-certificates/
+      if diff "${CERT_PATH}" "/usr/local/share/ca-certificates/${CERT_FILE}"; then
+        echo "Certificate is already trusted."
+        return
+      fi
+
+      sudo cp "${CERT_PATH}" "/usr/local/share/ca-certificates"
       sudo update-ca-certificates
       ;;
     'darwin')
+      if security verify-cert -c "${CERT_PATH}"; then
+        echo "Certificate is already trusted."
+        return
+      fi
+
       sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
       ;;
     *)
