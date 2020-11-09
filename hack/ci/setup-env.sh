@@ -52,7 +52,7 @@ export TESTS=$(echo ${TESTS} |sed 's/}, ]/} ]/g' )
 echo "TESTS=${TESTS}" >>"$GITHUB_ENV"
 
 INFRAS=$(echo 'name=matrix::{"include":['; for INFRA in ${INFRAS}; do echo {\"INFRA\":\"${INFRA}\"},; done; echo ']}' |tr -d "\n")
-export INFRAS=$(echo ${INFRAS} |sed 's/}, ]/} ]/g' )
+export INFRAS=$(echo ${INFRAS} |sed 's/}, ]/} ]/g')
 echo "INFRAS=${INFRAS}" >>"$GITHUB_ENV"
 
 
