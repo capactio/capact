@@ -1,5 +1,4 @@
 name: Build-cluster-and-deploy
-
 # to be triggerred manually but to enable that it must exist on default branch of repo
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
@@ -9,6 +8,9 @@ on:
     inputs:
       SHA:
         description: Git Ref (Optional)    
+        required: false
+      IMAGE_TAG:
+        description: Docker Image Tag (Optional)    
         required: false
 
 
@@ -46,7 +48,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: cluster-tfstate
-          path: ./terraform/*.tfstate
+          path: ./hack/ci/terraform/*.tfstate
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
@@ -63,41 +65,43 @@ jobs:
           helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
-          kubectl wait --namespace cert-manager \
-          --for=condition=ready pod \
-          --selector=app.kubernetes.io/instance=cert-manager \
-          --timeout=${CERT_MGR_TIMEOUT}
-          kubectl apply -f terraform/yaml/cluster-issuer-stag.yaml
-          kubectl apply -f terraform/yaml/cluster-issuer.yaml     
+          kubectl -n cert-manager rollout status deploy/cert-manager-webhook
+          sleep 20
+          cd hack/ci/terraform
+          kubectl apply -f yaml/cluster-issuer-stag.yaml
+          kubectl apply -f yaml/cluster-issuer.yaml
+          cd ..
+          . ./compare-cert.sh
       - name: Install services
         run: | 
           helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
           --set global.containerRegistry.overrideTag=${IMAGE_TAG}
 
-# In  below step the SERVICES is set again, as in current state engine service crashes, so the certificate
-# will never be produced for that.
+# In  below step the SERVICES is set again, as currently we get the certs only for gateway.
       - name: Store secrets
         run: | 
           export SERVICES="gateway"
-          i=0
-          while : 
-            do 
-              if (( $(kubectl get secret -n voltron |grep "kubernetes.io/tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
-                then echo "***All secrets created***"
-                break
-              fi
-              echo "All secrets STILL NOT created"
-              sleep 30
-              i=$((i+1))
-              if (( ${i} == 5 ))
-                then 
-                echo "Secrets STILL NOT READY, pls. check that."
-                break
-              fi
-            done
-          printf "Getting following secrets \n$(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }')"
-          for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
-          do  
-            kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
-          done
-          gsutil cp secret*.yaml gs://${BUCKET}
+          ./hack/ci/backup-cert.sh
+
+
+  network-cleanup:
+    name: Network access cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ create-cluster ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_CREDS }}
+          export_default_credentials: true
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Network cleanup and enable
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks
+          
