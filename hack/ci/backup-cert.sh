@@ -2,7 +2,7 @@ if [ -z "${CERT_RESTORE}" ]
 then 
   printf "\n***Certs restored, not backuping new.***";
 else 
-  printf "\n***Certs NOT restored, I will backup new.***
+  printf "\n***Certs NOT restored, I will backup new.***"
   i=0
   while : 
     do 
@@ -20,10 +20,10 @@ else
         exit
       fi
     done
-          printf "\n*** Getting secrets ****"
-          for SECRET in $(kubectl get secret -n ${NAMESPACE} |grep "\-tls" |awk '{ print $1 }') 
-          do  
-            kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
-          done
-          gsutil cp secret*.yaml gs://${BUCKET}
+    printf "\n*** Getting secrets ****"
+    for SECRET in $(kubectl get secret -n ${NAMESPACE} |grep "\-tls" |awk '{ print $1 }') 
+    do  
+      kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
+    done
+    gsutil cp secret*.yaml gs://${BUCKET}
 fi
