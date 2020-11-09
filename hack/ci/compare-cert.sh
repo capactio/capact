@@ -5,6 +5,7 @@ echo -e "\n- New cert needs to be generated -"
 else
 echo -e "\n- Cert still valid. Restoring -"
 gsutil cp $(gsutil ls gs://projectvoltron_le  |sort -k2 -r |grep -v ^TOTAL |head -n 1) .
+kubectl create ns ${NAMESPACE} || true
 kubectl apply -f secret-*.yaml --namespace ${NAMESPACE}
 export CERT_RESTORE=1
 fi
