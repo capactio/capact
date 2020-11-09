@@ -60,7 +60,7 @@ ingress:
   annotations:
     tls_acme: "true"
     class: "nginx"    
-    issuer: "letsencrypt-stag"
+    issuer: "letsencrypt"
     acmechallengetype: "http01"
 
   path: /

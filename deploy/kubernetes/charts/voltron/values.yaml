@@ -10,3 +10,21 @@ integrationTest:
   image:
     name: e2e-test
     pullPolicy: IfNotPresent
+
+ingress:
+  enabled: true
+  redirect: 
+  annotations:
+    tls_acme: "true"
+    class: "nginx"    
+    issuer: "letsencrypt"
+    acmechallengetype: "http01"
+
+  path: /
+        
+  hosts:
+    - gateway.dev.cluster.projectvoltron.dev
+  tls: 
+    - secretName: gateway-tls
+      hosts:
+        - gateway.dev.cluster.projectvoltron.dev

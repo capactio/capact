@@ -78,45 +78,22 @@ jobs:
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
           kubectl -n cert-manager rollout status deploy/cert-manager-webhook
           sleep 20
-          ls -la
           cd hack/ci/terraform
-          pwd
-          ls -la
-          ls -la yaml
           kubectl apply -f yaml/cluster-issuer-stag.yaml
           kubectl apply -f yaml/cluster-issuer.yaml
+          cd ..
+          . ./compare-cert.sh
       - name: Install services
         run: | 
           helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
           --set global.containerRegistry.overrideTag=${IMAGE_TAG}
 
-# In  below step the SERVICES is set again, as in current state engine service crashes, so the certificate
-# will never be produced for that.
+# In  below step the SERVICES is set again, as currently we get the certs only for gateway.
       - name: Store secrets
         run: | 
           export SERVICES="gateway"
-          i=0
-          while : 
-            do 
-              if (( $(kubectl get secret -n ${NAMESPACE} |grep "kubernetes.io/tls" |wc -l) == $(echo ${SERVICES} |wc -w) )) 
-                then echo "***All secrets created***"
-                break
-              fi
-              echo "All secrets STILL NOT created"
-              sleep 30
-              i=$((i+1))
-              if (( ${i} == 5 ))
-                then 
-                echo "Secrets STILL NOT READY, pls. check that."
-                break
-              fi
-            done
-          printf "Getting following secrets \n$(kubectl get secret -n ${NAMESPACE} |grep "\-tls" |awk '{ print $1 }')"
-          for SECRET in $(kubectl get secret -n voltron |grep "\-tls" |awk '{ print $1 }') 
-          do  
-            kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
-          done
-          gsutil cp secret*.yaml gs://${BUCKET}
+          ./hack/ci/backup-cert.sh
+
 
   network-cleanup:
     name: Network access cleanup
