@@ -20,7 +20,7 @@ else
         exit
       fi
     done
-          printf "Getting following secrets \n$(kubectl get secret -n ${NAMESPACE} |grep "\-tls" |awk '{ print $1 }')"
+          printf "\n*** Getting secrets ****"
           for SECRET in $(kubectl get secret -n ${NAMESPACE} |grep "\-tls" |awk '{ print $1 }') 
           do  
             kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
