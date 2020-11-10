@@ -12,7 +12,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
-  * [Required input TypeInstances](#required-input-typeinstances)
+  * [Required input and output TypeInstances](#required-input-and-output-typeinstances)
     + [Suggested solution](#suggested-solution)
     + [Alternatives](#alternatives)
   * [Handle optional input TypeInstances](#handle-optional-input-typeinstances)
@@ -21,14 +21,14 @@ This document describes the approach for handling the TypeInstances (artifacts) 
   * [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
     + [Suggested solution](#suggested-solution-2)
     + [Alternatives](#alternatives-2)
-  * [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
+  * [Specify relations between generated artifacts](#specify-relations-between-generated-artifacts)
     + [Suggested solution](#suggested-solution-3)
-  * [Upload Action artifacts to Local OCH](#upload-action-artifacts-to-local-och)
+  * [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
     + [Suggested solution](#suggested-solution-4)
+  * [Upload Action artifacts to Local OCH](#upload-action-artifacts-to-local-och)
+    + [Suggested solution](#suggested-solution-5)
     + [Alternatives](#alternatives-3)
   * [Delete the TypeInstance from Local OCH by Action](#delete-the-typeinstance-from-local-och-by-action)
-    + [Suggested solution](#suggested-solution-5)
-  * [Specify relations between generated artifacts](#specify-relations-between-generated-artifacts)
     + [Suggested solution](#suggested-solution-6)
 - [Consequences](#consequences)
 
@@ -36,9 +36,11 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 ###  Motivation
 
-The Voltron project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions. All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local OCH.
+The Voltron project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions.
 
-Currently, we struggle with defining flow for passing, creating, and deleting the TypeInstances. As a result, we cannot estimate work for artifacts implementation.
+All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local OCH.
+
+Currently, we are struggling with defining the flow for passing, creating, and deleting TypeInstances. As a result, we cannot estimate the work for artifacts implementation.
 
 ###  Goal
 
@@ -71,9 +73,9 @@ General notes
 1.	The required input TypeInstances are defined on Interfaces only.
 2.	The optional input TypeInstances are defined on Implementation only.
 3.	The input and output TypeInstances always have a name. This solves the problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
-4.	Action can produce only TypeInstances. We don't support dedicated user info (e.g. similar to _NOTES.txt from Helm), for Beta and GA. Can be considered once again after GA as this won't be a breaking change.
+4.	Action can produce only TypeInstances. We don't support output parameters, outputted for user (e.g. similar to `NOTES.txt` from Helm). We can revisit it after GA as this won't be a breaking change.
 
-###  Required input TypeInstances
+###  Required input and output TypeInstances
 
 Actors
 
@@ -144,7 +146,7 @@ Only Implementation knows that something can be swapped out e.g. defined workflo
 
 Specifying optional input TypeInstance on Implementation, cause that user is able to discover and pass optional TypeInstance only during the render process of a specific Implementation.
 
-We also need to take into account that the action developer should be able to handle optional TypeInstances and if a given TypeInstance is available then skip a given step(s).
+We also need to take into account that the Action developer should be able to handle optional TypeInstances and if a given TypeInstance is available then skip a given step(s).
 
 ####  Suggested solution
 
@@ -342,7 +344,7 @@ Identified operations:
 
 ####  Suggested solution
 
-Use the information from the `input`/`output` property defined in Interface. For each TypeInstance we can define `verbs` property to specify what kind of operation will be executed against that TypeInstance. Base on that we can determine Action behavior.
+Use the information from the `input`/`output` property defined in Interface. For each TypeInstance we can define `verbs` property to specify what kind of operation will be executed against that TypeInstance. Based on that we can determine Action behavior.
 
 | Verbs    | Description                                                                               |
 |----------|-------------------------------------------------------------------------------------------|
@@ -468,6 +470,36 @@ Use the information from the `input`/`output` property defined in Interface. For
 
 	</details>
 
+###  Specify relations between generated artifacts
+
+Actors
+
+-	Action developer
+
+If we know the relations between the TypeInstance e.g. that Jira instance uses a given database we can easily show the graph with those relations and based on that user can detect dependencies and also check if downtime of a given component can affect other parts of the system.
+
+####  Suggested solution
+
+Specify the relations between the TypeInstances in the Implementation. In the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. For now, the Interface can define only one TypeInstance in the output section, so the relations property is not necessary on the Interface type. As a result, it simplifies the solution for Beta and GA as we don't need to take care of proper merging those relations defined on Interface and Implementation.
+
+This property is required if the Implementation wants to upload more than one artifact. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed.
+
+```yaml
+kind: Implementation
+# ...
+spec:
+  # when saving artifact in Local OCH we can create a proper edges.
+  additionalOutput:
+    typeInstanceRelations:
+      worpdress_config: # artifact name
+        uses: # names of all artifacts that WP config depends on
+          - mysql_config
+          - ingress_config
+      mysql_config: # artifact name
+        uses:
+          - gcp_sa
+```
+
 ###  Populate an Action with the input TypeInstances
 
 Actors
@@ -558,7 +590,7 @@ Restrictions:
 
 -	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances MUST be exactly the same as those defined in Interface or being an extension thereof.
 
--	Implementation is allowed to upload more TypeInstances than those listed in the Interface.
+-	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action devleper needs to describe the relations between additional output TypeInstances as described in [this](#specify-relations-between-generated-artifacts) section.
 
 > **NOTE:** For the Beta and GA Engine doesn't validate above restrictions.
 
@@ -569,49 +601,62 @@ Interface:
 ```yaml
 kind: Interface
 metadata:
-  prefix: cap.interface.db.mysql
+  prefix: cap.interface.management.jira
   name: install
 spec:
   output: 
     typeInstances:
-      mysql-config:
-        type: cap.type.db.mysql.config
+      jira_config:
+        type: cap.type.management.jira.config
 ```
 
 Implementation workflow:
 
 ```yaml
-action:
-type: argo.run
-args:
-  workflow:
-    steps:
-      - name: gcp-create-service-account
-        actionFrom: cap.interfaces.gcp.create-service-account
-        outputs:
-          artifacts:
-            - name: "gcp-sa"
-      - name: create-cloud-sql
-        actionFrom: cap.interfaces.gcp.create-cloud-sql
-        inputs:
-          artifacts:
-            - name: "gcp-sa"
-        outputs:
-          artifacts:
-            - name: "mysql-config"
-      - name: upload-instances
-        actionFrom: cap.core.actions.upload-type-instances
-        inputs:
-          artifacts:
-            - name: "gcp-sa" # or "{{ steps.gcp-create-service-account.outputs.artifacts.gcp-sa }}"
-            - name: "mysql-config"
+kind: Implementation
+# ...
+spec:
+  # Workflow developer needs to specify relations between additional output.
+  # We use that to create a proper edges when saving artifact in Local OCH.
+  additionalOutput:
+    typeInstanceRelations:
+      jira_config:
+        uses:
+          - mysql_config
+          - ingress_config
+  action:
+    type: argo.run
+    args:
+      workflow:
+        steps:
+          - name: create-mysql-db
+            actionFrom: cap.interface.db.mysql.install
+            outputs:
+              artifacts:
+                - name: "mysql_config"
+          - name: install-jira
+            actionFrom: cap.interfaces.management.jira.install
+            inputs:
+              artifacts:
+                - name: "mysql_config"
+            outputs:
+              artifacts:
+                - name: "jira_config"
+          - name: expose-ingress
+            actionFrom: cap.interfaces.gcp.create-cloud-sql
+            inputs:
+              artifacts:
+                - name: "jira_config"
+            outputs:
+              artifacts:
+                - name: "ingress_config"
 ```
 
 </details>
 
 ####  Alternatives
 
-For the Implementation which does not want to register more TypeInstances than those which are defined in the Interface, we could automatically add an upload step for them.
+The Action Developer is able to use core upload Action and define manually which TypeInstances should be uploaded.
 
 <details> <summary>Example</summary>
 
@@ -632,45 +677,30 @@ spec:
 Implementation workflow:
 
 ```yaml
-action:
-type: argo.run
-args:
-  workflow:
-    steps:
-      - name: mysql-create-db
-        outputs:
-          artifacts:
-            - name: "mysql-config"
-```
-
-Rendered Implementation workflow:
-
-```yaml
-apiVersion: argoproj.io/v1alpha1
-kind: Workflow
-metadata:
-  generateName: mysql-create-db-
+kind: Implementation
+# ...
 spec:
-  entrypoint: work
-  templates:
-    # Steps from Implementation workflow
-    - name: mysql-create-db
-      container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
-      outputs:
-        artifacts:
-          - name: mysql-config
-            path: /tmp/mysql-config
-    - name: upload-instances
-      container:
-        image: gcr.io/projectvoltron/type-instance-uploader:0.0.1
-      arguments:
-        artifacts:
-        - name: mysql-config
-          from: "{{steps.mysql-create-db.outputs.artifacts.mysql-config}}"
+  action:
+  type: argo.run
+  args:
+    workflow:
+      steps:
+        - name: gcp-create-service-account
+          actionFrom: cap.interfaces.gcp.create-service-account
+          outputs:
+            artifacts:
+              - name: "gcp-sa"
+        - name: create-cloud-sql
+          actionFrom: cap.interfaces.gcp.create-cloud-sql
+          inputs:
+            artifacts:
+              - name: "gcp-sa"
+          outputs:
+            artifacts:
+              - name: "mysql-config"
 ```
 
-The problem is that it doubles the path of execution in the Engine renderer. It seems to be just bells and whistles which can be added later if needed.
+This solution was rejected as we found out that we can do it also automatically. Additional, it is similar to the populate and deletes TypeInstance actions which are also automatically injected by Voltron Engine.
 
 </details>
 
@@ -753,35 +783,6 @@ spec:
 ```
 
 </details>
-
-###  Specify relations between generated artifacts
-
-Actors
-
--	Action developer
-
-If we know the relations between the TypeInstance e.g. that Jira instance is using a given database we can easily show the graph with those relations and based on that user can detect dependencies and also check if downtime of a given component can affect other parts of the system.
-
-####  Suggested solution
-
-Specify the relations between the TypeInstances in the Implementation. In the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. For now, the Interface can define only one TypeInstance in the output section, so the relations property is not necessary on the Interface type. As a result, it simplifies the solution for Beta and GA as we don't need to take care of proper merging those relations defined on Interface and Implementation.
-
-This property is required if the Implementation wants to upload more than one artifact. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed.
-
-```yaml
-kind: Implementation
-# ...
-spec:
-  # when saving artifact in Local OCH we can create a proper edges.
-  typeInstanceRelations:
-    worpdress_config: # artifact name
-      uses: # names of all artifacts that WP config depends on
-        - mysql_config
-        - ingress_config
-    mysql_config: # artifact name
-      uses:
-        - gcp_sa
-```
 
 ##  Consequences
 
