@@ -1,0 +1,5 @@
+argo:
+  minio:
+    resources:
+      requests:
+        memory: 256Mi

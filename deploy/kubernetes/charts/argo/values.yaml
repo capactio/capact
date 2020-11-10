@@ -1,0 +1,8 @@
+argo:
+  controller:
+    containerRuntimeExecutor: pns
+  images:
+    tag: v2.11.7
+
+  minio:
+    install: true
