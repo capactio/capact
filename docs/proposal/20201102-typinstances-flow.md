@@ -8,7 +8,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 <!-- toc -->
 
-  * [Motivation](#motivation)
+- [Motivation](#motivation)
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
@@ -34,7 +34,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 <!-- tocstop -->
 
-###  Motivation
+##  Motivation
 
 The Voltron project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions.
 
