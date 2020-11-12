@@ -1,3 +1,3 @@
 # Core
 
-The directory contains OCH metadata and configuration and core entities.
+The directory contains OCH metadata with configuration and core manifests, such as Interfaces or Types.

@@ -59,6 +59,7 @@ spec:
         templates:
           - name: workflow
             steps:
+  # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
   #           {{ if ! .Input.typeInstances.postgresql-db }}
               - - name: install-db
                   template: install-db
@@ -92,6 +93,7 @@ spec:
                   globalName: helm-release
                   path: "/out/helm-release"
             container:
+# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
 #            {{ inlineAction:
 #                 runnerInterface: helm.run
 #                 args:

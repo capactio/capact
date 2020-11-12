@@ -30,10 +30,17 @@ spec:
             "name": "cap.core.type.versioning.semver",
             "revision": "0.1.0"
           }
+          "hostname": {
+            "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          }
         },
         "properties": {
           "version": {
             "$ref": "#/$ocfRefs/semVer"
+          }
+          "host": {
+            "$ref": "#/$ocfRefs/hostname"
           }
         },
         "additionalProperties": true

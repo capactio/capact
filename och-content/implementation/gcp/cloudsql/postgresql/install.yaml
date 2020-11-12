@@ -23,7 +23,7 @@ spec:
 # Requires `gcp-sa` of type cap.type.gcp.auth.service-account artifact
 # Outputs additionally cap.type.gcp.cloudsql.instance artifact
 
-  appVersion: "10,11,12,13"
+  appVersion: "10, 11, 12, 13"
 
   implements:
     - name: cap.interface.database.postgresql.install
