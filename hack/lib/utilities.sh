@@ -239,6 +239,7 @@ voltron::install::charts() {
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
     voltron::install::ingress_controller
+
     voltron::install::argo
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then

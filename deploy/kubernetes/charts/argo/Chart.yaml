@@ -1,13 +1,7 @@
 apiVersion: v2
 name: argo
-description: A Helm chart for Kubernetes
+description: Argo chart for Kubernetes
 
 type: application
 
 version: 0.1.0
-
-dependencies:
-  - name: argo
-    version: "0.13.2"
-    repository: https://argoproj.github.io/argo-helm
-    condition: argo.enabled

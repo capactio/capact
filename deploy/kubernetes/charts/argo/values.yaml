@@ -4,5 +4,15 @@ argo:
   images:
     tag: v2.11.7
 
+  artifactRepository:
+    s3:
+      bucket: argo-artifacts
+      endpoint: argo-minio.argo.svc.cluster.local:9000
+
   minio:
+    service:
+      port: 9000
     install: true
+    defaultBucket:
+      enabled: true
+      name: argo-artifacts
