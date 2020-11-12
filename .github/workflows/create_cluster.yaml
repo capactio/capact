@@ -68,7 +68,6 @@ jobs:
           kubectl -n cert-manager rollout status deploy/cert-manager-webhook
           sleep 20
           cd hack/ci/terraform
-          kubectl apply -f yaml/cluster-issuer-stag.yaml
           kubectl apply -f yaml/cluster-issuer.yaml
           cd ..
           . ./compare-cert.sh

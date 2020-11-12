@@ -28,6 +28,7 @@ jobs:
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
           AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
           AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl ${GET_IP_SERVICE}))
+          AUTHORIZED=$(echo ${AUTHORIZED} |awk 'BEGIN{FS=OFS=","}{NF--; print}')
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
       - name: Test releases
