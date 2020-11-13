@@ -11,9 +11,7 @@ metadata:
     - email: team@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-  tags:
-    cap.core.tag.capability.baseline:
-      revision: "0.1.0"
+
 spec:
   jsonSchema:
     value: |-

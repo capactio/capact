@@ -2,11 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: uri
+  name: port
   prefix: cap.core.type.networking  # Computed during fetching the manifest
-  displayName: URI
-  description: Describes Uniform Resource Identifier
-  documentationURL: https://tools.ietf.org/html/rfc3986
+  displayName: Port
+  description: Describes TCP and UDP port number.
   maintainers:
     - email: team@projectvoltron.dev
       name: Voltron Dev Team
@@ -17,13 +16,15 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.core.type.networking.uri",
-        "type": "string",
-        "format": "uri",
-        "title": "URI",
+        "$id": "cap.core.type.networking.port",
+        "type": "integer",
+        "title": "Port",
+        "minimum": 0,
+        "maximum": 65535,
         "examples": [
-            "127.0.0.1",
-            "postgresql://host/database"
+            "3000",
+            "8080",
+            "30000"
         ]
       }
 

@@ -30,17 +30,23 @@ spec:
               "password": "password"
             },
             "defaultDBName": "default_db",
-            "connectionURI": "postgresql://host/database"
+            "host": "host",
+            "port": 9000,
           }
         ],
         "required": [
             "superuser",
             "defaultDBName",
-            "connectionURI"
+            "host",
+            "port"
         ],
         "$ocfRefs": {
-          "uri": {
-            "name": "cap.core.type.networking.uri",
+          "hostname": {
+            "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          }
+          "port": {
+            "name": "cap.core.type.networking.port",
             "revision": "0.1.0"
           }
         },
@@ -73,9 +79,12 @@ spec:
             "type": "string",
             "title": "Defines a different name for the default database that is created"
           },
-          "connectionURI": {
-            "$ref": "#/$ocfRefs/uri"
-          }
+          "host": {
+            "$ref": "#/$ocfRefs/hostname"
+          },
+          "port": {
+            "$ref": "#/$ocfRefs/port"
+          },
         },
         "additionalProperties": false
       }

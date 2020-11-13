@@ -50,6 +50,8 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
@@ -60,16 +62,24 @@ spec:
           - name: workflow
             steps:
   # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-  #           {{ if ! .Input.typeInstances.postgresql-db }}
+  #           {{ if ! .Input.typeInstances.postgresql }}
               - - name: install-db
                   template: install-db
   #           {{ endif }}
+              - - name: create-db
+                  template: create-db
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
               - - name: install-jira
                   template: install-jira
                   arguments:
                     artifacts:
-                      - name: postgresql-db
-                        from: "{{workflow.outputs.artifacts.postgresql-db}}"
+                      - name: db
+                        from: "{{workflow.outputs.artifacts.db}}"
+                      - name: postgresql
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
               - - name: produce-jira-config
                   template: produce-config
                   arguments:
@@ -80,13 +90,31 @@ spec:
           - name: install-db
             outputs:
               artifacts:
-                - name: postgresql-db
-                  globalName: postgresql-db
-                  path: "/out/postgresql-db"
+                - name: postgresql
+                  path: "/out/postgresql"
             container: |-
               {{ actionFrom: postgresql.install }}
 
+          - name: create-db
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: "/in/postgresql"
+            outputs:
+              artifacts:
+                - name: db
+                  globalName: db
+                  path: "/out/db"
+            container: |-
+              {{ actionFrom: postgresql.create-db }}
+
           - name: install-jira
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: "/in/postgresql"
+                - name: db
+                  path: "/in/db"
             outputs:
               artifacts:
                 - name: helm-release
@@ -109,17 +137,18 @@ spec:
 #                       postgresql:
 #                         enabled: false # do not install Postgres along the Jira installation
 #                       databaseConnection:
-#                         host: jira-software-db
-#                         port: 5432
-#                         user: jirauser
-#                         password: "CHANGEME"
-#                         database: "dbname"
+#                         host: {{ fromArtifact postgresql.host }}
+#                         port: {{ fromArtifact postgresql.port }}
+#                         user: {{ fromArtifact postgresql.superuser.username }}
+#                         password: {{ fromArtifact postgresql.superuser.password }}
+#                         database: {{ fromArtifact db.name }}
 #                     ingress:
 #                       enabled: true
 #                       ingress:
 #                         hosts:
 #                           - host: "{{ .Input.parameters.host }}"
-#                             paths: [ ]}
+#                             paths: [ ]
+# }}
           - name: produce-config
             inputs:
               artifacts:

@@ -41,11 +41,17 @@ spec:
         entrypoint: db-helper
         templates:
           - name: db-helper
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: /in/postgresql
             container:
-              image: postgres:13
-              command: [ "psql" ]
+              image: gcr.io/projectvoltron/postgresql-exec:0.1.0
+              command: [ "run.sh" ]
               args:
-                - "-c"
+                - "--db-config-path"
+                - "{{`{{inputs.artifacts.postgresql.path}}`}}"
+                - "--command"
                 - >
                   CREATE DATABASE {{ .Input.parameters.name }}
                   {{ if or .Input.parameters.owner .Input.parameters.tablespace }}

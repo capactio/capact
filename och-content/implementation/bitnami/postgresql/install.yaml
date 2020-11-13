@@ -84,9 +84,9 @@ spec:
                   path: "/in/helm-release"
             outputs:
               artifacts:
-                - name: postgresql-config
-                  globalName: postgresql-config
-                  path: "/out/postgresql-config"
+                - name: postgresql
+                  globalName: postgresql
+                  path: "/out/postgresql"
             container:
               image: gcr.io/projectvoltron/postgresql-config-producer:0.1.0
               command: [ "run.sh" ]
