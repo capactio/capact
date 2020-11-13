@@ -74,30 +74,10 @@ spec:
                       continue:
                         default: false
                         description: Continue specifies the user intention to continue
-                          rendering using the provided InputArtifacts. As the input
-                          artifacts are optional, user may continue rendering with
-                          empty list of InputArtifacts.
+                          rendering using the provided InputArtifacts in the Action
+                          input. User may or may not add additional optional InputArtifacts
+                          to the list and continue Action rendering.
                         type: boolean
-                      inputArtifacts:
-                        description: InputArtifacts contains Input Artifacts passed
-                          for current rendering iteration.
-                        items:
-                          description: InputArtifact holds input artifact reference,
-                            which is in fact TypeInstance.
-                          properties:
-                            alias:
-                              description: Alias refers to input artifact name used
-                                in rendered Action.
-                              type: string
-                            typeInstanceID:
-                              description: TypeInstanceID is a unique identifier for
-                                the TypeInstance used as input artifact.
-                              type: string
-                          required:
-                          - alias
-                          - typeInstanceID
-                          type: object
-                        type: array
                     required:
                     - continue
                     type: object
@@ -109,20 +89,44 @@ spec:
                 description: Cancel specifies whether the Action execution should
                   be cancelled.
                 type: boolean
-              inputRef:
-                description: InputRef contains reference to resource with Action input.
+              input:
+                description: Input describes Action input.
                 properties:
-                  secretRef:
-                    description: SecretRef stores reference to Secret in the same
-                      namespace the Action CR is created.
+                  artifacts:
+                    description: Artifacts contains input Artifacts passed for Action
+                      rendering. It contains both required and optional input Artifacts.
+                    items:
+                      description: InputArtifact holds input artifact reference, which
+                        is in fact TypeInstance.
+                      properties:
+                        name:
+                          description: Name refers to input artifact name used in
+                            rendered Action.
+                          type: string
+                        typeInstanceID:
+                          description: TypeInstanceID is a unique identifier for the
+                            TypeInstance used as input artifact.
+                          type: string
+                      required:
+                      - name
+                      - typeInstanceID
+                      type: object
+                    type: array
+                  parameters:
+                    description: Parameters holds details about Action input parameters.
                     properties:
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
+                      secretRef:
+                        description: SecretRef stores reference to Secret in the same
+                          namespace the Action CR is created.
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                    required:
+                    - secretRef
                     type: object
-                required:
-                - secretRef
                 type: object
               path:
                 description: Path contains full path for Implementation or Interface
@@ -133,6 +137,7 @@ spec:
                 description: RenderedActionOverride contains optional rendered Action
                   that overrides the one rendered by Engine.
                 type: object
+                x-kubernetes-preserve-unknown-fields: true
               run:
                 default: false
                 description: Run specifies whether the Action is approved to be executed.
@@ -147,36 +152,6 @@ spec:
           status:
             description: ActionStatus defines the observed state of Action.
             properties:
-              advancedRendering:
-                description: AdvancedRendering describes status related to advanced
-                  rendering mode.
-                properties:
-                  renderingIteration:
-                    description: RenderingIteration describes status related to current
-                      rendering iteration.
-                    properties:
-                      inputArtifactsToProvide:
-                        description: InputArtifactsToProvide describes which input
-                          artifacts might be provided in a given rendering iteration.
-                        items:
-                          description: InputArtifact holds input artifact reference,
-                            which is in fact TypeInstance.
-                          properties:
-                            alias:
-                              description: Alias refers to input artifact name used
-                                in rendered Action.
-                              type: string
-                            typeInstanceID:
-                              description: TypeInstanceID is a unique identifier for
-                                the TypeInstance used as input artifact.
-                              type: string
-                          required:
-                          - alias
-                          - typeInstanceID
-                          type: object
-                        type: array
-                    type: object
-                type: object
               cancelledBy:
                 description: CancelledBy holds user data which cancelled a given Action.
                 properties:
@@ -229,6 +204,11 @@ spec:
                       all active users.
                     type: string
                 type: object
+              lastTransitionTime:
+                description: Last time the condition transitioned from one status
+                  to another.
+                format: date-time
+                type: string
               message:
                 description: Message provides a readable description of the Action
                   phase.
@@ -238,21 +218,31 @@ spec:
                   recently observed Action.
                 format: int64
                 type: integer
-              outputRef:
-                description: OutputRef contains reference to resource with Action
-                  output.
+              output:
+                description: Output describes Action output.
                 properties:
-                  secretRef:
-                    description: SecretRef stores reference to Secret in the same
-                      namespace the Action CR is created.
-                    properties:
-                      name:
-                        description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
-                          TODO: Add other useful fields. apiVersion, kind, uid?'
-                        type: string
-                    type: object
-                required:
-                - secretRef
+                  artifacts:
+                    description: Artifacts contains output Artifacts information.
+                    items:
+                      properties:
+                        name:
+                          description: Name refers to artifact name.
+                          type: string
+                        typeInstanceID:
+                          description: TypeInstanceID is a unique identifier for the
+                            TypeInstance used as artifact.
+                          type: string
+                        typePath:
+                          description: TypePath is full path for the Type manifest
+                            related to a given artifact (TypeInstance).
+                          minLength: 3
+                          type: string
+                      required:
+                      - name
+                      - typeInstanceID
+                      - typePath
+                      type: object
+                    type: array
                 type: object
               phase:
                 default: Initial
@@ -269,9 +259,89 @@ spec:
                 - Succeeded
                 - Failed
                 type: string
-              renderedAction:
-                description: RenderedAction contains partially or fully rendered Action
-                  to be executed.
+              rendering:
+                description: Rendering describes rendering status.
+                properties:
+                  action:
+                    description: Action contains partially or fully rendered Action
+                      to be executed.
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                  advancedRendering:
+                    description: AdvancedRendering describes status related to advanced
+                      rendering mode.
+                    properties:
+                      renderingIteration:
+                        description: RenderingIteration describes status related to
+                          current rendering iteration.
+                        properties:
+                          inputArtifactsToProvide:
+                            description: InputArtifactsToProvide describes which input
+                              artifacts might be provided in a given rendering iteration.
+                            items:
+                              properties:
+                                name:
+                                  description: Name refers to artifact name.
+                                  type: string
+                                optional:
+                                  default: false
+                                  description: Optional highlights that the input
+                                    artifact is optional.
+                                  type: boolean
+                                typeInstanceID:
+                                  description: TypeInstanceID is a unique identifier
+                                    for the TypeInstance used as artifact.
+                                  type: string
+                                typePath:
+                                  description: TypePath is full path for the Type
+                                    manifest related to a given artifact (TypeInstance).
+                                  minLength: 3
+                                  type: string
+                              required:
+                              - name
+                              - typeInstanceID
+                              - typePath
+                              type: object
+                            type: array
+                        type: object
+                    type: object
+                  input:
+                    description: Input contains resolved details of Action input.
+                    properties:
+                      artifacts:
+                        description: Artifacts contains input Artifacts passed for
+                          Action rendering. It contains both required and optional
+                          input Artifacts.
+                        items:
+                          properties:
+                            name:
+                              description: Name refers to artifact name.
+                              type: string
+                            optional:
+                              default: false
+                              description: Optional highlights that the input artifact
+                                is optional.
+                              type: boolean
+                            typeInstanceID:
+                              description: TypeInstanceID is a unique identifier for
+                                the TypeInstance used as artifact.
+                              type: string
+                            typePath:
+                              description: TypePath is full path for the Type manifest
+                                related to a given artifact (TypeInstance).
+                              minLength: 3
+                              type: string
+                          required:
+                          - name
+                          - typeInstanceID
+                          - typePath
+                          type: object
+                        type: array
+                      parameters:
+                        description: Parameters holds value of the User input parameters.
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                    type: object
                 type: object
               runBy:
                 description: RunBy holds user data which run a given Action.
@@ -310,6 +380,7 @@ spec:
                     description: StatusRef contains reference to resource with arbitrary
                       Runner status data.
                     type: object
+                    x-kubernetes-preserve-unknown-fields: true
                 required:
                 - interface
                 type: object

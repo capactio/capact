@@ -48,9 +48,9 @@ type ActionSpec struct {
 	// Path contains full path for Implementation or Interface manifest.
 	Path NodePath `json:"path"`
 
-	// InputRef contains reference to resource with Action input.
+	// Input describes Action input.
 	// +optional
-	InputRef *ActionIORef `json:"inputRef,omitempty"`
+	Input *ActionInput `json:"input,omitempty"`
 
 	// AdvancedRendering holds properties related to Action advanced rendering mode.
 	// +optional
@@ -58,6 +58,7 @@ type ActionSpec struct {
 
 	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
 	RenderedActionOverride *runtime.RawExtension `json:"renderedActionOverride,omitempty"`
 
 	// Run specifies whether the Action is approved to be executed.
@@ -71,6 +72,25 @@ type ActionSpec struct {
 	// +optional
 	// +kubebuilder:default=false
 	Cancel *bool `json:"cancel,omitempty"`
+}
+
+// ActionInput describes Action input.
+type ActionInput struct {
+
+	// Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+	// +optional
+	Artifacts *[]InputArtifact `json:"artifacts,omitempty"`
+
+	// Parameters holds details about Action input parameters.
+	// +optional
+	Parameters *InputParameters `json:"parameters,omitempty"`
+}
+
+// InputParameters holds details about Action input parameters.
+type InputParameters struct {
+
+	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
+	SecretRef v1.LocalObjectReference `json:"secretRef"`
 }
 
 // AdvancedRendering holds are properties related to Action advanced rendering mode.
@@ -88,12 +108,8 @@ type AdvancedRendering struct {
 // RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 type RenderingIteration struct {
 
-	// InputArtifacts contains Input Artifacts passed for current rendering iteration.
-	// +optional
-	InputArtifacts *[]InputArtifact `json:"inputArtifacts,omitempty"`
-
-	// Continue specifies the user intention to continue rendering using the provided InputArtifacts.
-	// As the input artifacts are optional, user may continue rendering with empty list of InputArtifacts.
+	// Continue specifies the user intention to continue rendering using the provided InputArtifacts in the Action input.
+	// User may or may not add additional optional InputArtifacts to the list and continue Action rendering.
 	// +kubebuilder:default=false
 	Continue bool `json:"continue"`
 }
@@ -101,18 +117,11 @@ type RenderingIteration struct {
 // InputArtifact holds input artifact reference, which is in fact TypeInstance.
 type InputArtifact struct {
 
-	// Alias refers to input artifact name used in rendered Action.
-	Alias string `json:"alias"`
+	// Name refers to input artifact name used in rendered Action.
+	Name string `json:"name"`
 
 	// TypeInstanceID is a unique identifier for the TypeInstance used as input artifact.
 	TypeInstanceID string `json:"typeInstanceID"`
-}
-
-// ActionIORef holds references to resources where Action input or output is stored.
-type ActionIORef struct {
-
-	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
-	SecretRef v1.LocalObjectReference `json:"secretRef"`
 }
 
 // ActionStatus defines the observed state of Action.
@@ -132,17 +141,13 @@ type ActionStatus struct {
 	// +optional
 	Runner *RunnerStatus `json:"runner,omitempty"`
 
-	// OutputRef contains reference to resource with Action output.
+	// Output describes Action output.
 	// +optional
-	OutputRef *ActionIORef `json:"outputRef,omitempty"`
+	Output *ActionOutput `json:"output,omitempty"`
 
-	// RenderedAction contains partially or fully rendered Action to be executed.
+	// Rendering describes rendering status.
 	// +optional
-	RenderedAction *runtime.RawExtension `json:"renderedAction,omitempty"`
-
-	// AdvancedRendering describes status related to advanced rendering mode.
-	// +optional
-	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
+	Rendering *RenderingStatus `json:"rendering,omitempty"`
 
 	// CreatedBy holds user data which created a given Action.
 	// +optional
@@ -159,6 +164,71 @@ type ActionStatus struct {
 	// ObservedGeneration reflects the generation of the most recently observed Action.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
+
+	// Last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+}
+
+// ActionOutput describes Action output.
+type ActionOutput struct {
+
+	// Artifacts contains output Artifacts information.
+	// +optional
+	Artifacts *[]OutputArtifactDetails `json:"artifacts,omitempty"`
+}
+
+// RenderingStatus describes rendering status.
+type RenderingStatus struct {
+
+	// Action contains partially or fully rendered Action to be executed.
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Action *runtime.RawExtension `json:"action,omitempty"`
+
+	// Input contains resolved details of Action input.
+	// +optional
+	Input *ResolvedActionInput `json:"input,omitempty"`
+
+	// AdvancedRendering describes status related to advanced rendering mode.
+	// +optional
+	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
+}
+
+// ResolvedActionInput contains resolved details of Action input.
+type ResolvedActionInput struct {
+	// Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+	// +optional
+	Artifacts *[]InputArtifactDetails `json:"artifacts,omitempty"`
+
+	// Parameters holds value of the User input parameters.
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	Parameters *runtime.RawExtension `json:"parameters,omitempty"`
+}
+
+type InputArtifactDetails struct {
+	CommonArtifactDetails `json:",inline"`
+
+	// Optional highlights that the input artifact is optional.
+	// +kubebuilder:default=false
+	Optional bool `json:"optional,omitempty"`
+}
+
+type OutputArtifactDetails struct {
+	CommonArtifactDetails `json:",inline"`
+}
+
+type CommonArtifactDetails struct {
+
+	// Name refers to artifact name.
+	Name string `json:"name"`
+
+	// TypeInstanceID is a unique identifier for the TypeInstance used as artifact.
+	TypeInstanceID string `json:"typeInstanceID"`
+
+	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
+	TypePath NodePath `json:"typePath"`
 }
 
 // AdvancedRenderingStatus describes status related to advanced rendering mode.
@@ -174,7 +244,7 @@ type RenderingIterationStatus struct {
 
 	// InputArtifactsToProvide describes which input artifacts might be provided in a given rendering iteration.
 	// +optional
-	InputArtifactsToProvide *[]InputArtifact `json:"inputArtifactsToProvide,omitempty"`
+	InputArtifactsToProvide *[]InputArtifactDetails `json:"inputArtifactsToProvide,omitempty"`
 }
 
 // InputArtifactsToProvide describes input artifact that may be provided in a given rendering iteration.
@@ -196,6 +266,7 @@ type RunnerStatus struct {
 
 	// StatusRef contains reference to resource with arbitrary Runner status data.
 	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
 	Status *runtime.RawExtension `json:"status,omitempty"`
 }
 

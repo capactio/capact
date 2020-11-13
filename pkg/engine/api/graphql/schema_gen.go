@@ -43,17 +43,17 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	Action struct {
-		CancelledBy           func(childComplexity int) int
-		CreatedAt             func(childComplexity int) int
-		CreatedBy             func(childComplexity int) int
-		ID                    func(childComplexity int) int
-		Input                 func(childComplexity int) int
-		Output                func(childComplexity int) int
-		Path                  func(childComplexity int) int
-		RenderedAction        func(childComplexity int) int
-		RenderingAdvancedMode func(childComplexity int) int
-		RunBy                 func(childComplexity int) int
-		Status                func(childComplexity int) int
+		Cancel                 func(childComplexity int) int
+		CreatedAt              func(childComplexity int) int
+		ID                     func(childComplexity int) int
+		Input                  func(childComplexity int) int
+		Output                 func(childComplexity int) int
+		Path                   func(childComplexity int) int
+		RenderedAction         func(childComplexity int) int
+		RenderedActionOverride func(childComplexity int) int
+		RenderingAdvancedMode  func(childComplexity int) int
+		Run                    func(childComplexity int) int
+		Status                 func(childComplexity int) int
 	}
 
 	ActionInput struct {
@@ -62,8 +62,7 @@ type ComplexityRoot struct {
 	}
 
 	ActionOutput struct {
-		Artifacts  func(childComplexity int) int
-		Parameters func(childComplexity int) int
+		Artifacts func(childComplexity int) int
 	}
 
 	ActionRenderingAdvancedMode struct {
@@ -72,18 +71,20 @@ type ComplexityRoot struct {
 	}
 
 	ActionStatus struct {
-		Condition func(childComplexity int) int
-		Message   func(childComplexity int) int
-		Runner    func(childComplexity int) int
-		Timestamp func(childComplexity int) int
+		CancelledBy func(childComplexity int) int
+		Condition   func(childComplexity int) int
+		CreatedBy   func(childComplexity int) int
+		Message     func(childComplexity int) int
+		RunBy       func(childComplexity int) int
+		Runner      func(childComplexity int) int
+		Timestamp   func(childComplexity int) int
 	}
 
 	InputArtifact struct {
-		Alias          func(childComplexity int) int
+		Name           func(childComplexity int) int
 		Optional       func(childComplexity int) int
 		TypeInstanceID func(childComplexity int) int
 		TypePath       func(childComplexity int) int
-		Value          func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -99,7 +100,6 @@ type ComplexityRoot struct {
 		Name           func(childComplexity int) int
 		TypeInstanceID func(childComplexity int) int
 		TypePath       func(childComplexity int) int
-		Value          func(childComplexity int) int
 	}
 
 	Query struct {
@@ -147,12 +147,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "Action.cancelledBy":
-		if e.complexity.Action.CancelledBy == nil {
+	case "Action.cancel":
+		if e.complexity.Action.Cancel == nil {
 			break
 		}
 
-		return e.complexity.Action.CancelledBy(childComplexity), true
+		return e.complexity.Action.Cancel(childComplexity), true
 
 	case "Action.createdAt":
 		if e.complexity.Action.CreatedAt == nil {
@@ -160,13 +160,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Action.CreatedAt(childComplexity), true
-
-	case "Action.createdBy":
-		if e.complexity.Action.CreatedBy == nil {
-			break
-		}
-
-		return e.complexity.Action.CreatedBy(childComplexity), true
 
 	case "Action.id":
 		if e.complexity.Action.ID == nil {
@@ -203,6 +196,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Action.RenderedAction(childComplexity), true
 
+	case "Action.renderedActionOverride":
+		if e.complexity.Action.RenderedActionOverride == nil {
+			break
+		}
+
+		return e.complexity.Action.RenderedActionOverride(childComplexity), true
+
 	case "Action.renderingAdvancedMode":
 		if e.complexity.Action.RenderingAdvancedMode == nil {
 			break
@@ -210,12 +210,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Action.RenderingAdvancedMode(childComplexity), true
 
-	case "Action.runBy":
-		if e.complexity.Action.RunBy == nil {
+	case "Action.run":
+		if e.complexity.Action.Run == nil {
 			break
 		}
 
-		return e.complexity.Action.RunBy(childComplexity), true
+		return e.complexity.Action.Run(childComplexity), true
 
 	case "Action.status":
 		if e.complexity.Action.Status == nil {
@@ -245,13 +245,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionOutput.Artifacts(childComplexity), true
 
-	case "ActionOutput.parameters":
-		if e.complexity.ActionOutput.Parameters == nil {
-			break
-		}
-
-		return e.complexity.ActionOutput.Parameters(childComplexity), true
-
 	case "ActionRenderingAdvancedMode.artifactsForRenderingIteration":
 		if e.complexity.ActionRenderingAdvancedMode.ArtifactsForRenderingIteration == nil {
 			break
@@ -266,6 +259,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionRenderingAdvancedMode.Enabled(childComplexity), true
 
+	case "ActionStatus.cancelledBy":
+		if e.complexity.ActionStatus.CancelledBy == nil {
+			break
+		}
+
+		return e.complexity.ActionStatus.CancelledBy(childComplexity), true
+
 	case "ActionStatus.condition":
 		if e.complexity.ActionStatus.Condition == nil {
 			break
@@ -273,12 +273,26 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionStatus.Condition(childComplexity), true
 
+	case "ActionStatus.createdBy":
+		if e.complexity.ActionStatus.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.ActionStatus.CreatedBy(childComplexity), true
+
 	case "ActionStatus.message":
 		if e.complexity.ActionStatus.Message == nil {
 			break
 		}
 
 		return e.complexity.ActionStatus.Message(childComplexity), true
+
+	case "ActionStatus.runBy":
+		if e.complexity.ActionStatus.RunBy == nil {
+			break
+		}
+
+		return e.complexity.ActionStatus.RunBy(childComplexity), true
 
 	case "ActionStatus.runner":
 		if e.complexity.ActionStatus.Runner == nil {
@@ -294,12 +308,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionStatus.Timestamp(childComplexity), true
 
-	case "InputArtifact.alias":
-		if e.complexity.InputArtifact.Alias == nil {
+	case "InputArtifact.name":
+		if e.complexity.InputArtifact.Name == nil {
 			break
 		}
 
-		return e.complexity.InputArtifact.Alias(childComplexity), true
+		return e.complexity.InputArtifact.Name(childComplexity), true
 
 	case "InputArtifact.optional":
 		if e.complexity.InputArtifact.Optional == nil {
@@ -321,13 +335,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InputArtifact.TypePath(childComplexity), true
-
-	case "InputArtifact.value":
-		if e.complexity.InputArtifact.Value == nil {
-			break
-		}
-
-		return e.complexity.InputArtifact.Value(childComplexity), true
 
 	case "Mutation.cancelAction":
 		if e.complexity.Mutation.CancelAction == nil {
@@ -421,13 +428,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.OutputArtifact.TypePath(childComplexity), true
-
-	case "OutputArtifact.value":
-		if e.complexity.OutputArtifact.Value == nil {
-			break
-		}
-
-		return e.complexity.OutputArtifact.Value(childComplexity), true
 
 	case "Query.action":
 		if e.complexity.Query.Action == nil {
@@ -563,6 +563,11 @@ Arbitrary data
 scalar Any
 
 """
+Arbitrary input data in JSON string format
+"""
+scalar JSON
+
+"""
 Full path of a given node, e.g. cap.core.type.platform.kubernetes
 """
 scalar NodePath
@@ -574,13 +579,14 @@ input ActionDetailsInput {
     input: ActionInputData
     action: String! # full path for the Implementation or Interface
     advancedRendering: Boolean = false # Enables advance rendering mode of Action
+    renderedActionOverride: JSON
 }
 
 """
 Client input that modifies input of a given Action
 """
 input ActionInputData {
-    parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
+    parameters: JSON # during rendering, it is validated against JSON schema from Interface of the resolved action
     artifacts: [InputArtifactData!] # required and optional artifacts from root workflow
 }
 
@@ -588,7 +594,7 @@ input ActionInputData {
 Client input for Input Artifact
 """
 input InputArtifactData {
-    alias: String!
+    name: String!
     typeInstanceID: ID!
 }
 
@@ -599,7 +605,7 @@ type Action {
     id: ID!
     createdAt: Timestamp!
 
-    input: ActionInput # resolver which reads from Secret/ConfigMap
+    input: ActionInput
     output: ActionOutput
 
     """
@@ -607,12 +613,19 @@ type Action {
     """
     path: NodePath!
 
+    """
+    Indicates if user approved this Action to run
+    """
+    run: Boolean!
+
+    """
+    Indicates if user cancelled the workflow
+    """
+    cancel: Boolean!
+
     renderedAction: Any
     renderingAdvancedMode: ActionRenderingAdvancedMode
-
-    createdBy: UserInfo
-    runBy: UserInfo
-    cancelledBy: UserInfo
+    renderedActionOverride: Any
 
     status: ActionStatus
 }
@@ -633,6 +646,10 @@ type ActionStatus {
     timestamp: Timestamp!
     message: String
     runner: RunnerStatus
+
+    createdBy: UserInfo
+    runBy: UserInfo
+    cancelledBy: UserInfo
 }
 
 """
@@ -655,7 +672,6 @@ type ActionInput {
 Describes output of an Action
 """
 type ActionOutput {
-    parameters: Any # validated against JSON schema from Interface
     artifacts: [OutputArtifact!]!
 }
 
@@ -663,10 +679,9 @@ type ActionOutput {
 Describes input artifact of an Action
 """
 type InputArtifact {
-    alias: String!
+    name: String!
     typePath: NodePath! # Full path of the corresponding Type
     typeInstanceID: ID
-    value: Any # resolver for TypeInstance value
     optional: Boolean!
 }
 
@@ -677,7 +692,6 @@ type OutputArtifact {
     name: String!
     typeInstanceID: ID!
     typePath: NodePath! # Full path of the corresponding Type
-    value: Any # resolver for TypeInstance value
 }
 
 """
@@ -1101,6 +1115,76 @@ func (ec *executionContext) _Action_path(ctx context.Context, field graphql.Coll
 	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Action_run(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Action",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Run, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Action_cancel(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Action",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Cancel, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Action_renderedAction(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1165,7 +1249,7 @@ func (ec *executionContext) _Action_renderingAdvancedMode(ctx context.Context, f
 	return ec.marshalOActionRenderingAdvancedMode2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionRenderingAdvancedMode(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Action_createdBy(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
+func (ec *executionContext) _Action_renderedActionOverride(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1183,7 +1267,7 @@ func (ec *executionContext) _Action_createdBy(ctx context.Context, field graphql
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedBy, nil
+		return obj.RenderedActionOverride, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1192,73 +1276,9 @@ func (ec *executionContext) _Action_createdBy(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*UserInfo)
+	res := resTmp.(interface{})
 	fc.Result = res
-	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Action_runBy(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Action",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.RunBy, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*UserInfo)
-	fc.Result = res
-	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Action_cancelledBy(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Action",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CancelledBy, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*UserInfo)
-	fc.Result = res
-	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Action_status(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
@@ -1358,38 +1378,6 @@ func (ec *executionContext) _ActionInput_artifacts(ctx context.Context, field gr
 	res := resTmp.([]*InputArtifact)
 	fc.Result = res
 	return ec.marshalNInputArtifact2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputArtifactᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ActionOutput_parameters(ctx context.Context, field graphql.CollectedField, obj *ActionOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ActionOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Parameters, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(interface{})
-	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActionOutput_artifacts(ctx context.Context, field graphql.CollectedField, obj *ActionOutput) (ret graphql.Marshaler) {
@@ -1631,7 +1619,103 @@ func (ec *executionContext) _ActionStatus_runner(ctx context.Context, field grap
 	return ec.marshalORunnerStatus2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐRunnerStatus(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InputArtifact_alias(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
+func (ec *executionContext) _ActionStatus_createdBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ActionStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*UserInfo)
+	fc.Result = res
+	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActionStatus_runBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ActionStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RunBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*UserInfo)
+	fc.Result = res
+	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActionStatus_cancelledBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ActionStatus",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CancelledBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*UserInfo)
+	fc.Result = res
+	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InputArtifact_name(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1649,7 +1733,7 @@ func (ec *executionContext) _InputArtifact_alias(ctx context.Context, field grap
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Alias, nil
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1731,38 +1815,6 @@ func (ec *executionContext) _InputArtifact_typeInstanceID(ctx context.Context, f
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _InputArtifact_value(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InputArtifact",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Value, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(interface{})
-	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputArtifact_optional(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
@@ -2155,38 +2207,6 @@ func (ec *executionContext) _OutputArtifact_typePath(ctx context.Context, field 
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _OutputArtifact_value(ctx context.Context, field graphql.CollectedField, obj *OutputArtifact) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "OutputArtifact",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Value, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(interface{})
-	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_action(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -3627,6 +3647,14 @@ func (ec *executionContext) unmarshalInputActionDetailsInput(ctx context.Context
 			if err != nil {
 				return it, err
 			}
+		case "renderedActionOverride":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("renderedActionOverride"))
+			it.RenderedActionOverride, err = ec.unmarshalOJSON2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -3663,7 +3691,7 @@ func (ec *executionContext) unmarshalInputActionInputData(ctx context.Context, o
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("parameters"))
-			it.Parameters, err = ec.unmarshalOAny2interface(ctx, v)
+			it.Parameters, err = ec.unmarshalOJSON2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3707,11 +3735,11 @@ func (ec *executionContext) unmarshalInputInputArtifactData(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
-		case "alias":
+		case "name":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("alias"))
-			it.Alias, err = ec.unmarshalNString2string(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3767,16 +3795,22 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "run":
+			out.Values[i] = ec._Action_run(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "cancel":
+			out.Values[i] = ec._Action_cancel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "renderedAction":
 			out.Values[i] = ec._Action_renderedAction(ctx, field, obj)
 		case "renderingAdvancedMode":
 			out.Values[i] = ec._Action_renderingAdvancedMode(ctx, field, obj)
-		case "createdBy":
-			out.Values[i] = ec._Action_createdBy(ctx, field, obj)
-		case "runBy":
-			out.Values[i] = ec._Action_runBy(ctx, field, obj)
-		case "cancelledBy":
-			out.Values[i] = ec._Action_cancelledBy(ctx, field, obj)
+		case "renderedActionOverride":
+			out.Values[i] = ec._Action_renderedActionOverride(ctx, field, obj)
 		case "status":
 			out.Values[i] = ec._Action_status(ctx, field, obj)
 		default:
@@ -3830,8 +3864,6 @@ func (ec *executionContext) _ActionOutput(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ActionOutput")
-		case "parameters":
-			out.Values[i] = ec._ActionOutput_parameters(ctx, field, obj)
 		case "artifacts":
 			out.Values[i] = ec._ActionOutput_artifacts(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -3905,6 +3937,12 @@ func (ec *executionContext) _ActionStatus(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._ActionStatus_message(ctx, field, obj)
 		case "runner":
 			out.Values[i] = ec._ActionStatus_runner(ctx, field, obj)
+		case "createdBy":
+			out.Values[i] = ec._ActionStatus_createdBy(ctx, field, obj)
+		case "runBy":
+			out.Values[i] = ec._ActionStatus_runBy(ctx, field, obj)
+		case "cancelledBy":
+			out.Values[i] = ec._ActionStatus_cancelledBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3927,8 +3965,8 @@ func (ec *executionContext) _InputArtifact(ctx context.Context, sel ast.Selectio
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("InputArtifact")
-		case "alias":
-			out.Values[i] = ec._InputArtifact_alias(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._InputArtifact_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -3939,8 +3977,6 @@ func (ec *executionContext) _InputArtifact(ctx context.Context, sel ast.Selectio
 			}
 		case "typeInstanceID":
 			out.Values[i] = ec._InputArtifact_typeInstanceID(ctx, field, obj)
-		case "value":
-			out.Values[i] = ec._InputArtifact_value(ctx, field, obj)
 		case "optional":
 			out.Values[i] = ec._InputArtifact_optional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -4039,8 +4075,6 @@ func (ec *executionContext) _OutputArtifact(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "value":
-			out.Values[i] = ec._OutputArtifact_value(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5081,6 +5115,22 @@ func (ec *executionContext) unmarshalOInputArtifactData2ᚕᚖprojectvoltronᚗd
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOJSON2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx context.Context, v interface{}) (*JSON, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(JSON)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOJSON2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx context.Context, sel ast.SelectionSet, v *JSON) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalORunnerStatus2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐRunnerStatus(ctx context.Context, sel ast.SelectionSet, v *RunnerStatus) graphql.Marshaler {

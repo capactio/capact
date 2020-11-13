@@ -2,6 +2,11 @@ package controller
 
 import (
 	"context"
+	"time"
+
+	"k8s.io/api/authentication/v1beta1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"projectvoltron.dev/voltron/internal/ptr"
 
 	"github.com/go-logr/logr"
 	batchv1 "k8s.io/api/batch/v1"
@@ -38,6 +43,7 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	// Just a simple logic to check if controller is working e2e
 	// TODO: replace in https://cshark.atlassian.net/browse/SV-34
+
 	var action corev1alpha1.Action
 	if err := r.Get(ctx, req.NamespacedName, &action); err != nil {
 		log.Error(err, "while fetching Action CR")
@@ -47,9 +53,85 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
+	if action.Status.Phase != "" {
+		return ctrl.Result{}, nil
+	}
+
 	job := r.dummyJob(action)
 	if err := r.Create(ctx, &job); err != nil {
 		log.Error(err, "while creating dummy Job")
+		return ctrl.Result{}, err
+	}
+
+	action.Status = corev1alpha1.ActionStatus{
+		Phase:   corev1alpha1.SucceededActionPhase,
+		Message: ptr.String("Foo"),
+		Runner: &corev1alpha1.RunnerStatus{
+			Interface: "cap.interface.runner.argo.run",
+			Status: &runtime.RawExtension{
+				Raw: []byte(`{"argoWorkflowRef": "sample"}`),
+			},
+		},
+		Output: &corev1alpha1.ActionOutput{
+			Artifacts: &[]corev1alpha1.OutputArtifactDetails{
+				{
+					CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
+						Name:           "bar",
+						TypeInstanceID: "b02bdc8e-9e5d-4ee0-a350-4ccc23b363fb",
+						TypePath:       "cap.type.database.postgresql.config",
+					},
+				},
+			},
+		},
+		Rendering: &corev1alpha1.RenderingStatus{
+			Action: &runtime.RawExtension{
+				Raw: []byte(`{"workflow": true}`),
+			},
+			Input: &corev1alpha1.ResolvedActionInput{
+				Artifacts: &[]corev1alpha1.InputArtifactDetails{
+					{
+						CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
+							Name:           "foo",
+							TypeInstanceID: "fee33a5e-d957-488a-86bd-5dacd4120312",
+							TypePath:       "cap.core.type.foo.bar",
+						},
+						Optional: false,
+					},
+					{
+						CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
+							Name:           "bar",
+							TypeInstanceID: "563a79eb-7417-4e11-aa4b-d93076c04e48",
+							TypePath:       "cap.core.type.bar.baz",
+						},
+						Optional: true,
+					},
+				},
+				Parameters: &runtime.RawExtension{
+					Raw: []byte(`{"input1": "foo", "input2": 2, "input3": { "nested": true }}`),
+				},
+			},
+		},
+		CreatedBy: &v1beta1.UserInfo{
+			Username: "foo",
+			UID:      "73d3c628-864e-45e3-8927-b9b71e17c110",
+			Groups:   []string{"bar", "baz"},
+		},
+		RunBy: &v1beta1.UserInfo{
+			Username: "bar",
+			UID:      "3935025e-1403-4bb5-99d8-3ce428acf527",
+			Groups:   []string{"bar", "baz"},
+		},
+		CancelledBy: &v1beta1.UserInfo{
+			Username: "bar",
+			UID:      "14354227-9afe-45c8-8808-765b6a7fcb2b",
+			Groups:   []string{"bar", "baz"},
+		},
+		LastTransitionTime: metav1.NewTime(time.Now()),
+	}
+
+	err := r.Status().Update(ctx, &action)
+	if err != nil {
+		log.Error(err, "while updating Action CR status")
 		return ctrl.Result{}, err
 	}
 

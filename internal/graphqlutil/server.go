@@ -13,13 +13,17 @@ import (
 )
 
 func NewHTTPServer(log *zap.Logger, execSchema graphql.ExecutableSchema, addr, name string) httputil.StartableServer {
-	mainRouter := mux.NewRouter()
-	mainRouter.HandleFunc("/", playground.Handler(name, "/graphql")).Methods(http.MethodGet)
-	mainRouter.Handle("/graphql", handler.NewDefaultServer(execSchema)).Methods(http.MethodPost)
-
 	return httputil.NewStartableServer(
 		log.Named(name).With(zap.String("server", "graphql")),
 		addr,
-		mainRouter,
+		NewGraphQLRouter(execSchema, name),
 	)
+}
+
+func NewGraphQLRouter(execSchema graphql.ExecutableSchema, name string) *mux.Router {
+	r := mux.NewRouter()
+	r.HandleFunc("/", playground.Handler(name, "/graphql")).Methods(http.MethodGet)
+	r.Handle("/graphql", handler.NewDefaultServer(execSchema)).Methods(http.MethodPost)
+
+	return r
 }

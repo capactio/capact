@@ -3,12 +3,18 @@ package main
 import (
 	"log"
 
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
+	"projectvoltron.dev/voltron/pkg/httputil"
+
+	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
+	uber_zap "go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
@@ -23,6 +29,8 @@ var (
 	scheme   = runtime.NewScheme()
 	setupLog = ctrl.Log.WithName("setup")
 )
+
+const NamespaceHeaderName = "NAMESPACE"
 
 // Config holds application related configuration
 type Config struct {
@@ -59,7 +67,8 @@ func main() {
 	err = corev1alpha1.AddToScheme(scheme)
 	exitOnError(err, "while adding core Action scheme")
 
-	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+	k8sCfg := ctrl.GetConfigOrDie()
+	mgr, err := ctrl.NewManager(k8sCfg, ctrl.Options{
 		Scheme:                  scheme,
 		LeaderElection:          cfg.EnableLeaderElection,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
@@ -78,18 +87,34 @@ func main() {
 	exitOnError(err, "while adding healthz check")
 
 	// setup graphql server
+	k8sCli, err := client.New(k8sCfg, client.Options{Scheme: scheme})
+	exitOnError(err, "while creating K8s client")
+
 	execSchema := graphql.NewExecutableSchema(graphql.Config{
-		Resolvers: domaingraphql.NewRootResolver(),
+		Resolvers: domaingraphql.NewRootResolver(k8sCli),
 	})
 
-	gsvr := graphqlutil.NewHTTPServer(logger, execSchema, cfg.GraphQLAddr, "Engine GraphQL API")
-	err = mgr.Add(gsvr)
+	gqlSrv := gqlServer(logger, execSchema, cfg.GraphQLAddr, "Engine GraphQL API")
+	err = mgr.Add(gqlSrv)
 	exitOnError(err, "while adding GraphQL server")
 
 	// start
 	setupLog.Info("starting manager")
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	exitOnError(err, "while running manager")
+}
+
+func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {
+	nsMiddleware := namespace.NewMiddleware(NamespaceHeaderName)
+
+	gqlRouter := graphqlutil.NewGraphQLRouter(execSchema, name)
+	gqlRouter.Use(nsMiddleware.Handle)
+
+	return httputil.NewStartableServer(
+		log.Named(name).With(uber_zap.String("server", "graphql")),
+		addr,
+		gqlRouter,
+	)
 }
 
 func exitOnError(err error, context string) {

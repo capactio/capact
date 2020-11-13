@@ -15,20 +15,23 @@ type Action struct {
 	Input     *ActionInput  `json:"input"`
 	Output    *ActionOutput `json:"output"`
 	// Full path for the Implementation or Interface
-	Path                  string                       `json:"path"`
-	RenderedAction        interface{}                  `json:"renderedAction"`
-	RenderingAdvancedMode *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
-	CreatedBy             *UserInfo                    `json:"createdBy"`
-	RunBy                 *UserInfo                    `json:"runBy"`
-	CancelledBy           *UserInfo                    `json:"cancelledBy"`
-	Status                *ActionStatus                `json:"status"`
+	Path string `json:"path"`
+	// Indicates if user approved this Action to run
+	Run bool `json:"run"`
+	// Indicates if user cancelled the workflow
+	Cancel                 bool                         `json:"cancel"`
+	RenderedAction         interface{}                  `json:"renderedAction"`
+	RenderingAdvancedMode  *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
+	RenderedActionOverride interface{}                  `json:"renderedActionOverride"`
+	Status                 *ActionStatus                `json:"status"`
 }
 
 // Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 type ActionDetailsInput struct {
-	Input             *ActionInputData `json:"input"`
-	Action            string           `json:"action"`
-	AdvancedRendering *bool            `json:"advancedRendering"`
+	Input                  *ActionInputData `json:"input"`
+	Action                 string           `json:"action"`
+	AdvancedRendering      *bool            `json:"advancedRendering"`
+	RenderedActionOverride *JSON            `json:"renderedActionOverride"`
 }
 
 // Set of filters for Action list
@@ -44,14 +47,13 @@ type ActionInput struct {
 
 // Client input that modifies input of a given Action
 type ActionInputData struct {
-	Parameters interface{}          `json:"parameters"`
+	Parameters *JSON                `json:"parameters"`
 	Artifacts  []*InputArtifactData `json:"artifacts"`
 }
 
 // Describes output of an Action
 type ActionOutput struct {
-	Parameters interface{}       `json:"parameters"`
-	Artifacts  []*OutputArtifact `json:"artifacts"`
+	Artifacts []*OutputArtifact `json:"artifacts"`
 }
 
 // Properties related to Action advanced rendering
@@ -62,10 +64,13 @@ type ActionRenderingAdvancedMode struct {
 
 // Status of the Action
 type ActionStatus struct {
-	Condition ActionStatusCondition `json:"condition"`
-	Timestamp Timestamp             `json:"timestamp"`
-	Message   *string               `json:"message"`
-	Runner    *RunnerStatus         `json:"runner"`
+	Condition   ActionStatusCondition `json:"condition"`
+	Timestamp   Timestamp             `json:"timestamp"`
+	Message     *string               `json:"message"`
+	Runner      *RunnerStatus         `json:"runner"`
+	CreatedBy   *UserInfo             `json:"createdBy"`
+	RunBy       *UserInfo             `json:"runBy"`
+	CancelledBy *UserInfo             `json:"cancelledBy"`
 }
 
 // Input used for continuing Action rendering in advanced mode.
@@ -75,25 +80,23 @@ type AdvancedModeContinueRenderingInput struct {
 
 // Describes input artifact of an Action
 type InputArtifact struct {
-	Alias          string      `json:"alias"`
-	TypePath       string      `json:"typePath"`
-	TypeInstanceID *string     `json:"typeInstanceID"`
-	Value          interface{} `json:"value"`
-	Optional       bool        `json:"optional"`
+	Name           string  `json:"name"`
+	TypePath       string  `json:"typePath"`
+	TypeInstanceID *string `json:"typeInstanceID"`
+	Optional       bool    `json:"optional"`
 }
 
 // Client input for Input Artifact
 type InputArtifactData struct {
-	Alias          string `json:"alias"`
+	Name           string `json:"name"`
 	TypeInstanceID string `json:"typeInstanceID"`
 }
 
 // Describes output artifact of an Action
 type OutputArtifact struct {
-	Name           string      `json:"name"`
-	TypeInstanceID string      `json:"typeInstanceID"`
-	TypePath       string      `json:"typePath"`
-	Value          interface{} `json:"value"`
+	Name           string `json:"name"`
+	TypeInstanceID string `json:"typeInstanceID"`
+	TypePath       string `json:"typePath"`
 }
 
 // Additional Action status from the Runner
