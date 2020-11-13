@@ -240,6 +240,8 @@ voltron::install::charts() {
 
     voltron::install::ingress_controller
 
+    voltron::install::argo
+
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
@@ -281,6 +283,17 @@ voltron::install::ingress_controller() {
       --for=condition=ready pod \
       --selector=app.kubernetes.io/component=controller \
       --timeout=90s
+}
+
+voltron::install::argo() {
+  # not waiting as other components do not need it during installation
+    readonly ARGO_OVERRIDES="${REPO_DIR}/hack/kind/overrides.argo.yaml"
+    shout "- Installing Argo Helm chart [wait: false]..."
+    echo -e "- Applying overrides from ${ARGO_OVERRIDES}\n"
+    helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
+        --create-namespace \
+        --namespace="argo" \
+        -f "${ARGO_OVERRIDES}"
 }
 
 # Updates /etc/hosts with all Voltron subdomains.
