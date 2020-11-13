@@ -9,18 +9,17 @@ metadata:
   documentationURL: https://kubernetes.io/docs
   supportURL: https://kubernetes.io/
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   tags:
     cap.core.tag.capability.baseline:
-      revision: "0.1.0"
+      revision: 0.1.0
 spec:
   jsonSchema:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "https://kubernetes.io/schemas/platform.json",
         "type": "object",
         "title": "The Kubernetes schema",
         "required": [
@@ -37,7 +36,7 @@ spec:
             "$ref": "#/$ocfRefs/semVer"
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       }
 
 signature:

@@ -3,13 +3,13 @@ revision: 0.1.0
 kind: InterfaceGroup
 metadata:
   prefix: cap.interface.runner # Computed during fetching the manifest
-  name: helm
-  displayName: "Helm Runner"
-  description: "Interfaces for Helm Runner actions"
+  name: argo
+  displayName: "Argo Runner"
+  description: "Interfaces for Argo Runner actions"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 

@@ -8,7 +8,7 @@ metadata:
   description: Describes Internet host name
   documentationURL: https://tools.ietf.org/html/rfc1034#section-3.1
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -17,7 +17,6 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.core.type.networking.hostname",
         "type": "string",
         "format": "hostname",
         "title": "Hostname",

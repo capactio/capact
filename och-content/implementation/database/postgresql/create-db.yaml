@@ -10,7 +10,7 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -18,14 +18,14 @@ spec:
   appVersion: "9.x.x-13.x.x"
 
   implements:
-    - name: cap.interface.database.postgresql.create-db
-      revision: "0.1.0"
+    - path: cap.interface.database.postgresql.create-db
+      revision: 0.1.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: "0.1.0"
+          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -45,24 +45,16 @@ spec:
               artifacts:
                 - name: postgresql
                   path: /in/postgresql
+#               {{ inputParametersToArtifact }}
             container:
               image: gcr.io/projectvoltron/postgresql-exec:0.1.0
-              command: [ "run.sh" ]
               args:
+                - "--command-type"
+                - "create-db"
                 - "--db-config-path"
                 - "{{`{{inputs.artifacts.postgresql.path}}`}}"
-                - "--command"
-                - >
-                  CREATE DATABASE {{ .Input.parameters.name }}
-                  {{ if or .Input.parameters.owner .Input.parameters.tablespace }}
-                  WITH
-                  {{ endif }}
-                  {{ if .Input.parameters.owner  }}
-                  OWNER={{.Input.parameters.owner}}
-                  {{ endif }}
-                  {{ if .Input.parameters.tablespace }}
-                  TABLESPACE={{.Input.parameters.tablespace}}
-                  {{ endif }}
+                - "--parameters-path"
+                - "{{ inputParametersToArtifact.path }}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

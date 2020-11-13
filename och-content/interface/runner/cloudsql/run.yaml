@@ -2,20 +2,19 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.runner.gcp # Computed during fetching the manifest
+  prefix: cap.interface.runner.cloudsql # Computed during fetching the manifest
   name: run
   displayName: "Run"
-  description: "Run action for Google Cloud Platform Runner"
+  description: "Run action for GCP CloudSQL"
   documentationURL: https://projectvoltron.dev
-  supportURL: https://projectvoltron.dev
+  supportURL: https://cloud.google.com/sql
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 spec:
 # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
 # Requires `gcp-sa` of type cap.type.gcp.auth.service-account artifact
-# Output artifact may vary depending on the operation, e.g. cap.type.gcp.cloudsql.instance for CloudSQL like operations
 
   input:
     jsonSchema:
@@ -24,7 +23,7 @@ spec:
           "$schema": "http://json-schema.org/draft-07/schema",
           "$ocfRefs": {
             "inputType": {
-              "name": "cap.type.runner.gcp.run-input",
+              "name": "cap.type.runner.cloudsql.run-input",
               "revision": "0.1.0"
             }
           },

@@ -8,11 +8,9 @@ metadata:
   description: Specifies that a given manifest is related to GCP
   documentationURL: https://projectvoltron.dev
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-
-spec: {}
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

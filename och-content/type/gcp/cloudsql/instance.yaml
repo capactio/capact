@@ -9,12 +9,12 @@ metadata:
   documentationURL: https://cloud.google.com/sql
   supportURL: https://cloud.google.com/sql
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   tags:
     cap.tag.cloud.provider.gcp:
-      revision: "0.1.0"
+      revision: 0.1.0
 spec:
   # Based on https://cloud.google.com/sql/docs/postgres/instance-info#rest-v1beta4
   # and https://cloud.google.com/sql/docs/mysql/instance-info#rest-v1beta4
@@ -22,7 +22,6 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.type.gcp.cloudsql.instance",
         "type": "object",
         "title": "The schema for GCP CloudSQL instance",
         "examples": [

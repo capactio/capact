@@ -6,8 +6,9 @@ metadata:
   prefix: cap.core.type.networking  # Computed during fetching the manifest
   displayName: Port
   description: Describes TCP and UDP port number.
+  documentationURL: https://tools.ietf.org/html/rfc6335#page-11
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -16,7 +17,6 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.core.type.networking.port",
         "type": "integer",
         "title": "Port",
         "minimum": 0,

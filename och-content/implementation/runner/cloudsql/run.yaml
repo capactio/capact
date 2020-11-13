@@ -2,15 +2,15 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.runner.gcp # Computed during fetching the manifest
+  prefix: cap.implementation.runner.cloudsql # Computed during fetching the manifest
   name: run
   license:
     name: "Apache 2.0"
-  displayName: Run Action for Google Cloud Platform Runner
-  description: Running GCP operations
-  documentationURL: https://cloud.google.com/sdk/gcloud/reference
+  displayName: Run Action for Google Cloud Platform CloudSQL Runner
+  description: Running GCP CloudSQL operations
+  documentationURL: https://cloud.google.com/sdk/gcloud/reference/sql
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -18,16 +18,16 @@ spec:
   appVersion: "318.x.x" # version of the gcloud CLI
 
   implements:
-    - name: cap.core.interface.runner.generic.run
-      revision: "0.1.0"
-    - name: cap.interface.runner.gcp.run
-      revision: "0.1.0"
+    - path: cap.core.interface.runner.generic.run
+      revision: 0.1.0
+    - path: cap.interface.runner.cloudsql.run
+      revision: 0.1.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: "0.1.0"
+          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -38,6 +38,7 @@ spec:
 
 # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
 # Requires `gcp-sa` artifact
+# Additional output: cap.type.gcp.cloudsql.instance
 
   action:
     runnerInterface: argo.run
@@ -50,17 +51,17 @@ spec:
               artifacts:
               - name: gcp-sa
                 path: /gcp/sa.json
+#             {{ inputParametersToArtifact }}
             outputs:
               artifacts:
-                - name: helm-release
-                  globalName: helm-release
-                  path: "/out/helm-release"
+                - name: cloudsql-instance
+                  globalName: cloudsql-instance
+                  path: "/out/cloudsql-instance"
             container:
-              image: gcr.io/projectvoltron/gcp-runner:0.1.0
-              command: [ "run.sh" ]
+              image: gcr.io/projectvoltron/cloudsql-runner:0.1.0
               args:
-                - --params
-                - "{{ .Input.parameters }}"
+                - --parameters-path
+                - "{{ inputParametersToArtifact.path }}"
                 - --credentials-path
                 - "{{`{{inputs.artifacts.gcp-sa.path}}`}}"
 

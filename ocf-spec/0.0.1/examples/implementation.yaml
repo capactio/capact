@@ -20,23 +20,23 @@ metadata:
       url: https://examples.com/foo/bar
   tags:
     cap.core.tag.workload.stateless:
-        revision: "1.0.1"
+        revision: 1.0.1
 spec:
   appVersion: "5.4.x - 5.5.x, 5.6.0-alpha0"
 
   implements:
-    - name: cap.interface.cms.wordpress
-      revision: "1.0.0"
+    - path: cap.interface.cms.wordpress
+      revision: 1.0.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: "0.0.1"
+          revision: 0.0.1
           valueConstraints:
             version: "1.14.x, 1.15.x"
         - name: cap.type.platform.cloudFoundry
-          revision: "0.0.1"
+          revision: 0.0.1
           valueConstraints:
             version: "2.33.0, 2.34.x"
 

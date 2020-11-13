@@ -7,8 +7,7 @@
     "kind",
     "revision",
     "signature",
-    "metadata",
-    "spec"
+    "metadata"
   ],
   "properties": {
     "ocfVersion": {

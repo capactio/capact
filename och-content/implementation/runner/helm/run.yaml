@@ -10,7 +10,7 @@ metadata:
   description: Running Helm operations
   documentationURL: https://helm.sh/
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -18,16 +18,16 @@ spec:
   appVersion: "3.x.x"
 
   implements:
-    - name: cap.core.interface.runner.generic.run
-      revision: "0.1.0"
-    - name: cap.interface.runner.helm.run
-      revision: "0.1.0"
+    - path: cap.core.interface.runner.generic.run
+      revision: 0.1.0
+    - path: cap.interface.runner.helm.run
+      revision: 0.1.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: "0.1.0"
+          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -43,6 +43,9 @@ spec:
         entrypoint: helm
         templates:
           - name: helm
+            inputs:
+              artifacts:
+#               {{ inputParametersToArtifact }}
             outputs:
               artifacts:
                 - name: helm-release
@@ -50,11 +53,10 @@ spec:
                   path: "/out/helm-release"
             container:
               image: gcr.io/projectvoltron/helm-runner:0.1.0
-              command: [ "run.sh" ]
               args:
-                - --params
-                - "{{ .Input.parameters }}"
-                - --output-path
+                - "--parameters-path"
+                - "{{ inputParametersToArtifact.path }}"
+                - "--output-path"
                 - "{{`{{outputs.artifacts.helm-release.path}}`}}"
 
 signature:

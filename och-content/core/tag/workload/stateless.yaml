@@ -10,11 +10,9 @@ metadata:
   supportURL: https://projectvoltron.dev
   iconURL: https://projectvoltron.dev/favicon.ico
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-
-spec: {}
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

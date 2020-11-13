@@ -9,7 +9,7 @@ metadata:
   documentationURL: https://helm.sh/docs
   supportURL: https://helm.sh
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -18,7 +18,6 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.type.helm.chart.release",
         "type": "object",
         "title": "The Helm chart release",
         "examples": [

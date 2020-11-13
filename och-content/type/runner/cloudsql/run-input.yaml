@@ -3,11 +3,11 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: run-input
-  prefix: cap.type.runner.helm  # Computed during fetching the manifest
+  prefix: cap.type.runner.cloudsql  # Computed during fetching the manifest
   displayName: Input parameters for Run action
-  description: Describes input parameters for Run action of the Helm Runner.
-  documentationURL: https://helm.sh/docs
-  supportURL: https://helm.sh
+  description: Describes input parameters for Run action of the Google Cloud Platform CloudSQL Runner.
+  documentationURL: https://cloud.google.com/sdk/gcloud/reference/sql
+  supportURL: https://cloud.google.com
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -19,7 +19,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The input schema for Helm Runner",
+        "title": "The input schema for Google Cloud Platform Runner",
         "examples": [
           {
             "context": {
@@ -30,11 +30,13 @@ spec:
               "dryRun": false
             },
             "args": {
-              "command": "install",
-              "name": "foo",
-              "chart": {
-                "name": "postgresql",
-                "repo": "https://charts.bitnami.com/bitnami"
+              "group": "sql",
+              "command": "create",
+              "generateName": true,
+              "configuration": {
+                "tier": "db-g1-small",
+                "databaseVersion": "POSTGRES_12",
+                "region": "us-central"
               }
             }
           }
@@ -77,84 +79,36 @@ spec:
             "title": "Arguments for Helm Runner",
             "additionalProperties": false,
             "required": [
-                "command",
-                "chart"
+                "group",
+                "command"
             ],
             "properties": {
+              "group": {
+                "$id": "#/properties/args/properties/group",
+                "type": "string",
+                "title": "The group of a command"
+              },
               "command": {
                 "$id": "#/properties/args/properties/command",
                 "type": "string",
-                "enum": ["install", "upgrade", "delete"],
-                "title": "The command to run for Helm"
+                "title": "The command to execute"
               },
               "name": {
                 "$id": "#/properties/args/properties/name",
                 "type": "string",
-                "title": "The name of installed release"
-              },
-              "namespace": {
-                "$id": "#/properties/args/properties/namespace",
-                "type": "string",
-                "title": "The namespace schema",
-                "description": "The namespace where the Chart is installed",
-                "default": "default"
-              },
-              "chart": {
-                "$id": "#/properties/args/properties/chart",
-                "type": "object",
-                "title": "The chart data",
-                "required": [
-                    "name"
-                ],
-                "properties": {
-                  "name": {
-                    "$id": "#/properties/args/properties/chart/properties/name",
-                    "type": "string",
-                    "title": "The name of Chart",
-                    "default": ""
-                  },
-                  "version": {
-                    "$id": "#/properties/args/properties/chart/properties/version",
-                    "type": "string",
-                    "title": "Specify the exact chart version to use. If this is not specified, the latest version is used",
-                    "default": ""
-                  },
-                  "repo": {
-                    "$id": "#/properties/args/properties/repo",
-                    "type": "string",
-                    "title": "Chart repository URL where to locate the requested chart"
-                  }
-                },
-                "additionalProperties": false
-              },
-              "noHooks": {
-                "$id": "#/properties/args/properties/noHooks",
-                "type": "boolean",
-                "title": "Prevent hooks from running during install",
-                "default": false
+                "title": "The name of an instance"
               },
               "generateName": {
                 "$id": "#/properties/args/properties/generateName",
                 "type": "boolean",
-                "title": "Generate release name",
+                "title": "Generate instance name",
                 "default": false
               },
-              "replace": {
-                "$id": "#/properties/args/properties/replace",
-                "type": "boolean",
-                "title": "Re-use the given name, only if that name is a deleted release which remains in the history. This is unsafe in production",
-                "default": false
-              },
-              "values": {
-                "$id": "#/properties/args/properties/values",
+              "configuration": {
+                "$id": "#/properties/args/properties/configuration",
                 "type": "object",
-                "title": "The values for chart",
+                "title": "Additional configuration properties",
                 "additionalProperties": true
-              },
-              "valuesFromFile": {
-                "$id": "#/properties/args/properties/valuesFromFile",
-                "type": "string",
-                "title": "The path for file with values for chart"
               },
               "additionalOutput": {
                 "$id": "#/properties/args/properties/additionalOutput",

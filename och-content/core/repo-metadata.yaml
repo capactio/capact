@@ -6,7 +6,7 @@ metadata:
   name: metadata
   description: Voltron OCH repository
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 spec:

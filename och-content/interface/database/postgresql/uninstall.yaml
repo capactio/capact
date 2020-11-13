@@ -10,7 +10,7 @@ metadata:
   supportURL: https://www.postgresql.org/
   iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 

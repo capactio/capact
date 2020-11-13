@@ -9,7 +9,7 @@ metadata:
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
@@ -18,27 +18,53 @@ spec:
     value: |-
       {
           "$schema": "http://json-schema.org/draft-07/schema",
-          "$id": "cap.core.type.runner.generic.run-input",
           "type": "object",
           "title": "The input schema for generic Runner",
           "examples": [
               {
-                  "dryRun": false,
+                  "context": {
+                    "platform": {
+                      "foo": "bar"
+                    },
+                    "name": "foo",
+                    "dryRun": false
+                  },
                   "args": {
                       "foo": "bar"
                   }
               }
           ],
           "required": [
-              "dryRun",
+              "context",
               "args"
           ],
           "properties": {
-              "dryRun": {
-                  "$id": "#/properties/dryRun",
-                  "type": "boolean",
-                  "title": "Describes if the action should test ability to execute, not actually execute",
-                  "default": false,
+              "context": {
+                "$id": "#/properties/context",
+                "type": "object",
+                "title": "Runner context",
+                "required": [ "dryRun", "name" ],
+                "properties": {
+                  "dryRun": {
+                      "$id": "#/properties/context/properties/dryRun",
+                      "type": "boolean",
+                      "title": "Describes if the action should test ability to execute, not actually execute",
+                      "default": false
+                  },
+                  "name": {
+                      "$id": "#/properties/context/properties/name",
+                      "type": "string",
+                      "title": "Describes the name of current run"
+                  },
+                  "platform": {
+                      "$id": "#/properties/context/properties/platform",
+                      "type": "object",
+                      "additionalProperties": true,
+                      "default": {},
+                      "title": "Describes platform-specific values"
+                  }
+                },
+                "additionalProperties": false
               },
               "args": {
                   "$id": "#/properties/args",

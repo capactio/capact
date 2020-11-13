@@ -3,19 +3,18 @@ revision: 0.1.0
 kind: Vendor
 metadata:
   prefix: cap.vendor  # Computed during fetching the manifest
-  name: och.structsure.com
-  description: Structsure OCH repository
-  displayName: Structsure OCH repository
-  documentationURL: https://structsure.com
-  supportURL: https://structsure.com
-  iconURL: https://structsure.com/wp-content/uploads/2018/10/Structure-Favacon-1.png
+  name: och.example.org
+  description: Example OCH repository
+  displayName: Example OCH repository
+  documentationURL: https://example.org
+  supportURL: https://example.org
   maintainers:
-    - email: och@structsure.co
-      name: Structsure OCH Maintainers
-      url: https://structsure.com
+    - email: och@example.org
+      name: Example OCH Maintainers
+      url: https://example.org
 spec:
   federation:
-    uri: https://och.structsure.com
+    uri: https://och.example.org
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

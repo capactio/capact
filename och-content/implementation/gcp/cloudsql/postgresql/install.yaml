@@ -2,21 +2,21 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.bitnami.postgresql # Computed during fetching the manifest
+  prefix: cap.implementation.gcp.cloudsql.postgresql # Computed during fetching the manifest
   name: install
-  displayName: Install PostgreSQL database
-  description: Action which installs PostgreSQL database via Helm chart
-  documentationURL: https://github.com/bitnami/charts
-  supportURL: https://bitnami.com
+  displayName: Install PostgreSQL database using CloudSQL instance
+  description: Action which provisions CloudSQL for PostgreSQL database
+  documentationURL: https://cloud.google.com/cloudsql
+  supportURL: https://cloud.google.com/cloudsql
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   tags:
     cap.tag.cloud.provider.gcp:
-      revision: "0.1.0"
+      revision: 0.1.0
 
 spec:
 # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
@@ -26,18 +26,18 @@ spec:
   appVersion: "10, 11, 12, 13"
 
   implements:
-    - name: cap.interface.database.postgresql.install
-      revision: "0.1.0"
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: "0.1.0"
+          revision: 0.1.0
 
   imports:
-    - interfaceGroupPath: cap.interface.runner.gcp
-      alias: gcp
+    - interfaceGroupPath: cap.interface.runner.cloudsql
+      alias: cloudsql
       methods:
         - name: run
           revision: 0.1.0
@@ -66,10 +66,13 @@ spec:
                 - name: cloudsql-instance
                   globalName: cloudsql-instance
                   path: "/out/cloudsql-instance"
+                - name: postgresql
+                  globalName: postgresql
+                  path: "/out/postgresql"
             container:
 # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-#                      {{ .inlineAction(`
-#                          runnerInterface: gcp.run
+#                      {{ action:
+#                          runnerInterface: cloudsql.run
 #                          args:
 #                            group: "sql"
 #                            command: "create"
@@ -78,23 +81,17 @@ spec:
 #                              tier: "db-g1-small"
 #                              databaseVersion: "POSTGRES_{{ .Context.appVersion }}"
 #                              region: "us-central"
-#                        `) }}
-          - name: produce-config
-            inputs:
-              artifacts:
-                - name: cloudsql-instance
-                  path: "/in/cloudsql-instance"
-            outputs:
-              artifacts:
-                - name: postgresql
-                  globalName: postgresql
-                  path: "/out/postgresql"
-            container:
-              image: gcr.io/projectvoltron/postgresql-config-producer:0.1.0
-              command: [ "run.sh" ]
-              args:
-                - --cloudsql-instance-path
-                - "{{`{{inputs.artifacts.cloudsql-instance.path}}`}}"
+#                            additionalOutput:
+#                              path: "{{`{{outputs.artifacts.postgresql.path}}`}}"
+#                              # assuming runner bases on details from https://cloud.google.com/sql/docs/postgres/admin-api/rest/v1beta4/instances#DatabaseInstance
+#                              value:
+#                                host: "{{`{{ .ipAddresses[0].ipAddress }}`}}"
+#                                port: 5432
+#                                defaultDBName: "postgres"
+#                                superuser: # assuming runner creates dedicated user
+#                                  username: "{{`{{ .username }}`}}"
+#                                  password: "{{`{{ .password }}`}}"
+#                        }}
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

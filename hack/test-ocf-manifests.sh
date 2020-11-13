@@ -15,9 +15,9 @@ cd "${REPO_ROOT_DIR}"
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 shout "Validating OCF examples..."
-for pathPrefix in ocf-spec/*/ ; do
+for pathPrefix in ocf-spec/*/examples ; do
     echo "- Testing examples in ${pathPrefix}..."
-    go test -v --tags=ocfmanifests "${pathPrefix}/examples/examples_test.go"
+    go test -v --tags=ocfmanifests "./${pathPrefix}/..."
 done
 
 shout "Validating Hub content..."

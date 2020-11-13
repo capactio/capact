@@ -9,24 +9,31 @@ metadata:
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
 spec:
   jsonSchema:
-    # This schema contains full ArgoWorkflowSpec JSON schema converted from OpenAPI: https://github.com/argoproj/argo/blob/master/api/openapi-spec/swagger.json
+    # This schema contains full ArgoWorkflowSpec JSON schema converted from OpenAPI:
+    # Source: https://raw.githubusercontent.com/argoproj/argo/d752e2fa4fd69204e2c5989c8adceeb19963f2d4/api/openapi-spec/swagger.json
+    # It has been converted using https://github.com/openapi-contrib/openapi-schema-to-json-schema
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.type.runner.argo.run-input",
         "type": "object",
         "title": "The input schema for Argo Runner",
         "examples": [
           {
-            "dryRun": false,
+            "context": {
+              "platform": {
+                "foo": "bar"
+              },
+              "name": "foo",
+              "dryRun": false
+            },
             "args": {
-              "workflowSpec": {
+              "workflow": {
                    "entrypoint": "A",
                    "arguments": {
                      "parameters": [
@@ -73,15 +80,36 @@ spec:
           }
         ],
         "required": [
-            "dryRun",
+            "context",
             "args"
         ],
         "properties": {
-          "dryRun": {
-            "$id": "#/properties/dryRun",
-            "type": "boolean",
-            "title": "Describes if the action should test ability to execute, not actually execute",
-            "default": false
+          "context": {
+            "$id": "#/properties/context",
+            "type": "object",
+            "title": "Runner context",
+            "required": [ "dryRun", "name" ],
+            "properties": {
+              "dryRun": {
+                  "$id": "#/properties/context/properties/dryRun",
+                  "type": "boolean",
+                  "title": "Describes if the action should test ability to execute, not actually execute",
+                  "default": false
+              },
+              "name": {
+                  "$id": "#/properties/context/properties/name",
+                  "type": "string",
+                  "title": "Describes the name of current run"
+              },
+              "platform": {
+                  "$id": "#/properties/context/properties/platform",
+                  "type": "object",
+                  "additionalProperties": true,
+                  "default": {},
+                  "title": "Describes platform-specific values"
+              }
+            },
+            "additionalProperties": false
           },
           "args": {
             "$id": "#/properties/args",

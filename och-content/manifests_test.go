@@ -24,6 +24,15 @@ import (
 const ocfPathPrefix = "../ocf-spec/0.0.1/schema"
 const yamlFileRegex = ".yaml$"
 
+var interfaceGroupFilenamesFilter = map[string]struct{}{
+	"postgresql.yaml": {},
+	"jira.yaml":       {},
+	"argo.yaml":       {},
+	"cloudsql.yaml":   {},
+	"helm.yaml":       {},
+	"generic.yaml":    {},
+}
+
 type filenameFilter struct {
 	Exact    map[string]struct{}
 	Excluded map[string]struct{}
@@ -47,27 +56,27 @@ func TestManifestsValid(t *testing.T) {
 		filter              filenameFilter
 	}{
 		"Type manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/type.json", ocfPathPrefix),
+			jsonSchemaPath: "type.json",
 			manifestDirectories: []string{
 				"core/type",
 				"type",
 			},
 		},
 		"Tag manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/tag.json", ocfPathPrefix),
+			jsonSchemaPath: "tag.json",
 			manifestDirectories: []string{
 				"core/tag",
 				"tag",
 			},
 		},
 		"Vendor manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/vendor.json", ocfPathPrefix),
+			jsonSchemaPath: "vendor.json",
 			manifestDirectories: []string{
 				"vendor",
 			},
 		},
 		"RepoMetadata manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/repo-metadata.json", ocfPathPrefix),
+			jsonSchemaPath: "repo-metadata.json",
 			manifestDirectories: []string{
 				"core",
 			},
@@ -78,31 +87,27 @@ func TestManifestsValid(t *testing.T) {
 			},
 		},
 		"InterfaceGroup manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/interface-group.json", ocfPathPrefix),
+			jsonSchemaPath: "interface-group.json",
 			manifestDirectories: []string{
 				"core/interface",
 				"interface",
 			},
 			filter: filenameFilter{
-				Exact: map[string]struct{}{
-					"METADATA.yaml": {},
-				},
+				Exact: interfaceGroupFilenamesFilter,
 			},
 		},
 		"Interface manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/interface.json", ocfPathPrefix),
+			jsonSchemaPath: "interface.json",
 			manifestDirectories: []string{
 				"core/interface",
 				"interface",
 			},
 			filter: filenameFilter{
-				Excluded: map[string]struct{}{
-					"METADATA.yaml": {},
-				},
+				Excluded: interfaceGroupFilenamesFilter,
 			},
 		},
 		"Implementation manifests should be valid": {
-			jsonSchemaPath: fmt.Sprintf("%s/implementation.json", ocfPathPrefix),
+			jsonSchemaPath: "implementation.json",
 			manifestDirectories: []string{
 				"implementation",
 			},
@@ -111,7 +116,7 @@ func TestManifestsValid(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", tc.jsonSchemaPath))
+			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s", ocfPathPrefix, tc.jsonSchemaPath))
 			schema, err := sl.Compile(schemaLoader)
 			require.NoError(t, err, "while creating schema validator")
 
@@ -119,7 +124,7 @@ func TestManifestsValid(t *testing.T) {
 			for _, dirPath := range tc.manifestDirectories {
 				err := filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
 					if err != nil {
-						return errors.Wrap(err, "while loading file/dir")
+						return errors.Wrap(err, "iterating over files/dirs")
 					}
 
 					ok, err := shouldReadFile(info, tc.filter)

@@ -4,29 +4,30 @@ kind: Type
 metadata:
   name: semver
   prefix: cap.core.type.versioning  # Computed during fetching the manifest
-  displayName: Semantic Versioning
-  description: Describes Semantic Versioning
-  documentationURL: https://semver.org
+  displayName: Semantic Versioning 2.0
+  description: Describes Semantic Versioning 2.0
+  documentationURL: https://semver.org/spec/v2.0.0.html
   supportURL: https://semver.org
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   tags:
     cap.core.tag.capability.baseline:
-      revision: "0.1.0"
+      revision: 0.1.0
 spec:
+  # regex from https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
   jsonSchema:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.core.type.versioning.semver",
         "type": "string",
         "minLength": 5,
-        "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
+        "pattern": "^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$",
         "title": "Semantic Versioning version",
         "examples": [
             "1.19.0"
+            "2.0.1-alpha1"
         ]
       }
 

@@ -9,18 +9,17 @@ metadata:
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
-    - email: team@projectvoltron.dev
+    - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   tags:
     cap.core.tag.workload.stateful:
-      revision: "0.1.0"
+      revision: 0.1.0
 spec:
   jsonSchema:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "cap.type.database.postgresql.config",
         "type": "object",
         "title": "The schema for PostgreSQL configuration",
         "examples": [
