@@ -373,6 +373,7 @@ voltron::version_supported(){
 }
 
 voltron::validate::tools() {
+  shout "- Validating tools versions..."
   local current_kind_version
   local current_helm_version
   local wrong_versions
@@ -380,6 +381,9 @@ voltron::validate::tools() {
   current_kind_version=$(kind::version)
   current_helm_version=$(helm::version)
   wrong_versions=false
+
+  echo "Current kind version: $current_kind_version, recommended kind version: $STABLE_KIND_VERSION"
+  echo "Current helm version: $current_helm_version, recommended helm version: $STABLE_HELM_VERSION"
 
   if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" voltron::version_supported; then
     wrong_versions=true
