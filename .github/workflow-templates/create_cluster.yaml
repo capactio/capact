@@ -13,7 +13,6 @@ on:
         description: Docker Image Tag (Optional)    
         required: false
 
-
 jobs:
   create-cluster:
     name: Create new cluster
@@ -81,7 +80,6 @@ jobs:
         run: | 
           export SERVICES="gateway"
           ./hack/ci/backup-cert.sh
-
 
   network-cleanup:
     name: Network access cleanup
