@@ -87,6 +87,7 @@ jobs:
           cd ..
           . ./compare-cert.sh
           env
+          [[ ! -z "$CREATED" ]] && echo "Not empty" || echo "Empty"
       # - name: Install services
       #   run: | 
       #     env
@@ -96,12 +97,14 @@ jobs:
         run: | 
           env
           helm ls || true
+          [[ ! -z "$CREATED" ]] && echo "Not empty" || echo "Empty"
 
 # In  below step the SERVICES is set again, as currently we get the certs only for gateway.
       - name: Store secrets
         run: | 
           env
           export SERVICES="gateway"
+          [[ ! -z "$CREATED" ]] && echo "Not empty" || echo "Empty"
           ./hack/ci/backup-cert.sh
 
 
