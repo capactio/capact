@@ -1,6 +1,6 @@
 #  Handling TypeInstances in Interfaces and Implementations
 
-Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/)\)
+Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
 
 ##  Overview
 
@@ -50,7 +50,7 @@ Currently, we are struggling with defining the flow for passing, creating, and d
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
 -	[Define how to upload the generated artifacts from Action workflow to Local OCH.](#upload-action-artifacts-to-local-och)
 -	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
--	[Define how to specify additional output TypeInstances relations between them.](#additional-output-typeinstances-and-relations-between-them)
+-	[Define how to specify additional output TypeInstances and relations between them.](#additional-output-typeinstances-and-relations-between-them)
 
 ###  Non-goal
 
@@ -85,7 +85,7 @@ Actors
 
 We have the Interface entity which defines the input and output parameters. To fulfill a given Interface, Implementation needs to accept the same input and returns the same output parameters.
 
-The **required** input TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangeable and do not introduce new requirements.
+The **required** input and output TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangeable and do not introduce new requirements.
 
 For the Beta and GA only one TypeInstance can be declared as the output. As a result we can simplify implementation for defining [relations between generated artifacts](#specify-relations-between-generated-artifacts).
 
@@ -125,7 +125,9 @@ spec:
 
 ####  Alternatives
 
-There is an option to define `typeInstances` as a list instead of a map:
+There is an option to define `typeInstances` as a list instead of a map.
+
+<details> <summary>Example</summary>
 
 ```yaml
     typeInstances:
@@ -133,6 +135,8 @@ There is an option to define `typeInstances` as a list instead of a map:
         type: cap.type.db.mysql.config
         verbs: ["read", "update"]
 ```
+
+</details>
 
 Unfortunately, in that way, we cannot easily enforce that the names won't be repeated, and we cannot benefit from native YAML syntax support.
 
@@ -491,7 +495,7 @@ spec:
   # when saving artifact in Local OCH we can create a proper edges.
   additionalOutput:
     typeInstanceRelations:
-      worpdress_config: # artifact name
+      wordpress_config: # artifact name
         uses: # names of all artifacts that WP config depends on
           - mysql_config
           - ingress_config
@@ -584,13 +588,17 @@ Actors
 
 ####  Suggested solution
 
-The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Action developer wants to upload additional TypeInstances. As a result, the best option, for now, is that the Action Developer is able to use core upload action to define which TypeInstances should be uploaded.
+The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Action developer wants to upload additional TypeInstances. To solve that problem, the Action developer needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section. In that way, the Voltron Engine can add a step that can upload artifacts automatically.
+
+To update TypeInstance in a workflow, the workflow output artifact name should match the workflow input artifact. The upload step overwrites TypeInstance using PUT-like operation with a proper `resourceVersion`. If there is a conflict, the workflow fails and can be retried.
+
+> **NOTE**: The ability to update the TypeInstance is planned for GA.
 
 Restrictions:
 
 -	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances MUST be exactly the same as those defined in Interface or being an extension thereof.
 
--	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action devleper needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section.
+-	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action developer needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section.
 
 > **NOTE:** For the Beta and GA Engine doesn't validate above restrictions.
 
@@ -630,12 +638,12 @@ spec:
       workflow:
         steps:
           - name: create-mysql-db
-            actionFrom: cap.interface.db.mysql.install
+            {{ actionFrom: cap.interface.db.mysql.install }}
             outputs:
               artifacts:
                 - name: "mysql_config"
           - name: install-jira
-            actionFrom: cap.interfaces.management.jira.install
+            {{ actionFrom: cap.interfaces.management.jira.install }}
             inputs:
               artifacts:
                 - name: "mysql_config"
@@ -643,7 +651,7 @@ spec:
               artifacts:
                 - name: "jira_config"
           - name: expose-ingress
-            actionFrom: cap.interfaces.gcp.create-cloud-sql
+            {{ actionFrom: cap.interfaces.gcp.create-cloud-sql }}
             inputs:
               artifacts:
                 - name: "jira_config"
@@ -686,12 +694,12 @@ spec:
     workflow:
       steps:
         - name: gcp-create-service-account
-          actionFrom: cap.interfaces.gcp.create-service-account
+          {{ actionFrom: cap.interfaces.gcp.create-service-account }}
           outputs:
             artifacts:
               - name: "gcp-sa"
         - name: create-cloud-sql
-          actionFrom: cap.interfaces.gcp.create-cloud-sql
+          {{ actionFrom: cap.interfaces.gcp.create-cloud-sql }}
           inputs:
             artifacts:
               - name: "gcp-sa"
