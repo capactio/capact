@@ -1,7 +1,6 @@
+#!/bin/bash
 if [ -z "${CERT_RESTORE}" ] 
-then 
-  printf "\n***Certs restored, not backuping new.***";
-else 
+then
   printf "\n***Certs NOT restored, I will backup new.***"
   i=0
   while : 
@@ -25,5 +24,7 @@ else
     do  
       kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
     done
-    gsutil cp secret*.yaml gs://${BUCKET}
+    gsutil cp secret*.yaml gs://${BUCKET} 
+else 
+  printf "\n***Certs restored, not backuping new.***"
 fi

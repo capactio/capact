@@ -1,6 +1,5 @@
 #!/bin/bash
 export CREATED=$(gsutil ls -la gs://${BUCKET} |sort -k2 -r |grep -v ^TOTAL |head -n 1 |awk -F"#" '{ print substr($2,1,10) }')
-echo "CREATED=${CREATED}" >> $GITHUB_ENV
 
 if [ -z "${CREATED}" ] 
 then 
