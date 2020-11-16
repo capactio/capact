@@ -43,21 +43,21 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GKE_CREDS }}        
       - name: Setup terraform
-        run: | 
-          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-          sudo apt-get update && sudo apt-get install terraform 
-      - name: Create cluster
-        run: | 
-          gcloud config set project ${PROJECT_ID}
-          cd hack/ci/terraform
-          terraform init
-          terraform apply -auto-approve
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./hack/ci/terraform/*.tfstate
+      #   run: | 
+      #     curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+      #     sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      #     sudo apt-get update && sudo apt-get install terraform 
+      # - name: Create cluster
+      #   run: | 
+      #     gcloud config set project ${PROJECT_ID}
+      #     cd hack/ci/terraform
+      #     terraform init
+      #     terraform apply -auto-approve
+      # - name: Archive terraform state
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: cluster-tfstate
+      #     path: ./hack/ci/terraform/*.tfstate
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
@@ -67,27 +67,40 @@ jobs:
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-      - name: Install dependencies in cluster
+      # - name: Install dependencies in cluster
+      #   run: | 
+      #     helm repo add jetstack https://charts.jetstack.io
+      #     helm repo update
+      #     helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
+      #     helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+      #     echo -e "\n- Waiting for Cert Manager to be ready...\n"
+      #     kubectl -n cert-manager rollout status deploy/cert-manager-webhook
+      #     sleep 20
+      #     cd hack/ci/terraform
+      #     kubectl apply -f yaml/cluster-issuer.yaml
+      #     cd ..
+      #     . ./compare-cert.sh
+      #     env
+      - name: certs tests
         run: | 
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo update
-          helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
-          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
-          echo -e "\n- Waiting for Cert Manager to be ready...\n"
-          kubectl -n cert-manager rollout status deploy/cert-manager-webhook
-          sleep 20
           cd hack/ci/terraform
-          kubectl apply -f yaml/cluster-issuer.yaml
           cd ..
           . ./compare-cert.sh
-      - name: Install services
+          env
+      # - name: Install services
+      #   run: | 
+      #     env
+      #     helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
+      #     --set global.containerRegistry.overrideTag=${IMAGE_TAG}
+      - name: test step
         run: | 
-          helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
-          --set global.containerRegistry.overrideTag=${IMAGE_TAG}
+          env
+          helm ls || true
 
 # In  below step the SERVICES is set again, as currently we get the certs only for gateway.
       - name: Store secrets
         run: | 
+          env
           export SERVICES="gateway"
           ./hack/ci/backup-cert.sh
 
