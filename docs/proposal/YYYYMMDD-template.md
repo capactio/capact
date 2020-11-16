@@ -1,10 +1,8 @@
-{Name}
-======
+# {Name}
 
 Created on {date in the `2020-11-02` format} by {Author} ({GitHub username})
 
-Overview
---------
+## Overview
 
 <!--
 General overview of the proposal and section with ToC
@@ -23,17 +21,15 @@ General overview of the proposal and section with ToC
 
 <!-- tocstop -->
 
-Motivation
-----------
+## Motivation
 
 ### Goal
 
 ### Non-goal
 
-Proposal
---------
+## Proposal
 
-### User Story
+### User Story Name
 
 #### Suggested solution
 
@@ -45,5 +41,4 @@ not need to be as detailed as the proposal, but should include enough
 information to express the idea and why it was not acceptable.
 -->
 
-Consequences
-------------
+## Consequences
