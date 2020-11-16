@@ -1,6 +1,6 @@
 #  Handling TypeInstances in Interfaces and Implementations
 
-Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
+Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/)\)
 
 ##  Overview
 
@@ -21,7 +21,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
   * [Identify Action behavior (create/delete/upsert/update/get/list)](#identify-action-behavior-createdeleteupsertupdategetlist)
     + [Suggested solution](#suggested-solution-2)
     + [Alternatives](#alternatives-2)
-  * [Specify relations between generated artifacts](#specify-relations-between-generated-artifacts)
+  * [Additional output TypeInstances and relations between them](#additional-output-typeinstances-and-relations-between-them)
     + [Suggested solution](#suggested-solution-3)
   * [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
     + [Suggested solution](#suggested-solution-4)
@@ -50,7 +50,7 @@ Currently, we are struggling with defining the flow for passing, creating, and d
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
 -	[Define how to upload the generated artifacts from Action workflow to Local OCH.](#upload-action-artifacts-to-local-och)
 -	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
--	[Define how to specify relations between generated artifacts.](#specify-relations-between-generated-artifacts)
+-	[Define how to specify additional output TypeInstances relations between them.](#additional-output-typeinstances-and-relations-between-them)
 
 ###  Non-goal
 
@@ -470,7 +470,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 
 	</details>
 
-###  Specify relations between generated artifacts
+###  Additional output TypeInstances and relations between them
 
 Actors
 
@@ -480,7 +480,7 @@ If we know the relations between the TypeInstance e.g. that Jira instance uses a
 
 ####  Suggested solution
 
-Specify the relations between the TypeInstances in the Implementation. In the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. For now, the Interface can define only one TypeInstance in the output section, so the relations property is not necessary on the Interface type. As a result, it simplifies the solution for Beta and GA as we don't need to take care of proper merging those relations defined on Interface and Implementation.
+Specify the relations between the TypeInstances in the Implementation. As describe in [upload artifacts](#upload-action-artifacts-to-local-och) section, in the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. For now, the Interface can define only one TypeInstance in the output section, so the relations property is not necessary on the Interface type. As a result, it simplifies the solution for Beta and GA as we don't need to take care of proper merging those relations defined on Interface and Implementation.
 
 This property is required if the Implementation wants to upload more than one artifact. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed.
 
@@ -590,7 +590,7 @@ Restrictions:
 
 -	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances MUST be exactly the same as those defined in Interface or being an extension thereof.
 
--	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action devleper needs to describe the relations between additional output TypeInstances as described in [this](#specify-relations-between-generated-artifacts) section.
+-	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action devleper needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section.
 
 > **NOTE:** For the Beta and GA Engine doesn't validate above restrictions.
 
