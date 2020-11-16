@@ -1,4 +1,4 @@
-# Internal documentation
+# Investigation documentation
 
 The directory contains investigations and proof of concepts files.
 
