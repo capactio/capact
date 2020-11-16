@@ -15,4 +15,5 @@ else
   kubectl create ns ${NAMESPACE} || true
   kubectl apply -f secret-*.yaml --namespace ${NAMESPACE}
   export CERT_RESTORE=1
+  echo "CERT_RESTORE=${CERT_RESTORE}" >>"$GITHUB_ENV"
 fi
