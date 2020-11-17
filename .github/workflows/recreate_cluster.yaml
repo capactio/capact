@@ -106,7 +106,7 @@ jobs:
     name: Network access cleanup
     runs-on: ubuntu-latest
     if: always()
-    needs: [ create-cluster ]
+    needs: [ recreate-cluster ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
