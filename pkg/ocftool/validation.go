@@ -86,7 +86,7 @@ func (v *FilesystemManifestValidator) ValidateYaml(r io.Reader) (*gojsonschema.R
 
 	schema, err := sl.Compile(rootLoader)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
