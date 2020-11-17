@@ -21,10 +21,10 @@ type FilesystemManifestValidator struct {
 	schemaRootPath string
 }
 
-func NewFilesystemManifestValidator(schemaRootPath string) (ManifestValidator, error) {
+func NewFilesystemManifestValidator(schemaRootPath string) ManifestValidator {
 	return &FilesystemManifestValidator{
 		schemaRootPath: schemaRootPath,
-	}, nil
+	}
 }
 
 type manifestMetadata struct {

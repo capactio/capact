@@ -10,14 +10,40 @@ import (
 
 const (
 	appName = "ocftool"
+	version = "0.0.1"
 )
+
+func validateManifest(validator ocftool.ManifestValidator, filepath string) (failed bool) {
+	fp, err := os.Open(filepath)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to open manifest: %v\n", err)
+		return failed
+	}
+	defer fp.Close()
+
+	result, err := validator.ValidateYaml(fp)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed validate manifest: %v\n", err)
+		return true
+	}
+
+	if result.Valid() {
+		fmt.Printf("- %s: PASSED\n", filepath)
+	} else {
+		fmt.Printf("- %s: FAILED\n", filepath)
+		for _, err := range result.Errors() {
+			fmt.Printf("    %s\n", err)
+		}
+	}
+	return !result.Valid()
+}
 
 var (
 	schemaRootDir string
 
 	rootCmd = &cobra.Command{
-		Use: appName,
-
+		Use:     appName,
+		Version: version,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				panic(err)
@@ -26,30 +52,25 @@ var (
 	}
 
 	validateCmd = &cobra.Command{
-		Use:  "validate",
-		Args: cobra.MinimumNArgs(1),
+		Use: "validate",
+		Example: `ocftool validate ocf-spec/0.0.1/examples/interface-group.yaml
+ocftool validate pkg/ocftool/test_manifests/*.yaml`,
+		Short: "Validate OCF manifests",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			validator, err := ocftool.NewFilesystemManifestValidator(schemaRootDir)
+			validator := ocftool.NewFilesystemManifestValidator(schemaRootDir)
 
-			fmt.Println("RESULTS:")
+			fmt.Println("Validation result:")
 
-			if err != nil {
-				panic(err)
+			shouldFail := false
+			for _, filepath := range args {
+				if validateManifest(validator, filepath) {
+					shouldFail = true
+				}
 			}
 
-			for _, filepath := range args {
-				fp, err := os.Open(filepath)
-				if err != nil {
-					panic(err)
-				}
-				defer fp.Close()
-
-				result, err := validator.ValidateYaml(fp)
-				if err != nil {
-					panic(err)
-				}
-
-				fmt.Printf("- %s: %v\n", filepath, result.Valid())
+			if shouldFail {
+				os.Exit(1)
 			}
 		},
 	}
