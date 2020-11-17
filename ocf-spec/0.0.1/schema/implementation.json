@@ -170,12 +170,12 @@
           "type": "object",
           "description": "List of the system prerequisites that need to be present on the cluster. There has to be an Instance for every concrete type.",
           "additionalProperties": {
-            "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform",
+            "$id": "#/properties/spec/properties/requires/additionalProperties",
             "type": "object",
             "description": "Prefix MUST be an abstract node and represents a core abstract Type e.g. cap.core.type.platform. Custom Types are not allowed.",
             "properties": {
               "oneOf": {
-                "$id": "#/properties/spec/properties/requires/properties/oneOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/oneOf",
                 "type": "array",
                 "description": "Exactly one of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
@@ -184,7 +184,7 @@
                 }
               },
               "allOf": {
-                "$id": "#/properties/spec/properties/requires/properties/allOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/allOf",
                 "type": "array",
                 "description": "All of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
@@ -193,7 +193,7 @@
                 }
               },
               "anyOf": {
-                "$id": "#/properties/spec/properties/requires/properties/anyOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/anyOf",
                 "type": "array",
                 "description": "Any (one or more) of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,

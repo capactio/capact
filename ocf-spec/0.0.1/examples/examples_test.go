@@ -22,6 +22,7 @@ func TestManifestsValid(t *testing.T) {
 
 	schemaRefPaths := []string{
 		"../schema/common/json-schema-type.json",
+		"../schema/common/type-ref.json",
 		"../schema/common/metadata.json",
 		"../schema/common/metadata-tags.json",
 	}

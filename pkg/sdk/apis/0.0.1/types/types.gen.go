@@ -140,7 +140,13 @@ type InterfaceSpec struct {
 
 // The input schema for Interface action.
 type Input struct {
-	JSONSchema JSONSchema `json:"jsonSchema"`
+	Parameters    Parameters                   `json:"parameters"`   // The input parameters passed from User
+	TypeInstances map[string]InputTypeInstance `json:"typeInstances"`// The required input TypeInstances
+}
+
+// The input parameters passed from User
+type Parameters struct {
+	JSONSchema *JSONSchema `json:"jsonSchema,omitempty"`
 }
 
 // The JSONSchema definition.
@@ -148,9 +154,26 @@ type JSONSchema struct {
 	Value string `json:"value"`// Inline JSON Schema definition for the parameters.
 }
 
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type InputTypeInstance struct {
+	TypeRef *TypeRef `json:"typeRef,omitempty"`
+	Verbs   []Verb   `json:"verbs,omitempty"`  // The full list of access rights for a given TypeInstance
+}
+
+// The full path to the Type from which the TypeInstance is created.
+type TypeRef struct {
+	Path     string  `json:"path"`              // Path of a given Type
+	Revision *string `json:"revision,omitempty"`// Version of the manifest content in the SemVer format.
+}
+
 // The output schema for Interface action.
 type Output struct {
-	JSONSchema JSONSchema `json:"jsonSchema"`
+	TypeInstances map[string]OutputTypeInstance `json:"typeInstances"`// The required output TypeInstances
+}
+
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type OutputTypeInstance struct {
+	TypeRef *TypeRef `json:"typeRef,omitempty"`
 }
 
 // The description of an action and its prerequisites (dependencies). An implementation
@@ -367,7 +390,7 @@ type TypeInstanceMetadata struct {
 // A container for the TypeInstance specification definition.
 type TypeInstanceSpec struct {
 	Instrumentation *Instrumentation       `json:"instrumentation,omitempty"`// Holds the details about instrumentation for given Type Instance
-	TypeRef         TypeRef                `json:"typeRef"`                  // The full path to the Type form which this instance was created.
+	TypeRef         TypeRef                `json:"typeRef"`                  
 	Value           map[string]interface{} `json:"value"`                    // Holds the JSON object for a given TypeInstance with arbitrary data. It needs to be valid; against the Type JSONSchema.
 }
 
@@ -393,12 +416,6 @@ type Metrics struct {
 // Stores details of a metrics dashboard
 type Dashboard struct {
 	URL *string `json:"url,omitempty"`// URL of metrics dashboard
-}
-
-// The full path to the Type form which this instance was created.
-type TypeRef struct {
-	Path     string  `json:"path"`              // Path of a given Type
-	Revision *string `json:"revision,omitempty"`// Version of the manifest content in the SemVer format.
 }
 
 // Remote OCH repositories can be mounted under the vendor sub-tree in the local repository.
@@ -431,6 +448,15 @@ type Federation struct {
 type InterfaceKind string
 const (
 	KindInterface InterfaceKind = "Interface"
+)
+
+type Verb string
+const (
+	Create Verb = "create"
+	Delete Verb = "delete"
+	List Verb = "list"
+	Read Verb = "read"
+	Update Verb = "update"
 )
 
 type ImplementationKind string
