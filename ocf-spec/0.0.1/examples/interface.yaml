@@ -35,7 +35,7 @@ spec:
         typeRef:
           path: cap.type.cms.wordpress.config
           revision: 0.1.0
-        verbs: [ "read", "update" ]
+        verbs: [ "get", "update" ]
   output:
     typeInstances:
       wpConfig:

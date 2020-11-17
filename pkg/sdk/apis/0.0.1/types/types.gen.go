@@ -156,8 +156,8 @@ type JSONSchema struct {
 
 // Prefix is an alias of the TypeInstance, used in the Implementation
 type InputTypeInstance struct {
-	TypeRef *TypeRef `json:"typeRef,omitempty"`
-	Verbs   []Verb   `json:"verbs,omitempty"`  // The full list of access rights for a given TypeInstance
+	TypeRef TypeRef `json:"typeRef"`
+	Verbs   []Verb  `json:"verbs"`  // The full list of access rights for a given TypeInstance
 }
 
 // The full path to the Type from which the TypeInstance is created.
@@ -472,8 +472,8 @@ type Verb string
 const (
 	Create Verb = "create"
 	Delete Verb = "delete"
+	Get Verb = "get"
 	List Verb = "list"
-	Read Verb = "read"
 	Update Verb = "update"
 )
 
@@ -512,7 +512,7 @@ const (
 // Method of HTTP request
 type MethodEnum string
 const (
-	Get MethodEnum = "GET"
+	MethodGET MethodEnum = "GET"
 	Post MethodEnum = "POST"
 )
 

@@ -30,7 +30,7 @@ spec:
         typeRef:
           path: cap.type.db.mysql.config
           revision: 0.1.0
-        verbs: [ "read", "update" ]
+        verbs: [ "get", "update" ]
 
   additionalOutput:
     typeInstances:

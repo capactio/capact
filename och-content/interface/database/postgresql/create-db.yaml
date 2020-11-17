@@ -14,36 +14,33 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
-# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-# Required artifact cap.type.database.postgresql.config",
-
 spec:
   input:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "$ocfRefs": {
-            "inputType": {
-              "name": "cap.type.database.postgresql.database-input",
-              "revision": "0.1.0"
-            }
-          },
-          "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
-        }
+    parameters:
+      jsonSchema:
+        value: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "$ocfRefs": {
+              "inputType": {
+                "name": "cap.type.database.postgresql.database-input",
+                "revision": "0.1.0"
+              }
+            },
+            "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+          }
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
   output:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "$ocfRefs": {
-            "outputType": {
-              "name": "cap.type.database.postgresql.database",
-              "revision": "0.1.0"
-            }
-          },
-          "allOf": [ { "$ref": "#/$ocfRefs/outputType" } ]
-        }
+    typeInstances:
+      db:
+        typeRef:
+          path: cap.type.database.postgresql.database
+          revision: 0.1.0
 
 
 signature:

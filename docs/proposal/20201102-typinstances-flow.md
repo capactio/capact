@@ -113,12 +113,16 @@ spec:
     typeInstances: # all bellow entities are required and need to be passed to Implementation
       # pass as an input one instance of cap.type.cms.wordpress.config Type based on ID that user should provide.
       backend_db: # unique name that needs to be used in Implementation
-        type: cap.type.db.mysql.config
-        verbs: ["read", "update"]
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
+        verbs: ["get", "update"]
   output:
     typeInstances: # it's an TypeInstance that is created as a result of executed action. ONLY one can be declared for Beta and GA.
       wp_config: 
-        type: cap.type.cms.wordpress.config
+        typeRef:
+          path: cap.type.cms.wordpress.config
+          revision: 0.1.0
 ```
 
 </details>
@@ -133,7 +137,7 @@ There is an option to define `typeInstances` as a list instead of a map.
     typeInstances:
       - name: backend_db
         type: cap.type.db.mysql.config
-        verbs: ["read", "update"]
+        verbs: ["get", "update"]
 ```
 
 </details>
@@ -169,8 +173,10 @@ spec:
     # maybe some day also parameters: {}
     typeInstances: # names need to be different from those define under spec.input.typeInstances in Interface
       mysql-config: 
-        type: cap.type.db.mysql.config
-        verbs: ["read", "update"]
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
+        verbs: ["get", "update"]
   
   action:
     type: argo.run
@@ -352,7 +358,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 
 | Verbs    | Description                                                                               |
 |----------|-------------------------------------------------------------------------------------------|
-| `read`   | Specify that the input is a single TypeInstance that is in read-only mode.                |
+| `get`   | Specify that the input is a single TypeInstance that is in read-only mode.                |
 | `list`   | Specify that the input is a list of all TypeInstances from Local OCH in read-only mode.   |
 | `create` | This is automatically set for output TypeInstances. Core Action stores them in Local OCH. |
 | `update` | Specify that the input TypeInstance is modified in Action.                                |
@@ -366,8 +372,10 @@ Use the information from the `input`/`output` property defined in Interface. For
 	input: 
 	  typeInstances:
 	    backend_db:
-	      type: cap.type.db.mysql.config
-	      verbs: ["read"] 
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0
+	      verbs: ["get"] 
 	```
 
 -	List operation
@@ -376,7 +384,9 @@ Use the information from the `input`/`output` property defined in Interface. For
 	input: 
 	  typeInstances:
 	    backend_db:
-	      type: cap.type.db.mysql.config
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0
 	      verbs: ["list"] 
 	```
 
@@ -386,7 +396,9 @@ Use the information from the `input`/`output` property defined in Interface. For
 	output: 
 	  typeInstances:
 	    wp_config:
-	      type: cap.type.cms.wordpress.config
+	      typeRef:
+            path: cap.type.cms.wordpress.config
+            revision: 0.1.0
 	```
 
 -	Delete operation
@@ -395,7 +407,9 @@ Use the information from the `input`/`output` property defined in Interface. For
 	input: 
 	  typeInstances:
 	    backend_db:
-	      type: cap.type.db.mysql.config
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0
 	      verbs: ["delete"] 
 	```
 
@@ -405,8 +419,10 @@ Use the information from the `input`/`output` property defined in Interface. For
 	input: 
 	  typeInstances:
 	    backend_db:
-	      type: cap.type.db.mysql.config
-	      verbs: ["read", "update"] 
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0
+	      verbs: ["get", "update"] 
 	```
 
 </details>
@@ -467,7 +483,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 	  typeInstances:
 	    - name: backend_db
 	      type: cap.type.db.mysql.config
-	      verbs: ["read"] 
+	      permissions: ["read"] 
 	```
 
 	With the `permissions` name, it's not so easy to explain that it affects the rendered workflow, and e.g. based on that Engine is injecting some steps automatically as describe [here](#populate-an-action-with-the-input-typeinstances).
@@ -494,14 +510,25 @@ kind: Implementation
 spec:
   # when saving artifact in Local OCH we can create a proper edges.
   additionalOutput:
+    typeInstances: # list all optional artifacts with type references
+        mysql_config:
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0	     
+        ingress_config:
+            typeRef:
+              path: cap.type.networking.ingress.config
+              revision: 0.1.0  
     typeInstanceRelations:
       wordpress_config: # artifact name
         uses: # names of all artifacts that WP config depends on
           - mysql_config
           - ingress_config
       mysql_config: # artifact name
-        uses:
-          - gcp_sa
+        typeRef:
+         path: cap.type.db.mysql.config
+         revision: 0.1.0
+        uses: []
 ```
 
 ###  Populate an Action with the input TypeInstances
@@ -529,8 +556,10 @@ spec:
   input: 
     typeInstances:
       mysql-config:
-        type: cap.type.db.mysql.config
-        verbs: ["read"]
+	    typeRef:
+	      path: cap.type.db.mysql.config
+	      revision: 0.1.0
+        verbs: ["get"]
 ```
 
 Implementation workflow:
@@ -627,6 +656,15 @@ spec:
   # Workflow developer needs to specify relations between additional output.
   # We use that to create a proper edges when saving artifact in Local OCH.
   additionalOutput:
+    typeInstances: # list all optional artifacts with type references
+        mysql_config:
+	      typeRef:
+	        path: cap.type.db.mysql.config
+	        revision: 0.1.0	     
+        ingress_config:
+            typeRef:
+              path: cap.type.networking.ingress.config
+              revision: 0.1.0  
     typeInstanceRelations:
       jira_config:
         uses:
@@ -679,7 +717,9 @@ spec:
   output: 
     typeInstances:
       mysql-config:
-        type: cap.type.db.mysql.config
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
 ```
 
 Implementation workflow:
@@ -735,8 +775,10 @@ spec:
   input: 
     typeInstances:
       mysql-config:
-        type: cap.type.db.mysql.config
-        verbs: ["read", "delete"]
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
+        verbs: ["get", "delete"]
 ```
 
 Implementation workflow:

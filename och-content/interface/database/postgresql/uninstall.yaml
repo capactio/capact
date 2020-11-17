@@ -14,24 +14,15 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
-# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-# Required artifacts: "cap.type.database.postgresql.config",
-
 spec:
   input:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "type": "null"
-        }
-  output:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "type": "null"
-        }
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["delete"]
+  output: {}
 
 
 signature:

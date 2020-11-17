@@ -61,6 +61,10 @@ spec:
                   template: produce-config
 
           - name: provision
+            inputs:
+              artifacts:
+                - name: gcp-sa
+                  path: "/in/gcp-sa"
             outputs:
               artifacts:
                 - name: cloudsql-instance

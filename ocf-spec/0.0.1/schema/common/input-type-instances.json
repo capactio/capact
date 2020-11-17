@@ -7,6 +7,10 @@
     "$id": "#/additionalParameters",
     "type": "object",
     "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
+    "required": [
+      "typeRef",
+      "verbs"
+    ],
     "properties": {
       "typeRef": {
         "$ref": "https://projectvoltron.dev/schemas/common/type-ref.json"
@@ -19,7 +23,7 @@
           "type": "string",
           "enum": [
             "create",
-            "read",
+            "get",
             "list",
             "update",
             "delete"
