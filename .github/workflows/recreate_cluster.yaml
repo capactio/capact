@@ -20,6 +20,7 @@ on:
       - "**.graphql"
       - ".github/workflows/**"
       - "**.sh"
+      - "**.yaml"
       - "Makefile"
     branches:
       - $default-branch
@@ -85,9 +86,7 @@ jobs:
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
           kubectl -n cert-manager rollout status deploy/cert-manager-webhook
-# though we wait above untill cert manager is properly rollouted, as the matter of fact we receive webhook error
-# in case we want to apply the ClusterIssuer. 
-          sleep 20
+          sleep 20 #due to webhook not ready
           cd hack/ci/terraform
           kubectl apply -f yaml/cluster-issuer.yaml
           cd ..
