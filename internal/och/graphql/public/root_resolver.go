@@ -39,3 +39,11 @@ type queryResolver struct {
 	*tags.TagResolver
 	*types.TypeResolver
 }
+
+func (r *RootResolver) Interface() gqlpublicapi.InterfaceResolver {
+	return interfaces.NewResolver()
+}
+
+func (r *RootResolver) Implementation() gqlpublicapi.ImplementationResolver {
+	return implementations.NewResolver()
+}

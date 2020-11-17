@@ -42,6 +42,8 @@ spec:
               value: "public"
             - name: APP_LOGGER_DEV_MODE
               value: "true"
+            - name: APP_MOCKGRAPHQL
+              value: {{ .Values.mockGraphQL | quote }}
           ports:
             - name: http
               containerPort: 8080
