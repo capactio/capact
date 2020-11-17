@@ -35,7 +35,7 @@ func (i ImplementationResolver) Implementation(ctx context.Context, path string)
 	return &gqlpublicapi.Implementation{}, fmt.Errorf("Implementation with path %s not found", path)
 }
 
-func (r *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
+func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
 	iface, err := getInterface()
 	if err != nil {
 		return &gqlpublicapi.ImplementationRevision{}, err
