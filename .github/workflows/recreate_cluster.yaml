@@ -23,7 +23,7 @@ on:
       - "**.yaml"
       - "Makefile"
     branches:
-      - $default-branch
+      - "devops*"
 
 jobs:
   recreate-cluster:
