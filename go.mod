@@ -10,11 +10,13 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/gorilla/mux v1.6.1
+	github.com/iancoleman/strcase v0.1.2
 	github.com/nautilus/gateway v0.1.9
 	github.com/nautilus/graphql v0.0.12
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
+	github.com/spf13/cobra v1.0.0
 	github.com/stretchr/testify v1.6.1
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/vrischmann/envconfig v1.3.0
