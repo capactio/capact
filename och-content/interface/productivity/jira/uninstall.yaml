@@ -14,8 +14,6 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 
-# Required artifacts: ""
-
 spec:
   input:
     typeInstances:

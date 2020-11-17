@@ -32,7 +32,7 @@ spec:
         typeRef:
           path: cap.type.gcp.auth.service-account
           revision: 0.1.0
-        verbs: ["get"]
+        verbs: [ "get" ]
   output:
     typeInstances:
       cloudsql-instance:

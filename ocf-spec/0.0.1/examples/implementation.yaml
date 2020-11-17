@@ -42,8 +42,7 @@ spec:
       wpConfig:
         uses:
           - mysqlConfig
-      mysqlConfig:
-        uses: [ ]
+      mysqlConfig: {}
 
   implements:
     - path: cap.interface.cms.wordpress

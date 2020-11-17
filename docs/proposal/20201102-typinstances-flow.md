@@ -136,7 +136,9 @@ There is an option to define `typeInstances` as a list instead of a map.
 ```yaml
     typeInstances:
       - name: backend_db
-        type: cap.type.db.mysql.config
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
         verbs: ["get", "update"]
 ```
 
@@ -358,7 +360,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 
 | Verbs    | Description                                                                               |
 |----------|-------------------------------------------------------------------------------------------|
-| `get`   | Specify that the input is a single TypeInstance that is in read-only mode.                |
+| `get`    | Specify that the input is a single TypeInstance that is in read-only mode.                |
 | `list`   | Specify that the input is a list of all TypeInstances from Local OCH in read-only mode.   |
 | `create` | This is automatically set for output TypeInstances. Core Action stores them in Local OCH. |
 | `update` | Specify that the input TypeInstance is modified in Action.                                |
