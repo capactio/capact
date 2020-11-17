@@ -1,0 +1,67 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: install-input
+  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  displayName: PostgreSQL installation input
+  description: Defines input for PostgreSQL installation
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+spec:
+  jsonSchema:
+    value: |-
+     {
+       "$schema": "http://json-schema.org/draft-07/schema",
+       "type": "object",
+       "title": "The schema for PostgreSQL installation input",
+       "examples": [
+         {
+           "superuser": {
+             "username": "username",
+             "password": "password"
+           },
+           "defaultDBName": "default_db"
+         }
+       ],
+       "required": [
+           "superuser"
+       ],
+       "properties": {
+         "superuser": {
+           "$id": "#/properties/superuser",
+           "type": "object",
+           "title": "Defines superuser details",
+           "required": [
+               "password"
+           ],
+           "properties": {
+             "username": {
+               "$id": "#/properties/superuser/properties/username",
+               "type": "string",
+               "title": "Create the specified user with superuser power and a database with the same name.",
+               "default": "postgres"
+             },
+             "password": {
+               "$id": "#/properties/superuser/properties/password",
+               "type": "string",
+               "title": "Sets the superuser password for PostgreSQL"
+             }
+           },
+           "additionalProperties": false
+         },
+         "defaultDBName": {
+           "$id": "#/properties/defaultDBName",
+           "type": "string",
+           "title": "Defines a different name for the default database that is created"
+         }
+       },
+       "additionalProperties": false
+     }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

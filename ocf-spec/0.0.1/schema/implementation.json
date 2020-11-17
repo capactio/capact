@@ -147,13 +147,13 @@
             "$id": "#/properties/spec/properties/implements/items",
             "type": "object",
             "required": [
-              "name"
+              "path"
             ],
             "properties": {
-              "name": {
+              "path": {
                 "$id": "#/properties/spec/properties/implements/items/anyOf/0/properties/name",
                 "type": "string",
-                "description": "The Interface name, for example cap.interfaces.db.mysql.install"
+                "description": "The Interface path, for example cap.interfaces.db.mysql.install"
               },
               "revision": {
                 "$id": "#/properties/spec/properties/implements/items/anyOf/0/properties/revision",

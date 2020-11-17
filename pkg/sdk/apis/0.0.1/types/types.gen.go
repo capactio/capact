@@ -133,8 +133,9 @@ type InterfaceSignature struct {
 
 // A container for the Interface specification definition.
 type InterfaceSpec struct {
-	Input  Input  `json:"input"` // The input schema for Interface action.
-	Output Output `json:"output"`// The output schema for Interface action.
+	Abstract *bool  `json:"abstract,omitempty"`// If true, the Interface cannot be implemented.
+	Input    Input  `json:"input"`             // The input schema for Interface action.
+	Output   Output `json:"output"`            // The output schema for Interface action.
 }
 
 // The input schema for Interface action.
@@ -212,7 +213,7 @@ type Action struct {
 }
 
 type Implement struct {
-	Name     string  `json:"name"`              // The Interface name, for example cap.interfaces.db.mysql.install
+	Path     string  `json:"path"`              // The Interface path, for example cap.interfaces.db.mysql.install
 	Revision *string `json:"revision,omitempty"`// The exact Interface revision.
 }
 
@@ -294,12 +295,12 @@ type OcfVersion struct {
 // Tag is a primitive, which is used to categorize Implementations. You can use Tags to find
 // and filter Implementations.
 type Tag struct {
-	Kind       TagKind           `json:"kind"`      
-	Metadata   InterfaceMetadata `json:"metadata"`  
-	OcfVersion string            `json:"ocfVersion"`
-	Revision   string            `json:"revision"`  // Version of the manifest content in the SemVer format.
-	Signature  TagSignature      `json:"signature"` // Ensures the authenticity and integrity of a given manifest.
-	Spec       TagSpec           `json:"spec"`      // A container for the Tag specification definition.
+	Kind       TagKind           `json:"kind"`          
+	Metadata   InterfaceMetadata `json:"metadata"`      
+	OcfVersion string            `json:"ocfVersion"`    
+	Revision   string            `json:"revision"`      // Version of the manifest content in the SemVer format.
+	Signature  TagSignature      `json:"signature"`     // Ensures the authenticity and integrity of a given manifest.
+	Spec       *TagSpec          `json:"spec,omitempty"`// A container for the Tag specification definition.
 }
 
 // Ensures the authenticity and integrity of a given manifest.

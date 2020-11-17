@@ -1,0 +1,95 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.bitnami.postgresql # Computed during fetching the manifest
+  name: install
+  displayName: Install PostgreSQL database
+  description: Action which installs PostgreSQL database via Helm chart
+  documentationURL: https://github.com/bitnami/charts
+  supportURL: https://bitnami.com
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
+  # Outputs additionally helm chart artifact
+
+  appVersion: "10,11,12,13"
+
+  implements:
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: workflow
+        templates:
+          - name: workflow
+            steps:
+              - - name: install
+                  template: install
+              - - name: produce-config
+                  template: produce-config
+
+          - name: install
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/out/helm-release"
+                - name: postgresql
+                  globalName: postgresql
+                  path: "/out/postgresql"
+            container:
+# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
+#            {{ action:
+#                  runnerInterface: helm.run
+#                  args:
+#                    command: "install"
+#                    generateName: true
+#                    namespace: "{{ .Context.namespace }}"
+#                    chart:
+#                      name: "postgresql"
+#                      repo: "https://charts.bitnami.com/bitnami"
+#                    values:
+#                      image:
+#                        tag: "{{ .Context.appVersion }}"
+#                    additionalOutput:
+#                      path: "{{`{{outputs.artifacts.postgresql.path}}`}}"
+#                      value:
+#                        host: "{{`{{ template "postgresql.fullname" . }}`}}"
+#                        port: "{{`{{ .Values.service.port }}`}}"
+#                        defaultDBName: "{{`.Values.postgresqlDatabase`}}"
+#                        superuser:
+#                          username: "{{`{{ .Values.postgresqlUsername }}`}}"
+#                          password: "{{`{{ .Values.postgresqlPassword }}`}}"
+#              }}
+
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
