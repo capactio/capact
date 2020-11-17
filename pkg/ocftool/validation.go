@@ -2,6 +2,7 @@ package ocftool
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 
 	"github.com/ghodss/yaml"
@@ -9,50 +10,49 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+type ValidationResult struct {
+}
+
 type ManifestValidator interface {
-	ValidateYaml(yamlBytes []byte) (bool, []error)
+	ValidateYaml(r io.Reader) (*gojsonschema.Result, error)
 }
 
 type FilesystemManifestValidator struct {
-	schemaRootPath     string
-	commonSchemaLoader *gojsonschema.SchemaLoader
+	schemaRootPath string
 }
 
 func NewFilesystemManifestValidator(schemaRootPath string) (ManifestValidator, error) {
-	sl, err := commonSchemaLoader(fmt.Sprintf("%s/schema/common"))
-	if err != nil {
-		return nil, err
-	}
-
 	return &FilesystemManifestValidator{
-		schemaRootPath:     schemaRootPath,
-		commonSchemaLoader: sl,
+		schemaRootPath: schemaRootPath,
 	}, nil
 }
 
 type manifestMetadata struct {
-	Kind string `yaml:"kind"`
+	OcfVersion string `yaml:"ocfVersion"`
+	Kind       string `yaml:"kind"`
 }
 
-func getManifestKind(yamlBytes []byte) (string, error) {
+func getManifestMetadata(yamlBytes []byte) (*manifestMetadata, error) {
 	mm := &manifestMetadata{}
 	err := yaml.Unmarshal(yamlBytes, mm)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return mm.Kind, nil
+	return mm, nil
 }
 
-func commonSchemaLoader(dir string) (*gojsonschema.SchemaLoader, error) {
+func commonSchemaLoader(dir string, metadata *manifestMetadata) (*gojsonschema.SchemaLoader, error) {
+	commonDir := fmt.Sprintf("%s/%s/schema/common", dir, metadata.OcfVersion)
+
 	sl := gojsonschema.NewSchemaLoader()
-	files, err := ioutil.ReadDir(dir)
+	files, err := ioutil.ReadDir(commonDir)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, file := range files {
-		path := fmt.Sprintf("file://%s/%s", dir, file)
-		if err := sl.AddSchemas(gojsonschema.NewStringLoader(path)); err != nil {
+		path := fmt.Sprintf("file://%s/%s", commonDir, file.Name())
+		if err := sl.AddSchemas(gojsonschema.NewReferenceLoader(path)); err != nil {
 			return nil, err
 		}
 	}
@@ -60,45 +60,41 @@ func commonSchemaLoader(dir string) (*gojsonschema.SchemaLoader, error) {
 	return sl, err
 }
 
-func rootManifestJSONLoader(dir, kind string) gojsonschema.JSONLoader {
-	filename := strcase.ToKebab(kind)
-	path := fmt.Sprintf("file://%s/schema/%s.json", dir, filename)
+func rootManifestJSONLoader(dir string, metadata *manifestMetadata) gojsonschema.JSONLoader {
+	filename := strcase.ToKebab(metadata.Kind)
+	path := fmt.Sprintf("file://%s/%s/schema/%s.json", dir, metadata.OcfVersion, filename)
 	return gojsonschema.NewReferenceLoader(path)
 }
 
-func (v *FilesystemManifestValidator) ValidateYaml(yamlBytes []byte) (bool, []error) {
-	kind, err := getManifestKind(yamlBytes)
+func (v *FilesystemManifestValidator) ValidateYaml(r io.Reader) (*gojsonschema.Result, error) {
+	yamlBytes, err := ioutil.ReadAll(r)
 	if err != nil {
-		return false, []error{err}
+		return nil, err
 	}
 
-	rootLoader := rootManifestJSONLoader(v.schemaRootPath, kind)
+	metadata, err := getManifestMetadata(yamlBytes)
+	if err != nil {
+		return nil, err
+	}
 
-	schema, err := v.commonSchemaLoader.Compile(rootLoader)
+	sl, err := commonSchemaLoader(v.schemaRootPath, metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	rootLoader := rootManifestJSONLoader(v.schemaRootPath, metadata)
+
+	schema, err := sl.Compile(rootLoader)
 	if err != nil {
 		panic(err)
 	}
 
 	jsonBytes, err := yaml.YAMLToJSON(yamlBytes)
 	if err != nil {
-		return false, []error{err}
+		return nil, err
 	}
 
 	manifestLoader := gojsonschema.NewBytesLoader(jsonBytes)
 
-	res, err := schema.Validate(manifestLoader)
-	if err != nil {
-		return false, []error{err}
-	}
-
-	if !res.Valid() {
-		errs := []error{}
-		for _, err := range res.Errors() {
-			errs = append(errs, fmt.Errorf("%s", err.String()))
-		}
-
-		return false, errs
-	}
-
-	return true, nil
+	return schema.Validate(manifestLoader)
 }

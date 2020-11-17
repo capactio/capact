@@ -2,45 +2,18 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
-	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
-	"github.com/xeipuuv/gojsonschema"
+	"projectvoltron.dev/voltron/pkg/ocftool"
 )
 
 const (
 	appName = "ocftool"
 )
 
-func schemaFileForKind(kind string) (string, error) {
-	schemaFilepath, ok := schemaPaths[kind]
-	if !ok {
-		return "", fmt.Errorf("cannot find schema file for kind %s", kind)
-	}
-	return schemaFilepath, nil
-}
-
 var (
-	commonSchemaPaths []string = []string{
-		"common/json-schema-type.json",
-		"common/metadata-tags.json",
-		"common/metadata.json",
-	}
-
-	schemaPaths = map[string]string{
-		"Implementation": "implementation.json",
-		"InterfaceGroup": "interface-group.json",
-		"Interface":      "interface.json",
-		"RepoMetadata":   "repo-metadata.json",
-		"Tag":            "tag.json",
-		"Type":           "type.json",
-		"TypeInstance":   "type-instance.json",
-		"Vendor":         "vendor.json",
-	}
-
-	manifestFilepath string
+	schemaRootDir string
 
 	rootCmd = &cobra.Command{
 		Use: appName,
@@ -56,58 +29,27 @@ var (
 		Use:  "validate",
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			validator, err := ocftool.NewFilesystemManifestValidator(schemaRootDir)
+
+			fmt.Println("RESULTS:")
+
+			if err != nil {
+				panic(err)
+			}
+
 			for _, filepath := range args {
-				sl := gojsonschema.NewSchemaLoader()
-
-				for _, path := range commonSchemaPaths {
-					jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://ocf-spec/0.0.1/schema/%s", path))
-					err := sl.AddSchemas(jsonLoader)
-					if err != nil {
-						panic(err)
-					}
-				}
-
-				manifestBytes, err := ioutil.ReadFile(filepath)
+				fp, err := os.Open(filepath)
 				if err != nil {
-					// TODO error handling
 					panic(err)
 				}
+				defer fp.Close()
 
-				manifestKind := &ManifestKind{}
-
-				err = yaml.Unmarshal(manifestBytes, manifestKind)
+				result, err := validator.ValidateYaml(fp)
 				if err != nil {
 					panic(err)
 				}
 
-				schemaRootFile, err := schemaFileForKind(manifestKind.Kind)
-				if err != nil {
-					panic(err)
-				}
-				schemaRootLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://ocf-spec/0.0.1/schema/%s", schemaRootFile))
-
-				schema, err := sl.Compile(schemaRootLoader)
-				if err != nil {
-					panic(err)
-				}
-
-				manifestJsonBytes, err := yaml.YAMLToJSON(manifestBytes)
-				if err != nil {
-					panic(err)
-				}
-
-				manifestLoader := gojsonschema.NewBytesLoader(manifestJsonBytes)
-
-				res, err := schema.Validate(manifestLoader)
-				if err != nil {
-					panic(err)
-				}
-
-				if !res.Valid() {
-					for _, err := range res.Errors() {
-						fmt.Println(err)
-					}
-				}
+				fmt.Printf("- %s: %v\n", filepath, result.Valid())
 			}
 		},
 	}
@@ -115,6 +57,9 @@ var (
 
 func main() {
 	cobra.OnInitialize()
+
+	validateCmd.PersistentFlags().StringVarP(&schemaRootDir, "schemas", "s", "ocf-spec", "Path to the ocf-spec directory")
+
 	rootCmd.AddCommand(validateCmd)
 
 	if err := rootCmd.Execute(); err != nil {

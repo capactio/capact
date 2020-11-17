@@ -3,20 +3,15 @@
 package examples
 
 import (
-	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
-	"github.com/ghodss/yaml"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xeipuuv/gojsonschema"
+	"projectvoltron.dev/voltron/pkg/ocftool"
 )
 
-// TestManifestsValid in the future will be removed and replaced with
-// an `ocftool validate` command executed against all examples.
-// TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
 func TestManifestsValid(t *testing.T) {
+<<<<<<< HEAD
 	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
 
@@ -30,97 +25,53 @@ func TestManifestsValid(t *testing.T) {
 	}
 	err := loadCommonSchemas(sl, schemaRefPaths)
 	require.NoError(t, err, "while loading common schemas")
+=======
+	validator, err := ocftool.NewFilesystemManifestValidator("../..")
+	require.NoError(t, err, "while creating validator instance")
+>>>>>>> ef5e95c... working cli
 
 	tests := map[string]struct {
-		jsonSchemaPath string
-		manifestPath   string
+		manifestPath string
 	}{
-		"Type Example should be valid": {
-			jsonSchemaPath: "../schema/type.json",
-			manifestPath:   "type.yaml",
+		"Implementation should be valid": {
+			manifestPath: "implementation.yaml",
 		},
-		"Tag Example should be valid": {
-			jsonSchemaPath: "../schema/tag.json",
-			manifestPath:   "tag.yaml",
+		"InterfaceGroup should be valid": {
+			manifestPath: "interface-group.yaml",
 		},
-		"Vendor Example should be valid": {
-			jsonSchemaPath: "../schema/vendor.json",
-			manifestPath:   "vendor.yaml",
+		"Interface should be valid": {
+			manifestPath: "interface.yaml",
 		},
-		"RepoMetadata Example should be valid": {
-			jsonSchemaPath: "../schema/repo-metadata.json",
-			manifestPath:   "repo-metadata.yaml",
+		"RepoMetadata should be valid": {
+			manifestPath: "repo-metadata.yaml",
 		},
-		"InterfaceGroup Example should be valid": {
-			jsonSchemaPath: "../schema/interface-group.json",
-			manifestPath:   "interface-group.yaml",
+		"Tag should be valid": {
+			manifestPath: "tag.yaml",
 		},
-		"Interface Example should be valid": {
-			jsonSchemaPath: "../schema/interface.json",
-			manifestPath:   "interface.yaml",
+		"TypeInstance should be valid": {
+			manifestPath: "type-instance.yaml",
 		},
-		"Implementation Example should be valid": {
-			jsonSchemaPath: "../schema/implementation.json",
-			manifestPath:   "implementation.yaml",
+		"Type should be valid": {
+			manifestPath: "type.yaml",
 		},
-		"TypeInstance Example should be valid": {
-			jsonSchemaPath: "../schema/type-instance.json",
-			manifestPath:   "type-instance.yaml",
+		"Vendor should be valid": {
+			manifestPath: "vendor.yaml",
 		},
 	}
+
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", tc.jsonSchemaPath))
-			schema, err := sl.Compile(schemaLoader)
-			require.NoError(t, err, "while creating schema validator")
-
-			manifest, err := documentLoader(tc.manifestPath)
-			require.NoError(t, err, "while loading manifest")
+			fp, err := os.Open(tc.manifestPath)
+			require.NoError(t, err, "while reading manifest test file")
+			defer fp.Close()
 
 			// when
-			result, err := schema.Validate(manifest)
-			require.NoError(t, err, "while validating object against JSON Schema")
+			result, err := validator.ValidateYaml(fp)
 
 			// then
-			assertResultIsValid(t, result)
+			require.NoError(t, err, "while validating object against JSON Schema")
+			require.True(t, result.Valid(), "is not valid")
 		})
 	}
-}
-
-func documentLoader(path string) (gojsonschema.JSONLoader, error) {
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	obj := map[string]interface{}{}
-	if err := yaml.Unmarshal(buf, &obj); err != nil {
-		return nil, err
-	}
-
-	return gojsonschema.NewGoLoader(obj), nil
-}
-
-func assertResultIsValid(t *testing.T, result *gojsonschema.Result) {
-	t.Helper()
-
-	if !assert.True(t, result.Valid()) {
-		t.Errorf("The document is not valid. see errors:\n")
-		for _, desc := range result.Errors() {
-			t.Errorf("- %s\n", desc.String())
-		}
-	}
-}
-
-func loadCommonSchemas(schemaLoader *gojsonschema.SchemaLoader, paths []string) error {
-	for _, path := range paths {
-		jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
-		err := schemaLoader.AddSchemas(jsonLoader)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
