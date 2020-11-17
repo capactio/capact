@@ -24,6 +24,20 @@ metadata:
 spec:
   appVersion: "5.4.x - 5.5.x, 5.6.0-alpha0"
 
+  additionalInput:
+    typeInstances:
+      mysqlConfig:
+        type: cap.type.db.mysql.config
+        verbs: [ "read", "update" ]
+
+  additionalOutput:
+    typeInstanceRelations:
+      wpConfig:
+        uses:
+          - mysqlConfig
+      mysqlConfig:
+        uses: []
+
   implements:
     - path: cap.interface.cms.wordpress
       revision: 1.0.0
@@ -58,7 +72,9 @@ spec:
     args:
       workflow:
         steps:
+# {{ if additionalInput.typeInstances.mysqlConfig == nil }}
           - name: mysql-install
+# {{ endif }}
           - name: mysql-create-db
           - name: wp-install
 
