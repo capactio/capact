@@ -9,8 +9,7 @@ import (
 )
 
 func TestVerifyValidator(t *testing.T) {
-	validator, err := ocftool.NewFilesystemManifestValidator("../../ocf-spec")
-	require.NoError(t, err, "while creating validator instance")
+	validator := ocftool.NewFilesystemManifestValidator("../../ocf-spec")
 
 	tests := map[string]struct {
 		manifestPath string
