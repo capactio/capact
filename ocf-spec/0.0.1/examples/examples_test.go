@@ -12,6 +12,7 @@ import (
 
 func TestManifestsValid(t *testing.T) {
 <<<<<<< HEAD
+<<<<<<< HEAD
 	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
 
@@ -29,6 +30,9 @@ func TestManifestsValid(t *testing.T) {
 	validator, err := ocftool.NewFilesystemManifestValidator("../..")
 	require.NoError(t, err, "while creating validator instance")
 >>>>>>> ef5e95c... working cli
+=======
+	validator := ocftool.NewFilesystemManifestValidator("../..")
+>>>>>>> f4cdb86... fix tests
 
 	tests := map[string]struct {
 		manifestPath string
