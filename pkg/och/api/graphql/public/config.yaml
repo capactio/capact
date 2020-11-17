@@ -12,3 +12,13 @@ model:
 
 # Optional turns on binding to field names by tag provided
 struct_tag: json
+
+models:
+  Interface:
+    fields:
+      revision:
+        resolver: true
+  Implementation:
+    fields:
+      revision:
+        resolver: true

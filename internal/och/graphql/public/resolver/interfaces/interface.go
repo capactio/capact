@@ -20,6 +20,10 @@ func (r *InterfaceResolver) Interface(ctx context.Context, path string) (*gqlpub
 	return dummyInterface("install"), nil
 }
 
+func (r *InterfaceResolver) Revision(ctx context.Context, obj *gqlpublicapi.Interface, revision string) (*gqlpublicapi.InterfaceRevision, error) {
+	return &gqlpublicapi.InterfaceRevision{}, nil
+}
+
 func dummyInterface(name string) *gqlpublicapi.Interface {
 	return &gqlpublicapi.Interface{
 		Name:   name,

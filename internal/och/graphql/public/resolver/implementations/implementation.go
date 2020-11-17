@@ -2,6 +2,7 @@ package implementations
 
 import (
 	"context"
+	"fmt"
 
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
@@ -18,6 +19,10 @@ func (i *ImplementationResolver) Implementations(ctx context.Context, filter *gq
 
 func (i ImplementationResolver) Implementation(ctx context.Context, path string) (*gqlpublicapi.Implementation, error) {
 	return dummyImplementation(), nil
+}
+
+func (r *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
+	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
 }
 
 func dummyImplementation() *gqlpublicapi.Implementation {

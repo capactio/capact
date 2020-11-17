@@ -25,6 +25,7 @@ FROM scratch
 ARG COMPONENT
 
 COPY --from=builder /bin/$COMPONENT /app
+COPY hack/mock/interface.json /
 
 LABEL source=git@github.com:Project-Voltron/go-voltron.git
 LABEL app=$COMPONENT

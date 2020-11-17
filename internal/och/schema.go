@@ -10,11 +10,17 @@ import (
 )
 
 // GraphQLSchema returns the proper GraphQL schema based on the given mode
-func GraphQLSchema(mode Mode) graphql.ExecutableSchema {
+func GraphQLSchema(mode Mode, useMockedResolver bool) graphql.ExecutableSchema {
 	switch mode {
 	case PublicMode:
+		var rootResolver gqlpublicapi.ResolverRoot
+		if useMockedResolver {
+			rootResolver = gqlpublicdomain.NewMockedRootResolver()
+		} else {
+			rootResolver = gqlpublicdomain.NewRootResolver()
+		}
 		cfg := gqlpublicapi.Config{
-			Resolvers: gqlpublicdomain.NewRootResolver(),
+			Resolvers: rootResolver,
 		}
 		return gqlpublicapi.NewExecutableSchema(cfg)
 	case LocalMode:
