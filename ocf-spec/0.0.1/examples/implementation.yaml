@@ -20,23 +20,30 @@ metadata:
       url: https://examples.com/foo/bar
   tags:
     cap.core.tag.workload.stateless:
-        revision: 1.0.1
+      revision: 1.0.1
 spec:
   appVersion: "5.4.x - 5.5.x, 5.6.0-alpha0"
 
   additionalInput:
     typeInstances:
       mysqlConfig:
-        type: cap.type.db.mysql.config
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
         verbs: [ "read", "update" ]
 
   additionalOutput:
+    typeInstances:
+      mysqlConfig:
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
     typeInstanceRelations:
       wpConfig:
         uses:
           - mysqlConfig
       mysqlConfig:
-        uses: []
+        uses: [ ]
 
   implements:
     - path: cap.interface.cms.wordpress
@@ -72,9 +79,9 @@ spec:
     args:
       workflow:
         steps:
-# {{ if additionalInput.typeInstances.mysqlConfig == nil }}
+          # {{ if additionalInput.typeInstances.mysqlConfig == nil }}
           - name: mysql-install
-# {{ endif }}
+          # {{ endif }}
           - name: mysql-create-db
           - name: wp-install
 

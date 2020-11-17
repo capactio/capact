@@ -140,8 +140,8 @@ type InterfaceSpec struct {
 
 // The input schema for Interface action.
 type Input struct {
-	Parameters    Parameters                   `json:"parameters"`   // The input parameters passed from User
-	TypeInstances map[string]InputTypeInstance `json:"typeInstances"`// The required input TypeInstances
+	Parameters    *Parameters                  `json:"parameters,omitempty"`   // The input parameters passed from User
+	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
 }
 
 // The input parameters passed from User
@@ -168,7 +168,7 @@ type TypeRef struct {
 
 // The output schema for Interface action.
 type Output struct {
-	TypeInstances map[string]OutputTypeInstance `json:"typeInstances"`// The required output TypeInstances
+	TypeInstances map[string]OutputTypeInstance `json:"typeInstances,omitempty"`
 }
 
 // Prefix is an alias of the TypeInstance, used in the Implementation
@@ -222,17 +222,35 @@ type ImplementationSignature struct {
 
 // A container for the Implementation specification definition.
 type ImplementationSpec struct {
-	Action     Action             `json:"action"`            // An explanation about the purpose of this instance.
-	AppVersion string             `json:"appVersion"`        // The supported application versions in SemVer2 format.
-	Implements []Implement        `json:"implements"`        // Defines what kind of interfaces this implementation fulfills.
-	Imports    []Import           `json:"imports,omitempty"` // List of external Interfaces that this Implementation requires to be able to execute the; action.
-	Requires   map[string]Require `json:"requires,omitempty"`// List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
+	Action           Action             `json:"action"`                    // An explanation about the purpose of this instance.
+	AdditionalInput  *AdditionalInput   `json:"additionalInput,omitempty"` // Specifies additional input for a given Implementation
+	AdditionalOutput *AdditionalOutput  `json:"additionalOutput,omitempty"`// Specifies additional output for a given Implementation
+	AppVersion       string             `json:"appVersion"`                // The supported application versions in SemVer2 format.
+	Implements       []Implement        `json:"implements"`                // Defines what kind of interfaces this implementation fulfills.
+	Imports          []Import           `json:"imports,omitempty"`         // List of external Interfaces that this Implementation requires to be able to execute the; action.
+	Requires         map[string]Require `json:"requires,omitempty"`        // List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
 }
 
 // An explanation about the purpose of this instance.
 type Action struct {
 	Args            map[string]interface{} `json:"args"`           // Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
 	RunnerInterface string                 `json:"runnerInterface"`// The Interface of a Runner, which handles the execution, for example,; cap.interface.runner.helm3.run
+}
+
+// Specifies additional input for a given Implementation
+type AdditionalInput struct {
+	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
+}
+
+// Specifies additional output for a given Implementation
+type AdditionalOutput struct {
+	TypeInstanceRelations map[string]TypeInstanceRelation `json:"typeInstanceRelations"`  // Defines the relations between all output TypeInstances
+	TypeInstances         map[string]OutputTypeInstance   `json:"typeInstances,omitempty"`
+}
+
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type TypeInstanceRelation struct {
+	Uses []string `json:"uses,omitempty"`// Uses contains all dependant TypeInstances
 }
 
 type Implement struct {

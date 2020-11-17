@@ -61,10 +61,7 @@
           "$id": "#/properties/spec/properties/input",
           "type": "object",
           "description": "The input schema for Interface action.",
-          "required": [
-            "parameters",
-            "typeInstances"
-          ],
+          "required": [],
           "properties": {
             "parameters": {
               "$id": "#/properties/spec/properties/input/properties/parameters",
@@ -78,35 +75,7 @@
               "additionalProperties": false
             },
             "typeInstances": {
-              "$id": "#/properties/spec/properties/input/properties/typeInstances",
-              "type": "object",
-              "description": "The required input TypeInstances",
-              "additionalProperties": {
-                "$id": "#/properties/spec/properties/input/properties/typeInstances/additionalParameters",
-                "type": "object",
-                "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
-                "properties": {
-                  "typeRef": {
-                    "$ref": "https://projectvoltron.dev/schemas/common/type-ref.json"
-                  },
-                  "verbs": {
-                    "$id": "#/properties/spec/properties/input/properties/typeInstances/additionalParameters/verbs",
-                    "description": "The full list of access rights for a given TypeInstance",
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "enum": [
-                        "create",
-                        "read",
-                        "list",
-                        "update",
-                        "delete"
-                      ]
-                    }
-                  }
-                },
-                "additionalProperties": false
-              }
+              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
             }
           },
           "additionalProperties": false
@@ -115,25 +84,10 @@
           "$id": "#/properties/spec/properties/output",
           "type": "object",
           "description": "The output schema for Interface action.",
-          "required": [
-            "typeInstances"
-          ],
+          "required": [],
           "properties": {
             "typeInstances": {
-              "$id": "#/properties/spec/properties/input/properties/typeInstances",
-              "type": "object",
-              "description": "The required output TypeInstances",
-              "additionalProperties": {
-                "$id": "#/properties/spec/properties/output/properties/typeInstances/additionalParameters",
-                "type": "object",
-                "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
-                "properties": {
-                  "typeRef": {
-                    "$ref": "https://projectvoltron.dev/schemas/common/type-ref.json"
-                  }
-                },
-                "additionalProperties": false
-              }
+              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
             }
           },
           "additionalProperties": false
@@ -148,3 +102,4 @@
     }
   }
 }
+

@@ -138,6 +138,53 @@
           "description": "The supported application versions in SemVer2 format.",
           "additionalProperties": false
         },
+        "additionalInput": {
+          "$id": "#/properties/spec/properties/additionalInput",
+          "type": "object",
+          "description": "Specifies additional input for a given Implementation",
+          "properties": {
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
+            }
+          },
+          "additionalProperties": false
+        },
+        "additionalOutput": {
+          "$id": "#/properties/spec/properties/additionalOutput",
+          "type": "object",
+          "description": "Specifies additional output for a given Implementation",
+          "required": [
+            "typeInstanceRelations"
+          ],
+          "properties": {
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
+            },
+            "typeInstanceRelations": {
+              "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations",
+              "type": "object",
+              "description": "Defines the relations between all output TypeInstances",
+              "additionalProperties": {
+                "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters",
+                "type": "object",
+                "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
+                "properties": {
+                  "uses": {
+                    "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters/properties/uses",
+                    "description": "Uses contains all dependant TypeInstances",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Alias of the dependant TypeInstance"
+                    },
+                    "additionalItems": false
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "implements": {
           "$id": "#/properties/spec/properties/implements",
           "type": "array",
@@ -289,8 +336,8 @@
           },
           "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }
-

@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://projectvoltron.dev/schemas/common/input-type-instances.json",
+  "type": "object",
+  "description": "The input TypeInstances",
+  "additionalProperties": {
+    "$id": "#/additionalParameters",
+    "type": "object",
+    "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
+    "properties": {
+      "typeRef": {
+        "$ref": "https://projectvoltron.dev/schemas/common/type-ref.json"
+      },
+      "verbs": {
+        "$id": "#/additionalParameters/verbs",
+        "description": "The full list of access rights for a given TypeInstance",
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": [
+            "create",
+            "read",
+            "list",
+            "update",
+            "delete"
+          ]
+        }
+      }
+    },
+    "additionalProperties": false
+  }
+}

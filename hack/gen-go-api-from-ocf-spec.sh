@@ -56,6 +56,8 @@ gen_go_api_from_ocf_specs() {
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/type-ref.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/input-type-instances.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/output-type-instances.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/interface.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/implementation.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
