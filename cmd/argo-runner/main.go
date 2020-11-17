@@ -1,37 +1,43 @@
 package main
 
 import (
-	"github.com/Project-Voltron/voltron/cmd/argo-runner/runner"
-	"github.com/Project-Voltron/voltron/cmd/argo-runner/runner/argo"
-	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
 	"log"
-	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	//"projectvoltron.dev/voltron/cmd/argo-runner/argo"
-	//"projectvoltron.dev/voltron/pkg/runner"
+	"projectvoltron.dev/voltron/pkg/runner"
+	"projectvoltron.dev/voltron/pkg/runner/argo"
+
+	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
+	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
-// TODO: go with template method pattern or with composable blocks?
 func main() {
 	// create k8s client
 	k8sCfg, err := config.GetConfig()
 	exitOnError(err, "while creating k8s config")
 
 	// create Argo workflow client
-	wfClient, err := wfclientset.NewForConfig(k8sCfg)
+	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
 
 	stop := signals.SetupSignalHandler()
 
-	argoRunner := argo.NewRunner(wfClient.ArgoprojV1alpha1())
+	argoRunner := argo.NewRunner(wfCli.ArgoprojV1alpha1())
 
-	mgr, err := runner.NewManager(argoRunner)
-	exitOnError(err, "while creating runner service")
+	// status reporter
+	k8sCli, err := client.New(config.GetConfigOrDie(), client.Options{})
+	exitOnError(err, "while creating K8s client")
+
+	//statusReporter := k8s.NewConfigMapStatusReporter(k8sCli)
+
+	// manager
+	mgr, err := runner.NewManager(argoRunner, k8sCli)
+	exitOnError(err, "while creating runner manager")
 
 	err = mgr.Execute(stop)
 	exitOnError(err, "while executing runner")
-
 }
 
 func exitOnError(err error, context string) {

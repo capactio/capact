@@ -3,8 +3,8 @@ package argo
 import (
 	"context"
 	"fmt"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	"time"
+
+	"projectvoltron.dev/voltron/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
@@ -15,8 +15,23 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/tools/cache"
-	//apierrors "k8s.io/apimachinery/pkg/api/errors"
 	watchtools "k8s.io/client-go/tools/watch"
+	"sigs.k8s.io/yaml"
+)
+
+const (
+	wfManagedByLabelKey = "runner.projectvoltron.dev/created-by"
+	runnerName          = "argo-runner"
+)
+
+type (
+	Status struct {
+		ArgoWorkflowRef ArgoWorkflowRef
+	}
+	ArgoWorkflowRef struct {
+		Name      string
+		Namespace string
+	}
 )
 
 type Runner struct {
@@ -24,52 +39,62 @@ type Runner struct {
 	log      *zap.Logger
 }
 
-func NewRunner(log *zap.Logger, wfClient v1alpha1.ArgoprojV1alpha1Interface) *Runner {
+// Logger (with logger)
+func NewRunner(wfClient v1alpha1.ArgoprojV1alpha1Interface) *Runner {
 	return &Runner{
 		wfClient: wfClient,
-		log:      log,
+		//log:      log,
 	}
 }
 
-func (r *Runner) Execute(manifest []byte) error {
-	// todo (constructor?)
-	sch := runtime.NewScheme()
-	err := wfv1.AddToScheme(sch)
-	if err != nil {
-		return errors.Wrap(err, "while registering Workflow scheme")
+func (r *Runner) Start(ctx context.Context, in runner.StartInput) (runner.StartOutput, error) {
+	var wfSpec wfv1.WorkflowSpec
+	if err := yaml.Unmarshal(in.Manifest, &wfSpec); err != nil {
+		return runner.StartOutput{}, errors.Wrap(err, "while unmarshaling workflow spec")
 	}
 
-	wf := &wfv1.Workflow{}
-	deserializer := serializer.NewCodecFactory(sch).UniversalDeserializer()
-	err = runtime.DecodeInto(deserializer, manifest, wf)
-
-	// submit the hello world workflow
-	createdWf, err := r.wfClient.Workflows("ns").Create(wf)
-	if err != nil {
-		return errors.Wrap(err, "while creating workflow")
+	if wfSpec.ServiceAccountName == "" {
+		wfSpec.ServiceAccountName = in.ExecCtx.Platform.ServiceAccountName
 	}
 
-	log := r.log.With(zap.String("name", createdWf.Name))
+	wf := wfv1.Workflow{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      in.ExecCtx.Name,
+			Namespace: in.ExecCtx.Platform.Namespace,
+			Labels: map[string]string{
+				wfManagedByLabelKey: runnerName,
+			},
+		},
+		Spec: wfSpec,
+	}
 
-	log.Info("Workflow submitted")
+	// only create or upsert?
+	wfCreated, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
+	if err != nil {
+		return runner.StartOutput{}, errors.Wrap(err, "while creating workflow")
+	}
 
-	return r.WaitForCompletion(createdWf.Name, createdWf.Namespace, time.Second)
+	return runner.StartOutput{
+		Status: Status{
+			ArgoWorkflowRef: ArgoWorkflowRef{
+				Name:      wfCreated.Name,
+				Namespace: wfCreated.Namespace,
+			},
+		},
+	}, nil
 }
 
-// waitForTestSuite watches the given test suite until the exitCondition is true
-func (r *Runner) WaitForCompletion(name, namespace string, timeout time.Duration) error {
-	ctx, cancel := watchtools.ContextWithOptionalTimeout(context.Background(), timeout)
-	defer cancel()
-
-	fieldSelector := fields.OneTermEqualSelector("metadata.name", name).String()
+// WaitForCompletion waits until Argo Workflow is finished.
+func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) error {
+	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.ExecCtx.Name).String()
 	lw := &cache.ListWatch{
 		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClient.Workflows(namespace).List(opts)
+			return r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).List(opts)
 		},
 		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClient.Workflows(namespace).Watch(opts)
+			return r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Watch(opts)
 		},
 	}
 
@@ -86,7 +111,7 @@ func (r *Runner) WaitForCompletion(name, namespace string, timeout time.Duration
 		switch obj := event.Object.(type) {
 		case *wfv1.Workflow:
 			if !obj.Status.FinishedAt.IsZero() {
-				fmt.Printf("Workflow %s %s at %v\n", obj.Name, obj.Status.Phase, obj.Status.FinishedAt)
+				fmt.Printf("Workflow %q %q at %v\n", obj.Name, obj.Status.Phase, obj.Status.FinishedAt)
 				return true, nil
 			}
 		}
@@ -95,6 +120,9 @@ func (r *Runner) WaitForCompletion(name, namespace string, timeout time.Duration
 	}
 
 	_, err := watchtools.UntilWithSync(ctx, lw, &wfv1.Workflow{}, nil, workflowCompleted)
-
 	return err
+}
+
+func (r *Runner) Name() string {
+	return "Argo Workflow runner"
 }
