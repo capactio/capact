@@ -24,7 +24,7 @@ then
     do  
       kubectl get secret ${SECRET} -n ${NAMESPACE} -o yaml >secret-${SECRET}-$(date -u +"%Y-%m-%dT%H:%M:%SZ").yaml
     done
-    gsutil cp secret*.yaml gs://${BUCKET} 
+    gsutil cp secret*.yaml gs://${BUCKET}/le
 else 
   printf "\n***Certs restored, not backuping new.***"
 fi

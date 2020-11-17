@@ -1,5 +1,5 @@
 #!/bin/bash
-export CREATED=$(gsutil ls -la gs://${BUCKET} |sort -k2 -r |grep -v ^TOTAL |head -n 1 |awk -F"#" '{ print substr($2,1,10) }')
+export CREATED=$(gsutil ls -la gs://${BUCKET}/le |sort -k2 -r |grep -v ^TOTAL |head -n 1 |awk -F"#" '{ print substr($2,1,10) }')
 
 if [ -z "${CREATED}" ] 
 then 
@@ -11,7 +11,7 @@ if (( $(echo $((($(date +%s) - ${CREATED} ) / 86400))) > ${CERT_MAX_AGE} )); the
    echo -e "\n- New cert needs to be generated -"
 else
   echo -e "\n- Cert still valid. Restoring -"
-  gsutil cp $(gsutil ls gs://${BUCKET}  |sort -k2 -r |grep -v ^TOTAL |head -n 1) .
+  gsutil cp $(gsutil ls gs://${BUCKET}/le  |sort -k2 -r |grep -v ^TOTAL |head -n 1) .
   kubectl create ns ${NAMESPACE} || true
   kubectl apply -f secret-*.yaml --namespace ${NAMESPACE}
   export CERT_RESTORE=1

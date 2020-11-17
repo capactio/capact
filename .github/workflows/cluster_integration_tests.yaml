@@ -37,3 +37,27 @@ jobs:
           do  
             helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
           done
+
+
+  network-cleanup:
+    name: Network access cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ integration-tests ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_CREDS }}
+          export_default_credentials: true
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Network cleanup
+        run: | 
+          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
+          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock') |grep -v $(curl ${GET_IP_SERVICE})
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g') 
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
+          --master-authorized-networks ${AUTHORIZED}

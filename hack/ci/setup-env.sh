@@ -10,7 +10,7 @@ cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.15.2
 SKIP_DEPS_INSTALLATION=false
 PROJECT_ID=projectvoltron
-BUCKET=projectvoltron_le
+BUCKET=projectvoltron_cluster_recreate
 ELB_IP=35.228.223.55
 IMAGE_TAG=adea064
 GET_IP_SERVICE=ifconfig.me
@@ -26,6 +26,7 @@ TF_VAR_node_pool_name=node-pool-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name1=gke-pods-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name2=gke-services-${NAME}
 COMPONENTS="gateway engine och-public och-local"
+SERVICES="voltron"
 CERT_MAX_AGE=85
 EOT
 
