@@ -110,7 +110,7 @@ func TestRunnerStartFailure(t *testing.T) {
 		out, err := r.Start(context.Background(), input)
 
 		// then
-		assert.EqualError(t, err, "DryRun support not implemented.")
+		assert.EqualError(t, err, "DryRun support not implemented")
 		assert.Nil(t, out)
 	})
 
