@@ -70,6 +70,7 @@ jobs:
       - name: Network enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
+          echo ${AUTHORIZED}
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
       # - name: Install dependencies in cluster
@@ -117,7 +118,9 @@ jobs:
           gcloud config set project ${PROJECT_ID}
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
           |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' |grep -v $(curl ${GET_IP_SERVICE}))
-          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g') 
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
+          echo ${AUTHORIZED}
+          curl ${GET_IP_SERVICE}
           if [ -z ${AUTHORIZED} ]
           then
             echo "not set"
