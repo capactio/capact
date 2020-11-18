@@ -116,7 +116,7 @@ jobs:
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
-          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock') |grep -v $(curl ${GET_IP_SERVICE})
+          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' |grep -v $(curl ${GET_IP_SERVICE}))
           echo $?
           echo ${AUTHORIZED}
           echo "AUTHORIZED no. 1 excuted"
