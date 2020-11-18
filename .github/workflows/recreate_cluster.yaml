@@ -63,12 +63,6 @@ jobs:
           terraform init
           terraform apply -auto-approve
           gsutil cp *.tfstate gs://${BUCKET}/tf
-
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./hack/ci/terraform/*.tfstate
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
@@ -119,6 +113,7 @@ jobs:
           . ./hack/ci/setup-env.sh
       - name: Network cleanup
         run: | 
+          sudo snap install yq
           gcloud config set project ${PROJECT_ID}
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
           |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock') |grep -v $(curl ${GET_IP_SERVICE})
