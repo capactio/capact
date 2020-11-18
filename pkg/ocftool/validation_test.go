@@ -1,7 +1,6 @@
 package ocftool_test
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -16,11 +15,15 @@ func TestVerifyValidator(t *testing.T) {
 		result       bool
 	}{
 		"Implementation should be invalid": {
-			manifestPath: "test_manifests/wrong_implementation.yaml",
+			manifestPath: "testdata/wrong_implementation.yaml",
 			result:       false,
 		},
 		"Implementation should be valid": {
-			manifestPath: "test_manifests/correct_implementation.yaml",
+			manifestPath: "testdata/correct_implementation.yaml",
+			result:       true,
+		},
+		"Should handle Go templates": {
+			manifestPath: "testdata/correct_implementation_with_template.yaml",
 			result:       true,
 		},
 	}
@@ -28,16 +31,12 @@ func TestVerifyValidator(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			fp, err := os.Open(tc.manifestPath)
-			require.NoError(t, err, "while reading manifest test file")
-			defer fp.Close()
 
 			// when
-			result, err := validator.ValidateYaml(fp)
+			result := validator.ValidateFile(tc.manifestPath)
 
 			// then
-			require.NoError(t, err, "while validating object against JSON Schema")
-			require.Equal(t, tc.result, result.Valid(), result.Errors())
+			require.Equal(t, tc.result, result.Valid(), result.Errors)
 		})
 	}
 }
