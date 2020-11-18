@@ -1,0 +1,62 @@
+{
+  "name": "install",
+  "prefix": "cap.interface.productivity.jira",
+  "path": "cap.interface.productivity.jira.install",
+  "latestRevision": {},
+  "revisions": [
+    {
+      "metadata": {
+        "prefix": "cap.interface.productivity.jira",
+        "path": "cap.interface.productivity.jira.install",
+        "displayName": "Install",
+        "description": "Install action for Jira",
+        "maintainers": [
+          {
+            "name": "Voltron Dev Team",
+            "email": "team-dev@projectvoltron.dev",
+            "url": "https://projectvoltron.dev"
+          }
+        ],
+        "documentationURL": "https://support.atlassian.com/jira-software-cloud/resources/",
+        "supportURL": "https://www.atlassian.com/software/jira",
+        "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png"
+      },
+      "revision": "0.2.0",
+      "spec": {
+        "input": "",
+        "output": ""
+      },
+      "implementations": [],
+      "signature": {
+        "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+      }
+    },
+    {
+      "metadata": {
+        "prefix": "cap.interface.productivity.jira",
+        "path": "cap.interface.productivity.jira.install",
+        "displayName": "Install",
+        "description": "Install action for Jira",
+        "maintainers": [
+          {
+            "name": "Voltron Dev Team",
+            "email": "team-dev@projectvoltron.dev",
+            "url": "https://projectvoltron.dev"
+          }
+        ],
+        "documentationURL": "https://support.atlassian.com/jira-software-cloud/resources/",
+        "supportURL": "https://www.atlassian.com/software/jira",
+        "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png"
+      },
+      "revision": "0.1.0",
+      "spec": {
+        "input": "",
+        "output": ""
+      },
+      "implementations": [],
+      "signature": {
+        "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+      }
+    }
+  ]
+}

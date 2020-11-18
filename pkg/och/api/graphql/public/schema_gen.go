@@ -37,7 +37,11 @@ type Config struct {
 type ResolverRoot interface {
 	Implementation() ImplementationResolver
 	Interface() InterfaceResolver
+	InterfaceRevision() InterfaceRevisionResolver
 	Query() QueryResolver
+	RepoMetadata() RepoMetadataResolver
+	Tag() TagResolver
+	Type() TypeResolver
 }
 
 type DirectiveRoot struct {
@@ -289,6 +293,9 @@ type ImplementationResolver interface {
 type InterfaceResolver interface {
 	Revision(ctx context.Context, obj *Interface, revision string) (*InterfaceRevision, error)
 }
+type InterfaceRevisionResolver interface {
+	Implementations(ctx context.Context, obj *InterfaceRevision, filter *ImplementationFilter) ([]*Implementation, error)
+}
 type QueryResolver interface {
 	RepoMetadata(ctx context.Context) (*RepoMetadata, error)
 	InterfaceGroups(ctx context.Context, filter *InterfaceGroupFilter) ([]*InterfaceGroup, error)
@@ -301,6 +308,15 @@ type QueryResolver interface {
 	Implementation(ctx context.Context, path string) (*Implementation, error)
 	Tags(ctx context.Context, filter *TagFilter) ([]*Tag, error)
 	Tag(ctx context.Context, path string) (*Tag, error)
+}
+type RepoMetadataResolver interface {
+	Revision(ctx context.Context, obj *RepoMetadata, revision string) (*RepoMetadataRevision, error)
+}
+type TagResolver interface {
+	Revision(ctx context.Context, obj *Tag, revision string) (*TagRevision, error)
+}
+type TypeResolver interface {
+	Revision(ctx context.Context, obj *Type, revision string) (*TypeRevision, error)
 }
 
 type executableSchema struct {
@@ -4280,8 +4296,8 @@ func (ec *executionContext) _InterfaceRevision_implementations(ctx context.Conte
 		Object:     "InterfaceRevision",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -4294,7 +4310,7 @@ func (ec *executionContext) _InterfaceRevision_implementations(ctx context.Conte
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Implementations, nil
+		return ec.resolvers.InterfaceRevision().Implementations(rctx, obj, args["filter"].(*ImplementationFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5276,8 +5292,8 @@ func (ec *executionContext) _RepoMetadata_revision(ctx context.Context, field gr
 		Object:     "RepoMetadata",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -5290,7 +5306,7 @@ func (ec *executionContext) _RepoMetadata_revision(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Revision, nil
+		return ec.resolvers.RepoMetadata().Revision(rctx, obj, args["revision"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5872,8 +5888,8 @@ func (ec *executionContext) _Tag_revision(ctx context.Context, field graphql.Col
 		Object:     "Tag",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -5886,7 +5902,7 @@ func (ec *executionContext) _Tag_revision(ctx context.Context, field graphql.Col
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Revision, nil
+		return ec.resolvers.Tag().Revision(rctx, obj, args["revision"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6258,8 +6274,8 @@ func (ec *executionContext) _Type_revision(ctx context.Context, field graphql.Co
 		Object:     "Type",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -6272,7 +6288,7 @@ func (ec *executionContext) _Type_revision(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Revision, nil
+		return ec.resolvers.Type().Revision(rctx, obj, args["revision"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8816,27 +8832,36 @@ func (ec *executionContext) _InterfaceRevision(ctx context.Context, sel ast.Sele
 		case "metadata":
 			out.Values[i] = ec._InterfaceRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "revision":
 			out.Values[i] = ec._InterfaceRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "spec":
 			out.Values[i] = ec._InterfaceRevision_spec(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "implementations":
-			out.Values[i] = ec._InterfaceRevision_implementations(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InterfaceRevision_implementations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "signature":
 			out.Values[i] = ec._InterfaceRevision_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9173,26 +9198,35 @@ func (ec *executionContext) _RepoMetadata(ctx context.Context, sel ast.Selection
 		case "name":
 			out.Values[i] = ec._RepoMetadata_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "prefix":
 			out.Values[i] = ec._RepoMetadata_prefix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "path":
 			out.Values[i] = ec._RepoMetadata_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "latestRevision":
 			out.Values[i] = ec._RepoMetadata_latestRevision(ctx, field, obj)
 		case "revision":
-			out.Values[i] = ec._RepoMetadata_revision(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._RepoMetadata_revision(ctx, field, obj)
+				return res
+			})
 		case "revisions":
 			out.Values[i] = ec._RepoMetadata_revisions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9384,26 +9418,35 @@ func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj 
 		case "name":
 			out.Values[i] = ec._Tag_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "prefix":
 			out.Values[i] = ec._Tag_prefix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "path":
 			out.Values[i] = ec._Tag_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "latestRevision":
 			out.Values[i] = ec._Tag_latestRevision(ctx, field, obj)
 		case "revision":
-			out.Values[i] = ec._Tag_revision(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Tag_revision(ctx, field, obj)
+				return res
+			})
 		case "revisions":
 			out.Values[i] = ec._Tag_revisions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -9499,26 +9542,35 @@ func (ec *executionContext) _Type(ctx context.Context, sel ast.SelectionSet, obj
 		case "name":
 			out.Values[i] = ec._Type_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "prefix":
 			out.Values[i] = ec._Type_prefix(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "path":
 			out.Values[i] = ec._Type_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "latestRevision":
 			out.Values[i] = ec._Type_latestRevision(ctx, field, obj)
 		case "revision":
-			out.Values[i] = ec._Type_revision(ctx, field, obj)
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Type_revision(ctx, field, obj)
+				return res
+			})
 		case "revisions":
 			out.Values[i] = ec._Type_revisions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

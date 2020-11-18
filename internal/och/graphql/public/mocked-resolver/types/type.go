@@ -13,17 +13,17 @@ func NewResolver() *TypeResolver {
 }
 
 func (r *TypeResolver) Types(ctx context.Context, filter *gqlpublicapi.TypeFilter) ([]*gqlpublicapi.Type, error) {
-	return []*gqlpublicapi.Type{dummyType("config"), dummyType("user")}, nil
+	return []*gqlpublicapi.Type{}, nil
 }
 
 func (r *TypeResolver) Type(ctx context.Context, path string) (*gqlpublicapi.Type, error) {
-	return dummyType("config"), nil
+	return &gqlpublicapi.Type{}, nil
 }
 
-func dummyType(name string) *gqlpublicapi.Type {
-	return &gqlpublicapi.Type{
-		Name:   name,
-		Prefix: "cap.type.database.mysql",
-		Path:   "cap.type.database.mysql." + name,
-	}
+func (r *TypeResolver) Revision(ctx context.Context, obj *gqlpublicapi.Type, revision string) (*gqlpublicapi.TypeRevision, error) {
+	return &gqlpublicapi.TypeRevision{}, nil
+}
+
+func getType() *gqlpublicapi.Type {
+	return &gqlpublicapi.Type{}
 }

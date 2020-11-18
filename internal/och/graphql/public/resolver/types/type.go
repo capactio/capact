@@ -20,6 +20,10 @@ func (r *TypeResolver) Type(ctx context.Context, path string) (*gqlpublicapi.Typ
 	return dummyType("config"), nil
 }
 
+func (r *TypeResolver) Revision(ctx context.Context, obj *gqlpublicapi.Type, revision string) (*gqlpublicapi.TypeRevision, error) {
+	return &gqlpublicapi.TypeRevision{}, nil
+}
+
 func dummyType(name string) *gqlpublicapi.Type {
 	return &gqlpublicapi.Type{
 		Name:   name,

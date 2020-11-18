@@ -44,6 +44,22 @@ func (r *MockedRootResolver) Interface() gqlpublicapi.InterfaceResolver {
 	return interfaces.NewResolver()
 }
 
+func (r *MockedRootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
+	return interfaces.NewRevisionResolver()
+}
+
 func (r *MockedRootResolver) Implementation() gqlpublicapi.ImplementationResolver {
 	return implementations.NewResolver()
+}
+
+func (r *MockedRootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
+	return repometadata.NewResolver()
+}
+
+func (r *MockedRootResolver) Tag() gqlpublicapi.TagResolver {
+	return tags.NewResolver()
+}
+
+func (r *MockedRootResolver) Type() gqlpublicapi.TypeResolver {
+	return types.NewResolver()
 }

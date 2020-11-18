@@ -18,7 +18,23 @@ models:
     fields:
       revision:
         resolver: true
+  InterfaceRevision:
+    fields:
+      implementations:
+        resolver: true
   Implementation:
+    fields:
+      revision:
+        resolver: true
+  Type:
+    fields:
+      revision:
+        resolver: true
+  Tag:
+    fields:
+      revision:
+        resolver: true
+  RepoMetadata:
     fields:
       revision:
         resolver: true
