@@ -79,7 +79,7 @@ jobs:
       - name: Save job ip
         uses: actions/upload-artifact@v1
         with:
-          name: job_ip.sh
+          name: job_ip
           path: job_ip.sh
       # - name: Install dependencies in cluster
       #   run: | 
@@ -123,10 +123,11 @@ jobs:
       - name: Download job ip
         uses: actions/download-artifact@v1
         with:
-          name: job_ip.sh
+          name: job_ip
       - name: Network cleanup
         run: | 
-          ls -la j*
+          ls -la
+          exit
           cat job_ip.sh
           . ./job_ip.sh
           sudo snap install yq
