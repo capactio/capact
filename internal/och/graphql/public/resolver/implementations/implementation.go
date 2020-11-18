@@ -13,6 +13,14 @@ type ImplementationResolver struct {
 func NewResolver() *ImplementationResolver {
 	return &ImplementationResolver{}
 }
+
+type ImplementationRevisionResolver struct {
+}
+
+func NewRevisionResolver() *ImplementationRevisionResolver {
+	return &ImplementationRevisionResolver{}
+}
+
 func (i *ImplementationResolver) Implementations(ctx context.Context, filter *gqlpublicapi.ImplementationFilter) ([]*gqlpublicapi.Implementation, error) {
 	return []*gqlpublicapi.Implementation{dummyImplementation()}, nil
 }
@@ -23,6 +31,10 @@ func (i ImplementationResolver) Implementation(ctx context.Context, path string)
 
 func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
 	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
+}
+
+func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
+	return []*gqlpublicapi.Interface{}, nil
 }
 
 func dummyImplementation() *gqlpublicapi.Implementation {

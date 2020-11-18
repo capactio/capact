@@ -52,6 +52,10 @@ func (r *MockedRootResolver) Implementation() gqlpublicapi.ImplementationResolve
 	return implementations.NewResolver()
 }
 
+func (r *MockedRootResolver) ImplementationRevision() gqlpublicapi.ImplementationRevisionResolver {
+	return implementations.NewRevisionResolver()
+}
+
 func (r *MockedRootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
 	return repometadata.NewResolver()
 }

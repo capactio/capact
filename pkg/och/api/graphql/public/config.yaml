@@ -26,6 +26,10 @@ models:
     fields:
       revision:
         resolver: true
+  ImplementationRevision:
+    fields:
+      interfaces:
+        resolver: true
   Type:
     fields:
       revision:
