@@ -43,7 +43,7 @@ jobs:
           AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
           echo IP_ADDED_JOB
           echo ${IP_ADDED_JOB}
-          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" "${IP_ADDED_JOB}") |tr -d ^,
+          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" "${IP_ADDED_JOB}" |tr -d ^,)
           echo AUTHORIZED
           echo ${AUTHORIZED}
           exit
