@@ -51,7 +51,7 @@ jobs:
           path: job_ip.sh
       - name: Test releases
         run: | 
-          SERVICE=voltron
+          SERVICES=voltron
           for SERVICE in ${SERVICES}
           do  
             helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
