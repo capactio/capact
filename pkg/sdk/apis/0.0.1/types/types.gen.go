@@ -513,7 +513,7 @@ const (
 type MethodEnum string
 const (
 	MethodGET MethodEnum = "GET"
-	Post MethodEnum = "POST"
+	MethodPOST MethodEnum = "POST"
 )
 
 type VendorKind string

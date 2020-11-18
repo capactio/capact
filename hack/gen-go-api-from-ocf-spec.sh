@@ -41,7 +41,7 @@ check_for_unknown_issues() {
 }
 
 gen_go_api_from_ocf_specs() {
-  shout "Generating Go struct from OCF JSON Schemas..."
+  shout "Generating Go types from OCF JSON Schemas..."
   OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
   mkdir -p "${REPORT_FILE_DIR}"
 
@@ -66,6 +66,10 @@ gen_go_api_from_ocf_specs() {
     --src "/local/ocf-spec/${OCF_VERSION}/schema/type-instance.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \
     -o "/local/$OUTPUT" 2> "${REPORT_FILENAME}"
+
+  echo "Patching Go types..."
+  sed -i.bak 's/Post MethodEnum = "POST"/MethodPOST MethodEnum = "POST"/g' "${OUTPUT}"
+  rm "${OUTPUT}.bak"
 
   popd
   shout "Generation completed successfully."

@@ -41,10 +41,6 @@ spec:
           path: cap.type.helm.chart.release
           revision: 0.1.0
     typeInstanceRelations:
-      helm-release:
-        uses: [ ]
-      postgresql:
-        uses: [ ]
       jira-config:
         uses:
           - helm-release

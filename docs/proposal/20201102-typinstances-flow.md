@@ -461,14 +461,14 @@ Use the information from the `input`/`output` property defined in Interface. For
 	spec:
 	  input:
 	    typeInstances:
-	     cap.core.action.register: # such instance is produced
-	       - type: cap.type.cms.wordpress.config
-	     cap.core.action.modify: # modifies existing instance
-	       - type: cap.type.database.mysql.config
-	     cap.core.action.list: #  pass the list of all existing instance
-	       - type: cap.type.database.mysql.config
-	     cap.core.action.get: #  pass the existing instance by ID
-	       - type: cap.type.database.mysql.config
+	      cap.core.action.register: # such instance is produced
+	        - type: cap.type.cms.wordpress.config
+	      cap.core.action.modify: # modifies existing instance
+	        - type: cap.type.database.mysql.config
+	      cap.core.action.list: #  pass the list of all existing instance
+	        - type: cap.type.database.mysql.config
+	      cap.core.action.get: #  pass the existing instance by ID
+	        - type: cap.type.database.mysql.config
 	# ...
 	```
 
@@ -513,14 +513,14 @@ spec:
   # when saving artifact in Local OCH we can create a proper edges.
   additionalOutput:
     typeInstances: # list all optional artifacts with type references
-        mysql_config:
-	      typeRef:
-	        path: cap.type.db.mysql.config
-	        revision: 0.1.0	     
-        ingress_config:
-            typeRef:
-              path: cap.type.networking.ingress.config
-              revision: 0.1.0  
+      mysql_config:
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0	     
+      ingress_config:
+        typeRef:
+          path: cap.type.networking.ingress.config
+          revision: 0.1.0  
     typeInstanceRelations:
       wordpress_config: # artifact name
         uses: # names of all artifacts that WP config depends on
@@ -528,9 +528,8 @@ spec:
           - ingress_config
       mysql_config: # artifact name
         typeRef:
-         path: cap.type.db.mysql.config
-         revision: 0.1.0
-        uses: []
+          path: cap.type.db.mysql.config
+          revision: 0.1.0
 ```
 
 ###  Populate an Action with the input TypeInstances
@@ -659,14 +658,14 @@ spec:
   # We use that to create a proper edges when saving artifact in Local OCH.
   additionalOutput:
     typeInstances: # list all optional artifacts with type references
-        mysql_config:
-	      typeRef:
-	        path: cap.type.db.mysql.config
-	        revision: 0.1.0	     
-        ingress_config:
-            typeRef:
-              path: cap.type.networking.ingress.config
-              revision: 0.1.0  
+      mysql_config:
+        typeRef:
+          path: cap.type.db.mysql.config
+          revision: 0.1.0	     
+      ingress_config:
+        typeRef:
+          path: cap.type.networking.ingress.config
+          revision: 0.1.0  
     typeInstanceRelations:
       jira_config:
         uses:
