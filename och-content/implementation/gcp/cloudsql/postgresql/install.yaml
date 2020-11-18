@@ -39,8 +39,6 @@ spec:
       cloudsql-instance:
         uses:
           - postgresql
-      postgresql:
-        uses: [ ]
 
   implements:
     - path: cap.interface.database.postgresql.install

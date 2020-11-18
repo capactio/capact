@@ -470,11 +470,11 @@ const (
 
 type Verb string
 const (
-	Create Verb = "create"
-	Delete Verb = "delete"
-	Get Verb = "get"
-	List Verb = "list"
-	Update Verb = "update"
+	VerbCreate Verb = "create"
+	VerbDelete Verb = "delete"
+	VerbGet Verb = "get"
+	VerbList Verb = "list"
+	VerbUpdate Verb = "update"
 )
 
 type ImplementationKind string
@@ -490,8 +490,8 @@ const (
 // An explanation about the purpose of this instance.
 type PointsTo string
 const (
-	Edge PointsTo = "Edge"
-	Stable PointsTo = "Stable"
+	PointsToEdge PointsTo = "Edge"
+	PointsToStable PointsTo = "Stable"
 )
 
 type TagKind string
