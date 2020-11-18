@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// Manager provides generic runner service
+// Manager implements template method pattern to orchestrate and execute runner functions in a proper order.
 type Manager struct {
 	runner         ActionRunner
 	cfg            Config
@@ -17,6 +17,7 @@ type Manager struct {
 	statusReporter StatusReporter
 }
 
+// NewManager returns new Manager instance.
 func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, error) {
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "RUNNER")
@@ -29,6 +30,7 @@ func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, e
 		return nil, errors.Wrap(err, "while creating zap logger")
 	}
 
+	log = log.Named("runner").Named(runner.Name())
 	loggerInto(log, runner)
 
 	return &Manager{
@@ -39,6 +41,7 @@ func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, e
 	}, nil
 }
 
+// Execute underlying runner function in a proper order.
 func (r *Manager) Execute(stop <-chan struct{}) error {
 	log := r.log.With(zap.String("runner", r.runner.Name()))
 
@@ -51,30 +54,31 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 	}
 
 	r.log.Debug("Starting runner")
-	out, err := r.runner.Start(ctx, StartInput{
+	sout, err := r.runner.Start(ctx, StartInput{
 		ExecCtx:  r.cfg.Context,
 		Manifest: manifest,
 	})
 	if err != nil {
 		return errors.Wrap(err, "while starting action")
 	}
-	r.log.Debug("Runner started", zap.Any("status", out.Status))
+	r.log.Debug("Runner started", zap.Any("status", sout.Status))
 
-	// save to disk or directly to CM and get rid of sidecar:
-	// problem with flat workflow and we cannot add sidecar to a given step
-	if err = r.statusReporter.Report(ctx, r.cfg.Context, out.Status); err != nil {
+	if err = r.statusReporter.Report(ctx, r.cfg.Context, sout.Status); err != nil {
 		return errors.Wrap(err, "while setting status")
 	}
 
 	log.Debug("Waiting for runner completion")
-	err = r.runner.WaitForCompletion(ctx, WaitForCompletionInput{ExecCtx: r.cfg.Context})
+	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{ExecCtx: r.cfg.Context})
 	if err != nil {
 		log.Error("while waiting for runner completion", zap.Error(err))
 		return errors.Wrap(err, "while waiting for completion")
 	}
-	log.Debug("Manager job completed")
+	log.Debug("Runner job completed",
+		zap.Bool("success", wout.FinishedSuccessfully),
+		zap.String("message", wout.Message),
+	)
 
-	return nil
+	return wout.ErrorOrNil()
 }
 
 // cancelableContext returns context that is canceled when stop signal is received or configured timeout elapsed.
@@ -100,10 +104,10 @@ type LoggerInjector interface {
 	InjectLogger(*zap.Logger)
 }
 
-// loggerInto will set logger on `runner` if requested.
+// loggerInto sets logger on `runner` if requested.
 func loggerInto(log *zap.Logger, runner interface{}) {
 	if s, ok := runner.(LoggerInjector); ok {
-		s.InjectLogger(log.Named("runner"))
+		s.InjectLogger(log)
 	}
 }
 

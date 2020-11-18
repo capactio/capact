@@ -3,19 +3,20 @@ package main
 import (
 	"log"
 
-	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
+	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/runner/argo"
 
 	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
 func main() {
+	stop := signals.SetupSignalHandler()
+
 	// create k8s client
 	k8sCfg, err := config.GetConfig()
 	exitOnError(err, "while creating k8s config")
@@ -24,17 +25,15 @@ func main() {
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
 
-	stop := signals.SetupSignalHandler()
-
 	argoRunner := argo.NewRunner(wfCli.ArgoprojV1alpha1())
 
-	// status reporter
+	// create status reporter
 	k8sCli, err := client.New(config.GetConfigOrDie(), client.Options{})
 	exitOnError(err, "while creating K8s client")
 
 	statusReporter := statusreporter.NewK8sConfigMap(k8sCli)
 
-	// manager
+	// create and run manager
 	mgr, err := runner.NewManager(argoRunner, statusReporter)
 	exitOnError(err, "while creating runner manager")
 

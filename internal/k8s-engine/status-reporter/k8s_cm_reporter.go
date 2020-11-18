@@ -1,4 +1,3 @@
-// Should be put in k8s-engine?
 package statusreporter
 
 import (
@@ -11,26 +10,32 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const cmStatusNameKey = "status"
+const ConfigMapStatusEntryKey = "status"
 
+var _ runner.StatusReporter = &K8sConfigMapReporter{}
+
+// K8sConfigMapReporter provides functionality to report status from Action Runner in a way that K8s Engine can
+// consume it later.
 type K8sConfigMapReporter struct {
 	cli client.Client
 }
 
+// NewK8sConfigMap returns new K8sConfigMapReporter instance.
 func NewK8sConfigMap(cli client.Client) *K8sConfigMapReporter {
 	return &K8sConfigMapReporter{
 		cli: cli,
 	}
 }
 
+// Report a given status to K8s Config Map, so K8s engine can consume it later.
 func (c *K8sConfigMapReporter) Report(ctx context.Context, execCtx runner.ExecutionContext, status interface{}) error {
 	cm := &v1.ConfigMap{}
-	err := c.cli.Get(ctx, client.ObjectKey{
+	key := client.ObjectKey{
 		Name:      execCtx.Name,
 		Namespace: execCtx.Platform.Namespace,
-	}, cm)
+	}
 
-	if err != nil {
+	if err := c.cli.Get(ctx, key, cm); err != nil {
 		return errors.Wrap(err, "while getting ConfigMap")
 	}
 
@@ -42,10 +47,9 @@ func (c *K8sConfigMapReporter) Report(ctx context.Context, execCtx runner.Execut
 	if err != nil {
 		return errors.Wrap(err, "while marshaling status")
 	}
-	cm.Data[cmStatusNameKey] = string(jsonStatus)
+	cm.Data[ConfigMapStatusEntryKey] = string(jsonStatus)
 
-	err = c.cli.Update(ctx, cm)
-	if err != nil {
+	if err := c.cli.Update(ctx, cm); err != nil {
 		return errors.Wrap(err, "while updating ConfigMap")
 	}
 

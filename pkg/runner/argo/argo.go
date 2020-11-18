@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"projectvoltron.dev/voltron/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -25,26 +25,35 @@ const (
 	runnerName          = "argo-runner"
 )
 
+// Provides info to easily identify started Argo Workflow.
 type (
 	Status struct {
-		ArgoWorkflowRef WorkflowRef
+		ArgoWorkflowRef WorkflowRef `json:"argoWorkflowRef"`
 	}
 	WorkflowRef struct {
-		Name      string
-		Namespace string
+		Name      string `json:"name"`
+		Namespace string `json:"namespace"`
 	}
 )
 
+var _ runner.ActionRunner = &Runner{}
+
+// Runner provides functionality to run and wait for Argo Workflow.
 type Runner struct {
 	wfClient v1alpha1.ArgoprojV1alpha1Interface
 	log      *zap.Logger
 }
 
+// NewRunner returns new instance of Argo Runner.
 func NewRunner(wfClient v1alpha1.ArgoprojV1alpha1Interface) *Runner {
 	return &Runner{wfClient: wfClient}
 }
 
+// Start the Argo Workflow from the given manifest.
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
+	if in.ExecCtx.DryRun {
+		return nil, errors.New("DryRun support not implemented")
+	}
 	var wfSpec wfv1.WorkflowSpec
 	if err := yaml.Unmarshal(in.Manifest, &wfSpec); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling workflow spec")
@@ -70,7 +79,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	// * implement upsert. But workflow can be already in running phase, so we can mess up it.
 	// * return error if already exists.
 	// * create and if already exits then cancel workflow and rerun it.
-	wfCreated, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
+	_, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
 	switch {
 	case err == nil:
 	case apierrors.IsAlreadyExists(err):
@@ -85,15 +94,15 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	return &runner.StartOutput{
 		Status: Status{
 			ArgoWorkflowRef: WorkflowRef{
-				Name:      wfCreated.Name,
-				Namespace: wfCreated.Namespace,
+				Name:      wf.Name,
+				Namespace: wf.Namespace,
 			},
 		},
 	}, nil
 }
 
 // WaitForCompletion waits until Argo Workflow is finished.
-func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) error {
+func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.ExecCtx.Name).String()
 	lw := &cache.ListWatch{
 		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
@@ -116,25 +125,48 @@ func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForComplet
 			return false, nil
 		}
 
-		switch obj := event.Object.(type) {
-		case *wfv1.Workflow:
-			if !obj.Status.FinishedAt.IsZero() {
-				fmt.Printf("Workflow %q %q at %v\n", obj.Name, obj.Status.Phase, obj.Status.FinishedAt)
-				return true, nil
-			}
+		status, _ := statusFromEvent(&event)
+		if !status.FinishedAt.IsZero() {
+			return true, nil
 		}
 
 		return false, nil
 	}
 
-	_, err := watchtools.UntilWithSync(ctx, lw, &wfv1.Workflow{}, nil, workflowCompleted)
-	return err
+	lastEvent, err := watchtools.UntilWithSync(ctx, lw, &wfv1.Workflow{}, nil, workflowCompleted)
+	if err != nil {
+		return nil, err
+	}
+
+	status, err := statusFromEvent(lastEvent)
+	if err != nil {
+		return nil, err
+	}
+
+	return &runner.WaitForCompletionOutput{
+		FinishedSuccessfully: status.Phase == wfv1.NodeSucceeded,
+		Message:              status.Message,
+	}, nil
 }
 
+func statusFromEvent(event *watch.Event) (wfv1.WorkflowStatus, error) {
+	if event == nil {
+		return wfv1.WorkflowStatus{}, errors.New("got nil event")
+	}
+	switch obj := event.Object.(type) {
+	case *wfv1.Workflow:
+		return obj.Status, nil
+	default:
+		return wfv1.WorkflowStatus{}, errors.Errorf("Wrong event object, want *wfv1.Workflow got %T", obj)
+	}
+}
+
+// InjectLogger requests logger injection.
 func (r *Runner) InjectLogger(log *zap.Logger) {
 	r.log = log.Named("argo")
 }
 
+// Name returns runner name.
 func (r *Runner) Name() string {
-	return "Argo Workflow runner"
+	return "argo.workflow"
 }
