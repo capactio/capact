@@ -36,7 +36,7 @@ func TestRunnerStart(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(inputManifest, &expWfSpec))
 
 	expOutStatus := Status{
-		ArgoWorkflowRef: ArgoWorkflowRef{
+		ArgoWorkflowRef: WorkflowRef{
 			Name:      input.ExecCtx.Name,
 			Namespace: input.ExecCtx.Platform.Namespace,
 		},
@@ -80,7 +80,6 @@ func TestRunnerWaitForCompletion(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-
 }
 
 func waitForFunc(fn func(ctx context.Context) error, timeout time.Duration) error {

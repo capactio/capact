@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"projectvoltron.dev/voltron/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
@@ -26,9 +27,9 @@ const (
 
 type (
 	Status struct {
-		ArgoWorkflowRef ArgoWorkflowRef
+		ArgoWorkflowRef WorkflowRef
 	}
-	ArgoWorkflowRef struct {
+	WorkflowRef struct {
 		Name      string
 		Namespace string
 	}
@@ -39,18 +40,14 @@ type Runner struct {
 	log      *zap.Logger
 }
 
-// Logger (with logger)
 func NewRunner(wfClient v1alpha1.ArgoprojV1alpha1Interface) *Runner {
-	return &Runner{
-		wfClient: wfClient,
-		//log:      log,
-	}
+	return &Runner{wfClient: wfClient}
 }
 
-func (r *Runner) Start(ctx context.Context, in runner.StartInput) (runner.StartOutput, error) {
+func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	var wfSpec wfv1.WorkflowSpec
 	if err := yaml.Unmarshal(in.Manifest, &wfSpec); err != nil {
-		return runner.StartOutput{}, errors.Wrap(err, "while unmarshaling workflow spec")
+		return nil, errors.Wrap(err, "while unmarshaling workflow spec")
 	}
 
 	if wfSpec.ServiceAccountName == "" {
@@ -68,15 +65,26 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (runner.StartO
 		Spec: wfSpec,
 	}
 
-	// only create or upsert?
+	// TODO: how should we handle retries?
+	// * create and ignore already exist error [currently implemented]
+	// * implement upsert. But workflow can be already in running phase, so we can mess up it.
+	// * return error if already exists.
+	// * create and if already exits then cancel workflow and rerun it.
 	wfCreated, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
-	if err != nil {
-		return runner.StartOutput{}, errors.Wrap(err, "while creating workflow")
+	switch {
+	case err == nil:
+	case apierrors.IsAlreadyExists(err):
+		r.log.Info("ArgoWorkflow already exists. Skip create/update action.",
+			zap.String("name", wf.Name),
+			zap.String("namespace", wf.Namespace),
+		)
+	default:
+		return nil, errors.Wrap(err, "while updating Argo Workflow")
 	}
 
-	return runner.StartOutput{
+	return &runner.StartOutput{
 		Status: Status{
-			ArgoWorkflowRef: ArgoWorkflowRef{
+			ArgoWorkflowRef: WorkflowRef{
 				Name:      wfCreated.Name,
 				Namespace: wfCreated.Namespace,
 			},
@@ -121,6 +129,10 @@ func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForComplet
 
 	_, err := watchtools.UntilWithSync(ctx, lw, &wfv1.Workflow{}, nil, workflowCompleted)
 	return err
+}
+
+func (r *Runner) InjectLogger(log *zap.Logger) {
+	r.log = log.Named("argo")
 }
 
 func (r *Runner) Name() string {

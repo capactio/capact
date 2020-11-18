@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+
+	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -30,10 +32,10 @@ func main() {
 	k8sCli, err := client.New(config.GetConfigOrDie(), client.Options{})
 	exitOnError(err, "while creating K8s client")
 
-	//statusReporter := k8s.NewConfigMapStatusReporter(k8sCli)
+	statusReporter := statusreporter.NewK8sConfigMap(k8sCli)
 
 	// manager
-	mgr, err := runner.NewManager(argoRunner, k8sCli)
+	mgr, err := runner.NewManager(argoRunner, statusReporter)
 	exitOnError(err, "while creating runner manager")
 
 	err = mgr.Execute(stop)

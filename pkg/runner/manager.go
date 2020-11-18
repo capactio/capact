@@ -2,10 +2,7 @@ package runner
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
-	v1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
@@ -17,40 +14,28 @@ type Manager struct {
 	runner         ActionRunner
 	cfg            Config
 	log            *zap.Logger
-	statusReporter statusReporter
-	k8sCli         client.Client
+	statusReporter StatusReporter
 }
 
-type statusReporter interface {
-	Report(status interface{}) error
-}
-
-func NewManager(runner ActionRunner, cli client.Client) (*Manager, error) {
+func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, error) {
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "RUNNER")
 	if err != nil {
 		return nil, errors.Wrap(err, "while loading configuration")
 	}
 
-	// setup logger
-	var logCfg zap.Config
-	if cfg.LoggerDevMode {
-		logCfg = zap.NewDevelopmentConfig()
-	} else {
-		logCfg = zap.NewProductionConfig()
-	}
-
-	log, err := logCfg.Build()
+	log, err := getLogger(cfg.LoggerDevMode)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating zap logger")
 	}
 
+	loggerInto(log, runner)
+
 	return &Manager{
-		runner: runner,
-		cfg:    cfg,
-		log:    log,
-		//statusReporter: statusReporter,
-		k8sCli: cli,
+		runner:         runner,
+		cfg:            cfg,
+		log:            log,
+		statusReporter: statusReporter,
 	}, nil
 }
 
@@ -77,7 +62,7 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 
 	// save to disk or directly to CM and get rid of sidecar:
 	// problem with flat workflow and we cannot add sidecar to a given step
-	if err = r.ReportStatus(ctx, r.cfg.Context, out.Status); err != nil {
+	if err = r.statusReporter.Report(ctx, r.cfg.Context, out.Status); err != nil {
 		return errors.Wrap(err, "while setting status")
 	}
 
@@ -88,37 +73,6 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 		return errors.Wrap(err, "while waiting for completion")
 	}
 	log.Debug("Manager job completed")
-
-	return nil
-}
-
-const cmStatusNameKey = "status"
-
-func (r *Manager) ReportStatus(ctx context.Context, execCtx ExecutionContext, status interface{}) error {
-	cm := &v1.ConfigMap{}
-	err := r.k8sCli.Get(ctx, client.ObjectKey{
-		Name:      execCtx.Name,
-		Namespace: execCtx.Platform.Namespace,
-	}, cm)
-
-	if err != nil {
-		return errors.Wrap(err, "while getting ConfigMap")
-	}
-
-	if cm.Data == nil {
-		cm.Data = map[string]string{}
-	}
-
-	jsonStatus, err := json.Marshal(status)
-	if err != nil {
-		return errors.Wrap(err, "while marshaling status")
-	}
-	cm.Data[cmStatusNameKey] = string(jsonStatus)
-
-	err = r.k8sCli.Update(ctx, cm)
-	if err != nil {
-		return errors.Wrap(err, "while updating ConfigMap")
-	}
 
 	return nil
 }
@@ -139,4 +93,23 @@ func (r *Manager) cancelableContext(stop <-chan struct{}) (context.Context, cont
 	}()
 
 	return ctx, cancel
+}
+
+// LoggerInjector is used by the Manager to inject logger to Runner.
+type LoggerInjector interface {
+	InjectLogger(*zap.Logger)
+}
+
+// loggerInto will set logger on `runner` if requested.
+func loggerInto(log *zap.Logger, runner interface{}) {
+	if s, ok := runner.(LoggerInjector); ok {
+		s.InjectLogger(log.Named("runner"))
+	}
+}
+
+func getLogger(loggerDevMode bool) (*zap.Logger, error) {
+	if loggerDevMode {
+		return zap.NewDevelopment()
+	}
+	return zap.NewProduction()
 }
