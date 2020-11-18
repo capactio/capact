@@ -116,6 +116,7 @@ jobs:
         run: | 
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
+          echo "IP_ADDED_JOB"
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
           |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' |grep -v ${IP_ADDED_JOB})
           AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
