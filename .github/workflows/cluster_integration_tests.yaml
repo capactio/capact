@@ -49,13 +49,13 @@ jobs:
         with:
           name: job_ip
           path: job_ip.sh
-  #     - name: Test releases
-  #       run: | 
-  #         SERVICE=voltron
-  #         for SERVICE in ${SERVICES}
-  #         do  
-  #           helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
-  #         done
+      - name: Test releases
+        run: | 
+          SERVICE=voltron
+          for SERVICE in ${SERVICES}
+          do  
+            helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
+          done
 
 
   network-cleanup:
@@ -92,4 +92,4 @@ jobs:
           else
             gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-          fi 
+          fi
