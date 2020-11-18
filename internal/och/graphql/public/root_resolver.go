@@ -44,6 +44,22 @@ func (r *RootResolver) Interface() gqlpublicapi.InterfaceResolver {
 	return interfaces.NewResolver()
 }
 
+func (r *RootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
+	return interfaces.NewRevisionResolver()
+}
+
 func (r *RootResolver) Implementation() gqlpublicapi.ImplementationResolver {
 	return implementations.NewResolver()
+}
+
+func (r *RootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
+	return repometadata.NewResolver()
+}
+
+func (r *RootResolver) Tag() gqlpublicapi.TagResolver {
+	return tags.NewResolver()
+}
+
+func (r *RootResolver) Type() gqlpublicapi.TypeResolver {
+	return types.NewResolver()
 }

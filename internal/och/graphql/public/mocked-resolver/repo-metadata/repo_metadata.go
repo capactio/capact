@@ -16,6 +16,10 @@ func (r *RepoMetadataResolver) RepoMetadata(ctx context.Context) (*gqlpublicapi.
 	return dummyRepoMetadata(), nil
 }
 
+func (r *RepoMetadataResolver) Revision(ctx context.Context, obj *gqlpublicapi.RepoMetadata, revision string) (*gqlpublicapi.RepoMetadataRevision, error) {
+	return &gqlpublicapi.RepoMetadataRevision{}, nil
+}
+
 func dummyRepoMetadata() *gqlpublicapi.RepoMetadata {
 	return &gqlpublicapi.RepoMetadata{
 		Name:   "metadata",

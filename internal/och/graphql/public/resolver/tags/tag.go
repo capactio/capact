@@ -20,6 +20,10 @@ func (r *TagResolver) Tag(ctx context.Context, path string) (*gqlpublicapi.Tag, 
 	return dummyTag("kubernetes"), nil
 }
 
+func (r *TagResolver) Revision(ctx context.Context, obj *gqlpublicapi.Tag, revision string) (*gqlpublicapi.TagRevision, error) {
+	return &gqlpublicapi.TagRevision{}, nil
+}
+
 func dummyTag(name string) *gqlpublicapi.Tag {
 	return &gqlpublicapi.Tag{
 		Name:   name,
