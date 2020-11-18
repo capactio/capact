@@ -36,6 +36,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Implementation() ImplementationResolver
+	ImplementationRevision() ImplementationRevisionResolver
 	Interface() InterfaceResolver
 	InterfaceRevision() InterfaceRevisionResolver
 	Query() QueryResolver
@@ -289,6 +290,9 @@ type ComplexityRoot struct {
 
 type ImplementationResolver interface {
 	Revision(ctx context.Context, obj *Implementation, revision string) (*ImplementationRevision, error)
+}
+type ImplementationRevisionResolver interface {
+	Interfaces(ctx context.Context, obj *ImplementationRevision) ([]*Interface, error)
 }
 type InterfaceResolver interface {
 	Revision(ctx context.Context, obj *Interface, revision string) (*InterfaceRevision, error)
@@ -3556,14 +3560,14 @@ func (ec *executionContext) _ImplementationRevision_interfaces(ctx context.Conte
 		Object:     "ImplementationRevision",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Interfaces, nil
+		return ec.resolvers.ImplementationRevision().Interfaces(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -8617,27 +8621,36 @@ func (ec *executionContext) _ImplementationRevision(ctx context.Context, sel ast
 		case "metadata":
 			out.Values[i] = ec._ImplementationRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "revision":
 			out.Values[i] = ec._ImplementationRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "spec":
 			out.Values[i] = ec._ImplementationRevision_spec(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "interfaces":
-			out.Values[i] = ec._ImplementationRevision_interfaces(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._ImplementationRevision_interfaces(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		case "signature":
 			out.Values[i] = ec._ImplementationRevision_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))

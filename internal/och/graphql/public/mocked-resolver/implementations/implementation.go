@@ -14,6 +14,14 @@ type ImplementationResolver struct {
 func NewResolver() *ImplementationResolver {
 	return &ImplementationResolver{}
 }
+
+type ImplementationRevisionResolver struct {
+}
+
+func NewRevisionResolver() *ImplementationRevisionResolver {
+	return &ImplementationRevisionResolver{}
+}
+
 func (i *ImplementationResolver) Implementations(ctx context.Context, filter *gqlpublicapi.ImplementationFilter) ([]*gqlpublicapi.Implementation, error) {
 	implementation, err := mockedresolver.MockedImplementation()
 	if err != nil {
@@ -43,13 +51,11 @@ func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi
 	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
 }
 
-func getInterface() (*gqlpublicapi.Interface, error) {
+func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
 	iface, err := mockedresolver.MockedInterface()
 	if err != nil {
-		return &gqlpublicapi.Interface{}, err
+		return []*gqlpublicapi.Interface{}, err
 	}
-	for _, implementation := range iface.LatestRevision.Implementations {
-		implementation.LatestRevision = implementation.Revisions[0]
-	}
-	return iface, nil
+
+	return []*gqlpublicapi.Interface{iface}, nil
 }
