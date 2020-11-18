@@ -44,11 +44,11 @@ jobs:
           AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" "${IP_ADDED_JOB}" |tr -d ^,)
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-  #     - name: Save job ip
-  #       uses: actions/upload-artifact@v1
-  #       with:
-  #         name: job_ip
-  #         path: job_ip.sh
+      - name: Save job ip
+        uses: actions/upload-artifact@v1
+        with:
+          name: job_ip
+          path: job_ip.sh
   #     - name: Test releases
   #       run: | 
   #         SERVICE=voltron
