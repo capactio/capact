@@ -10,7 +10,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - "master"
+      - $default-branch
 
 jobs:
   entry-tests:

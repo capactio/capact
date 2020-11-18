@@ -12,10 +12,13 @@ on:
       IMAGE_TAG:
         description: Docker Image Tag (Optional)    
         required: false
+      OLD_CLUSTER_DELETE:
+        description: You are aware old cluster will be dropped?    
+        required: true
 
 jobs:
-  create-cluster:
-    name: Create new cluster
+  recreate-cluster:
+    name: Recreate new cluster
     runs-on: ubuntu-latest
 
     steps:    
@@ -37,17 +40,20 @@ jobs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get update && sudo apt-get install terraform 
+      - name: Delete cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd hack/ci/terraform
+          gsutil cp gs://${BUCKET}/tf/*.tfstate .
+          terraform init
+          terraform destroy -auto-approve
       - name: Create cluster
         run: | 
           gcloud config set project ${PROJECT_ID}
           cd hack/ci/terraform
           terraform init
           terraform apply -auto-approve
-      - name: Archive terraform state
-        uses: actions/upload-artifact@v2
-        with:
-          name: cluster-tfstate
-          path: ./hack/ci/terraform/*.tfstate
+          gsutil cp *.tfstate gs://${BUCKET}/tf
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
@@ -55,8 +61,14 @@ jobs:
       - name: Network enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
+          echo "export IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
+      - name: Save job ip
+        uses: actions/upload-artifact@v1
+        with:
+          name: job_ip
+          path: job_ip.sh
       - name: Install dependencies in cluster
         run: | 
           helm repo add jetstack https://charts.jetstack.io
@@ -65,7 +77,7 @@ jobs:
           helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
           kubectl -n cert-manager rollout status deploy/cert-manager-webhook
-          sleep 20
+          sleep 20 #due to webhook not ready
           cd hack/ci/terraform
           kubectl apply -f yaml/cluster-issuer.yaml
           cd ..
@@ -85,7 +97,7 @@ jobs:
     name: Network access cleanup
     runs-on: ubuntu-latest
     if: always()
-    needs: [ create-cluster ]
+    needs: [ recreate-cluster ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -96,9 +108,24 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Network cleanup and enable
+      - name: Download job ip
+        uses: actions/download-artifact@v1
+        with:
+          name: job_ip
+      - name: Network cleanup
         run: | 
+          . job_ip/job_ip.sh
+          sudo snap install yq
           gcloud config set project ${PROJECT_ID}
-          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
-          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks
-          
+          AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
+          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' |grep -v ${IP_ADDED_JOB}) || true
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g') || true
+          if [ -z ${AUTHORIZED} ]
+          then
+            gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
+            gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks
+          else
+            gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
+          --master-authorized-networks ${AUTHORIZED}
+          fi
+                  
