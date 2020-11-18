@@ -9,7 +9,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - "devops*"
+      - "master"
 
 jobs:
   entry-tests:
@@ -156,7 +156,7 @@ jobs:
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
-    needs: [ integration-tests ] 
+    needs: [ integration-tests, entry-tests ] 
 
     steps:    
       - name: Checkout code
