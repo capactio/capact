@@ -1,19 +1,7 @@
 name: periodic-cluster-integration-tests
-# on:
-#   schedule:
-#   - cron: '0 */2 * * *'
-
 on:
-  push:
-    paths:
-      - "**.go"
-      - "**.graphql"
-      - ".github/workflows/**"
-      - "**.sh"
-      - "**.yaml"
-      - "Makefile"
-    branches:
-      - "devops*"
+  schedule:
+  - cron: '0 */2 * * *'
 
 jobs:
   integration-tests:
