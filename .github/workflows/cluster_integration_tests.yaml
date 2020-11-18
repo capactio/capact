@@ -1,7 +1,19 @@
 name: periodic-cluster-integration-tests
+# on:
+#   schedule:
+#   - cron: '0 */2 * * *'
+
 on:
-  schedule:
-  - cron: '0 */2 * * *'
+  push:
+    paths:
+      - "**.go"
+      - "**.graphql"
+      - ".github/workflows/**"
+      - "**.sh"
+      - "**.yaml"
+      - "Makefile"
+    branches:
+      - "devops*"
 
 jobs:
   integration-tests:
@@ -25,14 +37,21 @@ jobs:
       - name: Network enable
         run: | 
           sudo snap install yq
+          IP_ADDED_JOB=$(curl ${GET_IP_SERVICE})
+          echo "export IP_ADDED_JOB=${IP_ADDED_JOB}" >job_ip.sh
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
           AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g')
-          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" $(curl ${GET_IP_SERVICE}))
-          AUTHORIZED=$(echo ${AUTHORIZED} |awk 'BEGIN{FS=OFS=","}{NF--; print}')
+          AUTHORIZED=$(printf "%s,%s/32" "${AUTHORIZED}" "${IP_ADDED_JOB}"))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
+      - name: Save job ip
+        uses: actions/upload-artifact@v1
+        with:
+          name: job_ip
+          path: job_ip.sh
       - name: Test releases
         run: | 
+          SERVICE=voltron
           for SERVICE in ${SERVICES}
           do  
             helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
@@ -54,12 +73,18 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
+      - name: Download job ip
+        uses: actions/download-artifact@v1
+        with:
+          name: job_ip
       - name: Network cleanup
-        run: |
+        run: | 
+          . job_ip/job_ip.sh
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
-          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock') |grep -v $(curl ${GET_IP_SERVICE})
+          |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' |grep -v ${IP_ADDED_JOB}) || true
+          AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g') || true
           if [ -z ${AUTHORIZED} ]
           then
             gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks

@@ -3,30 +3,18 @@ name: Build-cluster-and-deploy
 #One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
 #Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
 #https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
-# on: 
-#   workflow_dispatch:
-#     inputs:
-#       SHA:
-#         description: Git Ref (Optional)    
-#         required: false
-#       IMAGE_TAG:
-#         description: Docker Image Tag (Optional)    
-#         required: false
-#       OLD_CLUSTER_DELETE:
-#         description: You are aware old cluster will be dropped?    
-#         required: true
-
-on:
-  push:
-    paths:
-      - "**.go"
-      - "**.graphql"
-      - ".github/workflows/**"
-      - "**.sh"
-      - "**.yaml"
-      - "Makefile"
-    branches:
-      - "devops*"
+on: 
+  workflow_dispatch:
+    inputs:
+      SHA:
+        description: Git Ref (Optional)    
+        required: false
+      IMAGE_TAG:
+        description: Docker Image Tag (Optional)    
+        required: false
+      OLD_CLUSTER_DELETE:
+        description: You are aware old cluster will be dropped?    
+        required: true
 
 jobs:
   recreate-cluster:
@@ -73,7 +61,6 @@ jobs:
       - name: Network enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
-          echo ${AUTHORIZED}
           echo "export IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
