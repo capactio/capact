@@ -71,10 +71,16 @@ jobs:
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
           echo ${AUTHORIZED}
-          echo "IP_ADDED_JOB=${AUTHORIZED}" >>"$GITHUB_ENV"
-          env |grep IP
+          echo "IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
+          cat job_ip.sh
+          . ./job_ip.sh
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
+      - name: Save job ip
+        uses: actions/upload-artifact@v1
+        with:
+          name: job_ip
+          path: job_ip.sh
       # - name: Install dependencies in cluster
       #   run: | 
       #     helm repo add jetstack https://charts.jetstack.io
@@ -114,8 +120,13 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
+      - name: Download job ip
+        uses: actions/download-artifact@v1
+        with:
+          name: job_ip
       - name: Network cleanup
         run: | 
+          . /.job_ip.sh
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
           echo "IP_ADDED_JOB"
