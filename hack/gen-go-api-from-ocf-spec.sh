@@ -67,10 +67,6 @@ gen_go_api_from_ocf_specs() {
     --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \
     -o "/local/$OUTPUT" 2> "${REPORT_FILENAME}"
 
-  echo "Patching Go types..."
-  sed -i.bak 's/Post MethodEnum = "POST"/MethodPOST MethodEnum = "POST"/g' "${OUTPUT}"
-  rm "${OUTPUT}.bak"
-
   popd
   shout "Generation completed successfully."
 }
