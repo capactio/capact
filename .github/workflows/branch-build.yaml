@@ -9,7 +9,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - $default-branch
+      - master
 
 jobs:
   entry-tests:
@@ -182,11 +182,9 @@ jobs:
           --master-authorized-networks ${AUTHORIZED}
       - name: Upgrade components
         run: | 
-          for COMPONENT in ${COMPONENTS}
-          do  
-            helm upgrade ${COMPONENT} ${HELM_CHARTS_PATH}/${COMPONENT} -f ${HELM_CHARTS_PATH}/${COMPONENT}/values.yaml \
-            --set global.containerRegistry.overrideTag=${DOCKER_TAG} --namespace ${NAMESPACE}
-          done
+          helm upgrade voltron ./deploy/kubernetes/charts/voltron -n ${NAMESPACE} \
+          --set global.containerRegistry.overrideTag=${DOCKER_TAG}
+
       
   network-cleanup:
     name: Network access cleanup

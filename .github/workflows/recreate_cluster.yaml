@@ -119,10 +119,10 @@ jobs:
           . ./hack/ci/setup-env.sh
       - name: Network cleanup
         run: | 
+          gcloud config set project ${PROJECT_ID}
           AUTHORIZED=$(gcloud container clusters describe ${TF_VAR_cluster_name} --zone ${TF_VAR_region} \
           |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock') |grep -v $(curl ${GET_IP_SERVICE})
           AUTHORIZED=$(echo ${AUTHORIZED} | tr ' ' ',' | sed 's/^,//g;s/ //g') 
-          gcloud config set project ${PROJECT_ID}
           if [ -z ${AUTHORIZED} ]
           then
             gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --no-enable-master-authorized-networks
