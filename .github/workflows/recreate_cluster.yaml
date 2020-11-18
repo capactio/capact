@@ -70,6 +70,7 @@ jobs:
       - name: Network enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
+          echo ${AUTHORIZED}
           echo "IP_ADDED_JOB=${AUTHORIZED}" >>"$GITHUB_ENV"
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
