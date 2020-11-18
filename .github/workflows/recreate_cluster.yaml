@@ -126,10 +126,7 @@ jobs:
           name: job_ip
       - name: Network cleanup
         run: | 
-          ls -la
-          exit
-          cat job_ip.sh
-          . ./job_ip.sh
+          . job_ip/job_ip.sh
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
           echo "IP_ADDED_JOB"
