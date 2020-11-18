@@ -16,14 +16,39 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-  # Additional input: postgresql
-  # Additional output:
-  # - postgresql artifact
-  # - db artifact
-  # - helm-release for Jira
-
   appVersion: "8.x.x"
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  additionalOutput:
+    typeInstances:
+      db:
+        typeRef:
+          path: cap.type.database.postgresql.database
+          revision: 0.1.0
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+      helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+    typeInstanceRelations:
+      jira-config:
+        uses:
+          - helm-release
+          - postgresql
+          - db
+      db:
+        uses:
+          - postgresql
 
   implements:
     - path: cap.interface.productivity.jira.install
@@ -63,11 +88,11 @@ spec:
         templates:
           - name: workflow
             steps:
-  # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-  #           {{ if ! .Input.typeInstances.postgresql }}
+              # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
+              #           {{ if ! .Input.typeInstances.postgresql }}
               - - name: install-db
                   template: install-db
-  #           {{ endif }}
+              #           {{ endif }}
               - - name: create-db
                   template: create-db
                   arguments:
@@ -95,7 +120,7 @@ spec:
                 - name: postgresql
                   path: "/out/postgresql"
             container:
-#              {{ actionFrom: postgresql.install }}
+          #              {{ actionFrom: postgresql.install }}
 
           - name: create-db
             inputs:
@@ -108,7 +133,7 @@ spec:
                   globalName: db
                   path: "/out/db"
             container:
-#              {{ actionFrom: postgresql.create-db }}
+          #              {{ actionFrom: postgresql.create-db }}
 
           - name: produce-helm-values
             inputs:
@@ -117,7 +142,7 @@ spec:
                   path: "/in/postgresql"
                 - name: db
                   path: "/in/db"
-#             {{ inputParametersToArtifact }}
+            #             {{ inputParametersToArtifact }}
             outputs:
               artifacts:
                 - name: jira-helm-values

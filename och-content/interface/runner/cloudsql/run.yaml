@@ -13,35 +13,32 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
 spec:
-# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-# Requires `gcp-sa` of type cap.type.gcp.auth.service-account artifact
-
   input:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "$ocfRefs": {
-            "inputType": {
-              "name": "cap.type.runner.cloudsql.run-input",
-              "revision": "0.1.0"
-            }
-          },
-          "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
-        }
+    parameters:
+      jsonSchema:
+        value: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "$ocfRefs": {
+              "inputType": {
+                "name": "cap.type.runner.cloudsql.run-input",
+                "revision": "0.1.0"
+              }
+            },
+            "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+          }
+    typeInstances:
+      gcp-sa:
+        typeRef:
+          path: cap.type.gcp.auth.service-account
+          revision: 0.1.0
+        verbs: [ "get" ]
   output:
-    jsonSchema:
-      value: |-
-        {
-          "$schema": "http://json-schema.org/draft-07/schema",
-          "$ocfRefs": {
-            "outputType": {
-              "name": "cap.core.type.runner.generic.run-output",
-              "revision": "0.1.0"
-            }
-          },
-          "allOf": [ { "$ref": "#/$ocfRefs/outputType" } ]
-        }
+    typeInstances:
+      cloudsql-instance:
+        typeRef:
+          path: cap.type.gcp.cloudsql.instance
+          revision: 0.1.0
 
 
 signature:

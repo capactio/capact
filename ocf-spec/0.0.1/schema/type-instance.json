@@ -56,27 +56,7 @@
       ],
       "properties": {
         "typeRef": {
-          "$id": "#/properties/spec/properties/typeRef",
-          "type": "object",
-          "description": "The full path to the Type form which this instance was created.",
-          "required": [
-            "path"
-          ],
-          "properties": {
-            "path": {
-              "$id": "#/properties/spec/properties/typeRef/0/path",
-              "type": "string",
-              "description": "Path of a given Type"
-            },
-            "revision": {
-              "$id": "#/properties/spec/properties/typeRef/0/revision",
-              "type": "string",
-              "description": "Version of the manifest content in the SemVer format.",
-              "minLength": 5,
-              "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$"
-            }
-          },
-          "additionalProperties": false
+          "$ref": "https://projectvoltron.dev/schemas/common/type-ref.json"
         },
         "value": {
           "$id": "#/properties/spec/properties/value",

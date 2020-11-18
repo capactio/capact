@@ -46,6 +46,9 @@ func TestManifestsValid(t *testing.T) {
 		fmt.Sprintf("%s/common/json-schema-type.json", ocfPathPrefix),
 		fmt.Sprintf("%s/common/metadata.json", ocfPathPrefix),
 		fmt.Sprintf("%s/common/metadata-tags.json", ocfPathPrefix),
+		fmt.Sprintf("%s/common/type-ref.json", ocfPathPrefix),
+		fmt.Sprintf("%s/common/input-type-instances.json", ocfPathPrefix),
+		fmt.Sprintf("%s/common/output-type-instances.json", ocfPathPrefix),
 	}
 	err := loadCommonSchemas(sl, schemaRefPaths)
 	require.NoError(t, err, "while loading common schemas")

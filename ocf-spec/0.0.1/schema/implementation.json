@@ -138,6 +138,53 @@
           "description": "The supported application versions in SemVer2 format.",
           "additionalProperties": false
         },
+        "additionalInput": {
+          "$id": "#/properties/spec/properties/additionalInput",
+          "type": "object",
+          "description": "Specifies additional input for a given Implementation",
+          "properties": {
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
+            }
+          },
+          "additionalProperties": false
+        },
+        "additionalOutput": {
+          "$id": "#/properties/spec/properties/additionalOutput",
+          "type": "object",
+          "description": "Specifies additional output for a given Implementation",
+          "required": [
+            "typeInstanceRelations"
+          ],
+          "properties": {
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
+            },
+            "typeInstanceRelations": {
+              "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations",
+              "type": "object",
+              "description": "Defines the relations between all output TypeInstances",
+              "additionalProperties": {
+                "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters",
+                "type": "object",
+                "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
+                "properties": {
+                  "uses": {
+                    "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters/properties/uses",
+                    "description": "Uses contains all dependant TypeInstances",
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "description": "Alias of the dependant TypeInstance"
+                    },
+                    "additionalItems": false
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
         "implements": {
           "$id": "#/properties/spec/properties/implements",
           "type": "array",
@@ -170,12 +217,12 @@
           "type": "object",
           "description": "List of the system prerequisites that need to be present on the cluster. There has to be an Instance for every concrete type.",
           "additionalProperties": {
-            "$id": "#/properties/spec/properties/requires/properties/cap.core.type.platform",
+            "$id": "#/properties/spec/properties/requires/additionalProperties",
             "type": "object",
             "description": "Prefix MUST be an abstract node and represents a core abstract Type e.g. cap.core.type.platform. Custom Types are not allowed.",
             "properties": {
               "oneOf": {
-                "$id": "#/properties/spec/properties/requires/properties/oneOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/oneOf",
                 "type": "array",
                 "description": "Exactly one of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
@@ -184,7 +231,7 @@
                 }
               },
               "allOf": {
-                "$id": "#/properties/spec/properties/requires/properties/allOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/allOf",
                 "type": "array",
                 "description": "All of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
@@ -193,7 +240,7 @@
                 }
               },
               "anyOf": {
-                "$id": "#/properties/spec/properties/requires/properties/anyOf",
+                "$id": "#/properties/spec/properties/requires/additionalProperties/anyOf",
                 "type": "array",
                 "description": "Any (one or more) of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
@@ -289,8 +336,8 @@
           },
           "additionalProperties": false
         }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }
-

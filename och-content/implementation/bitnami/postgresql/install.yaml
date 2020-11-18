@@ -16,10 +16,18 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  # TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-  # Outputs additionally helm chart artifact
-
   appVersion: "10,11,12,13"
+
+  additionalOutput:
+    typeInstances:
+      helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+    typeInstanceRelations:
+      postgresql:
+        uses:
+          - helm-release
 
   implements:
     - path: cap.interface.database.postgresql.install

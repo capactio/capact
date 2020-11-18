@@ -36,10 +36,6 @@ spec:
         - name: run
           revision: 0.1.0
 
-# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-# Requires `gcp-sa` artifact
-# Additional output: cap.type.gcp.cloudsql.instance
-
   action:
     runnerInterface: argo.run
     args:
@@ -49,9 +45,9 @@ spec:
           - name: gcp
             inputs:
               artifacts:
-              - name: gcp-sa
-                path: /gcp/sa.json
-#             {{ inputParametersToArtifact }}
+                - name: gcp-sa
+                  path: /gcp/sa.json
+            #             {{ inputParametersToArtifact }}
             outputs:
               artifacts:
                 - name: cloudsql-instance

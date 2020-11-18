@@ -61,12 +61,21 @@
           "$id": "#/properties/spec/properties/input",
           "type": "object",
           "description": "The input schema for Interface action.",
-          "required": [
-            "jsonSchema"
-          ],
+          "required": [],
           "properties": {
-            "jsonSchema": {
-              "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+            "parameters": {
+              "$id": "#/properties/spec/properties/input/properties/parameters",
+              "type": "object",
+              "description": "The input parameters passed from User",
+              "properties": {
+                "jsonSchema": {
+                  "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+                }
+              },
+              "additionalProperties": false
+            },
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
             }
           },
           "additionalProperties": false
@@ -75,12 +84,10 @@
           "$id": "#/properties/spec/properties/output",
           "type": "object",
           "description": "The output schema for Interface action.",
-          "required": [
-            "jsonSchema"
-          ],
+          "required": [],
           "properties": {
-            "jsonSchema": {
-              "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+            "typeInstances": {
+              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
             }
           },
           "additionalProperties": false
@@ -95,3 +102,4 @@
     }
   }
 }
+

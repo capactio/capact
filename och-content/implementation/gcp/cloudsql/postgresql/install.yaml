@@ -19,11 +19,28 @@ metadata:
       revision: 0.1.0
 
 spec:
-# TODO: Take into account artifacts after resolving https://cshark.atlassian.net/browse/SV-112
-# Requires `gcp-sa` of type cap.type.gcp.auth.service-account artifact
-# Outputs additionally cap.type.gcp.cloudsql.instance artifact
-
   appVersion: "10, 11, 12, 13"
+
+  additionalInput:
+    typeInstances:
+      gcp-sa:
+        typeRef:
+          path: cap.type.gcp.auth.service-account
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  additionalOutput:
+    typeInstances:
+      cloudsql-instance:
+        typeRef:
+          path: cap.type.gcp.cloudsql.instance
+          revision: 0.1.0
+    typeInstanceRelations:
+      cloudsql-instance:
+        uses:
+          - postgresql
+      postgresql:
+        uses: [ ]
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -61,6 +78,10 @@ spec:
                   template: produce-config
 
           - name: provision
+            inputs:
+              artifacts:
+                - name: gcp-sa
+                  path: "/in/gcp-sa"
             outputs:
               artifacts:
                 - name: cloudsql-instance

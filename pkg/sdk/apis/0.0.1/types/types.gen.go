@@ -140,7 +140,13 @@ type InterfaceSpec struct {
 
 // The input schema for Interface action.
 type Input struct {
-	JSONSchema JSONSchema `json:"jsonSchema"`
+	Parameters    *Parameters                  `json:"parameters,omitempty"`   // The input parameters passed from User
+	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
+}
+
+// The input parameters passed from User
+type Parameters struct {
+	JSONSchema *JSONSchema `json:"jsonSchema,omitempty"`
 }
 
 // The JSONSchema definition.
@@ -148,9 +154,26 @@ type JSONSchema struct {
 	Value string `json:"value"`// Inline JSON Schema definition for the parameters.
 }
 
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type InputTypeInstance struct {
+	TypeRef TypeRef `json:"typeRef"`
+	Verbs   []Verb  `json:"verbs"`  // The full list of access rights for a given TypeInstance
+}
+
+// The full path to the Type from which the TypeInstance is created.
+type TypeRef struct {
+	Path     string  `json:"path"`              // Path of a given Type
+	Revision *string `json:"revision,omitempty"`// Version of the manifest content in the SemVer format.
+}
+
 // The output schema for Interface action.
 type Output struct {
-	JSONSchema JSONSchema `json:"jsonSchema"`
+	TypeInstances map[string]OutputTypeInstance `json:"typeInstances,omitempty"`
+}
+
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type OutputTypeInstance struct {
+	TypeRef *TypeRef `json:"typeRef,omitempty"`
 }
 
 // The description of an action and its prerequisites (dependencies). An implementation
@@ -199,17 +222,35 @@ type ImplementationSignature struct {
 
 // A container for the Implementation specification definition.
 type ImplementationSpec struct {
-	Action     Action             `json:"action"`            // An explanation about the purpose of this instance.
-	AppVersion string             `json:"appVersion"`        // The supported application versions in SemVer2 format.
-	Implements []Implement        `json:"implements"`        // Defines what kind of interfaces this implementation fulfills.
-	Imports    []Import           `json:"imports,omitempty"` // List of external Interfaces that this Implementation requires to be able to execute the; action.
-	Requires   map[string]Require `json:"requires,omitempty"`// List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
+	Action           Action             `json:"action"`                    // An explanation about the purpose of this instance.
+	AdditionalInput  *AdditionalInput   `json:"additionalInput,omitempty"` // Specifies additional input for a given Implementation
+	AdditionalOutput *AdditionalOutput  `json:"additionalOutput,omitempty"`// Specifies additional output for a given Implementation
+	AppVersion       string             `json:"appVersion"`                // The supported application versions in SemVer2 format.
+	Implements       []Implement        `json:"implements"`                // Defines what kind of interfaces this implementation fulfills.
+	Imports          []Import           `json:"imports,omitempty"`         // List of external Interfaces that this Implementation requires to be able to execute the; action.
+	Requires         map[string]Require `json:"requires,omitempty"`        // List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
 }
 
 // An explanation about the purpose of this instance.
 type Action struct {
 	Args            map[string]interface{} `json:"args"`           // Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
 	RunnerInterface string                 `json:"runnerInterface"`// The Interface of a Runner, which handles the execution, for example,; cap.interface.runner.helm3.run
+}
+
+// Specifies additional input for a given Implementation
+type AdditionalInput struct {
+	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
+}
+
+// Specifies additional output for a given Implementation
+type AdditionalOutput struct {
+	TypeInstanceRelations map[string]TypeInstanceRelation `json:"typeInstanceRelations"`  // Defines the relations between all output TypeInstances
+	TypeInstances         map[string]OutputTypeInstance   `json:"typeInstances,omitempty"`
+}
+
+// Prefix is an alias of the TypeInstance, used in the Implementation
+type TypeInstanceRelation struct {
+	Uses []string `json:"uses,omitempty"`// Uses contains all dependant TypeInstances
 }
 
 type Implement struct {
@@ -367,7 +408,7 @@ type TypeInstanceMetadata struct {
 // A container for the TypeInstance specification definition.
 type TypeInstanceSpec struct {
 	Instrumentation *Instrumentation       `json:"instrumentation,omitempty"`// Holds the details about instrumentation for given Type Instance
-	TypeRef         TypeRef                `json:"typeRef"`                  // The full path to the Type form which this instance was created.
+	TypeRef         TypeRef                `json:"typeRef"`                  
 	Value           map[string]interface{} `json:"value"`                    // Holds the JSON object for a given TypeInstance with arbitrary data. It needs to be valid; against the Type JSONSchema.
 }
 
@@ -393,12 +434,6 @@ type Metrics struct {
 // Stores details of a metrics dashboard
 type Dashboard struct {
 	URL *string `json:"url,omitempty"`// URL of metrics dashboard
-}
-
-// The full path to the Type form which this instance was created.
-type TypeRef struct {
-	Path     string  `json:"path"`              // Path of a given Type
-	Revision *string `json:"revision,omitempty"`// Version of the manifest content in the SemVer format.
 }
 
 // Remote OCH repositories can be mounted under the vendor sub-tree in the local repository.
@@ -431,6 +466,15 @@ type Federation struct {
 type InterfaceKind string
 const (
 	KindInterface InterfaceKind = "Interface"
+)
+
+type Verb string
+const (
+	Create Verb = "create"
+	Delete Verb = "delete"
+	Get Verb = "get"
+	List Verb = "list"
+	Update Verb = "update"
 )
 
 type ImplementationKind string
@@ -468,8 +512,8 @@ const (
 // Method of HTTP request
 type MethodEnum string
 const (
-	Get MethodEnum = "GET"
-	Post MethodEnum = "POST"
+	MethodGET MethodEnum = "GET"
+	MethodPOST MethodEnum = "POST"
 )
 
 type VendorKind string

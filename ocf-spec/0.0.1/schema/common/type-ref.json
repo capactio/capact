@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://projectvoltron.dev/schemas/common/type-ref.json",
+  "type": "object",
+  "description": "The full path to the Type from which the TypeInstance is created.",
+  "required": [
+    "path"
+  ],
+  "properties": {
+    "path": {
+      "$id": "#/properties/path",
+      "type": "string",
+      "description": "Path of a given Type"
+    },
+    "revision": {
+      "$id": "#/properties/revision",
+      "type": "string",
+      "description": "Version of the manifest content in the SemVer format.",
+      "minLength": 5,
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$"
+    }
+  },
+  "additionalProperties": false
+}
