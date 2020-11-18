@@ -71,7 +71,7 @@ jobs:
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
           echo ${AUTHORIZED}
-          echo "IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
+          echo "export IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
           cat job_ip.sh
           . ./job_ip.sh
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
@@ -79,7 +79,7 @@ jobs:
       - name: Save job ip
         uses: actions/upload-artifact@v1
         with:
-          name: job_ip
+          name: job_ip.sh
           path: job_ip.sh
       # - name: Install dependencies in cluster
       #   run: | 
@@ -123,11 +123,11 @@ jobs:
       - name: Download job ip
         uses: actions/download-artifact@v1
         with:
-          name: job_ip
+          name: job_ip.sh
       - name: Network cleanup
         run: | 
           ls -la j*
-          mv job_ip job_ip.sh
+          cat job_ip.sh
           . ./job_ip.sh
           sudo snap install yq
           gcloud config set project ${PROJECT_ID}
