@@ -18,6 +18,10 @@ models:
     fields:
       revision:
         resolver: true
+  InterfaceGroup:
+    fields:
+      interfaces:
+        resolver: true
   InterfaceRevision:
     fields:
       implementations:

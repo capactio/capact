@@ -254,16 +254,16 @@ type TypeInstanceValue struct {
 }
 
 type TypeMetadata struct {
-	Name             string        `json:"name"`
-	Prefix           *string       `json:"prefix"`
-	Path             *string       `json:"path"`
-	DisplayName      *string       `json:"displayName"`
-	Description      string        `json:"description"`
-	Maintainers      []*Maintainer `json:"maintainers"`
-	DocumentationURL *string       `json:"documentationURL"`
-	SupportURL       *string       `json:"supportURL"`
-	IconURL          *string       `json:"iconURL"`
-	Tags             []*Tag        `json:"tags"`
+	Name             string         `json:"name"`
+	Prefix           *string        `json:"prefix"`
+	Path             *string        `json:"path"`
+	DisplayName      *string        `json:"displayName"`
+	Description      string         `json:"description"`
+	Maintainers      []*Maintainer  `json:"maintainers"`
+	DocumentationURL *string        `json:"documentationURL"`
+	SupportURL       *string        `json:"supportURL"`
+	IconURL          *string        `json:"iconURL"`
+	Tags             []*TagRevision `json:"tags"`
 }
 
 func (TypeMetadata) IsMetadataBaseFields() {}

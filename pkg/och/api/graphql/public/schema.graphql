@@ -347,7 +347,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [Tag!]!
+    tags: [TagRevision!]!
 }
 
 type Signature {

@@ -38,6 +38,7 @@ type ResolverRoot interface {
 	Implementation() ImplementationResolver
 	ImplementationRevision() ImplementationRevisionResolver
 	Interface() InterfaceResolver
+	InterfaceGroup() InterfaceGroupResolver
 	InterfaceRevision() InterfaceRevisionResolver
 	Query() QueryResolver
 	RepoMetadata() RepoMetadataResolver
@@ -296,6 +297,9 @@ type ImplementationRevisionResolver interface {
 }
 type InterfaceResolver interface {
 	Revision(ctx context.Context, obj *Interface, revision string) (*InterfaceRevision, error)
+}
+type InterfaceGroupResolver interface {
+	Interfaces(ctx context.Context, obj *InterfaceGroup, filter *InterfaceFilter) ([]*Interface, error)
 }
 type InterfaceRevisionResolver interface {
 	Implementations(ctx context.Context, obj *InterfaceRevision, filter *ImplementationFilter) ([]*Implementation, error)
@@ -1774,7 +1778,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [Tag!]!
+    tags: [TagRevision!]!
 }
 
 type Signature {
@@ -4083,8 +4087,8 @@ func (ec *executionContext) _InterfaceGroup_interfaces(ctx context.Context, fiel
 		Object:     "InterfaceGroup",
 		Field:      field,
 		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
@@ -4097,7 +4101,7 @@ func (ec *executionContext) _InterfaceGroup_interfaces(ctx context.Context, fiel
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Interfaces, nil
+		return ec.resolvers.InterfaceGroup().Interfaces(rctx, obj, args["filter"].(*InterfaceFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6668,9 +6672,9 @@ func (ec *executionContext) _TypeMetadata_tags(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Tag)
+	res := resTmp.([]*TagRevision)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeReference_path(ctx context.Context, field graphql.CollectedField, obj *TypeReference) (ret graphql.Marshaler) {
@@ -8776,18 +8780,27 @@ func (ec *executionContext) _InterfaceGroup(ctx context.Context, sel ast.Selecti
 		case "metadata":
 			out.Values[i] = ec._InterfaceGroup_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "signature":
 			out.Values[i] = ec._InterfaceGroup_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "interfaces":
-			out.Values[i] = ec._InterfaceGroup_interfaces(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._InterfaceGroup_interfaces(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

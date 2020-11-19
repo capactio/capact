@@ -48,6 +48,10 @@ func (r *MockedRootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionR
 	return interfaces.NewRevisionResolver()
 }
 
+func (r *MockedRootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {
+	return interfacegroups.NewInterfacesResolver()
+}
+
 func (r *MockedRootResolver) Implementation() gqlpublicapi.ImplementationResolver {
 	return implementations.NewResolver()
 }

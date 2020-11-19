@@ -71,3 +71,17 @@ func MockedTag() (*gqlpublicapi.Tag, error) {
 	tag.LatestRevision = tag.Revisions[0]
 	return tag, nil
 }
+
+func MockedInterfaceGroup() (*gqlpublicapi.InterfaceGroup, error) {
+	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "interfaceGroup.json"))
+	if err != nil {
+		return nil, err
+	}
+
+	group := &gqlpublicapi.InterfaceGroup{}
+	err = json.Unmarshal(buff, &group)
+	if err != nil {
+		return nil, err
+	}
+	return group, nil
+}
