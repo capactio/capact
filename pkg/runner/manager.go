@@ -7,18 +7,19 @@ import (
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
+	"sigs.k8s.io/yaml"
 )
 
 // Manager implements template method pattern to orchestrate and execute runner functions in a proper order.
 type Manager struct {
-	runner         ActionRunner
+	runner         Runner
 	cfg            Config
 	log            *zap.Logger
 	statusReporter StatusReporter
 }
 
 // NewManager returns new Manager instance.
-func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, error) {
+func NewManager(runner Runner, statusReporter StatusReporter) (*Manager, error) {
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "RUNNER")
 	if err != nil {
@@ -45,47 +46,61 @@ func NewManager(runner ActionRunner, statusReporter StatusReporter) (*Manager, e
 func (r *Manager) Execute(stop <-chan struct{}) error {
 	log := r.log.With(zap.String("runner", r.runner.Name()))
 
-	ctx, cancel := r.cancelableContext(stop)
-	defer cancel()
-
-	manifest, err := ioutil.ReadFile(r.cfg.InputManifestPath)
+	runnerInputData, err := r.readRunnerInput()
 	if err != nil {
-		return errors.Wrap(err, "while reading manifest from disk")
+		return errors.Wrap(err, "while reading runner input")
 	}
+
+	ctx, cancel := r.cancelableContext(stop, runnerInputData.Context.Timeout)
+	defer cancel()
 
 	r.log.Debug("Starting runner")
 	sout, err := r.runner.Start(ctx, StartInput{
-		ExecCtx:  r.cfg.Context,
-		Manifest: manifest,
+		ExecCtx: runnerInputData.Context,
+		Args:    runnerInputData.Args,
 	})
 	if err != nil {
 		return errors.Wrap(err, "while starting action")
 	}
 	r.log.Debug("Runner started", zap.Any("status", sout.Status))
 
-	if err = r.statusReporter.Report(ctx, r.cfg.Context, sout.Status); err != nil {
+	if err = r.statusReporter.Report(ctx, runnerInputData.Context, sout.Status); err != nil {
 		return errors.Wrap(err, "while setting status")
 	}
 
 	log.Debug("Waiting for runner completion")
-	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{ExecCtx: r.cfg.Context})
+	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{ExecCtx: runnerInputData.Context})
 	if err != nil {
 		log.Error("while waiting for runner completion", zap.Error(err))
 		return errors.Wrap(err, "while waiting for completion")
 	}
 	log.Debug("Runner job completed",
-		zap.Bool("success", wout.FinishedSuccessfully),
+		zap.Bool("success", wout.Succeeded),
 		zap.String("message", wout.Message),
 	)
 
 	return wout.ErrorOrNil()
 }
 
+func (r *Manager) readRunnerInput() (InputData, error) {
+	rawInput, err := ioutil.ReadFile(r.cfg.InputPath)
+	if err != nil {
+		return InputData{}, errors.Wrap(err, "while reading input data from disk")
+	}
+
+	var input InputData
+	if err := yaml.Unmarshal(rawInput, &input); err != nil {
+		return InputData{}, errors.Wrap(err, "while unmarshaling input data")
+	}
+
+	return input, nil
+}
+
 // cancelableContext returns context that is canceled when stop signal is received or configured timeout elapsed.
-func (r *Manager) cancelableContext(stop <-chan struct{}) (context.Context, context.CancelFunc) {
+func (r *Manager) cancelableContext(stop <-chan struct{}, timeout Duration) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(context.Background())
-	if r.cfg.Timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, r.cfg.Timeout)
+	if timeout > 0 {
+		ctx, cancel = context.WithTimeout(ctx, timeout.Duration())
 	}
 
 	go func() {

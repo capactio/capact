@@ -9,8 +9,6 @@ import (
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	"github.com/pkg/errors"
-	"go.uber.org/zap"
-	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,12 +34,11 @@ type (
 	}
 )
 
-var _ runner.ActionRunner = &Runner{}
+var _ runner.Runner = &Runner{}
 
 // Runner provides functionality to run and wait for Argo Workflow.
 type Runner struct {
 	wfClient v1alpha1.ArgoprojV1alpha1Interface
-	log      *zap.Logger
 }
 
 // NewRunner returns new instance of Argo Runner.
@@ -54,13 +51,16 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	if in.ExecCtx.DryRun {
 		return nil, errors.New("DryRun support not implemented")
 	}
-	var wfSpec wfv1.WorkflowSpec
-	if err := yaml.Unmarshal(in.Manifest, &wfSpec); err != nil {
+	var renderedWorklfow = struct {
+		Spec wfv1.WorkflowSpec `json:"workflow"`
+	}{}
+
+	if err := yaml.Unmarshal(in.Args, &renderedWorklfow); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling workflow spec")
 	}
 
-	if wfSpec.ServiceAccountName == "" {
-		wfSpec.ServiceAccountName = in.ExecCtx.Platform.ServiceAccountName
+	if renderedWorklfow.Spec.ServiceAccountName == "" {
+		renderedWorklfow.Spec.ServiceAccountName = in.ExecCtx.Platform.ServiceAccountName
 	}
 
 	wf := wfv1.Workflow{
@@ -71,23 +71,12 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 				wfManagedByLabelKey: runnerName,
 			},
 		},
-		Spec: wfSpec,
+		Spec: renderedWorklfow.Spec,
 	}
 
-	// TODO: how should we handle retries?
-	// * create and ignore already exist error [currently implemented]
-	// * implement upsert. But workflow can be already in running phase, so we can mess up it.
-	// * return error if already exists.
-	// * create and if already exits then cancel workflow and rerun it.
+	// We have agreement that we should return error also if workflow already exits.
 	_, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
-	switch {
-	case err == nil:
-	case apierrors.IsAlreadyExists(err):
-		r.log.Info("ArgoWorkflow already exists. Skip create/update action.",
-			zap.String("name", wf.Name),
-			zap.String("namespace", wf.Namespace),
-		)
-	default:
+	if err != nil {
 		return nil, errors.Wrap(err, "while updating Argo Workflow")
 	}
 
@@ -144,8 +133,8 @@ func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForComplet
 	}
 
 	return &runner.WaitForCompletionOutput{
-		FinishedSuccessfully: status.Phase == wfv1.NodeSucceeded,
-		Message:              status.Message,
+		Succeeded: status.Phase == wfv1.NodeSucceeded,
+		Message:   status.Message,
 	}, nil
 }
 
@@ -159,11 +148,6 @@ func statusFromEvent(event *watch.Event) (wfv1.WorkflowStatus, error) {
 	default:
 		return wfv1.WorkflowStatus{}, errors.Errorf("Wrong event object, want *wfv1.Workflow got %T", obj)
 	}
-}
-
-// InjectLogger requests logger injection.
-func (r *Runner) InjectLogger(log *zap.Logger) {
-	r.log = log.Named("argo")
 }
 
 // Name returns runner name.

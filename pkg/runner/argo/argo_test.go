@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"projectvoltron.dev/voltron/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
@@ -34,11 +32,13 @@ func TestRunnerStartHappyPath(t *testing.T) {
 					Namespace: "argo-ns",
 				},
 			},
-			Manifest: inputManifest,
+			Args: inputManifest,
 		}
 
-		var expWfSpec wfv1.WorkflowSpec
-		require.NoError(t, yaml.Unmarshal(inputManifest, &expWfSpec))
+		var expWf = struct {
+			Spec wfv1.WorkflowSpec `json:"workflow"`
+		}{}
+		require.NoError(t, yaml.Unmarshal(inputManifest, &expWf))
 
 		expOutStatus := Status{
 			ArgoWorkflowRef: WorkflowRef{
@@ -59,10 +59,12 @@ func TestRunnerStartHappyPath(t *testing.T) {
 
 		gotWf, err := fakeCli.ArgoprojV1alpha1().Workflows(input.ExecCtx.Platform.Namespace).Get(input.ExecCtx.Name, metav1.GetOptions{})
 		require.NoError(t, err)
-		assert.EqualValues(t, expWfSpec, gotWf.Spec)
+		assert.EqualValues(t, expWf.Spec, gotWf.Spec)
 	})
+}
 
-	t.Run("Should skip Argo Workflow update if already exits", func(t *testing.T) {
+func TestRunnerStartFailure(t *testing.T) {
+	t.Run("Should return error when Argo Workflow already exits", func(t *testing.T) {
 		// given
 		input := runner.StartInput{
 			ExecCtx: runner.ExecutionContext{
@@ -72,30 +74,19 @@ func TestRunnerStartHappyPath(t *testing.T) {
 				},
 			},
 		}
-
-		expOutStatus := Status{
-			ArgoWorkflowRef: WorkflowRef{
-				Name:      input.ExecCtx.Name,
-				Namespace: input.ExecCtx.Platform.Namespace,
-			},
-		}
-
 		wf := fixFinishedArgoWorkflow(t, input.ExecCtx.Name, input.ExecCtx.Platform.Namespace)
 		fakeCli := fake.NewSimpleClientset(&wf)
 
 		r := NewRunner(fakeCli.ArgoprojV1alpha1())
-		r.InjectLogger(zap.NewNop())
 
 		// when
 		out, err := r.Start(context.Background(), input)
 
 		// then
-		require.NoError(t, err)
-		assert.Equal(t, expOutStatus, out.Status)
+		assert.EqualError(t, err, `while updating Argo Workflow: workflows.argoproj.io "Rocket" already exists`)
+		assert.Nil(t, out)
 	})
-}
 
-func TestRunnerStartFailure(t *testing.T) {
 	t.Run("Should return error if dry run requested", func(t *testing.T) {
 		// given
 		input := runner.StartInput{
@@ -117,7 +108,7 @@ func TestRunnerStartFailure(t *testing.T) {
 	t.Run("Should fail when manifest is malformed", func(t *testing.T) {
 		// given
 		input := runner.StartInput{
-			Manifest: []byte("{malformed manifest"),
+			Args: []byte("{malformed manifest"),
 		}
 
 		r := NewRunner(nil)
@@ -150,7 +141,7 @@ func TestRunnerWaitForCompletion(t *testing.T) {
 	// when
 	err := waitForFunc(func(ctx context.Context) error {
 		out, err := r.WaitForCompletion(ctx, input)
-		assert.True(t, out.FinishedSuccessfully)
+		assert.True(t, out.Succeeded)
 		return err
 	}, 50*time.Millisecond)
 

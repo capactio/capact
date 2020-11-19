@@ -2,6 +2,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 )
 
@@ -10,8 +11,8 @@ type (
 	StartInput struct {
 		// ExecCtx holds all information provided by Engine.
 		ExecCtx ExecutionContext
-		// Manifest that was provided by Engine.
-		Manifest []byte
+		// Args that was provided by Engine.
+		Args json.RawMessage
 	}
 
 	StartOutput struct {
@@ -25,8 +26,8 @@ type (
 	}
 
 	WaitForCompletionOutput struct {
-		// FinishedSuccessfully indicates if runner finished successfully or not.
-		FinishedSuccessfully bool
+		// Succeeded indicates if runner finished successfully or not.
+		Succeeded bool
 		// Message holds a human readable message indicating details about why the is in this condition.
 		Message string
 	}
@@ -34,14 +35,14 @@ type (
 
 // ErrorOrNil returns error if action finished unsuccessfully.
 func (o WaitForCompletionOutput) ErrorOrNil() error {
-	if !o.FinishedSuccessfully {
+	if !o.Succeeded {
 		return fmt.Errorf("finished unsuccessfully [details: %q]", o.Message)
 	}
 	return nil
 }
 
-// ActionRunner provide functionality to execute runner in a generic way.
-type ActionRunner interface {
+// Runner provide functionality to execute runner in a generic way.
+type Runner interface {
 	Start(ctx context.Context, in StartInput) (*StartOutput, error)
 	WaitForCompletion(ctx context.Context, in WaitForCompletionInput) (*WaitForCompletionOutput, error)
 	Name() string
