@@ -8,7 +8,6 @@ import (
 	"projectvoltron.dev/voltron/pkg/runner/argo"
 
 	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
-	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"

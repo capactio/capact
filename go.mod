@@ -24,13 +24,16 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
-	k8s.io/client-go v0.18.2
+	k8s.io/client-go v0.17.9
 	sigs.k8s.io/controller-runtime v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/yaml v1.2.0
 )
 
+// Can be removed after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 replace (
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.8
-	k8s.io/client-go => k8s.io/client-go v0.17.8
+	k8s.io/api => k8s.io/api v0.17.9
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.9
+	k8s.io/apimachinery => k8s.io/apimachinery v0.17.9
+	k8s.io/client-go => k8s.io/client-go v0.17.9
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.11
 )
