@@ -3,6 +3,7 @@ package types
 import (
 	"context"
 
+	mockedresolver "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
@@ -13,7 +14,12 @@ func NewResolver() *TypeResolver {
 }
 
 func (r *TypeResolver) Types(ctx context.Context, filter *gqlpublicapi.TypeFilter) ([]*gqlpublicapi.Type, error) {
-	return []*gqlpublicapi.Type{}, nil
+	types, err := mockedresolver.MockedTypes()
+	if err != nil {
+		return []*gqlpublicapi.Type{}, err
+	}
+
+	return types, nil
 }
 
 func (r *TypeResolver) Type(ctx context.Context, path string) (*gqlpublicapi.Type, error) {
@@ -22,8 +28,4 @@ func (r *TypeResolver) Type(ctx context.Context, path string) (*gqlpublicapi.Typ
 
 func (r *TypeResolver) Revision(ctx context.Context, obj *gqlpublicapi.Type, revision string) (*gqlpublicapi.TypeRevision, error) {
 	return &gqlpublicapi.TypeRevision{}, nil
-}
-
-func getType() *gqlpublicapi.Type {
-	return &gqlpublicapi.Type{}
 }
