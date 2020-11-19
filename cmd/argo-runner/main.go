@@ -25,10 +25,10 @@ func main() {
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
 
-	argoRunner := argo.NewRunner(wfCli.ArgoprojV1alpha1())
+	argoRunner := argo.NewRunner(wfCli)
 
 	// create status reporter
-	k8sCli, err := client.New(config.GetConfigOrDie(), client.Options{})
+	k8sCli, err := client.New(k8sCfg, client.Options{})
 	exitOnError(err, "while creating K8s client")
 
 	statusReporter := statusreporter.NewK8sConfigMap(k8sCli)
