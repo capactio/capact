@@ -8,10 +8,10 @@ import (
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-const MOCKS_PATH = "./mock/public"
+const MocksPath = "./mock/public"
 
 func MockedInterface() (*gqlpublicapi.Interface, error) {
-	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "interface.json"))
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interface.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +26,7 @@ func MockedInterface() (*gqlpublicapi.Interface, error) {
 }
 
 func MockedImplementation() (*gqlpublicapi.Implementation, error) {
-	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "implementation.json"))
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "implementation.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func MockedImplementation() (*gqlpublicapi.Implementation, error) {
 }
 
 func MockedTypes() ([]*gqlpublicapi.Type, error) {
-	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "types.json"))
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "types.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func MockedTypes() ([]*gqlpublicapi.Type, error) {
 }
 
 func MockedTag() (*gqlpublicapi.Tag, error) {
-	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "tag.json"))
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "tag.json"))
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func MockedTag() (*gqlpublicapi.Tag, error) {
 }
 
 func MockedInterfaceGroup() (*gqlpublicapi.InterfaceGroup, error) {
-	buff, err := ioutil.ReadFile(path.Join(MOCKS_PATH, "interfaceGroup.json"))
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interfaceGroup.json"))
 	if err != nil {
 		return nil, err
 	}
