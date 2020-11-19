@@ -31,9 +31,6 @@ ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-grou
 			for _, filepath := range args {
 				result := validator.ValidateFile(filepath)
 
-				if !result.Valid() {
-				}
-
 				if result.Valid() {
 					color.Green("- %s: PASSED\n", filepath)
 				} else {
