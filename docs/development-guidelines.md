@@ -22,8 +22,6 @@ All tools should:
 
 > **NOTE:** We are not using dedicated GitHub Actions on CI as we want to have a control and deterministic executions of our tools both on CI and local machines.
 
-It's recommended to install [`pre-commit`](https://pre-commit.com/) and use to verify, that the commits are passing linting and unit tests.
-
 ## Testing
 
 For assertions in Go unit-tests we are using [testify](https://github.com/stretchr/testify) library as this gives as simple matchers functions which we do not have to write by ourself. 
