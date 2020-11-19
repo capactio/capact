@@ -15,7 +15,8 @@ Input file syntax:
 ```yaml
 context:
     name: "action-name"          # Specifies Action name. The runner should use this name to correlate the resource it creates.
-    timeout: "10m"               # Specifies the runner timeout when waiting for competition.
+    dryRun: true                 # Specifies whether Action Runner should perform only dry-run action without persisting the resource.
+    timeout: "10m"               # Specifies the runner timeout when waiting for competition. The zero value means no timeout.
     platform:                    # Specifies platform-specific values. Currently, only the Kubernetes platform is supported.
       # Kubernetes platform context properties:
       namespace: "k8s-ns-name"      # Specifies the Kubernetes Namespace where Action is executed. The runner must create all Kubernetes resources in this Namespace.
@@ -43,6 +44,15 @@ type Runner interface {
 
 This allows you to focus on implementing only a business logic related to the new runner.
 
+Optionally you can implement `LoggerInjector` interface. If implemented method is detected, Manager injects [zap](https://github.com/uber-go/zap) logger before executing any other methods on runner.
+
+```go
+// LoggerInjector is used by the Manager to inject logger to Runner.
+type LoggerInjector interface {
+	InjectLogger(*zap.Logger)
+}
+```
+
 ###  Create binary
 
 A new runner can be added under the [cmd](../cmd) package.
@@ -69,6 +79,18 @@ func main() {
 
 Use the following environment variables to configure the Manager:
 
-| Environment Variable Name | Description                                                                                                                           |
-|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
-| **RUNNER_LOGGER_DEV_MODE**       | Specifies whether to use the development logger that writes `DebugLevel` and above logs to standard error in a human-friendly format. |
+| Environment Variable Name  | Description                                                                                                                           |
+|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
+| **RUNNER_LOGGER_DEV_MODE** | Specifies whether to use the development logger that writes `DebugLevel` and above logs to standard error in a human-friendly format. |
+
+##  Available runners
+
+###  Argo Workflow Runner
+
+The Argo Workflow Runner implementation is defined in the [pkg/runner/argo](../pkg/runner/argo) package. It creates the Argo Workflow CR and waits for completion using the Kubernetes *watch* functionality. It exits with error when the Argo Workflow with the **RUNNER_CONTEXT_NAME** name already exists. Argo Workflow ServiceAccount is always overridden with the one provided via the **RUNNER_CONTEXT_PLATFORM_SERVICE_ACCOUNT_NAME** environment variable.
+
+The implemented dry run functionality only executes the Argo Workflow manifest static validation, and sends a request to the server with the `dry-run` flag, which renders the manifest with the server's representation without creating it.
+
+The Argo Workflow Runner is published to the [gcr.io/projectvoltron/argo-runner](gcr.io/projectvoltron/argo-runner) registry.
+
+> **CAUTION:** As the Argo Workflow does not get created, the nested Action Runners are not executed with the `dry-run` flag.

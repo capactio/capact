@@ -20,7 +20,7 @@ fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure
 cat <<EOT >> "$GITHUB_ENV"
-APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och"}]}
+APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och"},{"APP":"argo-runner"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
 INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"}]}
 EOT

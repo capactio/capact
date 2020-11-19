@@ -7,7 +7,8 @@ import (
 	"projectvoltron.dev/voltron/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
+	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
+	"github.com/argoproj/argo/workflow/util"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -38,29 +39,22 @@ var _ runner.Runner = &Runner{}
 
 // Runner provides functionality to run and wait for Argo Workflow.
 type Runner struct {
-	wfClient v1alpha1.ArgoprojV1alpha1Interface
+	wfClientset wfclientset.Interface
 }
 
 // NewRunner returns new instance of Argo Runner.
-func NewRunner(wfClient v1alpha1.ArgoprojV1alpha1Interface) *Runner {
-	return &Runner{wfClient: wfClient}
+func NewRunner(wfClientset wfclientset.Interface) *Runner {
+	return &Runner{wfClientset: wfClientset}
 }
 
 // Start the Argo Workflow from the given manifest.
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
-	if in.ExecCtx.DryRun {
-		return nil, errors.New("DryRun support not implemented")
-	}
 	var renderedWorklfow = struct {
 		Spec wfv1.WorkflowSpec `json:"workflow"`
 	}{}
 
 	if err := yaml.Unmarshal(in.Args, &renderedWorklfow); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling workflow spec")
-	}
-
-	if renderedWorklfow.Spec.ServiceAccountName == "" {
-		renderedWorklfow.Spec.ServiceAccountName = in.ExecCtx.Platform.ServiceAccountName
 	}
 
 	wf := wfv1.Workflow{
@@ -75,9 +69,8 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	}
 
 	// We have agreement that we should return error also if workflow already exits.
-	_, err := r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Create(&wf)
-	if err != nil {
-		return nil, errors.Wrap(err, "while updating Argo Workflow")
+	if err := r.submitWorkflow(&wf, in.ExecCtx); err != nil {
+		return nil, errors.Wrap(err, "while creating Argo Workflow")
 	}
 
 	return &runner.StartOutput{
@@ -92,15 +85,22 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 // WaitForCompletion waits until Argo Workflow is finished.
 func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
+	if in.ExecCtx.DryRun {
+		return &runner.WaitForCompletionOutput{
+			Succeeded: true,
+			Message:   "In DryRun mode Argo Workflow is not created.",
+		}, nil
+	}
+
 	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.ExecCtx.Name).String()
 	lw := &cache.ListWatch{
 		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).List(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.ExecCtx.Platform.Namespace).List(opts)
 		},
 		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClient.Workflows(in.ExecCtx.Platform.Namespace).Watch(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.ExecCtx.Platform.Namespace).Watch(opts)
 		},
 	}
 
@@ -148,6 +148,15 @@ func statusFromEvent(event *watch.Event) (wfv1.WorkflowStatus, error) {
 	default:
 		return wfv1.WorkflowStatus{}, errors.Errorf("Wrong event object, want *wfv1.Workflow got %T", obj)
 	}
+}
+
+func (r *Runner) submitWorkflow(wf *wfv1.Workflow, execCtx runner.ExecutionContext) error {
+	wfNSCli := r.wfClientset.ArgoprojV1alpha1().Workflows(execCtx.Platform.Namespace)
+	_, err := util.SubmitWorkflow(wfNSCli, r.wfClientset, execCtx.Platform.Namespace, wf, &wfv1.SubmitOpts{
+		ServiceAccount: execCtx.Platform.ServiceAccountName,
+		ServerDryRun:   execCtx.DryRun,
+	})
+	return err
 }
 
 // Name returns runner name.

@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/argoproj/argo v2.5.2+incompatible
+	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0
@@ -26,11 +26,14 @@ require (
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v0.17.9
 	sigs.k8s.io/controller-runtime v0.0.0-00010101000000-000000000000
-	sigs.k8s.io/yaml v1.1.0
+	sigs.k8s.io/yaml v1.2.0
 )
 
+// Can be removed after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 replace (
-	k8s.io/apimachinery => k8s.io/apimachinery v0.17.8
-	k8s.io/client-go => k8s.io/client-go v0.17.8
+	k8s.io/api => k8s.io/api v0.17.9
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.9
+	k8s.io/apimachinery => k8s.io/apimachinery v0.17.9
+	k8s.io/client-go => k8s.io/client-go v0.17.9
 	sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.11
 )
