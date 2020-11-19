@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
 	"github.com/ghodss/yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
@@ -156,12 +158,10 @@ func (v *FilesystemManifestValidator) validateYamlFromReader(r io.Reader) *Valid
 	return result
 }
 
-func getTemplateFuncsMap() template.FuncMap {
-	dummyFunc := func() string { return "" }
+func getDummyTemplateFuncsMap() template.FuncMap {
 	return template.FuncMap{
-		"actionFrom":                dummyFunc,
-		"inputParametersToArtifact": dummyFunc,
-		"action":                    dummyFunc,
+		"actionFrom": func(interface{}) string { return "" },
+		"action":     func(x interface{}) interface{} { return x },
 	}
 }
 
@@ -171,7 +171,7 @@ func (v *FilesystemManifestValidator) ValidateFile(filepath string) *ValidationR
 		return NewValidationResult(err)
 	}
 
-	tmpl, err := template.New(filepath).Funcs(getTemplateFuncsMap()).Parse(string(data))
+	tmpl, err := template.New(filepath).Funcs(sprig.GenericFuncMap()).Funcs(getDummyTemplateFuncsMap()).Parse(string(data))
 	if err != nil {
 		return NewValidationResult(errors.Wrap(err, "failed to parse manifest template"))
 	}
@@ -182,5 +182,7 @@ func (v *FilesystemManifestValidator) ValidateFile(filepath string) *ValidationR
 		return NewValidationResult(errors.Wrap(err, "failed to render manifest template"))
 	}
 
-	return v.validateYamlFromReader(buf)
+	templateString := strings.ReplaceAll(buf.String(), "<no value>", "")
+
+	return v.validateYamlFromReader(bytes.NewBufferString(templateString))
 }

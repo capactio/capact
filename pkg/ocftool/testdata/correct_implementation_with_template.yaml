@@ -109,7 +109,7 @@ spec:
                   path: "/in/postgresql"
                 - name: db
                   path: "/in/db"
-             {{ inputParametersToArtifact }}
+             {{ .inputParametersToArtifact }}
             outputs:
               artifacts:
                 - name: jira-helm-values
@@ -123,7 +123,7 @@ spec:
                 - --input
                 - "db={{`{{ inputs.artifacts.db.path }}`}}"
                 - --input
-                - "params={{ inputParametersToArtifact.path }}"
+                - "params={{ .inputParametersToArtifact.path }}"
                 - --output-path
                 - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
                 - --output-format
@@ -159,22 +159,13 @@ spec:
                   globalName: jira-config
                   path: "/out/jira-config"
             container:
-              {{ action
-                 runnerInterface: helm.run
-                 args:
-                   command: "install"
-                   generateName: true
-                   namespace: "{{ .Context.namespace }}"
-                   chart:
-                     name: "jira-software"
-                     repo: "https://helm.mox.sh"
-                   valuesFromFile: "{{`{{inputs.artifacts.jira-helm-values.path}}`}}"
-                   additionalOutput:
-                     path: "{{`{{outputs.artifacts.jira-config.path}}`}}"
-                     value:
-                       version: "{{`{{ .Values.image.tag }}`}}"
-                       host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
-              }}
+              {{- $chart2 := dict "name" "jira-software" "repo" "https://helm.mox.sh" }}
+              {{- $args2 := dict "command" "install" }}
+              {{- $_ := set $args2 "generateName" true }}
+              {{- $_ := set $args2 "namespace" .Context.namespace }}
+              {{- $_ := set $args2 "chart" $chart2 }}
+              {{- $_ := set $args2 "valuesFromFile" "{{inputs.artifacts.jira-helm-values.path}}" }}
+              {{ action $args2 }}
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

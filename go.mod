@@ -4,6 +4,9 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.13.0
+	github.com/Masterminds/goutils v1.1.0 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
+	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/fatih/color v1.10.0
@@ -11,7 +14,9 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/gorilla/mux v1.6.1
+	github.com/huandu/xstrings v1.3.2 // indirect
 	github.com/iancoleman/strcase v0.1.2
+	github.com/mitchellh/copystructure v1.0.0 // indirect
 	github.com/nautilus/gateway v0.1.9
 	github.com/nautilus/graphql v0.0.12
 	github.com/onsi/ginkgo v1.12.1
