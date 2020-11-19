@@ -1,6 +1,6 @@
 # Hub
 
-The directory contains representation of the OCH repository content.
+The directory contains a representation of the OCH repository content.
 
 The Hub contains the following groups:
 - [`core`](./core) - Contains OCH metadata with configuration and core manifests, such as Interfaces or Types.
