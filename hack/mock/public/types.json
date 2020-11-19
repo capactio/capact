@@ -20,7 +20,9 @@
           ],
           "documentationURL": "https://support.atlassian.com/jira-software-cloud/resources/",
           "supportURL": "https://www.atlassian.com/software/jira",
-          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png"
+          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
+          "tags": [
+          ]
         },
         "revision": "0.1.0",
         "spec": {
@@ -87,7 +89,26 @@
               "email": "team-dev@projectvoltron.dev",
               "url": "https://projectvoltron.dev"
             }
-          ]
+          ],
+	  "tags": [
+            {
+              "metadata": {
+                "name": "baseline",
+                "prefix": "cap.core.tag.system",
+                "decription": "Indication that tagged item is an essential system capability.",
+                "displayName": "Baseline Capability",
+                "documentationURL": "https://projectvoltron.dev",
+                "iconURL": "https://projectvoltron.dev/favicon.ico",
+                "maintainers": [
+                  {
+                    "name": "Voltron Dev Team",
+                    "email": "team-dev@projectvoltron.dev",
+                    "url": "https://projectvoltron.dev"
+                  }
+                ]
+              }
+            }
+	  ]
         },
         "revision": "0.1.0",
         "spec": {

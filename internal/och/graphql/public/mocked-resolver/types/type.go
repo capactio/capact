@@ -18,7 +18,6 @@ func (r *TypeResolver) Types(ctx context.Context, filter *gqlpublicapi.TypeFilte
 	if err != nil {
 		return []*gqlpublicapi.Type{}, err
 	}
-
 	return types, nil
 }
 

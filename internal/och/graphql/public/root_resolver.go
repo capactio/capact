@@ -48,6 +48,10 @@ func (r *RootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolve
 	return interfaces.NewRevisionResolver()
 }
 
+func (r *RootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {
+	return interfacegroups.NewInterfacesResolver()
+}
+
 func (r *RootResolver) Implementation() gqlpublicapi.ImplementationResolver {
 	return implementations.NewResolver()
 }

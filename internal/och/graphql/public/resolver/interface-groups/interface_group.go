@@ -13,6 +13,14 @@ func NewResolver() *InterfaceGroupResolver {
 	return &InterfaceGroupResolver{}
 }
 
+type InterfaceGroupInterfacesResolver struct {
+	*InterfaceGroupResolver
+}
+
+func NewInterfacesResolver() *InterfaceGroupInterfacesResolver {
+	return &InterfaceGroupInterfacesResolver{}
+}
+
 func (r *InterfaceGroupResolver) InterfaceGroups(ctx context.Context, filter *gqlpublicapi.InterfaceGroupFilter) ([]*gqlpublicapi.InterfaceGroup, error) {
 	return []*gqlpublicapi.InterfaceGroup{dummyInterfaceGroup()}, nil
 }
@@ -42,4 +50,8 @@ func dummyInterfaceGroup() *gqlpublicapi.InterfaceGroup {
 		},
 		Interfaces: nil,
 	}
+}
+
+func (r *InterfaceGroupInterfacesResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.InterfaceGroup, filter *gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
+	return []*gqlpublicapi.Interface{}, nil
 }
