@@ -506,6 +506,8 @@ Specify the relations between the TypeInstances in the Implementation. As descri
 
 This property is required if the Implementation wants to upload more than one artifact. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed.
 
+<details> <summary>Example</summary>
+
 ```yaml
 kind: Implementation
 # ...
@@ -520,17 +522,22 @@ spec:
       ingress_config:
         typeRef:
           path: cap.type.networking.ingress.config
-          revision: 0.1.0  
+          revision: 0.1.0
+      cloudsql_config:
+        typeRef:
+          path: cap.type.gcp.cloudsql.config
+          revision: 0.1.0   
     typeInstanceRelations:
       wordpress_config: # artifact name
         uses: # names of all artifacts that WP config depends on
-          - mysql_config
+          - cloudsql_config
           - ingress_config
-      mysql_config: # artifact name
-        typeRef:
-          path: cap.type.db.mysql.config
-          revision: 0.1.0
+      cloudsql_config: # artifact name
+        uses:
+          - mysql_config
 ```
+
+</details>
 
 ###  Populate an Action with the input TypeInstances
 
