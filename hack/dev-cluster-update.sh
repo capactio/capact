@@ -25,6 +25,8 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     voltron::update::images_on_kind
+
+    export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
     voltron::install::charts
 
     shout "Development local cluster updated successfully."

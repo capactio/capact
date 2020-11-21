@@ -1,0 +1,42 @@
+[
+  {
+    "metadata": {
+      "id": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+      "Tags": [
+        {
+          "path": "cap.core.type.platform.kubernetes",
+          "revision": "0.1.0"
+        }
+      ]
+    },
+    "resourceVersion": 1,
+    "spec": {
+      "typeRef": {
+        "path": "cap.type.productivity.jira,config",
+        "revision": "0.1.0"
+      },
+      "value": {
+        "hostname": "jira.svc.cluster.local"
+      },
+      "instrumentation": {
+        "metrics": {
+          "endpoints": "https://jira.svc.cluster.local:2112",
+          "regex": "^(go_gc_duration_seconds|go_goroutines|go_memstats_alloc_bytes|go_memstats_heap_alloc_bytes)$",
+          "dashboards": [
+            {
+              "url": "https://grafana.foo.bar/d/foo/bar"
+            },
+            {
+              "url": "https://grafana.foo.bar/d/foo/poo"
+            }
+          ]
+        },
+        "health": {
+          "url": "https://jira.svc.cluster.local/healthz",
+          "method": "GET",
+          "status": "READY"
+        }
+      }
+    }
+  }
+]

@@ -43,7 +43,7 @@ spec:
             - name: APP_LOGGER_DEV_MODE
               value: "true"
             - name: APP_MOCKGRAPHQL
-              value: {{ .Values.mockGraphQL | quote }}
+              value: "{{ .Values.global.mockGraphQL }}"
           ports:
             - name: http
               containerPort: 8080

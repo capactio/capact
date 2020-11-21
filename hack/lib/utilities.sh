@@ -229,6 +229,7 @@ docker::delete_images() {
 #  - REPO_DIR
 #  - VOLTRON_NAMESPACE
 #  - VOLTRON_RELEASE_NAME
+#  - MOCK_GRAPHQL - if set to true then predifined values are used in graphql
 #
 # Optional envs:
 #  - UPDATE - if specified then, Helm charts are updated
@@ -256,6 +257,7 @@ voltron::install::charts() {
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
         --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
+        --set global.mockGraphQL="$MOCK_GRAPHQL" \
         --wait
 }
 

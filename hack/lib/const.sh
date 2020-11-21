@@ -35,3 +35,9 @@ readonly DEFAULT_OCF_VERSION="0.0.1"
 
 readonly JSON_GO_GEN_IMAGE_VERSION="0.1.0"
 readonly GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION="0.1.0"
+
+#
+# Development
+#
+
+readonly VOLTRON_MOCK_GRAPHQL="true"
