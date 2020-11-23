@@ -1,0 +1,214 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.atlassian.jira # Computed during fetching the manifest
+  name: install
+  displayName: Install Jira
+  description: Action which installs Jira via Helm chart
+  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
+  supportURL: https://mox.sh/helm/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "8.x.x"
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  additionalOutput:
+    typeInstances:
+      db:
+        typeRef:
+          path: cap.type.database.postgresql.database
+          revision: 0.1.0
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+      helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+    typeInstanceRelations:
+      jira-config:
+        uses:
+          - helm-release
+          - postgresql
+          - db
+      db:
+        uses:
+          - postgresql
+
+  implements:
+    - path: cap.interface.productivity.jira.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      appVersion: 3.x.x
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: workflow
+        templates:
+          - name: workflow
+            steps:
+              # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
+              #           {{ if ! .Input.typeInstances.postgresql }}
+              - - name: install-db
+                  template: install-db
+              #           {{ endif }}
+              - - name: create-db
+                  template: create-db
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
+              - - name: produce-jira-helm-values
+                  template: produce-jira-helm-values
+                  arguments:
+                    artifacts:
+                      - name: db
+                        from: "{{workflow.outputs.artifacts.db}}"
+                      - name: postgresql
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
+              - - name: install-jira
+                  template: install-jira
+                  arguments:
+                    artifacts:
+                      - name: jira-helm-values
+                        from: "{{workflow.outputs.artifacts.jira-helm-values}}"
+
+          - name: install-db
+            outputs:
+              artifacts:
+                - name: postgresql
+                  path: "/out/postgresql"
+            container:
+          #              {{ actionFrom: postgresql.install }}
+
+          - name: create-db
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: "/in/postgresql"
+            outputs:
+              artifacts:
+                - name: db
+                  globalName: db
+                  path: "/out/db"
+            container:
+          #              {{ actionFrom: postgresql.create-db }}
+
+          - name: produce-helm-values
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: "/in/postgresql"
+                - name: db
+                  path: "/in/db"
+            #             {{ inputParametersToArtifact }}
+            outputs:
+              artifacts:
+                - name: jira-helm-values
+                  globalName: jira-helm-values
+                  path: "/out/jira-helm-values"
+            container:
+              image: gcr.io/projectvoltron/artifact-merger:0.1.0
+              args:
+                - --input
+                - "postgresql={{`{{ inputs.artifacts.postgresql.path }}`}}"
+                - --input
+                - "db={{`{{ inputs.artifacts.db.path }}`}}"
+                - --input
+                - "params={{ inputParametersToArtifact.path }}"
+                - --output-path
+                - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
+                - --output-format
+                - >
+                  image:
+                    tag: {{ .Context.appVersion }}
+                    postgresql:
+                      enabled: false # do not install Postgres along the Jira installation
+                    databaseConnection:
+                      host: {{`{{ .postgresql.host }}`}}
+                      port: {{`{{ .postgresql.port }}`}}
+                      user: {{`{{ .postgresql.superuser.username }}`}}
+                      password: {{`{{ .postgresql.superuser.password }}`}}
+                      database: {{`{{ .db.name }}`}}
+                  ingress:
+                    enabled: true
+                    ingress:
+                      hosts:
+                        - host: {{`{{ .params.host }}`}}
+                          paths: []
+
+          - name: install-jira
+            inputs:
+              artifacts:
+                - name: jira-helm-values
+                  path: "/in/jira-helm-values"
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/out/helm-release"
+                - name: jira-config
+                  globalName: jira-config
+                  path: "/out/jira-config"
+            container:
+# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
+#            {{ action:
+#                 runnerInterface: helm.run
+#                 args:
+#                   command: "install"
+#                   generateName: true
+#                   namespace: "{{ .Context.namespace }}"
+#                   chart:
+#                     name: "jira-software"
+#                     repo: "https://helm.mox.sh"
+#                   valuesFromFile: "{{`{{inputs.artifacts.jira-helm-values.path}}`}}"
+#                   additionalOutput:
+#                     path: "{{`{{outputs.artifacts.jira-config.path}}`}}"
+#                     value:
+#                       version: "{{`{{ .Values.image.tag }}`}}"
+#                       host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
+#              }}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

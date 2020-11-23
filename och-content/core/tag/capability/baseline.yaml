@@ -1,0 +1,18 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Tag
+metadata:
+  prefix: cap.core.tag.system # Computed during fetching the manifest
+  name: baseline
+  displayName: Baseline Capability
+  description: Indication that tagged item is an essential system capability.
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  iconURL: https://projectvoltron.dev/favicon.ico
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

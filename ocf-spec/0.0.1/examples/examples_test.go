@@ -1,4 +1,4 @@
-// +build ocfexamples
+// +build ocfmanifests
 
 package examples
 
@@ -13,15 +13,18 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// TestExampleSuccess in the future will be removed and replaced with
-// a ocftool validate command executed against all examples.
+// TestManifestsValid in the future will be removed and replaced with
+// an `ocftool validate` command executed against all examples.
 // TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
-func TestExampleSuccess(t *testing.T) {
+func TestManifestsValid(t *testing.T) {
 	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
 	sl := gojsonschema.NewSchemaLoader()
 
 	schemaRefPaths := []string{
 		"../schema/common/json-schema-type.json",
+		"../schema/common/type-ref.json",
+		"../schema/common/input-type-instances.json",
+		"../schema/common/output-type-instances.json",
 		"../schema/common/metadata.json",
 		"../schema/common/metadata-tags.json",
 	}

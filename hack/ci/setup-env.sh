@@ -2,7 +2,7 @@
 
 echo "Setting up CI environmental variables..."
 export NAME="dev3"
-export APPS="gateway k8s-engine och"
+export APPS="gateway k8s-engine och argo-runner"
 export TESTS="e2e"
 export INFRAS="json-go-gen"
 
@@ -41,7 +41,7 @@ else
   echo "DOCKER_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
 fi
 
-
+# TODO: Read components to build in automated way, e.g. from directory structure
 APPS=$(echo 'name=matrix::{"include":['; for APP in ${APPS}; do echo {\"APP\":\"${APP}\"},; done; echo ']}' |tr -d "\n")
 export APPS=$(echo ${APPS} |sed 's/}, ]/} ]/g' )
 echo "APPS=${APPS}" >>"$GITHUB_ENV"
@@ -53,6 +53,3 @@ echo "TESTS=${TESTS}" >>"$GITHUB_ENV"
 INFRAS=$(echo 'name=matrix::{"include":['; for INFRA in ${INFRAS}; do echo {\"INFRA\":\"${INFRA}\"},; done; echo ']}' |tr -d "\n")
 export INFRAS=$(echo ${INFRAS} |sed 's/}, ]/} ]/g')
 echo "INFRAS=${INFRAS}" >>"$GITHUB_ENV"
-
-
-

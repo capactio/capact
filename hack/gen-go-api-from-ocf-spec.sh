@@ -41,7 +41,7 @@ check_for_unknown_issues() {
 }
 
 gen_go_api_from_ocf_specs() {
-  shout "Generating Go struct from OCF JSON Schemas..."
+  shout "Generating Go types from OCF JSON Schemas..."
   OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
   mkdir -p "${REPORT_FILE_DIR}"
 
@@ -55,6 +55,9 @@ gen_go_api_from_ocf_specs() {
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/type-ref.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/input-type-instances.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/output-type-instances.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/interface.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/implementation.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
