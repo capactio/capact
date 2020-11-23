@@ -63,8 +63,8 @@ func getManifestMetadata(yamlBytes []byte) (manifestMetadata, error) {
 	return mm, nil
 }
 
-func commonSchemaLoader(dir string, ocfVersion ocfVersion) (*gojsonschema.SchemaLoader, error) {
-	commonDir := fmt.Sprintf("%s/%s/schema/common", dir, ocfVersion)
+func (v *FilesystemManifestValidator) getCommonSchemaLoader(ocfVersion ocfVersion) (*gojsonschema.SchemaLoader, error) {
+	commonDir := fmt.Sprintf("%s/%s/schema/common", v.schemaRootPath, ocfVersion)
 
 	sl := gojsonschema.NewSchemaLoader()
 	files, err := ioutil.ReadDir(commonDir)
@@ -82,13 +82,13 @@ func commonSchemaLoader(dir string, ocfVersion ocfVersion) (*gojsonschema.Schema
 	return sl, nil
 }
 
-func rootManifestJSONLoader(dir string, metadata manifestMetadata) gojsonschema.JSONLoader {
+func (v *FilesystemManifestValidator) getRootSchemaJSONLoader(metadata manifestMetadata) gojsonschema.JSONLoader {
 	filename := strcase.ToKebab(string(metadata.Kind))
-	path := fmt.Sprintf("file://%s/%s/schema/%s.json", dir, metadata.OCFVersion, filename)
+	path := fmt.Sprintf("file://%s/%s/schema/%s.json", v.schemaRootPath, metadata.OCFVersion, filename)
 	return gojsonschema.NewReferenceLoader(path)
 }
 
-func (v *FilesystemManifestValidator) getSchema(metadata manifestMetadata) (*gojsonschema.Schema, error) {
+func (v *FilesystemManifestValidator) getManifestSchema(metadata manifestMetadata) (*gojsonschema.Schema, error) {
 	var ok bool
 	var cachedSchema *loadedOCFSchema
 
@@ -104,10 +104,10 @@ func (v *FilesystemManifestValidator) getSchema(metadata manifestMetadata) (*goj
 		return schema, nil
 	}
 
-	rootLoader := rootManifestJSONLoader(v.schemaRootPath, metadata)
+	rootLoader := v.getRootSchemaJSONLoader(metadata)
 
 	if cachedSchema.common == nil {
-		sl, err := commonSchemaLoader(v.schemaRootPath, metadata.OCFVersion)
+		sl, err := v.getCommonSchemaLoader(metadata.OCFVersion)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get common schema loader")
 		}
@@ -130,7 +130,7 @@ func (v *FilesystemManifestValidator) validateYamlBytes(yamlBytes []byte) (Valid
 		return newValidationResult(errors.Wrap(err, "failed to read manifest metadata")), err
 	}
 
-	schema, err := v.getSchema(metadata)
+	schema, err := v.getManifestSchema(metadata)
 	if err != nil {
 		return newValidationResult(), errors.Wrap(err, "failed to get JSON schema")
 	}

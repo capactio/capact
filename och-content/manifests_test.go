@@ -3,25 +3,17 @@
 package manifests
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"testing"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/xeipuuv/gojsonschema"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
-// TestManifestsValid in the future will be removed and replaced with
-// an `ocftool validate` command executed against all examples.
-// TODO: Remove as a part of https://cshark.atlassian.net/browse/SV-21
-
-const ocfPathPrefix = "../ocf-spec/0.0.1/schema"
+const ocfPathPrefix = "../ocf-spec"
 const yamlFileRegex = ".yaml$"
 
 var interfaceGroupFilenamesFilter = map[string]struct{}{
@@ -39,19 +31,7 @@ type filenameFilter struct {
 }
 
 func TestManifestsValid(t *testing.T) {
-	// Load the common schemas. Currently, the https $ref is not working as we didn't publish the spec yet.
-	sl := gojsonschema.NewSchemaLoader()
-
-	schemaRefPaths := []string{
-		fmt.Sprintf("%s/common/json-schema-type.json", ocfPathPrefix),
-		fmt.Sprintf("%s/common/metadata.json", ocfPathPrefix),
-		fmt.Sprintf("%s/common/metadata-tags.json", ocfPathPrefix),
-		fmt.Sprintf("%s/common/type-ref.json", ocfPathPrefix),
-		fmt.Sprintf("%s/common/input-type-instances.json", ocfPathPrefix),
-		fmt.Sprintf("%s/common/output-type-instances.json", ocfPathPrefix),
-	}
-	err := loadCommonSchemas(sl, schemaRefPaths)
-	require.NoError(t, err, "while loading common schemas")
+	validator := manifest.NewFilesystemValidator(ocfPathPrefix)
 
 	tests := map[string]struct {
 		jsonSchemaPath      string
@@ -119,9 +99,6 @@ func TestManifestsValid(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			schemaLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s/%s", ocfPathPrefix, tc.jsonSchemaPath))
-			schema, err := sl.Compile(schemaLoader)
-			require.NoError(t, err, "while creating schema validator")
 
 			// when
 			for _, dirPath := range tc.manifestDirectories {
@@ -138,61 +115,18 @@ func TestManifestsValid(t *testing.T) {
 						return nil
 					}
 
-					manifest, err := documentLoader(path)
-					if err != nil {
-						return errors.Wrapf(err, "while loading manifest from path '%s'", path)
-					}
-
-					result, err := schema.Validate(manifest)
-					if err != nil {
-						return errors.Wrap(err, "while validating object against JSON Schema")
-					}
+					result, err := validator.ValidateFile(path)
 
 					// then
-					assertResultIsValid(t, path, result)
+
+					require.Nil(t, err, "returned error: %v", err)
+					require.True(t, result.Valid(), "is not valid, errors: %v", result.Errors)
 					return nil
 				})
 				require.NoError(t, err)
 			}
 		})
 	}
-}
-
-func documentLoader(path string) (gojsonschema.JSONLoader, error) {
-	buf, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	obj := map[string]interface{}{}
-	if err := yaml.Unmarshal(buf, &obj); err != nil {
-		return nil, err
-	}
-
-	return gojsonschema.NewGoLoader(obj), nil
-}
-
-func assertResultIsValid(t *testing.T, path string, result *gojsonschema.Result) {
-	t.Helper()
-
-	if !assert.True(t, result.Valid()) {
-		t.Errorf("%s: The document is not valid. see errors:\n", path)
-		for _, desc := range result.Errors() {
-			t.Errorf("- %s\n", desc.String())
-		}
-	}
-}
-
-func loadCommonSchemas(schemaLoader *gojsonschema.SchemaLoader, paths []string) error {
-	for _, path := range paths {
-		jsonLoader := gojsonschema.NewReferenceLoader(fmt.Sprintf("file://%s", path))
-		err := schemaLoader.AddSchemas(jsonLoader)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func shouldReadFile(fileInfo os.FileInfo, filter filenameFilter) (bool, error) {

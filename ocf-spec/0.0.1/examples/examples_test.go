@@ -46,9 +46,10 @@ func TestManifestsValid(t *testing.T) {
 			// given
 
 			// when
-			result := validator.ValidateFile(tc.manifestPath)
+			result, err := validator.ValidateFile(tc.manifestPath)
 
 			// then
+			require.Nil(t, err, "returned error: %v", err)
 			require.True(t, result.Valid(), "is not valid, errors: %v", result.Errors)
 		})
 	}

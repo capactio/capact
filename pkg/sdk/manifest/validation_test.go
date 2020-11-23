@@ -7,7 +7,7 @@ import (
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
-func TestVerifyValidator(t *testing.T) {
+func TestFilesystemValidator_ValidateFile(t *testing.T) {
 	validator := manifest.NewFilesystemValidator("../../../ocf-spec")
 
 	tests := map[string]struct {
