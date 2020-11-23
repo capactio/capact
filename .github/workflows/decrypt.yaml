@@ -1,12 +1,12 @@
 name: Decrypt Example
 
-on: 
-  push:
-    paths:
-    - '**.txt'
-    - '**.yaml'
-    branches: 
-    - 'master'
+# on: 
+#   push:
+#     paths:
+#     - '**.txt'
+#     - '**.yaml'
+#     branches: 
+#     - 'master'
 
 
 jobs:
