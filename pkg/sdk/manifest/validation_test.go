@@ -1,14 +1,14 @@
-package ocftool_test
+package manifest_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/pkg/ocftool"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
 func TestVerifyValidator(t *testing.T) {
-	validator := ocftool.NewFilesystemManifestValidator("../../ocf-spec")
+	validator := manifest.NewFilesystemValidator("../../../ocf-spec")
 
 	tests := map[string]struct {
 		manifestPath string
@@ -22,10 +22,6 @@ func TestVerifyValidator(t *testing.T) {
 			manifestPath: "testdata/correct_implementation.yaml",
 			result:       true,
 		},
-		"Should handle Go templates": {
-			manifestPath: "testdata/correct_implementation_with_template.yaml",
-			result:       true,
-		},
 	}
 
 	for tn, tc := range tests {
@@ -33,9 +29,10 @@ func TestVerifyValidator(t *testing.T) {
 			// given
 
 			// when
-			result := validator.ValidateFile(tc.manifestPath)
+			result, err := validator.ValidateFile(tc.manifestPath)
 
 			// then
+			require.Nil(t, err, "failed to read file: %v", err)
 			require.Equal(t, tc.result, result.Valid(), result.Errors)
 		})
 	}

@@ -6,7 +6,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/pkg/ocftool"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
 var (
@@ -17,25 +17,30 @@ func NewValidate() *cobra.Command {
 	validateCmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate OCF manifests",
-		Example: `ocftool validate ocf-spec/0.0.1/examples/interface-group.yaml
+		Example: `# Validate interface-group.yaml file with OCF specification in default location
+ocftool validate ocf-spec/0.0.1/examples/interface-group.yaml
+
+# Validate multiple files inside test_manifests directory
 ocftool validate pkg/ocftool/test_manifests/*.yaml
+
+# Validate interface-group.yaml file with custom OCF specification location 
 ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml`,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			validator := ocftool.NewFilesystemManifestValidator(schemaRootDir)
+			validator := manifest.NewFilesystemValidator(schemaRootDir)
 
 			fmt.Println("Validating files...")
 
 			shouldFail := false
 
 			for _, filepath := range args {
-				result := validator.ValidateFile(filepath)
+				result, err := validator.ValidateFile(filepath)
 
-				if result.Valid() {
+				if err == nil && result.Valid() {
 					color.Green("- %s: PASSED\n", filepath)
 				} else {
 					color.Red("- %s: FAILED\n", filepath)
-					for _, err := range result.Errors {
+					for _, err := range append(result.Errors, err) {
 						color.Red("    %v", err)
 					}
 
@@ -50,7 +55,7 @@ ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-grou
 		},
 	}
 
-	validateCmd.PersistentFlags().StringVarP(&schemaRootDir, "schemas", "s", "ocf-spec", "Path to the ocf-spec directory")
+	validateCmd.PersistentFlags().StringVarP(&schemaRootDir, "schemas", "s", "./ocf-spec", "Path to the ocf-spec directory")
 
 	return validateCmd
 }

@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/pkg/ocftool"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
 func TestManifestsValid(t *testing.T) {
-	validator := ocftool.NewFilesystemManifestValidator("../..")
+	validator := manifest.NewFilesystemValidator("../..")
 
 	tests := map[string]struct {
 		manifestPath string
