@@ -24,7 +24,10 @@ ocftool validate ocf-spec/0.0.1/examples/interface-group.yaml
 ocftool validate pkg/ocftool/test_manifests/*.yaml
 
 # Validate interface-group.yaml file with custom OCF specification location 
-ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml`,
+ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
+
+# Validate all OCH manifests
+ocftool validate ./och-content/**/*.yaml`,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			validator := manifest.NewFilesystemValidator(schemaRootDir)
