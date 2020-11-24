@@ -4,7 +4,7 @@ package v1alpha1
 import (
 	"k8s.io/apimachinery/pkg/runtime"
 
-	"k8s.io/api/authentication/v1beta1"
+	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -151,15 +151,15 @@ type ActionStatus struct {
 
 	// CreatedBy holds user data which created a given Action.
 	// +optional
-	CreatedBy *v1beta1.UserInfo `json:"createdBy,omitempty"`
+	CreatedBy *authv1.UserInfo `json:"createdBy,omitempty"`
 
 	// RunBy holds user data which run a given Action.
 	// +optional
-	RunBy *v1beta1.UserInfo `json:"runBy,omitempty"`
+	RunBy *authv1.UserInfo `json:"runBy,omitempty"`
 
 	// CancelledBy holds user data which cancelled a given Action.
 	// +optional
-	CancelledBy *v1beta1.UserInfo `json:"cancelledBy,omitempty"`
+	CancelledBy *authv1.UserInfo `json:"cancelledBy,omitempty"`
 
 	// ObservedGeneration reflects the generation of the most recently observed Action.
 	// +optional

@@ -156,7 +156,10 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 		return err
 	}
 
+	log := s.log.With(zap.Any("action", item))
+
 	if item.Spec.Run != nil && *item.Spec.Run {
+		log.Info("Action already run")
 		return nil
 	}
 
@@ -172,7 +175,10 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 		return err
 	}
 
+	log := s.log.With(zap.Any("action", item))
+
 	if item.Spec.Cancel != nil && *item.Spec.Cancel {
+		log.Info("Action already cancelled")
 		return nil
 	}
 

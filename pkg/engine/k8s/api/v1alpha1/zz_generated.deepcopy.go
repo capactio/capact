@@ -5,7 +5,7 @@
 package v1alpha1
 
 import (
-	"k8s.io/api/authentication/v1beta1"
+	"k8s.io/api/authentication/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
@@ -186,17 +186,17 @@ func (in *ActionStatus) DeepCopyInto(out *ActionStatus) {
 	}
 	if in.CreatedBy != nil {
 		in, out := &in.CreatedBy, &out.CreatedBy
-		*out = new(v1beta1.UserInfo)
+		*out = new(v1.UserInfo)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.RunBy != nil {
 		in, out := &in.RunBy, &out.RunBy
-		*out = new(v1beta1.UserInfo)
+		*out = new(v1.UserInfo)
 		(*in).DeepCopyInto(*out)
 	}
 	if in.CancelledBy != nil {
 		in, out := &in.CancelledBy, &out.CancelledBy
-		*out = new(v1beta1.UserInfo)
+		*out = new(v1.UserInfo)
 		(*in).DeepCopyInto(*out)
 	}
 	in.LastTransitionTime.DeepCopyInto(&out.LastTransitionTime)

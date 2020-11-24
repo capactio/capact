@@ -127,7 +127,7 @@ Describes input artifact of an Action
 type InputArtifact {
     name: String!
     typePath: NodePath! # Full path of the corresponding Type
-    typeInstanceID: ID
+    typeInstanceID: ID!
     optional: Boolean!
 }
 

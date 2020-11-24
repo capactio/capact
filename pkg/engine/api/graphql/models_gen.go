@@ -80,10 +80,10 @@ type AdvancedModeContinueRenderingInput struct {
 
 // Describes input artifact of an Action
 type InputArtifact struct {
-	Name           string  `json:"name"`
-	TypePath       string  `json:"typePath"`
-	TypeInstanceID *string `json:"typeInstanceID"`
-	Optional       bool    `json:"optional"`
+	Name           string `json:"name"`
+	TypePath       string `json:"typePath"`
+	TypeInstanceID string `json:"typeInstanceID"`
+	Optional       bool   `json:"optional"`
 }
 
 // Client input for Input Artifact

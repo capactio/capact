@@ -4,7 +4,8 @@ import (
 	"context"
 	"time"
 
-	"k8s.io/api/authentication/v1beta1"
+	authv1 "k8s.io/api/authentication/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	"projectvoltron.dev/voltron/internal/ptr"
 
@@ -111,17 +112,17 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 				},
 			},
 		},
-		CreatedBy: &v1beta1.UserInfo{
+		CreatedBy: &authv1.UserInfo{
 			Username: "foo",
 			UID:      "73d3c628-864e-45e3-8927-b9b71e17c110",
 			Groups:   []string{"bar", "baz"},
 		},
-		RunBy: &v1beta1.UserInfo{
+		RunBy: &authv1.UserInfo{
 			Username: "bar",
 			UID:      "3935025e-1403-4bb5-99d8-3ce428acf527",
 			Groups:   []string{"bar", "baz"},
 		},
-		CancelledBy: &v1beta1.UserInfo{
+		CancelledBy: &authv1.UserInfo{
 			Username: "bar",
 			UID:      "14354227-9afe-45c8-8808-765b6a7fcb2b",
 			Groups:   []string{"bar", "baz"},

@@ -681,7 +681,7 @@ Describes input artifact of an Action
 type InputArtifact {
     name: String!
     typePath: NodePath! # Full path of the corresponding Type
-    typeInstanceID: ID
+    typeInstanceID: ID!
     optional: Boolean!
 }
 
@@ -1810,11 +1810,14 @@ func (ec *executionContext) _InputArtifact_typeInstanceID(ctx context.Context, f
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*string)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalOID2ᚖstring(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputArtifact_optional(ctx context.Context, field graphql.CollectedField, obj *InputArtifact) (ret graphql.Marshaler) {
@@ -3977,6 +3980,9 @@ func (ec *executionContext) _InputArtifact(ctx context.Context, sel ast.Selectio
 			}
 		case "typeInstanceID":
 			out.Values[i] = ec._InputArtifact_typeInstanceID(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "optional":
 			out.Values[i] = ec._InputArtifact_optional(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5076,21 +5082,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return graphql.MarshalBoolean(*v)
-}
-
-func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := graphql.UnmarshalID(v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return graphql.MarshalID(*v)
 }
 
 func (ec *executionContext) unmarshalOInputArtifactData2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputArtifactDataᚄ(ctx context.Context, v interface{}) ([]*InputArtifactData, error) {

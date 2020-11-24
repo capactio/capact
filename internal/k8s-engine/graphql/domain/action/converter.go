@@ -1,12 +1,13 @@
 package action
 
 import (
-	"k8s.io/api/authentication/v1beta1"
+	"encoding/json"
+
+	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
@@ -88,7 +89,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 	var actionInput *graphql.ActionInput
 	if in.Status.Rendering != nil {
 		if in.Status.Rendering.Action != nil {
-			renderedAction = in.Status.Rendering.Action
+			renderedAction = c.runtimeExtensionToJSONRawMessage(in.Status.Rendering.Action)
 		}
 
 		actionInput = c.actionInputToGraphQL(in.Status.Rendering.Input)
@@ -114,7 +115,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 			Enabled:                        advancedRenderingEnabled,
 			ArtifactsForRenderingIteration: nil, // TODO: Implement once advanced rendering is supported
 		},
-		RenderedActionOverride: in.Spec.RenderedActionOverride,
+		RenderedActionOverride: c.runtimeExtensionToJSONRawMessage(in.Spec.RenderedActionOverride),
 		Status:                 c.statusToGraphQL(&in.Status),
 	}
 }
@@ -127,7 +128,7 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 	result := &graphql.ActionInput{}
 
 	if in.Parameters != nil {
-		result.Parameters = in.Parameters
+		result.Parameters = c.runtimeExtensionToJSONRawMessage(in.Parameters)
 	}
 
 	if in.Artifacts != nil {
@@ -136,7 +137,7 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 			gqlArtifacts = append(gqlArtifacts, &graphql.InputArtifact{
 				Name:           item.Name,
 				TypePath:       string(item.TypePath),
-				TypeInstanceID: ptr.String(item.TypeInstanceID),
+				TypeInstanceID: item.TypeInstanceID,
 				Optional:       item.Optional,
 			})
 		}
@@ -198,7 +199,7 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 	if in.Runner != nil {
 		runnerStatus = &graphql.RunnerStatus{
 			Interface: string(in.Runner.Interface),
-			Status:    in.Runner.Status,
+			Status:    c.runtimeExtensionToJSONRawMessage(in.Runner.Status),
 		}
 	}
 
@@ -213,15 +214,22 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 	}
 }
 
-func (c *Converter) userInfoToGraphQL(in *v1beta1.UserInfo) *graphql.UserInfo {
+func (c *Converter) userInfoToGraphQL(in *authv1.UserInfo) *graphql.UserInfo {
 	if in == nil {
 		return nil
+	}
+
+	extras := map[string][]string{}
+	if in.Extra != nil {
+		for key, value := range in.Extra {
+			extras[key] = value
+		}
 	}
 
 	return &graphql.UserInfo{
 		Username: in.Username,
 		Groups:   in.Groups,
-		Extra:    in.Extra,
+		Extra:    extras,
 	}
 }
 
@@ -248,4 +256,15 @@ func (c *Converter) phaseToGraphQL(in v1alpha1.ActionPhase) graphql.ActionStatus
 	}
 
 	return graphql.ActionStatusConditionInitial
+}
+
+func (c *Converter) runtimeExtensionToJSONRawMessage(extension *runtime.RawExtension) *json.RawMessage {
+	if extension == nil {
+		return nil
+	}
+
+	var jsonRaw json.RawMessage
+	bytes := extension.Raw
+	jsonRaw = bytes
+	return &jsonRaw
 }
