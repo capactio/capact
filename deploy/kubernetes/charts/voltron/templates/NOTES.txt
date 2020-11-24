@@ -2,3 +2,9 @@ Thank you for installing Voltron components.
 
 Here is the list of exposed services:
 - Gateway GraphQL Playground: https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}
+
+Use the following header configuration in the Gateway GraphQL Playground:
+
+  {
+    "Authorization": "Basic {{ printf "%s:%s" .Values.gateway.auth.username .Values.gateway.auth.password | b64enc -}}"
+  }

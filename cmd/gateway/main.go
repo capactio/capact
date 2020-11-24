@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"time"
@@ -35,12 +36,12 @@ type Config struct {
 	Introspection IntrospectionConfig
 
 	// AuthConfig holds configuration parameters for user authentication
-	Auth AuthConfig
+	Auth BasicAuth
 }
 
-type AuthConfig struct {
-	BasicAuthUsername string `envconfig:"default=graphql"`
-	BasicAuthPassword string
+type BasicAuth struct {
+	Username string `envconfig:"default=graphql"`
+	Password string
 }
 
 // IntrospectionConfig holds configuration parameters related to GraphQL schema introspection.
@@ -127,7 +128,7 @@ func introspectGraphQLSchemas(log *zap.Logger, cfg IntrospectionConfig) ([]*grap
 	return schemas, nil
 }
 
-func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, authCfg AuthConfig, addr string) (httputil.StartableServer, error) {
+func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, authCfg BasicAuth, addr string) (httputil.StartableServer, error) {
 	log.Info("Setting up gateway GraphQL server")
 	gw, err := gateway.New(schemas)
 	if err != nil {
@@ -149,9 +150,9 @@ func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSch
 	return gqlServer, nil
 }
 
-func withBasicAuth(log *zap.Logger, cfg AuthConfig, handler http.HandlerFunc) http.HandlerFunc {
+func withBasicAuth(log *zap.Logger, cfg BasicAuth, handler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != "POST" {
+		if r.Method != http.MethodPost {
 			handler.ServeHTTP(w, r)
 			return
 		}
@@ -159,22 +160,32 @@ func withBasicAuth(log *zap.Logger, cfg AuthConfig, handler http.HandlerFunc) ht
 		username, password, ok := r.BasicAuth()
 
 		if !ok {
-			if _, err := w.Write([]byte(`{"errors":["missing credentials"]}`)); err != nil {
-				log.Info("failed to write response bytes")
+			if err := writeJSONError(w, "missing credentials", http.StatusOK); err != nil {
+				log.Info("failed to write response")
 			}
-			w.WriteHeader(401)
 			return
 		}
 
-		if username != cfg.BasicAuthUsername || password != cfg.BasicAuthPassword {
-			if _, err := w.Write([]byte(`{"errors":["wrong credentials"]}`)); err != nil {
-				log.Info("failed to write response bytes")
+		if username != cfg.Username || password != cfg.Password {
+			if err := writeJSONError(w, "wrong credentials", http.StatusOK); err != nil {
+				log.Info("failed to write response")
 			}
-			w.WriteHeader(403)
 			return
 		}
 
 		handler.ServeHTTP(w, r)
+	})
+}
+
+func writeJSONError(w http.ResponseWriter, message string, statusCode int) error {
+	w.Header().Set("content-type", "application/json")
+	w.WriteHeader(statusCode)
+	return json.NewEncoder(w).Encode(map[string]interface{}{
+		"errors": []map[string]interface{}{
+			{
+				"message": message,
+			},
+		},
 	})
 }
 
