@@ -156,6 +156,10 @@ func (v *FilesystemManifestValidator) getCommonSchemaLoader(ocfVersion ocfVersio
 	}
 
 	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+
 		path := fmt.Sprintf("file://%s/%s", commonDir, file.Name())
 		if err := sl.AddSchemas(gojsonschema.NewReferenceLoader(path)); err != nil {
 			return nil, errors.Wrapf(err, "cannot load common schema %s", path)
