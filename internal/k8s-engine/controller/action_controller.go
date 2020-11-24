@@ -34,6 +34,7 @@ func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconcile
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=create
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=create
 
 // Reconcile handles the reconcile logic for the Action CR.
 func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {

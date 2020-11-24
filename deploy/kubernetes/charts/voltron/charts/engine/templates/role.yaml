@@ -7,6 +7,12 @@ metadata:
   name: k8s-engine-role
 rules:
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - create
+- apiGroups:
   - batch
   resources:
   - jobs
