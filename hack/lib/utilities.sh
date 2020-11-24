@@ -186,6 +186,17 @@ kind::load_images() {
   done
 }
 
+kind::version() {
+  echo "v$(kind version -q)"
+}
+
+#
+# 'helm' functions
+#
+helm::version(){
+  helm version --short -c | tr -d  'Client: '
+}
+
 
 #
 # Docker functions
@@ -228,6 +239,8 @@ voltron::install::charts() {
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
     voltron::install::ingress_controller
+
+    voltron::install::argo
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
@@ -272,6 +285,17 @@ voltron::install::ingress_controller() {
       --timeout=90s
 }
 
+voltron::install::argo() {
+  # not waiting as other components do not need it during installation
+    readonly ARGO_OVERRIDES="${REPO_DIR}/hack/kind/overrides.argo.yaml"
+    shout "- Installing Argo Helm chart [wait: false]..."
+    echo -e "- Applying overrides from ${ARGO_OVERRIDES}\n"
+    helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
+        --create-namespace \
+        --namespace="argo" \
+        -f "${ARGO_OVERRIDES}"
+}
+
 # Updates /etc/hosts with all Voltron subdomains.
 host::update::voltron_hosts() {
   shout "- Updating /etc/hosts..."
@@ -289,8 +313,9 @@ host::update::voltron_hosts() {
 # Required envs:
 #  - REPO_DIR
 host::install:trust_self_signed_cert() {
-  shout "- Trusting self-signed TLS certificate..."
-  CERT_PATH="${REPO_DIR}/hack/kind/voltron.local.crt"
+  shout "- Trusting self-signed TLS certificate if not already trusted..."
+  CERT_FILE="voltron.local.crt"
+  CERT_PATH="${REPO_DIR}/hack/kind/${CERT_FILE}"
   OS="$(host::os)"
 
   echo "Certificate path: ${CERT_PATH}"
@@ -298,10 +323,20 @@ host::install:trust_self_signed_cert() {
 
   case $OS in
     'linux')
-      sudo cp "${CERT_PATH}" /usr/local/share/ca-certificates/
+      if diff "${CERT_PATH}" "/usr/local/share/ca-certificates/${CERT_FILE}"; then
+        echo "Certificate is already trusted."
+        return
+      fi
+
+      sudo cp "${CERT_PATH}" "/usr/local/share/ca-certificates"
       sudo update-ca-certificates
       ;;
     'darwin')
+      if security verify-cert -c "${CERT_PATH}"; then
+        echo "Certificate is already trusted."
+        return
+      fi
+
       sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
       ;;
     *)
@@ -337,4 +372,39 @@ voltron::install::detect_command() {
     return
   fi
   echo "install"
+}
+
+
+# Installs kind and helm dependencies locally.
+# Required envs:
+#  - MINIMAL_VERSION
+#  - CURRENT_VERSION
+#
+# usage: env MINIMAL_VERSION=v3.3.4 CURRENT_VERSION=v2.16.9 voltron::version_supported
+voltron::version_supported(){
+  printf '%s\n%s\n' "$CURRENT_VERSION" "$MINIMAL_VERSION" | sort -rVC
+}
+
+voltron::validate::tools() {
+  shout "- Validating tools versions..."
+  local current_kind_version
+  local current_helm_version
+  local wrong_versions
+
+  current_kind_version=$(kind::version)
+  current_helm_version=$(helm::version)
+  wrong_versions=false
+
+  echo "Current kind version: $current_kind_version, recommended kind version: $STABLE_KIND_VERSION"
+  echo "Current helm version: $current_helm_version, recommended helm version: $STABLE_HELM_VERSION"
+
+  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" voltron::version_supported; then
+    wrong_versions=true
+    echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
+  fi
+  if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" voltron::version_supported; then
+      wrong_versions=true
+      echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"
+  fi
+  [ ${wrong_versions} == false ]
 }

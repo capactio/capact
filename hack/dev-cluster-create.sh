@@ -23,6 +23,8 @@ main() {
 
     export REPO_DIR=$REPO_ROOT_DIR
 
+    voltron::validate::tools
+
     export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     kind::create_cluster

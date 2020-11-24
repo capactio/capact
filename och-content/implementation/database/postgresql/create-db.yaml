@@ -1,0 +1,66 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.database.postgresql # Computed during fetching the manifest
+  name: create-db
+  displayName: Create PostgreSQL database
+  description: Action which creates PostgreSQL database in existing installation
+  documentationURL: https://www.postgresql.org/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "9.x.x-13.x.x"
+
+  implements:
+    - path: cap.interface.database.postgresql.create-db
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: db-helper
+        templates:
+          - name: db-helper
+            inputs:
+              artifacts:
+                - name: postgresql
+                  path: /in/postgresql
+#               {{ inputParametersToArtifact }}
+            outputs:
+              artifacts:
+                - name: db
+                  path: /out/db
+            container:
+              image: gcr.io/projectvoltron/postgresql-exec:0.1.0
+              args:
+                - "--command-type"
+                - "create-db"
+                - "--db-config-path"
+                - "{{`{{inputs.artifacts.postgresql.path}}`}}"
+                - "--parameters-path"
+                - "{{ inputParametersToArtifact.path }}"
+                - "--output-path"
+                - "{{`{{outputs.artifacts.db.path}}`}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

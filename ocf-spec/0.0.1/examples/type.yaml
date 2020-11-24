@@ -18,7 +18,7 @@ metadata:
       url: https://examples.com/foo/bar
   tags:
     cap.tag.cncf.graduated:
-      revision: "1.0.0"
+      revision: 1.0.0
 spec:
   additionalRefs:
     - cap.core.type.platform
@@ -26,7 +26,6 @@ spec:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "https://kubernetes.io/schemas/platform.json",
         "type": "object",
         "title": "The Kubernetes schema",
         "required": [

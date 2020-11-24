@@ -18,7 +18,8 @@ The repository has the following structure:
   │ └── kubernetes              # Kubernetes related deployment (Helm charts, CRDs etc.)
   │
   ├── docs                      # Documentation related to the project
-  │ └── investigation           # Investigations and proof of concepts files
+  │ ├── investigation           # Investigations and proof of concepts files
+  │ └── proposal                # Proposals for handling new features
   │
   ├── hack                      # Scripts used by the Voltron developers
   │

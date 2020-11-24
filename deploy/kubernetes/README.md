@@ -22,9 +22,15 @@ To install Voltron, run the following steps:
 1. Install NGINX Ingress Controller:
     
     ```bash
-   helm install ingress-nginx ./ingress-nginx --create-namespace -n=ingress-nginx
+   helm install ingress-nginx ./ingress-nginx --create-namespace -n ingress-nginx
    ```
-   
+
+1. Install Argo Workflow:
+
+    ```bash
+   helm install argo ./argo --create-namespace -n argo
+   ```
+
 1. **[Optional]** Install monitoring stack:
 
     ```bash

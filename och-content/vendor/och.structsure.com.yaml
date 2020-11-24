@@ -1,0 +1,20 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Vendor
+metadata:
+  prefix: cap.vendor  # Computed during fetching the manifest
+  name: och.example.org
+  description: Example OCH repository
+  displayName: Example OCH repository
+  documentationURL: https://example.org
+  supportURL: https://example.org
+  maintainers:
+    - email: och@example.org
+      name: Example OCH Maintainers
+      url: https://example.org
+spec:
+  federation:
+    uri: https://och.example.org
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
