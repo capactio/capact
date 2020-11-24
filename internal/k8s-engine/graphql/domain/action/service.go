@@ -3,6 +3,8 @@ package action
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
@@ -18,19 +20,26 @@ import (
 const actionResourceKind = "Action"
 
 type Service struct {
+	log    *zap.Logger
 	k8sCli client.Client
 }
 
-func NewService(actionCli client.Client) *Service {
+func NewService(log *zap.Logger, actionCli client.Client) *Service {
 	return &Service{
+		log:    log.With(zap.String("module", "service")),
 		k8sCli: actionCli,
 	}
 }
 
 func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) error {
+	log := s.log.With(zap.Any("ActionToCreate", item))
+
+	log.Info("Creating Action")
 	err := s.k8sCli.Create(ctx, &item.Action)
 	if err != nil {
-		return errors.Wrap(err, "while creating item")
+		errContext := "while creating Action"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
 	}
 
 	if item.InputParamsSecret != nil {
@@ -45,9 +54,14 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 			},
 		})
 
+		log.Info("Creating Secret",
+			zap.Any("secret", secret),
+		)
 		err = s.k8sCli.Create(ctx, secret)
 		if err != nil {
-			return errors.Wrap(err, "while creating secret for input parameters")
+			errContext := "while creating Secret for input parameters"
+			log.Error(errContext, zap.Error(err))
+			return errors.Wrap(err, errContext)
 		}
 	}
 
@@ -55,9 +69,14 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 }
 
 func (s *Service) updateAction(ctx context.Context, item v1alpha1.Action) error {
+	log := s.log.With(zap.Any("Action", item))
+	log.Info("Updating Action")
+
 	err := s.k8sCli.Update(ctx, &item)
 	if err != nil {
-		return errors.Wrap(err, "while updating item")
+		errContext := "while updating item"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
 	}
 
 	return nil
@@ -69,15 +88,22 @@ func (s *Service) FindByName(ctx context.Context, name string) (v1alpha1.Action,
 		return v1alpha1.Action{}, err
 	}
 
+	log := s.log.With(zap.Any("objectKey", objKey))
+	log.Info("Finding Action by name")
+
 	var item v1alpha1.Action
 	err = s.k8sCli.Get(ctx, objKey, &item)
 	if err != nil {
+		errContext := "while getting item"
 		errToReturn := err
 		if apierrors.IsNotFound(err) {
 			errToReturn = ErrActionNotFound
+			log.Info("Item not found")
+		} else {
+			log.Error(errContext, zap.Error(errToReturn))
 		}
 
-		return v1alpha1.Action{}, errors.Wrap(errToReturn, "while getting item")
+		return v1alpha1.Action{}, errors.Wrap(errToReturn, errContext)
 	}
 
 	return item, nil
@@ -89,12 +115,17 @@ func (s *Service) List(ctx context.Context) ([]v1alpha1.Action, error) {
 		return nil, errors.Wrap(err, "while reading namespace from context")
 	}
 
+	log := s.log.With(zap.String("namespace", ns))
+	log.Info("Listing Actions")
+
 	var itemList v1alpha1.ActionList
 	err = s.k8sCli.List(ctx, &itemList, &client.ListOptions{
 		Namespace: ns,
 	})
 	if err != nil {
-		return nil, errors.Wrap(err, "while listing items")
+		errContext := "while listing Actions"
+		log.Error(errContext, zap.Error(err))
+		return nil, errors.Wrap(err, errContext)
 	}
 
 	return itemList.Items, nil
@@ -106,9 +137,14 @@ func (s *Service) DeleteByName(ctx context.Context, name string) error {
 		return err
 	}
 
+	log := s.log.With(zap.Any("Action", item))
+	log.Info("Deleting Action by name")
+
 	err = s.k8sCli.Delete(ctx, &item)
 	if err != nil {
-		return errors.Wrap(err, "while deleting item")
+		errContext := "while deleting item"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
 	}
 
 	return nil

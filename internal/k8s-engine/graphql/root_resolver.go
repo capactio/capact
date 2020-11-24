@@ -1,6 +1,7 @@
 package graphql
 
 import (
+	"go.uber.org/zap"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -13,9 +14,9 @@ type RootResolver struct {
 	queryResolver    graphql.QueryResolver
 }
 
-func NewRootResolver(k8sCli client.Client) *RootResolver {
+func NewRootResolver(log *zap.Logger, k8sCli client.Client) *RootResolver {
 	actionConverter := action.NewConverter()
-	actionService := action.NewService(k8sCli)
+	actionService := action.NewService(log, k8sCli)
 	actionResolver := action.NewResolver(actionService, actionConverter)
 
 	return &RootResolver{

@@ -86,15 +86,17 @@ func main() {
 	err = mgr.AddHealthzCheck("ping", healthz.Ping)
 	exitOnError(err, "while adding healthz check")
 
-	// setup graphql server
+	// setup GraphQL server
 	k8sCli, err := client.New(k8sCfg, client.Options{Scheme: scheme})
 	exitOnError(err, "while creating K8s client")
 
-	execSchema := graphql.NewExecutableSchema(graphql.Config{
-		Resolvers: domaingraphql.NewRootResolver(k8sCli),
-	})
+	gqlSrvName := "engine-graphql"
+	gqlLogger := logger.Named(gqlSrvName)
 
-	gqlSrv := gqlServer(logger, execSchema, cfg.GraphQLAddr, "Engine GraphQL API")
+	execSchema := graphql.NewExecutableSchema(graphql.Config{
+		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
+	})
+	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, gqlSrvName)
 	err = mgr.Add(gqlSrv)
 	exitOnError(err, "while adding GraphQL server")
 
@@ -111,7 +113,7 @@ func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema,
 	gqlRouter.Use(nsMiddleware.Handle)
 
 	return httputil.NewStartableServer(
-		log.Named(name).With(uber_zap.String("server", "graphql")),
+		log.With(uber_zap.String("server", "graphql")),
 		addr,
 		gqlRouter,
 	)
