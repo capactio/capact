@@ -1,36 +1,34 @@
 name: Build-cluster-and-deploy
-# to be triggerred manually but to enable that it must exist on default branch of repo
-#One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
-#Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
-#https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
-on: 
+
+# One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
+# Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
+# https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
+on:
   workflow_dispatch:
     inputs:
       SHA:
-        description: Git Ref (Optional)    
-        required: false
-      IMAGE_TAG:
-        description: Docker Image Tag (Optional)    
+        description: Git commit SHA.
+        required: true
+      OVERRIDE_DOCKER_TAG:
+        description: Docker images tag. If not provided images generated from git commit SHA are used.
         required: false
       OLD_CLUSTER_DELETE:
-        description: You are aware old cluster will be dropped?    
+        description: Are you aware that old cluster will be deleted?
         required: true
 
 jobs:
   recreate-cluster:
-    name: Recreate new cluster
+    name: Recreate GKE cluster
     runs-on: ubuntu-latest
 
-    steps:    
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
+    steps:
       - name: Checkout code to point of time
         uses: actions/checkout@v2
         with:
           ref: ${{ env.SHA }}
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
@@ -44,7 +42,7 @@ jobs:
         run: | 
           gcloud config set project ${PROJECT_ID}
           cd hack/ci/terraform
-          gsutil cp gs://${BUCKET}/tf/*.tfstate .
+          gsutil cp gs://${RECREATE_CLUSTER_GCS_BUCKET}/tf/${TF_VAR_cluster_name}/*.tfstate .
           terraform init
           terraform destroy -auto-approve
       - name: Create cluster
@@ -53,66 +51,42 @@ jobs:
           cd hack/ci/terraform
           terraform init
           terraform apply -auto-approve
-          gsutil cp *.tfstate gs://${BUCKET}/tf
+          gsutil cp *.tfstate gs://${RECREATE_CLUSTER_GCS_BUCKET}/tf/${TF_VAR_cluster_name}
       - name: Get cluster credentials
         run: | 
           gcloud config set project ${PROJECT_ID}
           gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}         
       - name: Network enable
+        id: network-enable
         run: | 
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
-          echo "export IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
-      - name: Save job ip
-        uses: actions/upload-artifact@v1
-        with:
-          name: job_ip
-          path: job_ip.sh
-      - name: Install dependencies in cluster
+          echo "::set-output name=JOB_IP::$AUTHORIZED"
+      - name: Install Cert Manager in cluster
         run: | 
           helm repo add jetstack https://charts.jetstack.io
           helm repo update
-          helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
-          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.4 --set installCRDs=true --wait
           echo -e "\n- Waiting for Cert Manager to be ready...\n"
           kubectl -n cert-manager rollout status deploy/cert-manager-webhook
-          sleep 20 #due to webhook not ready
-          cd hack/ci/terraform
-          kubectl apply -f yaml/cluster-issuer.yaml
-          cd ..
-          . ./compare-cert.sh
+          sleep 60 # due to webhook not ready, see: https://github.com/jetstack/cert-manager/issues/1873#issuecomment-683142375
+          kubectl apply -f ./hack/ci/terraform/yaml/cluster-issuer.yaml
+          . ./hack/ci/compare-cert.sh
       - name: Install services
-        run: | 
-          helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
-          --set global.containerRegistry.overrideTag=${IMAGE_TAG}
-
-# In  below step the SERVICES is set again, as currently we get the certs only for gateway.
+        run: |
+          export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
+          ./hack/ci/cluster-components-install.sh
       - name: Store secrets
         run: | 
-          export SERVICES="gateway"
           ./hack/ci/backup-cert.sh
 
-  network-cleanup:
-    name: Network access cleanup
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [ recreate-cluster ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GKE_CREDS }}
-          export_default_credentials: true
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
-      - name: Download job ip
-        uses: actions/download-artifact@v1
-        with:
-          name: job_ip
       - name: Network cleanup
-        run: | 
-          . job_ip/job_ip.sh
+        # The `always()` is needed as "If your if expression does not contain any of the status functions it will automatically result with success(). "
+        # Without that it will results in: `Evaluating: (success() && (steps.network-enable.outcome == 'success'))`
+        # source: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#job-status-check-functions
+        if: ${{ always() && steps.network-enable.outcome == 'success' }}
+        env:
+          IP_ADDED_JOB: "${{ steps.network-enable.outputs.JOB_IP }}"
+        run: |
           ./hack/ci/remove-job-ip.sh

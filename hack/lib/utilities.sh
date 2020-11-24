@@ -229,6 +229,7 @@ docker::delete_images() {
 #  - REPO_DIR
 #  - VOLTRON_NAMESPACE
 #  - VOLTRON_RELEASE_NAME
+#  - CLUSTER_TYPE
 #
 # Optional envs:
 #  - UPDATE - if specified then, Helm charts are updated
@@ -269,9 +270,15 @@ voltron::install::monitoring() {
 
 voltron::install::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
-    readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/kind/overrides.ingress-nginx.yaml"
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
-    echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
+
+    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
+      readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/kind/overrides.ingress-nginx.yaml"
+      echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
+    else # currently, only KIND needs custom settings
+      readonly INGRESS_CTRL_OVERRIDES=""
+    fi
+
     helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
         --create-namespace \
         --namespace="ingress-nginx" \
@@ -286,10 +293,16 @@ voltron::install::ingress_controller() {
 }
 
 voltron::install::argo() {
-  # not waiting as other components do not need it during installation
-    readonly ARGO_OVERRIDES="${REPO_DIR}/hack/kind/overrides.argo.yaml"
+    # not waiting as other components do not need it during installation
     shout "- Installing Argo Helm chart [wait: false]..."
-    echo -e "- Applying overrides from ${ARGO_OVERRIDES}\n"
+
+    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
+      readonly ARGO_OVERRIDES="${REPO_DIR}/hack/kind/overrides.argo.yaml"
+      echo -e "- Applying overrides from ${ARGO_OVERRIDES}\n"
+    else # currently, only KIND needs custom settings
+      readonly ARGO_OVERRIDES=""
+    fi
+
     helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
         --create-namespace \
         --namespace="argo" \

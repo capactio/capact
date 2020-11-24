@@ -31,6 +31,7 @@ main() {
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
+    export CLUSTER_TYPE="KIND"
     voltron::update::images_on_kind
     voltron::install::charts
 

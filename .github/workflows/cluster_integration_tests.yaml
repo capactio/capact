@@ -23,42 +23,18 @@ jobs:
           gcloud config set project ${PROJECT_ID}
           gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}       
       - name: Network enable
-        run: | 
-          ./hack/ci/add-job-ip.sh
-      - name: Save job ip
-        uses: actions/upload-artifact@v1
-        with:
-          name: job_ip
-          path: job_ip.sh
-      - name: Test releases
-        run: | 
-          SERVICES=voltron
-          for SERVICE in ${SERVICES}
-          do  
-            helm test ${SERVICE} --namespace=${NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
-          done
-
-
-  network-cleanup:
-    name: Network access cleanup
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [ integration-tests ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GKE_CREDS }}
-          export_default_credentials: true
-      - name: Setup environment
+        id: network-enable
         run: |
-          . ./hack/ci/setup-env.sh
-      - name: Download job ip
-        uses: actions/download-artifact@v1
-        with:
-          name: job_ip
-      - name: Network cleanup
+          ./hack/ci/add-job-ip.sh
+      - name: Test Voltron release
         run: | 
-          . job_ip/job_ip.sh
+          helm test voltron --namespace=voltron-system --timeout="10m" --logs
+      - name: Network cleanup
+        # The `always()` is needed to always run the step, even if previous ones failed. From docs: "If your if expression does not contain any of the status functions it will automatically result with success()."
+        # Without that it will results in: `Evaluating: (success() && (steps.network-enable.outcome == 'success'))`
+        # source: https://docs.github.com/en/free-pro-team@latest/actions/reference/context-and-expression-syntax-for-github-actions#job-status-check-functions
+        if: ${{ always() && steps.network-enable.outcome == 'success' }}
+        env:
+          IP_ADDED_JOB: "${{ steps.network-enable.outputs.JOB_IP }}"
+        run: |
           ./hack/ci/remove-job-ip.sh

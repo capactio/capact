@@ -1,5 +1,5 @@
-{{- $fullName := include "gateway.fullname" . -}}
-apiVersion: extensions/v1beta1
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "gateway.fullname" . }}
@@ -11,23 +11,21 @@ metadata:
     cert-manager.io/cluster-issuer: "{{ .Values.ingress.annotations.issuer }}"
     acmechallengetype: "{{ .Values.ingress.annotations.acmechallengetype }}"
 spec:
-  {{- if .Values.ingress.tls }}
+  {{- if .Values.ingress.tls.enabled }}
   tls:
-    {{- range .Values.ingress.tls }}
     - hosts:
-    {{- range .hosts }}
-      - {{ . }}
-    {{- end }}
-      secretName: {{ .secretName }}
-    {{- end }}
+      - "{{ .Values.ingress.host }}.{{ .Values.global.domainName }}"
+      secretName: {{ .Values.ingress.tls.secretName }}
   {{- end }}
   rules:
-  {{- range .Values.ingress.hosts }}
-    - host: {{ . }}
+    - host: "{{ .Values.ingress.host}}.{{ .Values.global.domainName }}"
       http:
         paths:
-          - backend:
-              serviceName: {{ $fullName }}
-              servicePort: 80
-            path: {{ $.Values.ingress.path }}
-    {{- end }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "gateway.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+{{- end}}
