@@ -137,6 +137,7 @@ jobs:
   build-tools:
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-tool)}}
+    needs: prepare-matrix
     name: Build ${{ matrix.TOOL }}
     runs-on: ubuntu-latest
     steps:
