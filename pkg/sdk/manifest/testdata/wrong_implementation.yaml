@@ -1,0 +1,34 @@
+ocfVersion: 0.0.1
+revision: 0.0.1
+kind: Implementation
+metadata:
+  name: install
+  description: WordPress installation
+  license:
+    name: "BSD-3-Clause"
+  maintainers:
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+    - email: foo@example.com
+      name: Foo Bar
+      url: https://examples.com/foo/bar
+spec:
+  appVersion: "5.4.x - 5.5.x, 5.6.0-alpha0"
+
+  # MISSING SECTION
+  #implements:
+  #  - path: cap.interface.cms.wordpress
+  #    revision: "1.0.0"
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        steps:
+          - name: mysql-install
+          - name: mysql-create-db
+          - name: wp-install
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

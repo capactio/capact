@@ -21,6 +21,10 @@ APPS = gateway k8s-engine och argo-runner
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter
 
+build-tool-ocftool:
+	./hack/build-tool-ocftool.sh
+.PHONY: build-tool-ocftool
+
 # All images
 build-all-apps-images: $(addprefix build-app-image-,$(APPS))
 .PHONY: build-all-apps-images
