@@ -57,3 +57,7 @@ affinity: {}
 ingress:
   enabled: true
   host: "gateway"
+
+auth:
+  username: graphql
+  password: t0p_s3cr3t
