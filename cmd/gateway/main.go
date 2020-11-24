@@ -35,7 +35,7 @@ type Config struct {
 	// Introspection holds configuration parameters related to GraphQL schema introspection.
 	Introspection IntrospectionConfig
 
-	// AuthConfig holds configuration parameters for user authentication
+	// Auth holds configuration parameters for user authentication
 	Auth BasicAuth
 }
 
