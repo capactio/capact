@@ -1,0 +1,258 @@
+[
+  {
+    "name": "Jira installation",
+    "createdAt": "2020-11-22T19:42:31+07:00",
+    "input": {
+      "paramters": {
+        "val": "1"
+      },
+      "artifacts": [
+        {
+          "name": "db-config",
+          "typeInstanceID": "123-sss-1132-12"
+        }
+      ],
+      "parameters": "{\"key\": \"val\"}"
+    },
+    "output": {
+      "paramters": "{\"val\":1}",
+      "artifacts": [
+        {
+          "name": "artifact1",
+          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typePath": "cap.type.productivity.jira.config"
+        }
+      ]
+    },
+    "path": "cap.implementation.attlasian.jira.install",
+    "renderedAction": {
+      "steps": [
+        {
+          "step1": "install me"
+        },
+        {
+          "step2": "install it"
+        }
+      ]
+    },
+    "renderedActionOverride": {
+      "steps": [
+        {
+          "step2": "install it2"
+        }
+      ]
+    },
+    "renderingAdvancedMode": {
+      "enabled": false,
+      "artifactsForRenderingIteration": []
+    },
+    "run": true,
+    "status": {
+      "condition": "SUCCEEDED",
+      "timestamp": "2020-11-22T21:42:31+07:00",
+      "message": "Jira Installed",
+      "runner": {
+        "interface": "cap.type.runner.argo",
+        "status": {
+          "argoWorklfowRef": "default/WorkflowRun01"
+        }
+      },
+      "createdBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {}
+      },
+      "runBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {
+          "par1": "val2"
+        }
+      }
+    }
+  },
+  {
+    "name": "Jira update",
+    "createdAt": "2020-11-22T21:42:31+07:00",
+    "input": {
+      "paramters": {
+        "val": "1"
+      },
+      "artifacts": [
+        {
+          "name": "db-config",
+          "typeInstanceID": "123-sss-1132-12"
+        }
+      ]
+    },
+    "output": {
+      "paramters": "{\"val\":1}",
+      "artifacts": [
+        {
+          "name": "artifact1",
+          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typePath": "cap.type.productivity.jira.config"
+        }
+      ]
+    },
+    "path": "cap.implementation.attlasian.jira.update",
+    "renderAction": {
+      "steps": [
+        {
+          "name": "step1"
+        }
+      ]
+    },
+    "renderingAdvancedMode": {
+      "enabled": false
+    },
+    "run": true,
+    "status": {
+      "condition": "FAILED",
+      "timestamp": "2020-11-22T21:42:31+07:00",
+      "message": "Jira update failed",
+      "runner": {
+        "interface": "cap.type.runner.argo",
+        "status": {
+          "argoWorklfowRef": "default/WorkflowRun01"
+        }
+      },
+      "createdBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {}
+      },
+      "runBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {
+          "par1": "val2"
+        }
+      }
+    }
+  },
+  {
+    "name": "Jira reinstall",
+    "createdAt": "2020-11-22T19:42:31+07:00",
+    "input": {
+      "paramters": {
+        "val": "1"
+      },
+      "artifacts": [
+        {
+          "name": "db-config",
+          "typeInstanceID": "123-sss-1132-12"
+        }
+      ]
+    },
+    "output": {
+      "paramters": "{\"val\":1}",
+      "artifacts": [
+        {
+          "name": "artifact1",
+          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typePath": "cap.type.productivity.jira.config"
+        }
+      ]
+    },
+    "path": "cap.implementation.attlasian.jira.install",
+    "renderAction": {},
+    "renderingAdvancedMode": {
+      "enabled": false,
+      "artifactsForRenderingIteration": []
+    },
+    "run": true,
+    "cancel": true,
+    "status": {
+      "condition": "CANCELED",
+      "timestamp": "2020-11-22T21:42:31+07:00",
+      "message": "Jira Installed",
+      "runner": {
+        "interface": "cap.type.runner.argo",
+        "status": {
+          "argoWorklfowRef": "default/WorkflowRun01"
+        }
+      },
+      "createdBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {}
+      },
+      "runBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {
+          "par1": "val2"
+        }
+      },
+      "cancelledBy": {
+        "username": "voltron1",
+        "groups": [
+          "users"
+        ],
+        "extra": {}
+      }
+    }
+  },
+  {
+    "name": "Jira advanced update",
+    "createdAt": "2020-11-22T19:42:31+07:00",
+    "input": {
+      "paramters": {
+        "val": "1"
+      },
+      "artifacts": [
+        {
+          "name": "db-config",
+          "typeInstanceID": "123-sss-1132-12"
+        }
+      ]
+    },
+    "output": {
+      "paramters": "{\"val\":1}",
+      "artifacts": [
+        {
+          "name": "artifact1",
+          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typePath": "cap.type.productivity.jira.config"
+        }
+      ]
+    },
+    "path": "cap.implementation.attlasian.jira.install",
+    "renderAction": {},
+    "renderingAdvancedMode": {
+      "enabled": true,
+      "artifactsForRenderingIteration": []
+    },
+    "status": {
+      "condition": "ADVANCED_MODE_RENDERING_ITERATION",
+      "timestamp": "2020-11-22T21:42:31+07:00",
+      "message": "Waiting for artifacts from user",
+      "runner": {
+        "interface": "cap.type.runner.argo",
+        "status": {
+          "argoWorklfowRef": "default/WorkflowRun01"
+        }
+      }
+    },
+    "createdBy": {
+      "username": "voltron1",
+      "groups": [
+        "users"
+      ],
+      "extra": {}
+    }
+  }
+]
