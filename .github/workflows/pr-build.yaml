@@ -43,6 +43,7 @@ jobs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
       matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
       matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
+      matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
 
     steps:
       - name: Checkout code
@@ -55,6 +56,8 @@ jobs:
         run: echo "::set-output ${TESTS}"
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
+      - id: set-matrix-tool
+        run: echo "::set-output ${TOOLS}"
 
   build-app:
     name: Build ${{ matrix.APP }}
@@ -130,6 +133,24 @@ jobs:
       - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
       - run: make build-infra-image-${{ matrix.INFRA }}
       - run: make push-infra-image-${{ matrix.INFRA }}
+
+  build-tools:
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-tool)}}
+    needs: prepare-matrix
+    name: Build ${{ matrix.TOOL }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - run: make build-tool-${{ matrix.tool }}
 
   integration-tests:
     name: Integration tests

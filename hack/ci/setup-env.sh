@@ -42,14 +42,9 @@ else
 fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure
-APPS=$(echo 'name=matrix::{"include":['; for APP in ${APPS}; do echo {\"APP\":\"${APP}\"},; done; echo ']}' |tr -d "\n")
-export APPS=$(echo ${APPS} |sed 's/}, ]/} ]/g' )
-echo "APPS=${APPS}" >>"$GITHUB_ENV"
-
-TESTS=$(echo 'name=matrix::{"include":['; for TEST in ${TESTS}; do echo {\"TEST\":\"${TEST}\"},; done; echo ']}' |tr -d "\n")
-export TESTS=$(echo ${TESTS} |sed 's/}, ]/} ]/g' )
-echo "TESTS=${TESTS}" >>"$GITHUB_ENV"
-
-INFRAS=$(echo 'name=matrix::{"include":['; for INFRA in ${INFRAS}; do echo {\"INFRA\":\"${INFRA}\"},; done; echo ']}' |tr -d "\n")
-export INFRAS=$(echo ${INFRAS} |sed 's/}, ]/} ]/g')
-echo "INFRAS=${INFRAS}" >>"$GITHUB_ENV"
+cat <<EOT >> "$GITHUB_ENV"
+APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och"},{"APP":"argo-runner"}]}
+TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
+INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"}]}
+TOOLS=name=matrix::{"include":[{"TOOL":"ocftool"}]}
+EOT

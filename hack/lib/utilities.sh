@@ -305,7 +305,7 @@ host::update::voltron_hosts() {
   LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
   HOSTS_FILE="/etc/hosts"
 
-  grep -qF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
+  grep -qxF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
 }
 
 # Sets self-signed wildcard TLS certificate as trusted

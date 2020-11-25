@@ -71,3 +71,7 @@ ingress:
     - secretName: gateway-tls
       hosts:
         - gateway.dev.cluster.projectvoltron.dev
+
+auth:
+  username: graphql
+  password: t0p_s3cr3t
