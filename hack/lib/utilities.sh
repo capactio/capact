@@ -252,11 +252,19 @@ voltron::install::charts() {
     shout "- Installing Voltron Helm chart from sources [wait: true]..."
     echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
 
+    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
+      readonly VOLTRON_OVERRIDES="${REPO_DIR}/hack/kind/overrides.voltron.yaml"
+      echo -e "- Applying overrides from ${VOLTRON_OVERRIDES}\n"
+    else # currently, only KIND needs custom settings
+      readonly VOLTRON_OVERRIDES=""
+    fi
+
     helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
         --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
+        -f "${VOLTRON_OVERRIDES}" \
         --wait
 }
 

@@ -4,7 +4,7 @@ global:
     path: gcr.io/projectvoltron
     # Overrides the image tag for all Voltron component. Default is the sub-chart appVersion.
     overrideTag: "latest"
-  domainName: "voltron.local"
+  domainName: "dev.cluster.projectvoltron.dev"
 
 integrationTest:
   image:
