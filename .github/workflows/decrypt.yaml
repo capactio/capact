@@ -1,0 +1,28 @@
+name: Decrypt Example
+
+# on: 
+#   push:
+#     paths:
+#     - '**.txt'
+#     - '**.yaml'
+#     branches: 
+#     - 'master'
+
+
+jobs:
+  entry-tests:
+    name: Git crypt PoC
+    runs-on: ubuntu-latest
+      
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment & decrypt
+        run: |
+          . ./hack/ci/setup-env.sh
+          sudo apt-get update -y && sudo apt-get install -y git-crypt
+          printf "${GIT_CRYPT_KEY}" | base64 -d > ./ci.key
+          git-crypt unlock ./ci.key
+          cat data/qqq.txt
+        env:
+          GIT_CRYPT_KEY: ${{ secrets.GIT_CRYPT_KEY }}

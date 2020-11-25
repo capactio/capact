@@ -2,10 +2,7 @@ name: PR build
 
 on:
   pull_request:
-    types:
-      - opened
-      - synchronize
-      - reopened
+    types: [opened, synchronize, reopened]
     paths:
       - "**.go"
       - "**.graphql"
@@ -13,7 +10,7 @@ on:
       - "**.sh"
       - "Makefile"
     branches:
-      - "$default-branch"
+      - $default-branch
 
 jobs:
   entry-tests:

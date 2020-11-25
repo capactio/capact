@@ -1,0 +1,118 @@
+name: Build-cluster-and-deploy
+# to be triggerred manually but to enable that it must exist on default branch of repo
+#One thing that's not mentioned in the documentation: the workflow must exist on the default branch for the "Run workflow" button to appear.
+#Once you add it there, you can continue developing the action on its own branch and the changes will take effect when run using the button
+#https://stackoverflow.com/questions/58933155/manual-workflow-triggers-in-github-actions
+on: 
+  workflow_dispatch:
+    inputs:
+      SHA:
+        description: Git Ref (Optional)    
+        required: false
+      IMAGE_TAG:
+        description: Docker Image Tag (Optional)    
+        required: false
+      OLD_CLUSTER_DELETE:
+        description: You are aware old cluster will be dropped?    
+        required: true
+
+jobs:
+  recreate-cluster:
+    name: Recreate new cluster
+    runs-on: ubuntu-latest
+
+    steps:    
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Checkout code to point of time
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ env.SHA }}
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          export_default_credentials: true
+          service_account_key: ${{ secrets.GKE_CREDS }}        
+      - name: Setup terraform
+        run: | 
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+          sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          sudo apt-get update && sudo apt-get install terraform 
+      - name: Delete cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd hack/ci/terraform
+          gsutil cp gs://${BUCKET}/tf/*.tfstate .
+          terraform init
+          terraform destroy -auto-approve
+      - name: Create cluster
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          cd hack/ci/terraform
+          terraform init
+          terraform apply -auto-approve
+          gsutil cp *.tfstate gs://${BUCKET}/tf
+      - name: Get cluster credentials
+        run: | 
+          gcloud config set project ${PROJECT_ID}
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}         
+      - name: Network enable
+        run: | 
+          AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
+          echo "export IP_ADDED_JOB=${AUTHORIZED}" >job_ip.sh
+          gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
+          --master-authorized-networks ${AUTHORIZED}
+      - name: Save job ip
+        uses: actions/upload-artifact@v1
+        with:
+          name: job_ip
+          path: job_ip.sh
+      - name: Install dependencies in cluster
+        run: | 
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update
+          helm install ingress-nginx ./deploy/kubernetes/charts/ingress-nginx --create-namespace -n=ingress-nginx --set ingress-nginx.controller.service.loadBalancerIP=${ELB_IP}
+          helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.0.3 --set installCRDs=true
+          echo -e "\n- Waiting for Cert Manager to be ready...\n"
+          kubectl -n cert-manager rollout status deploy/cert-manager-webhook
+          sleep 20 #due to webhook not ready
+          cd hack/ci/terraform
+          kubectl apply -f yaml/cluster-issuer.yaml
+          cd ..
+          . ./compare-cert.sh
+      - name: Install services
+        run: | 
+          helm install voltron ./deploy/kubernetes/charts/voltron --create-namespace -n ${NAMESPACE} \
+          --set global.containerRegistry.overrideTag=${IMAGE_TAG}
+
+# In  below step the SERVICES is set again, as currently we get the certs only for gateway.
+      - name: Store secrets
+        run: | 
+          export SERVICES="gateway"
+          ./hack/ci/backup-cert.sh
+
+  network-cleanup:
+    name: Network access cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [ recreate-cluster ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GKE_CREDS }}
+          export_default_credentials: true
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Download job ip
+        uses: actions/download-artifact@v1
+        with:
+          name: job_ip
+      - name: Network cleanup
+        run: | 
+          . job_ip/job_ip.sh
+          ./hack/ci/remove-job-ip.sh

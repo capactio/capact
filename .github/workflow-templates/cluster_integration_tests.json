@@ -1,0 +1,8 @@
+{
+    "name": "Voltron Branch Build Workflow",
+    "description": "Voltron cluster integration tests workflow template.",
+    "iconName": "lnr-rocket",
+    "categories": [
+        "Go"
+    ]
+}
