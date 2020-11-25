@@ -22,7 +22,7 @@ spec:
       http:
         paths:
           - path: /
-            # Error: unable to build kubernetes objects from release manifest: error validating "": error validating data: ValidationError(Ingress.spec.rules[0].http.paths[0]): unknown field "pathType" in io.k8s.api.networking.v1beta1.HTTPIngressPath
+            # pathType was introduced in K8s 1.18+. On GKE we have 1.17, so we cannot use it yet.
             # pathType: Prefix
             backend:
               serviceName: {{ include "gateway.fullname" . }}
