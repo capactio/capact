@@ -1765,7 +1765,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [Tag!]!
+    tags: [TagRevision!]!
 }
 
 type TypeMetadata implements MetadataBaseFields {
@@ -3236,9 +3236,9 @@ func (ec *executionContext) _ImplementationMetadata_tags(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Tag)
+	res := resTmp.([]*TagRevision)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationRequirement_prefix(ctx context.Context, field graphql.CollectedField, obj *ImplementationRequirement) (ret graphql.Marshaler) {

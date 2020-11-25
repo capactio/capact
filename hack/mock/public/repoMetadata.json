@@ -1,0 +1,32 @@
+{
+  "name": "Metadata",
+  "prefix": "cap.core",
+  "path": "cap.core.metadata",
+  "revisions": [
+    {
+      "metadata": {},
+      "revision": "0.1.0",
+      "spec": {
+        "ochVersion": "0.1.0",
+        "ocfVersion": {
+          "default": "0.1.0",
+          "supported": [
+            "0.1.0"
+          ]
+        },
+        "implementation": {
+          "appVersion": {
+            "semVerTaggingStrategy": {
+              "latest": {
+                "pointsTo": "STABLE"
+              }
+            }
+          }
+        },
+        "signature": {
+          "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+        }
+      }
+    }
+  ]
+}

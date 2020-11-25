@@ -2,7 +2,6 @@ package implementations
 
 import (
 	"context"
-	"fmt"
 
 	mockedresolver "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
@@ -23,39 +22,53 @@ func NewRevisionResolver() *ImplementationRevisionResolver {
 }
 
 func (i *ImplementationResolver) Implementations(ctx context.Context, filter *gqlpublicapi.ImplementationFilter) ([]*gqlpublicapi.Implementation, error) {
-	implementation, err := mockedresolver.MockedImplementation()
+	implementations, err := mockedresolver.MockedImplementations()
 	if err != nil {
 		return []*gqlpublicapi.Implementation{}, err
 	}
-	return []*gqlpublicapi.Implementation{implementation}, nil
+	return implementations, nil
 }
 
 func (i ImplementationResolver) Implementation(ctx context.Context, path string) (*gqlpublicapi.Implementation, error) {
-	implementation, err := mockedresolver.MockedImplementation()
+	implementations, err := mockedresolver.MockedImplementations()
 	if err != nil {
-		return &gqlpublicapi.Implementation{}, err
+		return nil, err
 	}
-	return implementation, nil
+	for _, i := range implementations {
+		if i.Path == path {
+			return i, nil
+		}
+	}
+	return nil, nil
 }
 
 func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
-	implementation, err := mockedresolver.MockedImplementation()
-	if err != nil {
-		return &gqlpublicapi.ImplementationRevision{}, err
+	if obj == nil {
+		return nil, nil
 	}
-	for _, im := range implementation.Revisions {
-		if im.Revision == revision {
-			return im, nil
+	for _, ir := range obj.Revisions {
+		if ir.Revision == revision {
+			return ir, nil
 		}
 	}
-	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
+	return nil, nil
 }
 
 func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
-	iface, err := mockedresolver.MockedInterface()
+	if obj == nil {
+		return []*gqlpublicapi.Interface{}, nil
+	}
+	ifaces, err := mockedresolver.MockedInterfaces()
 	if err != nil {
 		return []*gqlpublicapi.Interface{}, err
 	}
-
-	return []*gqlpublicapi.Interface{iface}, nil
+	filtered := []*gqlpublicapi.Interface{}
+	for _, iface := range ifaces {
+		for _, impl := range obj.Spec.Implements {
+			if iface.Path == impl.Path {
+				filtered = append(filtered, iface)
+			}
+		}
+	}
+	return filtered, nil
 }

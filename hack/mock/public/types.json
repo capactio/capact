@@ -2,13 +2,13 @@
   {
     "name": "config",
     "prefix": "cap.type.productivy.jira",
-    "latestRevision": {},
-    "revision": {},
+    "path": "cap.type.productivity.jira.config",
     "revisions": [
       {
         "metadata": {
           "name": "config",
           "prefix": "cap.type.productivity.jira",
+          "path": "cap.type.productivity.jira.config",
           "displayName": "Jira config",
           "description": "Defines configuration for Jira instance",
           "maintainers": [
@@ -20,13 +20,14 @@
           ],
           "documentationURL": "https://support.atlassian.com/jira-software-cloud/resources/",
           "supportURL": "https://www.atlassian.com/software/jira",
-          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
-          "tags": [
-          ]
+          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png"
         },
         "revision": "0.1.0",
         "spec": {
-          "additionalRefs": [],
+          "additionalRefs": [
+            "ref1",
+            "ref2"
+          ],
           "jsonSchema": "{\"$schema\":\"http://json-schema.org/draft-07/schema\",\"type\":\"object\",\"title\":\"The schema for Jira configuration\",\"required\": [\"version\"],\"$ocfRefs\": {\"semVer\": {\"name\": \"cap.core.type.versioning.semver\",\"revision\": \"0.1.0\"}\"hostname\": {\"name\": \"cap.core.type.networking.hostname\",\"revision\": \"0.1.0\"}},\"properties\": {\"version\": {\"$ref\": \"#/$ocfRefs/semVer\"}\"host\": {\"$ref\": \"#/$ocfRefs/hostname\"}},\"additionalProperties\": true}"
         },
         "signature": {
@@ -37,7 +38,8 @@
   },
   {
     "name": "install-input",
-    "prefix": "cap.type.productivy.jira",
+    "prefix": "cap.type.productivity.jira",
+    "path": "cap.type.productivity.jira.install-input",
     "latestRevision": {},
     "revision": {},
     "revisions": [
@@ -45,6 +47,7 @@
         "metadata": {
           "name": "install-input",
           "prefix": "cap.type.productivity.jira",
+          "path": "cap.type.productivity.jira.install-input",
           "displayName": "Jira installation input",
           "description": "Defines installation parameters for Jira",
           "documentationURL": "https://support.atlassian.com/jira-software-cloud/resources/",
@@ -72,6 +75,7 @@
   {
     "name": "kubernetes",
     "prefix": "cap.core.type.platform",
+    "path": "cap.core.type.platform.kubernetes",
     "latestRevision": {},
     "revision": {},
     "revisions": [
@@ -79,6 +83,7 @@
         "metadata": {
           "name": "kubernetes",
           "prefix": "cap.core.type.platform",
+          "path": "cap.core.type.platform.kubernetes",
           "displayName": "Kubernetes Platform",
           "description": "This Type indicates that a given platform is a Kubernetes installation.",
           "documentationURL": "https://kubernetes.io/docs",
@@ -90,11 +95,12 @@
               "url": "https://projectvoltron.dev"
             }
           ],
-	  "tags": [
+          "tags": [
             {
               "metadata": {
                 "name": "baseline",
                 "prefix": "cap.core.tag.system",
+                "path": "cap.core.tag.system.name",
                 "decription": "Indication that tagged item is an essential system capability.",
                 "displayName": "Baseline Capability",
                 "documentationURL": "https://projectvoltron.dev",
@@ -108,7 +114,7 @@
                 ]
               }
             }
-	  ]
+          ]
         },
         "revision": "0.1.0",
         "spec": {

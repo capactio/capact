@@ -12,6 +12,15 @@ import (
 
 type MockedRootResolver struct {
 	queryResolver mockedQueryResolver
+
+	interfaceResolver              gqlpublicapi.InterfaceResolver
+	interfaceRevisionResolver      gqlpublicapi.InterfaceRevisionResolver
+	interfaceGroupResolver         gqlpublicapi.InterfaceGroupResolver
+	implementationResolver         gqlpublicapi.ImplementationResolver
+	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
+	repoMetadataResolver           gqlpublicapi.RepoMetadataResolver
+	tagResolver                    gqlpublicapi.TagResolver
+	typeResolver                   gqlpublicapi.TypeResolver
 }
 
 func NewMockedRootResolver() *MockedRootResolver {
@@ -24,6 +33,14 @@ func NewMockedRootResolver() *MockedRootResolver {
 			TagResolver:            tags.NewResolver(),
 			TypeResolver:           types.NewResolver(),
 		},
+		interfaceResolver:              interfaces.NewResolver(),
+		interfaceRevisionResolver:      interfaces.NewRevisionResolver(),
+		interfaceGroupResolver:         interfacegroups.NewInterfacesResolver(),
+		implementationResolver:         implementations.NewResolver(),
+		implementationRevisionResolver: implementations.NewRevisionResolver(),
+		repoMetadataResolver:           repometadata.NewResolver(),
+		tagResolver:                    tags.NewResolver(),
+		typeResolver:                   types.NewResolver(),
 	}
 }
 
@@ -41,33 +58,33 @@ type mockedQueryResolver struct {
 }
 
 func (r *MockedRootResolver) Interface() gqlpublicapi.InterfaceResolver {
-	return interfaces.NewResolver()
+	return r.interfaceResolver
 }
 
 func (r *MockedRootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
-	return interfaces.NewRevisionResolver()
+	return r.interfaceRevisionResolver
 }
 
 func (r *MockedRootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {
-	return interfacegroups.NewInterfacesResolver()
+	return r.interfaceGroupResolver
 }
 
 func (r *MockedRootResolver) Implementation() gqlpublicapi.ImplementationResolver {
-	return implementations.NewResolver()
+	return r.implementationResolver
 }
 
 func (r *MockedRootResolver) ImplementationRevision() gqlpublicapi.ImplementationRevisionResolver {
-	return implementations.NewRevisionResolver()
+	return r.implementationRevisionResolver
 }
 
 func (r *MockedRootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
-	return repometadata.NewResolver()
+	return r.repoMetadataResolver
 }
 
 func (r *MockedRootResolver) Tag() gqlpublicapi.TagResolver {
-	return tags.NewResolver()
+	return r.tagResolver
 }
 
 func (r *MockedRootResolver) Type() gqlpublicapi.TypeResolver {
-	return types.NewResolver()
+	return r.typeResolver
 }

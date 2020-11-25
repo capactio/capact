@@ -22,31 +22,40 @@ func NewInterfacesResolver() *InterfaceGroupInterfacesResolver {
 }
 
 func (r *InterfaceGroupResolver) InterfaceGroups(ctx context.Context, filter *gqlpublicapi.InterfaceGroupFilter) ([]*gqlpublicapi.InterfaceGroup, error) {
-	ig, err := mockedresolver.MockedInterfaceGroup()
+	groups, err := mockedresolver.MockedInterfaceGroups()
 	if err != nil {
 		return []*gqlpublicapi.InterfaceGroup{}, err
 	}
-	return []*gqlpublicapi.InterfaceGroup{ig}, nil
+	return groups, nil
 }
 
 func (r *InterfaceGroupResolver) InterfaceGroup(ctx context.Context, path string) (*gqlpublicapi.InterfaceGroup, error) {
-	ig, err := mockedresolver.MockedInterfaceGroup()
+	groups, err := mockedresolver.MockedInterfaceGroups()
 	if err != nil {
 		return &gqlpublicapi.InterfaceGroup{}, err
 	}
-	if *ig.Metadata.Path == path {
-		return ig, nil
+	for _, group := range groups {
+		if group.Metadata != nil && group.Metadata.Path != nil && *group.Metadata.Path == path {
+			return group, nil
+		}
 	}
-	return &gqlpublicapi.InterfaceGroup{}, nil
+	return nil, nil
 }
 
 func (r *InterfaceGroupInterfacesResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.InterfaceGroup, filter *gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
-	i, err := mockedresolver.MockedInterface()
+	if obj == nil || obj.Metadata == nil || obj.Metadata.Path == nil {
+		return []*gqlpublicapi.Interface{}, nil
+	}
+	ifaces, err := mockedresolver.MockedInterfaces()
 	if err != nil {
 		return []*gqlpublicapi.Interface{}, err
 	}
-	if obj != nil && *obj.Metadata.Path == i.Prefix {
-		return []*gqlpublicapi.Interface{i}, nil
+
+	filtered := []*gqlpublicapi.Interface{}
+	for _, iface := range ifaces {
+		if *obj.Metadata.Path == iface.Prefix {
+			filtered = append(filtered, iface)
+		}
 	}
-	return []*gqlpublicapi.Interface{}, nil
+	return filtered, nil
 }

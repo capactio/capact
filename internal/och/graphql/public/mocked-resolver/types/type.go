@@ -22,9 +22,23 @@ func (r *TypeResolver) Types(ctx context.Context, filter *gqlpublicapi.TypeFilte
 }
 
 func (r *TypeResolver) Type(ctx context.Context, path string) (*gqlpublicapi.Type, error) {
-	return &gqlpublicapi.Type{}, nil
+	types, err := mockedresolver.MockedTypes()
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range types {
+		if t.Path == path {
+			return t, nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *TypeResolver) Revision(ctx context.Context, obj *gqlpublicapi.Type, revision string) (*gqlpublicapi.TypeRevision, error) {
-	return &gqlpublicapi.TypeRevision{}, nil
+	for _, rev := range obj.Revisions {
+		if rev.Revision == revision {
+			return rev, nil
+		}
+	}
+	return nil, nil
 }

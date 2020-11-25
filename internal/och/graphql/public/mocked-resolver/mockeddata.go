@@ -10,33 +10,41 @@ import (
 
 const MocksPath = "./mock/public"
 
-func MockedInterface() (*gqlpublicapi.Interface, error) {
-	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interface.json"))
+func MockedInterfaces() ([]*gqlpublicapi.Interface, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interfaces.json"))
 	if err != nil {
 		return nil, err
 	}
 
-	i := &gqlpublicapi.Interface{}
-	err = json.Unmarshal(buff, i)
+	i := []*gqlpublicapi.Interface{}
+	err = json.Unmarshal(buff, &i)
 	if err != nil {
 		return nil, err
 	}
-	i.LatestRevision = i.Revisions[0]
+	for _, iface := range i {
+		if len(iface.Revisions) > 0 {
+			iface.LatestRevision = iface.Revisions[0]
+		}
+	}
 	return i, nil
 }
 
-func MockedImplementation() (*gqlpublicapi.Implementation, error) {
-	buff, err := ioutil.ReadFile(path.Join(MocksPath, "implementation.json"))
+func MockedImplementations() ([]*gqlpublicapi.Implementation, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "implementations.json"))
 	if err != nil {
 		return nil, err
 	}
 
-	i := &gqlpublicapi.Implementation{}
-	err = json.Unmarshal(buff, i)
+	i := []*gqlpublicapi.Implementation{}
+	err = json.Unmarshal(buff, &i)
 	if err != nil {
 		return nil, err
 	}
-	i.LatestRevision = i.Revisions[0]
+	for _, implementation := range i {
+		if len(implementation.Revisions) > 0 {
+			implementation.LatestRevision = implementation.Revisions[0]
+		}
+	}
 	return i, nil
 }
 
@@ -57,31 +65,48 @@ func MockedTypes() ([]*gqlpublicapi.Type, error) {
 	return types, nil
 }
 
-func MockedTag() (*gqlpublicapi.Tag, error) {
-	buff, err := ioutil.ReadFile(path.Join(MocksPath, "tag.json"))
+func MockedTags() ([]*gqlpublicapi.Tag, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "tags.json"))
 	if err != nil {
 		return nil, err
 	}
 
-	tag := &gqlpublicapi.Tag{}
-	err = json.Unmarshal(buff, &tag)
+	tags := []*gqlpublicapi.Tag{}
+	err = json.Unmarshal(buff, &tags)
 	if err != nil {
 		return nil, err
 	}
-	tag.LatestRevision = tag.Revisions[0]
-	return tag, nil
+	for _, tag := range tags {
+		tag.LatestRevision = tag.Revisions[0]
+	}
+	return tags, nil
 }
 
-func MockedInterfaceGroup() (*gqlpublicapi.InterfaceGroup, error) {
-	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interfaceGroup.json"))
+func MockedRepoMetadata() (*gqlpublicapi.RepoMetadata, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "repoMetadata.json"))
 	if err != nil {
 		return nil, err
 	}
 
-	group := &gqlpublicapi.InterfaceGroup{}
-	err = json.Unmarshal(buff, &group)
+	repo := &gqlpublicapi.RepoMetadata{}
+	err = json.Unmarshal(buff, repo)
 	if err != nil {
 		return nil, err
 	}
-	return group, nil
+	repo.LatestRevision = repo.Revisions[0]
+	return repo, nil
+}
+
+func MockedInterfaceGroups() ([]*gqlpublicapi.InterfaceGroup, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "interfaceGroups.json"))
+	if err != nil {
+		return nil, err
+	}
+
+	groups := []*gqlpublicapi.InterfaceGroup{}
+	err = json.Unmarshal(buff, &groups)
+	if err != nil {
+		return nil, err
+	}
+	return groups, nil
 }

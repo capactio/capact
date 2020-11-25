@@ -3,6 +3,7 @@ package repometadata
 import (
 	"context"
 
+	mockedresolver "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
@@ -13,17 +14,18 @@ func NewResolver() *RepoMetadataResolver {
 }
 
 func (r *RepoMetadataResolver) RepoMetadata(ctx context.Context) (*gqlpublicapi.RepoMetadata, error) {
-	return dummyRepoMetadata(), nil
+	repo, err := mockedresolver.MockedRepoMetadata()
+	if err != nil {
+		return &gqlpublicapi.RepoMetadata{}, err
+	}
+	return repo, nil
 }
 
 func (r *RepoMetadataResolver) Revision(ctx context.Context, obj *gqlpublicapi.RepoMetadata, revision string) (*gqlpublicapi.RepoMetadataRevision, error) {
-	return &gqlpublicapi.RepoMetadataRevision{}, nil
-}
-
-func dummyRepoMetadata() *gqlpublicapi.RepoMetadata {
-	return &gqlpublicapi.RepoMetadata{
-		Name:   "metadata",
-		Prefix: "cap.core",
-		Path:   "cap.core.metadata",
+	for _, rev := range obj.Revisions {
+		if rev.Revision == revision {
+			return rev, nil
+		}
 	}
+	return nil, nil
 }
