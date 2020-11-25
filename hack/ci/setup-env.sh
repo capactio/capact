@@ -22,14 +22,14 @@ CERT_SERVICE_NAMESPACE=voltron-system
 EOT
 
 
-if [ "${GITHUB_EVENT_NAME}" = "push" ]
+if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]
 then
-  echo "DOCKER_TAG=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
-  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron" >> "$GITHUB_ENV"
-else
   PR_NUMBER=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
   echo "DOCKER_TAG=PR-${PR_NUMBER}" >> "$GITHUB_ENV"
   echo "DOCKER_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
+else
+  echo "DOCKER_TAG=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron" >> "$GITHUB_ENV"
 fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure
