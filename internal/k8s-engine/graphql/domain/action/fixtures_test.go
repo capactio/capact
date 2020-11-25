@@ -30,7 +30,7 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 	}
 
 	return graphql.Action{
-		ID:        name,
+		Name:      name,
 		CreatedAt: graphql.Timestamp(timestamp),
 		Input: &graphql.ActionInput{
 			Parameters: ptrToJSONRawMessage(`{"param":"one"}`),
@@ -87,11 +87,12 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 	}
 }
 
-func fixGQLInput() graphql.ActionDetailsInput {
+func fixGQLInput(name string) graphql.ActionDetailsInput {
 	params := graphql.JSON(`{"param":"one"}`)
 	override := graphql.JSON(`{"foo":"bar"}`)
 
 	return graphql.ActionDetailsInput{
+		Name: name,
 		Input: &graphql.ActionInputData{
 			Parameters: &params,
 			Artifacts: []*graphql.InputArtifactData{

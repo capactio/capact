@@ -4,18 +4,16 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/uuid"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 
 	"github.com/pkg/errors"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 type actionConverter interface {
-	FromGraphQLInput(in graphql.ActionDetailsInput, name, namespace string) model.ActionToCreateOrUpdate
+	FromGraphQLInput(in graphql.ActionDetailsInput, namespace string) model.ActionToCreateOrUpdate
 	ToGraphQL(in v1alpha1.Action) graphql.Action
 }
 
@@ -40,10 +38,10 @@ func NewResolver(svc actionService, conv actionConverter) *Resolver {
 	}
 }
 
-func (r *Resolver) Action(ctx context.Context, id string) (*graphql.Action, error) {
-	item, err := r.svc.FindByName(ctx, id)
+func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, error) {
+	item, err := r.svc.FindByName(ctx, name)
 	if err != nil {
-		if errors.Cause(err) == ErrActionNotFound {
+		if errors.Is(err, ErrActionNotFound) {
 			return nil, nil
 		}
 
@@ -61,7 +59,7 @@ func (r *Resolver) Actions(ctx context.Context, filter []*graphql.ActionFilter) 
 		return nil, errors.Wrap(err, "while listing Actions")
 	}
 
-	var gqlItems []*graphql.Action
+	gqlItems := make([]*graphql.Action, 0, len(items))
 	for _, item := range items {
 		gqlItem := r.conv.ToGraphQL(item)
 		gqlItems = append(gqlItems, &gqlItem)
@@ -75,47 +73,46 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.New("input cannot be empty")
 	}
 
-	ns, err := namespace.ReadFromContext(ctx)
+	ns, err := namespace.FromContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while reading namespace from context")
 	}
 
-	id := uuid.New().String()
-	actionToCreate := r.conv.FromGraphQLInput(*in, id, ns)
+	actionToCreate := r.conv.FromGraphQLInput(*in, ns)
 
 	err = r.svc.Create(ctx, actionToCreate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating Action")
 	}
 
-	return r.findAndConvertToGQL(ctx, id)
+	return r.findAndConvertToGQL(ctx, in.Name)
 }
 
-func (r *Resolver) RunAction(ctx context.Context, id string) (*graphql.Action, error) {
-	err := r.svc.RunByName(ctx, id)
+func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action, error) {
+	err := r.svc.RunByName(ctx, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while running Action")
 	}
 
-	return r.findAndConvertToGQL(ctx, id)
+	return r.findAndConvertToGQL(ctx, name)
 }
 
-func (r *Resolver) CancelAction(ctx context.Context, id string) (*graphql.Action, error) {
-	err := r.svc.CancelByName(ctx, id)
+func (r *Resolver) CancelAction(ctx context.Context, name string) (*graphql.Action, error) {
+	err := r.svc.CancelByName(ctx, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while cancelling Action")
 	}
 
-	return r.findAndConvertToGQL(ctx, id)
+	return r.findAndConvertToGQL(ctx, name)
 }
 
-func (r *Resolver) DeleteAction(ctx context.Context, id string) (*graphql.Action, error) {
-	gqlItem, err := r.findAndConvertToGQL(ctx, id)
+func (r *Resolver) DeleteAction(ctx context.Context, name string) (*graphql.Action, error) {
+	gqlItem, err := r.findAndConvertToGQL(ctx, name)
 	if err != nil {
 		return nil, err
 	}
 
-	err = r.svc.DeleteByName(ctx, id)
+	err = r.svc.DeleteByName(ctx, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while deleting Action")
 	}
@@ -123,8 +120,8 @@ func (r *Resolver) DeleteAction(ctx context.Context, id string) (*graphql.Action
 	return gqlItem, nil
 }
 
-func (r *Resolver) findAndConvertToGQL(ctx context.Context, id string) (*graphql.Action, error) {
-	item, err := r.svc.FindByName(ctx, id)
+func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graphql.Action, error) {
+	item, err := r.svc.FindByName(ctx, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while finding Action by name")
 	}
@@ -135,17 +132,17 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, id string) (*graphql
 
 // TODO: To implement as a part of SV-61
 
-func (r *Resolver) UpdateAction(ctx context.Context, id string, in *graphql.ActionDetailsInput) (*graphql.Action, error) {
-	return dummyAction(id), nil
+func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
+	return dummyAction(in.Name), nil
 }
 
-func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionID string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {
-	return dummyAction(actionID), nil
+func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {
+	return dummyAction(actionName), nil
 }
 
-func dummyAction(id string) *graphql.Action {
+func dummyAction(name string) *graphql.Action {
 	return &graphql.Action{
-		ID:             id,
+		Name:           name,
 		CreatedAt:      graphql.Timestamp(time.Now()),
 		Path:           "deploy",
 		RenderedAction: nil,

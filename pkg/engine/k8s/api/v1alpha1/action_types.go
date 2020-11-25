@@ -74,6 +74,14 @@ type ActionSpec struct {
 	Cancel *bool `json:"cancel,omitempty"`
 }
 
+func (in *ActionSpec) IsRun() bool {
+	return in.Run != nil && *in.Run
+}
+
+func (in *ActionSpec) IsCancelled() bool {
+	return in.Cancel != nil && *in.Cancel
+}
+
 // ActionInput describes Action input.
 type ActionInput struct {
 
@@ -118,6 +126,7 @@ type RenderingIteration struct {
 type InputArtifact struct {
 
 	// Name refers to input artifact name used in rendered Action.
+	// Name is not unique as there may be multiple artifacts with the same name on different levels of Action workflow.
 	Name string `json:"name"`
 
 	// TypeInstanceID is a unique identifier for the TypeInstance used as input artifact.
@@ -208,6 +217,13 @@ type ResolvedActionInput struct {
 }
 
 type InputArtifactDetails struct {
+
+	// TODO: After first implementation of rendering workflow, make Input Artifact unique.
+	// Possible options:
+	// - name prefix is added manually by User during advanced rendering
+	// - introduce additional field `prefix` or `location`, `source`, etc. with path to the nested step
+	// - similarly to Argo, add special steps with children data
+
 	CommonArtifactDetails `json:",inline"`
 
 	// Optional highlights that the input artifact is optional.
@@ -250,9 +266,9 @@ type RenderingIterationStatus struct {
 // InputArtifactsToProvide describes input artifact that may be provided in a given rendering iteration.
 type InputArtifactToProvide struct {
 
-	// Alias refers to input artifact name used in rendered Action.
+	// Name refers to input artifact name used in rendered Action.
 	// +kubebuilder:validation:MinLength=1
-	Alias string `json:"alias"`
+	Name string `json:"name"`
 
 	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
 	TypePath NodePath `json:"typePath"`

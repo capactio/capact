@@ -14,11 +14,10 @@ import (
 
 func TestMiddleware_Handle(t *testing.T) {
 	// given
-	headerName := "sample"
 	customNS := "foo"
 
 	reqWithCustomNS := sampleRequest()
-	reqWithCustomNS.Header.Set(headerName, customNS)
+	reqWithCustomNS.Header.Set(namespace.NamespaceHeaderName, customNS)
 
 	tests := []struct {
 		name              string
@@ -37,7 +36,7 @@ func TestMiddleware_Handle(t *testing.T) {
 	//nolint:scopelint
 	for _, testCase := range tests {
 		t.Run(testCase.name, func(t *testing.T) {
-			middleware := namespace.NewMiddleware(headerName)
+			middleware := namespace.NewMiddleware()
 
 			handler := setupHandler(middleware.Handle, testCase.expectedNamespace)
 
@@ -60,7 +59,7 @@ func setupHandler(middleware mux.MiddlewareFunc, expectedValue string) http.Hand
 	router := mux.NewRouter()
 	router.Use(middleware)
 	router.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		actualValue, err := namespace.ReadFromContext(req.Context())
+		actualValue, err := namespace.FromContext(req.Context())
 
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)

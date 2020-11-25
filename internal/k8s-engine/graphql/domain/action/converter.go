@@ -20,7 +20,7 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, name, namespace string) model.ActionToCreateOrUpdate {
+func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace string) model.ActionToCreateOrUpdate {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
 		advancedRendering = &v1alpha1.AdvancedRendering{
@@ -35,16 +35,16 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, name, namesp
 		}
 	}
 
-	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, name, namespace)
+	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, in.Name, namespace)
 	var inputParamsSecretName *string
 	if inputParamsSecret != nil {
-		inputParamsSecretName = &name
+		inputParamsSecretName = &in.Name
 	}
 
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
+				Name:      in.Name,
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.ActionSpec{
@@ -103,7 +103,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 	}
 
 	return graphql.Action{
-		ID:             in.Name,
+		Name:           in.Name,
 		CreatedAt:      graphql.Timestamp(in.CreationTimestamp.Time),
 		Input:          actionInput,
 		Output:         actionOutput,

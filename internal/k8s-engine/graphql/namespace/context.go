@@ -9,15 +9,15 @@ import (
 type contextKey struct{}
 
 var ErrMissingNamespaceInContext = errors.New("cannot read namespace from context")
-var ErrEmptyContext = errors.New("context is empty")
+var ErrNilContext = errors.New("context is nil")
 
-func SaveToContext(ctx context.Context, namespace string) context.Context {
+func NewContext(ctx context.Context, namespace string) context.Context {
 	return context.WithValue(ctx, contextKey{}, namespace)
 }
 
-func ReadFromContext(ctx context.Context) (string, error) {
+func FromContext(ctx context.Context) (string, error) {
 	if ctx == nil {
-		return "", ErrEmptyContext
+		return "", ErrNilContext
 	}
 
 	value := ctx.Value(contextKey{})

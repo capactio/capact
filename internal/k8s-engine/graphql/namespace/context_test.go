@@ -12,11 +12,11 @@ import (
 func TestSaveAndReadFromContext_HappyPath(t *testing.T) {
 	// given
 	ns := "namespace"
-	ctx := context.TODO()
+	ctx := context.Background()
 
 	// when
-	ctxWithNS := namespace.SaveToContext(ctx, ns)
-	readNs, err := namespace.ReadFromContext(ctxWithNS)
+	ctxWithNS := namespace.NewContext(ctx, ns)
+	readNs, err := namespace.FromContext(ctxWithNS)
 
 	// then
 	require.NoError(t, err)

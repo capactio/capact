@@ -101,7 +101,9 @@ spec:
                       properties:
                         name:
                           description: Name refers to input artifact name used in
-                            rendered Action.
+                            rendered Action. Name is not unique as there may be multiple
+                            artifacts with the same name on different levels of Action
+                            workflow.
                           type: string
                         typeInstanceID:
                           description: TypeInstanceID is a unique identifier for the

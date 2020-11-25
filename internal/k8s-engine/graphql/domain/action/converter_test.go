@@ -11,13 +11,13 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
 	name := "foo"
 	namespace := "bar"
-	gqlInput := fixGQLInput()
+	gqlInput := fixGQLInput(name)
 	expectedModel := fixModel(name, namespace)
 
 	c := action.NewConverter()
 
 	// when
-	actualModel := c.FromGraphQLInput(gqlInput, name, namespace)
+	actualModel := c.FromGraphQLInput(gqlInput, namespace)
 
 	// then
 	assert.Equal(t, expectedModel, actualModel)

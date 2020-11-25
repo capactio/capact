@@ -9,7 +9,6 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
-	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.6.1
 	github.com/nautilus/gateway v0.1.9
 	github.com/nautilus/graphql v0.0.12

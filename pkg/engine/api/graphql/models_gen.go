@@ -10,7 +10,7 @@ import (
 
 // Action describes user intention to resolve & execute a given Interface or Implementation.
 type Action struct {
-	ID        string        `json:"id"`
+	Name      string        `json:"name"`
 	CreatedAt Timestamp     `json:"createdAt"`
 	Input     *ActionInput  `json:"input"`
 	Output    *ActionOutput `json:"output"`
@@ -28,6 +28,7 @@ type Action struct {
 
 // Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 type ActionDetailsInput struct {
+	Name                   string           `json:"name"`
 	Input                  *ActionInputData `json:"input"`
 	Action                 string           `json:"action"`
 	AdvancedRendering      *bool            `json:"advancedRendering"`

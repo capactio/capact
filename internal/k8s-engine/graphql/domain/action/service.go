@@ -32,7 +32,7 @@ func NewService(log *zap.Logger, actionCli client.Client) *Service {
 }
 
 func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) error {
-	log := s.log.With(zap.Any("ActionToCreate", item))
+	log := s.logWithNameAndNs(item.Action.Name, item.Action.Namespace)
 
 	log.Info("Creating Action")
 	err := s.k8sCli.Create(ctx, &item.Action)
@@ -54,9 +54,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 			},
 		})
 
-		log.Info("Creating Secret",
-			zap.Any("secret", secret),
-		)
+		log.Info("Creating Secret with params")
 		err = s.k8sCli.Create(ctx, secret)
 		if err != nil {
 			errContext := "while creating Secret for input parameters"
@@ -69,7 +67,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 }
 
 func (s *Service) updateAction(ctx context.Context, item v1alpha1.Action) error {
-	log := s.log.With(zap.Any("Action", item))
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
 	log.Info("Updating Action")
 
 	err := s.k8sCli.Update(ctx, &item)
@@ -88,29 +86,28 @@ func (s *Service) FindByName(ctx context.Context, name string) (v1alpha1.Action,
 		return v1alpha1.Action{}, err
 	}
 
-	log := s.log.With(zap.Any("objectKey", objKey))
+	log := s.logWithNameAndNs(objKey.Name, objKey.Namespace)
 	log.Info("Finding Action by name")
 
 	var item v1alpha1.Action
 	err = s.k8sCli.Get(ctx, objKey, &item)
 	if err != nil {
 		errContext := "while getting item"
-		errToReturn := err
-		if apierrors.IsNotFound(err) {
-			errToReturn = ErrActionNotFound
-			log.Info("Item not found")
-		} else {
-			log.Error(errContext, zap.Error(errToReturn))
+		switch {
+		case apierrors.IsNotFound(err):
+			log.Debug(errContext, zap.Error(ErrActionNotFound))
+			return v1alpha1.Action{}, errors.Wrap(ErrActionNotFound, errContext)
+		default:
+			log.Error(errContext, zap.Error(err))
+			return v1alpha1.Action{}, errors.Wrap(ErrActionNotFound, errContext)
 		}
-
-		return v1alpha1.Action{}, errors.Wrap(errToReturn, errContext)
 	}
 
 	return item, nil
 }
 
 func (s *Service) List(ctx context.Context) ([]v1alpha1.Action, error) {
-	ns, err := namespace.ReadFromContext(ctx)
+	ns, err := namespace.FromContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while reading namespace from context")
 	}
@@ -137,7 +134,7 @@ func (s *Service) DeleteByName(ctx context.Context, name string) error {
 		return err
 	}
 
-	log := s.log.With(zap.Any("Action", item))
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
 	log.Info("Deleting Action by name")
 
 	err = s.k8sCli.Delete(ctx, &item)
@@ -156,9 +153,14 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 		return err
 	}
 
-	log := s.log.With(zap.Any("action", item))
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
 
-	if item.Spec.Run != nil && *item.Spec.Run {
+	if item.Spec.IsCancelled() {
+		log.Info("Action already cancelled, so it cannot be run")
+		return ErrActionCancelledNotRunnable
+	}
+
+	if item.Spec.IsRun() {
 		log.Info("Action already run")
 		return nil
 	}
@@ -175,21 +177,28 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 		return err
 	}
 
-	log := s.log.With(zap.Any("action", item))
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
 
-	if item.Spec.Cancel != nil && *item.Spec.Cancel {
+	// TODO: Validate it using validation webhook
+	if item.Spec.IsRun() {
+		log.Info("Action not run, so it cannot be cancelled")
+		return ErrActionNotCancellable
+	}
+
+	if item.Spec.IsCancelled() {
 		log.Info("Action already cancelled")
 		return nil
 	}
 
 	item.Spec.Cancel = ptr.Bool(true)
+	item.Spec.Run = ptr.Bool(false)
 
 	err = s.updateAction(ctx, item)
 	return err
 }
 
 func (s *Service) objectKey(ctx context.Context, name string) (client.ObjectKey, error) {
-	ns, err := namespace.ReadFromContext(ctx)
+	ns, err := namespace.FromContext(ctx)
 	if err != nil {
 		return client.ObjectKey{}, errors.Wrap(err, "while reading namespace from context")
 	}
@@ -198,4 +207,8 @@ func (s *Service) objectKey(ctx context.Context, name string) (client.ObjectKey,
 		Namespace: ns,
 		Name:      name,
 	}, nil
+}
+
+func (s *Service) logWithNameAndNs(name, namespace string) *zap.Logger {
+	return s.log.With(zap.String("name", name), zap.String("namespace", namespace))
 }

@@ -2,22 +2,18 @@ package controller
 
 import (
 	"context"
-	"time"
-
-	authv1 "k8s.io/api/authentication/v1"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"projectvoltron.dev/voltron/internal/ptr"
 
 	"github.com/go-logr/logr"
+	authv1 "k8s.io/api/authentication/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"projectvoltron.dev/voltron/internal/ptr"
+	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-
-	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 // ActionReconciler reconciles a Action object.
@@ -65,6 +61,17 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, err
 	}
 
+	r.setSampleStatus(&action)
+	err := r.Status().Update(ctx, &action)
+	if err != nil {
+		log.Error(err, "while updating Action CR status")
+		return ctrl.Result{}, err
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *ActionReconciler) setSampleStatus(action *corev1alpha1.Action) {
 	action.Status = corev1alpha1.ActionStatus{
 		Phase:   corev1alpha1.SucceededActionPhase,
 		Message: ptr.String("Foo"),
@@ -128,16 +135,8 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			UID:      "14354227-9afe-45c8-8808-765b6a7fcb2b",
 			Groups:   []string{"bar", "baz"},
 		},
-		LastTransitionTime: metav1.NewTime(time.Now()),
+		LastTransitionTime: metav1.Now(),
 	}
-
-	err := r.Status().Update(ctx, &action)
-	if err != nil {
-		log.Error(err, "while updating Action CR status")
-		return ctrl.Result{}, err
-	}
-
-	return ctrl.Result{}, nil
 }
 
 func (r *ActionReconciler) dummyJob(action corev1alpha1.Action) batchv1.Job {

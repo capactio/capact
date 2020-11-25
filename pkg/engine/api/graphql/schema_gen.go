@@ -45,8 +45,8 @@ type ComplexityRoot struct {
 	Action struct {
 		Cancel                 func(childComplexity int) int
 		CreatedAt              func(childComplexity int) int
-		ID                     func(childComplexity int) int
 		Input                  func(childComplexity int) int
+		Name                   func(childComplexity int) int
 		Output                 func(childComplexity int) int
 		Path                   func(childComplexity int) int
 		RenderedAction         func(childComplexity int) int
@@ -88,12 +88,12 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CancelAction              func(childComplexity int, id string) int
-		ContinueAdvancedRendering func(childComplexity int, actionID string, in AdvancedModeContinueRenderingInput) int
+		CancelAction              func(childComplexity int, name string) int
+		ContinueAdvancedRendering func(childComplexity int, actionName string, in AdvancedModeContinueRenderingInput) int
 		CreateAction              func(childComplexity int, in *ActionDetailsInput) int
-		DeleteAction              func(childComplexity int, id string) int
-		RunAction                 func(childComplexity int, id string) int
-		UpdateAction              func(childComplexity int, id string, in *ActionDetailsInput) int
+		DeleteAction              func(childComplexity int, name string) int
+		RunAction                 func(childComplexity int, name string) int
+		UpdateAction              func(childComplexity int, in ActionDetailsInput) int
 	}
 
 	OutputArtifact struct {
@@ -103,7 +103,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Action  func(childComplexity int, id string) int
+		Action  func(childComplexity int, name string) int
 		Actions func(childComplexity int, filter []*ActionFilter) int
 	}
 
@@ -121,14 +121,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	CreateAction(ctx context.Context, in *ActionDetailsInput) (*Action, error)
-	RunAction(ctx context.Context, id string) (*Action, error)
-	CancelAction(ctx context.Context, id string) (*Action, error)
-	UpdateAction(ctx context.Context, id string, in *ActionDetailsInput) (*Action, error)
-	ContinueAdvancedRendering(ctx context.Context, actionID string, in AdvancedModeContinueRenderingInput) (*Action, error)
-	DeleteAction(ctx context.Context, id string) (*Action, error)
+	RunAction(ctx context.Context, name string) (*Action, error)
+	CancelAction(ctx context.Context, name string) (*Action, error)
+	UpdateAction(ctx context.Context, in ActionDetailsInput) (*Action, error)
+	ContinueAdvancedRendering(ctx context.Context, actionName string, in AdvancedModeContinueRenderingInput) (*Action, error)
+	DeleteAction(ctx context.Context, name string) (*Action, error)
 }
 type QueryResolver interface {
-	Action(ctx context.Context, id string) (*Action, error)
+	Action(ctx context.Context, name string) (*Action, error)
 	Actions(ctx context.Context, filter []*ActionFilter) ([]*Action, error)
 }
 
@@ -161,19 +161,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Action.CreatedAt(childComplexity), true
 
-	case "Action.id":
-		if e.complexity.Action.ID == nil {
-			break
-		}
-
-		return e.complexity.Action.ID(childComplexity), true
-
 	case "Action.input":
 		if e.complexity.Action.Input == nil {
 			break
 		}
 
 		return e.complexity.Action.Input(childComplexity), true
+
+	case "Action.name":
+		if e.complexity.Action.Name == nil {
+			break
+		}
+
+		return e.complexity.Action.Name(childComplexity), true
 
 	case "Action.output":
 		if e.complexity.Action.Output == nil {
@@ -346,7 +346,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CancelAction(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.CancelAction(childComplexity, args["name"].(string)), true
 
 	case "Mutation.continueAdvancedRendering":
 		if e.complexity.Mutation.ContinueAdvancedRendering == nil {
@@ -358,7 +358,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.ContinueAdvancedRendering(childComplexity, args["actionID"].(string), args["in"].(AdvancedModeContinueRenderingInput)), true
+		return e.complexity.Mutation.ContinueAdvancedRendering(childComplexity, args["actionName"].(string), args["in"].(AdvancedModeContinueRenderingInput)), true
 
 	case "Mutation.createAction":
 		if e.complexity.Mutation.CreateAction == nil {
@@ -382,7 +382,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.DeleteAction(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.DeleteAction(childComplexity, args["name"].(string)), true
 
 	case "Mutation.runAction":
 		if e.complexity.Mutation.RunAction == nil {
@@ -394,7 +394,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.RunAction(childComplexity, args["id"].(string)), true
+		return e.complexity.Mutation.RunAction(childComplexity, args["name"].(string)), true
 
 	case "Mutation.updateAction":
 		if e.complexity.Mutation.UpdateAction == nil {
@@ -406,7 +406,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateAction(childComplexity, args["id"].(string), args["in"].(*ActionDetailsInput)), true
+		return e.complexity.Mutation.UpdateAction(childComplexity, args["in"].(ActionDetailsInput)), true
 
 	case "OutputArtifact.name":
 		if e.complexity.OutputArtifact.Name == nil {
@@ -439,7 +439,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Action(childComplexity, args["id"].(string)), true
+		return e.complexity.Query.Action(childComplexity, args["name"].(string)), true
 
 	case "Query.actions":
 		if e.complexity.Query.Actions == nil {
@@ -576,6 +576,7 @@ scalar NodePath
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
 input ActionDetailsInput {
+    name: String!
     input: ActionInputData
     action: String! # full path for the Implementation or Interface
     advancedRendering: Boolean = false # Enables advance rendering mode of Action
@@ -602,7 +603,7 @@ input InputArtifactData {
 Action describes user intention to resolve & execute a given Interface or Implementation.
 """
 type Action {
-    id: ID!
+    name: String!
     createdAt: Timestamp!
 
     input: ActionInput
@@ -733,17 +734,17 @@ enum ActionStatusCondition {
 }
 
 type Query {
-    action(id: ID!): Action
+    action(name: String!): Action
     actions(filter: [ActionFilter!]): [Action!]!
 }
 
 type Mutation {
     createAction(in: ActionDetailsInput): Action!
-    runAction(id: ID!): Action!
-    cancelAction(id: ID!): Action!
-    updateAction(id: ID!, in: ActionDetailsInput): Action!
-    continueAdvancedRendering(actionID: ID!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
-    deleteAction(id: ID!): Action!
+    runAction(name: String!): Action!
+    cancelAction(name: String!): Action!
+    updateAction(in: ActionDetailsInput!): Action!
+    continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
+    deleteAction(name: String!): Action!
 }
 
 # TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58
@@ -759,14 +760,14 @@ func (ec *executionContext) field_Mutation_cancelAction_args(ctx context.Context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["name"] = arg0
 	return args, nil
 }
 
@@ -774,14 +775,14 @@ func (ec *executionContext) field_Mutation_continueAdvancedRendering_args(ctx co
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["actionID"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionID"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["actionName"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionName"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["actionID"] = arg0
+	args["actionName"] = arg0
 	var arg1 AdvancedModeContinueRenderingInput
 	if tmp, ok := rawArgs["in"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("in"))
@@ -813,14 +814,14 @@ func (ec *executionContext) field_Mutation_deleteAction_args(ctx context.Context
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["name"] = arg0
 	return args, nil
 }
 
@@ -828,38 +829,29 @@ func (ec *executionContext) field_Mutation_runAction_args(ctx context.Context, r
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["name"] = arg0
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_updateAction_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg0
-	var arg1 *ActionDetailsInput
+	var arg0 ActionDetailsInput
 	if tmp, ok := rawArgs["in"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("in"))
-		arg1, err = ec.unmarshalOActionDetailsInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionDetailsInput(ctx, tmp)
+		arg0, err = ec.unmarshalNActionDetailsInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionDetailsInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["in"] = arg1
+	args["in"] = arg0
 	return args, nil
 }
 
@@ -882,14 +874,14 @@ func (ec *executionContext) field_Query_action_args(ctx context.Context, rawArgs
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["id"] = arg0
+	args["name"] = arg0
 	return args, nil
 }
 
@@ -946,7 +938,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _Action_id(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
+func (ec *executionContext) _Action_name(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -964,7 +956,7 @@ func (ec *executionContext) _Action_id(ctx context.Context, field graphql.Collec
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
+		return obj.Name, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -978,7 +970,7 @@ func (ec *executionContext) _Action_id(ctx context.Context, field graphql.Collec
 	}
 	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Action_createdAt(ctx context.Context, field graphql.CollectedField, obj *Action) (ret graphql.Marshaler) {
@@ -1922,7 +1914,7 @@ func (ec *executionContext) _Mutation_runAction(ctx context.Context, field graph
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().RunAction(rctx, args["id"].(string))
+		return ec.resolvers.Mutation().RunAction(rctx, args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1964,7 +1956,7 @@ func (ec *executionContext) _Mutation_cancelAction(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CancelAction(rctx, args["id"].(string))
+		return ec.resolvers.Mutation().CancelAction(rctx, args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2006,7 +1998,7 @@ func (ec *executionContext) _Mutation_updateAction(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateAction(rctx, args["id"].(string), args["in"].(*ActionDetailsInput))
+		return ec.resolvers.Mutation().UpdateAction(rctx, args["in"].(ActionDetailsInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2048,7 +2040,7 @@ func (ec *executionContext) _Mutation_continueAdvancedRendering(ctx context.Cont
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().ContinueAdvancedRendering(rctx, args["actionID"].(string), args["in"].(AdvancedModeContinueRenderingInput))
+		return ec.resolvers.Mutation().ContinueAdvancedRendering(rctx, args["actionName"].(string), args["in"].(AdvancedModeContinueRenderingInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2090,7 +2082,7 @@ func (ec *executionContext) _Mutation_deleteAction(ctx context.Context, field gr
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteAction(rctx, args["id"].(string))
+		return ec.resolvers.Mutation().DeleteAction(rctx, args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2237,7 +2229,7 @@ func (ec *executionContext) _Query_action(ctx context.Context, field graphql.Col
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Action(rctx, args["id"].(string))
+		return ec.resolvers.Query().Action(rctx, args["name"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3626,6 +3618,14 @@ func (ec *executionContext) unmarshalInputActionDetailsInput(ctx context.Context
 
 	for k, v := range asMap {
 		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "input":
 			var err error
 
@@ -3779,8 +3779,8 @@ func (ec *executionContext) _Action(ctx context.Context, sel ast.SelectionSet, o
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Action")
-		case "id":
-			out.Values[i] = ec._Action_id(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._Action_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4504,6 +4504,11 @@ func (ec *executionContext) marshalNAction2ᚖprojectvoltronᚗdevᚋvoltronᚋp
 		return graphql.Null
 	}
 	return ec._Action(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNActionDetailsInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionDetailsInput(ctx context.Context, v interface{}) (ActionDetailsInput, error) {
+	res, err := ec.unmarshalInputActionDetailsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNActionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilter(ctx context.Context, v interface{}) (*ActionFilter, error) {

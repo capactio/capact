@@ -2,14 +2,17 @@ package namespace
 
 import "net/http"
 
-const DefaultNamespace = "default"
+const (
+	NamespaceHeaderName = "NAMESPACE"
+	DefaultNamespace    = "default"
+)
 
 type Middleware struct {
 	headerName string
 }
 
-func NewMiddleware(headerName string) *Middleware {
-	return &Middleware{headerName: headerName}
+func NewMiddleware() *Middleware {
+	return &Middleware{headerName: NamespaceHeaderName}
 }
 
 // Handle reads namespace from header and passes it to next handlers in request context.
@@ -21,7 +24,7 @@ func (m *Middleware) Handle(next http.Handler) http.Handler {
 				ns = DefaultNamespace
 			}
 
-			ctx := SaveToContext(r.Context(), ns)
+			ctx := NewContext(r.Context(), ns)
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		},

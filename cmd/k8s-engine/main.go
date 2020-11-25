@@ -30,7 +30,9 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
-const NamespaceHeaderName = "NAMESPACE"
+const (
+	GraphQLServerName = "engine-graphql"
+)
 
 // Config holds application related configuration
 type Config struct {
@@ -90,13 +92,12 @@ func main() {
 	k8sCli, err := client.New(k8sCfg, client.Options{Scheme: scheme})
 	exitOnError(err, "while creating K8s client")
 
-	gqlSrvName := "engine-graphql"
-	gqlLogger := logger.Named(gqlSrvName)
+	gqlLogger := logger.Named(GraphQLServerName)
 
 	execSchema := graphql.NewExecutableSchema(graphql.Config{
 		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
 	})
-	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, gqlSrvName)
+	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, GraphQLServerName)
 	err = mgr.Add(gqlSrv)
 	exitOnError(err, "while adding GraphQL server")
 
@@ -107,7 +108,7 @@ func main() {
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {
-	nsMiddleware := namespace.NewMiddleware(NamespaceHeaderName)
+	nsMiddleware := namespace.NewMiddleware()
 
 	gqlRouter := graphqlutil.NewGraphQLRouter(execSchema, name)
 	gqlRouter.Use(nsMiddleware.Handle)
