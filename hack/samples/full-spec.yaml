@@ -4,18 +4,6 @@ metadata:
   name: "full-spec"
 spec:
   path: "cap.interface.database.postgresql.install"
-  input:
-    parameters:
-      secretRef:
-        name: "full-spec-params"
-    artifacts:
-      - name: foo
-        typeInstanceID: fee33a5e-d957-488a-86bd-5dacd4120312
-      - name: bar
-        typeInstanceID: 563a79eb-7417-4e11-aa4b-d93076c04e48
   advancedRendering:
-    enabled: true
-    renderingIteration:
-      continue: true
+    enabled: false
   run: false
-  cancel: false

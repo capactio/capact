@@ -1,0 +1,57 @@
+package statusreporter
+
+import (
+	"context"
+	"encoding/json"
+
+	"github.com/pkg/errors"
+	v1 "k8s.io/api/core/v1"
+	"projectvoltron.dev/voltron/pkg/runner"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const SecretStatusEntryKey = "status"
+
+var _ runner.StatusReporter = &K8sSecretReporter{}
+
+// K8sSecretReporter provides functionality to report status from Action Runner in a way that K8s Engine can
+// consume it later.
+type K8sSecretReporter struct {
+	cli client.Client
+}
+
+// NewK8sSecret returns new K8sSecretReporter instance.
+func NewK8sSecret(cli client.Client) *K8sSecretReporter {
+	return &K8sSecretReporter{
+		cli: cli,
+	}
+}
+
+// Report a given status to K8s Secret, so K8s engine can consume it later.
+func (c *K8sSecretReporter) Report(ctx context.Context, execCtx runner.ExecutionContext, status interface{}) error {
+	cm := &v1.Secret{}
+	key := client.ObjectKey{
+		Name:      execCtx.Name,
+		Namespace: execCtx.Platform.Namespace,
+	}
+
+	if err := c.cli.Get(ctx, key, cm); err != nil {
+		return errors.Wrap(err, "while getting Secret")
+	}
+
+	if cm.Data == nil {
+		cm.Data = map[string][]byte{}
+	}
+
+	jsonStatus, err := json.Marshal(status)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling status")
+	}
+	cm.Data[SecretStatusEntryKey] = jsonStatus
+
+	if err := c.cli.Update(ctx, cm); err != nil {
+		return errors.Wrap(err, "while updating Secret")
+	}
+
+	return nil
+}

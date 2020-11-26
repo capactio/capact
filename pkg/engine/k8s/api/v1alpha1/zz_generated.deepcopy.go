@@ -144,6 +144,11 @@ func (in *ActionSpec) DeepCopyInto(out *ActionSpec) {
 		*out = new(bool)
 		**out = **in
 	}
+	if in.DryRun != nil {
+		in, out := &in.DryRun, &out.DryRun
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Cancel != nil {
 		in, out := &in.Cancel, &out.Cancel
 		*out = new(bool)

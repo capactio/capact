@@ -93,8 +93,9 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
+	actionSvc := controller.NewActionService(mgr.GetClient(), time.Minute)
 
-	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), ochClient)
+	actionCtrl := controller.NewActionReconciler(ctrl.Log, mgr.GetClient(), mgr.GetEventRecorderFor("action-controller"), ochClient, actionSvc)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 

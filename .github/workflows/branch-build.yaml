@@ -194,6 +194,7 @@ jobs:
           gcloud config set project ${PROJECT_ID}
           gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}        
       - name: Network enable
+        id: network-enable
         run: | 
           ./hack/ci/add-job-ip.sh
       - name: Upgrade components

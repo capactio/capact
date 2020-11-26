@@ -7,3 +7,7 @@ func String(in string) *string {
 func Bool(in bool) *bool {
 	return &in
 }
+
+func Int32(in int32) *int32 {
+	return &in
+}

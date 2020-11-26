@@ -4,16 +4,19 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/go-logr/logr"
-	"github.com/pkg/errors"
-	authv1 "k8s.io/api/authentication/v1"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"projectvoltron.dev/voltron/internal/ptr"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+
+	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -22,7 +25,9 @@ import (
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
-	Log        logr.Logger
+	log        logr.Logger
+	svc        *ActionService // TODO interface
+	recorder   record.EventRecorder
 	implGetter OCHImplementationGetter
 }
 
@@ -31,54 +36,67 @@ type OCHImplementationGetter interface {
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger, implementationGetter OCHImplementationGetter) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log, implGetter: implementationGetter}
+func NewActionReconciler(log logr.Logger, client client.Client, recorder record.EventRecorder, implementationGetter OCHImplementationGetter, svc *ActionService) *ActionReconciler {
+	return &ActionReconciler{
+		Client:     client,
+		log:        log.WithName("controllers").WithName("Action"),
+		svc:        svc,
+		recorder:   recorder,
+		implGetter: implementationGetter,
+	}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=create
-// +kubebuilder:rbac:groups="",resources=secrets,verbs=create
+// +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create
+// +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile handles the reconcile logic for the Action CR.
+// TODO: introduce and ignore permanent error in reconcile loop
 func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	var (
 		ctx = context.Background()
-		log = r.Log.WithValues("action", req.NamespacedName)
+		log = r.log.WithValues("action", req.NamespacedName)
 	)
 
 	// Just a simple logic to check if controller is working e2e
 	// TODO: replace in https://cshark.atlassian.net/browse/SV-34
 
-	var action corev1alpha1.Action
-	if err := r.Get(ctx, req.NamespacedName, &action); err != nil {
+	action := &v1alpha1.Action{}
+	if err := r.Get(ctx, req.NamespacedName, action); err != nil {
+		if apierrors.IsNotFound(err) {
+			return ctrl.Result{}, nil
+		}
 		log.Error(err, "while fetching Action CR")
-		// we'll ignore not-found errors, since they can't be fixed by an immediate
-		// requeue (we'll need to wait for a new notification), and we can get them
-		// on deleted requests.
-		return ctrl.Result{}, client.IgnoreNotFound(err)
-	}
-
-	// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
-	if action.Status.Phase == "" || action.Status.Phase == corev1alpha1.InitialActionPhase {
-		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), &action)
 		return ctrl.Result{}, err
 	}
 
-	if action.Status.Phase == corev1alpha1.ReadyToRunActionPhase {
-		job := r.dummyJob(action)
-		if err := r.Create(ctx, &job); err != nil {
-			log.Error(err, "while creating dummy Job")
+	// TODO: add finalizer and handle deletion properly (cancel running actions, remove ArgoWorkflows)
+
+	// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
+	if action.Status.Phase == "" || action.Status.Phase == corev1alpha1.InitialActionPhase {
+		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), action)
+		return ctrl.Result{}, err
+	}
+
+	if action.ShouldBeExecuted() {
+		log.Info("Execute runner")
+		if err := r.executeAction(ctx, action); err != nil {
+			r.recorder.Event(action, corev1.EventTypeWarning, "Execute runner", err.Error())
+			log.Error(err, "while executing runner")
 			return ctrl.Result{}, err
 		}
+		return ctrl.Result{}, nil
+	}
 
-		r.setSampleStatus(&action)
-		err := r.Status().Update(ctx, &action)
-		if err != nil {
-			log.Error(err, "while updating Action CR status")
+	if action.IsExecuted() {
+		log.Info("Check runner status")
+		if err := r.handleRunningAction(ctx, action); err != nil {
+			r.recorder.Event(action, corev1.EventTypeWarning, "Check runner status", err.Error())
+			log.Error(err, "while checking runner status")
 			return ctrl.Result{}, err
 		}
-
 		return ctrl.Result{}, nil
 	}
 
@@ -130,102 +148,89 @@ func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, ac
 	return nil
 }
 
-func (r *ActionReconciler) setSampleStatus(action *corev1alpha1.Action) {
-	action.Status = corev1alpha1.ActionStatus{
-		Phase:   corev1alpha1.SucceededActionPhase,
-		Message: ptr.String("Foo"),
-		Runner: &corev1alpha1.RunnerStatus{
-			Interface: "cap.interface.runner.argo.run",
-			Status: &runtime.RawExtension{
-				Raw: []byte(`{"argoWorkflowRef": "sample"}`),
-			},
-		},
-		Output: &corev1alpha1.ActionOutput{
-			Artifacts: &[]corev1alpha1.OutputArtifactDetails{
-				{
-					CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
-						Name:           "bar",
-						TypeInstanceID: "b02bdc8e-9e5d-4ee0-a350-4ccc23b363fb",
-						TypePath:       "cap.type.database.postgresql.config",
-					},
-				},
-			},
-		},
-		Rendering: &corev1alpha1.RenderingStatus{
-			Action: &runtime.RawExtension{
-				Raw: []byte(`{"workflow": true}`),
-			},
-			Input: &corev1alpha1.ResolvedActionInput{
-				Artifacts: &[]corev1alpha1.InputArtifactDetails{
-					{
-						CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
-							Name:           "foo",
-							TypeInstanceID: "fee33a5e-d957-488a-86bd-5dacd4120312",
-							TypePath:       "cap.core.type.foo.bar",
-						},
-						Optional: false,
-					},
-					{
-						CommonArtifactDetails: corev1alpha1.CommonArtifactDetails{
-							Name:           "bar",
-							TypeInstanceID: "563a79eb-7417-4e11-aa4b-d93076c04e48",
-							TypePath:       "cap.core.type.bar.baz",
-						},
-						Optional: true,
-					},
-				},
-				Parameters: &runtime.RawExtension{
-					Raw: []byte(`{"input1": "foo", "input2": 2, "input3": { "nested": true }}`),
-				},
-			},
-		},
-		CreatedBy: &authv1.UserInfo{
-			Username: "foo",
-			UID:      "73d3c628-864e-45e3-8927-b9b71e17c110",
-			Groups:   []string{"bar", "baz"},
-		},
-		RunBy: &authv1.UserInfo{
-			Username: "bar",
-			UID:      "3935025e-1403-4bb5-99d8-3ce428acf527",
-			Groups:   []string{"bar", "baz"},
-		},
-		CancelledBy: &authv1.UserInfo{
-			Username: "bar",
-			UID:      "14354227-9afe-45c8-8808-765b6a7fcb2b",
-			Groups:   []string{"bar", "baz"},
-		},
-		LastTransitionTime: metav1.Now(),
+func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.Action) error {
+	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
+	if err != nil {
+		return errors.Wrap(err, "while creating runner service account")
 	}
+
+	if err := r.svc.EnsureRunnerInputDataCreated(ctx, sa.Name, action); err != nil {
+		return errors.Wrap(err, "while creating runner input")
+	}
+
+	if err := r.svc.EnsureRunnerExecuted(ctx, sa.Name, action); err != nil {
+		return errors.Wrap(err, "while executing runner")
+	}
+
+	action.Status = r.successStatus(action, v1alpha1.RunningActionPhase, "Kubernetes runner executed. Waiting for finish phase.")
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "while updating status of executed action")
+	}
+
+	return nil
 }
 
-func (r *ActionReconciler) dummyJob(action corev1alpha1.Action) batchv1.Job {
-	return batchv1.Job{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      action.Name,
-			Namespace: action.Namespace,
-		},
-		Spec: batchv1.JobSpec{
-			Template: corev1.PodTemplateSpec{
-				Spec: corev1.PodSpec{
-					RestartPolicy: corev1.RestartPolicyNever,
-					Containers: []corev1.Container{
-						{
-							Name:    "runner",
-							Image:   "alpine:latest",
-							Command: []string{"echo", "hakuna-matata"},
-						},
-					},
-				},
-			},
-		},
+func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1alpha1.Action) error {
+	// if changed update and return?
+	if err := r.svc.EnsureRunnerStatusIsUpToDate(ctx, action); err != nil {
+		return errors.Wrap(err, "while ensuring runner status is up to date")
 	}
+
+	out, err := r.svc.GetRunnerJobStatus(ctx, action)
+	if err != nil {
+		return errors.Wrap(err, "while getting runner job status")
+	}
+
+	if !out.Finished {
+		return nil
+	}
+
+	switch out.JobStatus {
+	case batchv1.JobComplete:
+		action.Status = r.successStatus(action, v1alpha1.SucceededActionPhase, "Runner finished successfully")
+	case batchv1.JobFailed:
+		action.Status = r.failStatus(action, v1alpha1.FailedActionPhase, "Runner finished unsuccessfully")
+	default:
+		action.Status = r.failStatus(action, v1alpha1.FailedActionPhase, "Unknown runner job status")
+	}
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "while updating status of executed action")
+	}
+
+	return nil
+}
+
+func (r *ActionReconciler) failStatus(action *v1alpha1.Action, phase v1alpha1.ActionPhase, msg string) v1alpha1.ActionStatus {
+	return r.setStatus(action, corev1.EventTypeWarning, phase, msg)
+}
+
+func (r *ActionReconciler) successStatus(action *v1alpha1.Action, phase v1alpha1.ActionPhase, msg string) v1alpha1.ActionStatus {
+	return r.setStatus(action, corev1.EventTypeNormal, phase, msg)
+}
+
+func (r *ActionReconciler) setStatus(action *v1alpha1.Action, eventType string, phase v1alpha1.ActionPhase, msg string) v1alpha1.ActionStatus {
+	r.recorder.Event(action, eventType, string(phase), msg)
+
+	statusCpy := action.Status.DeepCopy()
+	statusCpy.Phase = phase
+	statusCpy.Message = ptr.String(msg)
+	statusCpy.LastTransitionTime = metav1.Now()
+	statusCpy.ObservedGeneration = action.Generation
+
+	if statusCpy.Phase == action.Status.Phase {
+		statusCpy.LastTransitionTime = action.Status.LastTransitionTime
+	}
+
+	return *statusCpy
 }
 
 func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentReconciles int) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&corev1alpha1.Action{}).
+		For(&v1alpha1.Action{}).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
 		}).
+		Owns(&batchv1.Job{}).
+		Owns(&corev1.Secret{}).
 		Complete(r)
 }

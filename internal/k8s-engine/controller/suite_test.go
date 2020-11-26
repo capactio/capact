@@ -71,7 +71,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	err = (&ActionReconciler{
 		Client:     k8sManager.GetClient(),
-		Log:        ctrl.Log.WithName("controllers").WithName("Action"),
+		log:        ctrl.Log.WithName("controllers").WithName("Action"),
 		implGetter: &implGetterFake{},
 	}).SetupWithManager(k8sManager, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())

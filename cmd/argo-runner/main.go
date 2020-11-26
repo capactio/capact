@@ -30,7 +30,7 @@ func main() {
 	k8sCli, err := client.New(k8sCfg, client.Options{})
 	exitOnError(err, "while creating K8s client")
 
-	statusReporter := statusreporter.NewK8sConfigMap(k8sCli)
+	statusReporter := statusreporter.NewK8sSecret(k8sCli)
 
 	// create and run manager
 	mgr, err := runner.NewManager(argoRunner, statusReporter)
