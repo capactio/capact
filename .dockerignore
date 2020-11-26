@@ -8,3 +8,4 @@
 !/test
 !/go.mod
 !/go.sum
+!/hack/mock

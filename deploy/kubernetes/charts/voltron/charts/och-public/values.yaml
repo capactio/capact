@@ -53,3 +53,5 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+mockGraphQL: true

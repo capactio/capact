@@ -1,0 +1,178 @@
+[
+  {
+    "name": "install",
+    "prefix": "cap.implementation.attlasian.jira",
+    "path": "cap.implementation.attlasian.jira.install",
+    "revisions": [
+      {
+        "metadata": {
+          "description": "Action which installs Jira via Helm chart",
+          "displayName": "Install Jira",
+          "documentationURL": "https://github.com/javimox/helm-charts/tree/master/charts/jira-software",
+          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
+          "maintainers": [
+            {
+              "name": "Voltron Dev Team",
+              "email": "team-dev@projectvoltron.dev",
+              "url": "https://projectvoltron.dev"
+            }
+          ],
+          "name": "install",
+          "prefix": "cap.implementation.attlasian.jira",
+          "path": "cap.implementation.attlasian.jira.install",
+          "supportURL": " https://mox.sh/helm",
+          "tags": []
+        },
+        "revision": "0.1.0",
+        "spec": {
+          "action": {
+            "runnerInterface": "argo.run",
+            "args": {
+              "workflow": {
+                "entrypoint": "workflow",
+                "templates": [
+                  {
+                    "name": "workflow",
+                    "steps": [
+                      {
+                        "name": "install-jira",
+                        "template": "install-jira",
+                        "arguments": {
+                          "artifacts": {
+                            "name": "jira-helm-values",
+                            "from": "{{workflow.outputs.artifacts.jira-helm-values}}"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "appVersion": "8.x.x",
+          "implements": [
+            {
+              "path": "cap.interface.productivity.jira.install",
+              "revision": "0.1.0"
+            }
+          ],
+          "imports": [
+            {
+              "interfaceGroupPath": "cap.interface.runner.argo",
+              "alias": "argo",
+              "appVersion": "1.0",
+              "methods": [
+                {
+                  "name": "run",
+                  "revision": "0.1.0"
+                }
+              ]
+            },
+            {
+              "path": "cap.interface.runner.helm",
+              "alias": "helm",
+              "appVersion": "3.0",
+              "methods": [
+                {
+                  "name": "run",
+                  "revision": "0.1.0"
+                }
+              ]
+            }
+          ],
+          "requires": [
+            {
+              "prefix": "cap.core.type.platform",
+              "oneOf": [
+                {
+                  "typeRef": {
+                    "path": "cap.core.type.platform.kubernetes",
+                    "revision": "0.1.0"
+                  },
+                  "valueConstraints": {
+                    "version": ">=1.19.0"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "signature": {
+          "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+        }
+      }
+    ]
+  },
+  {
+    "name": "update",
+    "prefix": "cap.implementation.attlasian.jira",
+    "path": "cap.implementation.attlasian.jira.update",
+    "revisions": [
+      {
+        "metadata": {
+          "description": "Action which updates Jira via Helm chart",
+          "displayName": "Update Jira",
+          "documentationURL": "https://github.com/javimox/helm-charts/tree/master/charts/jira-software",
+          "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
+          "maintainers": [
+            {
+              "name": "Voltron Dev Team",
+              "email": "team-dev@projectvoltron.dev",
+              "url": "https://projectvoltron.dev"
+            }
+          ],
+          "name": "updated",
+          "prefix": "cap.implementation.attlasian.jira",
+          "path": "cap.implementation.attlasian.jira.update",
+          "supportURL": " https://mox.sh/helm",
+          "tags": []
+        },
+        "revision": "0.1.0",
+        "spec": {
+          "action": {
+            "runnerInterface": "argo.run",
+            "args": {
+              "workflow": {
+                "entrypoint": "workflow",
+                "templates": []
+              }
+            }
+          },
+          "appVersion": "8.x.x",
+          "implements": [
+            {
+              "path": "cap.interface.productivity.jira.update",
+              "revision": "0.1.0"
+            }
+          ],
+          "imports": [
+            {
+              "path": "cap.interface.productivity.jira.install",
+              "revision": "0.1.0"
+            }
+          ],
+          "requires": [
+            {
+              "prefix": "cap.core.type.platform",
+              "oneOf": [
+                {
+                  "typeRef": {
+                    "path": "cap.core.type.platform.kubernetes",
+                    "revision": "0.1.0"
+                  },
+                  "valueConstraints": {
+                    "version": ">=1.19.0"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "signature": {
+          "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+        }
+      }
+    ]
+  }
+]

@@ -24,6 +24,8 @@ type Config struct {
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
+	// MockGraphQL sets the grapql servers to use mocked data
+	MockGraphQL bool `envconfig:"default=false"`
 }
 
 func main() {
@@ -51,7 +53,7 @@ func main() {
 	// GraphQL server
 	gsvr := graphqlutil.NewHTTPServer(
 		logger,
-		och.GraphQLSchema(cfg.OCHMode),
+		och.GraphQLSchema(cfg.OCHMode, cfg.MockGraphQL),
 		cfg.GraphQLAddr,
 		cfg.OCHMode.String(),
 	)

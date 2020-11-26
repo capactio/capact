@@ -1,0 +1,71 @@
+[
+  {
+    "name": "baseline",
+    "prefix": "cap.core.tag.system",
+    "path": "cap.core.tag.system.baseline",
+    "revisions": [
+      {
+        "revision": "0.1.0",
+        "spec": {
+          "additionalRefs": [
+            "ref1"
+          ]
+        },
+        "metadata": {
+          "name": "baseline",
+          "path": "cap.core.tag.system.baseline",
+          "prefix": "cap.core.tag.system",
+          "description": "Indication that tagged item is an essential system capability.",
+          "displayName": "Baseline Capability",
+          "documentationURL": "https://projectvoltron.dev",
+          "supportURL": "https://projectvoltron.dev/contact",
+          "iconURL": "https://projectvoltron.dev/favicon.ico",
+          "maintainers": [
+            {
+              "name": "Voltron Dev Team",
+              "email": "team-dev@projectvoltron.dev",
+              "url": "https://projectvoltron.dev"
+            }
+          ]
+        },
+        "signature": {
+          "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+        }
+      }
+    ]
+  },
+  {
+    "name": "gcp",
+    "prefix": "cap.tag.cloud.provider",
+    "path": "cap.tag.cloud.provider.gcp",
+    "revisions": [
+      {
+        "revision": "0.1.0",
+        "spec": {
+          "additionalRefs": [
+            "ref1"
+          ]
+        },
+        "metadata": {
+          "name": "gcp",
+          "prefix": "cap.tag.cloud.provider",
+          "dsecription": "Specifies that a given manifest is related to GCP",
+          "displayName": "Google Cloud Platform Cloud Provider",
+          "documentationURL": "https://projectvoltron.dev",
+          "supportURL": "https://projectvoltron.dev/contact",
+          "iconURL": "https://projectvoltron.dev/favicon.ico",
+          "maintainers": [
+            {
+              "name": "Voltron Dev Team",
+              "email": "team-dev@projectvoltron.dev",
+              "url": "https://projectvoltron.dev"
+            }
+          ]
+        },
+        "signature": {
+          "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+        }
+      }
+    ]
+  }
+]

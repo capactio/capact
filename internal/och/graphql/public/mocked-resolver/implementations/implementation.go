@@ -2,8 +2,8 @@ package implementations
 
 import (
 	"context"
-	"fmt"
 
+	mockedresolver "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
@@ -22,25 +22,53 @@ func NewRevisionResolver() *ImplementationRevisionResolver {
 }
 
 func (i *ImplementationResolver) Implementations(ctx context.Context, filter *gqlpublicapi.ImplementationFilter) ([]*gqlpublicapi.Implementation, error) {
-	return []*gqlpublicapi.Implementation{dummyImplementation()}, nil
+	implementations, err := mockedresolver.MockedImplementations()
+	if err != nil {
+		return []*gqlpublicapi.Implementation{}, err
+	}
+	return implementations, nil
 }
 
 func (i ImplementationResolver) Implementation(ctx context.Context, path string) (*gqlpublicapi.Implementation, error) {
-	return dummyImplementation(), nil
+	implementations, err := mockedresolver.MockedImplementations()
+	if err != nil {
+		return nil, err
+	}
+	for _, i := range implementations {
+		if i.Path == path {
+			return i, nil
+		}
+	}
+	return nil, nil
 }
 
 func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi.Implementation, revision string) (*gqlpublicapi.ImplementationRevision, error) {
-	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
+	if obj == nil {
+		return nil, nil
+	}
+	for _, ir := range obj.Revisions {
+		if ir.Revision == revision {
+			return ir, nil
+		}
+	}
+	return nil, nil
 }
 
 func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
-	return []*gqlpublicapi.Interface{}, nil
-}
-
-func dummyImplementation() *gqlpublicapi.Implementation {
-	return &gqlpublicapi.Implementation{
-		Name:   "install",
-		Prefix: "cap.implementation.cms.wordpress",
-		Path:   "cap.implementation.cms.wordpress.install",
+	if obj == nil {
+		return []*gqlpublicapi.Interface{}, nil
 	}
+	ifaces, err := mockedresolver.MockedInterfaces()
+	if err != nil {
+		return []*gqlpublicapi.Interface{}, err
+	}
+	filtered := []*gqlpublicapi.Interface{}
+	for _, iface := range ifaces {
+		for _, impl := range obj.Spec.Implements {
+			if iface.Path == impl.Path {
+				filtered = append(filtered, iface)
+			}
+		}
+	}
+	return filtered, nil
 }

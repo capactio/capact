@@ -12,3 +12,37 @@ model:
 
 # Optional turns on binding to field names by tag provided
 struct_tag: json
+
+models:
+  Interface:
+    fields:
+      revision:
+        resolver: true
+  InterfaceGroup:
+    fields:
+      interfaces:
+        resolver: true
+  InterfaceRevision:
+    fields:
+      implementations:
+        resolver: true
+  Implementation:
+    fields:
+      revision:
+        resolver: true
+  ImplementationRevision:
+    fields:
+      interfaces:
+        resolver: true
+  Type:
+    fields:
+      revision:
+        resolver: true
+  Tag:
+    fields:
+      revision:
+        resolver: true
+  RepoMetadata:
+    fields:
+      revision:
+        resolver: true
