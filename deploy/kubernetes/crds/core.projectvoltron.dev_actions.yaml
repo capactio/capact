@@ -345,6 +345,7 @@ spec:
                         x-kubernetes-preserve-unknown-fields: true
                     type: object
                 type: object
+                x-kubernetes-preserve-unknown-fields: true
               runBy:
                 description: RunBy holds user data which run a given Action.
                 properties:

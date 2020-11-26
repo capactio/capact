@@ -35,7 +35,7 @@ function print_info() {
 function test::go_modules() {
   shout "? go mod tidy"
   go mod tidy
-  STATUS=$(git status --porcelain go.mod go.sum)
+  STATUS=$(git status --porcelain go.mod go.sum | grep -E '^ M' || true )
   if [ -n "$STATUS" ]; then
     echo -e "${RED}✗ go mod tidy modified go.mod and/or go.sum${NC}"
     exit 1

@@ -23,6 +23,7 @@ import (
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"projectvoltron.dev/voltron/pkg/gateway"
 )
 
 var (
@@ -51,6 +52,12 @@ type Config struct {
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
+
+	GraphQLGateway GraphQLGateway
+}
+
+type GraphQLGateway struct {
+	Endpoint string `envconfig:"default=http://graphql:t0p_s3cr3t@voltron-gateway/graphql"`
 }
 
 func main() {
@@ -80,7 +87,9 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"))
+	gatewayClient := gateway.NewClient(cfg.GraphQLGateway.Endpoint)
+
+	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), gatewayClient)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 

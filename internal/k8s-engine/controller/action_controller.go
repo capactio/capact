@@ -2,8 +2,10 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -14,17 +16,21 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+
+	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"projectvoltron.dev/voltron/pkg/gateway"
 )
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
-	Log logr.Logger
+	Log           logr.Logger
+	gatewayClient *gateway.Client
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log}
+func NewActionReconciler(client client.Client, log logr.Logger, gatewayClient *gateway.Client) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log, gatewayClient: gatewayClient}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
@@ -51,21 +57,50 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if action.Status.Phase != "" {
+	if action.Status.Phase == corev1alpha1.InitialActionPhase || action.Status.Phase == "" {
+		log.Info("rendering workflow")
+
+		implementation, err := r.gatewayClient.GetImplementation(ctx, string(action.Spec.Path))
+		if err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "cannot fetch implementation via gateway")
+		}
+
+		if implementation.LatestRevision == nil || implementation.LatestRevision.Spec == nil ||
+			implementation.LatestRevision.Spec.Action == nil {
+			return ctrl.Result{}, errors.Wrap(err, "missing workflow in fetched implementation")
+		}
+
+		actionBytes, err := json.Marshal(implementation.LatestRevision.Spec.Action.Args)
+		if err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "failed to marshal action to json")
+		}
+
+		action.Status.RenderedAction = &runtime.RawExtension{
+			Raw: actionBytes,
+		}
+		action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+
+		if err := r.Status().Update(ctx, &action); err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "failed to save updated action in k8s")
+		}
 		return ctrl.Result{}, nil
 	}
 
-	job := r.dummyJob(action)
-	if err := r.Create(ctx, &job); err != nil {
-		log.Error(err, "while creating dummy Job")
-		return ctrl.Result{}, err
-	}
+	if action.Status.Phase == corev1alpha1.ReadyToRunActionPhase {
+		job := r.dummyJob(action)
+		if err := r.Create(ctx, &job); err != nil {
+			log.Error(err, "while creating dummy Job")
+			return ctrl.Result{}, err
+		}
 
-	r.setSampleStatus(&action)
-	err := r.Status().Update(ctx, &action)
-	if err != nil {
-		log.Error(err, "while updating Action CR status")
-		return ctrl.Result{}, err
+		r.setSampleStatus(&action)
+		err := r.Status().Update(ctx, &action)
+		if err != nil {
+			log.Error(err, "while updating Action CR status")
+			return ctrl.Result{}, err
+		}
+
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil
