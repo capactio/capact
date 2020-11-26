@@ -13,24 +13,26 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"projectvoltron.dev/voltron/internal/ptr"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-
-	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/gateway"
 )
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
-	Log           logr.Logger
-	gatewayClient *gateway.Client
+	Log logr.Logger
+	gatewayInterface
+}
+
+type gatewayInterface interface {
+	GetImplementation(ctx context.Context, path string) (*ochgraphql.Implementation, error)
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger, gatewayClient *gateway.Client) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log, gatewayClient: gatewayClient}
+func NewActionReconciler(client client.Client, log logr.Logger, gatewayClient *GatewayClient) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log, gatewayInterface: gatewayClient}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
@@ -57,33 +59,9 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if action.Status.Phase == corev1alpha1.InitialActionPhase || action.Status.Phase == "" {
-		log.Info("rendering workflow")
-
-		implementation, err := r.gatewayClient.GetImplementation(ctx, string(action.Spec.Path))
-		if err != nil {
-			return ctrl.Result{}, errors.Wrap(err, "cannot fetch implementation via gateway")
-		}
-
-		if implementation.LatestRevision == nil || implementation.LatestRevision.Spec == nil ||
-			implementation.LatestRevision.Spec.Action == nil {
-			return ctrl.Result{}, errors.Wrap(err, "missing workflow in fetched implementation")
-		}
-
-		actionBytes, err := json.Marshal(implementation.LatestRevision.Spec.Action.Args)
-		if err != nil {
-			return ctrl.Result{}, errors.Wrap(err, "failed to marshal action to json")
-		}
-
-		action.Status.RenderedAction = &runtime.RawExtension{
-			Raw: actionBytes,
-		}
-		action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
-
-		if err := r.Status().Update(ctx, &action); err != nil {
-			return ctrl.Result{}, errors.Wrap(err, "failed to save updated action in k8s")
-		}
-		return ctrl.Result{}, nil
+	if action.Status.Phase == corev1alpha1.CreatedActionPhase || action.Status.Phase == corev1alpha1.InitialActionPhase {
+		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), &action)
+		return ctrl.Result{}, err
 	}
 
 	if action.Status.Phase == corev1alpha1.ReadyToRunActionPhase {
@@ -104,6 +82,41 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return ctrl.Result{}, nil
+}
+
+func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, action *corev1alpha1.Action) error {
+	log.Info("rendering workflow")
+
+	implementation, err := r.gatewayInterface.GetImplementation(ctx, string(action.Spec.Path))
+	if err != nil {
+		return errors.Wrap(err, "cannot fetch implementation via gateway")
+	}
+
+	if implementation.LatestRevision == nil || implementation.LatestRevision.Spec == nil ||
+		implementation.LatestRevision.Spec.Action == nil {
+		return errors.Wrap(err, "missing action workflow in fetched implementation")
+	}
+
+	actionBytes, err := json.Marshal(implementation.LatestRevision.Spec.Action.Args)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal action to json")
+	}
+
+	if action.Status.Rendering == nil {
+		action.Status.Rendering = &corev1alpha1.RenderingStatus{}
+	}
+
+	action.Status.Rendering.Action = &runtime.RawExtension{
+		Raw: actionBytes,
+	}
+	action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+	action.Status.LastTransitionTime = metav1.Now()
+
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "failed to save updated action in k8s")
+	}
+
+	return nil
 }
 
 func (r *ActionReconciler) setSampleStatus(action *corev1alpha1.Action) {

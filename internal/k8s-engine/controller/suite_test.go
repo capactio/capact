@@ -3,6 +3,7 @@
 package controller
 
 import (
+	"context"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,6 +20,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -29,10 +31,9 @@ var k8sClient client.Client
 var testEnv *envtest.Environment
 
 const (
-	crdDirectory = "../../../deploy/kubernetes/crds"
+	crdDirectory            = "../../../deploy/kubernetes/crds"
 	maxConcurrentReconciles = 1
 )
-
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -69,8 +70,9 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&ActionReconciler{
-		Client: k8sManager.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Action"),
+		Client:           k8sManager.GetClient(),
+		Log:              ctrl.Log.WithName("controllers").WithName("Action"),
+		gatewayInterface: &gatewayClientMock{},
 	}).SetupWithManager(k8sManager, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -90,6 +92,22 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
+
+type gatewayClientMock struct{}
+
+func (c *gatewayClientMock) GetImplementation(ctx context.Context, path string) (*ochgraphql.Implementation, error) {
+	return &ochgraphql.Implementation{
+		LatestRevision: &ochgraphql.ImplementationRevision{
+			Spec: &ochgraphql.ImplementationSpec{
+				Action: &ochgraphql.ImplementationAction{
+					Args: map[string]interface{}{
+						"template": "main",
+					},
+				},
+			},
+		},
+	}, nil
+}
 
 // returns path with OS specific Separator
 func toOSPath(path string) string {

@@ -4,11 +4,11 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	batchv1 "k8s.io/api/batch/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
@@ -33,7 +33,7 @@ var _ = Describe("Action Controller", func() {
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
 	Context("When Action CR is created", func() {
-		It("Should create K8s Job", func() {
+		It("Should render the action workflow", func() {
 			key := types.NamespacedName{
 				Name:      "action-test",
 				Namespace: "defdault",
@@ -53,8 +53,16 @@ var _ = Describe("Action Controller", func() {
 			Expect(k8sClient.Create(context.Background(), created)).Should(Succeed())
 
 			Eventually(func() error {
-				job := &batchv1.Job{}
-				return k8sClient.Get(context.Background(), key, job)
+				action := &corev1alpha1.Action{}
+
+				if err := k8sClient.Get(context.Background(), key, action); err != nil {
+					return err
+				}
+
+				if action.Status.Rendering == nil || action.Status.Rendering.Action == nil {
+					return errors.New(".Status.Rendering.Action field is empty")
+				}
+				return nil
 			}, timeout, interval).Should(Succeed())
 		})
 	})

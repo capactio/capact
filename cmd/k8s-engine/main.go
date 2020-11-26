@@ -23,7 +23,6 @@ import (
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/gateway"
 )
 
 var (
@@ -87,7 +86,7 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	gatewayClient := gateway.NewClient(cfg.GraphQLGateway.Endpoint)
+	gatewayClient := controller.NewClient(cfg.GraphQLGateway.Endpoint)
 
 	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), gatewayClient)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)

@@ -284,6 +284,7 @@ type NodePath string
 type ActionPhase string
 
 const (
+	CreatedActionPhase                        ActionPhase = ""
 	InitialActionPhase                        ActionPhase = "Initial"
 	BeingRenderedActionPhase                  ActionPhase = "BeingRendered"
 	AdvancedModeRenderingIterationActionPhase ActionPhase = "AdvancedModeRenderingIteration"
