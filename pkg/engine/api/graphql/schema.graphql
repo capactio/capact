@@ -9,6 +9,11 @@ Arbitrary data
 scalar Any
 
 """
+Arbitrary input data in JSON string format
+"""
+scalar JSON
+
+"""
 Full path of a given node, e.g. cap.core.type.platform.kubernetes
 """
 scalar NodePath
@@ -17,16 +22,18 @@ scalar NodePath
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
 input ActionDetailsInput {
+    name: String!
     input: ActionInputData
     action: String! # full path for the Implementation or Interface
     advancedRendering: Boolean = false # Enables advance rendering mode of Action
+    renderedActionOverride: JSON
 }
 
 """
 Client input that modifies input of a given Action
 """
 input ActionInputData {
-    parameters: Any # during rendering, it is validated against JSON schema from Interface of the resolved action
+    parameters: JSON # during rendering, it is validated against JSON schema from Interface of the resolved action
     artifacts: [InputArtifactData!] # required and optional artifacts from root workflow
 }
 
@@ -34,7 +41,7 @@ input ActionInputData {
 Client input for Input Artifact
 """
 input InputArtifactData {
-    alias: String!
+    name: String!
     typeInstanceID: ID!
 }
 
@@ -42,10 +49,10 @@ input InputArtifactData {
 Action describes user intention to resolve & execute a given Interface or Implementation.
 """
 type Action {
-    id: ID!
+    name: String!
     createdAt: Timestamp!
 
-    input: ActionInput # resolver which reads from Secret/ConfigMap
+    input: ActionInput
     output: ActionOutput
 
     """
@@ -53,12 +60,19 @@ type Action {
     """
     path: NodePath!
 
+    """
+    Indicates if user approved this Action to run
+    """
+    run: Boolean!
+
+    """
+    Indicates if user cancelled the workflow
+    """
+    cancel: Boolean!
+
     renderedAction: Any
     renderingAdvancedMode: ActionRenderingAdvancedMode
-
-    createdBy: UserInfo
-    runBy: UserInfo
-    cancelledBy: UserInfo
+    renderedActionOverride: Any
 
     status: ActionStatus
 }
@@ -79,6 +93,10 @@ type ActionStatus {
     timestamp: Timestamp!
     message: String
     runner: RunnerStatus
+
+    createdBy: UserInfo
+    runBy: UserInfo
+    cancelledBy: UserInfo
 }
 
 """
@@ -101,7 +119,6 @@ type ActionInput {
 Describes output of an Action
 """
 type ActionOutput {
-    parameters: Any # validated against JSON schema from Interface
     artifacts: [OutputArtifact!]!
 }
 
@@ -109,10 +126,9 @@ type ActionOutput {
 Describes input artifact of an Action
 """
 type InputArtifact {
-    alias: String!
+    name: String!
     typePath: NodePath! # Full path of the corresponding Type
-    typeInstanceID: ID
-    value: Any # resolver for TypeInstance value
+    typeInstanceID: ID!
     optional: Boolean!
 }
 
@@ -123,7 +139,6 @@ type OutputArtifact {
     name: String!
     typeInstanceID: ID!
     typePath: NodePath! # Full path of the corresponding Type
-    value: Any # resolver for TypeInstance value
 }
 
 """
@@ -165,17 +180,17 @@ enum ActionStatusCondition {
 }
 
 type Query {
-    action(id: ID!): Action
+    action(name: String!): Action
     actions(filter: [ActionFilter!]): [Action!]!
 }
 
 type Mutation {
     createAction(in: ActionDetailsInput): Action!
-    runAction(id: ID!): Action!
-    cancelAction(id: ID!): Action!
-    updateAction(id: ID!, in: ActionDetailsInput): Action!
-    continueAdvancedRendering(actionID: ID!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
-    deleteAction(id: ID!): Action!
+    runAction(name: String!): Action!
+    cancelAction(name: String!): Action!
+    updateAction(in: ActionDetailsInput!): Action!
+    continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
+    deleteAction(name: String!): Action!
 }
 
 # TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58

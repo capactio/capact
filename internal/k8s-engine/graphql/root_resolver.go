@@ -1,8 +1,10 @@
 package graphql
 
 import (
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/resolver/action"
+	"go.uber.org/zap"
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 var _ graphql.ResolverRoot = &RootResolver{}
@@ -12,8 +14,11 @@ type RootResolver struct {
 	queryResolver    graphql.QueryResolver
 }
 
-func NewRootResolver() *RootResolver {
-	actionResolver := action.NewResolver()
+func NewRootResolver(log *zap.Logger, k8sCli client.Client) *RootResolver {
+	actionConverter := action.NewConverter()
+	actionService := action.NewService(log, k8sCli)
+	actionResolver := action.NewResolver(actionService, actionConverter)
+
 	return &RootResolver{
 		mutationResolver: actionResolver,
 		queryResolver:    actionResolver,
