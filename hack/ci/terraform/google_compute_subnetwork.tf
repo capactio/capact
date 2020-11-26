@@ -15,5 +15,3 @@ resource "google_compute_subnetwork" "gcs_compute_subnetwork"{
     ip_cidr_range = var.google_compute_subnetwork_secondary_ip_range_cidr2
   }
 }
-
-

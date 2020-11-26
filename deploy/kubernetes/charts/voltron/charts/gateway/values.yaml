@@ -56,21 +56,18 @@ affinity: {}
 
 ingress:
   enabled: true
-  redirect: 
+  redirect:
   annotations:
     tls_acme: "true"
-    class: "nginx"    
+    class: "nginx"
     issuer: "letsencrypt"
     acmechallengetype: "http01"
 
-  path: /
-        
-  hosts:
-    - gateway.dev.cluster.projectvoltron.dev
-  tls: 
-    - secretName: gateway-tls
-      hosts:
-        - gateway.dev.cluster.projectvoltron.dev
+  host: "gateway"
+
+  tls:
+    enabled: true
+    secretName: gateway-tls
 
 auth:
   username: graphql

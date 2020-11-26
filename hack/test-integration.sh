@@ -76,6 +76,7 @@ main() {
       voltron::update::images_on_kind
     fi
 
+    export CLUSTER_TYPE="KIND"
     voltron::install::charts
 
     voltron::test::execute

@@ -1,8 +1,0 @@
-{
-    "name": "Voltron Branch Build Workflow",
-    "description": "Voltron branch build workflow template.",
-    "iconName": "lnr-rocket",
-    "categories": [
-        "Go"
-    ]
-}

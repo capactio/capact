@@ -24,6 +24,7 @@ main() {
     export DOCKER_REPOSITORY="local"
     export REPO_DIR=$REPO_ROOT_DIR
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
+    export CLUSTER_TYPE="KIND"
     voltron::update::images_on_kind
     voltron::install::charts
 

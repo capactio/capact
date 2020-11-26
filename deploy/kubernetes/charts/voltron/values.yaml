@@ -4,27 +4,9 @@ global:
     path: gcr.io/projectvoltron
     # Overrides the image tag for all Voltron component. Default is the sub-chart appVersion.
     overrideTag: "latest"
-  domainName: "voltron.local"
+  domainName: "dev.cluster.projectvoltron.dev"
 
 integrationTest:
   image:
     name: e2e-test
     pullPolicy: IfNotPresent
-
-ingress:
-  enabled: true
-  redirect: 
-  annotations:
-    tls_acme: "true"
-    class: "nginx"    
-    issuer: "letsencrypt"
-    acmechallengetype: "http01"
-
-  path: /
-        
-  hosts:
-    - gateway.dev.cluster.projectvoltron.dev
-  tls: 
-    - secretName: gateway-tls
-      hosts:
-        - gateway.dev.cluster.projectvoltron.dev

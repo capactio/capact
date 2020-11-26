@@ -97,6 +97,3 @@ resource "google_container_node_pool" "gcnp-container-node-pool" {
     ]
   }
 }
-
-
-

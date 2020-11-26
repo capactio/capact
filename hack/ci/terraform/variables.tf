@@ -97,6 +97,3 @@ variable "image_type" {
   default = "COS"
   type    = string
 }
-
-
-

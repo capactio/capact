@@ -1,11 +1,14 @@
-ingress-nginx: {} # put all "ingress-nginx" chart related values here
+#ingress-nginx: {} # put all "ingress-nginx" chart related values here
 #  # For example, to use default TLS certificate from values below, uncomment:
 #  controller:
 #    config:
 #      ssl-redirect: true
 #    extraArgs:
 #      default-ssl-certificate: "ingress-nginx/default-ssl-cert"
-
+ingress-nginx:
+  controller:
+    service:
+      loadBalancerIP: 35.228.223.55
 tlsCertificate:
   create: false
   name: "default-ssl-cert"
