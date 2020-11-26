@@ -37,6 +37,7 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/api v0.20.0
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.18.2

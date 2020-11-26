@@ -1,0 +1,34 @@
+context:
+  name: "action-name"
+  dryRun: true
+  timeout: "10m"
+  platform:
+    namespace: "k8s-ns-name"
+    serviceAccountName: "sa-name"
+
+args:
+  group: "sql"
+  command: "create"
+  generateName: false
+  configuration: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+    name: action-name-fbda12b0-63fa-4568-897f-a1a2b41e067f 
+    databaseVersion: "POSTGRES_11"
+    region: "us-central"
+    defaultDBName: postgres
+    rootPassword: s3cr3t
+    settings:
+      tier: "db-g1-small"
+      ipConfiguration:
+        authorizedNetworks:
+          - name: internet
+            value: "0.0.0.0/0"
+
+  additionalOutput:
+    path: "cloudsql-output.yml"
+    value:
+      host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+      port: 5432
+      defaultDBName: "{{ .DefaultDBName }}"
+      superuser:
+        username: "{{ .Username }}"
+        password: "{{ .Password }}"
