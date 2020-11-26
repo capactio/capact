@@ -6,13 +6,13 @@ name: Build-cluster-and-deploy
 on:
   workflow_dispatch:
     inputs:
-      SHA:
-        description: Git commit SHA.
-        required: true
-      OVERRIDE_DOCKER_TAG:
+      gitCommitSHA:
+        description: Git commit SHA. If not provided, use the latest commit from branch.
+        required: false
+      overrideDockerTag:
         description: Docker images tag. If not provided images generated from git commit SHA are used.
         required: false
-      OLD_CLUSTER_DELETE:
+      oldClusterDelete:
         description: Are you aware that old cluster will be deleted?
         required: true
 
@@ -22,10 +22,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code to point of time
+      - name: Clone Repository (Latest)
         uses: actions/checkout@v2
+        if: github.event.inputs.gitCommitSHA == ''
+      - name: Clone Repository (Custom Ref)
+        uses: actions/checkout@v2
+        if: github.event.inputs.gitCommitSHA != ''
         with:
-          ref: ${{ env.SHA }}
+          ref: ${{ github.event.inputs.gitCommitSHA }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -74,8 +78,9 @@ jobs:
           kubectl apply -f ./hack/ci/terraform/yaml/cluster-issuer.yaml
           . ./hack/ci/compare-cert.sh
       - name: Install services
+        env:
+          OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
         run: |
-          export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
           ./hack/ci/cluster-components-install.sh
       - name: Store secrets
         run: | 
