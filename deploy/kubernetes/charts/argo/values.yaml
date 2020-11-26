@@ -16,3 +16,8 @@ argo:
     defaultBucket:
       enabled: true
       name: argo-artifacts
+    resources:
+      requests:
+        memory: 256Mi
+      limits:
+        memory: 1Gi

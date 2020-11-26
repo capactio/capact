@@ -304,17 +304,9 @@ voltron::install::argo() {
     # not waiting as other components do not need it during installation
     shout "- Installing Argo Helm chart [wait: false]..."
 
-    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly ARGO_OVERRIDES="${REPO_DIR}/hack/kind/overrides.argo.yaml"
-      echo -e "- Applying overrides from ${ARGO_OVERRIDES}\n"
-    else # currently, only KIND needs custom settings
-      readonly ARGO_OVERRIDES=""
-    fi
-
     helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
         --create-namespace \
-        --namespace="argo" \
-        -f "${ARGO_OVERRIDES}"
+        --namespace="argo"
 }
 
 # Updates /etc/hosts with all Voltron subdomains.
