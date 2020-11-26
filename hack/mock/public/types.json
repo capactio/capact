@@ -88,6 +88,7 @@
           "description": "This Type indicates that a given platform is a Kubernetes installation.",
           "documentationURL": "https://kubernetes.io/docs",
           "supportURL": "https://kubernetes.io/",
+          "iconURL": "https://projectvoltron.dev/favicon.ico",
           "maintainers": [
             {
               "name": "Voltron Dev Team",
@@ -101,9 +102,10 @@
                 "name": "baseline",
                 "prefix": "cap.core.tag.system",
                 "path": "cap.core.tag.system.name",
-                "decription": "Indication that tagged item is an essential system capability.",
+                "description": "Indication that tagged item is an essential system capability.",
                 "displayName": "Baseline Capability",
                 "documentationURL": "https://projectvoltron.dev",
+                "supportURL": "https://projectvoltron.dev/contact",
                 "iconURL": "https://projectvoltron.dev/favicon.ico",
                 "maintainers": [
                   {
@@ -118,7 +120,10 @@
         },
         "revision": "0.1.0",
         "spec": {
-          "additionalRefs": [],
+          "additionalRefs": [
+            "ref1",
+            "ref2"
+          ],
           "jsonSchema": "{\"$schema\": \"http://json-schema.org/draft-07/schema\",\"type\": \"object\",\"title\": \"The Kubernetes schema\",\"required\": [\"version\"],\"$ocfRefs\": {\"semVer\": {\"name\": \"cap.core.type.versioning.semver\",\"revision\": \"0.1.0\"}},\"properties\": {\"version\": {\"$ref\": \"#/$ocfRefs/semVer\"}},\"additionalProperties\": false}"
         },
         "signature": {

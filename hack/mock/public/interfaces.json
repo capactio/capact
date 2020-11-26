@@ -8,6 +8,7 @@
         "metadata": {
           "prefix": "cap.interface.productivity.jira",
           "path": "cap.interface.productivity.jira.install",
+          "name": "install",
           "displayName": "Install",
           "description": "Install action for Jira",
           "maintainers": [
@@ -68,6 +69,7 @@
         "metadata": {
           "prefix": "cap.interface.productivity.jira",
           "path": "cap.interface.productivity.jira.update",
+          "name": "update",
           "displayName": "Update",
           "description": "Update action for Jira",
           "maintainers": [

@@ -4,7 +4,23 @@
   "path": "cap.core.metadata",
   "revisions": [
     {
-      "metadata": {},
+      "metadata": {
+        "name": "Metadata",
+        "displayName": "Metadata",
+        "prefix": "cap.core",
+        "path": "cap.core.metadata",
+        "description": "Metadata",
+        "maintainers": [
+          {
+            "name": "Voltron Dev Team",
+            "email": "team-dev@projectvoltron.dev",
+            "url": "https://projectvoltron.dev"
+          }
+        ],
+        "documentationURL": "https://projectvoltron.dev/docs",
+        "supportURL": "https://projectvoltron.dev/contact",
+        "iconURL": "https://projectvoltron.dev/icon.png"
+      },
       "revision": "0.1.0",
       "spec": {
         "ochVersion": "0.1.0",

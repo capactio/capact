@@ -6,7 +6,7 @@
     "revisions": [
       {
         "metadata": {
-          "decription": "Action which installs Jira via Helm chart",
+          "description": "Action which installs Jira via Helm chart",
           "displayName": "Install Jira",
           "documentationURL": "https://github.com/javimox/helm-charts/tree/master/charts/jira-software",
           "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
@@ -86,8 +86,13 @@
               "prefix": "cap.core.type.platform",
               "oneOf": [
                 {
-                  "name": "kubernetes",
-                  "revision": "0.1.0"
+                  "typeRef": {
+                    "path": "cap.core.type.platform.kubernetes",
+                    "revision": "0.1.0"
+                  },
+                  "valueConstraints": {
+                    "version": ">=1.19.0"
+                  }
                 }
               ]
             }
@@ -106,7 +111,7 @@
     "revisions": [
       {
         "metadata": {
-          "decription": "Action which updates Jira via Helm chart",
+          "description": "Action which updates Jira via Helm chart",
           "displayName": "Update Jira",
           "documentationURL": "https://github.com/javimox/helm-charts/tree/master/charts/jira-software",
           "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
@@ -152,8 +157,13 @@
               "prefix": "cap.core.type.platform",
               "oneOf": [
                 {
-                  "name": "kubernetes",
-                  "revision": "0.1.0"
+                  "typeRef": {
+                    "path": "cap.core.type.platform.kubernetes",
+                    "revision": "0.1.0"
+                  },
+                  "valueConstraints": {
+                    "version": ">=1.19.0"
+                  }
                 }
               ]
             }

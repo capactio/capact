@@ -12,6 +12,15 @@ import (
 
 type RootResolver struct {
 	queryResolver queryResolver
+
+	interfaceResolver              gqlpublicapi.InterfaceResolver
+	interfaceRevisionResolver      gqlpublicapi.InterfaceRevisionResolver
+	interfaceGroupResolver         gqlpublicapi.InterfaceGroupResolver
+	implementationResolver         gqlpublicapi.ImplementationResolver
+	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
+	repoMetadataResolver           gqlpublicapi.RepoMetadataResolver
+	tagResolver                    gqlpublicapi.TagResolver
+	typeResolver                   gqlpublicapi.TypeResolver
 }
 
 func NewRootResolver() *RootResolver {
@@ -24,6 +33,14 @@ func NewRootResolver() *RootResolver {
 			TagResolver:            tags.NewResolver(),
 			TypeResolver:           types.NewResolver(),
 		},
+		interfaceResolver:              interfaces.NewResolver(),
+		interfaceRevisionResolver:      interfaces.NewRevisionResolver(),
+		interfaceGroupResolver:         interfacegroups.NewInterfacesResolver(),
+		implementationResolver:         implementations.NewResolver(),
+		implementationRevisionResolver: implementations.NewRevisionResolver(),
+		repoMetadataResolver:           repometadata.NewResolver(),
+		tagResolver:                    tags.NewResolver(),
+		typeResolver:                   types.NewResolver(),
 	}
 }
 
@@ -41,33 +58,33 @@ type queryResolver struct {
 }
 
 func (r *RootResolver) Interface() gqlpublicapi.InterfaceResolver {
-	return interfaces.NewResolver()
+	return r.interfaceResolver
 }
 
 func (r *RootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
-	return interfaces.NewRevisionResolver()
+	return r.interfaceRevisionResolver
 }
 
 func (r *RootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {
-	return interfacegroups.NewInterfacesResolver()
+	return r.interfaceGroupResolver
 }
 
 func (r *RootResolver) Implementation() gqlpublicapi.ImplementationResolver {
-	return implementations.NewResolver()
+	return r.implementationResolver
 }
 
 func (r *RootResolver) ImplementationRevision() gqlpublicapi.ImplementationRevisionResolver {
-	return implementations.NewRevisionResolver()
+	return r.implementationRevisionResolver
 }
 
 func (r *RootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
-	return repometadata.NewResolver()
+	return r.repoMetadataResolver
 }
 
 func (r *RootResolver) Tag() gqlpublicapi.TagResolver {
-	return tags.NewResolver()
+	return r.tagResolver
 }
 
 func (r *RootResolver) Type() gqlpublicapi.TypeResolver {
-	return types.NewResolver()
+	return r.typeResolver
 }
