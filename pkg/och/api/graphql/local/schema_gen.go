@@ -414,16 +414,25 @@ Version in semantic versioning, e.g. 1.1.0
 scalar Version
 
 input CreateTypeInstanceInput {
-  typeRef: String!
+  typeRef: TypeReferenceInput!
   tags: [TagReferenceInput!]
   value: Any
 }
 
 input UpdateTypeInstanceInput {
-  typeRef: String!
+  typeRef: TypeReferenceInput!
   tags: [TagReferenceInput!]
   value: Any
   resourceVersion: Int!
+}
+
+input TypeReferenceInput {
+    path: NodePath!
+
+    """
+    If not provided, latest revision for a given Type is used
+    """
+    revision: Version
 }
 
 type TypeInstance {
@@ -2770,7 +2779,7 @@ func (ec *executionContext) unmarshalInputCreateTypeInstanceInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
-			it.TypeRef, err = ec.unmarshalNString2string(ctx, v)
+			it.TypeRef, err = ec.unmarshalNTypeReferenceInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2920,6 +2929,34 @@ func (ec *executionContext) unmarshalInputTypeRefFilterInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTypeReferenceInput(ctx context.Context, obj interface{}) (TypeReferenceInput, error) {
+	var it TypeReferenceInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "path":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+			it.Path, err = ec.unmarshalNNodePath2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "revision":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
+			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Context, obj interface{}) (UpdateTypeInstanceInput, error) {
 	var it UpdateTypeInstanceInput
 	var asMap = obj.(map[string]interface{})
@@ -2930,7 +2967,7 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
-			it.TypeRef, err = ec.unmarshalNString2string(ctx, v)
+			it.TypeRef, err = ec.unmarshalNTypeReferenceInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3866,6 +3903,11 @@ func (ec *executionContext) marshalNTypeReference2ᚖprojectvoltronᚗdevᚋvolt
 		return graphql.Null
 	}
 	return ec._TypeReference(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTypeReferenceInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeReferenceInput(ctx context.Context, v interface{}) (*TypeReferenceInput, error) {
+	res, err := ec.unmarshalInputTypeReferenceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNVersion2string(ctx context.Context, v interface{}) (string, error) {

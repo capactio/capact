@@ -9,7 +9,7 @@ import (
 )
 
 type CreateTypeInstanceInput struct {
-	TypeRef string               `json:"typeRef"`
+	TypeRef *TypeReferenceInput  `json:"typeRef"`
 	Tags    []*TagReferenceInput `json:"tags"`
 	Value   interface{}          `json:"value"`
 }
@@ -86,8 +86,14 @@ type TypeReference struct {
 	Revision string `json:"revision"`
 }
 
+type TypeReferenceInput struct {
+	Path string `json:"path"`
+	// If not provided, latest revision for a given Type is used
+	Revision *string `json:"revision"`
+}
+
 type UpdateTypeInstanceInput struct {
-	TypeRef         string               `json:"typeRef"`
+	TypeRef         *TypeReferenceInput  `json:"typeRef"`
 	Tags            []*TagReferenceInput `json:"tags"`
 	Value           interface{}          `json:"value"`
 	ResourceVersion int                  `json:"resourceVersion"`

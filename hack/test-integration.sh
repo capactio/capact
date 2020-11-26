@@ -77,6 +77,7 @@ main() {
     fi
 
     export CLUSTER_TYPE="KIND"
+    export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
     voltron::install::charts
 
     voltron::test::execute
