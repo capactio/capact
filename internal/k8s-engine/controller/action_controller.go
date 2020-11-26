@@ -27,12 +27,12 @@ type ActionReconciler struct {
 }
 
 type gatewayInterface interface {
-	GetImplementation(ctx context.Context, path string) (*ochgraphql.Implementation, error)
+	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger, gatewayClient *GatewayClient) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log, gatewayInterface: gatewayClient}
+func NewActionReconciler(client client.Client, log logr.Logger, gatewayInterface gatewayInterface) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log, gatewayInterface: gatewayInterface}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
@@ -58,6 +58,8 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		// on deleted requests.
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
+
+	log.Info("action", "action", action)
 
 	if action.Status.Phase == corev1alpha1.CreatedActionPhase || action.Status.Phase == corev1alpha1.InitialActionPhase {
 		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), &action)
@@ -87,17 +89,17 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, action *corev1alpha1.Action) error {
 	log.Info("rendering workflow")
 
-	implementation, err := r.gatewayInterface.GetImplementation(ctx, string(action.Spec.Path))
+	latestRevision, err := r.gatewayInterface.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
 	if err != nil {
 		return errors.Wrap(err, "cannot fetch implementation via gateway")
 	}
 
-	if implementation.LatestRevision == nil || implementation.LatestRevision.Spec == nil ||
-		implementation.LatestRevision.Spec.Action == nil {
+	if latestRevision == nil || latestRevision.Spec == nil ||
+		latestRevision.Spec.Action == nil {
 		return errors.Wrap(err, "missing action workflow in fetched implementation")
 	}
 
-	actionBytes, err := json.Marshal(implementation.LatestRevision.Spec.Action.Args)
+	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal action to json")
 	}

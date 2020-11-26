@@ -45,6 +45,7 @@ func dummyImplementation() *gqlpublicapi.Implementation {
 		LatestRevision: &gqlpublicapi.ImplementationRevision{
 			Spec: &gqlpublicapi.ImplementationSpec{
 				Action: &gqlpublicapi.ImplementationAction{
+					RunnerInterface: "argo",
 					Args: map[string]interface{}{
 						"template": "main",
 					},

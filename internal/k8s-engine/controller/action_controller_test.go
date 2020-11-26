@@ -35,8 +35,8 @@ var _ = Describe("Action Controller", func() {
 	Context("When Action CR is created", func() {
 		It("Should render the action workflow", func() {
 			key := types.NamespacedName{
-				Name:      "action-test",
-				Namespace: "defdault",
+				Name:      "action-test-1",
+				Namespace: "default",
 			}
 
 			created := &corev1alpha1.Action{

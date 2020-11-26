@@ -1,10 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/pkg/httputil"
+	"projectvoltron.dev/voltron/pkg/sdk/gateway"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	"github.com/go-logr/zapr"
@@ -56,7 +58,11 @@ type Config struct {
 }
 
 type GraphQLGateway struct {
-	Endpoint string `envconfig:"default=http://graphql:t0p_s3cr3t@voltron-gateway/graphql"`
+	Protocol string `envconfig:"default=http"`
+	Host     string `envconfig:"default=voltron-gateway"`
+	Port     int    `envconfig:"default=80"`
+	Username string
+	Password string
 }
 
 func main() {
@@ -86,7 +92,15 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	gatewayClient := controller.NewClient(cfg.GraphQLGateway.Endpoint)
+	gatewayEndpoint := fmt.Sprintf(
+		"%s://%s:%s@%s:%d/graphql",
+		cfg.GraphQLGateway.Protocol,
+		cfg.GraphQLGateway.Username,
+		cfg.GraphQLGateway.Password,
+		cfg.GraphQLGateway.Host,
+		cfg.GraphQLGateway.Port,
+	)
+	gatewayClient := gateway.NewClient(gatewayEndpoint)
 
 	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), gatewayClient)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)

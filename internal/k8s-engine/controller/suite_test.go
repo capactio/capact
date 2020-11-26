@@ -95,14 +95,12 @@ var _ = AfterSuite(func() {
 
 type gatewayClientMock struct{}
 
-func (c *gatewayClientMock) GetImplementation(ctx context.Context, path string) (*ochgraphql.Implementation, error) {
-	return &ochgraphql.Implementation{
-		LatestRevision: &ochgraphql.ImplementationRevision{
-			Spec: &ochgraphql.ImplementationSpec{
-				Action: &ochgraphql.ImplementationAction{
-					Args: map[string]interface{}{
-						"template": "main",
-					},
+func (c *gatewayClientMock) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+	return &ochgraphql.ImplementationRevision{
+		Spec: &ochgraphql.ImplementationSpec{
+			Action: &ochgraphql.ImplementationAction{
+				Args: map[string]interface{}{
+					"template": "main",
 				},
 			},
 		},

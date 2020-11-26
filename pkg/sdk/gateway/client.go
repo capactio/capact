@@ -1,4 +1,4 @@
-package controller
+package gateway
 
 import (
 	"context"
@@ -8,21 +8,19 @@ import (
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-type GatewayClient struct {
+type Client struct {
 	client *graphql.Client
 }
 
-func NewClient(endpoint string) *GatewayClient {
-	return &GatewayClient{
+func NewClient(endpoint string) *Client {
+	return &Client{
 		client: graphql.NewClient(endpoint),
 	}
 }
 
-func (c *GatewayClient) GetImplementation(ctx context.Context, path string) (*ochgraphql.Implementation, error) {
+func (c *Client) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($implementationPath: NodePath!) {
 	  implementation(path: $implementationPath) {
-	    name,
-	    prefix,
 	    latestRevision {
 	      spec {
 	        action {
@@ -43,5 +41,5 @@ func (c *GatewayClient) GetImplementation(ctx context.Context, path string) (*oc
 		return nil, errs.Wrap(err, "failed to query gateway endpoint")
 	}
 
-	return &resp.Implementation, nil
+	return resp.Implementation.LatestRevision, nil
 }
