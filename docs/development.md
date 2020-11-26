@@ -123,6 +123,7 @@ You can export the following environment variables to configure the script:
 - To disable monitoring stack installation, use `DISABLE_MONITORING_INSTALLATION=true`.
 - To disable `/etc/hosts` update with all Voltron subdomain, use `DISABLE_HOSTS_UPDATE=true`.
 - To disable setting self-signed TLS certificate for `*.voltron.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
+- To enable mocked version of GraphQL APIs (Engine, Local OCH, Public OCH) use `MOCK_GRAPHQL=true`
 
 ### Rebuild Docker images and update cluster
 

@@ -51,6 +51,9 @@ func main() {
 	hsvr := healthz.NewHTTPServer(logger, cfg.HealthzAddr, cfg.OCHMode.String())
 
 	// GraphQL server
+	if cfg.MockGraphQL {
+		logger.Info("Using mocked version of OCH API", zap.String("OCH mode", string(cfg.OCHMode)))
+	}
 	gsvr := graphqlutil.NewHTTPServer(
 		logger,
 		och.GraphQLSchema(cfg.OCHMode, cfg.MockGraphQL),

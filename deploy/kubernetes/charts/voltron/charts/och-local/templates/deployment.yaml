@@ -42,6 +42,8 @@ spec:
               value: "local"
             - name: APP_LOGGER_DEV_MODE
               value: "true"
+            - name: APP_MOCKGRAPHQL
+              value: "{{ .Values.global.mockGraphQL }}"
           ports:
             - name: http
               containerPort: 8080

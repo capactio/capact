@@ -11,6 +11,7 @@ require (
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/google/go-cmp v0.5.1 // indirect
+	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.6.1
 	github.com/iancoleman/strcase v0.1.2
 	github.com/nautilus/gateway v0.1.9

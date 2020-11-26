@@ -24,8 +24,14 @@ func GraphQLSchema(mode Mode, useMockedResolver bool) graphql.ExecutableSchema {
 		}
 		return gqlpublicapi.NewExecutableSchema(cfg)
 	case LocalMode:
+		var rootResolver gqllocalapi.ResolverRoot
+		if useMockedResolver {
+			rootResolver = gqllocaldomain.NewMockedRootResolver()
+		} else {
+			rootResolver = gqllocaldomain.NewRootResolver()
+		}
 		cfg := gqllocalapi.Config{
-			Resolvers: gqllocaldomain.NewRootResolver(),
+			Resolvers: rootResolver,
 		}
 		return gqllocalapi.NewExecutableSchema(cfg)
 	}

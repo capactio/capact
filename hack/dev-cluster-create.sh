@@ -33,6 +33,8 @@ main() {
     export DOCKER_REPOSITORY="local"
     export CLUSTER_TYPE="KIND"
     voltron::update::images_on_kind
+
+    export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
     voltron::install::charts
 
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then

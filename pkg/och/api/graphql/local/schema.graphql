@@ -14,16 +14,25 @@ Version in semantic versioning, e.g. 1.1.0
 scalar Version
 
 input CreateTypeInstanceInput {
-  typeRef: String!
+  typeRef: TypeReferenceInput!
   tags: [TagReferenceInput!]
   value: Any
 }
 
 input UpdateTypeInstanceInput {
-  typeRef: String!
+  typeRef: TypeReferenceInput!
   tags: [TagReferenceInput!]
   value: Any
   resourceVersion: Int!
+}
+
+input TypeReferenceInput {
+    path: NodePath!
+
+    """
+    If not provided, latest revision for a given Type is used
+    """
+    revision: Version
 }
 
 type TypeInstance {
