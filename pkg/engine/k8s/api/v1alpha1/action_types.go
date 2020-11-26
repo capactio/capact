@@ -263,17 +263,6 @@ type RenderingIterationStatus struct {
 	InputArtifactsToProvide *[]InputArtifactDetails `json:"inputArtifactsToProvide,omitempty"`
 }
 
-// InputArtifactsToProvide describes input artifact that may be provided in a given rendering iteration.
-type InputArtifactToProvide struct {
-
-	// Name refers to input artifact name used in rendered Action.
-	// +kubebuilder:validation:MinLength=1
-	Name string `json:"name"`
-
-	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
-	TypePath NodePath `json:"typePath"`
-}
-
 // RunnerStatus holds data related to built-in Runner that runs the Action.
 type RunnerStatus struct {
 
