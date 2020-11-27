@@ -70,9 +70,9 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 
 	err = (&ActionReconciler{
-		Client:           k8sManager.GetClient(),
-		Log:              ctrl.Log.WithName("controllers").WithName("Action"),
-		gatewayInterface: &gatewayClientMock{},
+		Client:     k8sManager.GetClient(),
+		Log:        ctrl.Log.WithName("controllers").WithName("Action"),
+		implGetter: &implGetterFake{},
 	}).SetupWithManager(k8sManager, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -93,9 +93,9 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-type gatewayClientMock struct{}
+type implGetterFake struct{}
 
-func (c *gatewayClientMock) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+func (c *implGetterFake) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
 	return &ochgraphql.ImplementationRevision{
 		Spec: &ochgraphql.ImplementationSpec{
 			Action: &ochgraphql.ImplementationAction{

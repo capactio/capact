@@ -1,12 +1,11 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/sdk/gateway"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	"github.com/go-logr/zapr"
@@ -25,6 +24,7 @@ import (
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 )
 
 var (
@@ -58,9 +58,7 @@ type Config struct {
 }
 
 type GraphQLGateway struct {
-	Protocol string `envconfig:"default=http"`
-	Host     string `envconfig:"default=voltron-gateway"`
-	Port     int    `envconfig:"default=80"`
+	Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
 	Username string
 	Password string
 }
@@ -92,17 +90,9 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	gatewayEndpoint := fmt.Sprintf(
-		"%s://%s:%s@%s:%d/graphql",
-		cfg.GraphQLGateway.Protocol,
-		cfg.GraphQLGateway.Username,
-		cfg.GraphQLGateway.Password,
-		cfg.GraphQLGateway.Host,
-		cfg.GraphQLGateway.Port,
-	)
-	gatewayClient := gateway.NewClient(gatewayEndpoint)
+	ochClient := getOCHClient(&cfg)
 
-	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), gatewayClient)
+	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), ochClient)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 
@@ -127,6 +117,12 @@ func main() {
 	setupLog.Info("starting manager")
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	exitOnError(err, "while running manager")
+}
+
+func getOCHClient(cfg *Config) *ochclient.Client {
+	httpClient := httputil.NewClient(30*time.Second, false,
+		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
+	return ochclient.NewClientWithBasicAuth(cfg.GraphQLGateway.Endpoint, httpClient)
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {

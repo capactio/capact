@@ -35,6 +35,9 @@ function print_info() {
 function test::go_modules() {
   shout "? go mod tidy"
   go mod tidy
+
+  # check, if cleaned go.mod or go.sum are not is git stage
+  # grep fails, when didn't match anything, so "|| true"o is used to supress the error code
   STATUS=$(git status --porcelain go.mod go.sum | grep -E '^ M' || true )
   if [ -n "$STATUS" ]; then
     echo -e "${RED}✗ go mod tidy modified go.mod and/or go.sum${NC}"

@@ -22,17 +22,17 @@ import (
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
-	Log logr.Logger
-	gatewayInterface
+	Log        logr.Logger
+	implGetter OCHImplementationGetter
 }
 
-type gatewayInterface interface {
+type OCHImplementationGetter interface {
 	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger, gatewayInterface gatewayInterface) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log, gatewayInterface: gatewayInterface}
+func NewActionReconciler(client client.Client, log logr.Logger, implementationGetter OCHImplementationGetter) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log, implGetter: implementationGetter}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
@@ -59,9 +59,8 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	log.Info("action", "action", action)
-
-	if action.Status.Phase == corev1alpha1.CreatedActionPhase || action.Status.Phase == corev1alpha1.InitialActionPhase {
+	// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
+	if action.Status.Phase == "" || action.Status.Phase == corev1alpha1.InitialActionPhase {
 		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), &action)
 		return ctrl.Result{}, err
 	}
@@ -89,19 +88,27 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, action *corev1alpha1.Action) error {
 	log.Info("rendering workflow")
 
-	latestRevision, err := r.gatewayInterface.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
+	action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+	action.Status.LastTransitionTime = metav1.Now()
+	action.Status.ObservedGeneration = action.Generation
+
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "while updating action object status")
+	}
+
+	latestRevision, err := r.implGetter.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
 	if err != nil {
-		return errors.Wrap(err, "cannot fetch implementation via gateway")
+		return errors.Wrap(err, "while fetching implementation")
 	}
 
 	if latestRevision == nil || latestRevision.Spec == nil ||
 		latestRevision.Spec.Action == nil {
-		return errors.Wrap(err, "missing action workflow in fetched implementation")
+		return errors.New("missing action in Implementation revision")
 	}
 
 	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
 	if err != nil {
-		return errors.Wrap(err, "failed to marshal action to json")
+		return errors.Wrap(err, "while marshaling action to json")
 	}
 
 	if action.Status.Rendering == nil {
@@ -111,11 +118,13 @@ func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, ac
 	action.Status.Rendering.Action = &runtime.RawExtension{
 		Raw: actionBytes,
 	}
-	action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+	action.Status.Phase = corev1alpha1.ReadyToRunActionPhase
 	action.Status.LastTransitionTime = metav1.Now()
+	action.Status.ObservedGeneration = action.Generation
 
+	log.Info("workflow rendered")
 	if err := r.Status().Update(ctx, action); err != nil {
-		return errors.Wrap(err, "failed to save updated action in k8s")
+		return errors.Wrap(err, "while updating action object status")
 	}
 
 	return nil
