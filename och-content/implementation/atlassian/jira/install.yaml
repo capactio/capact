@@ -203,14 +203,14 @@ spec:
 #                     repo: "https://helm.mox.sh"
 #                   valuesFromFile: "{{`{{inputs.artifacts.jira-helm-values.path}}`}}"
 #                   output:
-#                    directory: "/out"
-#                    default:
-#                      fileName: "helm-release.yaml"
-#                    additional:
-#                      fileName: "jira.yaml"
-#                      value: |-
-#                        version: "{{`{{ .Values.image.tag }}`}}"
-#                        host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
+#                     directory: "/out"
+#                     default:
+#                       fileName: "helm-release.yaml"
+#                     additional:
+#                       fileName: "jira.yaml"
+#                       value: |-
+#                         version: "{{`{{ .Values.image.tag }}`}}"
+#                         host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
 #              }}
 
 signature:

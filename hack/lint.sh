@@ -14,7 +14,7 @@ readonly ROOT_PATH=$(cd "${CURRENT_DIR}/.." && pwd)
 readonly GOLANGCI_LINT_VERSION="v1.31.0"
 readonly TMP_DIR=$(mktemp -d)
 
-LINT_TIMEOUT=${LINT_TIMEOUT:-2m}
+LINT_TIMEOUT=${LINT_TIMEOUT:-5m}
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 
 # shellcheck source=./hack/lib/utilities.sh

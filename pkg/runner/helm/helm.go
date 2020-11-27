@@ -21,7 +21,7 @@ import (
 
 // Config holds Runner related configuration.
 type Config struct {
-	HelmDriver          string `envconfig:"default=configmaps"`
+	HelmDriver          string `envconfig:"default=secrets"`
 	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
 }
 

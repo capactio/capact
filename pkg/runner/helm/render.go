@@ -29,8 +29,6 @@ func (r *helmRenderer) Do(chrt *chart.Chart, release *release.Release, additiona
 		Data: additionalOutputTemplate,
 	})
 
-	fmt.Printf("Manifest: %+v\n", release.Manifest)
-
 	caps := chartutil.DefaultCapabilities
 	releaseOptions := chartutil.ReleaseOptions{
 		Name:      release.Name,
