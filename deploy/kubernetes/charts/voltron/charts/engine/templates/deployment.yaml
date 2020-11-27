@@ -50,6 +50,8 @@ spec:
               value: "{{ .Values.gateway.password }}"
             - name: APP_MOCKGRAPHQL
               value: "{{ .Values.global.mockGraphQL }}"
+            - name: APP_BUILTIN_RUNNER_IMAGE
+              value: "gcr.io/projectvoltron/pr/argo-runner:PR-63"
           ports:
             - name: http
               containerPort: 8080

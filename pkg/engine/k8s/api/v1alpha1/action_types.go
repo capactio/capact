@@ -99,12 +99,22 @@ func (in *Action) IsExecuted() bool {
 	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCancelledActionPhase
 }
 
-func (in *Action) ShouldBeExecuted() bool {
+// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
+func (in *Action) IsUninitialized() bool {
+	return in.Status.Phase == "" || in.Status.Phase == InitialActionPhase
+}
+
+func (in *Action) IsBeingRendered() bool {
+	return in.Status.Phase == BeingRenderedActionPhase
+}
+
+func (in *Action) IsApprovedForExecution() bool {
 	return in.Status.Phase == ReadyToRunActionPhase && in.Spec.IsRun()
 }
 
-func (in *Action) IsUninitialized() bool {
-	return in.Status.Phase == ""
+// IsBeingDeleted returns true if a deletion timestamp is set
+func (in *Action) IsBeingDeleted() bool {
+	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
 // ActionInput describes Action input.

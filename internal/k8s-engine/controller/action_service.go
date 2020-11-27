@@ -3,10 +3,11 @@ package controller
 import (
 	"context"
 	"encoding/json"
-	"k8s.io/apimachinery/pkg/runtime"
+	"fmt"
 	"reflect"
 	"time"
 
+	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -21,21 +22,27 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
-// as built-in runner.
-const temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo"
+const (
+	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
+	// as built-in runner.
+	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo"
+	secretInputDataEntryName       = "input.yaml"
+	k8sJobRunnerInputDataMountPath = "/mnt"
+)
 
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
-	k8sCli        client.Client
-	runnerTimeout time.Duration
+	k8sCli             client.Client
+	runnerTimeout      time.Duration
+	builtinRunnerImage string
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, runnerTimeout time.Duration) *ActionService {
+func NewActionService(cli client.Client, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
 	return &ActionService{
-		k8sCli:        cli,
-		runnerTimeout: runnerTimeout,
+		k8sCli:             cli,
+		runnerTimeout:      runnerTimeout,
+		builtinRunnerImage: builtinRunnerImage,
 	}
 }
 
@@ -66,36 +73,49 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 		},
 	}
 
-	if err := a.k8sCli.Create(ctx, sa); a.ignoreAlreadyExits(err) != nil {
+	err := a.k8sCli.Create(ctx, sa)
+	switch {
+	case err == nil:
+	case apierrors.IsAlreadyExists(err):
+		old := &corev1.ServiceAccount{}
+		key := client.ObjectKey{Name: sa.Name, Namespace: sa.Namespace}
+		if err := a.k8sCli.Get(ctx, key, old); err != nil {
+			return nil, err
+		}
+
+		if !metav1.IsControlledBy(old, action) {
+			return nil, errors.Errorf("ServiceAccount %q already exists and it is not owned by Action with the same name", key.String())
+		}
+	default:
 		return nil, errors.Wrap(err, "while creating service account")
 	}
 
-	if err := a.k8sCli.Create(ctx, binding); a.ignoreAlreadyExits(err) != nil {
+	err = a.k8sCli.Create(ctx, binding)
+	switch {
+	case err == nil:
+	case apierrors.IsAlreadyExists(err):
+		old := &rbacv1.RoleBinding{}
+		key := client.ObjectKey{Name: binding.Name, Namespace: binding.Namespace}
+		if err := a.k8sCli.Get(ctx, key, old); err != nil {
+			return nil, err
+		}
+
+		if !metav1.IsControlledBy(old, action) {
+			return nil, errors.Errorf("RoleBinding %q already exists and it is not owned by Action with the same name", key.String())
+		}
+		old.Subjects = binding.Subjects
+		old.RoleRef = binding.RoleRef
+		if err := a.k8sCli.Update(ctx, old); err != nil {
+			return nil, err
+		}
+	default:
 		return nil, errors.Wrap(err, "while creating binding")
 	}
 
 	return sa, nil
 }
 
-// EnsureRunnerExecuted ensures that Kubernetes Job is created.
-func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error {
-	renderedAction, err := a.extractRunnerInterfaceAndArgs(action)
-	if err != nil {
-		return errors.Wrap(err, "while extracting rendered action from raw form")
-	}
-
-	switch renderedAction.RunnerInterface {
-	case temporaryBuiltinArgoRunnerName:
-		runnerJob := a.argoRunnerJob(saName, action)
-
-		err = a.k8sCli.Create(ctx, runnerJob)
-		return a.ignoreAlreadyExits(err)
-	default:
-		return errors.Errorf("unsupported %q runner", renderedAction.RunnerInterface)
-	}
-}
-
-// EnsureRunnerInputDataCreated ensures that Kubernetes Secret with input data for a runner is created.
+// EnsureRunnerInputDataCreated ensures that Kubernetes Secret with input data for a runner is created and up to date.
 func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error {
 	renderedAction, err := a.extractRunnerInterfaceAndArgs(action)
 	if err != nil {
@@ -127,7 +147,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	secret := &corev1.Secret{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
-			"input.yaml": marshaledInput,
+			secretInputDataEntryName: marshaledInput,
 		},
 	}
 
@@ -135,18 +155,17 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	switch {
 	case err == nil:
 	case apierrors.IsAlreadyExists(err):
-		var oldSecret corev1.Secret
+		oldSecret := &corev1.Secret{}
 		key := client.ObjectKey{Name: secret.Name, Namespace: secret.Namespace}
-		if err := a.k8sCli.Get(ctx, key, &oldSecret); err != nil {
+		if err := a.k8sCli.Get(ctx, key, oldSecret); err != nil {
 			return err
 		}
 
-		if !metav1.IsControlledBy(&oldSecret, action) {
+		if !metav1.IsControlledBy(oldSecret, action) {
 			return errors.Errorf("secret with the name %s already exists and it is not owned by Action with the same name", key.String())
 		}
-		// Do not mutate as the job can be already in running state?
-		//	oldSecret.Data = secret.Data
-		return nil
+		oldSecret.Data = secret.Data
+		return a.k8sCli.Update(ctx, oldSecret)
 	default:
 		return err
 	}
@@ -154,40 +173,74 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	return nil
 }
 
-func (a *ActionService) EnsureRunnerStatusIsUpToDate(ctx context.Context, action *v1alpha1.Action) error {
-	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
-	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
-		return errors.Wrap(err, "while getting secret with status")
+// EnsureRunnerExecuted ensures that Kubernetes Job is created and up to date.
+func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error {
+	renderedAction, err := a.extractRunnerInterfaceAndArgs(action)
+	if err != nil {
+		return errors.Wrap(err, "while extracting rendered action from raw form")
 	}
 
-	if secret.Data == nil {
-		return nil
+	// TODO: Change that to generic option similar to k8s plugins which can be registered from separate pkg
+	// example: https://github.com/kubernetes/kubernetes/blob/v1.19.4/pkg/kubeapiserver/options/plugins.go
+	if renderedAction.RunnerInterface != temporaryBuiltinArgoRunnerName {
+		return errors.Errorf("unsupported %q runner", renderedAction.RunnerInterface)
 	}
 
-	status, found := secret.Data["status"]
-	if !found {
-		return nil
-	}
+	runnerJob := a.argoRunnerJob(saName, action)
 
-	if action.Status.Runner == nil {
-		action.Status.Runner = &v1alpha1.RunnerStatus{
-			Interface: "why.we.need.that.?",
+	err = a.k8sCli.Create(ctx, runnerJob)
+	switch {
+	case err == nil:
+	case apierrors.IsAlreadyExists(err):
+		old := &batchv1.Job{}
+		key := client.ObjectKey{Name: runnerJob.Name, Namespace: runnerJob.Namespace}
+		if err := a.k8sCli.Get(ctx, key, old); err != nil {
+			return err
 		}
-	}
 
-	if action.Status.Runner.Status != nil && reflect.DeepEqual(action.Status.Runner.Status.Raw, status) {
-		return nil
-	}
-
-	action.Status.Runner.Status = &runtime.RawExtension{
-		Raw: status,
-	}
-	if err := a.k8sCli.Status().Update(ctx, action); err != nil {
-		return errors.Wrap(err, "while updating status of executed action")
+		if !metav1.IsControlledBy(old, action) {
+			return errors.Errorf("secret with the name %s already exists and it is not owned by Action with the same name", key.String())
+		}
+		old.Spec = runnerJob.Spec
+		return a.k8sCli.Update(ctx, old)
+	default:
+		return err
 	}
 
 	return nil
+}
+
+type GetReportedRunnerStatusOutput struct {
+	Changed bool
+	Status  []byte
+}
+
+func (a *ActionService) GetReportedRunnerStatus(ctx context.Context, action *v1alpha1.Action) (*GetReportedRunnerStatusOutput, error) {
+	// TODO: consider moving logic with fetching current status to status-reporter pkg
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
+	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
+		return nil, errors.Wrap(err, "while getting secret with status")
+	}
+
+	if secret.Data == nil {
+		return &GetReportedRunnerStatusOutput{Changed: false}, nil
+	}
+
+	status, found := secret.Data[statusreporter.SecretStatusEntryKey]
+	if !found {
+		return &GetReportedRunnerStatusOutput{Changed: false}, nil
+	}
+
+	if action.Status.Runner != nil && action.Status.Runner.Status != nil &&
+		reflect.DeepEqual(action.Status.Runner.Status.Raw, status) {
+		return &GetReportedRunnerStatusOutput{Changed: false}, nil
+	}
+
+	return &GetReportedRunnerStatusOutput{
+		Changed: true,
+		Status:  status,
+	}, nil
 }
 
 type GetRunnerJobStatusOutput struct {
@@ -216,13 +269,6 @@ func jobFinishStatus(j *batchv1.Job) (batchv1.JobConditionType, bool) {
 		}
 	}
 	return "", false
-}
-
-func (a *ActionService) ignoreAlreadyExits(err error) error {
-	if err != nil && !apierrors.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
 }
 
 // objectMetaFromAction uses given Action Name and Namespace, to set the same values on new ObjectMeta.
@@ -254,11 +300,11 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 					Containers: []corev1.Container{
 						{
 							Name:  "runner",
-							Image: "gcr.io/projectvoltron/pr/argo-runner:engine",
+							Image: a.builtinRunnerImage,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "RUNNER_INPUT_PATH",
-									Value: "/mnt/input.yaml",
+									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretInputDataEntryName),
 								},
 								{
 									Name:  "RUNNER_LOGGER_DEV_MODE",
@@ -268,10 +314,9 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      "input-volume",
-									MountPath: "/mnt",
+									MountPath: k8sJobRunnerInputDataMountPath,
 								},
 							},
-							ImagePullPolicy: "Never", // TODO: Always
 						},
 					},
 					Volumes: []corev1.Volume{
@@ -291,15 +336,14 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 	}
 }
 
-type RenderedAction struct {
+type renderedAction struct {
 	RunnerInterface string          `json:"runnerInterface"`
 	Args            json.RawMessage `json:"args"`
 }
 
-// extractRunnerInterfaceAndArgs
-// assumption the `runnerInterface` is already resolved, currently we do not support revision
-func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (*RenderedAction, error) {
-	var renderingAction RenderedAction
+// assumption that the `runnerInterface` is already resolved to full node path. Currently, we do not support revision.
+func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (*renderedAction, error) {
+	var renderingAction renderedAction
 	err := yaml.Unmarshal(action.Status.Rendering.Action.Raw, &renderingAction)
 	if err != nil {
 		return nil, err
