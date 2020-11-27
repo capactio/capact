@@ -1,8 +1,8 @@
 package httputil_test
 
 import (
-	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -44,29 +44,27 @@ func TestNewClient(t *testing.T) {
 	}
 }
 
-func TestClientBasicAuth(t *testing.T) {
-	tt := map[string]struct {
-		username            string
-		password            string
-		exptectedStatusCode int
-	}{
-		"Should use basic auth when making request": {
-			username:            "test",
-			password:            "s3cr3t",
-			exptectedStatusCode: 200,
-		},
-	}
+func TestClientProvidedBasicAuthIsUsedInRequests(t *testing.T) {
+	// given
+	const (
+		username = "test"
+		password = "s3cr3t"
+	)
 
-	for tn, tc := range tt {
-		t.Run(tn, func(t *testing.T) {
-			cli := httputil.NewClient(30*time.Second, false, httputil.WithBasicAuth(tc.username, tc.password))
+	var receivedUser, receivedPass string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedUser, receivedPass, _ = r.BasicAuth()
+	}))
 
-			url := fmt.Sprintf("https://httpbin.org/basic-auth/%s/%s", tc.username, tc.password)
-			resp, err := cli.Get(url)
+	cli := httputil.NewClient(30*time.Second, false, httputil.WithBasicAuth(username, password))
 
-			require.Nil(t, err, "error making http request: %v", err)
-			defer resp.Body.Close()
-			require.Equal(t, tc.exptectedStatusCode, resp.StatusCode, "incorrect status code")
-		})
-	}
+	// when
+	resp, err := cli.Get(ts.URL)
+
+	// then
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	require.Equal(t, username, receivedUser)
+	require.Equal(t, password, receivedPass)
 }
