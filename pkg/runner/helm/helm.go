@@ -2,176 +2,71 @@ package helm
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"log"
 
+	"helm.sh/helm/v3/pkg/engine"
+
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/engine"
-	"helm.sh/helm/v3/pkg/release"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )
 
-// Config holds Runner related configuration.
-type Config struct {
-	HelmDriver          string `envconfig:"default=secrets"`
-	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
+type helmCommand interface {
+	Do(ctx context.Context, in Input) (Output, Status, error)
 }
 
 // Runner provides functionality to run and wait for Helm operations.
 type helmRunner struct {
-	cfg      Config
-	helmCfg  *genericclioptions.ConfigFlags
-	renderer *helmRenderer
+	cfg    Config
+	k8sCfg *rest.Config
 }
 
 func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
-	helmCfg := helmConfigFlagsFrom(k8sCfg)
-
-	renderer := newHelmRenderer(&engine.Engine{})
-
 	return &helmRunner{
-		cfg:      cfg,
-		helmCfg:  helmCfg,
-		renderer: renderer,
+		cfg:    cfg,
+		k8sCfg: k8sCfg,
 	}
-}
-
-type Arguments struct {
-	Command        string                 `json:"command"`
-	Name           string                 `json:"name"`
-	Chart          Chart                  `json:"chart"`
-	Values         map[string]interface{} `json:"values"`
-	ValuesFromFile string                 `json:"valuesFromFile"`
-	NoHooks        bool                   `json:"noHooks"`
-	Replace        bool                   `json:"replace"`
-	GenerateName   bool                   `json:"generateName"`
-
-	Output Output `json:"output"`
-}
-
-type Output struct {
-	Directory  string           `json:"directory"`
-	Default    DefaultOutput    `json:"default"`
-	Additional AdditionalOutput `json:"additional"`
-}
-
-type DefaultOutput struct {
-	FileName string `json:"fileName"`
-}
-
-type AdditionalOutput struct {
-	FileName string `json:"fileName"`
-	Value    string `json:"value"`
-}
-
-type Chart struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
-	Repo    string `json:"repo"`
-}
-
-type ChartRelease struct {
-	Name      string `json:"name"`
-	Namespace string `json:"namespace"`
-	Chart     Chart  `json:"chart"`
 }
 
 func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
-	actionConfig := new(action.Configuration)
-	ns := in.ExecCtx.Platform.Namespace
-	err := actionConfig.Init(r.helmCfg, ns, r.cfg.HelmDriver, func(format string, v ...interface{}) {
-		log.Printf(format, v...)
-	})
+	namespace := in.ExecCtx.Platform.Namespace
+
+	actionConfig, err := r.initActionConfig(namespace, log.Printf)
 	if err != nil {
-		return nil, errors.Wrap(err, "while initializing Helm configuration")
+		return nil, err
 	}
 
-	var args Arguments
-	err = yaml.Unmarshal(in.Args, &args)
+	cmdInput, cmdType, err := r.readCommandData(in)
 	if err != nil {
-		return nil, errors.Wrap(err, "while unmarshaling runner arguments")
+		return nil, err
 	}
 
-	if args.Command != "install" {
+	var helmCmd helmCommand
+	switch cmdType {
+	case InstallCommandType:
+		renderer := newHelmRenderer(&engine.Engine{})
+		helmCmd = newInstaller(r.cfg.RepositoryCachePath, actionConfig, renderer)
+	default:
 		return nil, errors.New("Unsupported command")
 	}
 
-	installCli := action.NewInstall(actionConfig)
-	installCli.DryRun = in.ExecCtx.DryRun
-	installCli.Namespace = ns
-	installCli.Wait = true
-	installCli.Timeout = in.ExecCtx.Timeout.Duration()
-
-	installCli.GenerateName = args.GenerateName
-	installCli.Replace = args.Replace
-	installCli.DisableHooks = args.NoHooks
-	installCli.ChartPathOptions.Version = args.Chart.Version
-	installCli.ChartPathOptions.RepoURL = args.Chart.Repo
-
-	nameAndChartArgs := r.nameAndChartArgs(args.Name, args.Chart.Name)
-	name, chrtName, err := installCli.NameAndChart(nameAndChartArgs)
+	out, status, err := helmCmd.Do(ctx, cmdInput)
 	if err != nil {
-		return nil, errors.Wrap(err, "while getting release name")
+		return nil, errors.Wrapf(err, "while running Helm command '%s'", cmdType)
 	}
-	installCli.ReleaseName = name
 
-	chartPath, err := installCli.ChartPathOptions.LocateChart(chrtName, &cli.EnvSettings{
-		RepositoryCache: r.cfg.RepositoryCachePath,
-	})
+	err = r.saveOutput(out)
 	if err != nil {
-		return nil, errors.Wrap(err, "while locating Helm chart")
-	}
-
-	chrt, err := loader.Load(chartPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "while loading Helm chart")
-	}
-
-	values, err := r.getValues(args.Values, args.ValuesFromFile)
-	if err != nil {
-		return nil, errors.Wrap(err, "while reading values")
-	}
-
-	helmRelease, err := installCli.Run(chrt, values)
-	if err != nil {
-		return nil, errors.Wrap(err, "while installing Helm chart")
-	}
-
-	if helmRelease == nil {
-		return nil, errors.Wrap(err, "Helm release is nil")
-	}
-
-	releaseData := ChartRelease{
-		Name:      helmRelease.Name,
-		Namespace: helmRelease.Namespace,
-		Chart: Chart{
-			Name:    helmRelease.Chart.Metadata.Name,
-			Version: helmRelease.Chart.Metadata.Version,
-			Repo:    args.Chart.Repo,
-		},
-	}
-
-	err = r.saveDefaultOutput(args.Output, releaseData)
-	if err != nil {
-		return nil, errors.Wrap(err, "while saving default output")
-	}
-
-	err = r.renderAndSaveAdditionalOutputIfShould(args.Output, chrt, helmRelease)
-	if err != nil {
-		return nil, errors.Wrap(err, "while rendering and saving output")
+		return nil, errors.Wrap(err, "while saving output")
 	}
 
 	return &runner.WaitForCompletionOutput{
-		Succeeded: true,
-		Message:   fmt.Sprintf("release '%s' installed successfully in namespace '%s'", helmRelease.Name, helmRelease.Namespace),
+		Succeeded: status.Succeeded,
+		Message:   status.Message,
 	}, nil
 }
 
@@ -179,65 +74,55 @@ func (r *helmRunner) Name() string {
 	return "helm"
 }
 
-func (r *helmRunner) nameAndChartArgs(releaseName string, chartName string) []string {
-	var nameAndChartArgs []string
-	if releaseName != "" {
-		nameAndChartArgs = append(nameAndChartArgs, releaseName)
-	}
-	nameAndChartArgs = append(nameAndChartArgs, chartName)
-
-	return nameAndChartArgs
-}
-
-func (r *helmRunner) getValues(inlineValues map[string]interface{}, valuesFilePath string) (map[string]interface{}, error) {
-	var values map[string]interface{}
-
-	if valuesFilePath == "" {
-		return inlineValues, nil
+func (r *helmRunner) initActionConfig(namespace string, debugLog action.DebugLog) (*action.Configuration, error) {
+	actionConfig := new(action.Configuration)
+	helmCfg := &genericclioptions.ConfigFlags{
+		APIServer:   &r.k8sCfg.Host,
+		Insecure:    &r.k8sCfg.Insecure,
+		CAFile:      &r.k8sCfg.CAFile,
+		BearerToken: &r.k8sCfg.BearerToken,
 	}
 
-	if len(inlineValues) > 0 && valuesFilePath != "" {
-		return nil, errors.New("providing values both inline and from file is currently unsupported")
-	}
+	err := actionConfig.Init(helmCfg, namespace, r.cfg.HelmDriver, debugLog)
 
-	log.Printf("Reading values from file '%s'", valuesFilePath)
-	bytes, err := ioutil.ReadFile(valuesFilePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "while reading values from file '%s'", valuesFilePath)
+		return nil, errors.Wrap(err, "while initializing Helm configuration")
 	}
-	if err := yaml.Unmarshal(bytes, &values); err != nil {
-		return nil, errors.Wrapf(err, "while parsing '%s'", valuesFilePath)
-	}
-	return values, nil
+
+	return actionConfig, nil
 }
 
-func (r *helmRunner) saveDefaultOutput(out Output, rel ChartRelease) error {
-	filePath := fmt.Sprintf("%s/%s", out.Directory, out.Default.FileName)
-	log.Printf("Saving default output to %s\n...", filePath)
-
-	bytes, err := yaml.Marshal(&rel)
+func (r *helmRunner) readCommandData(in runner.StartInput) (Input, CommandType, error) {
+	var args Arguments
+	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
-		return errors.Wrap(err, "while marshaling yaml")
+		return Input{}, "", errors.Wrap(err, "while unmarshaling runner arguments")
 	}
 
-	return r.saveToFile(filePath, bytes)
+	return Input{
+		Args:    args,
+		ExecCtx: in.ExecCtx,
+	}, args.Command, nil
 }
 
-func (r *helmRunner) renderAndSaveAdditionalOutputIfShould(out Output, chrt *chart.Chart, rel *release.Release) error {
-	if out.Additional.FileName == "" {
-		log.Println("no additional output to render and save. skipping...")
+func (r *helmRunner) saveOutput(out Output) error {
+	log.Printf("Saving default output to %s\n...", out.Default.Path)
+	err := r.saveToFile(out.Default.Path, out.Default.Value)
+	if err != nil {
+		return errors.Wrap(err, "while saving default output")
+	}
+
+	if out.Additional == nil {
 		return nil
 	}
 
-	bytes, err := r.renderer.Do(chrt, rel, []byte(out.Additional.Value))
+	log.Printf("Saving additional output to %s\n...", out.Additional.Path)
+	err = r.saveToFile(out.Additional.Path, out.Additional.Value)
 	if err != nil {
-		return errors.Wrap(err, "while rendering additional output")
+		return errors.Wrap(err, "while saving default output")
 	}
 
-	filePath := fmt.Sprintf("%s/%s", out.Directory, out.Additional.FileName)
-	log.Printf("Saving additional output to %s\n...", filePath)
-
-	return r.saveToFile(filePath, bytes)
+	return nil
 }
 
 const defaultFilePermissions = 0644
@@ -249,17 +134,4 @@ func (r *helmRunner) saveToFile(path string, bytes []byte) error {
 	}
 
 	return nil
-}
-
-func helmConfigFlagsFrom(k8sCfg *rest.Config) *genericclioptions.ConfigFlags {
-	if k8sCfg == nil {
-		return nil
-	}
-
-	return &genericclioptions.ConfigFlags{
-		APIServer:   &k8sCfg.Host,
-		Insecure:    &k8sCfg.Insecure,
-		CAFile:      &k8sCfg.CAFile,
-		BearerToken: &k8sCfg.BearerToken,
-	}
 }
