@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/pkg/httputil"
@@ -23,6 +24,7 @@ import (
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 )
 
 var (
@@ -51,6 +53,14 @@ type Config struct {
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
+
+	GraphQLGateway GraphQLGateway
+}
+
+type GraphQLGateway struct {
+	Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
+	Username string
+	Password string
 }
 
 func main() {
@@ -80,7 +90,9 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"))
+	ochClient := getOCHClient(&cfg)
+
+	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), ochClient)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 
@@ -105,6 +117,12 @@ func main() {
 	setupLog.Info("starting manager")
 	err = mgr.Start(ctrl.SetupSignalHandler())
 	exitOnError(err, "while running manager")
+}
+
+func getOCHClient(cfg *Config) *ochclient.Client {
+	httpClient := httputil.NewClient(30*time.Second, false,
+		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
+	return ochclient.NewClient(cfg.GraphQLGateway.Endpoint, httpClient)
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {

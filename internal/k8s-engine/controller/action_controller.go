@@ -2,8 +2,10 @@ package controller
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/go-logr/logr"
+	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -11,6 +13,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"projectvoltron.dev/voltron/internal/ptr"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -19,12 +22,17 @@ import (
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
 	client.Client
-	Log logr.Logger
+	Log        logr.Logger
+	implGetter OCHImplementationGetter
+}
+
+type OCHImplementationGetter interface {
+	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
 }
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(client client.Client, log logr.Logger) *ActionReconciler {
-	return &ActionReconciler{Client: client, Log: log}
+func NewActionReconciler(client client.Client, log logr.Logger, implementationGetter OCHImplementationGetter) *ActionReconciler {
+	return &ActionReconciler{Client: client, Log: log, implGetter: implementationGetter}
 }
 
 // +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
@@ -51,24 +59,75 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if action.Status.Phase != "" {
+	// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
+	if action.Status.Phase == "" || action.Status.Phase == corev1alpha1.InitialActionPhase {
+		err := r.renderAction(ctx, log.WithValues("phase", "renderAction"), &action)
+		return ctrl.Result{}, err
+	}
+
+	if action.Status.Phase == corev1alpha1.ReadyToRunActionPhase {
+		job := r.dummyJob(action)
+		if err := r.Create(ctx, &job); err != nil {
+			log.Error(err, "while creating dummy Job")
+			return ctrl.Result{}, err
+		}
+
+		r.setSampleStatus(&action)
+		err := r.Status().Update(ctx, &action)
+		if err != nil {
+			log.Error(err, "while updating Action CR status")
+			return ctrl.Result{}, err
+		}
+
 		return ctrl.Result{}, nil
 	}
 
-	job := r.dummyJob(action)
-	if err := r.Create(ctx, &job); err != nil {
-		log.Error(err, "while creating dummy Job")
-		return ctrl.Result{}, err
-	}
-
-	r.setSampleStatus(&action)
-	err := r.Status().Update(ctx, &action)
-	if err != nil {
-		log.Error(err, "while updating Action CR status")
-		return ctrl.Result{}, err
-	}
-
 	return ctrl.Result{}, nil
+}
+
+func (r *ActionReconciler) renderAction(ctx context.Context, log logr.Logger, action *corev1alpha1.Action) error {
+	log.Info("rendering workflow")
+
+	action.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+	action.Status.LastTransitionTime = metav1.Now()
+	action.Status.ObservedGeneration = action.Generation
+
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "while updating action object status")
+	}
+
+	latestRevision, err := r.implGetter.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
+	if err != nil {
+		return errors.Wrap(err, "while fetching implementation")
+	}
+
+	if latestRevision == nil || latestRevision.Spec == nil ||
+		latestRevision.Spec.Action == nil {
+		return errors.New("missing action in Implementation revision")
+	}
+
+	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling action to json")
+	}
+
+	if action.Status.Rendering == nil {
+		action.Status.Rendering = &corev1alpha1.RenderingStatus{}
+	}
+
+	action.Status.Rendering.Action = &runtime.RawExtension{
+		Raw: actionBytes,
+	}
+	action.Status.Phase = corev1alpha1.ReadyToRunActionPhase
+	action.Status.LastTransitionTime = metav1.Now()
+	action.Status.ObservedGeneration = action.Generation
+
+	log.Info("workflow rendered")
+	if err := r.Status().Update(ctx, action); err != nil {
+		return errors.Wrap(err, "while updating action object status")
+	}
+
+	return nil
 }
 
 func (r *ActionReconciler) setSampleStatus(action *corev1alpha1.Action) {

@@ -2,10 +2,12 @@ package httputil_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"projectvoltron.dev/voltron/pkg/httputil"
 )
@@ -40,4 +42,29 @@ func TestNewClient(t *testing.T) {
 			assert.NotZero(t, transport.ExpectContinueTimeout)
 		})
 	}
+}
+
+func TestClientProvidedBasicAuthIsUsedInRequests(t *testing.T) {
+	// given
+	const (
+		username = "test"
+		password = "s3cr3t"
+	)
+
+	var receivedUser, receivedPass string
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedUser, receivedPass, _ = r.BasicAuth()
+	}))
+
+	cli := httputil.NewClient(30*time.Second, false, httputil.WithBasicAuth(username, password))
+
+	// when
+	resp, err := cli.Get(ts.URL)
+
+	// then
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	require.Equal(t, username, receivedUser)
+	require.Equal(t, password, receivedPass)
 }

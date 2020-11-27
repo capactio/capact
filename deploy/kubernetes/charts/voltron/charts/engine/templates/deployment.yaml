@@ -44,6 +44,10 @@ spec:
               value: "true"
             - name: APP_MAX_CONCURRENT_RECONCILES
               value: "1"
+            - name: APP_GRAPHQLGATEWAY_USERNAME
+              value: {{ .Values.gateway.username }}
+            - name: APP_GRAPHQLGATEWAY_PASSWORD
+              value: "{{ .Values.gateway.password }}"
           ports:
             - name: http
               containerPort: 8080

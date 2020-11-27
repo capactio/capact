@@ -42,5 +42,15 @@ func dummyImplementation() *gqlpublicapi.Implementation {
 		Name:   "install",
 		Prefix: "cap.implementation.cms.wordpress",
 		Path:   "cap.implementation.cms.wordpress.install",
+		LatestRevision: &gqlpublicapi.ImplementationRevision{
+			Spec: &gqlpublicapi.ImplementationSpec{
+				Action: &gqlpublicapi.ImplementationAction{
+					RunnerInterface: "argo",
+					Args: map[string]interface{}{
+						"template": "main",
+					},
+				},
+			},
+		},
 	}
 }
