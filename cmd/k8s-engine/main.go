@@ -53,6 +53,8 @@ type Config struct {
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
+	// MockGraphQL sets the grapql servers to use mocked data
+	MockGraphQL bool `envconfig:"default=false"`
 
 	GraphQLGateway GraphQLGateway
 }
@@ -106,10 +108,19 @@ func main() {
 
 	gqlLogger := logger.Named(GraphQLServerName)
 
-	execSchema := graphql.NewExecutableSchema(graphql.Config{
-		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
-	})
+	var execSchema gqlgen_graphql.ExecutableSchema
+	if cfg.MockGraphQL {
+		logger.Info("Using mocked version of engine API")
+		execSchema = graphql.NewExecutableSchema(graphql.Config{
+			Resolvers: domaingraphql.NewMockedRootResolver(),
+		})
+	} else {
+		execSchema = graphql.NewExecutableSchema(graphql.Config{
+			Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
+		})
+	}
 	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, GraphQLServerName)
+
 	err = mgr.Add(gqlSrv)
 	exitOnError(err, "while adding GraphQL server")
 

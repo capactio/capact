@@ -48,6 +48,8 @@ spec:
               value: {{ .Values.gateway.username }}
             - name: APP_GRAPHQLGATEWAY_PASSWORD
               value: "{{ .Values.gateway.password }}"
+            - name: APP_MOCKGRAPHQL
+              value: "{{ .Values.global.mockGraphQL }}"
           ports:
             - name: http
               containerPort: 8080
