@@ -3,10 +3,13 @@ package main
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
+	"google.golang.org/api/option"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
+	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/runner/cloudsql"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
@@ -36,7 +39,9 @@ func main() {
 		logger, _ = zap.NewProduction()
 	}
 
-	service, err := sqladmin.NewService(context.Background())
+	httpClient := httputil.NewClient(30*time.Second, false)
+
+	service, err := sqladmin.NewService(context.Background(), option.WithHTTPClient(httpClient))
 	exitOnError(err, "failed to create GCP client")
 
 	cloudsqlRunner := cloudsql.NewRunner(logger, service, cfg.GcpProjectName)

@@ -26,7 +26,7 @@ type OutputArgs struct {
 	Default   struct {
 		Filename string `json:"filename"`
 	} `json:"default"`
-	Additional struct {
+	Additional *struct {
 		Path  string          `json:"filename"`
 		Value json.RawMessage `json:"value"`
 	}
@@ -80,7 +80,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 	logger.Info("database ready")
 
-	output := &Output{
+	output := &outputValues{
 		DBInstance:    db,
 		Port:          5432,
 		DefaultDBName: "postgres",
@@ -88,7 +88,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 		Password:      args.Configuration.RootPassword,
 	}
 
-	if err := writeOutput(&args.Output, output); err != nil {
+	if err := createArtifacts(&args.Output, output); err != nil {
 		return nil, errors.Wrap(err, "while writing output")
 	}
 

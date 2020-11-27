@@ -3,6 +3,7 @@ package cloudsql
 import (
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"os"
 
 	"github.com/pkg/errors"
@@ -10,7 +11,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type Output struct {
+type outputValues struct {
 	DBInstance    *sqladmin.DatabaseInstance
 	Port          int    `json:"port"`
 	DefaultDBName string `json:"defaultDBName"`
@@ -18,40 +19,66 @@ type Output struct {
 	Password      string `json:"password"`
 }
 
-const cloudSQLInstanceOutputTemplate string = `
-name: "{{ .DBInstance.Name }}"
-project: "{{ .DBInstance.Project }}"
-region: "{{ .DBInstance.Region }}"
-databaseVersion: "{{ .DBInstance.DatabaseVersion }}"
-`
+type instanceArtifact struct {
+	Name            string `json:"name"`
+	Project         string `json:"project"`
+	Region          string `json:"region"`
+	DatabaseVersion string `json:"databaseVersion"`
+}
 
-func writeOutput(args *OutputArgs, output *Output) error {
-	yamlBytes, err := yaml.JSONToYAML(args.Additional.Value)
-	if err != nil {
-		return errors.Wrap(err, "cannot convert output json to yaml")
+func createArtifacts(args *OutputArgs, values *outputValues) error {
+	if err := os.MkdirAll(args.Directory, 0775); err != nil {
+		return err
 	}
 
-	if err := writeOutputFile(args.Directory, args.Default.Filename, string(cloudSQLInstanceOutputTemplate), output); err != nil {
-		return errors.Wrap(err, "failed to write default output file")
+	if err := createDefaultArtifact(args, values); err != nil {
+		return errors.Wrap(err, "while creating default artifact")
 	}
 
-	if err := writeOutputFile(args.Directory, args.Additional.Path, string(yamlBytes), output); err != nil {
-		return errors.Wrap(err, "failed to write additional output file")
+	if args.Additional != nil {
+		if err := createAdditionalArtifact(args, values); err != nil {
+			return errors.Wrap(err, "while creating additional artifact")
+		}
 	}
+
 	return nil
 }
 
-func writeOutputFile(outDir, outFilename, templateStr string, values interface{}) error {
-	tmpl, err := template.New("output").Parse(templateStr)
+func createDefaultArtifact(args *OutputArgs, output *outputValues) error {
+	artifact := &instanceArtifact{
+		Name:            output.DBInstance.Name,
+		Project:         output.DBInstance.Project,
+		Region:          output.DBInstance.Region,
+		DatabaseVersion: output.DBInstance.DatabaseVersion,
+	}
+
+	data, err := yaml.Marshal(artifact)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling artifact to YAML")
+	}
+
+	artifactFilepath := fmt.Sprintf("%s/%s", args.Directory, args.Default.Filename)
+
+	// #nosec G306: Poor file permissions used when writing to a new file
+	if err := ioutil.WriteFile(artifactFilepath, data, 0644); err != nil {
+		return errors.Wrapf(err, "while writing artifact file %s", artifactFilepath)
+	}
+
+	return nil
+}
+
+func createAdditionalArtifact(args *OutputArgs, values *outputValues) error {
+	artifactTemplate, err := yaml.JSONToYAML(args.Additional.Value)
+	if err != nil {
+		return errors.Wrap(err, "while converting JSON to YAML")
+	}
+
+	tmpl, err := template.New("output").Parse(string(artifactTemplate))
 	if err != nil {
 		return errors.Wrap(err, "failed to load template")
 	}
 
-	if err := os.MkdirAll(outDir, 0775); err != nil {
-		return err
-	}
-
-	filepath := fmt.Sprintf("%s/%s", outDir, outFilename)
+	filepath := fmt.Sprintf("%s/%s", args.Directory, args.Additional.Path)
 
 	fd, err := os.Create(filepath)
 	if err != nil {
