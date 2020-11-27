@@ -9,9 +9,9 @@ context:
 args:
   group: "sql"
   command: "create"
-  generateName: false
+  generateName: true
   configuration: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
-    name: action-name-fbda12b0-63fa-4568-897f-a1a2b41e067f 
+    name: runner-devel
     databaseVersion: "POSTGRES_11"
     region: "us-central"
     defaultDBName: postgres
@@ -23,12 +23,16 @@ args:
           - name: internet
             value: "0.0.0.0/0"
 
-  additionalOutput:
-    path: "cloudsql-output.yml"
-    value:
-      host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
-      port: 5432
-      defaultDBName: "{{ .DefaultDBName }}"
-      superuser:
-        username: "{{ .Username }}"
-        password: "{{ .Password }}"
+  output:
+    directory: .
+    default:
+      filename: cloudsql-instance.yml
+    additional:
+      filename: "cloudsql-additional.yml"
+      value:
+        host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+        port: "{{ .Port }}"
+        defaultDBName: "{{ .DefaultDBName }}"
+        superuser:
+          username: "{{ .Username }}"
+          password: "{{ .Password }}"

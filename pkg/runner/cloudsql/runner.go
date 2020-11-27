@@ -4,69 +4,81 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"html/template"
-	"os"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	"projectvoltron.dev/voltron/pkg/runner"
-	"sigs.k8s.io/yaml"
 )
 
 type Args struct {
-	Group            string                    `json:"group"`
-	Command          string                    `json:"command"`
-	GenerateName     bool                      `json:"generateName"`
-	Configuration    sqladmin.DatabaseInstance `json:"configuration"`
-	AdditionalOutput struct {
-		Path  string          `json:"path"`
-		Value json.RawMessage `json:"value"`
-	} `json:"additionalOutput"`
+	Group         string                    `json:"group"`
+	Command       string                    `json:"command"`
+	GenerateName  bool                      `json:"generateName"`
+	Configuration sqladmin.DatabaseInstance `json:"configuration"`
+	Output        OutputArgs                `json:"output"`
 }
 
-type Output struct {
-	DBInstance    *sqladmin.DatabaseInstance
-	Port          int    `json:"port"`
-	DefaultDBName string `json:"defaultDBName"`
-	Username      string `json:"username"`
-	Password      string `json:"password"`
+type OutputArgs struct {
+	Directory string `json:"directory"`
+	Default   struct {
+		Filename string `json:"filename"`
+	} `json:"default"`
+	Additional struct {
+		Path  string          `json:"filename"`
+		Value json.RawMessage `json:"value"`
+	}
 }
 
 type Runner struct {
+	logger          *zap.Logger
 	sqladminService *sqladmin.Service
+	gcpProjectName  string
 }
 
-func NewRunner(sqladminService *sqladmin.Service) *Runner {
+var (
+	CreateTimeout time.Duration = time.Minute * 5
+)
+
+func NewRunner(logger *zap.Logger, sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
 	return &Runner{
+		logger:          logger,
 		sqladminService: sqladminService,
+		gcpProjectName:  gcpProjectName,
 	}
 }
 
 func (r *Runner) Name() string {
-	return "CloudSQL"
+	return "cloudsql"
 }
 
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	args := &Args{}
-
-	project := "projectvoltron"
 
 	if err := json.Unmarshal(in.Args, args); err != nil {
 		return nil, errors.Wrap(err, "wrong input args")
 	}
 
 	instanceInput := r.getDatabaseInstanceToCreate(&in.ExecCtx, args)
-	err := r.createDatabaseInstance(project, instanceInput)
+
+	logger := r.logger.With(zap.String("instanceName", instanceInput.Name))
+	logger.Info("creating database")
+
+	err := r.createDatabaseInstance(instanceInput)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create DB instance")
 	}
 
-	db, err := r.waitForDatabaseInstanceRunning(project, instanceInput.Name)
+	logger.Info("waiting for database to be running")
+
+	db, err := r.waitForDatabaseInstanceRunning(instanceInput.Name)
 	if err != nil {
-		return nil, errors.Wrap(err, "cannot timed out waiting for DB instance to be running")
+		return nil, errors.Wrap(err, "timed out waiting for DB instance to be running")
 	}
+
+	logger.Info("database ready")
 
 	output := &Output{
 		DBInstance:    db,
@@ -76,29 +88,12 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 		Password:      args.Configuration.RootPassword,
 	}
 
-	yamlBytes, err := yaml.JSONToYAML(args.AdditionalOutput.Value)
-	if err != nil {
-		return nil, err
-	}
-
-	tmpl, err := template.New("output").Parse(string(yamlBytes))
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot create template from output")
-	}
-
-	fd, err := os.Create(args.AdditionalOutput.Path)
-	if err != nil {
-		return nil, errors.Wrap(err, "cannot open output file for write")
-	}
-	defer fd.Close()
-
-	err = tmpl.Execute(fd, output)
-	if err != nil {
-		return nil, err
+	if err := writeOutput(&args.Output, output); err != nil {
+		return nil, errors.Wrap(err, "failed to write output files")
 	}
 
 	return &runner.StartOutput{
-		Status: "super",
+		Status: "Completed",
 	}, nil
 }
 
@@ -119,34 +114,43 @@ func (r *Runner) getDatabaseInstanceToCreate(execCtx *runner.ExecutionContext, a
 	return &instance
 }
 
-func (r *Runner) createDatabaseInstance(project string, instance *sqladmin.DatabaseInstance) error {
-	call := r.sqladminService.Instances.Insert(project, instance)
+func (r *Runner) createDatabaseInstance(instance *sqladmin.DatabaseInstance) error {
+	call := r.sqladminService.Instances.Insert(r.gcpProjectName, instance)
 
-	// TODO Operation can also have an error, handle it
 	_, err := call.Do()
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-func (r *Runner) waitForDatabaseInstanceRunning(project string, instanceName string) (*sqladmin.DatabaseInstance, error) {
-	// TODO handle timeout, ctx with chans
+func (r *Runner) waitForDatabaseInstanceRunning(instanceName string) (*sqladmin.DatabaseInstance, error) {
+	logger := r.logger.With(zap.String("instanceName", instanceName))
+
+	ctx, cancel := context.WithTimeout(context.Background(), CreateTimeout)
+	defer cancel()
+
 	for {
-		db, err := r.getDatabaseInstance(project, instanceName)
-		if err != nil {
-			return nil, err
-		}
+		select {
+		case <-time.After(time.Second * 10):
+			logger.Debug("checking db status")
+			db, err := r.getDatabaseInstance(instanceName)
+			if err != nil {
+				return nil, err
+			}
 
-		if db.State == "RUNNABLE" {
-			return db, nil
+			if db.State == "RUNNABLE" {
+				return db, err
+			}
+		case <-ctx.Done():
+			logger.Debug("timeout on waiting for db to run")
+			return nil, nil
 		}
-
-		time.Sleep(time.Second * 10)
 	}
 }
 
-func (r *Runner) getDatabaseInstance(project, name string) (*sqladmin.DatabaseInstance, error) {
-	call := r.sqladminService.Instances.Get(project, name)
+func (r *Runner) getDatabaseInstance(name string) (*sqladmin.DatabaseInstance, error) {
+	call := r.sqladminService.Instances.Get(r.gcpProjectName, name)
 	return call.Do()
 }
