@@ -15,7 +15,7 @@ type Client struct {
 	client *graphql.Client
 }
 
-func NewClientWithBasicAuth(endpoint string, httpClient *http.Client) *Client {
+func NewClient(endpoint string, httpClient *http.Client) *Client {
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)
 

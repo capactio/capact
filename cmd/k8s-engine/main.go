@@ -122,7 +122,7 @@ func main() {
 func getOCHClient(cfg *Config) *ochclient.Client {
 	httpClient := httputil.NewClient(30*time.Second, false,
 		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
-	return ochclient.NewClientWithBasicAuth(cfg.GraphQLGateway.Endpoint, httpClient)
+	return ochclient.NewClient(cfg.GraphQLGateway.Endpoint, httpClient)
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {
