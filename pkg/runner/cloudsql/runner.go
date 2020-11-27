@@ -38,7 +38,7 @@ type Runner struct {
 	gcpProjectName  string
 }
 
-var (
+const (
 	CreateTimeout time.Duration = time.Minute * 5
 )
 
@@ -58,7 +58,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	args := &Args{}
 
 	if err := json.Unmarshal(in.Args, args); err != nil {
-		return nil, errors.Wrap(err, "wrong input args")
+		return nil, errors.Wrap(err, "while unmarshaling input parameters")
 	}
 
 	instanceInput := r.getDatabaseInstanceToCreate(&in.ExecCtx, args)
@@ -68,14 +68,14 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 	err := r.createDatabaseInstance(instanceInput)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create DB instance")
+		return nil, errors.Wrap(err, "while creating database instance")
 	}
 
 	logger.Info("waiting for database to be running")
 
 	db, err := r.waitForDatabaseInstanceRunning(instanceInput.Name)
 	if err != nil {
-		return nil, errors.Wrap(err, "timed out waiting for DB instance to be running")
+		return nil, errors.Wrap(err, "while waiting for database to be ready")
 	}
 
 	logger.Info("database ready")
@@ -89,7 +89,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	}
 
 	if err := writeOutput(&args.Output, output); err != nil {
-		return nil, errors.Wrap(err, "failed to write output files")
+		return nil, errors.Wrap(err, "while writing output")
 	}
 
 	return &runner.StartOutput{
@@ -116,13 +116,8 @@ func (r *Runner) getDatabaseInstanceToCreate(execCtx *runner.ExecutionContext, a
 
 func (r *Runner) createDatabaseInstance(instance *sqladmin.DatabaseInstance) error {
 	call := r.sqladminService.Instances.Insert(r.gcpProjectName, instance)
-
 	_, err := call.Do()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (r *Runner) waitForDatabaseInstanceRunning(instanceName string) (*sqladmin.DatabaseInstance, error) {
