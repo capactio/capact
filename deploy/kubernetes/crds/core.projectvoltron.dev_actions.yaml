@@ -39,32 +39,44 @@ spec:
     name: v1alpha1
     schema:
       openAPIV3Schema:
-        description: Action describes user intention to resolve & execute a given Interface or Implementation.
+        description: Action describes user intention to resolve & execute a given
+          Interface or Implementation.
         properties:
           apiVersion:
-            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
           spec:
-            description: ActionSpec contains configuration properties for a given Action to execute.
+            description: ActionSpec contains configuration properties for a given
+              Action to execute.
             properties:
               advancedRendering:
-                description: AdvancedRendering holds properties related to Action advanced rendering mode.
+                description: AdvancedRendering holds properties related to Action
+                  advanced rendering mode.
                 properties:
                   enabled:
                     default: false
-                    description: Enabled specifies if the advanced rendering mode is enabled.
+                    description: Enabled specifies if the advanced rendering mode
+                      is enabled.
                     type: boolean
                   renderingIteration:
-                    description: RenderingIteration holds properties for rendering iteration in advanced rendering mode.
+                    description: RenderingIteration holds properties for rendering
+                      iteration in advanced rendering mode.
                     properties:
                       continue:
                         default: false
-                        description: Continue specifies the user intention to continue rendering using the provided InputArtifacts in the Action input. User may or may not add additional optional InputArtifacts to the list and continue Action rendering.
+                        description: Continue specifies the user intention to continue
+                          rendering using the provided InputArtifacts in the Action
+                          input. User may or may not add additional optional InputArtifacts
+                          to the list and continue Action rendering.
                         type: boolean
                     required:
                     - continue
@@ -74,25 +86,33 @@ spec:
                 type: object
               cancel:
                 default: false
-                description: Cancel specifies whether the Action execution should be cancelled.
+                description: Cancel specifies whether the Action execution should
+                  be cancelled.
                 type: boolean
               dryRun:
                 default: false
-                description: DryRun specifies whether runner should perform only dry-run action without persisting the resource.
+                description: DryRun specifies whether runner should perform only dry-run
+                  action without persisting the resource.
                 type: boolean
               input:
                 description: Input describes Action input.
                 properties:
                   artifacts:
-                    description: Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+                    description: Artifacts contains input Artifacts passed for Action
+                      rendering. It contains both required and optional input Artifacts.
                     items:
-                      description: InputArtifact holds input artifact reference, which is in fact TypeInstance.
+                      description: InputArtifact holds input artifact reference, which
+                        is in fact TypeInstance.
                       properties:
                         name:
-                          description: Name refers to input artifact name used in rendered Action. Name is not unique as there may be multiple artifacts with the same name on different levels of Action workflow.
+                          description: Name refers to input artifact name used in
+                            rendered Action. Name is not unique as there may be multiple
+                            artifacts with the same name on different levels of Action
+                            workflow.
                           type: string
                         typeInstanceID:
-                          description: TypeInstanceID is a unique identifier for the TypeInstance used as input artifact.
+                          description: TypeInstanceID is a unique identifier for the
+                            TypeInstance used as input artifact.
                           type: string
                       required:
                       - name
@@ -103,10 +123,12 @@ spec:
                     description: Parameters holds details about Action input parameters.
                     properties:
                       secretRef:
-                        description: SecretRef stores reference to Secret in the same namespace the Action CR is created.
+                        description: SecretRef stores reference to Secret in the same
+                          namespace the Action CR is created.
                         properties:
                           name:
-                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                              TODO: Add other useful fields. apiVersion, kind, uid?'
                             type: string
                         type: object
                     required:
@@ -114,16 +136,22 @@ spec:
                     type: object
                 type: object
               path:
-                description: Path contains full path for Implementation or Interface manifest.
+                description: Path contains full path for Implementation or Interface
+                  manifest.
                 minLength: 3
                 type: string
               renderedActionOverride:
-                description: RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
+                description: RenderedActionOverride contains optional rendered Action
+                  that overrides the one rendered by Engine.
                 type: object
                 x-kubernetes-preserve-unknown-fields: true
               run:
                 default: false
-                description: Run specifies whether the Action is approved to be executed. Engine won't execute fully rendered Action until the field is set to `true`. If the Action is not fully rendered, and this field is set to `true`, Engine executes a given Action instantly after it is resolved.
+                description: Run specifies whether the Action is approved to be executed.
+                  Engine won't execute fully rendered Action until the field is set
+                  to `true`. If the Action is not fully rendered, and this field is
+                  set to `true`, Engine executes a given Action instantly after it
+                  is resolved.
                 type: boolean
             required:
             - path
@@ -148,10 +176,13 @@ spec:
                       type: string
                     type: array
                   uid:
-                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    description: A unique value that identifies this user across time.
+                      If this user is deleted and another user by the same name is
+                      added, they will have different UIDs.
                     type: string
                   username:
-                    description: The name that uniquely identifies this user among all active users.
+                    description: The name that uniquely identifies this user among
+                      all active users.
                     type: string
                 type: object
               createdBy:
@@ -171,21 +202,27 @@ spec:
                       type: string
                     type: array
                   uid:
-                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    description: A unique value that identifies this user across time.
+                      If this user is deleted and another user by the same name is
+                      added, they will have different UIDs.
                     type: string
                   username:
-                    description: The name that uniquely identifies this user among all active users.
+                    description: The name that uniquely identifies this user among
+                      all active users.
                     type: string
                 type: object
               lastTransitionTime:
-                description: Last time the condition transitioned from one status to another.
+                description: Last time the condition transitioned from one status
+                  to another.
                 format: date-time
                 type: string
               message:
-                description: Message provides a readable description of the Action phase.
+                description: Message provides a readable description of the Action
+                  phase.
                 type: string
               observedGeneration:
-                description: ObservedGeneration reflects the generation of the most recently observed Action.
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Action.
                 format: int64
                 type: integer
               output:
@@ -199,10 +236,12 @@ spec:
                           description: Name refers to artifact name.
                           type: string
                         typeInstanceID:
-                          description: TypeInstanceID is a unique identifier for the TypeInstance used as artifact.
+                          description: TypeInstanceID is a unique identifier for the
+                            TypeInstance used as artifact.
                           type: string
                         typePath:
-                          description: TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
+                          description: TypePath is full path for the Type manifest
+                            related to a given artifact (TypeInstance).
                           minLength: 3
                           type: string
                       required:
@@ -214,7 +253,8 @@ spec:
                 type: object
               phase:
                 default: Initial
-                description: ActionPhase describes in which state is the Action to execute.
+                description: ActionPhase describes in which state is the Action to
+                  execute.
                 enum:
                 - Initial
                 - BeingRendered
@@ -230,17 +270,21 @@ spec:
                 description: Rendering describes rendering status.
                 properties:
                   action:
-                    description: Action contains partially or fully rendered Action to be executed.
+                    description: Action contains partially or fully rendered Action
+                      to be executed.
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                   advancedRendering:
-                    description: AdvancedRendering describes status related to advanced rendering mode.
+                    description: AdvancedRendering describes status related to advanced
+                      rendering mode.
                     properties:
                       renderingIteration:
-                        description: RenderingIteration describes status related to current rendering iteration.
+                        description: RenderingIteration describes status related to
+                          current rendering iteration.
                         properties:
                           inputArtifactsToProvide:
-                            description: InputArtifactsToProvide describes which input artifacts might be provided in a given rendering iteration.
+                            description: InputArtifactsToProvide describes which input
+                              artifacts might be provided in a given rendering iteration.
                             items:
                               properties:
                                 name:
@@ -248,13 +292,16 @@ spec:
                                   type: string
                                 optional:
                                   default: false
-                                  description: Optional highlights that the input artifact is optional.
+                                  description: Optional highlights that the input
+                                    artifact is optional.
                                   type: boolean
                                 typeInstanceID:
-                                  description: TypeInstanceID is a unique identifier for the TypeInstance used as artifact.
+                                  description: TypeInstanceID is a unique identifier
+                                    for the TypeInstance used as artifact.
                                   type: string
                                 typePath:
-                                  description: TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
+                                  description: TypePath is full path for the Type
+                                    manifest related to a given artifact (TypeInstance).
                                   minLength: 3
                                   type: string
                               required:
@@ -269,7 +316,9 @@ spec:
                     description: Input contains resolved details of Action input.
                     properties:
                       artifacts:
-                        description: Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+                        description: Artifacts contains input Artifacts passed for
+                          Action rendering. It contains both required and optional
+                          input Artifacts.
                         items:
                           properties:
                             name:
@@ -277,13 +326,16 @@ spec:
                               type: string
                             optional:
                               default: false
-                              description: Optional highlights that the input artifact is optional.
+                              description: Optional highlights that the input artifact
+                                is optional.
                               type: boolean
                             typeInstanceID:
-                              description: TypeInstanceID is a unique identifier for the TypeInstance used as artifact.
+                              description: TypeInstanceID is a unique identifier for
+                                the TypeInstance used as artifact.
                               type: string
                             typePath:
-                              description: TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
+                              description: TypePath is full path for the Type manifest
+                                related to a given artifact (TypeInstance).
                               minLength: 3
                               type: string
                           required:
@@ -315,10 +367,13 @@ spec:
                       type: string
                     type: array
                   uid:
-                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    description: A unique value that identifies this user across time.
+                      If this user is deleted and another user by the same name is
+                      added, they will have different UIDs.
                     type: string
                   username:
-                    description: The name that uniquely identifies this user among all active users.
+                    description: The name that uniquely identifies this user among
+                      all active users.
                     type: string
                 type: object
               runner:
@@ -329,7 +384,8 @@ spec:
                     minLength: 3
                     type: string
                   status:
-                    description: StatusRef contains reference to resource with arbitrary Runner status data.
+                    description: StatusRef contains reference to resource with arbitrary
+                      Runner status data.
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
                 required:
