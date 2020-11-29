@@ -6,7 +6,6 @@ require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.10.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0

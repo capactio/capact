@@ -96,9 +96,9 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
-	actionSvc := controller.NewActionService(mgr.GetClient(), cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
+	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
-	actionCtrl := controller.NewActionReconciler(ctrl.Log, ochClient, actionSvc)
+	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 

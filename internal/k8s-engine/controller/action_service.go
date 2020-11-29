@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"time"
 
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+
 	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
@@ -30,19 +32,25 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 )
 
+type OCHImplementationGetter interface {
+	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli             client.Client
 	runnerTimeout      time.Duration
 	builtinRunnerImage string
+	implGetter         OCHImplementationGetter
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
+func NewActionService(cli client.Client, implGetter OCHImplementationGetter, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		runnerTimeout:      runnerTimeout,
 		builtinRunnerImage: builtinRunnerImage,
+		implGetter:         implGetter,
 	}
 }
 
@@ -210,13 +218,34 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
+// ResolveImplementationForAction returns specific implementation for interface from a given Action.
+// TODO: This is a dummy implementation just for demo purpose.
+func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
+	latestRevision, err := a.implGetter.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
+	if err != nil {
+		return nil, errors.Wrap(err, "while fetching implementation")
+	}
+
+	if latestRevision == nil || latestRevision.Spec == nil ||
+		latestRevision.Spec.Action == nil {
+		return nil, errors.New("missing action in Implementation revision")
+	}
+
+	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling action to json")
+	}
+	return actionBytes, nil
+}
+
 type GetReportedRunnerStatusOutput struct {
 	Changed bool
 	Status  []byte
 }
 
+// GetReportedRunnerStatus returns status reported by action runner.
 func (a *ActionService) GetReportedRunnerStatus(ctx context.Context, action *v1alpha1.Action) (*GetReportedRunnerStatusOutput, error) {
-	// TODO: consider moving logic with fetching current status to status-reporter pkg
+	// TODO: consider to move logic with fetching current status to status-reporter pkg
 	secret := &corev1.Secret{}
 	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
 	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
@@ -248,6 +277,7 @@ type GetRunnerJobStatusOutput struct {
 	JobStatus batchv1.JobConditionType
 }
 
+// GetRunnerJobStatus returns K8s Job status which executes action runner.
 func (a *ActionService) GetRunnerJobStatus(ctx context.Context, action *v1alpha1.Action) (*GetRunnerJobStatusOutput, error) {
 	runnerJob := &batchv1.Job{}
 	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
@@ -341,7 +371,7 @@ type renderedAction struct {
 	Args            json.RawMessage `json:"args"`
 }
 
-// assumption that the `runnerInterface` is already resolved to full node path. Currently, we do not support revision.
+// CAUTION: assumption that the `runnerInterface` is already resolved to full node path. Currently, we do not support revision.
 func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (*renderedAction, error) {
 	var renderingAction renderedAction
 	err := yaml.Unmarshal(action.Status.Rendering.Action.Raw, &renderingAction)

@@ -2,11 +2,9 @@ package controller
 
 import (
 	"context"
-	"encoding/json"
 
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -23,23 +21,37 @@ import (
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
-	k8sCli     client.Client
-	log        logr.Logger
-	svc        *ActionService // TODO interface
-	recorder   record.EventRecorder
-	implGetter OCHImplementationGetter
+	k8sCli   client.Client
+	log      logr.Logger
+	svc      actionService
+	recorder record.EventRecorder
 }
 
-type OCHImplementationGetter interface {
-	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
-}
+type (
+	actionStarter interface {
+		EnsureWorkflowSAExists(ctx context.Context, action *v1alpha1.Action) (*corev1.ServiceAccount, error)
+		EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error
+		EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error
+	}
+	actionRenderer interface {
+		ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error)
+	}
+	actionStatusGetter interface {
+		GetReportedRunnerStatus(ctx context.Context, action *v1alpha1.Action) (*GetReportedRunnerStatusOutput, error)
+		GetRunnerJobStatus(ctx context.Context, action *v1alpha1.Action) (*GetRunnerJobStatusOutput, error)
+	}
+	actionService interface {
+		actionRenderer
+		actionStarter
+		actionStatusGetter
+	}
+)
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(log logr.Logger, implementationGetter OCHImplementationGetter, svc *ActionService) *ActionReconciler {
+func NewActionReconciler(log logr.Logger, svc actionService) *ActionReconciler {
 	return &ActionReconciler{
-		log:        log.WithName("controllers").WithName("Action"),
-		svc:        svc,
-		implGetter: implementationGetter,
+		log: log.WithName("controllers").WithName("Action"),
+		svc: svc,
 	}
 }
 
@@ -88,10 +100,11 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if action.IsBeingRendered() {
 		log.Info("Rendering runner action")
-		if err := r.renderAction(ctx, action); err != nil {
+		result, err := r.renderAction(ctx, action)
+		if err != nil {
 			return reportOnError(err, "Render runner action")
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return result, nil
 	}
 
 	if action.IsApprovedForExecution() {
@@ -120,20 +133,10 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 // If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
 //
 // TODO: add support for v1alpha1.AdvancedModeRenderingIterationActionPhase phase
-func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Action) error {
-	latestRevision, err := r.implGetter.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
+func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	impl, err := r.svc.ResolveImplementationForAction(ctx, action)
 	if err != nil {
-		return errors.Wrap(err, "while fetching implementation")
-	}
-
-	if latestRevision == nil || latestRevision.Spec == nil ||
-		latestRevision.Spec.Action == nil {
-		return errors.New("missing action in Implementation revision")
-	}
-
-	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
-	if err != nil {
-		return errors.Wrap(err, "while marshaling action to json")
+		return ctrl.Result{}, errors.Wrap(err, "while resolving Implementation for Action")
 	}
 
 	if action.Status.Rendering == nil {
@@ -141,15 +144,16 @@ func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Ac
 	}
 
 	action.Status.Rendering.Action = &runtime.RawExtension{
-		Raw: actionBytes,
+		Raw: impl,
 	}
 
 	action.Status = r.successStatus(action, v1alpha1.ReadyToRunActionPhase, "Runner action is rendered and ready to be executed")
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
-		return errors.Wrap(err, "while updating action object status")
+		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
 	}
 
-	return nil
+	// requeue to check if runner should be executed
+	return ctrl.Result{Requeue: true}, nil
 }
 
 // executeAction executes action (run, dryRun, cancel etc) and set v1alpha1.RunningActionPhase.
@@ -174,7 +178,7 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 		return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
 	}
 
-	// requeue for checking execution status
+	// requeue to check execution status
 	return ctrl.Result{Requeue: true}, nil
 }
 
@@ -222,7 +226,7 @@ func (r *ActionReconciler) reportedRunnerStatus(ctx context.Context, action *v1a
 	statusCpy := action.Status.DeepCopy()
 	if statusCpy.Runner == nil {
 		statusCpy.Runner = &v1alpha1.RunnerStatus{
-			Interface: "why.we.need.that.?", // TODO: Any thoughts Paweł?
+			Interface: "why.we.need.that.?", // TODO: Any thoughts Paweł? shouldn't that be under `action.Status.Rendering.Action.Interface`?
 		}
 	}
 	statusCpy.Runner.Status = &runtime.RawExtension{
