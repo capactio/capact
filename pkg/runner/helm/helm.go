@@ -2,13 +2,14 @@ package helm
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
-	"log"
 
-	"helm.sh/helm/v3/pkg/engine"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/engine"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -23,6 +24,7 @@ type helmCommand interface {
 type helmRunner struct {
 	cfg    Config
 	k8sCfg *rest.Config
+	log    *zap.Logger
 }
 
 func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
@@ -35,28 +37,28 @@ func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
 func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
 	namespace := in.ExecCtx.Platform.Namespace
 
-	actionConfig, err := r.initActionConfig(namespace, log.Printf)
+	actionConfig, err := r.initActionConfig(namespace)
 	if err != nil {
 		return nil, err
 	}
 
-	cmdInput, cmdType, err := r.readCommandData(in)
+	cmdInput, err := r.readCommandData(in)
 	if err != nil {
 		return nil, err
 	}
 
 	var helmCmd helmCommand
-	switch cmdType {
+	switch cmdInput.Args.Command {
 	case InstallCommandType:
 		renderer := newHelmRenderer(&engine.Engine{})
-		helmCmd = newInstaller(r.cfg.RepositoryCachePath, actionConfig, renderer)
+		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionConfig, renderer)
 	default:
 		return nil, errors.New("Unsupported command")
 	}
 
 	out, status, err := helmCmd.Do(ctx, cmdInput)
 	if err != nil {
-		return nil, errors.Wrapf(err, "while running Helm command '%s'", cmdType)
+		return nil, errors.Wrapf(err, "while running Helm command %q", cmdInput.Args.Command)
 	}
 
 	err = r.saveOutput(out)
@@ -71,16 +73,24 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 }
 
 func (r *helmRunner) Name() string {
-	return "helm"
+	return "helm.v3"
 }
 
-func (r *helmRunner) initActionConfig(namespace string, debugLog action.DebugLog) (*action.Configuration, error) {
+func (r *helmRunner) InjectLogger(logger *zap.Logger) {
+	r.log = logger
+}
+
+func (r *helmRunner) initActionConfig(namespace string) (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	helmCfg := &genericclioptions.ConfigFlags{
 		APIServer:   &r.k8sCfg.Host,
 		Insecure:    &r.k8sCfg.Insecure,
 		CAFile:      &r.k8sCfg.CAFile,
 		BearerToken: &r.k8sCfg.BearerToken,
+	}
+
+	debugLog := func(format string, v ...interface{}) {
+		r.log.Debug(fmt.Sprintf(format, v...), zap.String("source", "Helm"))
 	}
 
 	err := actionConfig.Init(helmCfg, namespace, r.cfg.HelmDriver, debugLog)
@@ -92,31 +102,31 @@ func (r *helmRunner) initActionConfig(namespace string, debugLog action.DebugLog
 	return actionConfig, nil
 }
 
-func (r *helmRunner) readCommandData(in runner.StartInput) (Input, CommandType, error) {
+func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 	var args Arguments
 	err := yaml.Unmarshal(in.Args, &args)
 	if err != nil {
-		return Input{}, "", errors.Wrap(err, "while unmarshaling runner arguments")
+		return Input{}, errors.Wrap(err, "while unmarshaling runner arguments")
 	}
 
 	return Input{
 		Args:    args,
 		ExecCtx: in.ExecCtx,
-	}, args.Command, nil
+	}, nil
 }
 
 func (r *helmRunner) saveOutput(out Output) error {
-	log.Printf("Saving default output to %s\n...", out.Default.Path)
-	err := r.saveToFile(out.Default.Path, out.Default.Value)
+	r.log.Debug("Saving Helm release output", zap.String("path", out.Release.Path))
+	err := r.saveToFile(out.Release.Path, out.Release.Value)
 	if err != nil {
-		return errors.Wrap(err, "while saving default output")
+		return errors.Wrap(err, "while saving Helm release output")
 	}
 
 	if out.Additional == nil {
 		return nil
 	}
 
-	log.Printf("Saving additional output to %s\n...", out.Additional.Path)
+	r.log.Debug("Saving additional output", zap.String("path", out.Additional.Path))
 	err = r.saveToFile(out.Additional.Path, out.Additional.Value)
 	if err != nil {
 		return errors.Wrap(err, "while saving default output")
@@ -130,7 +140,7 @@ const defaultFilePermissions = 0644
 func (r *helmRunner) saveToFile(path string, bytes []byte) error {
 	err := ioutil.WriteFile(path, bytes, defaultFilePermissions)
 	if err != nil {
-		return errors.Wrapf(err, "while writing file to '%s'", path)
+		return errors.Wrapf(err, "while writing file to %q", path)
 	}
 
 	return nil

@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"log"
+
+	"go.uber.org/zap"
 
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
@@ -21,12 +22,14 @@ type renderer interface {
 
 type installer struct {
 	actionCfg           *action.Configuration
+	log                 *zap.Logger
 	renderer            renderer
 	repositoryCachePath string
 }
 
-func newInstaller(repositoryCachePath string, actionCfg *action.Configuration, renderer renderer) *installer {
+func newInstaller(log *zap.Logger, repositoryCachePath string, actionCfg *action.Configuration, renderer renderer) *installer {
 	return &installer{
+		log:                 log,
 		actionCfg:           actionCfg,
 		renderer:            renderer,
 		repositoryCachePath: repositoryCachePath,
@@ -68,7 +71,7 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "Helm release is nil")
 	}
 
-	defaultOut, err := i.defaultOutputFrom(in.Args, helmRelease)
+	releaseOut, err := i.releaseOutputFrom(in.Args, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
@@ -80,11 +83,11 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 
 	status := Status{
 		Succeeded: true,
-		Message:   fmt.Sprintf("release '%s' installed successfully in namespace '%s'", helmRelease.Name, helmRelease.Namespace),
+		Message:   fmt.Sprintf("release %q installed successfully in namespace %q", helmRelease.Name, helmRelease.Namespace),
 	}
 
 	return Output{
-		Default:    defaultOut,
+		Release:    releaseOut,
 		Additional: additionalOut,
 	}, status, nil
 }
@@ -125,18 +128,18 @@ func (i *installer) getValues(inlineValues map[string]interface{}, valuesFilePat
 		return nil, errors.New("providing values both inline and from file is currently unsupported")
 	}
 
-	log.Printf("Reading values from file '%s'", valuesFilePath)
+	i.log.Debug("Reading values from file", zap.String("path", valuesFilePath))
 	bytes, err := ioutil.ReadFile(valuesFilePath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "while reading values from file '%s'", valuesFilePath)
+		return nil, errors.Wrapf(err, "while reading values from file %q", valuesFilePath)
 	}
 	if err := yaml.Unmarshal(bytes, &values); err != nil {
-		return nil, errors.Wrapf(err, "while parsing '%s'", valuesFilePath)
+		return nil, errors.Wrapf(err, "while parsing %q", valuesFilePath)
 	}
 	return values, nil
 }
 
-func (i *installer) defaultOutputFrom(args Arguments, helmRelease *release.Release) (File, error) {
+func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Release) (File, error) {
 	releaseData := ChartRelease{
 		Name:      helmRelease.Name,
 		Namespace: helmRelease.Namespace,
@@ -153,14 +156,14 @@ func (i *installer) defaultOutputFrom(args Arguments, helmRelease *release.Relea
 	}
 
 	return File{
-		Path:  fmt.Sprintf("%s/%s", args.Output.Directory, args.Output.Default.FileName),
+		Path:  fmt.Sprintf("%s/%s", args.Output.Directory, args.Output.HelmRelease.FileName),
 		Value: bytes,
 	}, nil
 }
 
 func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) (*File, error) {
 	if args.Output.Additional.FileName == "" {
-		log.Println("no additional output to render and save. skipping...")
+		i.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
 	}
 

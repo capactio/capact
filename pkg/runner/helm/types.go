@@ -28,12 +28,12 @@ type Arguments struct {
 }
 
 type OutputArgs struct {
-	Directory  string           `json:"directory"`
-	Default    DefaultOutput    `json:"default"`
-	Additional AdditionalOutput `json:"additional"`
+	Directory   string           `json:"directory"`
+	HelmRelease ReleaseOutput    `json:"helmRelease"`
+	Additional  AdditionalOutput `json:"additional"`
 }
 
-type DefaultOutput struct {
+type ReleaseOutput struct {
 	FileName string `json:"fileName"`
 }
 
@@ -65,7 +65,7 @@ type Status struct {
 }
 
 type Output struct {
-	Default    File
+	Release    File
 	Additional *File
 }
 

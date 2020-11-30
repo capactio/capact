@@ -38,7 +38,7 @@ spec:
               },
               "output": {
                 "directory": "./",
-                "default": { "fileName": "release.yaml" }
+                "helmRelease": { "fileName": "release.yaml" }
               }
             }
           }
@@ -170,19 +170,19 @@ spec:
                     "default"
                 ],
                 "properties": {
-                  "default": {
-                    "$id": "#/properties/args/properties/output/properties/default",
+                  "helmRelease": {
+                    "$id": "#/properties/args/properties/output/properties/helmRelease",
                     "type": "object",
-                    "title": "The parameters for default output file",
+                    "title": "The parameters for Helm release output file",
                     "additionalProperties": false,
                     "required": [
                         "fileName"
                     ],
                     "properties": {
                       "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/default/properties/fileName",
+                        "$id": "#/properties/args/properties/output/properties/helmRelease/properties/fileName",
                         "type": "string",
-                        "title": "The file name of the default output file"
+                        "title": "The file name of the helm-release output file"
                       }
                     }
                   },

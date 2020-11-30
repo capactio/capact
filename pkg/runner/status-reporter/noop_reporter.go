@@ -13,7 +13,7 @@ var _ runner.StatusReporter = &NoopReporter{}
 type NoopReporter struct {
 }
 
-// NewK8sConfigMap returns new K8sConfigMapReporter instance.
+// NewNoop returns new NoopReporter instance.
 func NewNoop() *NoopReporter {
 	return &NoopReporter{}
 }
