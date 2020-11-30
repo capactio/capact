@@ -10,12 +10,11 @@ args:
   group: "sql"
   command: "create"
   generateName: true
-  configuration: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+  configuration: # this is mapped to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
     name: runner-devel
     databaseVersion: "POSTGRES_11"
     region: "us-central"
     defaultDBName: postgres
-    rootPassword: s3cr3t
     settings:
       tier: "db-g1-small"
       ipConfiguration:

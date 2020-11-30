@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
+	"github.com/sethvargo/go-password/password"
 	"go.uber.org/zap"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -42,12 +43,16 @@ const (
 	CreateTimeout time.Duration = time.Minute * 5
 )
 
-func NewRunner(logger *zap.Logger, sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
+func NewRunner(sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
 	return &Runner{
-		logger:          logger,
+		logger:          &zap.Logger{},
 		sqladminService: sqladminService,
 		gcpProjectName:  gcpProjectName,
 	}
+}
+
+func (r *Runner) InjectLogger(logger *zap.Logger) {
+	r.logger = logger
 }
 
 func (r *Runner) Name() string {
@@ -61,12 +66,15 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 		return nil, errors.Wrap(err, "while unmarshaling input parameters")
 	}
 
-	instanceInput := r.getDatabaseInstanceToCreate(&in.ExecCtx, args)
+	instanceInput, err := r.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, args)
+	if err != nil {
+		return nil, errors.Wrap(err, "while preparing create database instance parameters")
+	}
 
 	logger := r.logger.With(zap.String("instanceName", instanceInput.Name))
 	logger.Info("creating database")
 
-	err := r.createDatabaseInstance(instanceInput)
+	err = r.createDatabaseInstance(instanceInput)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating database instance")
 	}
@@ -85,7 +93,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 		Port:          5432,
 		DefaultDBName: "postgres",
 		Username:      "postgres",
-		Password:      args.Configuration.RootPassword,
+		Password:      instanceInput.RootPassword,
 	}
 
 	if err := createArtifacts(&args.Output, output); err != nil {
@@ -103,7 +111,7 @@ func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForComplet
 	}, nil
 }
 
-func (r *Runner) getDatabaseInstanceToCreate(execCtx *runner.ExecutionContext, args *Args) *sqladmin.DatabaseInstance {
+func (r *Runner) prepareCreateDatabaseInstanceParameters(execCtx *runner.ExecutionContext, args *Args) (*sqladmin.DatabaseInstance, error) {
 	instance := args.Configuration
 
 	if args.GenerateName {
@@ -111,7 +119,16 @@ func (r *Runner) getDatabaseInstanceToCreate(execCtx *runner.ExecutionContext, a
 		instance.Name = fmt.Sprintf("%s-%s", execCtx.Name, UUID.String())
 	}
 
-	return &instance
+	if instance.RootPassword == "" {
+		passwd, err := password.Generate(16, 4, 4, false, false)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating random root password")
+		}
+
+		instance.RootPassword = passwd
+	}
+
+	return &instance, nil
 }
 
 func (r *Runner) createDatabaseInstance(instance *sqladmin.DatabaseInstance) error {

@@ -110,23 +110,51 @@ spec:
                 "title": "Additional configuration properties",
                 "additionalProperties": true
               },
-              "additionalOutput": {
-                "$id": "#/properties/args/properties/additionalOutput",
+              "output": {
+                "$id": "#/properties/args/properties/output",
                 "type": "object",
-                "title": "The parameters for additional output file",
+                "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["value", "path"],
+                "required": ["directory", "default"],
                 "properties": {
-                  "value": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/value",
-                     "type": "object",
-                     "title": "The shape for output file",
-                     "additionalProperties": true
+                  "default": {
+                    "$id": "#/properties/args/properties/output/properties/default",
+                    "type": "object",
+                    "title": "The parameters for default output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "fileName"
+                    ],
+                    "properties": {
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/default/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the default output file"
+                      }
+                    }
                   },
-                  "path": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/path",
-                     "type": "string",
-                     "title": "The path of the output file"
+                  "additional": {
+                    "$id": "#/properties/args/properties/output/properties/additional",
+                    "type": "object",
+                    "title": "The parameters for additional output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "value",
+                        "fileName"
+                    ],
+                    "properties": {
+                      "value": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/value",
+                        "type": "object",
+                        "title": "The shape for additional output file",
+                        "additionalProperties": true
+                      },
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the output file"
+                      }
+                    }
                   }
                 }
               }
