@@ -8,18 +8,12 @@ import (
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/runner/cloudsql"
+	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
-type noopReporter struct {
-}
-
 type Config struct {
 	GcpProjectName string `envconfig:"default=projectvoltron"`
-}
-
-func (r *noopReporter) Report(ctx context.Context, execCtx runner.ExecutionContext, status interface{}) error {
-	return nil
 }
 
 func main() {
@@ -32,7 +26,9 @@ func main() {
 
 	cloudsqlRunner := cloudsql.NewRunner(service, cfg.GcpProjectName)
 
-	mgr, err := runner.NewManager(cloudsqlRunner, &noopReporter{})
+	statusReporter := statusreporter.NewNoop()
+
+	mgr, err := runner.NewManager(cloudsqlRunner, statusReporter)
 	exitOnError(err, "failed to create manager")
 
 	stop := signals.SetupSignalHandler()

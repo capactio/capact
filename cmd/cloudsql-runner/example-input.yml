@@ -24,7 +24,7 @@ args:
 
   output:
     directory: .
-    default:
+    cloudSQLInstance:
       filename: cloudsql-instance.yml
     additional:
       filename: "cloudsql-additional.yml"

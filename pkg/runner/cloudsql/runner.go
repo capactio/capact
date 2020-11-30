@@ -23,10 +23,10 @@ type Args struct {
 }
 
 type OutputArgs struct {
-	Directory string `json:"directory"`
-	Default   struct {
+	Directory        string `json:"directory"`
+	CloudSQLInstance struct {
 		Filename string `json:"filename"`
-	} `json:"default"`
+	} `json:"cloudSQLInstance"`
 	Additional *struct {
 		Path  string          `json:"filename"`
 		Value json.RawMessage `json:"value"`

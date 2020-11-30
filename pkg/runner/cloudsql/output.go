@@ -31,7 +31,7 @@ func createArtifacts(args *OutputArgs, values *outputValues) error {
 		return err
 	}
 
-	if err := createDefaultArtifact(args, values); err != nil {
+	if err := createCloudSQLInstanceArtifact(args, values); err != nil {
 		return errors.Wrap(err, "while creating default artifact")
 	}
 
@@ -44,7 +44,7 @@ func createArtifacts(args *OutputArgs, values *outputValues) error {
 	return nil
 }
 
-func createDefaultArtifact(args *OutputArgs, output *outputValues) error {
+func createCloudSQLInstanceArtifact(args *OutputArgs, output *outputValues) error {
 	artifact := &instanceArtifact{
 		Name:            output.DBInstance.Name,
 		Project:         output.DBInstance.Project,
@@ -57,7 +57,7 @@ func createDefaultArtifact(args *OutputArgs, output *outputValues) error {
 		return errors.Wrap(err, "while marshaling artifact to YAML")
 	}
 
-	artifactFilepath := fmt.Sprintf("%s/%s", args.Directory, args.Default.Filename)
+	artifactFilepath := fmt.Sprintf("%s/%s", args.Directory, args.CloudSQLInstance.Filename)
 
 	// #nosec G306: Poor file permissions used when writing to a new file
 	if err := ioutil.WriteFile(artifactFilepath, data, 0644); err != nil {

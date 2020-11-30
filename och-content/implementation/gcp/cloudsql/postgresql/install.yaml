@@ -108,7 +108,7 @@ spec:
 #                                      value: "0.0.0.0/0"
 #                            output:
 #                              directory: "/out"
-#                              default:
+#                              cloudSQLInstance:
 #                                fileName: "cloudsql-instance.yaml"
 #                              additional:
 #                                fileName: "postgresql.yaml"

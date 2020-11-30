@@ -115,21 +115,21 @@ spec:
                 "type": "object",
                 "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["directory", "default"],
+                "required": ["directory", "cloudSQLInstance"],
                 "properties": {
-                  "default": {
-                    "$id": "#/properties/args/properties/output/properties/default",
+                  "cloudSQLInstance": {
+                    "$id": "#/properties/args/properties/output/properties/cloudSQLInstance",
                     "type": "object",
-                    "title": "The parameters for default output file",
+                    "title": "Parameters for the CloudSQL instance (cap.type.gcp.cloudsql) output file",
                     "additionalProperties": false,
                     "required": [
                         "fileName"
                     ],
                     "properties": {
                       "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/default/properties/fileName",
+                        "$id": "#/properties/args/properties/output/properties/cloudSQLInstance/properties/fileName",
                         "type": "string",
-                        "title": "The file name of the default output file"
+                        "title": "The file name of the CloudSQLInstance output file"
                       }
                     }
                   },
