@@ -244,6 +244,13 @@ voltron::install::charts() {
 
     voltron::install::argo
 
+     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
+      shout "Skipping kubed installation cause DISABLE_KUBED_INSTALLATION is set to true."
+    else
+      voltron::install::kubed
+      voltron::synchronize::minio_secret
+    fi
+
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
@@ -278,6 +285,14 @@ voltron::install::monitoring() {
         --namespace="monitoring"
 }
 
+voltron::install::kubed() {
+    # not waiting as it is not needed.
+    shout "- Installing kubed Helm chart [wait: false]..."
+    helm "$(voltron::install::detect_command)" kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
+        --create-namespace \
+        --namespace="kubed"
+}
+
 voltron::install::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
@@ -309,6 +324,11 @@ voltron::install::argo() {
     helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
         --create-namespace \
         --namespace="argo"
+}
+
+voltron::synchronize::minio_secret() {
+  echo "Annotating Minio secret to be synchronized across all namespaces..."
+  kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync=""
 }
 
 # Updates /etc/hosts with all Voltron subdomains.

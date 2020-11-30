@@ -1,0 +1,6 @@
+dependencies:
+- name: kubed
+  repository: https://charts.appscode.com/stable/
+  version: v0.12.0
+digest: sha256:3ebc8bc3392e0852d2b7dfb86287a1aaf5b06a94574285a565b647d8017c969c
+generated: "2020-11-30T11:23:32.635681+01:00"
