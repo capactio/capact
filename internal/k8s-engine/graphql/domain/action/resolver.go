@@ -159,7 +159,6 @@ func dummyAction(name string) *graphql.Action {
 				Username: "mszostok",
 			},
 			Runner: &graphql.RunnerStatus{
-				Interface: "cap.type.runner.argo",
 				Status: struct {
 					ArgoWorkflowRef string
 				}{

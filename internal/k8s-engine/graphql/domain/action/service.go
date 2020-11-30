@@ -17,8 +17,6 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-const actionResourceKind = "Action"
-
 type Service struct {
 	log    *zap.Logger
 	k8sCli client.Client
@@ -48,7 +46,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 		secret.SetOwnerReferences([]v1.OwnerReference{
 			{
 				APIVersion: v1alpha1.GroupVersion.Identifier(),
-				Kind:       actionResourceKind,
+				Kind:       v1alpha1.ActionKind,
 				Name:       owner.Name,
 				UID:        owner.UID,
 			},

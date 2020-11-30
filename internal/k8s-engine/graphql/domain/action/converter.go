@@ -198,8 +198,7 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 	var runnerStatus *graphql.RunnerStatus
 	if in.Runner != nil {
 		runnerStatus = &graphql.RunnerStatus{
-			Interface: string(in.Runner.Interface),
-			Status:    c.runtimeExtensionToJSONRawMessage(in.Runner.Status),
+			Status: c.runtimeExtensionToJSONRawMessage(in.Runner.Status),
 		}
 	}
 

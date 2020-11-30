@@ -56,13 +56,16 @@ type Config struct {
 	// MockGraphQL sets the grapql servers to use mocked data
 	MockGraphQL bool `envconfig:"default=false"`
 
-	GraphQLGateway GraphQLGateway
-}
+	GraphQLGateway struct {
+		Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
+		Username string
+		Password string
+	}
 
-type GraphQLGateway struct {
-	Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
-	Username string
-	Password string
+	BuiltinRunner struct {
+		Timeout time.Duration `envconfig:"default=30m"`
+		Image   string
+	}
 }
 
 func main() {
@@ -93,8 +96,9 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
+	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
-	actionCtrl := controller.NewActionReconciler(mgr.GetClient(), ctrl.Log.WithName("controllers").WithName("Action"), ochClient)
+	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 

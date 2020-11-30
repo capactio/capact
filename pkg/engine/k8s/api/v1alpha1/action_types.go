@@ -68,18 +68,54 @@ type ActionSpec struct {
 	// +kubebuilder:default=false
 	Run *bool `json:"run,omitempty"`
 
+	// DryRun specifies whether runner should perform only dry-run action without persisting the resource.
+	// +optional
+	// +kubebuilder:default=false
+	DryRun *bool `json:"dryRun,omitempty"`
+
 	// Cancel specifies whether the Action execution should be cancelled.
 	// +optional
 	// +kubebuilder:default=false
 	Cancel *bool `json:"cancel,omitempty"`
 }
 
+func isBoolSet(in *bool) bool {
+	return in != nil && *in
+}
+
+func (in *ActionSpec) IsDryRun() bool {
+	return isBoolSet(in.DryRun)
+}
+
 func (in *ActionSpec) IsRun() bool {
-	return in.Run != nil && *in.Run
+	return isBoolSet(in.Run)
 }
 
 func (in *ActionSpec) IsCancelled() bool {
-	return in.Cancel != nil && *in.Cancel
+	return isBoolSet(in.Cancel)
+}
+
+func (in *Action) IsExecuted() bool {
+	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCancelledActionPhase
+}
+
+// TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
+func (in *Action) IsUninitialized() bool {
+	return in.Status.Phase == "" || in.Status.Phase == InitialActionPhase
+}
+
+func (in *Action) IsBeingRendered() bool {
+	return in.Status.Phase == BeingRenderedActionPhase
+}
+
+// IsReadyToExecute returns true if Action is fully rendered and approved by user.
+func (in *Action) IsReadyToExecute() bool {
+	return in.Status.Phase == ReadyToRunActionPhase && in.Spec.IsRun()
+}
+
+// IsBeingDeleted returns true if a deletion timestamp is set
+func (in *Action) IsBeingDeleted() bool {
+	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
 // ActionInput describes Action input.
@@ -266,8 +302,7 @@ type RenderingIterationStatus struct {
 // RunnerStatus holds data related to built-in Runner that runs the Action.
 type RunnerStatus struct {
 
-	// Interface is a full path of Runner Interface manifest.
-	Interface NodePath `json:"interface"`
+	// TODO: Once we will support nested runners statues, add Interface property which is a full path of Runner Interface manifest .
 
 	// StatusRef contains reference to resource with arbitrary Runner status data.
 	// +optional

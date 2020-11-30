@@ -102,8 +102,7 @@ type OutputArtifact struct {
 
 // Additional Action status from the Runner
 type RunnerStatus struct {
-	Interface string      `json:"interface"`
-	Status    interface{} `json:"status"`
+	Status interface{} `json:"status"`
 }
 
 // Stores user information
