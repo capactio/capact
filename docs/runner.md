@@ -21,7 +21,13 @@ context:
       # Kubernetes platform context properties:
       namespace: "k8s-ns-name"      # Specifies the Kubernetes Namespace where Action is executed. The runner must create all Kubernetes resources in this Namespace.
       serviceAccountName: "sa-name" # Specifies the Kubernetes ServiceAccount. The runner must use it to create all Kubernetes resources.        
-
+      ownerRef: # Specifies owner reference details (Action Custom Resource controller)
+        apiVersion: core.projectvoltron.dev/v1alpha1 # Specifies the owner resource apiVersion
+        kind: Action # Specifies the owner resource kind
+        blockOwnerDeletion: true # The owner cannot be deleted before the referenced object
+        controller: true # Specifies whether the reference points to the managing controller
+        name: action-name # Specifies the name of the Action Custom Resource
+        uid: 3826a747-cfac-49c7-a81e-1d48cc23096f # Specifies the UID of the Action Custom Resource
 args:
     # Rendered data data from the Implementation `spec.action.args` property.
 ```

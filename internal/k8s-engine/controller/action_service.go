@@ -140,6 +140,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			Platform: runner.KubernetesPlatformConfig{
 				Namespace:          action.Namespace,
 				ServiceAccountName: saName,
+				OwnerRef:           *metav1.NewControllerRef(action, v1alpha1.GroupVersion.WithKind(v1alpha1.ActionKind)),
 			},
 		},
 		Args: renderedAction.Args,

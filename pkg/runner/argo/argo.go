@@ -64,6 +64,9 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 			Labels: map[string]string{
 				wfManagedByLabelKey: runnerName,
 			},
+			OwnerReferences: []metav1.OwnerReference{
+				in.ExecCtx.Platform.OwnerRef,
+			},
 		},
 		Spec: renderedWorkflow.Spec,
 	}

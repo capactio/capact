@@ -4,6 +4,8 @@ image:
   name: k8s-engine
   pullPolicy: IfNotPresent
 
+builtInRunnerImage: gcr.io/projectvoltron/pr/argo-runner:PR-67
+
 controller:
   metricsPort: "8081"
 
