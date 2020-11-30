@@ -21,7 +21,7 @@ main() {
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
     export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
-    voltron::install::charts
+    voltron::install_upgrade::charts
 }
 
 main

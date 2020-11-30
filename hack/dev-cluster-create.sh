@@ -35,7 +35,7 @@ main() {
     voltron::update::images_on_kind
 
     export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
-    voltron::install::charts
+    voltron::install_upgrade::charts
 
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
       shout "Skipping updating /etc/hosts cause DISABLE_HOSTS_UPDATE is set to true."

@@ -198,8 +198,6 @@ jobs:
         run: | 
           ./hack/ci/add-job-ip.sh
       - name: Upgrade components
-        env:
-          UPDATE: "true"
         run: |
           ./hack/ci/cluster-components-install.sh
       - name: Network cleanup

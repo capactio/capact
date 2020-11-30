@@ -19,7 +19,6 @@ source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; e
 main() {
     shout "Updating development local cluster..."
 
-    export UPDATE=true
     export DOCKER_TAG="dev-$RANDOM"
     export DOCKER_REPOSITORY="local"
     export REPO_DIR=$REPO_ROOT_DIR
@@ -28,7 +27,7 @@ main() {
     voltron::update::images_on_kind
 
     export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
-    voltron::install::charts
+    voltron::install_upgrade::charts
 
     shout "Development local cluster updated successfully."
 }

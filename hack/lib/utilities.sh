@@ -223,6 +223,8 @@ docker::delete_images() {
 # Voltron functions
 #
 
+# Installs Voltron charts. If they are already installed, it upgrades them.
+#
 # Required envs:
 #  - DOCKER_REPOSITORY
 #  - DOCKER_TAG
@@ -231,30 +233,27 @@ docker::delete_images() {
 #  - VOLTRON_RELEASE_NAME
 #  - CLUSTER_TYPE
 #  - MOCK_GRAPHQL - if set to true then predifined values are used in graphql
-#
-# Optional envs:
-#  - UPDATE - if specified then, Helm charts are updated
-voltron::install::charts() {
+voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
-    voltron::install::ingress_controller
+    voltron::install_upgrade::ingress_controller
 
-    voltron::install::argo
+    voltron::install_upgrade::argo
 
      if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping kubed installation cause DISABLE_KUBED_INSTALLATION is set to true."
     else
-      voltron::install::kubed
+      voltron::install_upgrade::kubed
       voltron::synchronize::minio_secret
     fi
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
-      voltron::install::monitoring
+      voltron::install_upgrade::monitoring
     fi
 
     shout "- Installing Voltron Helm chart from sources [wait: true]..."
@@ -267,7 +266,8 @@ voltron::install::charts() {
       readonly VOLTRON_OVERRIDES=""
     fi
 
-    helm "$(voltron::install::detect_command)" "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
+    helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
+        --install \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
@@ -277,23 +277,25 @@ voltron::install::charts() {
         --wait
 }
 
-voltron::install::monitoring() {
+voltron::install_upgrade::monitoring() {
     # not waiting as Helm Charts installation takes additional ~3 minutes. To proceed further we need only monitoring CRDs.
     shout "- Installing monitoring Helm chart [wait: false]..."
-    helm "$(voltron::install::detect_command)" monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
+    helm upgrade monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
+        --install \
         --create-namespace \
         --namespace="monitoring"
 }
 
-voltron::install::kubed() {
+voltron::install_upgrade::kubed() {
     # not waiting as it is not needed.
     shout "- Installing kubed Helm chart [wait: false]..."
-    helm "$(voltron::install::detect_command)" kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
+    helm upgrade kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
+        --install \
         --create-namespace \
         --namespace="kubed"
 }
 
-voltron::install::ingress_controller() {
+voltron::install_upgrade::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
 
@@ -304,7 +306,8 @@ voltron::install::ingress_controller() {
       readonly INGRESS_CTRL_OVERRIDES=""
     fi
 
-    helm "$(voltron::install::detect_command)" ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
+    helm upgrade ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
+        --install \
         --create-namespace \
         --namespace="ingress-nginx" \
         -f "${INGRESS_CTRL_OVERRIDES}" \
@@ -317,11 +320,12 @@ voltron::install::ingress_controller() {
       --timeout=90s
 }
 
-voltron::install::argo() {
+voltron::install_upgrade::argo() {
     # not waiting as other components do not need it during installation
     shout "- Installing Argo Helm chart [wait: false]..."
 
-    helm "$(voltron::install::detect_command)" argo "${K8S_DEPLOY_DIR}/charts/argo" \
+    helm upgrade argo "${K8S_DEPLOY_DIR}/charts/argo" \
+        --install \
         --create-namespace \
         --namespace="argo"
 }
@@ -400,15 +404,6 @@ voltron::update::images_on_kind() {
 
     popd || return
 }
-
-voltron::install::detect_command() {
-  if [[ "${UPDATE:-x}" == "true" ]]; then
-    echo "upgrade"
-    return
-  fi
-  echo "install"
-}
-
 
 # Installs kind and helm dependencies locally.
 # Required envs:
