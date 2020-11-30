@@ -11,3 +11,7 @@ func Bool(in bool) *bool {
 func Int32(in int32) *int32 {
 	return &in
 }
+
+func Int64(in int64) *int64 {
+	return &in
+}

@@ -1,10 +1,10 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
@@ -30,6 +30,8 @@ const (
 	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo"
 	secretInputDataEntryName       = "input.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
+	k8sJobRunnerVolumeName         = "input-volume"
+	k8sJobActiveDeadlinePadding    = 10 * time.Second
 )
 
 type OCHImplementationGetter interface {
@@ -59,7 +61,7 @@ func NewActionService(cli client.Client, implGetter OCHImplementationGetter, bui
 
 // EnsureWorkflowSAExists creates dedicated ServiceAccount with cluster-admin permissions.
 //
-// This method MUST be removed in the near future as we should use a user service account instead.
+// TODO: This method MUST be removed in the near future as we should use a user service account instead.
 // When deleting, remove also the above kubebuilder rbac markers.
 func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1alpha1.Action) (*corev1.ServiceAccount, error) {
 	sa := &corev1.ServiceAccount{
@@ -134,17 +136,13 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 		Context: runner.ExecutionContext{
 			Name:    action.Name,
 			DryRun:  action.Spec.IsDryRun(),
-			Timeout: 0,
+			Timeout: runner.Duration(a.runnerTimeout),
 			Platform: runner.KubernetesPlatformConfig{
 				Namespace:          action.Namespace,
 				ServiceAccountName: saName,
 			},
 		},
 		Args: renderedAction.Args,
-	}
-
-	if action.Spec.DryRun != nil {
-		runnerInput.Context.DryRun = *action.Spec.DryRun
 	}
 
 	marshaledInput, err := yaml.Marshal(runnerInput)
@@ -226,8 +224,7 @@ func (a *ActionService) ResolveImplementationForAction(ctx context.Context, acti
 		return nil, errors.Wrap(err, "while fetching implementation")
 	}
 
-	if latestRevision == nil || latestRevision.Spec == nil ||
-		latestRevision.Spec.Action == nil {
+	if latestRevision == nil || latestRevision.Spec == nil || latestRevision.Spec.Action == nil {
 		return nil, errors.New("missing action in Implementation revision")
 	}
 
@@ -262,7 +259,7 @@ func (a *ActionService) GetReportedRunnerStatus(ctx context.Context, action *v1a
 	}
 
 	if action.Status.Runner != nil && action.Status.Runner.Status != nil &&
-		reflect.DeepEqual(action.Status.Runner.Status.Raw, status) {
+		bytes.Equal(action.Status.Runner.Status.Raw, status) {
 		return &GetReportedRunnerStatusOutput{Changed: false}, nil
 	}
 
@@ -319,14 +316,19 @@ func (a *ActionService) objectMetaFromAction(action *v1alpha1.Action) metav1.Obj
 }
 
 func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *batchv1.Job {
+	activeDeadline := a.runnerTimeout + k8sJobActiveDeadlinePadding
+	activeDeadlineSec := activeDeadline.Seconds()
+
 	return &batchv1.Job{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Spec: batchv1.JobSpec{
+			// TODO: In the future we should add retries and each runner should handle them properly.
 			BackoffLimit: ptr.Int32(0),
 			Template: corev1.PodTemplateSpec{
 				Spec: corev1.PodSpec{
-					ServiceAccountName: saName,
-					RestartPolicy:      corev1.RestartPolicyNever,
+					ServiceAccountName:    saName,
+					RestartPolicy:         corev1.RestartPolicyNever,
+					ActiveDeadlineSeconds: ptr.Int64(int64(activeDeadlineSec)),
 					Containers: []corev1.Container{
 						{
 							Name:  "runner",
@@ -343,7 +345,7 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
-									Name:      "input-volume",
+									Name:      k8sJobRunnerVolumeName,
 									MountPath: k8sJobRunnerInputDataMountPath,
 								},
 							},
@@ -351,7 +353,7 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 					},
 					Volumes: []corev1.Volume{
 						{
-							Name: "input-volume",
+							Name: k8sJobRunnerVolumeName,
 							VolumeSource: corev1.VolumeSource{
 								Secret: &corev1.SecretVolumeSource{
 									SecretName: action.Name,

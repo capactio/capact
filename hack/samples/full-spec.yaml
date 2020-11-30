@@ -18,4 +18,5 @@ spec:
     renderingIteration:
       continue: true
   run: false
+  dryRun: false
   cancel: false

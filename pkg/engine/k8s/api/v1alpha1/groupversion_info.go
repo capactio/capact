@@ -20,5 +20,6 @@ var (
 )
 
 const (
+	// ActionKind is Action CRD kind name
 	ActionKind string = "Action"
 )

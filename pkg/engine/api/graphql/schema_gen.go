@@ -108,8 +108,7 @@ type ComplexityRoot struct {
 	}
 
 	RunnerStatus struct {
-		Interface func(childComplexity int) int
-		Status    func(childComplexity int) int
+		Status func(childComplexity int) int
 	}
 
 	UserInfo struct {
@@ -453,13 +452,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Actions(childComplexity, args["filter"].([]*ActionFilter)), true
 
-	case "RunnerStatus.interface":
-		if e.complexity.RunnerStatus.Interface == nil {
-			break
-		}
-
-		return e.complexity.RunnerStatus.Interface(childComplexity), true
-
 	case "RunnerStatus.status":
 		if e.complexity.RunnerStatus.Status == nil {
 			break
@@ -657,7 +649,6 @@ type ActionStatus {
 Additional Action status from the Runner
 """
 type RunnerStatus {
-    interface: NodePath! # Path of the Runner Interface
     status: Any # status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 }
 
@@ -2354,41 +2345,6 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	res := resTmp.(*introspection.Schema)
 	fc.Result = res
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RunnerStatus_interface(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RunnerStatus",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Interface, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RunnerStatus_status(ctx context.Context, field graphql.CollectedField, obj *RunnerStatus) (ret graphql.Marshaler) {
@@ -4158,11 +4114,6 @@ func (ec *executionContext) _RunnerStatus(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RunnerStatus")
-		case "interface":
-			out.Values[i] = ec._RunnerStatus_interface(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "status":
 			out.Values[i] = ec._RunnerStatus_status(ctx, field, obj)
 		default:

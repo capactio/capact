@@ -108,7 +108,8 @@ func (in *Action) IsBeingRendered() bool {
 	return in.Status.Phase == BeingRenderedActionPhase
 }
 
-func (in *Action) IsApprovedForExecution() bool {
+// IsReadyToExecute returns true if Action is fully rendered and approved by user.
+func (in *Action) IsReadyToExecute() bool {
 	return in.Status.Phase == ReadyToRunActionPhase && in.Spec.IsRun()
 }
 
@@ -301,8 +302,7 @@ type RenderingIterationStatus struct {
 // RunnerStatus holds data related to built-in Runner that runs the Action.
 type RunnerStatus struct {
 
-	// Interface is a full path of Runner Interface manifest.
-	Interface NodePath `json:"interface"`
+	// TODO: Once we will support nested runners statues, add Interface property which is a full path of Runner Interface manifest .
 
 	// StatusRef contains reference to resource with arbitrary Runner status data.
 	// +optional

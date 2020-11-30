@@ -379,17 +379,11 @@ spec:
               runner:
                 description: Runner holds data related to Runner that runs the Action.
                 properties:
-                  interface:
-                    description: Interface is a full path of Runner Interface manifest.
-                    minLength: 3
-                    type: string
                   status:
                     description: StatusRef contains reference to resource with arbitrary
                       Runner status data.
                     type: object
                     x-kubernetes-preserve-unknown-fields: true
-                required:
-                - interface
                 type: object
             required:
             - phase

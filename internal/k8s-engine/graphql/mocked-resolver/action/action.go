@@ -167,9 +167,7 @@ func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDet
 			Condition: graphql.ActionStatusConditionInitial,
 			Message:   &message,
 			Timestamp: graphql.Timestamp(time.Now()),
-			Runner: &graphql.RunnerStatus{
-				Interface: "cap.type.runner.argo",
-			},
+			Runner:    &graphql.RunnerStatus{},
 		},
 	}
 	updateAction(newAction, in)

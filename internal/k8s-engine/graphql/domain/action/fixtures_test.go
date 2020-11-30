@@ -77,8 +77,7 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 			Timestamp: graphql.Timestamp(timestamp),
 			Message:   ptr.String("message"),
 			Runner: &graphql.RunnerStatus{
-				Interface: "runner.interface",
-				Status:    ptrToJSONRawMessage(`{"runner":true}`),
+				Status: ptrToJSONRawMessage(`{"runner":true}`),
 			},
 			CreatedBy:   &userInfo,
 			RunBy:       &userInfo,
@@ -203,8 +202,7 @@ func fixK8sAction(t *testing.T, name string) v1alpha1.Action {
 			Phase:   v1alpha1.SucceededActionPhase,
 			Message: ptr.String("message"),
 			Runner: &v1alpha1.RunnerStatus{
-				Interface: "runner.interface",
-				Status:    &runtime.RawExtension{Raw: []byte(`{"runner":true}`)},
+				Status: &runtime.RawExtension{Raw: []byte(`{"runner":true}`)},
 			},
 			Output: &v1alpha1.ActionOutput{
 				Artifacts: &[]v1alpha1.OutputArtifactDetails{

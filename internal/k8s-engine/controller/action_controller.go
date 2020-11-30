@@ -107,7 +107,7 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return result, nil
 	}
 
-	if action.IsApprovedForExecution() {
+	if action.IsReadyToExecute() {
 		log.Info("Execute runner")
 		result, err := r.executeAction(ctx, action)
 		if err != nil {
@@ -225,9 +225,7 @@ func (r *ActionReconciler) reportedRunnerStatus(ctx context.Context, action *v1a
 
 	statusCpy := action.Status.DeepCopy()
 	if statusCpy.Runner == nil {
-		statusCpy.Runner = &v1alpha1.RunnerStatus{
-			Interface: "why.we.need.that.?", // TODO: Any thoughts Paweł? shouldn't that be under `action.Status.Rendering.Action.Interface`?
-		}
+		statusCpy.Runner = &v1alpha1.RunnerStatus{}
 	}
 	statusCpy.Runner.Status = &runtime.RawExtension{
 		Raw: reportedStatus.Status,
