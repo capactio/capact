@@ -87,7 +87,7 @@ Use the following environment variables to configure the Manager:
 
 ###  Argo Workflow Runner
 
-The Argo Workflow Runner implementation is defined in the [pkg/runner/argo](../pkg/runner/argo) package. It creates the Argo Workflow CR and waits for completion using the Kubernetes *watch* functionality. It exits with error when the Argo Workflow with the **RUNNER_CONTEXT_NAME** name already exists. Argo Workflow ServiceAccount is always overridden with the one provided via the **RUNNER_CONTEXT_PLATFORM_SERVICE_ACCOUNT_NAME** environment variable.
+The Argo Workflow Runner implementation is defined in the [pkg/runner/argo](../pkg/runner/argo) package. It creates the Argo Workflow CR and waits for completion using the Kubernetes *watch* functionality. It exits with error when the Argo Workflow with the `context.name` name already exists. Argo Workflow ServiceAccount is always overridden with the one provided via the `context.platform.serviceAccountName` property in the input file.
 
 The implemented dry run functionality only executes the Argo Workflow manifest static validation, and sends a request to the server with the `dry-run` flag, which renders the manifest with the server's representation without creating it.
 

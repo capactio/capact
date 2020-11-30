@@ -35,6 +35,10 @@ spec:
               "chart": {
                 "name": "postgresql",
                 "repo": "https://charts.bitnami.com/bitnami"
+              },
+              "output": {
+                "directory": "./",
+                "helmRelease": { "fileName": "release.yaml" }
               }
             }
           }
@@ -48,25 +52,28 @@ spec:
             "$id": "#/properties/context",
             "type": "object",
             "title": "Runner context",
-            "required": [ "dryRun", "name" ],
+            "required": [
+                "dryRun",
+                "name"
+            ],
             "properties": {
               "dryRun": {
-                  "$id": "#/properties/context/properties/dryRun",
-                  "type": "boolean",
-                  "title": "Describes if the action should test ability to execute, not actually execute",
-                  "default": false
+                "$id": "#/properties/context/properties/dryRun",
+                "type": "boolean",
+                "title": "Describes if the action should test ability to execute, not actually execute",
+                "default": false
               },
               "name": {
-                  "$id": "#/properties/context/properties/name",
-                  "type": "string",
-                  "title": "Describes the name of current run"
+                "$id": "#/properties/context/properties/name",
+                "type": "string",
+                "title": "Describes the name of current run"
               },
               "platform": {
-                  "$id": "#/properties/context/properties/platform",
-                  "type": "object",
-                  "additionalProperties": true,
-                  "default": {},
-                  "title": "Describes platform-specific values"
+                "$id": "#/properties/context/properties/platform",
+                "type": "object",
+                "additionalProperties": true,
+                "default": {},
+                "title": "Describes platform-specific values"
               }
             },
             "additionalProperties": false
@@ -84,20 +91,17 @@ spec:
               "command": {
                 "$id": "#/properties/args/properties/command",
                 "type": "string",
-                "enum": ["install", "upgrade", "delete"],
+                "enum": [
+                    "install",
+                    "upgrade",
+                    "delete"
+                ],
                 "title": "The command to run for Helm"
               },
               "name": {
                 "$id": "#/properties/args/properties/name",
                 "type": "string",
                 "title": "The name of installed release"
-              },
-              "namespace": {
-                "$id": "#/properties/args/properties/namespace",
-                "type": "string",
-                "title": "The namespace schema",
-                "description": "The namespace where the Chart is installed",
-                "default": "default"
               },
               "chart": {
                 "$id": "#/properties/args/properties/chart",
@@ -156,23 +160,59 @@ spec:
                 "type": "string",
                 "title": "The path for file with values for chart"
               },
-              "additionalOutput": {
-                "$id": "#/properties/args/properties/additionalOutput",
+              "output": {
+                "$id": "#/properties/args/properties/output",
                 "type": "object",
-                "title": "The parameters for additional output file",
+                "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["value", "path"],
+                "required": [
+                    "directory",
+                    "default"
+                ],
                 "properties": {
-                  "value": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/value",
-                     "type": "object",
-                     "title": "The shape for output file",
-                     "additionalProperties": true
+                  "helmRelease": {
+                    "$id": "#/properties/args/properties/output/properties/helmRelease",
+                    "type": "object",
+                    "title": "The parameters for Helm release output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "fileName"
+                    ],
+                    "properties": {
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/helmRelease/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the helm-release output file"
+                      }
+                    }
                   },
-                  "path": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/path",
-                     "type": "string",
-                     "title": "The path of the output file"
+                  "additional": {
+                    "$id": "#/properties/args/properties/output/properties/additional",
+                    "type": "object",
+                    "title": "The parameters for additional output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "value",
+                        "fileName"
+                    ],
+                    "properties": {
+                      "value": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/value",
+                        "type": "object",
+                        "title": "The shape for additional output file",
+                        "additionalProperties": true
+                      },
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the output file"
+                      }
+                    }
+                  },
+                  "directory": {
+                    "$id": "#/properties/args/properties/output/properties/directory",
+                    "type": "string",
+                    "title": "The directory path for the output files"
                   }
                 }
               }

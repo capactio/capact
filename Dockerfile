@@ -24,6 +24,9 @@ RUN --mount=target=. \
 FROM scratch
 ARG COMPONENT
 
+# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
 COPY --from=builder /bin/$COMPONENT /app
 COPY hack/mock/ /mock/
 

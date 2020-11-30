@@ -49,11 +49,11 @@ func NewRunner(wfClientset wfclientset.Interface) *Runner {
 
 // Start the Argo Workflow from the given manifest.
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
-	var renderedWorklfow = struct {
+	var renderedWorkflow = struct {
 		Spec wfv1.WorkflowSpec `json:"workflow"`
 	}{}
 
-	if err := yaml.Unmarshal(in.Args, &renderedWorklfow); err != nil {
+	if err := yaml.Unmarshal(in.Args, &renderedWorkflow); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling workflow spec")
 	}
 
@@ -65,7 +65,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 				wfManagedByLabelKey: runnerName,
 			},
 		},
-		Spec: renderedWorklfow.Spec,
+		Spec: renderedWorkflow.Spec,
 	}
 
 	// We have agreement that we should return error also if workflow already exits.

@@ -69,10 +69,10 @@ spec:
               artifacts:
                 - name: helm-release
                   globalName: helm-release
-                  path: "/out/helm-release"
+                  path: "/out/helm-release.yaml"
                 - name: postgresql
                   globalName: postgresql
-                  path: "/out/postgresql"
+                  path: "/out/postgresql.yaml"
             container:
 # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
 #            {{ action:
@@ -80,22 +80,25 @@ spec:
 #                  args:
 #                    command: "install"
 #                    generateName: true
-#                    namespace: "{{ .Context.namespace }}"
 #                    chart:
 #                      name: "postgresql"
 #                      repo: "https://charts.bitnami.com/bitnami"
 #                    values:
 #                      image:
 #                        tag: "{{ .Context.appVersion }}"
-#                    additionalOutput:
-#                      path: "{{`{{outputs.artifacts.postgresql.path}}`}}"
-#                      value:
-#                        host: "{{`{{ template "postgresql.fullname" . }}`}}"
-#                        port: "{{`{{ .Values.service.port }}`}}"
-#                        defaultDBName: "{{`.Values.postgresqlDatabase`}}"
+#                    output:
+#                      directory: "/out"
+#                      helmRelease:
+#                        fileName: "helm-release.yaml"
+#                      additional:
+#                        fileName: "postgresql.yaml"
+#                      value: |-
+#                        host: "{{ template "postgresql.fullname" . }}"
+#                        port: "{{ template "postgresql.port" . }}"
+#                        defaultDBName: "{{ template "postgresql.database" . }}"
 #                        superuser:
-#                          username: "{{`{{ .Values.postgresqlUsername }}`}}"
-#                          password: "{{`{{ .Values.postgresqlPassword }}`}}"
+#                          username: "{{ template "postgresql.username" . }}"
+#                          password: "{{ template "postgresql.password" . }}"
 #              }}
 
 

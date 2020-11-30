@@ -198,16 +198,19 @@ spec:
 #                 args:
 #                   command: "install"
 #                   generateName: true
-#                   namespace: "{{ .Context.namespace }}"
 #                   chart:
 #                     name: "jira-software"
 #                     repo: "https://helm.mox.sh"
 #                   valuesFromFile: "{{`{{inputs.artifacts.jira-helm-values.path}}`}}"
-#                   additionalOutput:
-#                     path: "{{`{{outputs.artifacts.jira-config.path}}`}}"
-#                     value:
-#                       version: "{{`{{ .Values.image.tag }}`}}"
-#                       host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
+#                   output:
+#                     directory: "/out"
+#                     helmRelease:
+#                       fileName: "helm-release.yaml"
+#                     additional:
+#                       fileName: "jira.yaml"
+#                       value: |-
+#                         version: "{{`{{ .Values.image.tag }}`}}"
+#                         host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
 #              }}
 
 signature:
