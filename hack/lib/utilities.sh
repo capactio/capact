@@ -332,7 +332,7 @@ voltron::install_upgrade::argo() {
 
 voltron::synchronize::minio_secret() {
   echo "Annotating Minio secret to be synchronized across all namespaces..."
-  kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync=""
+  kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync="" --overwrite
 }
 
 # Updates /etc/hosts with all Voltron subdomains.

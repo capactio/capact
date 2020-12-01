@@ -51,7 +51,7 @@ spec:
             - name: APP_MOCKGRAPHQL
               value: "{{ .Values.global.mockGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
-              value: "{{ .Values.builtInRunnerImage }}"
+              value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           ports:
             - name: http
               containerPort: 8080
