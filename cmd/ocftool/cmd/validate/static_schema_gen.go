@@ -144,7 +144,6 @@ var StaticSchema = func() http.FileSystem {
 		fs["/README.md"].(os.FileInfo),
 	}
 	fs["/0.0.1"].(*vfsgen۰DirInfo).entries = []os.FileInfo{
-		fs["/0.0.1/examples"].(os.FileInfo),
 		fs["/0.0.1/schema"].(os.FileInfo),
 	}
 	fs["/0.0.1/schema"].(*vfsgen۰DirInfo).entries = []os.FileInfo{

@@ -3,7 +3,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -52,14 +51,20 @@ type dirsIgnorant struct {
 	skipDirs map[string]struct{}
 }
 
-func (f dirsIgnorant) Stat() (os.FileInfo, error) {
-	fi, err := f.File.Stat()
+func (f dirsIgnorant) Readdir(count int) ([]os.FileInfo, error) {
+	info, err := f.File.Readdir(count)
 	if err != nil {
 		return nil, err
 	}
-	_, skip := f.skipDirs[fi.Name()]
-	if fi.IsDir() && skip {
-		return nil, fmt.Errorf("directory %q should be ignored", fi.Name())
+
+	var out []os.FileInfo
+	for _, i := range info {
+		_, skip := f.skipDirs[i.Name()]
+		if i.IsDir() && skip {
+			continue
+		}
+
+		out = append(out, i)
 	}
-	return fi, nil
+	return out, nil
 }
