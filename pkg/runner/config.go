@@ -3,6 +3,8 @@ package runner
 import (
 	"encoding/json"
 	"time"
+
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Config holds whole configuration for Manager.
@@ -26,8 +28,9 @@ type ExecutionContext struct {
 
 // KubernetesPlatformConfig holds Kubernetes specific configuration that can be utilized by K8s runners.
 type KubernetesPlatformConfig struct {
-	Namespace          string `json:"namespace"`
-	ServiceAccountName string `json:"serviceAccountName"`
+	Namespace          string            `json:"namespace"`
+	ServiceAccountName string            `json:"serviceAccountName"`
+	OwnerRef           v1.OwnerReference `json:"ownerRef"`
 }
 
 // Duration implements own unmarshal function to solve problem with:

@@ -4,6 +4,10 @@ image:
   name: k8s-engine
   pullPolicy: IfNotPresent
 
+builtInRunner:
+  image:
+    name: argo-runner
+
 controller:
   metricsPort: "8081"
 
