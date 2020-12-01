@@ -10,6 +10,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/validate"
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
@@ -31,7 +32,7 @@ type filenameFilter struct {
 }
 
 func TestManifestsValid(t *testing.T) {
-	validator := manifest.NewFilesystemValidator(ocfPathPrefix)
+	validator := manifest.NewFilesystemValidator(&validate.LocalSchema{}, ocfPathPrefix)
 
 	tests := map[string]struct {
 		jsonSchemaPath      string

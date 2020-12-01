@@ -3,6 +3,8 @@ package cmd
 import (
 	"log"
 
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/validate"
+
 	"github.com/spf13/cobra"
 )
 
@@ -23,7 +25,7 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
-	rootCmd.AddCommand(NewValidate())
+	rootCmd.AddCommand(validate.NewCmd())
 
 	return rootCmd
 }

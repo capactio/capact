@@ -1,4 +1,4 @@
-package cmd
+package validate
 
 import (
 	"fmt"
@@ -9,11 +9,9 @@ import (
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
-var (
-	schemaRootDir string
-)
+func NewCmd() *cobra.Command {
+	schemaProvider := SchemaProvider{}
 
-func NewValidate() *cobra.Command {
 	validateCmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate OCF manifests",
@@ -30,7 +28,7 @@ ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-grou
 ocftool validate ./och-content/**/*.yaml`,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			validator := manifest.NewFilesystemValidator(schemaRootDir)
+			validator := manifest.NewFilesystemValidator(schemaProvider.FileSystem())
 
 			fmt.Println("Validating files...")
 
@@ -58,7 +56,7 @@ ocftool validate ./och-content/**/*.yaml`,
 		},
 	}
 
-	validateCmd.PersistentFlags().StringVarP(&schemaRootDir, "schemas", "s", "./ocf-spec", "Path to the ocf-spec directory")
+	schemaProvider.RegisterSchemaFlags(validateCmd.PersistentFlags())
 
 	return validateCmd
 }
