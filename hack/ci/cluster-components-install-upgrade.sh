@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script install Voltron components on a cluster.
+# This script installs new and upgrades existing Voltron components on a cluster.
 #
 
 # standard bash error handling
@@ -21,7 +21,7 @@ main() {
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
     export MOCK_GRAPHQL=${MOCK_GRAPHQL:-${VOLTRON_MOCK_GRAPHQL}}
-    voltron::install::charts
+    voltron::install_upgrade::charts
 }
 
 main

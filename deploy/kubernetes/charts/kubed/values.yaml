@@ -1,0 +1,6 @@
+kubed:
+  config:
+    clusterName: dev
+    configSourceNamespace: argo
+  # Do not send usage analytics
+  enableAnalytics: false

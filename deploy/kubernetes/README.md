@@ -31,6 +31,20 @@ To install Voltron, run the following steps:
    helm install argo ./argo --create-namespace -n argo
    ```
 
+1. **[Optional]** To run Argo workflows in any namespace, follow these steps:
+
+    1. Install kubed:
+
+        ```bash
+        helm install kubed ./charts/kubed --create-namespace -n kubed 
+        ``` 
+   
+   1. Annotate Minio secret to synchronize it to all namespaces:
+       
+       ```bash
+       kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync=""
+       ```
+
 1. **[Optional]** Install monitoring stack:
 
     ```bash

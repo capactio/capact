@@ -197,11 +197,9 @@ jobs:
         id: network-enable
         run: | 
           ./hack/ci/add-job-ip.sh
-      - name: Upgrade components
-        env:
-          UPDATE: "true"
+      - name: Install and upgrade existing components
         run: |
-          ./hack/ci/cluster-components-install.sh
+          ./hack/ci/cluster-components-install-upgrade.sh
       - name: Network cleanup
         # The `always()` is needed to always run the step, even if previous ones failed. From docs: "If your if expression does not contain any of the status functions it will automatically result with success()."
         # Without that it will result in: `Evaluating: (success() && (steps.network-enable.outcome == 'success'))`

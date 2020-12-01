@@ -1,0 +1,13 @@
+apiVersion: v2
+name: kubed
+description: A Helm chart for kubed for Voltron installation
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: kubed
+    version: "0.12.0"
+    repository: https://charts.appscode.com/stable/
+    condition: kubed.enabled
