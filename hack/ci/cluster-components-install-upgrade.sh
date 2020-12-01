@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script install Voltron components on a cluster.
+# This script installs new and upgrades existing Voltron components on a cluster.
 #
 
 # standard bash error handling

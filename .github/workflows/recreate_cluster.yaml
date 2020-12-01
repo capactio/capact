@@ -77,11 +77,11 @@ jobs:
           sleep 60 # due to webhook not ready, see: https://github.com/jetstack/cert-manager/issues/1873#issuecomment-683142375
           kubectl apply -f ./hack/ci/terraform/yaml/cluster-issuer.yaml
           . ./hack/ci/compare-cert.sh
-      - name: Install services
+      - name: Install components
         env:
           OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
         run: |
-          ./hack/ci/cluster-components-install.sh
+          ./hack/ci/cluster-components-install-upgrade.sh
       - name: Store secrets
         run: | 
           ./hack/ci/backup-cert.sh
