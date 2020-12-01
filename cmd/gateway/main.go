@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"projectvoltron.dev/voltron/internal/gateway/header"
+
 	"github.com/avast/retry-go"
 	"github.com/gorilla/mux"
 	"github.com/nautilus/gateway"
@@ -130,7 +132,12 @@ func introspectGraphQLSchemas(log *zap.Logger, cfg IntrospectionConfig) ([]*grap
 
 func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, authCfg BasicAuth, addr string) (httputil.StartableServer, error) {
 	log.Info("Setting up gateway GraphQL server")
-	gw, err := gateway.New(schemas)
+
+	middlewares := []gateway.Middleware{
+		gateway.RequestMiddleware(
+			header.SetHeadersFromCtxGQLMiddleware(),
+		)}
+	gw, err := gateway.New(schemas, gateway.WithMiddlewares(middlewares...))
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating gateway")
 	}
@@ -139,7 +146,12 @@ func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSch
 	// TODO: Remove redirect after https://github.com/nautilus/gateway/issues/120
 	router.Handle("/", http.RedirectHandler("/graphql", http.StatusTemporaryRedirect)).Methods(http.MethodGet)
 	// TODO: Replace with proper authentication mechanism
-	router.HandleFunc("/graphql", withBasicAuth(log, authCfg, gw.PlaygroundHandler)).Methods(http.MethodGet, http.MethodPost)
+	gatewayHandler := withBasicAuth(log, authCfg,
+		header.SaveHeadersInCtxHTTPMiddleware(
+			http.HandlerFunc(gw.PlaygroundHandler),
+		),
+	)
+	router.HandleFunc("/graphql", gatewayHandler).Methods(http.MethodGet, http.MethodPost)
 
 	gqlServer := httputil.NewStartableServer(
 		log.With(zap.String("server", "graphql")),
@@ -150,8 +162,8 @@ func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSch
 	return gqlServer, nil
 }
 
-func withBasicAuth(log *zap.Logger, cfg BasicAuth, handler http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func withBasicAuth(log *zap.Logger, cfg BasicAuth, handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			handler.ServeHTTP(w, r)
 			return
@@ -174,7 +186,7 @@ func withBasicAuth(log *zap.Logger, cfg BasicAuth, handler http.HandlerFunc) htt
 		}
 
 		handler.ServeHTTP(w, r)
-	})
+	}
 }
 
 func writeJSONError(w http.ResponseWriter, message string, statusCode int) error {
