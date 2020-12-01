@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
+	"github.com/shurcooL/httpfs/filter"
 	"github.com/shurcooL/vfsgen"
 )
 
@@ -15,12 +17,13 @@ const schemaDir = "../../../../ocf-spec"
 // Use the Go built-in functionality after switching to Go 1.16
 // More info: https://github.com/golang/go/issues/41191
 func main() {
-	fs := &HTTPFileSystem{
-		fs: http.Dir(schemaDir),
-		skipDirs: map[string]struct{}{
-			"examples": {},
-		},
-	}
+	fs := filter.Skip(
+		http.Dir(schemaDir),
+		func(path string, fi os.FileInfo) bool {
+			return fi.Name() == "README.md" || (fi.IsDir() && fi.Name() == "examples")
+		})
+
+	fs = zeroTimeFileSystem{fs}
 
 	err := vfsgen.Generate(fs, vfsgen.Options{
 		Filename:     "static_schema_gen.go",
@@ -32,39 +35,38 @@ func main() {
 	}
 }
 
-// HTTPFileSystem implements http.FileSystem interface and provides functionality to skip a given directories.
-type HTTPFileSystem struct {
-	fs       http.FileSystem
-	skipDirs map[string]struct{}
+// zeroTimeFileSystem implements http.FileSystem interface and provides functionality to skip modTime.
+// vfsgen can't generate deterministic content when executed from different systems (because file timestamps aren't stable).
+// Fortunately, we do not need that as we run validation for generated files and each modification in content will be detected.
+// More info in issue: https://github.com/shurcooL/vfsgen/issues/26
+type zeroTimeFileSystem struct {
+	fs http.FileSystem
 }
 
-func (fs HTTPFileSystem) Open(name string) (http.File, error) {
+func (fs zeroTimeFileSystem) Open(name string) (http.File, error) {
 	f, err := fs.fs.Open(name)
 	if err != nil {
 		return nil, err
 	}
-	return dirsIgnorant{f, fs.skipDirs}, nil
+	return &zeroTimeStat{f}, nil
 }
 
-type dirsIgnorant struct {
+type zeroTimeStat struct {
 	http.File
-	skipDirs map[string]struct{}
 }
 
-func (f dirsIgnorant) Readdir(count int) ([]os.FileInfo, error) {
-	info, err := f.File.Readdir(count)
+func (f *zeroTimeStat) Stat() (os.FileInfo, error) {
+	info, err := f.File.Stat()
 	if err != nil {
 		return nil, err
 	}
+	return &zeroModTime{info}, nil
+}
 
-	var out []os.FileInfo
-	for _, i := range info {
-		_, skip := f.skipDirs[i.Name()]
-		if i.IsDir() && skip {
-			continue
-		}
+type zeroModTime struct {
+	os.FileInfo
+}
 
-		out = append(out, i)
-	}
-	return out, nil
+func (z *zeroModTime) ModTime() time.Time {
+	return time.Time{}
 }
