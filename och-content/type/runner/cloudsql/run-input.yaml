@@ -80,7 +80,9 @@ spec:
             "additionalProperties": false,
             "required": [
                 "group",
-                "command"
+                "command",
+              	"configuration",
+                "output"
             ],
             "properties": {
               "group": {
@@ -92,11 +94,6 @@ spec:
                 "$id": "#/properties/args/properties/command",
                 "type": "string",
                 "title": "The command to execute"
-              },
-              "name": {
-                "$id": "#/properties/args/properties/name",
-                "type": "string",
-                "title": "The name of an instance"
               },
               "generateName": {
                 "$id": "#/properties/args/properties/generateName",
@@ -117,6 +114,11 @@ spec:
                 "additionalProperties": false,
                 "required": ["directory", "cloudSQLInstance"],
                 "properties": {
+                  "directory": {
+                    "$id": "#/properties/args/properties/output/properties/directory",
+                    "type": "string",
+                    "title": "Directory for the output files"
+                  },
                   "cloudSQLInstance": {
                     "$id": "#/properties/args/properties/output/properties/cloudSQLInstance",
                     "type": "object",

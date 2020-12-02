@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 
@@ -41,8 +40,6 @@ func main() {
 
 	service, err := sqladmin.NewService(context.Background(), option.WithCredentials(creds))
 	exitOnError(err, "failed to create GCP service client")
-
-	fmt.Println(sa.ProjectName)
 
 	cloudsqlRunner := cloudsql.NewRunner(service, sa.ProjectName)
 

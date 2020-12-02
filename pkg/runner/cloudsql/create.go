@@ -42,15 +42,22 @@ type cloudSQLOutput struct {
 }
 
 const (
-	CreateTimeout time.Duration = time.Minute * 5
-	PostgresPort  int           = 5432
+	PostgresPort          = 5432
+	PostgresDefaultDBName = "postgres"
+	PostgresRootUser      = "postgres"
+
+	createWaitDelay    = 10 * time.Second
+	createWaitAttempts = 60
+
+	artifactsDirFileMode os.FileMode = 0775
+	artifactsFileMode    os.FileMode = 0644
 )
 
 var (
 	ErrInstanceNotReady = errors.New("DB instance not ready")
 )
 
-func (a *createAction) Start(ctx context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
+func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 
 	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, a.args)
@@ -58,8 +65,8 @@ func (a *createAction) Start(ctx context.Context, in *runner.StartInput) (*runne
 		return nil, errors.Wrap(err, "while preparing create database instance parameters")
 	}
 
-	logger := a.logger.With(zap.String("instanceName", a.dbInstance.Name))
-	logger.Info("creating database")
+	a.logger = a.logger.With(zap.String("instanceName", a.dbInstance.Name))
+	a.logger.Info("creating database")
 
 	err = a.createDatabaseInstance(a.dbInstance)
 	if err != nil {
@@ -71,7 +78,7 @@ func (a *createAction) Start(ctx context.Context, in *runner.StartInput) (*runne
 	}, nil
 }
 
-func (a *createAction) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
+func (a *createAction) WaitForCompletion(_ context.Context, _ runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	a.logger.Info("waiting for database to be running")
 
 	db, err := a.waitForDatabaseInstanceRunning(a.dbInstance.Name)
@@ -86,8 +93,8 @@ func (a *createAction) WaitForCompletion(ctx context.Context, in runner.WaitForC
 	output := &createOutputValues{
 		DBInstance:    a.dbInstance,
 		Port:          PostgresPort,
-		DefaultDBName: "postgres",
-		Username:      "postgres",
+		DefaultDBName: PostgresDefaultDBName,
+		Username:      PostgresRootUser,
 		Password:      a.dbInstance.RootPassword,
 	}
 
@@ -148,8 +155,8 @@ func (a *createAction) waitForDatabaseInstanceRunning(instanceName string) (*sql
 
 			return ErrInstanceNotReady
 		},
-		retry.Delay(10*time.Second),
-		retry.Attempts(60),
+		retry.Delay(createWaitDelay),
+		retry.Attempts(createWaitAttempts),
 	)
 
 	if err != nil {
