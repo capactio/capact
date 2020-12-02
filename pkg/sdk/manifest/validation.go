@@ -183,8 +183,10 @@ func (v *FilesystemManifestValidator) ReadDir(dirname string) ([]os.FileInfo, er
 		return nil, err
 	}
 	list, err := f.Readdir(-1)
-	f.Close()
 	if err != nil {
+		return nil, err
+	}
+	if err := f.Close(); err != nil {
 		return nil, err
 	}
 	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })

@@ -3,13 +3,14 @@ package manifest_test
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/validate"
+	"projectvoltron.dev/voltron/internal/ocftool/schema"
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestFilesystemValidator_ValidateFile(t *testing.T) {
-	validator := manifest.NewFilesystemValidator(&validate.LocalSchema{}, "../../../ocf-spec")
+	validator := manifest.NewFilesystemValidator(&schema.LocalFileSystem{}, "../../../ocf-spec")
 
 	tests := map[string]struct {
 		manifestPath string

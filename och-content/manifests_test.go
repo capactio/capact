@@ -8,10 +8,11 @@ import (
 	"regexp"
 	"testing"
 
+	"projectvoltron.dev/voltron/internal/ocftool/schema"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/validate"
-	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
 const ocfPathPrefix = "../ocf-spec"
@@ -32,7 +33,7 @@ type filenameFilter struct {
 }
 
 func TestManifestsValid(t *testing.T) {
-	validator := manifest.NewFilesystemValidator(&validate.LocalSchema{}, ocfPathPrefix)
+	validator := manifest.NewFilesystemValidator(&schema.LocalFileSystem{}, ocfPathPrefix)
 
 	tests := map[string]struct {
 		jsonSchemaPath      string

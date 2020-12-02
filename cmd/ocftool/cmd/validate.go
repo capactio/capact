@@ -1,16 +1,18 @@
-package validate
+package cmd
 
 import (
 	"fmt"
 	"os"
 
+	"projectvoltron.dev/voltron/internal/ocftool/schema"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 )
 
-func NewCmd() *cobra.Command {
-	schemaProvider := SchemaProvider{}
+func NewValidate() *cobra.Command {
+	schemaProvider := schema.Provider{}
 
 	validateCmd := &cobra.Command{
 		Use:   "validate",

@@ -12,9 +12,9 @@ import (
 	"github.com/shurcooL/vfsgen"
 )
 
-const schemaDir = "../../../../ocf-spec"
+const schemaDir = "../../../ocf-spec"
 
-// Use the Go built-in functionality after switching to Go 1.16
+// TODO: Use the Go built-in functionality after switching to Go 1.16
 // More info: https://github.com/golang/go/issues/41191
 func main() {
 	fs := filter.Skip(
@@ -27,8 +27,8 @@ func main() {
 
 	err := vfsgen.Generate(fs, vfsgen.Options{
 		Filename:     "static_schema_gen.go",
-		PackageName:  "validate",
-		VariableName: "StaticSchema",
+		PackageName:  "schema",
+		VariableName: "Static",
 	})
 	if err != nil {
 		log.Fatal(err)
