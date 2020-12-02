@@ -1,0 +1,144 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: jira-deployment
+spec:
+  volumes:
+  - name: gcp-credentials
+    secret:
+      secretName: gcp-credentials
+  entrypoint: jira
+  templates:
+  - name: jira
+    steps:
+    - - name: generate-artifacts
+        template: fetch-type-instances
+    - - name: postgresql-install
+        template: postgresql-install
+        arguments:
+          artifacts:
+          - name: cloudsql
+            from: "{{steps.generate-artifacts.outputs.artifacts.cloudsql}}"
+    - - name: produce-helm-values
+        template: produce-helm-values
+        arguments:
+          artifacts: 
+          - name: cloudsql
+            from: "{{steps.postgresql-install.outputs.artifacts.additional}}"
+    - - name: jira-install
+        template: jira-install
+        arguments:
+          artifacts:
+          - name: jira-helm-input
+            from: "{{steps.generate-artifacts.outputs.artifacts.jira-helm}}"
+          - name: jira-helm-values
+            from: "{{steps.produce-helm-values.outputs.artifacts.jira-helm-values}}"
+    - - name: upload-type-instances
+        template: upload-type-instances
+        arguments:
+          artifacts:
+          - name: jira-output
+            from: "{{steps.jira-install.outputs.artifacts.additional}}"
+
+  - name: fetch-type-instances
+    container:
+      image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+      imagePullPolicy: Always
+    outputs:
+      artifacts:
+      - name: cloudsql
+        path: /out/cloudsql-input.yaml
+      - name: jira-helm
+        path: /out/jira-cloud-input.yaml
+
+  - name: postgresql-install
+    container:
+      image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-65
+      env:
+        - name: RUNNER_INPUT_PATH
+          value: "/input.yaml"
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+      volumeMounts:
+      - name: gcp-credentials
+        mountPath: "/etc/gcp"    
+    inputs:
+      artifacts:
+      - name: cloudsql
+        path: /input.yaml
+    outputs:
+      artifacts:
+      - name: instance
+        path: /instance.yaml
+      - name: additional
+        path: /additional.yaml
+
+  - name: produce-helm-values
+    inputs:
+      artifacts:
+      - name: cloudsql
+        path: "/input.yaml"
+    outputs:
+      artifacts:
+      - name: jira-helm-values
+        globalName: jira-helm-values
+        path: "/out/jira-cloud-values.yaml"
+    container:
+      image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+      command: ["/produce-helm-cloud-values.sh"]
+      args:
+          - --input
+          - "postgresql={{`{{ inputs.artifacts.postgresql.path }}`}}"
+          - --input
+          - "params={{ inputParametersToArtifact.path }}"
+          - --output-path
+          - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
+          - --output-format
+          - >
+            image:
+              tag: {{ .Context.appVersion }}
+            postgresql:
+              enabled: false # do not install Postgres along the Jira installation
+            databaseConnection:
+              host: {{`{{ .postgresql.host }}`}}
+              port: {{`{{ .postgresql.port }}`}}
+              user: {{`{{ .postgresql.superuser.username }}`}}
+              password: {{`{{ .postgresql.superuser.password }}`}}
+              database: {{`{{ .postgresql.defaultDBName }}`}}
+            ingress:
+              enabled: true
+              ingress:
+                hosts:
+                  - host: {{`{{ .params.host }}`}}
+                    paths: []
+
+  - name: jira-install
+    container:
+      image: gcr.io/projectvoltron/pr/helm-runner:PR-62
+      env:
+        - name: RUNNER_INPUT_PATH
+          value: "/input.yaml"
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+    inputs:
+      artifacts:
+      - name: jira-helm-input
+        path: /input.yaml
+      - name: jira-helm-values
+        path: /values.yaml
+    outputs:
+      artifacts:
+      - name: release
+        path: /release.yaml
+      - name: additional
+        path: /additional.yaml
+
+  - name: upload-type-instances
+    container:
+      image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+      command: ["/upload-type-instances.sh"]
+      args: ["cloudsql"]
+    inputs:
+      artifacts:
+      - name: jira-output
+        path: /input.yaml

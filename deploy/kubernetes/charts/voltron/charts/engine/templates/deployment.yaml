@@ -49,7 +49,7 @@ spec:
             - name: APP_GRAPHQLGATEWAY_PASSWORD
               value: "{{ .Values.gateway.password }}"
             - name: APP_MOCKGRAPHQL
-              value: "{{ .Values.global.mockGraphQL }}"
+              value: "{{ .Values.global.mockEngineGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           ports:

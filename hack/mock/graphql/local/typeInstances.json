@@ -72,5 +72,51 @@
         }
       }
     }
+  },
+  {
+    "metadata": {
+      "id": "13343627-ab4a-4fbf-a312-f96f11b07d0b",
+      "Tags": [
+        {
+          "path": "cap.type.productivity.jira",
+          "revision": "0.1.0"
+        }
+      ]
+    },
+    "resourceVersion": 1,
+    "spec": {
+      "typeRef": {
+        "path": "cap.type.productivity.jira",
+        "revision": "0.1.0"
+      },
+      "value": {
+        "hostname": "jira-cloud.cluster.local",
+        "version": "8.14.0"
+      },
+      "instrumentation": {}
+    }
+  },
+  {
+    "metadata": {
+      "id": "45678917-ab4a-4fbf-a312-f96f11b07d0b",
+      "Tags": [
+        {
+          "path": "cap.type.productivity.jira",
+          "revision": "0.1.0"
+        }
+      ]
+    },
+    "resourceVersion": 1,
+    "spec": {
+      "typeRef": {
+        "path": "cap.type.productivity.jira",
+        "revision": "0.1.0"
+      },
+      "value": {
+        "hostname": "jira-local.cluster.local",
+        "version": "8.14.0"
+      },
+      "instrumentation": {}
+    }
   }
 ]

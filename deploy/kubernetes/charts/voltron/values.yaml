@@ -5,7 +5,8 @@ global:
     # Overrides the image tag for all Voltron component. Default is the sub-chart appVersion.
     overrideTag: "latest"
   domainName: "dev.cluster.projectvoltron.dev"
-  mockGraphQL: "true"
+  mockOCHGraphQL: "false"
+  mockEngineGraphQL: "false"
 
 integrationTest:
   image:

@@ -232,7 +232,8 @@ docker::delete_images() {
 #  - VOLTRON_NAMESPACE
 #  - VOLTRON_RELEASE_NAME
 #  - CLUSTER_TYPE
-#  - MOCK_GRAPHQL - if set to true then predifined values are used in graphql
+#  - MOCK_OCH_GRAPHQL - if set to true then predifined values are used in och graphql(local and public)
+#  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
@@ -272,7 +273,8 @@ voltron::install_upgrade::charts() {
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
         --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
-        --set global.mockGraphQL="$MOCK_GRAPHQL" \
+        --set global.mockOCHGraphQL="$MOCK_OCH_GRAPHQL" \
+        --set global.mockEngineGraphQL="$MOCK_ENGINE_GRAPHQL" \
         -f "${VOLTRON_OVERRIDES}" \
         --wait
 }

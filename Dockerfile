@@ -28,7 +28,7 @@ ARG COMPONENT
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
-COPY hack/mock/ /mock/
+COPY hack/mock/graphql /mock/
 
 LABEL source=git@github.com:Project-Voltron/go-voltron.git
 LABEL app=$COMPONENT
