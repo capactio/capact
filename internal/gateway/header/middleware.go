@@ -6,7 +6,9 @@ import (
 	"github.com/nautilus/graphql"
 )
 
-func SaveHeadersInCtxHTTPMiddleware(next http.Handler) http.Handler {
+type Middleware struct{}
+
+func (Middleware) StoreInCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			ctx := NewContext(r.Context(), r.Header)
@@ -15,7 +17,7 @@ func SaveHeadersInCtxHTTPMiddleware(next http.Handler) http.Handler {
 	)
 }
 
-func SetHeadersFromCtxGQLMiddleware() graphql.NetworkMiddleware {
+func (Middleware) RestoreFromCtx() graphql.NetworkMiddleware {
 	return func(request *http.Request) error {
 		headers, ok := FromContext(request.Context())
 		if !ok {

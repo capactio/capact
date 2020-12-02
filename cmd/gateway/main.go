@@ -133,9 +133,11 @@ func introspectGraphQLSchemas(log *zap.Logger, cfg IntrospectionConfig) ([]*grap
 func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSchema, authCfg BasicAuth, addr string) (httputil.StartableServer, error) {
 	log.Info("Setting up gateway GraphQL server")
 
+	headerMiddleware := header.Middleware{}
+
 	middlewares := []gateway.Middleware{
 		gateway.RequestMiddleware(
-			header.SetHeadersFromCtxGQLMiddleware(),
+			headerMiddleware.RestoreFromCtx(),
 		)}
 	gw, err := gateway.New(schemas, gateway.WithMiddlewares(middlewares...))
 	if err != nil {
@@ -147,7 +149,7 @@ func setupGatewayServerFromSchemas(log *zap.Logger, schemas []*graphql.RemoteSch
 	router.Handle("/", http.RedirectHandler("/graphql", http.StatusTemporaryRedirect)).Methods(http.MethodGet)
 	// TODO: Replace with proper authentication mechanism
 	gatewayHandler := withBasicAuth(log, authCfg,
-		header.SaveHeadersInCtxHTTPMiddleware(
+		headerMiddleware.StoreInCtx(
 			http.HandlerFunc(gw.PlaygroundHandler),
 		),
 	)

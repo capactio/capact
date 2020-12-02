@@ -28,7 +28,8 @@ func TestSaveHeadersInCtxHTTPMiddleware(t *testing.T) {
 
 	rw := httptest.NewRecorder()
 
-	handler := header.SaveHeadersInCtxHTTPMiddleware(testHandler)
+	middleware := header.Middleware{}
+	handler := middleware.StoreInCtx(testHandler)
 
 	// when
 	handler.ServeHTTP(rw, req)
@@ -57,7 +58,9 @@ func TestSetHeadersFromCtxGatewayMiddleware(t *testing.T) {
 	}
 
 	ctxWithHeaders := header.NewContext(context.Background(), headers)
-	middlewareFn := header.SetHeadersFromCtxGQLMiddleware()
+
+	middleware := header.Middleware{}
+	middlewareFn := middleware.RestoreFromCtx()
 
 	reqWithCtx := req.WithContext(ctxWithHeaders)
 
