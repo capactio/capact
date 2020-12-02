@@ -26,7 +26,7 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 
 // TODO simple implementation for demo, does return only some fields
 // TODO: add support for not found errors
-func (c *Client) GetLatestRevisionImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
