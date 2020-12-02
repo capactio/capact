@@ -3,12 +3,8 @@ package cloudsql
 import (
 	"context"
 	"encoding/json"
-	"fmt"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/pkg/errors"
-	"github.com/sethvargo/go-password/password"
 	"go.uber.org/zap"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -16,11 +12,17 @@ import (
 
 type Args struct {
 	Group         string                    `json:"group"`
-	Command       string                    `json:"command"`
+	Command       CommandType               `json:"command"`
 	GenerateName  bool                      `json:"generateName"`
 	Configuration sqladmin.DatabaseInstance `json:"configuration"`
 	Output        OutputArgs                `json:"output"`
 }
+
+type CommandType string
+
+const (
+	CreateCommandType = "create"
+)
 
 type OutputArgs struct {
 	Directory        string `json:"directory"`
@@ -33,14 +35,20 @@ type OutputArgs struct {
 	}
 }
 
+type runnerAction interface {
+	Start(ctx context.Context, in *runner.StartInput) (*runner.StartOutput, error)
+	WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error)
+}
+
 type Runner struct {
 	logger          *zap.Logger
 	sqladminService *sqladmin.Service
 	gcpProjectName  string
+	action          runnerAction
 }
 
-const (
-	CreateTimeout time.Duration = time.Minute * 5
+var (
+	ErrUnkownCommand = errors.New("unknown command")
 )
 
 func NewRunner(sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
@@ -66,103 +74,21 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 		return nil, errors.Wrap(err, "while unmarshaling input parameters")
 	}
 
-	instanceInput, err := r.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, args)
-	if err != nil {
-		return nil, errors.Wrap(err, "while preparing create database instance parameters")
+	switch args.Command {
+	case CreateCommandType:
+		r.action = &createAction{
+			logger:          r.logger,
+			gcpProjectName:  r.gcpProjectName,
+			sqladminService: r.sqladminService,
+			args:            args,
+		}
+	default:
+		return nil, ErrUnkownCommand
 	}
 
-	logger := r.logger.With(zap.String("instanceName", instanceInput.Name))
-	logger.Info("creating database")
-
-	err = r.createDatabaseInstance(instanceInput)
-	if err != nil {
-		return nil, errors.Wrap(err, "while creating database instance")
-	}
-
-	logger.Info("waiting for database to be running")
-
-	db, err := r.waitForDatabaseInstanceRunning(instanceInput.Name)
-	if err != nil {
-		return nil, errors.Wrap(err, "while waiting for database to be ready")
-	}
-
-	logger.Info("database ready")
-
-	output := &outputValues{
-		DBInstance:    db,
-		Port:          5432,
-		DefaultDBName: "postgres",
-		Username:      "postgres",
-		Password:      instanceInput.RootPassword,
-	}
-
-	if err := createArtifacts(&args.Output, output); err != nil {
-		return nil, errors.Wrap(err, "while writing output")
-	}
-
-	return &runner.StartOutput{
-		Status: "Completed",
-	}, nil
+	return r.action.Start(ctx, &in)
 }
 
 func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
-	return &runner.WaitForCompletionOutput{
-		Succeeded: true,
-	}, nil
-}
-
-func (r *Runner) prepareCreateDatabaseInstanceParameters(execCtx *runner.ExecutionContext, args *Args) (*sqladmin.DatabaseInstance, error) {
-	instance := args.Configuration
-
-	if args.GenerateName {
-		UUID := uuid.New()
-		instance.Name = fmt.Sprintf("%s-%s", execCtx.Name, UUID.String())
-	}
-
-	if instance.RootPassword == "" {
-		passwd, err := password.Generate(16, 4, 4, false, false)
-		if err != nil {
-			return nil, errors.Wrap(err, "while generating random root password")
-		}
-
-		instance.RootPassword = passwd
-	}
-
-	return &instance, nil
-}
-
-func (r *Runner) createDatabaseInstance(instance *sqladmin.DatabaseInstance) error {
-	call := r.sqladminService.Instances.Insert(r.gcpProjectName, instance)
-	_, err := call.Do()
-	return err
-}
-
-func (r *Runner) waitForDatabaseInstanceRunning(instanceName string) (*sqladmin.DatabaseInstance, error) {
-	logger := r.logger.With(zap.String("instanceName", instanceName))
-
-	ctx, cancel := context.WithTimeout(context.Background(), CreateTimeout)
-	defer cancel()
-
-	for {
-		select {
-		case <-time.After(time.Second * 10):
-			logger.Debug("checking db status")
-			db, err := r.getDatabaseInstance(instanceName)
-			if err != nil {
-				return nil, err
-			}
-
-			if db.State == "RUNNABLE" {
-				return db, err
-			}
-		case <-ctx.Done():
-			logger.Debug("timeout on waiting for db to run")
-			return nil, nil
-		}
-	}
-}
-
-func (r *Runner) getDatabaseInstance(name string) (*sqladmin.DatabaseInstance, error) {
-	call := r.sqladminService.Instances.Get(r.gcpProjectName, name)
-	return call.Do()
+	return r.action.WaitForCompletion(ctx, in)
 }
