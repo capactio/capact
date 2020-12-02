@@ -8,7 +8,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/avast/retry-go"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-password/password"
@@ -46,18 +45,17 @@ const (
 	PostgresDefaultDBName = "postgres"
 	PostgresRootUser      = "postgres"
 
-	createWaitDelay    = 10 * time.Second
-	createWaitAttempts = 60
+	createWaitDelay = 10 * time.Second
 
 	artifactsDirFileMode os.FileMode = 0775
 	artifactsFileMode    os.FileMode = 0644
 )
 
 var (
-	ErrInstanceNotReady = errors.New("DB instance not ready")
+	ErrInstanceCreateTimeout = errors.New("timed out waiting for DB instance to be ready")
 )
 
-func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
+func (a *createAction) Start(ctx context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 
 	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, a.args)
@@ -78,10 +76,10 @@ func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.
 	}, nil
 }
 
-func (a *createAction) WaitForCompletion(_ context.Context, _ runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
+func (a *createAction) WaitForCompletion(ctx context.Context, _ runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	a.logger.Info("waiting for database to be running")
 
-	createdDb, err := a.waitForDatabaseInstanceRunning(a.dbInstance.Name)
+	createdDb, err := a.waitForDatabaseInstanceRunning(ctx, a.dbInstance.Name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while waiting for database to be ready")
 	}
@@ -132,36 +130,23 @@ func (a *createAction) createDatabaseInstance(instance *sqladmin.DatabaseInstanc
 	return err
 }
 
-func (a *createAction) waitForDatabaseInstanceRunning(instanceName string) (*sqladmin.DatabaseInstance, error) {
-	logger := a.logger.With(zap.String("instanceName", instanceName))
-
-	var db *sqladmin.DatabaseInstance
-
-	err := retry.Do(
-		func() error {
-			var err error
-
-			logger.Debug("checking db status")
-			db, err = a.getDatabaseInstance(instanceName)
+func (a *createAction) waitForDatabaseInstanceRunning(ctx context.Context, instanceName string) (*sqladmin.DatabaseInstance, error) {
+	for {
+		select {
+		case <-time.After(createWaitDelay):
+			a.logger.Debug("checking db instance status")
+			db, err := a.getDatabaseInstance(instanceName)
 			if err != nil {
-				return err
+				return nil, errors.Wrap(err, "while getting DB instance")
 			}
 
 			if db.State == "RUNNABLE" {
-				return nil
+				return db, nil
 			}
-
-			return ErrInstanceNotReady
-		},
-		retry.Delay(createWaitDelay),
-		retry.Attempts(createWaitAttempts),
-	)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "while waiting for DB instance to be ready")
+		case <-ctx.Done():
+			return nil, ErrInstanceCreateTimeout
+		}
 	}
-
-	return db, err
 }
 
 func (a *createAction) getDatabaseInstance(name string) (*sqladmin.DatabaseInstance, error) {

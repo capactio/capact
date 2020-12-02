@@ -82,7 +82,7 @@ spec:
             "required": [
                 "group",
                 "command",
-              	"configuration",
+                "configuration",
                 "output"
             ],
             "properties": {
