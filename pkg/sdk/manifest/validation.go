@@ -3,6 +3,9 @@ package manifest
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
+	"os"
+	"sort"
 
 	"github.com/ghodss/yaml"
 	"github.com/iancoleman/strcase"
@@ -31,6 +34,7 @@ func newValidationResult(errors ...error) ValidationResult {
 type FilesystemManifestValidator struct {
 	schemaRootPath string
 	cachedSchemas  map[ocfVersion]*loadedOCFSchema
+	fs             http.FileSystem
 }
 
 type ocfVersion string
@@ -42,9 +46,10 @@ type loadedOCFSchema struct {
 	kind   map[kind]*gojsonschema.Schema
 }
 
-func NewFilesystemValidator(schemaRootPath string) Validator {
+func NewFilesystemValidator(fs http.FileSystem, schemaRootPath string) Validator {
 	return &FilesystemManifestValidator{
 		schemaRootPath: schemaRootPath,
+		fs:             fs,
 		cachedSchemas:  map[ocfVersion]*loadedOCFSchema{},
 	}
 }
@@ -143,14 +148,15 @@ func (v *FilesystemManifestValidator) getManifestSchema(metadata manifestMetadat
 func (v *FilesystemManifestValidator) getRootSchemaJSONLoader(metadata manifestMetadata) gojsonschema.JSONLoader {
 	filename := strcase.ToKebab(string(metadata.Kind))
 	path := fmt.Sprintf("file://%s/%s/schema/%s.json", v.schemaRootPath, metadata.OCFVersion, filename)
-	return gojsonschema.NewReferenceLoader(path)
+	return gojsonschema.NewReferenceLoaderFileSystem(path, v.fs)
 }
 
 func (v *FilesystemManifestValidator) getCommonSchemaLoader(ocfVersion ocfVersion) (*gojsonschema.SchemaLoader, error) {
 	commonDir := fmt.Sprintf("%s/%s/schema/common", v.schemaRootPath, ocfVersion)
 
 	sl := gojsonschema.NewSchemaLoader()
-	files, err := ioutil.ReadDir(commonDir)
+
+	files, err := v.ReadDir(commonDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list common schemas directory")
 	}
@@ -161,10 +167,28 @@ func (v *FilesystemManifestValidator) getCommonSchemaLoader(ocfVersion ocfVersio
 		}
 
 		path := fmt.Sprintf("file://%s/%s", commonDir, file.Name())
-		if err := sl.AddSchemas(gojsonschema.NewReferenceLoader(path)); err != nil {
+		if err := sl.AddSchemas(gojsonschema.NewReferenceLoaderFileSystem(path, v.fs)); err != nil {
 			return nil, errors.Wrapf(err, "cannot load common schema %s", path)
 		}
 	}
 
 	return sl, nil
+}
+
+// ReadDir reads the directory named by dirname and returns
+// a list of directory entries sorted by filename.
+func (v *FilesystemManifestValidator) ReadDir(dirname string) ([]os.FileInfo, error) {
+	f, err := v.fs.Open(dirname)
+	if err != nil {
+		return nil, err
+	}
+	list, err := f.Readdir(-1)
+	if err != nil {
+		return nil, err
+	}
+	if err := f.Close(); err != nil {
+		return nil, err
+	}
+	sort.Slice(list, func(i, j int) bool { return list[i].Name() < list[j].Name() })
+	return list, nil
 }

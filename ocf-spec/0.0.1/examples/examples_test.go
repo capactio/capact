@@ -5,12 +5,14 @@ package examples
 import (
 	"testing"
 
-	"github.com/stretchr/testify/require"
+	"projectvoltron.dev/voltron/internal/ocftool/schema"
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestManifestsValid(t *testing.T) {
-	validator := manifest.NewFilesystemValidator("../..")
+	validator := manifest.NewFilesystemValidator(&schema.LocalFileSystem{}, "../..")
 
 	tests := map[string]struct {
 		manifestPath string

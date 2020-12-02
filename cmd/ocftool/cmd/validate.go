@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"os"
 
+	"projectvoltron.dev/voltron/internal/ocftool/schema"
+	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/pkg/sdk/manifest"
-)
-
-var (
-	schemaRootDir string
 )
 
 func NewValidate() *cobra.Command {
+	schemaProvider := schema.Provider{}
+
 	validateCmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate OCF manifests",
@@ -30,7 +30,7 @@ ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-grou
 ocftool validate ./och-content/**/*.yaml`,
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			validator := manifest.NewFilesystemValidator(schemaRootDir)
+			validator := manifest.NewFilesystemValidator(schemaProvider.FileSystem())
 
 			fmt.Println("Validating files...")
 
@@ -58,7 +58,7 @@ ocftool validate ./och-content/**/*.yaml`,
 		},
 	}
 
-	validateCmd.PersistentFlags().StringVarP(&schemaRootDir, "schemas", "s", "./ocf-spec", "Path to the ocf-spec directory")
+	schemaProvider.RegisterSchemaFlags(validateCmd.PersistentFlags())
 
 	return validateCmd
 }
