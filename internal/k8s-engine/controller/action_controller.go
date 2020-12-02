@@ -80,7 +80,6 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	reportOnError := func(err error, context string) (ctrl.Result, error) {
 		r.recorder.Event(action, corev1.EventTypeWarning, context, err.Error())
-		log.Error(err, context)
 		return ctrl.Result{}, err
 	}
 

@@ -35,7 +35,7 @@ const (
 )
 
 type OCHImplementationGetter interface {
-	GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
+	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -208,8 +208,6 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 		if !metav1.IsControlledBy(old, action) {
 			return errors.Errorf("secret with the name %s already exists and it is not owned by Action with the same name", key.String())
 		}
-		old.Spec = runnerJob.Spec
-		return a.k8sCli.Update(ctx, old)
 	default:
 		return err
 	}
@@ -220,7 +218,7 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	latestRevision, err := a.implGetter.GetImplementationLatestRevision(ctx, string(action.Spec.Path))
+	latestRevision, err := a.implGetter.GetLatestRevisionOfImplementationForInterface(ctx, string(action.Spec.Path))
 	if err != nil {
 		return nil, errors.Wrap(err, "while fetching implementation")
 	}

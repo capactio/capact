@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/machinebox/graphql"
-	errs "github.com/pkg/errors"
+	"github.com/pkg/errors"
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
@@ -25,27 +25,38 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 }
 
 // TODO simple implementation for demo, does return only some fields
-func (c *Client) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
-	req := graphql.NewRequest(`query($implementationPath: NodePath!) {
-	  implementation(path: $implementationPath) {
-	    latestRevision {
-	      spec {
-	        action {
-	          runnerInterface
-	          args
-	        }
-	      }
-	    }
-	  }
-	}`)
-	req.Var("implementationPath", path)
+// TODO: add support for not found errors
+func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
+		  interface(path: $interfacePath) {
+			latestRevision {
+			  implementations {
+				latestRevision {
+				  spec {
+					action {
+					  runnerInterface
+					  args
+					}
+				  }
+				}
+			  }
+			}
+		  }
+		}`)
 
+	req.Var("interfacePath", path)
 	var resp struct {
-		Implementation ochgraphql.Implementation `json:"implementation"`
+		Interface ochgraphql.Interface `json:"interface"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
-		return nil, errs.Wrap(err, "while executing query to fetch OCH Implementation")
+		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
+	}
+	if resp.Interface.LatestRevision == nil {
+		return nil, errors.New("Interface.LatestRevision cannot be nil")
+	}
+	if len(resp.Interface.LatestRevision.Implementations) == 0 {
+		return nil, errors.New("Interface.LatestRevision.Implementations cannot be nil")
 	}
 
-	return resp.Implementation.LatestRevision, nil
+	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
 }

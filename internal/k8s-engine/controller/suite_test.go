@@ -95,7 +95,7 @@ var _ = AfterSuite(func() {
 
 type implGetterFake struct{}
 
-func (c *implGetterFake) GetImplementationLatestRevision(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+func (c *implGetterFake) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
 	return &ochgraphql.ImplementationRevision{
 		Spec: &ochgraphql.ImplementationSpec{
 			Action: &ochgraphql.ImplementationAction{
