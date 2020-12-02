@@ -14,6 +14,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
+  # TODO improve the .args.instance JSON schema, after we know inputs for other commands
   jsonSchema:
     value: |-
       {
@@ -33,7 +34,7 @@ spec:
               "group": "sql",
               "command": "create",
               "generateName": true,
-              "configuration": {
+              "instance": {
                 "tier": "db-g1-small",
                 "databaseVersion": "POSTGRES_12",
                 "region": "us-central"
@@ -101,10 +102,11 @@ spec:
                 "title": "Generate instance name",
                 "default": false
               },
-              "configuration": {
-                "$id": "#/properties/args/properties/configuration",
+              "instance": {
+                "$id": "#/properties/args/properties/instance",
                 "type": "object",
-                "title": "Additional configuration properties",
+                "title": "CloudSQL instance parameters",
+                "description": "This field can have the content defined in https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances"
                 "additionalProperties": true
               },
               "output": {

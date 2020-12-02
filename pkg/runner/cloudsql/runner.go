@@ -11,11 +11,11 @@ import (
 )
 
 type Args struct {
-	Group         string                    `json:"group"`
-	Command       CommandType               `json:"command"`
-	GenerateName  bool                      `json:"generateName"`
-	Configuration sqladmin.DatabaseInstance `json:"configuration"`
-	Output        OutputArgs                `json:"output"`
+	Group        string                    `json:"group"`
+	Command      CommandType               `json:"command"`
+	GenerateName bool                      `json:"generateName"`
+	Instance     sqladmin.DatabaseInstance `json:"instance"`
+	Output       OutputArgs                `json:"output"`
 }
 
 type CommandType string

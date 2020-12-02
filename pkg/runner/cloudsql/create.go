@@ -109,7 +109,7 @@ func (a *createAction) WaitForCompletion(_ context.Context, _ runner.WaitForComp
 }
 
 func (a *createAction) prepareCreateDatabaseInstanceParameters(execCtx *runner.ExecutionContext, args *Args) (*sqladmin.DatabaseInstance, error) {
-	instance := args.Configuration
+	instance := args.Instance
 	instance.Project = a.gcpProjectName
 
 	if args.GenerateName {
