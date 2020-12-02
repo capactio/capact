@@ -81,17 +81,15 @@ func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.
 func (a *createAction) WaitForCompletion(_ context.Context, _ runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	a.logger.Info("waiting for database to be running")
 
-	db, err := a.waitForDatabaseInstanceRunning(a.dbInstance.Name)
+	createdDb, err := a.waitForDatabaseInstanceRunning(a.dbInstance.Name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while waiting for database to be ready")
 	}
 
-	a.dbInstance = db
-
 	a.logger.Info("database ready")
 
 	output := &createOutputValues{
-		DBInstance:    a.dbInstance,
+		DBInstance:    createdDb,
 		Port:          PostgresPort,
 		DefaultDBName: PostgresDefaultDBName,
 		Username:      PostgresRootUser,

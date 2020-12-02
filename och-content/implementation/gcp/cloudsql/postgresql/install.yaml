@@ -96,7 +96,7 @@ spec:
 #                            group: "sql"
 #                            command: "create"
 #                            generateName: true
-#                            configuration:
+#                            instance:
 #                              tier: "db-g1-small"
 #                              databaseVersion: "POSTGRES_{{ .Context.appVersion }}"
 #                              region: "us-central"
