@@ -102,8 +102,28 @@ query {
                     description
                 }
                 spec {
-                    input
-                    output
+                    input {
+                        parameters {
+                            jsonSchema
+                        }
+                        typeInstances {
+                            name
+                            typeRef {
+                                path
+                                revision
+                            }
+                            verbs
+                        }
+                    }
+                    output {
+                        typeInstances {
+                            name
+                            typeRef {
+                                path
+                                revision
+                            }
+                        }
+                    }
                 }
                 implementations(filter: {
                     tags: [{path: "cap.tag.foo.bar", rule: INCLUDE}],
@@ -126,7 +146,10 @@ query {
                             displayName
                         }
                         spec {
-                            action
+                            action {
+                                runnerInterface
+                                args
+                            }
                             appVersion
                         }
                     }

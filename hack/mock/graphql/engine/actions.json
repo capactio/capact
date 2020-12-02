@@ -3,28 +3,34 @@
     "name": "Jira installation",
     "createdAt": "2020-11-22T19:42:31+07:00",
     "input": {
-      "paramters": {
+      "parameters": {
         "val": "1"
       },
-      "artifacts": [
+      "typeInstances": [
         {
           "name": "db-config",
-          "typeInstanceID": "123-sss-1132-12"
-        }
-      ],
-      "parameters": "{\"key\": \"val\"}"
-    },
-    "output": {
-      "paramters": "{\"val\":1}",
-      "artifacts": [
-        {
-          "name": "artifact1",
-          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
-          "typePath": "cap.type.productivity.jira.config"
+          "id": "123-sss-1132-12"
         }
       ]
     },
-    "path": "cap.implementation.attlasian.jira.install",
+    "output": {
+      "parameters": {
+        "val": "1"
+      },
+      "typeInstances": [
+        {
+          "name": "typeInstance1",
+          "id": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typeRef": {
+            "path": "cap.type.productivity.jira.config",
+            "revision": "0.1.0"
+          }
+        }
+      ]
+    },
+    "actionRef": {
+      "path": "cap.implementation.atlassian.jira.install"
+    },
     "renderedAction": {
       "steps": [
         {
@@ -44,8 +50,9 @@
     },
     "renderingAdvancedMode": {
       "enabled": false,
-      "artifactsForRenderingIteration": []
+      "typeInstancesForRenderingIteration": []
     },
+    "dryRun": false,
     "run": true,
     "status": {
       "condition": "SUCCEEDED",
@@ -54,7 +61,7 @@
       "runner": {
         "interface": "cap.type.runner.argo",
         "status": {
-          "argoWorklfowRef": "default/WorkflowRun01"
+          "argoWorkflowRef": "default/WorkflowRun01"
         }
       },
       "createdBy": {
@@ -79,27 +86,34 @@
     "name": "Jira update",
     "createdAt": "2020-11-22T21:42:31+07:00",
     "input": {
-      "paramters": {
+      "parameters": {
         "val": "1"
       },
-      "artifacts": [
+      "typeInstances": [
         {
           "name": "db-config",
-          "typeInstanceID": "123-sss-1132-12"
+          "id": "123-sss-1132-12"
         }
       ]
     },
     "output": {
-      "paramters": "{\"val\":1}",
-      "artifacts": [
+      "parameters": {
+        "val": "1"
+      },
+      "typeInstances": [
         {
-          "name": "artifact1",
-          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
-          "typePath": "cap.type.productivity.jira.config"
+          "name": "typeInstance1",
+          "id": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typeRef": {
+            "path": "cap.type.productivity.jira.config",
+            "revision": "0.1.0"
+          }
         }
       ]
     },
-    "path": "cap.implementation.attlasian.jira.update",
+    "actionRef": {
+      "path": "cap.implementation.atlassian.jira.update"
+    },
     "renderAction": {
       "steps": [
         {
@@ -110,6 +124,7 @@
     "renderingAdvancedMode": {
       "enabled": false
     },
+    "dryRun": true,
     "run": true,
     "status": {
       "condition": "FAILED",
@@ -118,7 +133,7 @@
       "runner": {
         "interface": "cap.type.runner.argo",
         "status": {
-          "argoWorklfowRef": "default/WorkflowRun01"
+          "argoWorkflowRef": "default/WorkflowRun01"
         }
       },
       "createdBy": {
@@ -143,32 +158,40 @@
     "name": "Jira reinstall",
     "createdAt": "2020-11-22T19:42:31+07:00",
     "input": {
-      "paramters": {
+      "parameters": {
         "val": "1"
       },
-      "artifacts": [
+      "typeInstances": [
         {
           "name": "db-config",
-          "typeInstanceID": "123-sss-1132-12"
+          "id": "123-sss-1132-12"
         }
       ]
     },
     "output": {
-      "paramters": "{\"val\":1}",
-      "artifacts": [
+      "parameters": {
+        "val": "1"
+      },
+      "typeInstances": [
         {
-          "name": "artifact1",
-          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
-          "typePath": "cap.type.productivity.jira.config"
+          "name": "typeInstance1",
+          "id": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typeRef": {
+            "path": "cap.type.productivity.jira.config",
+            "revision": "0.1.0"
+          }
         }
       ]
     },
-    "path": "cap.implementation.attlasian.jira.install",
+    "actionRef": {
+      "path": "cap.implementation.atlassian.jira.install"
+    },
     "renderAction": {},
     "renderingAdvancedMode": {
       "enabled": false,
-      "artifactsForRenderingIteration": []
+      "typeInstancesForRenderingIteration": []
     },
+    "dryRun": false,
     "run": true,
     "cancel": true,
     "status": {
@@ -178,7 +201,7 @@
       "runner": {
         "interface": "cap.type.runner.argo",
         "status": {
-          "argoWorklfowRef": "default/WorkflowRun01"
+          "argoWorkflowRef": "default/WorkflowRun01"
         }
       },
       "createdBy": {
@@ -210,40 +233,49 @@
     "name": "Jira advanced update",
     "createdAt": "2020-11-22T19:42:31+07:00",
     "input": {
-      "paramters": {
+      "parameters": {
         "val": "1"
       },
-      "artifacts": [
+      "typeInstances": [
         {
           "name": "db-config",
-          "typeInstanceID": "123-sss-1132-12"
+          "id": "123-sss-1132-12"
         }
       ]
     },
     "output": {
-      "paramters": "{\"val\":1}",
-      "artifacts": [
+      "parameters": {
+        "val": "1"
+      },
+      "typeInstances": [
         {
-          "name": "artifact1",
-          "typeInstanceID": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
-          "typePath": "cap.type.productivity.jira.config"
+          "name": "typeInstance1",
+          "id": "c6079f69-ab4a-4fbf-a312-f96f11b07d0b",
+          "typeRef": {
+            "path": "cap.type.productivity.jira.config",
+            "revision": "0.1.0"
+          }
         }
       ]
     },
-    "path": "cap.implementation.attlasian.jira.install",
+    "dryRun": false,
+    "actionRef": {
+      "path": "cap.implementation.atlassian.jira.install",
+      "revision": "0.1.0"
+    },
     "renderAction": {},
     "renderingAdvancedMode": {
       "enabled": true,
-      "artifactsForRenderingIteration": []
+      "typeInstancesForRenderingIteration": []
     },
     "status": {
       "condition": "ADVANCED_MODE_RENDERING_ITERATION",
       "timestamp": "2020-11-22T21:42:31+07:00",
-      "message": "Waiting for artifacts from user",
+      "message": "Waiting for TypeInstances from user",
       "runner": {
         "interface": "cap.type.runner.argo",
         "status": {
-          "argoWorklfowRef": "default/WorkflowRun01"
+          "argoWorkflowRef": "default/WorkflowRun01"
         }
       }
     },

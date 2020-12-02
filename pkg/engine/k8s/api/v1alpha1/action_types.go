@@ -45,8 +45,9 @@ func init() { //nolint:gochecknoinits
 // ActionSpec contains configuration properties for a given Action to execute.
 type ActionSpec struct {
 
-	// Path contains full path for Implementation or Interface manifest.
-	Path NodePath `json:"path"`
+	// ActionRef contains data sufficient to resolve Implementation or Interface manifest.
+	// Currently only Interface reference is supported.
+	ActionRef ManifestReference `json:"actionRef,omitempty"`
 
 	// Input describes Action input.
 	// +optional
@@ -121,9 +122,9 @@ func (in *Action) IsBeingDeleted() bool {
 // ActionInput describes Action input.
 type ActionInput struct {
 
-	// Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+	// TypeInstances contains input TypeInstances passed for Action rendering. It contains both required and optional input TypeInstances.
 	// +optional
-	Artifacts *[]InputArtifact `json:"artifacts,omitempty"`
+	TypeInstances *[]InputTypeInstance `json:"typeInstances,omitempty"`
 
 	// Parameters holds details about Action input parameters.
 	// +optional
@@ -152,21 +153,21 @@ type AdvancedRendering struct {
 // RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 type RenderingIteration struct {
 
-	// Continue specifies the user intention to continue rendering using the provided InputArtifacts in the Action input.
-	// User may or may not add additional optional InputArtifacts to the list and continue Action rendering.
+	// Continue specifies the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input.
+	// User may or may not add additional optional TypeInstances to the list and continue Action rendering.
 	// +kubebuilder:default=false
 	Continue bool `json:"continue"`
 }
 
-// InputArtifact holds input artifact reference, which is in fact TypeInstance.
-type InputArtifact struct {
+// InputTypeInstance holds input TypeInstance reference.
+type InputTypeInstance struct {
 
-	// Name refers to input artifact name used in rendered Action.
-	// Name is not unique as there may be multiple artifacts with the same name on different levels of Action workflow.
+	// Name refers to input TypeInstance name used in rendered Action.
+	// Name is not unique as there may be multiple TypeInstances with the same name on different levels of Action workflow.
 	Name string `json:"name"`
 
-	// TypeInstanceID is a unique identifier for the TypeInstance used as input artifact.
-	TypeInstanceID string `json:"typeInstanceID"`
+	// ID is a unique identifier for the input TypeInstance.
+	ID string `json:"id"`
 }
 
 // ActionStatus defines the observed state of Action.
@@ -218,9 +219,9 @@ type ActionStatus struct {
 // ActionOutput describes Action output.
 type ActionOutput struct {
 
-	// Artifacts contains output Artifacts information.
+	// TypeInstances contains output TypeInstances data.
 	// +optional
-	Artifacts *[]OutputArtifactDetails `json:"artifacts,omitempty"`
+	TypeInstances *[]OutputTypeInstanceDetails `json:"typeInstances,omitempty"`
 }
 
 // RenderingStatus describes rendering status.
@@ -242,9 +243,10 @@ type RenderingStatus struct {
 
 // ResolvedActionInput contains resolved details of Action input.
 type ResolvedActionInput struct {
-	// Artifacts contains input Artifacts passed for Action rendering. It contains both required and optional input Artifacts.
+	// TypeInstances contains input TypeInstances passed for Action rendering.
+	// It contains both required and optional input TypeInstances.
 	// +optional
-	Artifacts *[]InputArtifactDetails `json:"artifacts,omitempty"`
+	TypeInstances *[]InputTypeInstanceDetails `json:"typeInstances,omitempty"`
 
 	// Parameters holds value of the User input parameters.
 	// +optional
@@ -252,35 +254,49 @@ type ResolvedActionInput struct {
 	Parameters *runtime.RawExtension `json:"parameters,omitempty"`
 }
 
-type InputArtifactDetails struct {
+// InputTypeInstanceDetails describes input TypeInstance.
+type InputTypeInstanceDetails struct {
 
-	// TODO: After first implementation of rendering workflow, make Input Artifact unique.
+	// TODO: After first implementation of rendering workflow, make Input TypeInstance unique.
 	// Possible options:
 	// - name prefix is added manually by User during advanced rendering
 	// - introduce additional field `prefix` or `location`, `source`, etc. with path to the nested step
 	// - similarly to Argo, add special steps with children data
 
-	CommonArtifactDetails `json:",inline"`
+	CommonTypeInstanceDetails `json:",inline"`
 
-	// Optional highlights that the input artifact is optional.
+	// Optional highlights that the input TypeInstance is optional.
 	// +kubebuilder:default=false
 	Optional bool `json:"optional,omitempty"`
 }
 
-type OutputArtifactDetails struct {
-	CommonArtifactDetails `json:",inline"`
+// OutputTypeInstanceDetails describes the output TypeInstance.
+type OutputTypeInstanceDetails struct {
+	CommonTypeInstanceDetails `json:",inline"`
 }
 
-type CommonArtifactDetails struct {
+// CommonTypeInstanceDetails contains common details of TypeInstance, regardless if it is input or output one.
+type CommonTypeInstanceDetails struct {
 
-	// Name refers to artifact name.
+	// Name refers to TypeInstance name.
 	Name string `json:"name"`
 
-	// TypeInstanceID is a unique identifier for the TypeInstance used as artifact.
-	TypeInstanceID string `json:"typeInstanceID"`
+	// ID is a unique identifier of the TypeInstance.
+	ID string `json:"id"`
 
-	// TypePath is full path for the Type manifest related to a given artifact (TypeInstance).
-	TypePath NodePath `json:"typePath"`
+	// TypeRef contains data needed to resolve Type manifest.
+	TypeRef *ManifestReference `json:"typeReference"`
+}
+
+// ManifestReference contains data needed to resolve a manifest.
+type ManifestReference struct {
+
+	// Path is full path for the manifest.
+	Path NodePath `json:"path"`
+
+	// Revision is a semantic version of the manifest. If not provided, the latest revision is used.
+	// +optional
+	Revision *string `json:"revision,omitempty"`
 }
 
 // AdvancedRenderingStatus describes status related to advanced rendering mode.
@@ -294,9 +310,9 @@ type AdvancedRenderingStatus struct {
 // RenderingIterationStatus holds status for current rendering iteration in advanced rendering mode.
 type RenderingIterationStatus struct {
 
-	// InputArtifactsToProvide describes which input artifacts might be provided in a given rendering iteration.
+	// InputTypeInstancesToProvide describes which input TypeInstances might be provided in a given rendering iteration.
 	// +optional
-	InputArtifactsToProvide *[]InputArtifactDetails `json:"inputArtifactsToProvide,omitempty"`
+	InputTypeInstancesToProvide *[]InputTypeInstanceDetails `json:"inputTypeInstancesToProvide,omitempty"`
 }
 
 // RunnerStatus holds data related to built-in Runner that runs the Action.

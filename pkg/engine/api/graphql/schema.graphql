@@ -14,9 +14,19 @@ Arbitrary input data in JSON string format
 scalar JSON
 
 """
+Version in semantic versioning, e.g. 1.1.0
+"""
+scalar Version
+
+"""
 Full path of a given node, e.g. cap.core.type.platform.kubernetes
 """
 scalar NodePath
+
+type ManifestReference {
+    path: NodePath!
+    revision: Version!
+}
 
 """
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
@@ -24,25 +34,58 @@ Client input of Action details, that are used for create and update Action opera
 input ActionDetailsInput {
     name: String!
     input: ActionInputData
-    action: String! # full path for the Implementation or Interface
-    advancedRendering: Boolean = false # Enables advance rendering mode of Action
+
+    """
+    Contains reference to the Implementation or Interface manifest
+    """
+    actionRef: ManifestReferenceInput!
+
+    """
+    Specifies whether the Action performs server-side test without actually running the Action
+    """
+    dryRun: Boolean = false
+
+    """
+    Enables advance rendering mode for Action
+    """
+    advancedRendering: Boolean = false
+
     renderedActionOverride: JSON
+}
+
+input ManifestReferenceInput {
+    """
+    Full path for the manifest
+    """
+    path: NodePath!
+
+    """
+    If not provided, latest revision for a given manifest is used
+    """
+    revision: Version
 }
 
 """
 Client input that modifies input of a given Action
 """
 input ActionInputData {
-    parameters: JSON # during rendering, it is validated against JSON schema from Interface of the resolved action
-    artifacts: [InputArtifactData!] # required and optional artifacts from root workflow
+    """
+    During rendering, it is validated against JSON schema from Interface of the resolved action
+    """
+    parameters: JSON
+
+    """
+    Required and optional TypeInstances for Action
+    """
+    typeInstances: [InputTypeInstanceData!]
 }
 
 """
-Client input for Input Artifact
+Client input for Input TypeInstance
 """
-input InputArtifactData {
+input InputTypeInstanceData {
     name: String!
-    typeInstanceID: ID!
+    id: ID!
 }
 
 """
@@ -56,9 +99,9 @@ type Action {
     output: ActionOutput
 
     """
-    Full path for the Implementation or Interface
+    Contains reference to the Implementation or Interface manifest
     """
-    path: NodePath!
+    actionRef: ManifestReference!
 
     """
     Indicates if user approved this Action to run
@@ -69,6 +112,11 @@ type Action {
     Indicates if user cancelled the workflow
     """
     cancel: Boolean!
+
+    """
+    Specifies whether the Action performs server-side test without actually running the Action.
+    """
+    dryRun: Boolean!
 
     renderedAction: Any
     renderingAdvancedMode: ActionRenderingAdvancedMode
@@ -82,7 +130,11 @@ Properties related to Action advanced rendering
 """
 type ActionRenderingAdvancedMode {
     enabled: Boolean!
-    artifactsForRenderingIteration: [InputArtifact!]! # Optional Artifacts for current rendering iteration
+
+    """
+    Optional TypeInstances for current rendering iteration
+    """
+    typeInstancesForRenderingIteration: [InputTypeInstanceDetails!]!
 }
 
 """
@@ -103,41 +155,53 @@ type ActionStatus {
 Additional Action status from the Runner
 """
 type RunnerStatus {
-    status: Any # status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
+    """
+    Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
+    """
+    status: Any
 }
 
 """
 Describes input of an Action
 """
 type ActionInput {
-    parameters: Any # validated against JSON schema from Interface
-    artifacts: [InputArtifact!]!
+    """
+    Validated against JSON schema from Interface
+    """
+    parameters: Any
+    typeInstances: [InputTypeInstanceDetails!]!
 }
 
 """
 Describes output of an Action
 """
 type ActionOutput {
-    artifacts: [OutputArtifact!]!
+    typeInstances: [OutputTypeInstanceDetails!]!
+}
+
+interface TypeInstanceDetails {
+    id: ID!
+    name: String!
+    typeRef: ManifestReference!
 }
 
 """
-Describes input artifact of an Action
+Describes input TypeInstance of an Action
 """
-type InputArtifact {
+type InputTypeInstanceDetails implements TypeInstanceDetails {
+    id: ID!
     name: String!
-    typePath: NodePath! # Full path of the corresponding Type
-    typeInstanceID: ID!
+    typeRef: ManifestReference!
     optional: Boolean!
 }
 
 """
-Describes output artifact of an Action
+Describes output TypeInstance of an Action
 """
-type OutputArtifact {
+type OutputTypeInstanceDetails implements TypeInstanceDetails {
+    id: ID!
     name: String!
-    typeInstanceID: ID!
-    typePath: NodePath! # Full path of the corresponding Type
+    typeRef: ManifestReference!
 }
 
 """
@@ -157,10 +221,13 @@ input ActionFilter {
 }
 
 """
-Input used for continuing Action rendering in advanced mode.
+Input used for continuing Action rendering in advanced mode
 """
 input AdvancedModeContinueRenderingInput {
-    artifacts: [InputArtifactData!] # optional artifacts for a given rendering iteration
+    """
+    Optional TypeInstances for a given rendering iteration
+    """
+    typeInstances: [InputTypeInstanceData!]
 }
 
 """
@@ -169,7 +236,7 @@ Current state of the Action
 enum ActionStatusCondition {
     INITIAL,
     BEING_RENDERED,
-    ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional artifacts discovered. User has to provide input artifacts
+    ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
     READY_TO_RUN,
     RUNNING,
     BEING_CANCELLED,
@@ -188,7 +255,7 @@ type Mutation {
     runAction(name: String!): Action!
     cancelAction(name: String!): Action!
     updateAction(in: ActionDetailsInput!): Action!
-    continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional artifacts in each step of workflow render
+    continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional TypeInstances in each step of workflow render
     deleteAction(name: String!): Action!
 }
 

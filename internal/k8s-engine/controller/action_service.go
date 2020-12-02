@@ -237,7 +237,7 @@ func (a *ActionService) ensureLocalSuffix(path string) string {
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	path := string(action.Spec.Path)
+	path := string(action.Spec.ActionRef.Path)
 	if !a.isGCPSecretAvailable(ctx, action) {
 		path = a.ensureLocalSuffix(path)
 	}

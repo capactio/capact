@@ -8,18 +8,24 @@ import (
 	"strconv"
 )
 
+type TypeInstanceDetails interface {
+	IsTypeInstanceDetails()
+}
+
 // Action describes user intention to resolve & execute a given Interface or Implementation.
 type Action struct {
 	Name      string        `json:"name"`
 	CreatedAt Timestamp     `json:"createdAt"`
 	Input     *ActionInput  `json:"input"`
 	Output    *ActionOutput `json:"output"`
-	// Full path for the Implementation or Interface
-	Path string `json:"path"`
+	// Contains reference to the Implementation or Interface manifest
+	ActionRef *ManifestReference `json:"actionRef"`
 	// Indicates if user approved this Action to run
 	Run bool `json:"run"`
 	// Indicates if user cancelled the workflow
-	Cancel                 bool                         `json:"cancel"`
+	Cancel bool `json:"cancel"`
+	// Specifies whether the Action performs server-side test without actually running the Action.
+	DryRun                 bool                         `json:"dryRun"`
 	RenderedAction         interface{}                  `json:"renderedAction"`
 	RenderingAdvancedMode  *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
 	RenderedActionOverride interface{}                  `json:"renderedActionOverride"`
@@ -28,11 +34,15 @@ type Action struct {
 
 // Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 type ActionDetailsInput struct {
-	Name                   string           `json:"name"`
-	Input                  *ActionInputData `json:"input"`
-	Action                 string           `json:"action"`
-	AdvancedRendering      *bool            `json:"advancedRendering"`
-	RenderedActionOverride *JSON            `json:"renderedActionOverride"`
+	Name  string           `json:"name"`
+	Input *ActionInputData `json:"input"`
+	// Contains reference to the Implementation or Interface manifest
+	ActionRef *ManifestReferenceInput `json:"actionRef"`
+	// Specifies whether the Action performs server-side test without actually running the Action
+	DryRun *bool `json:"dryRun"`
+	// Enables advance rendering mode for Action
+	AdvancedRendering      *bool `json:"advancedRendering"`
+	RenderedActionOverride *JSON `json:"renderedActionOverride"`
 }
 
 // Set of filters for Action list
@@ -42,25 +52,29 @@ type ActionFilter struct {
 
 // Describes input of an Action
 type ActionInput struct {
-	Parameters interface{}      `json:"parameters"`
-	Artifacts  []*InputArtifact `json:"artifacts"`
+	// Validated against JSON schema from Interface
+	Parameters    interface{}                 `json:"parameters"`
+	TypeInstances []*InputTypeInstanceDetails `json:"typeInstances"`
 }
 
 // Client input that modifies input of a given Action
 type ActionInputData struct {
-	Parameters *JSON                `json:"parameters"`
-	Artifacts  []*InputArtifactData `json:"artifacts"`
+	// During rendering, it is validated against JSON schema from Interface of the resolved action
+	Parameters *JSON `json:"parameters"`
+	// Required and optional TypeInstances for Action
+	TypeInstances []*InputTypeInstanceData `json:"typeInstances"`
 }
 
 // Describes output of an Action
 type ActionOutput struct {
-	Artifacts []*OutputArtifact `json:"artifacts"`
+	TypeInstances []*OutputTypeInstanceDetails `json:"typeInstances"`
 }
 
 // Properties related to Action advanced rendering
 type ActionRenderingAdvancedMode struct {
-	Enabled                        bool             `json:"enabled"`
-	ArtifactsForRenderingIteration []*InputArtifact `json:"artifactsForRenderingIteration"`
+	Enabled bool `json:"enabled"`
+	// Optional TypeInstances for current rendering iteration
+	TypeInstancesForRenderingIteration []*InputTypeInstanceDetails `json:"typeInstancesForRenderingIteration"`
 }
 
 // Status of the Action
@@ -74,34 +88,52 @@ type ActionStatus struct {
 	CancelledBy *UserInfo             `json:"cancelledBy"`
 }
 
-// Input used for continuing Action rendering in advanced mode.
+// Input used for continuing Action rendering in advanced mode
 type AdvancedModeContinueRenderingInput struct {
-	Artifacts []*InputArtifactData `json:"artifacts"`
+	// Optional TypeInstances for a given rendering iteration
+	TypeInstances []*InputTypeInstanceData `json:"typeInstances"`
 }
 
-// Describes input artifact of an Action
-type InputArtifact struct {
-	Name           string `json:"name"`
-	TypePath       string `json:"typePath"`
-	TypeInstanceID string `json:"typeInstanceID"`
-	Optional       bool   `json:"optional"`
+// Client input for Input TypeInstance
+type InputTypeInstanceData struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
 }
 
-// Client input for Input Artifact
-type InputArtifactData struct {
-	Name           string `json:"name"`
-	TypeInstanceID string `json:"typeInstanceID"`
+// Describes input TypeInstance of an Action
+type InputTypeInstanceDetails struct {
+	ID       string             `json:"id"`
+	Name     string             `json:"name"`
+	TypeRef  *ManifestReference `json:"typeRef"`
+	Optional bool               `json:"optional"`
 }
 
-// Describes output artifact of an Action
-type OutputArtifact struct {
-	Name           string `json:"name"`
-	TypeInstanceID string `json:"typeInstanceID"`
-	TypePath       string `json:"typePath"`
+func (InputTypeInstanceDetails) IsTypeInstanceDetails() {}
+
+type ManifestReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
+
+type ManifestReferenceInput struct {
+	// Full path for the manifest
+	Path string `json:"path"`
+	// If not provided, latest revision for a given manifest is used
+	Revision *string `json:"revision"`
+}
+
+// Describes output TypeInstance of an Action
+type OutputTypeInstanceDetails struct {
+	ID      string             `json:"id"`
+	Name    string             `json:"name"`
+	TypeRef *ManifestReference `json:"typeRef"`
+}
+
+func (OutputTypeInstanceDetails) IsTypeInstanceDetails() {}
 
 // Additional Action status from the Runner
 type RunnerStatus struct {
+	// Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 	Status interface{} `json:"status"`
 }
 

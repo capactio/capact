@@ -156,11 +156,27 @@ func (a *ActionResolver) Actions(ctx context.Context, filter []*graphql.ActionFi
 
 func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsInput) (*graphql.Action, error) {
 	message := conditionMessages[graphql.ActionStatusConditionInitial]
+	var dryRun bool
+	if in.DryRun != nil {
+		dryRun = *in.DryRun
+	}
+
+	var revision string
+	if in.ActionRef.Revision != nil {
+		revision = *in.ActionRef.Revision
+	} else {
+		revision = "latest"
+	}
+
 	newAction := &graphql.Action{
-		Name:      in.Name,
-		Path:      in.Action,
+		Name: in.Name,
+		ActionRef: &graphql.ManifestReference{
+			Path:     in.ActionRef.Path,
+			Revision: revision,
+		},
 		CreatedAt: graphql.Timestamp(time.Now()),
 		Input:     &graphql.ActionInput{},
+		DryRun:    dryRun,
 
 		Status: &graphql.ActionStatus{
 			CreatedBy: mockUser,
@@ -243,14 +259,14 @@ func (a *ActionResolver) ContinueAdvancedRendering(ctx context.Context, id strin
 	if action.RenderingAdvancedMode == nil || !action.RenderingAdvancedMode.Enabled {
 		return action, errors.New("Rendering in advanced mode is disabled")
 	}
-	artifacts := []*graphql.InputArtifact{}
-	for _, artifact := range in.Artifacts {
-		artifacts = append(artifacts,
-			&graphql.InputArtifact{
-				TypeInstanceID: artifact.TypeInstanceID,
+	typeInstances := []*graphql.InputTypeInstanceDetails{}
+	for _, typeInstance := range in.TypeInstances {
+		typeInstances = append(typeInstances,
+			&graphql.InputTypeInstanceDetails{
+				ID: typeInstance.ID,
 			})
 	}
-	action.RenderingAdvancedMode.ArtifactsForRenderingIteration = artifacts
+	action.RenderingAdvancedMode.TypeInstancesForRenderingIteration = typeInstances
 	message := conditionMessages[graphql.ActionStatusConditionBeingRendered]
 
 	action.Status.Condition = graphql.ActionStatusConditionBeingRendered
@@ -297,23 +313,26 @@ func updateAction(action *graphql.Action, in *graphql.ActionDetailsInput) {
 		return
 	}
 
-	artifacts := []*graphql.InputArtifact{}
+	typeInstances := []*graphql.InputTypeInstanceDetails{}
 	var parameters interface{}
 	if in.Input != nil {
 		if action.Input == nil {
 			action.Input = &graphql.ActionInput{}
 		}
 
-		for _, a := range in.Input.Artifacts {
-			artifact := &graphql.InputArtifact{
-				TypeInstanceID: a.TypeInstanceID,
+		for _, t := range in.Input.TypeInstances {
+			typeInstance := &graphql.InputTypeInstanceDetails{
+				ID: t.ID,
 			}
-			artifacts = append(artifacts, artifact)
+			typeInstances = append(typeInstances, typeInstance)
 		}
 		parameters = in.Input.Parameters
 	}
 	action.Input.Parameters = parameters
-	action.Input.Artifacts = artifacts
+	action.Input.TypeInstances = typeInstances
+	if in.DryRun != nil {
+		action.DryRun = *in.DryRun
+	}
 
 	if in.AdvancedRendering != nil {
 		action.RenderingAdvancedMode = &graphql.ActionRenderingAdvancedMode{Enabled: *in.AdvancedRendering}

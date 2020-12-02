@@ -142,9 +142,12 @@ func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName str
 
 func dummyAction(name string) *graphql.Action {
 	return &graphql.Action{
-		Name:           name,
-		CreatedAt:      graphql.Timestamp(time.Now()),
-		Path:           "deploy",
+		Name:      name,
+		CreatedAt: graphql.Timestamp(time.Now()),
+		ActionRef: &graphql.ManifestReference{
+			Path:     "deploy",
+			Revision: "0.1.0",
+		},
 		RenderedAction: nil,
 		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
 			Enabled: false,

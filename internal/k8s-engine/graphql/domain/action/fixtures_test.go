@@ -34,42 +34,58 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 		CreatedAt: graphql.Timestamp(timestamp),
 		Input: &graphql.ActionInput{
 			Parameters: ptrToJSONRawMessage(`{"param":"one"}`),
-			Artifacts: []*graphql.InputArtifact{
+			TypeInstances: []*graphql.InputTypeInstanceDetails{
 				{
-					Name:           "in1",
-					TypeInstanceID: "in-id1",
-					TypePath:       "path1",
-					Optional:       false,
+					Name: "in1",
+					ID:   "in-id1",
+					TypeRef: &graphql.ManifestReference{
+						Path:     "path1",
+						Revision: "0.1.0",
+					},
+					Optional: false,
 				},
 				{
-					Name:           "in2",
-					TypeInstanceID: "in-id2",
-					TypePath:       "path2",
-					Optional:       true,
+					Name: "in2",
+					ID:   "in-id2",
+					TypeRef: &graphql.ManifestReference{
+						Path:     "path2",
+						Revision: "0.1.0",
+					},
+					Optional: true,
 				},
 			},
 		},
 		Output: &graphql.ActionOutput{
-			Artifacts: []*graphql.OutputArtifact{
+			TypeInstances: []*graphql.OutputTypeInstanceDetails{
 				{
-					Name:           "out1",
-					TypeInstanceID: "id1",
-					TypePath:       "path1",
+					Name: "out1",
+					ID:   "id1",
+					TypeRef: &graphql.ManifestReference{
+						Path:     "path1",
+						Revision: "0.1.0",
+					},
 				},
 				{
-					Name:           "out2",
-					TypeInstanceID: "id2",
-					TypePath:       "path2",
+					Name: "out2",
+					ID:   "id2",
+					TypeRef: &graphql.ManifestReference{
+						Path:     "path2",
+						Revision: "0.1.0",
+					},
 				},
 			},
 		},
-		Path:           "foo.bar",
+		ActionRef: &graphql.ManifestReference{
+			Path:     "foo.bar",
+			Revision: "0.1.0",
+		},
 		Run:            true,
+		DryRun:         true,
 		Cancel:         true,
 		RenderedAction: ptrToJSONRawMessage(`{"foo":"bar","baz":3}`),
 		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
-			Enabled:                        true,
-			ArtifactsForRenderingIteration: nil,
+			Enabled:                            true,
+			TypeInstancesForRenderingIteration: nil,
 		},
 		RenderedActionOverride: ptrToJSONRawMessage(`{"override":true}`),
 		Status: &graphql.ActionStatus{
@@ -94,18 +110,22 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 		Name: name,
 		Input: &graphql.ActionInputData{
 			Parameters: &params,
-			Artifacts: []*graphql.InputArtifactData{
+			TypeInstances: []*graphql.InputTypeInstanceData{
 				{
-					Name:           "in1",
-					TypeInstanceID: "in-id1",
+					Name: "in1",
+					ID:   "in-id1",
 				},
 				{
-					Name:           "in2",
-					TypeInstanceID: "in-id2",
+					Name: "in2",
+					ID:   "in-id2",
 				},
 			},
 		},
-		Action:                 "sample.action",
+		DryRun: ptr.Bool(true),
+		ActionRef: &graphql.ManifestReferenceInput{
+			Path:     "sample.action",
+			Revision: ptr.String("0.1.0"),
+		},
 		AdvancedRendering:      ptr.Bool(true),
 		RenderedActionOverride: &override,
 	}
@@ -119,21 +139,25 @@ func fixModel(name, namespace string) model.ActionToCreateOrUpdate {
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.ActionSpec{
-				Path: "sample.action",
+				ActionRef: v1alpha1.ManifestReference{
+					Path:     "sample.action",
+					Revision: ptr.String("0.1.0"),
+				},
+				DryRun: ptr.Bool(true),
 				Input: &v1alpha1.ActionInput{
 					Parameters: &v1alpha1.InputParameters{
 						SecretRef: corev1.LocalObjectReference{
 							Name: name,
 						},
 					},
-					Artifacts: &[]v1alpha1.InputArtifact{
+					TypeInstances: &[]v1alpha1.InputTypeInstance{
 						{
-							Name:           "in1",
-							TypeInstanceID: "in-id1",
+							Name: "in1",
+							ID:   "in-id1",
 						},
 						{
-							Name:           "in2",
-							TypeInstanceID: "in-id2",
+							Name: "in2",
+							ID:   "in-id2",
 						},
 					},
 				},
@@ -173,16 +197,20 @@ func fixK8sAction(t *testing.T, name string) v1alpha1.Action {
 			CreationTimestamp: metav1.NewTime(timestamp),
 		},
 		Spec: v1alpha1.ActionSpec{
-			Path: "foo.bar",
+			ActionRef: v1alpha1.ManifestReference{
+				Path:     "foo.bar",
+				Revision: ptr.String("0.1.0"),
+			},
+			DryRun: ptr.Bool(true),
 			Input: &v1alpha1.ActionInput{
-				Artifacts: &[]v1alpha1.InputArtifact{
+				TypeInstances: &[]v1alpha1.InputTypeInstance{
 					{
-						Name:           "in1",
-						TypeInstanceID: "in-id1",
+						Name: "in1",
+						ID:   "in-id1",
 					},
 					{
-						TypeInstanceID: "in-id2",
-						Name:           "in2",
+						ID:   "in-id2",
+						Name: "in2",
 					},
 				},
 				Parameters: &v1alpha1.InputParameters{
@@ -205,19 +233,25 @@ func fixK8sAction(t *testing.T, name string) v1alpha1.Action {
 				Status: &runtime.RawExtension{Raw: []byte(`{"runner":true}`)},
 			},
 			Output: &v1alpha1.ActionOutput{
-				Artifacts: &[]v1alpha1.OutputArtifactDetails{
+				TypeInstances: &[]v1alpha1.OutputTypeInstanceDetails{
 					{
-						CommonArtifactDetails: v1alpha1.CommonArtifactDetails{
-							Name:           "out1",
-							TypeInstanceID: "id1",
-							TypePath:       "path1",
+						CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
+							Name: "out1",
+							ID:   "id1",
+							TypeRef: &v1alpha1.ManifestReference{
+								Path:     "path1",
+								Revision: ptr.String("0.1.0"),
+							},
 						},
 					},
 					{
-						CommonArtifactDetails: v1alpha1.CommonArtifactDetails{
-							Name:           "out2",
-							TypeInstanceID: "id2",
-							TypePath:       "path2",
+						CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
+							Name: "out2",
+							ID:   "id2",
+							TypeRef: &v1alpha1.ManifestReference{
+								Path:     "path2",
+								Revision: ptr.String("0.1.0"),
+							},
 						},
 					},
 				},
@@ -226,20 +260,26 @@ func fixK8sAction(t *testing.T, name string) v1alpha1.Action {
 				Action: &runtime.RawExtension{Raw: []byte(`{"foo":"bar","baz":3}`)},
 				Input: &v1alpha1.ResolvedActionInput{
 					Parameters: &runtime.RawExtension{Raw: []byte(`{"param":"one"}`)},
-					Artifacts: &[]v1alpha1.InputArtifactDetails{
+					TypeInstances: &[]v1alpha1.InputTypeInstanceDetails{
 						{
-							CommonArtifactDetails: v1alpha1.CommonArtifactDetails{
-								Name:           "in1",
-								TypeInstanceID: "in-id1",
-								TypePath:       "path1",
+							CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
+								Name: "in1",
+								ID:   "in-id1",
+								TypeRef: &v1alpha1.ManifestReference{
+									Path:     "path1",
+									Revision: ptr.String("0.1.0"),
+								},
 							},
 							Optional: false,
 						},
 						{
-							CommonArtifactDetails: v1alpha1.CommonArtifactDetails{
-								Name:           "in2",
-								TypeInstanceID: "in-id2",
-								TypePath:       "path2",
+							CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
+								Name: "in2",
+								ID:   "in-id2",
+								TypeRef: &v1alpha1.ManifestReference{
+									Path:     "path2",
+									Revision: ptr.String("0.1.0"),
+								},
 							},
 							Optional: true,
 						},
