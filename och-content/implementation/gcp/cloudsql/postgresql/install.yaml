@@ -84,10 +84,10 @@ spec:
               artifacts:
                 - name: cloudsql-instance
                   globalName: cloudsql-instance
-                  path: "/out/cloudsql-instance"
+                  path: "/out/cloudsql-instance.yaml"
                 - name: postgresql
                   globalName: postgresql
-                  path: "/out/postgresql"
+                  path: "/out/postgresql.yaml"
             container:
 # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
 #                      {{ action:
@@ -96,20 +96,29 @@ spec:
 #                            group: "sql"
 #                            command: "create"
 #                            generateName: true
-#                            configuration:
+#                            instance:
 #                              tier: "db-g1-small"
 #                              databaseVersion: "POSTGRES_{{ .Context.appVersion }}"
 #                              region: "us-central"
-#                            additionalOutput:
-#                              path: "{{`{{outputs.artifacts.postgresql.path}}`}}"
-#                              # assuming runner bases on details from https://cloud.google.com/sql/docs/postgres/admin-api/rest/v1beta4/instances#DatabaseInstance
-#                              value:
-#                                host: "{{`{{ .ipAddresses[0].ipAddress }}`}}"
-#                                port: 5432
-#                                defaultDBName: "postgres"
-#                                superuser: # assuming runner creates dedicated user
-#                                  username: "{{`{{ .username }}`}}"
-#                                  password: "{{`{{ .password }}`}}"
+#                              settings:
+#                                tier: "db-g1-small"
+#                                ipConfiguration:
+#                                  authorizedNetworks:
+#                                    - name: internet
+#                                      value: "0.0.0.0/0"
+#                            output:
+#                              directory: "/out"
+#                              cloudSQLInstance:
+#                                fileName: "cloudsql-instance.yaml"
+#                              additional:
+#                                fileName: "postgresql.yaml"
+#                                value:
+#                                  host: "{{`{{ (index .DBInstance.IpAddresses 0).IpAddress  }}`}}"
+#                                  port: "{{`{{ .Port }}`}}"
+#                                  defaultDBName: "{{`{{ .DefaultDBName }}`}}"
+#                                  superuser:
+#                                    username: "{{`{{ .Username }}`}}"
+#                                    password: "{{`{{ .Password }}`}}"
 #                        }}
 
 signature:

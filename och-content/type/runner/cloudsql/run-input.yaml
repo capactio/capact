@@ -14,6 +14,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
+  # TODO improve the .args.instance JSON schema, after we know inputs for other commands
   jsonSchema:
     value: |-
       {
@@ -33,7 +34,7 @@ spec:
               "group": "sql",
               "command": "create",
               "generateName": true,
-              "configuration": {
+              "instance": {
                 "tier": "db-g1-small",
                 "databaseVersion": "POSTGRES_12",
                 "region": "us-central"
@@ -80,7 +81,9 @@ spec:
             "additionalProperties": false,
             "required": [
                 "group",
-                "command"
+                "command",
+                "configuration",
+                "output"
             ],
             "properties": {
               "group": {
@@ -93,40 +96,69 @@ spec:
                 "type": "string",
                 "title": "The command to execute"
               },
-              "name": {
-                "$id": "#/properties/args/properties/name",
-                "type": "string",
-                "title": "The name of an instance"
-              },
               "generateName": {
                 "$id": "#/properties/args/properties/generateName",
                 "type": "boolean",
                 "title": "Generate instance name",
                 "default": false
               },
-              "configuration": {
-                "$id": "#/properties/args/properties/configuration",
+              "instance": {
+                "$id": "#/properties/args/properties/instance",
                 "type": "object",
-                "title": "Additional configuration properties",
+                "title": "CloudSQL instance parameters",
+                "description": "This field can have the content defined in https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances"
                 "additionalProperties": true
               },
-              "additionalOutput": {
-                "$id": "#/properties/args/properties/additionalOutput",
+              "output": {
+                "$id": "#/properties/args/properties/output",
                 "type": "object",
-                "title": "The parameters for additional output file",
+                "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["value", "path"],
+                "required": ["directory", "cloudSQLInstance"],
                 "properties": {
-                  "value": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/value",
-                     "type": "object",
-                     "title": "The shape for output file",
-                     "additionalProperties": true
+                  "directory": {
+                    "$id": "#/properties/args/properties/output/properties/directory",
+                    "type": "string",
+                    "title": "Directory for the output files"
                   },
-                  "path": {
-                     "$id": "#/properties/args/properties/additionalOutput/properties/path",
-                     "type": "string",
-                     "title": "The path of the output file"
+                  "cloudSQLInstance": {
+                    "$id": "#/properties/args/properties/output/properties/cloudSQLInstance",
+                    "type": "object",
+                    "title": "Parameters for the CloudSQL instance (cap.type.gcp.cloudsql) output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "fileName"
+                    ],
+                    "properties": {
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/cloudSQLInstance/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the CloudSQLInstance output file"
+                      }
+                    }
+                  },
+                  "additional": {
+                    "$id": "#/properties/args/properties/output/properties/additional",
+                    "type": "object",
+                    "title": "The parameters for additional output file",
+                    "additionalProperties": false,
+                    "required": [
+                        "value",
+                        "fileName"
+                    ],
+                    "properties": {
+                      "value": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/value",
+                        "type": "object",
+                        "title": "The shape for additional output file",
+                        "additionalProperties": true
+                      },
+                      "fileName": {
+                        "$id": "#/properties/args/properties/output/properties/additional/properties/fileName",
+                        "type": "string",
+                        "title": "The file name of the output file"
+                      }
+                    }
                   }
                 }
               }

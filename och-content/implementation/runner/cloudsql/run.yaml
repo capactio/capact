@@ -52,7 +52,7 @@ spec:
               artifacts:
                 - name: cloudsql-instance
                   globalName: cloudsql-instance
-                  path: "/out/cloudsql-instance"
+                  path: "/out/cloudsql-instance.yaml"
             container:
               image: gcr.io/projectvoltron/cloudsql-runner:0.1.0
               args:

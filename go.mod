@@ -23,6 +23,7 @@ require (
 	github.com/onsi/gomega v1.10.1
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
 	github.com/sirupsen/logrus v1.7.0 // indirect
@@ -34,9 +35,11 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
+	google.golang.org/api v0.20.0
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.18.2
