@@ -1,0 +1,36 @@
+context:
+  name: "cloudsql-runner-example"
+  dryRun: false
+  timeout: "10m"
+  platform:
+    namespace: "gcp-scenario"
+    serviceAccountName: "cloudsql-runner-example"
+args:
+  group: "sql"
+  command: "create"
+  generateName: true
+  instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+    databaseVersion: "POSTGRES_11"
+    region: "us-central"
+    defaultDBName: postgres
+    rootPassword: okon
+    settings:
+      tier: "db-g1-small"
+      ipConfiguration:
+        authorizedNetworks:
+          - name: internet
+            value: "0.0.0.0/0"
+  output:
+    directory: /
+    cloudSQLInstance:
+      filename: "instance.yaml"
+    additional:
+      filename: "additional.yaml"
+      value:
+        host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+        port: "{{ .Port }}"
+        defaultDBName: "{{ .DefaultDBName }}"
+        superuser:
+          username: "{{ .Username }}"
+          password: "{{ .Password }}"
+

@@ -1,0 +1,8 @@
+apiVersion: core.projectvoltron.dev/v1alpha1
+kind: Action
+metadata:
+  name: "install-jira-helm"
+  namespace: "local-scenario"
+spec:
+  path: "cap.interface.productivity.jira.install-helm"
+  run: false

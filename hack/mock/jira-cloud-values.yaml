@@ -1,0 +1,12 @@
+postgresql:
+  enabled: false
+databaseConnection:
+  host: postgresql-server
+  user: postgres
+  password: okon
+  database: postgres
+ingress:
+  enabled: true
+  hosts:
+  - host: jira-cloud.voltron.local
+    paths: ['/']

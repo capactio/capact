@@ -1,0 +1,23 @@
+context:
+  name: "helm-runner-example"
+  dryRun: false
+  timeout: "10m"
+  platform:
+    namespace: "gcp-scenario"
+    serviceAccountName: "helm-runner-example"
+args:
+  command: "install"
+  generateName: true
+  chart:
+    name: "jira-software"
+    repo: "https://helm.mox.sh"
+  valuesFromFile: "/values.yaml"
+  output:
+    directory: "/"
+    helmRelease:
+      fileName: "release.yaml"
+    additional:
+      fileName: "additional.yaml"
+      value: |-
+        version: "{{ .Values.image.tag }}"
+        host: "{{ template "jira-software.fullname" . }}"
