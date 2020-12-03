@@ -16,6 +16,10 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
+<<<<<<< HEAD
+=======
+	github.com/mitchellh/mapstructure v1.3.3
+>>>>>>> c58854e... working JIRA!!!
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/onsi/ginkgo v1.12.1

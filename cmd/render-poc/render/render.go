@@ -2,6 +2,7 @@ package render
 
 import (
 	"encoding/json"
+	"fmt"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
@@ -32,7 +33,8 @@ type WorkflowStep struct {
 }
 
 type Action struct {
-	Name string `json:"name"`
+	Name   string `json:"name"`
+	Prefix string `json:"prefix"`
 }
 
 type Renderer struct {
@@ -102,11 +104,24 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 	}
 
 	// import templates
-	r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, importedWorkflow.Templates...)
+	for _, template := range importedWorkflow.Templates {
+		templateName := fmt.Sprintf("%s-%s", step.Action.Prefix, template.Name)
+		template.Name = templateName
+
+		for parallelStepsIdx := range template.Steps {
+			parallelSteps := template.Steps[parallelStepsIdx]
+
+			for stepIdx := range parallelSteps {
+				templateName := fmt.Sprintf("%s-%s", step.Action.Prefix, template.Steps[parallelStepsIdx][stepIdx].Template)
+				template.Steps[parallelStepsIdx][stepIdx].Template = templateName
+			}
+		}
+		r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, template)
+	}
 
 	// replace action with template reference
+	step.Template = fmt.Sprintf("%s-%s", step.Action.Prefix, importedWorkflow.Entrypoint)
 	step.Action = nil
-	step.Template = importedWorkflow.Entrypoint
 
 	return nil
 }

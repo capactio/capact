@@ -55,15 +55,20 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: workflow
+        entrypoint: postgres-install
         templates:
-          - name: workflow
+          - name: postgres-install
+            outputs:
+              artifacts:
+                - name: postgres-config
+                  from: "{{steps.postgres-install.outputs.artifacts.additional}}"
             steps:
               - - name: postgres-install
                   # 'action' includes the templates from the implementation
                   # and calls the entrypoint template from it
                   action:
                     name: cap.implementation.runner.helm.run
+                    prefix: helm-install
                   arguments:
                     artifacts:
                       - name: helm-args
@@ -100,23 +105,6 @@ spec:
                                     superuser:
                                       username: "{{ template "postgresql.username" . }}"
                                       password: "{{ template "postgresql.password" . }}"
-                                        template: helm
-              - - name: show-postgres-config
-                  template: show-file
-                  arguments:
-                    artifacts:
-                      - name: file
-                        from: "{{steps.postgres-install.outputs.artifacts.additional}}"
-
-          - name: show-file
-            inputs:
-              artifacts:
-                - name: file
-                  path: /file
-            container:
-              image: alpine:3.7
-              command: [sh, -c]
-              args: ["sleep 1 && cat /file"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

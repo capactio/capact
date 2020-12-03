@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"log"
 
+	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"projectvoltron.dev/voltron/cmd/render-poc/render"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
@@ -25,14 +27,27 @@ func main() {
 		Implementations: implementations,
 	}
 
-	toRender := implementations["cap.implementation.bitnami.postgresql.install"]
+	//toRender := implementations["cap.implementation.bitnami.postgresql.install"]
+	toRender := implementations["cap.implementation.atlassian.jira.install"]
 
 	data, err := renderer.Render(toRender)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	yamlData, err := yaml.Marshal(data)
+	obj := &unstructured.Unstructured{}
+
+	obj.SetKind("Workflow")
+	obj.SetAPIVersion("argoproj.io/v1alpha1")
+	obj.SetName("render-poc")
+
+	if err := mapstructure.Decode(map[string]interface{}{
+		"spec": data,
+	}, &obj.Object); err != nil {
+		log.Fatal(err)
+	}
+
+	yamlData, err := yaml.Marshal(obj)
 	if err != nil {
 		log.Fatal(err)
 	}
