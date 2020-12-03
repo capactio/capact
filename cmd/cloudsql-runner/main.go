@@ -2,11 +2,8 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"io/ioutil"
 	"log"
-
-	"sigs.k8s.io/yaml"
 
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
@@ -19,29 +16,30 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
-type serviceAccount struct {
-	Key         json.RawMessage `json:"key"`
-	ProjectName string          `json:"projectName"`
-}
 type Config struct {
-	GCPServiceAccountFilepath string `envconfig:"default=/etc/gcp/sa.yaml"`
+	GCPServiceAccountFilepath string `envconfig:"default=/etc/gcp/sa.json"`
+}
+
+var scopes = []string{
+	"https://www.googleapis.com/auth/cloud-platform",
+	"https://www.googleapis.com/auth/sqlservice.admin",
 }
 
 func main() {
 	var cfg Config
-	err := envconfig.InitWithPrefix(&cfg, "APP")
+	err := envconfig.InitWithPrefix(&cfg, "RUNNER")
 	exitOnError(err, "failed to load config")
 
-	sa, err := getGCPServiceAccount(&cfg)
+	credsBytes, err := loadGCPCredentialsFileBytes(&cfg)
 	exitOnError(err, "failed to get GCP service account")
 
-	creds, err := google.CredentialsFromJSON(context.Background(), sa.Key)
+	gcpCreds, err := google.CredentialsFromJSON(context.Background(), credsBytes, scopes...)
 	exitOnError(err, "failed to read GCP credentials")
 
-	service, err := sqladmin.NewService(context.Background(), option.WithCredentials(creds))
+	service, err := sqladmin.NewService(context.Background(), option.WithCredentials(gcpCreds))
 	exitOnError(err, "failed to create GCP service client")
 
-	cloudsqlRunner := cloudsql.NewRunner(service, sa.ProjectName)
+	cloudsqlRunner := cloudsql.NewRunner(service, gcpCreds.ProjectID)
 
 	statusReporter := statusreporter.NewNoop()
 
@@ -54,20 +52,13 @@ func main() {
 	exitOnError(err, "while executing runner")
 }
 
-func getGCPServiceAccount(cfg *Config) (serviceAccount, error) {
-	sa := serviceAccount{}
-
+func loadGCPCredentialsFileBytes(cfg *Config) ([]byte, error) {
 	rawInput, err := ioutil.ReadFile(cfg.GCPServiceAccountFilepath)
 	if err != nil {
-		return sa, errors.Wrap(err, "while reading GCP service account file")
+		return rawInput, errors.Wrap(err, "while reading GCP credentials file")
 	}
 
-	err = yaml.Unmarshal(rawInput, &sa)
-	if err != nil {
-		return sa, errors.Wrap(err, "while unmarshaling GCP service account file")
-	}
-
-	return sa, nil
+	return rawInput, nil
 }
 
 func exitOnError(err error, context string) {

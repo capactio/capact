@@ -2,7 +2,7 @@
   {
     "metadata": {
       "id": "00000000-ab4a-4fbf-a312-f96f11b07d0b",
-      "Tags": [
+      "tags": [
         {
           "path": "cap.core.type.platform.kubernetes",
           "revision": "0.1.0"
@@ -41,42 +41,8 @@
   },
   {
     "metadata": {
-      "id": "11111111-ab4a-4fbf-a312-f96f11b07d0b"
-    },
-    "resourceVersion": 4,
-    "spec": {
-      "typeRef": {
-        "path": "cap.type.productivity.jira.install-input",
-        "revision": "0.1.0"
-      },
-      "value": {
-        "hostname": "jira.svc.cluster.local"
-      },
-      "instrumentation": {
-        "metrics": {
-          "endpoint": "https://jira.svc.cluster.local:2112",
-          "regex": "^(go_gc_duration_seconds|go_goroutines|go_memstats_alloc_bytes|go_memstats_heap_alloc_bytes)$",
-          "dashboards": [
-            {
-              "url": "https://grafana.foo.bar/d/foo/bar"
-            },
-            {
-              "url": "https://grafana.foo.bar/d/foo/poo"
-            }
-          ]
-        },
-        "health": {
-          "url": "https://jira.svc.cluster.local/healthz",
-          "method": "GET",
-          "status": "READY"
-        }
-      }
-    }
-  },
-  {
-    "metadata": {
       "id": "13343627-ab4a-4fbf-a312-f96f11b07d0b",
-      "Tags": [
+      "tags": [
         {
           "path": "cap.type.productivity.jira",
           "revision": "0.1.0"
@@ -90,7 +56,7 @@
         "revision": "0.1.0"
       },
       "value": {
-        "hostname": "jira-cloud.cluster.local",
+        "hostname": "https://jira-cloud.voltron.local",
         "version": "8.14.0"
       },
       "instrumentation": {}
@@ -99,7 +65,7 @@
   {
     "metadata": {
       "id": "45678917-ab4a-4fbf-a312-f96f11b07d0b",
-      "Tags": [
+      "tags": [
         {
           "path": "cap.type.productivity.jira",
           "revision": "0.1.0"
@@ -113,7 +79,7 @@
         "revision": "0.1.0"
       },
       "value": {
-        "hostname": "jira-local.cluster.local",
+        "hostname": "https://jira-local.voltron.local",
         "version": "8.14.0"
       },
       "instrumentation": {}
