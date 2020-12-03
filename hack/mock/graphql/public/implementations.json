@@ -132,7 +132,7 @@
                   {
                     "name": "postgresql-install",
                     "container": {
-                      "image": "gcr.io/projectvoltron/pr/cloudsql-runner:PR-65",
+                      "image": "gcr.io/projectvoltron/pr/cloudsql-runner:PR-72",
                       "env": [
                         {
                           "name": "RUNNER_INPUT_PATH",
