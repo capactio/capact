@@ -63,8 +63,10 @@ spec:
               # so they can be uploaded to OCH easily
               artifacts:
                 - name: postgresql
+                  globalName: postgresql
                   from: "{{steps.postgres-install.outputs.artifacts.additional}}"
                 - name: helm-release
+                  globalName: helm-release
                   from: "{{steps.postgres-install.outputs.artifacts.helm-release}}"
             steps:
               - - name: create-install-config

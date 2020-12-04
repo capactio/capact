@@ -9,13 +9,13 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"projectvoltron.dev/voltron/cmd/render-poc/render"
+	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )
 
 var (
-	implementationsDir = "cmd/render-poc/implementations"
+	implementationsDir = "docs/investigation/workflow-rendering/implementations"
 	implementations    = map[string]*types.Implementation{}
 )
 
