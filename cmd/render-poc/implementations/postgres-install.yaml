@@ -59,19 +59,30 @@ spec:
         templates:
           - name: postgres-install
             outputs:
+              # artifact names match with the typeInstance names
+              # so they can be uploaded to OCH easily
               artifacts:
-                - name: postgres-config
+                - name: postgresql
                   from: "{{steps.postgres-install.outputs.artifacts.additional}}"
+                - name: helm-release
+                  from: "{{steps.postgres-install.outputs.artifacts.helm-release}}"
             steps:
-              - - name: postgres-install
-                  # 'action' includes the templates from the implementation
-                  # and calls the entrypoint template from it
+              - - name: create-install-config
+                  # action imports templates in the Implementation workflow
+                  # and sets the template here to the entrypoint in the imported workflow
                   action:
-                    name: cap.implementation.runner.helm.run
-                    prefix: helm-install
+                    name: cap.implementation.jinja2.template # implementation of a Jinja2 template :D
                   arguments:
                     artifacts:
-                      - name: helm-args
+                      - name: values
+                        # mock cap.type.database.postgresql.install-input typeInstance artifact
+                        raw:
+                          data: |
+                            superuser:
+                              username: postgres
+                              password: s3cr3t
+                            defaultDBName: postgres
+                      - name: template
                         raw:
                           data: |
                             context:
@@ -90,9 +101,9 @@ spec:
                               values:
                                 image:
                                   pullPolicy: Always
-                                postgresqlDatabase: defaultdb
-                                postgresqlPassword: okon
-                              output:
+                                postgresqlDatabase: {{ defaultDBName }}
+                                postgresqlPassword: {{ superuser.password }}
+                              output:{% raw %}
                                 directory: "/"
                                 helmRelease:
                                   fileName: "helm-release"
@@ -104,7 +115,16 @@ spec:
                                     defaultDBName: "{{ template "postgresql.database" . }}"
                                     superuser:
                                       username: "{{ template "postgresql.username" . }}"
-                                      password: "{{ template "postgresql.password" . }}"
+                                      password: "{{ template "postgresql.password" . }}"{% endraw %}
+
+              - - name: postgres-install
+                  action:
+                    name: cap.implementation.runner.helm.run
+                    prefix: helm-install
+                  arguments:
+                    artifacts:
+                      - name: helm-args
+                        from: "{{steps.create-install-config.outputs.artifacts.render}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

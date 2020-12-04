@@ -3,6 +3,8 @@ package render
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"time"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
@@ -103,6 +105,10 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 		return errors.Wrap(err, "while creating workflow for imported implementation")
 	}
 
+	if step.Action.Prefix == "" {
+		step.Action.Prefix = StringWithCharset(6)
+	}
+
 	// import templates
 	for _, template := range importedWorkflow.Templates {
 		templateName := fmt.Sprintf("%s-%s", step.Action.Prefix, template.Name)
@@ -124,4 +130,18 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 	step.Action = nil
 
 	return nil
+}
+
+var seededRand *rand.Rand = rand.New(
+	rand.NewSource(time.Now().UnixNano()))
+
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+func StringWithCharset(length int) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }

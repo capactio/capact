@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -19,6 +20,12 @@ var (
 )
 
 func main() {
+	if len(os.Args) < 2 {
+		log.Fatal("missing implementation path argument")
+	}
+
+	implementationPath := os.Args[1]
+
 	if err := loadImplementations(); err != nil {
 		log.Fatal(err)
 	}
@@ -27,8 +34,11 @@ func main() {
 		Implementations: implementations,
 	}
 
-	//toRender := implementations["cap.implementation.bitnami.postgresql.install"]
-	toRender := implementations["cap.implementation.atlassian.jira.install"]
+	toRender, ok := implementations[implementationPath]
+	if !ok {
+		log.Fatalf("implementation %s does not exist", implementationPath)
+	}
+	//toRender := implementations["cap.implementation.atlassian.jira.install"]
 
 	data, err := renderer.Render(toRender)
 	if err != nil {

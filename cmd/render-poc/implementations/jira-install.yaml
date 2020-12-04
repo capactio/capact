@@ -98,9 +98,10 @@ spec:
                   arguments:
                     artifacts:
                       - name: file
-                        from: "{{steps.install-db.outputs.artifacts.postgres-config}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                 - name: jira-input-converter
-                  template: template
+                  action:
+                    name: cap.implementation.jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -142,7 +143,7 @@ spec:
                                   - host: jira-cloud.voltron.local
                                     paths: ['/']
                       - name: values
-                        from: "{{steps.install-db.outputs.artifacts.postgres-config}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
               - - name: install-jira
                   action:
@@ -175,26 +176,6 @@ spec:
               image: alpine:3.7
               command: [sh, -c]
               args: ["sleep 2 && cat /file"]
-
-          - name: template
-            inputs:
-              artifacts:
-                - name: template
-                  path: "/template.yml"
-                - name: values
-                  path: "/values.yml"
-            outputs:
-              artifacts:
-                - name: render
-                  path: "/render.yml"
-            container:
-              image: dinutac/jinja2docker
-              args:
-                - /template.yml 
-                - /values.yml 
-                - --format=yaml
-                - -o
-                - /render.yml
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
