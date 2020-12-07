@@ -8,6 +8,7 @@ This directory contains the following files and directories:
 
 - [`investigation`](./investigation) - Contains investigations and proof of concepts files.
 - [`proposal`](./proposal) - Contains proposals to enhance the Voltron project.
+- [`tutorial`](./tutorial) - Contains various tutorials to show how to use the Voltron project.
 
 **Files**
 

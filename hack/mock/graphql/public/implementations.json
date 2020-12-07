@@ -401,9 +401,9 @@
     ]
   },
   {
-    "name": "install-helm",
+    "name": "install-local",
     "prefix": "cap.implementation.attlasian.jira",
-    "path": "cap.implementation.attlasian.jira.install-helm",
+    "path": "cap.implementation.attlasian.jira.install-local",
     "revisions": [
       {
         "metadata": {
@@ -418,9 +418,9 @@
               "url": "https://projectvoltron.dev"
             }
           ],
-          "name": "install-helm",
+          "name": "install-local",
           "prefix": "cap.implementation.attlasian.jira",
-          "path": "cap.implementation.attlasian.jira.install-helm",
+          "path": "cap.implementation.attlasian.jira.install-local",
           "supportURL": " https://mox.sh/helm",
           "tags": []
         },
@@ -644,7 +644,7 @@
           "appVersion": "8.x.x",
           "implements": [
             {
-              "path": "cap.interface.productivity.jira.install-helm",
+              "path": "cap.interface.productivity.jira.install-local",
               "revision": "0.1.0"
             }
           ],
