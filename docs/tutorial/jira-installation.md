@@ -28,9 +28,6 @@ The bellow diagrams show possible scenarios:
 
 ![in-gcp](./assets/install-gcp.svg)
 
-
-This tutorial will focus on Jira with Cloud SQL for PostgreSQL database installation. However, 
-
 ###  Prerequisites
 
 * Install Docker
