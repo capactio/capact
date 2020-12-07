@@ -3,16 +3,18 @@ kind: Action
 metadata:
   name: "full-spec"
 spec:
-  path: "cap.interface.database.postgresql.install"
+  actionRef:
+    path: "cap.interface.database.postgresql.install"
+    revision: "0.1.0"
   input:
     parameters:
       secretRef:
         name: "full-spec-params"
-    artifacts:
+    typeInstances:
       - name: foo
-        typeInstanceID: fee33a5e-d957-488a-86bd-5dacd4120312
+        id: fee33a5e-d957-488a-86bd-5dacd4120312
       - name: bar
-        typeInstanceID: 563a79eb-7417-4e11-aa4b-d93076c04e48
+        id: 563a79eb-7417-4e11-aa4b-d93076c04e48
   advancedRendering:
     enabled: true
     renderingIteration:

@@ -33,11 +33,6 @@ Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
 """
 scalar VersionRange
 
-"""
-String that contains JSON schema
-"""
-scalar JSONSchema
-
 input InterfaceFilter {
     prefixPattern: NodePathPattern
 }
@@ -176,8 +171,41 @@ type InterfaceRevision {
 }
 
 type InterfaceSpec {
-    input: JSONSchema!
-    output: JSONSchema!
+    input: InterfaceInput!
+    output: InterfaceOutput!
+}
+
+type InterfaceInput {
+    parameters: InputParameters
+    typeInstances: [InputTypeInstance]!
+}
+
+type InputParameters {
+    jsonSchema: Any
+}
+
+type InterfaceOutput {
+    typeInstances: [OutputTypeInstance]!
+}
+
+interface TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type InputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+    verbs: [TypeInstanceOperationVerb!]!
+}
+
+enum TypeInstanceOperationVerb {
+    CREATE, GET, LIST, UPDATE, DELETE
+}
+
+type OutputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
 }
 
 type Type {
@@ -199,7 +227,7 @@ type TypeRevision {
 
 type TypeSpec {
     additionalRefs: [NodePath!]
-    jsonSchema: JSONSchema
+    jsonSchema: Any
 }
 
 type Implementation {
@@ -227,7 +255,28 @@ type ImplementationSpec {
     requires: [ImplementationRequirement!]!
     imports: [ImplementationImport!]
     action: ImplementationAction!
+    additionalInput: ImplementationAdditionalInput
+    additionalOutput: ImplementationAdditionalOutput
 }
+
+type ImplementationAdditionalInput {
+    typeInstances: [InputTypeInstance!]!
+}
+
+type ImplementationAdditionalOutput {
+    typeInstances: [OutputTypeInstance!]!
+    typeInstanceRelations: [TypeInstanceRelationItem!]!
+}
+
+type TypeInstanceRelationItem {
+    typeInstanceName: String!
+
+    """
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    """
+    uses: [String!]!
+}
+
 
 type InterfaceReference {
     path: NodePath!

@@ -13,6 +13,7 @@ import (
 )
 
 const ParametersSecretDataKey = "parameters"
+const LatestRevision = "latest"
 
 type Converter struct{}
 
@@ -41,6 +42,14 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace st
 		inputParamsSecretName = &in.Name
 	}
 
+	var actionRef v1alpha1.ManifestReference
+	if in.ActionRef != nil {
+		actionRef = v1alpha1.ManifestReference{
+			Path:     v1alpha1.NodePath(in.ActionRef.Path),
+			Revision: in.ActionRef.Revision,
+		}
+	}
+
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			ObjectMeta: metav1.ObjectMeta{
@@ -48,7 +57,8 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace st
 				Namespace: namespace,
 			},
 			Spec: v1alpha1.ActionSpec{
-				Path:                   v1alpha1.NodePath(in.Action),
+				DryRun:                 in.DryRun,
+				ActionRef:              actionRef,
 				Input:                  c.actionInputFromGraphQL(in.Input, inputParamsSecretName),
 				AdvancedRendering:      advancedRendering,
 				RenderedActionOverride: renderedActionOverride,
@@ -80,6 +90,11 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 		run = *in.Spec.Run
 	}
 
+	var dryRun bool
+	if in.Spec.DryRun != nil {
+		dryRun = *in.Spec.DryRun
+	}
+
 	var cancel bool
 	if in.Spec.Cancel != nil {
 		cancel = *in.Spec.Cancel
@@ -102,18 +117,21 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 		advancedRenderingEnabled = in.Spec.AdvancedRendering.Enabled
 	}
 
+	actionRef := c.manifestRefToGraphQL(&in.Spec.ActionRef)
+
 	return graphql.Action{
 		Name:           in.Name,
 		CreatedAt:      graphql.Timestamp(in.CreationTimestamp.Time),
 		Input:          actionInput,
 		Output:         actionOutput,
-		Path:           string(in.Spec.Path),
+		DryRun:         dryRun,
 		Run:            run,
+		ActionRef:      actionRef,
 		Cancel:         cancel,
 		RenderedAction: renderedAction,
 		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
-			Enabled:                        advancedRenderingEnabled,
-			ArtifactsForRenderingIteration: nil, // TODO: Implement once advanced rendering is supported
+			Enabled:                            advancedRenderingEnabled,
+			TypeInstancesForRenderingIteration: nil, // TODO: Implement once advanced rendering is supported
 		},
 		RenderedActionOverride: c.runtimeExtensionToJSONRawMessage(in.Spec.RenderedActionOverride),
 		Status:                 c.statusToGraphQL(&in.Status),
@@ -131,38 +149,38 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 		result.Parameters = c.runtimeExtensionToJSONRawMessage(in.Parameters)
 	}
 
-	if in.Artifacts != nil {
-		var gqlArtifacts []*graphql.InputArtifact
-		for _, item := range *in.Artifacts {
-			gqlArtifacts = append(gqlArtifacts, &graphql.InputArtifact{
-				Name:           item.Name,
-				TypePath:       string(item.TypePath),
-				TypeInstanceID: item.TypeInstanceID,
-				Optional:       item.Optional,
+	if in.TypeInstances != nil {
+		var gqlTypeInstances []*graphql.InputTypeInstanceDetails
+		for _, item := range *in.TypeInstances {
+			gqlTypeInstances = append(gqlTypeInstances, &graphql.InputTypeInstanceDetails{
+				Name:     item.Name,
+				TypeRef:  c.manifestRefToGraphQL(item.TypeRef),
+				ID:       item.ID,
+				Optional: item.Optional,
 			})
 		}
-		result.Artifacts = gqlArtifacts
+		result.TypeInstances = gqlTypeInstances
 	}
 
 	return result
 }
 
 func (c *Converter) actionOutputToGraphQL(in *v1alpha1.ActionOutput) *graphql.ActionOutput {
-	if in == nil || in.Artifacts == nil {
+	if in == nil || in.TypeInstances == nil {
 		return nil
 	}
 
-	var gqlArtifacts []*graphql.OutputArtifact
-	for _, item := range *in.Artifacts {
-		gqlArtifacts = append(gqlArtifacts, &graphql.OutputArtifact{
-			Name:           item.Name,
-			TypePath:       string(item.TypePath),
-			TypeInstanceID: item.TypeInstanceID,
+	var gqlTypeInstances []*graphql.OutputTypeInstanceDetails
+	for _, item := range *in.TypeInstances {
+		gqlTypeInstances = append(gqlTypeInstances, &graphql.OutputTypeInstanceDetails{
+			Name:    item.Name,
+			ID:      item.ID,
+			TypeRef: c.manifestRefToGraphQL(item.TypeRef),
 		})
 	}
 
 	return &graphql.ActionOutput{
-		Artifacts: gqlArtifacts,
+		TypeInstances: gqlTypeInstances,
 	}
 }
 
@@ -172,17 +190,17 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 	}
 
 	actionInput := &v1alpha1.ActionInput{}
-	if in.Artifacts != nil && len(in.Artifacts) > 0 {
-		var inputArtifacts []v1alpha1.InputArtifact
+	if in.TypeInstances != nil && len(in.TypeInstances) > 0 {
+		var inputTypeInstances []v1alpha1.InputTypeInstance
 
-		for _, item := range in.Artifacts {
-			inputArtifacts = append(inputArtifacts, v1alpha1.InputArtifact{
-				Name:           item.Name,
-				TypeInstanceID: item.TypeInstanceID,
+		for _, item := range in.TypeInstances {
+			inputTypeInstances = append(inputTypeInstances, v1alpha1.InputTypeInstance{
+				Name: item.Name,
+				ID:   item.ID,
 			})
 		}
 
-		actionInput.Artifacts = &inputArtifacts
+		actionInput.TypeInstances = &inputTypeInstances
 	}
 
 	if in.Parameters != nil && inputParamsSecretName != nil {
@@ -229,6 +247,24 @@ func (c *Converter) userInfoToGraphQL(in *authv1.UserInfo) *graphql.UserInfo {
 		Username: in.Username,
 		Groups:   in.Groups,
 		Extra:    extras,
+	}
+}
+
+func (c *Converter) manifestRefToGraphQL(in *v1alpha1.ManifestReference) *graphql.ManifestReference {
+	if in == nil {
+		return nil
+	}
+
+	var revision string
+	if in.Revision != nil {
+		revision = *in.Revision
+	} else {
+		revision = LatestRevision
+	}
+
+	return &graphql.ManifestReference{
+		Path:     string(in.Path),
+		Revision: revision,
 	}
 }
 

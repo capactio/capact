@@ -272,6 +272,61 @@
             }
           },
           "appVersion": "8.x.x",
+          "additionalInput": {
+            "typeInstances": [
+              {
+                "name": "db",
+                "typeRef": {
+                  "path": "cap.type.database.postgresql.config",
+                  "revision": "0.1.0"
+                },
+                "verbs": [
+                  "get"
+                ]
+              }
+            ]
+          },
+          "additionalOutput": {
+            "typeInstances": [
+              {
+                "name": "db",
+                "typeRef": {
+                  "path": "cap.type.database.postgresql.database",
+                  "revision": "0.1.0"
+                }
+              },
+              {
+                "name": "postgresql",
+                "typeRef": {
+                  "path": "cap.type.database.postgresql.config",
+                  "revision": "0.1.0"
+                }
+              },
+              {
+                "name": "helm-release",
+                "typeRef": {
+                  "path": "cap.type.helm.chart.release",
+                  "revision": "0.1.0"
+                }
+              }
+            ],
+            "typeInstanceRelations": [
+              {
+                "typeInstanceName": "jira-config",
+                "uses": [
+                  "helm-release",
+                  "postgresql",
+                  "db"
+                ]
+              },
+              {
+                "typeInstanceName": "db",
+                "uses": [
+                  "postgresql"
+                ]
+              }
+            ]
+          },
           "implements": [
             {
               "path": "cap.interface.productivity.jira.install",

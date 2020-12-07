@@ -58,6 +58,21 @@ spec:
             description: ActionSpec contains configuration properties for a given
               Action to execute.
             properties:
+              actionRef:
+                description: ActionRef contains data sufficient to resolve Implementation
+                  or Interface manifest. Currently only Interface reference is supported.
+                properties:
+                  path:
+                    description: Path is full path for the manifest.
+                    minLength: 3
+                    type: string
+                  revision:
+                    description: Revision is a semantic version of the manifest. If
+                      not provided, the latest revision is used.
+                    type: string
+                required:
+                - path
+                type: object
               advancedRendering:
                 description: AdvancedRendering holds properties related to Action
                   advanced rendering mode.
@@ -74,9 +89,9 @@ spec:
                       continue:
                         default: false
                         description: Continue specifies the user intention to continue
-                          rendering using the provided InputArtifacts in the Action
-                          input. User may or may not add additional optional InputArtifacts
-                          to the list and continue Action rendering.
+                          rendering using the provided ActionInput.typeInstances in
+                          the Action input. User may or may not add additional optional
+                          TypeInstances to the list and continue Action rendering.
                         type: boolean
                     required:
                     - continue
@@ -97,28 +112,6 @@ spec:
               input:
                 description: Input describes Action input.
                 properties:
-                  artifacts:
-                    description: Artifacts contains input Artifacts passed for Action
-                      rendering. It contains both required and optional input Artifacts.
-                    items:
-                      description: InputArtifact holds input artifact reference, which
-                        is in fact TypeInstance.
-                      properties:
-                        name:
-                          description: Name refers to input artifact name used in
-                            rendered Action. Name is not unique as there may be multiple
-                            artifacts with the same name on different levels of Action
-                            workflow.
-                          type: string
-                        typeInstanceID:
-                          description: TypeInstanceID is a unique identifier for the
-                            TypeInstance used as input artifact.
-                          type: string
-                      required:
-                      - name
-                      - typeInstanceID
-                      type: object
-                    type: array
                   parameters:
                     description: Parameters holds details about Action input parameters.
                     properties:
@@ -134,12 +127,28 @@ spec:
                     required:
                     - secretRef
                     type: object
+                  typeInstances:
+                    description: TypeInstances contains input TypeInstances passed
+                      for Action rendering. It contains both required and optional
+                      input TypeInstances.
+                    items:
+                      description: InputTypeInstance holds input TypeInstance reference.
+                      properties:
+                        id:
+                          description: ID is a unique identifier for the input TypeInstance.
+                          type: string
+                        name:
+                          description: Name refers to input TypeInstance name used
+                            in rendered Action. Name is not unique as there may be
+                            multiple TypeInstances with the same name on different
+                            levels of Action workflow.
+                          type: string
+                      required:
+                      - id
+                      - name
+                      type: object
+                    type: array
                 type: object
-              path:
-                description: Path contains full path for Implementation or Interface
-                  manifest.
-                minLength: 3
-                type: string
               renderedActionOverride:
                 description: RenderedActionOverride contains optional rendered Action
                   that overrides the one rendered by Engine.
@@ -153,8 +162,6 @@ spec:
                   set to `true`, Engine executes a given Action instantly after it
                   is resolved.
                 type: boolean
-            required:
-            - path
             type: object
           status:
             description: ActionStatus defines the observed state of Action.
@@ -228,26 +235,37 @@ spec:
               output:
                 description: Output describes Action output.
                 properties:
-                  artifacts:
-                    description: Artifacts contains output Artifacts information.
+                  typeInstances:
+                    description: TypeInstances contains output TypeInstances data.
                     items:
+                      description: OutputTypeInstanceDetails describes the output
+                        TypeInstance.
                       properties:
+                        id:
+                          description: ID is a unique identifier of the TypeInstance.
+                          type: string
                         name:
-                          description: Name refers to artifact name.
+                          description: Name refers to TypeInstance name.
                           type: string
-                        typeInstanceID:
-                          description: TypeInstanceID is a unique identifier for the
-                            TypeInstance used as artifact.
-                          type: string
-                        typePath:
-                          description: TypePath is full path for the Type manifest
-                            related to a given artifact (TypeInstance).
-                          minLength: 3
-                          type: string
+                        typeReference:
+                          description: TypeRef contains data needed to resolve Type
+                            manifest.
+                          properties:
+                            path:
+                              description: Path is full path for the manifest.
+                              minLength: 3
+                              type: string
+                            revision:
+                              description: Revision is a semantic version of the manifest.
+                                If not provided, the latest revision is used.
+                              type: string
+                          required:
+                          - path
+                          type: object
                       required:
+                      - id
                       - name
-                      - typeInstanceID
-                      - typePath
+                      - typeReference
                       type: object
                     type: array
                 type: object
@@ -282,32 +300,45 @@ spec:
                         description: RenderingIteration describes status related to
                           current rendering iteration.
                         properties:
-                          inputArtifactsToProvide:
-                            description: InputArtifactsToProvide describes which input
-                              artifacts might be provided in a given rendering iteration.
+                          inputTypeInstancesToProvide:
+                            description: InputTypeInstancesToProvide describes which
+                              input TypeInstances might be provided in a given rendering
+                              iteration.
                             items:
+                              description: InputTypeInstanceDetails describes input
+                                TypeInstance.
                               properties:
+                                id:
+                                  description: ID is a unique identifier of the TypeInstance.
+                                  type: string
                                 name:
-                                  description: Name refers to artifact name.
+                                  description: Name refers to TypeInstance name.
                                   type: string
                                 optional:
                                   default: false
                                   description: Optional highlights that the input
-                                    artifact is optional.
+                                    TypeInstance is optional.
                                   type: boolean
-                                typeInstanceID:
-                                  description: TypeInstanceID is a unique identifier
-                                    for the TypeInstance used as artifact.
-                                  type: string
-                                typePath:
-                                  description: TypePath is full path for the Type
-                                    manifest related to a given artifact (TypeInstance).
-                                  minLength: 3
-                                  type: string
+                                typeReference:
+                                  description: TypeRef contains data needed to resolve
+                                    Type manifest.
+                                  properties:
+                                    path:
+                                      description: Path is full path for the manifest.
+                                      minLength: 3
+                                      type: string
+                                    revision:
+                                      description: Revision is a semantic version
+                                        of the manifest. If not provided, the latest
+                                        revision is used.
+                                      type: string
+                                  required:
+                                  - path
+                                  type: object
                               required:
+                              - id
                               - name
-                              - typeInstanceID
-                              - typePath
+                              - typeReference
                               type: object
                             type: array
                         type: object
@@ -315,39 +346,50 @@ spec:
                   input:
                     description: Input contains resolved details of Action input.
                     properties:
-                      artifacts:
-                        description: Artifacts contains input Artifacts passed for
-                          Action rendering. It contains both required and optional
-                          input Artifacts.
-                        items:
-                          properties:
-                            name:
-                              description: Name refers to artifact name.
-                              type: string
-                            optional:
-                              default: false
-                              description: Optional highlights that the input artifact
-                                is optional.
-                              type: boolean
-                            typeInstanceID:
-                              description: TypeInstanceID is a unique identifier for
-                                the TypeInstance used as artifact.
-                              type: string
-                            typePath:
-                              description: TypePath is full path for the Type manifest
-                                related to a given artifact (TypeInstance).
-                              minLength: 3
-                              type: string
-                          required:
-                          - name
-                          - typeInstanceID
-                          - typePath
-                          type: object
-                        type: array
                       parameters:
                         description: Parameters holds value of the User input parameters.
                         type: object
                         x-kubernetes-preserve-unknown-fields: true
+                      typeInstances:
+                        description: TypeInstances contains input TypeInstances passed
+                          for Action rendering. It contains both required and optional
+                          input TypeInstances.
+                        items:
+                          description: InputTypeInstanceDetails describes input TypeInstance.
+                          properties:
+                            id:
+                              description: ID is a unique identifier of the TypeInstance.
+                              type: string
+                            name:
+                              description: Name refers to TypeInstance name.
+                              type: string
+                            optional:
+                              default: false
+                              description: Optional highlights that the input TypeInstance
+                                is optional.
+                              type: boolean
+                            typeReference:
+                              description: TypeRef contains data needed to resolve
+                                Type manifest.
+                              properties:
+                                path:
+                                  description: Path is full path for the manifest.
+                                  minLength: 3
+                                  type: string
+                                revision:
+                                  description: Revision is a semantic version of the
+                                    manifest. If not provided, the latest revision
+                                    is used.
+                                  type: string
+                              required:
+                              - path
+                              type: object
+                          required:
+                          - id
+                          - name
+                          - typeReference
+                          type: object
+                        type: array
                     type: object
                 type: object
               runBy:

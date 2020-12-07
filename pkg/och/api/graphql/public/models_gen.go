@@ -12,6 +12,10 @@ type MetadataBaseFields interface {
 	IsMetadataBaseFields()
 }
 
+type TypeInstance interface {
+	IsTypeInstance()
+}
+
 type GenericMetadata struct {
 	Name             string        `json:"name"`
 	Prefix           *string       `json:"prefix"`
@@ -39,6 +43,15 @@ type ImplementationAction struct {
 	// The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
 	RunnerInterface string      `json:"runnerInterface"`
 	Args            interface{} `json:"args"`
+}
+
+type ImplementationAdditionalInput struct {
+	TypeInstances []*InputTypeInstance `json:"typeInstances"`
+}
+
+type ImplementationAdditionalOutput struct {
+	TypeInstances         []*OutputTypeInstance       `json:"typeInstances"`
+	TypeInstanceRelations []*TypeInstanceRelationItem `json:"typeInstanceRelations"`
 }
 
 type ImplementationFilter struct {
@@ -100,12 +113,26 @@ type ImplementationRevision struct {
 }
 
 type ImplementationSpec struct {
-	AppVersion string                       `json:"appVersion"`
-	Implements []*InterfaceReference        `json:"implements"`
-	Requires   []*ImplementationRequirement `json:"requires"`
-	Imports    []*ImplementationImport      `json:"imports"`
-	Action     *ImplementationAction        `json:"action"`
+	AppVersion       string                          `json:"appVersion"`
+	Implements       []*InterfaceReference           `json:"implements"`
+	Requires         []*ImplementationRequirement    `json:"requires"`
+	Imports          []*ImplementationImport         `json:"imports"`
+	Action           *ImplementationAction           `json:"action"`
+	AdditionalInput  *ImplementationAdditionalInput  `json:"additionalInput"`
+	AdditionalOutput *ImplementationAdditionalOutput `json:"additionalOutput"`
 }
+
+type InputParameters struct {
+	JSONSchema interface{} `json:"jsonSchema"`
+}
+
+type InputTypeInstance struct {
+	Name    string                      `json:"name"`
+	TypeRef *TypeReference              `json:"typeRef"`
+	Verbs   []TypeInstanceOperationVerb `json:"verbs"`
+}
+
+func (InputTypeInstance) IsTypeInstance() {}
 
 type Interface struct {
 	Name           string               `json:"name"`
@@ -130,6 +157,15 @@ type InterfaceGroupFilter struct {
 	PrefixPattern *string `json:"prefixPattern"`
 }
 
+type InterfaceInput struct {
+	Parameters    *InputParameters     `json:"parameters"`
+	TypeInstances []*InputTypeInstance `json:"typeInstances"`
+}
+
+type InterfaceOutput struct {
+	TypeInstances []*OutputTypeInstance `json:"typeInstances"`
+}
+
 type InterfaceReference struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
@@ -145,8 +181,8 @@ type InterfaceRevision struct {
 }
 
 type InterfaceSpec struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
+	Input  *InterfaceInput  `json:"input"`
+	Output *InterfaceOutput `json:"output"`
 }
 
 type LatestSemVerTaggingStrategy struct {
@@ -158,6 +194,13 @@ type Maintainer struct {
 	Email string  `json:"email"`
 	URL   *string `json:"url"`
 }
+
+type OutputTypeInstance struct {
+	Name    string         `json:"name"`
+	TypeRef *TypeReference `json:"typeRef"`
+}
+
+func (OutputTypeInstance) IsTypeInstance() {}
 
 type RepoImplementationAppVersionConfig struct {
 	SemVerTaggingStrategy *SemVerTaggingStrategy `json:"semVerTaggingStrategy"`
@@ -246,6 +289,12 @@ type TypeFilter struct {
 	PrefixPattern *string `json:"prefixPattern"`
 }
 
+type TypeInstanceRelationItem struct {
+	TypeInstanceName string `json:"typeInstanceName"`
+	// Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+	Uses []string `json:"uses"`
+}
+
 type TypeInstanceValue struct {
 	TypeRef *TypeReferenceInput `json:"typeRef"`
 	// Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
@@ -287,8 +336,8 @@ type TypeRevision struct {
 }
 
 type TypeSpec struct {
-	AdditionalRefs []string `json:"additionalRefs"`
-	JSONSchema     *string  `json:"jsonSchema"`
+	AdditionalRefs []string    `json:"additionalRefs"`
+	JSONSchema     interface{} `json:"jsonSchema"`
 }
 
 type FilterRule string
@@ -370,5 +419,52 @@ func (e *SemVerTaggingStrategyTags) UnmarshalGQL(v interface{}) error {
 }
 
 func (e SemVerTaggingStrategyTags) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type TypeInstanceOperationVerb string
+
+const (
+	TypeInstanceOperationVerbCreate TypeInstanceOperationVerb = "CREATE"
+	TypeInstanceOperationVerbGet    TypeInstanceOperationVerb = "GET"
+	TypeInstanceOperationVerbList   TypeInstanceOperationVerb = "LIST"
+	TypeInstanceOperationVerbUpdate TypeInstanceOperationVerb = "UPDATE"
+	TypeInstanceOperationVerbDelete TypeInstanceOperationVerb = "DELETE"
+)
+
+var AllTypeInstanceOperationVerb = []TypeInstanceOperationVerb{
+	TypeInstanceOperationVerbCreate,
+	TypeInstanceOperationVerbGet,
+	TypeInstanceOperationVerbList,
+	TypeInstanceOperationVerbUpdate,
+	TypeInstanceOperationVerbDelete,
+}
+
+func (e TypeInstanceOperationVerb) IsValid() bool {
+	switch e {
+	case TypeInstanceOperationVerbCreate, TypeInstanceOperationVerbGet, TypeInstanceOperationVerbList, TypeInstanceOperationVerbUpdate, TypeInstanceOperationVerbDelete:
+		return true
+	}
+	return false
+}
+
+func (e TypeInstanceOperationVerb) String() string {
+	return string(e)
+}
+
+func (e *TypeInstanceOperationVerb) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TypeInstanceOperationVerb(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TypeInstanceOperationVerb", str)
+	}
+	return nil
+}
+
+func (e TypeInstanceOperationVerb) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

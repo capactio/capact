@@ -33,7 +33,7 @@ var _ = Describe("Action Controller", func() {
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
 	Context("When Action CR is created", func() {
-		It("Should render the action workflow", func() {
+		It("should render the action workflow", func() {
 			key := types.NamespacedName{
 				Name:      "action-test-1",
 				Namespace: "default",
@@ -45,7 +45,9 @@ var _ = Describe("Action Controller", func() {
 					Namespace: key.Namespace,
 				},
 				Spec: corev1alpha1.ActionSpec{
-					Path: "bar",
+					ActionRef: corev1alpha1.ManifestReference{
+						Path: "bar",
+					},
 				},
 			}
 
