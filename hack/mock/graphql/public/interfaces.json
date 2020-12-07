@@ -95,15 +95,15 @@
     ]
   },
 {
-    "name": "install-helm",
+    "name": "install-local",
     "prefix": "cap.interface.productivity.jira",
-    "path": "cap.interface.productivity.jira.install-helm",
+    "path": "cap.interface.productivity.jira.install-local",
     "revisions": [
       {
         "metadata": {
           "prefix": "cap.interface.productivity.jira",
-          "path": "cap.interface.productivity.jira.install-helm",
-          "name": "install-helm",
+          "path": "cap.interface.productivity.jira.install-local",
+          "name": "install-local",
           "displayName": "Install",
           "description": "Install action for Jira",
           "maintainers": [

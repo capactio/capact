@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path/filepath"
+	"strings"
 	"time"
 
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
@@ -215,10 +217,32 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
+func (a *ActionService) isGCPSecretAvailable(ctx context.Context, action *v1alpha1.Action) bool {
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: "gcp-credentials", Namespace: action.Namespace}
+	err := a.k8sCli.Get(ctx, key, secret)
+	return err == nil
+}
+
+// ensureLocalSuffix adds the `-local` prefix if not already added
+func (a *ActionService) ensureLocalSuffix(path string) string {
+	name := filepath.Ext(path)
+	prefix := strings.TrimSuffix(path, name)
+	if !strings.HasSuffix(name, "-local") {
+		name = name + "-local"
+	}
+	return prefix + name
+}
+
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	latestRevision, err := a.implGetter.GetLatestRevisionOfImplementationForInterface(ctx, string(action.Spec.Path))
+	path := string(action.Spec.Path)
+	if !a.isGCPSecretAvailable(ctx, action) {
+		path = a.ensureLocalSuffix(path)
+	}
+
+	latestRevision, err := a.implGetter.GetLatestRevisionOfImplementationForInterface(ctx, path)
 	if err != nil {
 		return nil, errors.Wrap(err, "while fetching implementation")
 	}

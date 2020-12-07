@@ -84,85 +84,94 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: workflow
-        templates:
-          - name: workflow
-            steps:
-              # TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-              #           {{ if ! .Input.typeInstances.postgresql }}
-              - - name: install-db
-                  template: install-db
-              #           {{ endif }}
-              - - name: create-db
-                  template: create-db
-                  arguments:
-                    artifacts:
-                      - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
-              - - name: produce-jira-helm-values
-                  template: produce-jira-helm-values
-                  arguments:
-                    artifacts:
-                      - name: db
-                        from: "{{workflow.outputs.artifacts.db}}"
-                      - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
-              - - name: install-jira
-                  template: install-jira
-                  arguments:
-                    artifacts:
-                      - name: jira-helm-values
-                        from: "{{workflow.outputs.artifacts.jira-helm-values}}"
+        spec:
+          volumes:
+            - name: gcp-credentials
+              secret:
+                secretName: gcp-credentials
+          entrypoint: jira
+          templates:
+            - name: jira
+              steps:
+                - - name: generate-artifacts
+                    template: fetch-type-instances
+                - - name: postgresql-install
+                    template: postgresql-install
+                    arguments:
+                      artifacts:
+                        - name: postgresql
+                          from: "{{steps.generate-artifacts.outputs.artifacts.postgresql}}"
+                - - name: produce-helm-values
+                    template: produce-helm-values
+                    arguments:
+                      artifacts:
+                        - name: postgresql
+                          from: "{{steps.postgresql-install.outputs.artifacts.additional}}"
+                - - name: jira-install
+                    template: jira-install
+                    arguments:
+                      artifacts:
+                        - name: jira-helm-input
+                          from: "{{steps.generate-artifacts.outputs.artifacts.jira-helm}}"
+                        - name: jira-helm-values
+                          from: "{{steps.produce-helm-values.outputs.artifacts.jira-helm-values}}"
+                - - name: upload-type-instances
+                    template: upload-type-instances
+                    arguments:
+                      artifacts:
+                        - name: jira-output
+                          from: "{{steps.jira-install.outputs.artifacts.additional}}"
 
-          - name: install-db
-            outputs:
-              artifacts:
-                - name: postgresql
-                  path: "/out/postgresql"
-            container:
-          #              {{ actionFrom: postgresql.install }}
+            - name: fetch-type-instances
+              container:
+                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+                imagePullPolicy: Always
+              outputs:
+                artifacts:
+                  - name: postgresql
+                    path: /out/postgresql-input.yaml
+                  - name: jira-helm
+                    path: /out/jira-cloud-input.yaml
 
-          - name: create-db
-            inputs:
-              artifacts:
-                - name: postgresql
-                  path: "/in/postgresql"
-            outputs:
-              artifacts:
-                - name: db
-                  globalName: db
-                  path: "/out/db"
-            container:
-          #              {{ actionFrom: postgresql.create-db }}
+            - name: postgresql-install
+              actionFrom:
+                path: "cap.interface.database.postgresql.install"
+                revision: "0.1.0"
+              inputs:
+                artifacts:
+                  - name: postgresql
+                    path: /input.yaml
+              outputs:
+                artifacts:
+                  - name: instance
+                    path: /instance.yaml
+                  - name: additional
+                    path: /additional.yaml
 
-          - name: produce-helm-values
-            inputs:
-              artifacts:
-                - name: postgresql
-                  path: "/in/postgresql"
-                - name: db
-                  path: "/in/db"
-            #             {{ inputParametersToArtifact }}
-            outputs:
-              artifacts:
-                - name: jira-helm-values
-                  globalName: jira-helm-values
-                  path: "/out/jira-helm-values"
-            container:
-              image: gcr.io/projectvoltron/artifact-merger:0.1.0
-              args:
-                - --input
-                - "postgresql={{`{{ inputs.artifacts.postgresql.path }}`}}"
-                - --input
-                - "db={{`{{ inputs.artifacts.db.path }}`}}"
-                - --input
-                - "params={{ inputParametersToArtifact.path }}"
-                - --output-path
-                - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
-                - --output-format
-                - >
-                  image:
-                    tag: {{ .Context.appVersion }}
+            - name: produce-helm-values
+              inputs:
+                artifacts:
+                  - name: postgresql
+                    path: "/input.yaml"
+              outputs:
+                artifacts:
+                  - name: jira-helm-values
+                    globalName: jira-helm-values
+                    path: "/out/jira-cloud-values.yaml"
+              container:
+                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+                command: [ "/produce-helm-values.sh" ]
+                args:
+                  - --input
+                  - "postgresql={{`{{ inputs.artifacts.postgresql.path }}`}}"
+                  - --input
+                  - "params={{ inputParametersToArtifact.path }}"
+                  - --output-path
+                  - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
+                  - --output-format
+                  - >
+                    image:
+                      tag: {{ .Context.appVersion }}
                     postgresql:
                       enabled: false # do not install Postgres along the Jira installation
                     databaseConnection:
@@ -170,48 +179,43 @@ spec:
                       port: {{`{{ .postgresql.port }}`}}
                       user: {{`{{ .postgresql.superuser.username }}`}}
                       password: {{`{{ .postgresql.superuser.password }}`}}
-                      database: {{`{{ .db.name }}`}}
-                  ingress:
-                    enabled: true
+                      database: {{`{{ .postgresql.defaultDBName }}`}}
                     ingress:
-                      hosts:
-                        - host: {{`{{ .params.host }}`}}
-                          paths: []
+                      enabled: true
+                      ingress:
+                        hosts:
+                          - host: {{`{{ .params.host }}`}}
+                            paths: []
 
-          - name: install-jira
-            inputs:
-              artifacts:
-                - name: jira-helm-values
-                  path: "/in/jira-helm-values"
-            outputs:
-              artifacts:
-                - name: helm-release
-                  globalName: helm-release
-                  path: "/out/helm-release"
-                - name: jira-config
-                  globalName: jira-config
-                  path: "/out/jira-config"
-            container:
-# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-#            {{ action:
-#                 runnerInterface: helm.run
-#                 args:
-#                   command: "install"
-#                   generateName: true
-#                   chart:
-#                     name: "jira-software"
-#                     repo: "https://helm.mox.sh"
-#                   valuesFromFile: "{{`{{inputs.artifacts.jira-helm-values.path}}`}}"
-#                   output:
-#                     directory: "/out"
-#                     helmRelease:
-#                       fileName: "helm-release.yaml"
-#                     additional:
-#                       fileName: "jira.yaml"
-#                       value: |-
-#                         version: "{{`{{ .Values.image.tag }}`}}"
-#                         host: "{{`{{ .Values.ingress.hosts[0].host }}`}}"
-#              }}
+            - name: jira-install
+              container:
+                image: gcr.io/projectvoltron/pr/helm-runner:PR-62
+                env:
+                  - name: RUNNER_INPUT_PATH
+                    value: "/input.yaml"
+                  - name: RUNNER_LOGGER_DEV_MODE
+                    value: "true"
+              inputs:
+                artifacts:
+                  - name: jira-helm-input
+                    path: /input.yaml
+                  - name: jira-helm-values
+                    path: /values.yaml
+              outputs:
+                artifacts:
+                  - name: release
+                    path: /release.yaml
+                  - name: additional
+                    path: /additional.yaml
+
+            - name: upload-type-instances
+              container:
+                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
+                command: [ "/upload-type-instances.sh" ]
+              inputs:
+                artifacts:
+                  - name: jira-output
+                    path: /input.yaml
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
