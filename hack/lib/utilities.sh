@@ -341,7 +341,7 @@ voltron::synchronize::minio_secret() {
 host::update::voltron_hosts() {
   shout "- Updating /etc/hosts..."
   readonly DOMAIN="voltron.local"
-  readonly VOLTRON_HOSTS=("gateway")
+  readonly VOLTRON_HOSTS=("gateway" "argo" "jira-cloud" "jira-local")
 
   LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
   HOSTS_FILE="/etc/hosts"

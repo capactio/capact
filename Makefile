@@ -149,3 +149,15 @@ dev-cluster-delete:
 fix-lint-issues:
 	LINT_FORCE_FIX=true ./hack/lint.sh
 .PHONY: fix-lint
+
+###############
+# Tutorials   #
+###############
+
+jira-tutorial-cluster:
+	./hack/jira-tutorial-cluster-create.sh
+.PHONY: jira-tutorial-cluster
+
+jira-tutorial-cluster-delete:
+	./hack/jira-tutorial-cluster-delete.sh
+.PHONY: jira-tutorial-cluster

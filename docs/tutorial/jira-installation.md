@@ -31,6 +31,7 @@ The bellow diagrams show possible scenarios:
 ###  Prerequisites
 
 * Install Docker
+* Install [Helm v3](https://helm.sh/docs/intro/install/)
 * Install [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * Install [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.0.1-alpha.1)
 * Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)

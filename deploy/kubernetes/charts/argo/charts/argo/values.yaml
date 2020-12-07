@@ -205,7 +205,7 @@ server:
   ## ref: https://kubernetes.io/docs/user-guide/ingress/
   ##
   ingress:
-    enabled: false
+    enabled: true
 
     ## Annotations to be added to the web ingress.
     ##
@@ -216,8 +216,8 @@ server:
     ## Hostnames.
     ## Must be provided if Ingress is enabled.
     ##
-    # hosts:
-    #   - argo.domain.com
+    hosts:
+      - argo
 
     ## Additional Paths for each host
     # paths:

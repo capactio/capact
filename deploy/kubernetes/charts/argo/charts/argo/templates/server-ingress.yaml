@@ -21,7 +21,7 @@ metadata:
 spec:
   rules:
     {{- range .Values.server.ingress.hosts }}
-    - host: {{ . }}
+    - host: "{{ printf "%s.%s" . $.Values.global.domainName }}"
       http:
         paths:
           {{- if $.Values.server.ingress.paths }}
