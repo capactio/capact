@@ -4,19 +4,19 @@ This tutorial shows the basic concepts of Voltron on Jira installation example.
 
 ### Introduction
 
-The key benefit which Voltron brings are interchangeable dependencies. Cluster Admin may configure preferences for resolving the dependencies (e.g. to prefer cloud-based or on-premise solutions). In the result, the end user is able to easily install applications with multiple dependencies, without knowledge of platform-specific configuration.
+The key benefit which Voltron brings is interchangeable dependencies. Cluster Admin may configure preferences for resolving the dependencies (e.g. to prefer cloud-based or on-premise solutions). As a result, the end-user is able to easily install applications with multiple dependencies without any knowledge of platform-specific configuration.
 
 Apart from installing applications, Voltron makes it easy to:
-- execute day-two operations (such as upgrade, backup, restore)
-- run any workflow - to process data, configure system, run serverless workloads etc. Possibilities are endless.
+- execute day-two operations (such as upgrade, backup, and restore)
+- run any workflow (to process data, configure the system, run serverless workloads, etc. The possibilities are endless.)
 
-Voltron aims to be platform-agnostic solution. However, the very first Voltron implementation is based on Kubernetes.
+Voltron aims to be a platform-agnostic solution. However, the very first Voltron implementation is based on Kubernetes.
 
 ### Goal
 
-This instruction will guide you how to install Jira on Kubernetes cluster using Voltron. 
+This instruction will guide you through the installation of Jira on the Kubernetes cluster using Voltron. 
 
-Jira depends on the PostgreSQL database. Depending on the cluster configuration, with Voltron project you can install Jira with managed Cloud SQL database or locally deployed PostgreSQL Helm chart.
+Jira depends on the PostgreSQL database. Depending on the cluster configuration, with the Voltron project, you can install Jira with a managed Cloud SQL database or a locally deployed PostgreSQL Helm chart.
 
 The bellow diagrams show possible scenarios:
 
@@ -286,24 +286,24 @@ The following section extends the tutorial with additional topics, to learn Volt
 
 #### OCF manifests
 
-User consumes content stored in Open Capability Hub (OCH). The content is defined using Open Capability Format (OCF) manifests. OCF specification defines the shape of manifests that Voltron understands, such as Interface or Implementation.
+A user consumes content stored in Open Capability Hub (OCH). The content is defined using Open Capability Format (OCF) manifests. OCF specification defines the shape of manifests that Voltron understands, such as Interface or Implementation.
 
-To see all manifests that OCH stores, navigate to the [OCH content structure](https://github.com/Project-Voltron/go-voltron/tree/master/och-content).
+To see all the manifest that OCH stores, navigate to the [OCH content structure](https://github.com/Project-Voltron/go-voltron/tree/master/och-content).
 
 To see the Jira installation manifests, click on the following links:
- - [Jira installation Interface](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/interface/productivity/jira/install.yaml) - which is a generic description of Jira installation (action name, input and output - similar concept to interfaces in programming languages),
- - [Jira installation Implementation](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/implementation/atlassian/jira/install.yaml), which represents dynamic workflow for Jira Installation.
+ - [Jira installation Interface](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/interface/productivity/jira/install.yaml) - a generic description of Jira installation (action name, input, and output - a concept similar to interfaces in programming languages),
+ - [Jira installation Implementation](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/implementation/atlassian/jira/install.yaml) - represents the dynamic workflow for Jira Installation.
 
 #### Content development
 
-To make it easier to develop new OCH content, we implemented a dedicated CLI. Currently it exposes validation feature for OCF manifests. It detects manifest kind and OCF version to properly validate a given file. You can use it to validate single or multiple files at a single run.
+To make it easier to develop new OCH content, we implemented a dedicated CLI. Currently, it exposes the validation feature for OCF manifests. It detects the manifest kind and OCF version to properly validate a given file. You can use it to validate one or multiple files at a single run.
 
-To validate all OCH manifests, navigate to the repository root directory and run the following command:
+To validate all OCH manifests, navigate to the repository root directory, and run the following command:
 ```
 ocftool validate ./och-content/**/*.yaml
 ```
 
-In future, we will extend the `ocftool` with additional features, such as:
+In the future, we will extend the `ocftool` with additional features, such as:
 - manifests scaffolding,
 - manifests submission,
 - signing manifests.
