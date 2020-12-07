@@ -18,12 +18,13 @@ The bellow diagrams show possible scenarios:
 
 * Install Docker
 * Install [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-* Install `ocftool`
-    > **NOTE:** Download binaries from the [releases page](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.0.1-alpha.1).
-* Install `kubectl`
+* Install [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.0.1-alpha.1)
+* Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * Access to Google Cloud Platform 
 	
-### Steps
+### Install Jira with managed Cloud SQL
+
+The below scenario installs Jira with Cloud SQL database because Engine detected the `gcp-credentials` secret in `gcp-scenario` namespace. 
 
 1. Clone the `go-voltron` repository in the `v0.0.1-alpha.1` version:
 
@@ -32,7 +33,7 @@ The bellow diagrams show possible scenarios:
 	cd ./go-voltron
 	```
 
-2. Create a local cluster with Voltron components installed:
+1. Create a local cluster with Voltron components installed:
 
 	```bash
 	MOCK_OCH_GRAPHQL=true make dev-cluster
@@ -68,7 +69,9 @@ The bellow diagrams show possible scenarios:
    
    	* Click **Done**.
 
-3. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local) to open the GraphQL console and use the following Authorization header:
+1. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local) to open the GraphQL console.
+ 
+1. Add the following Authorization header:
 
 	```json
 	{
@@ -78,7 +81,7 @@ The bellow diagrams show possible scenarios:
 
 	![gql-auth](./assets/graphql-auth.png)
 
-4. List all available Interfaces:
+1. List all available Interfaces:
 
 	<details><summary>Query</summary>
 
@@ -102,7 +105,7 @@ The bellow diagrams show possible scenarios:
 
 	The returned response on the right-hand side represents all available Actions that you can execute. As you can see, you can install and upgrade a Jira instance. For installation, there are two revisions. Different revisions mean that the installation input/output parameters differ. It might be due to a new feature or one removed in a non-backward-compatible way.
 
-5. Create an Action with the `cap.interface.productivity.jira.install` Interface:
+1. Create an Action with the `cap.interface.productivity.jira.install` Interface:
 
 	Before running the GraphQL mutation, you must add the `Namespace` header in the **HTTP HEADERS** section.
 
@@ -143,7 +146,7 @@ The bellow diagrams show possible scenarios:
 
 	![create-action](./assets/create-action.png)
 
-6. Get the status of the Action from the previous step:
+1. Get the status of the Action from the previous step:
 
 	<details><summary>Query</summary>
 
@@ -173,7 +176,7 @@ The bellow diagrams show possible scenarios:
 
 	In the previous step, when you created the Action, you saw the `INITIAL` phase  in the response. Now the Action is in `READY_TO_RUN`. It means that the Action was processed by the Engine and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `RENDERING` phase.
 
-7. Run the rendered Action:
+1. Run the rendered Action:
 
 	In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, you need to send such a mutation:
 
@@ -194,13 +197,13 @@ The bellow diagrams show possible scenarios:
 
 	![run-action](./assets/run-action.png)
 
-8. Navigate to [https://argo.voltron.local](https://gateway.voltron.local) to open Argo UI and check the currently running `jira-install` workflow.
+1. Navigate to [https://argo.voltron.local](https://gateway.voltron.local) to open Argo UI and check the currently running `jira-install` workflow.
 
-9. Navigate to your [GCP CloudSQL Console](https://console.cloud.google.com/sql/instances). You should see that a new CloudSQL instance is being created.
+1. Navigate to your [GCP CloudSQL Console](https://console.cloud.google.com/sql/instances). You should see that a new CloudSQL instance is being created.
     
     ![gcp-cloudsql](./assets/gcp-cloudsql.png)
     
-10.	Wait until the Action is in the `SUCCEEDED` phase:
+1.	Wait until the Action is in the `SUCCEEDED` phase:
 
 	<details><summary>Query</summary>
 
@@ -226,13 +229,13 @@ The bellow diagrams show possible scenarios:
 
 	</details>
 
-11.	Get Argo Workflow logs to check the uploaded TypeInstance ID: 
+1.	Get Argo Workflow logs to check the uploaded TypeInstance ID: 
 
     From the **Workflows** view select `jira-instance`. Next, select the last step called `upload-type-instances` and get its logs. The logs contain the uploaded TypeInstance ID.
 
 	![get-logs](./assets/get-logs.png)
 
-12.	Get the TypeInstance details: 
+1.	Get the TypeInstance details: 
 
     Use the ID from the previous step and fetch the TypeInstance details.
 
@@ -255,11 +258,13 @@ The bellow diagrams show possible scenarios:
 
 	![get-type-instance](./assets/get-type-instance.png)
 
-13.	Open Jira console using the **hostname** value from the previous step:
+1.	Open Jira console using the **hostname** value from the previous step:
 
 	The installed Jira URL is: [https://jira-cloud.cluster.local/](https://gateway.voltron.local).
-	
-The above scenario installs Jira with Cloud SQL database because Engine detected the `gcp-credentials` secret in `gcp-scenario` namespace. You can repeat the steps in a different namespace in which `gcp-credentials` does not exist, so Engine will render the Workflow with the step to locally deploy PostgreSQL Helm chart. In the near future, we will provide dedicated policies that will allow cluster admins to set more complicated rules e.g. associate GCP subscription with a given user.
+
+### Install Jira with on-premise PostgreSQL database
+
+Repeat the steps from [Install Jira with managed Cloud SQL](#install-jira-with-managed-cloud-sql) in a different namespace and skip the 4th and 9th step. If the `gcp-credentials` secret does not exist, Engine renders the Workflow with the step to locally deploy PostgreSQL Helm chart. Shortly, we will provide dedicated policies that will allow cluster admins to set more complicated rules e.g. to associate GCP subscription with a given user.
 
 ###  Additional resources
 

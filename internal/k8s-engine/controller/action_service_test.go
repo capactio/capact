@@ -1,9 +1,10 @@
 package controller
 
 import (
-	"gotest.tools/assert"
 	"testing"
 	"time"
+
+	"gotest.tools/assert"
 )
 
 func Test(t *testing.T) {
