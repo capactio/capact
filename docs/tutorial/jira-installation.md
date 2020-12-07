@@ -1,8 +1,22 @@
 # Jira installation
 
-This tutorial shows how to install Jira on Kubernetes cluster using Voltron project. 
+This tutorial shows the basic concepts of Voltron on Jira installation example.
 
-In the provided solution steps are interchangeable, so you can install Jira with managed Cloud SQL database or locally deployed PostgreSQL Helm chart.
+### Introduction
+
+The key benefit which Voltron brings are interchangeable dependencies. Cluster Admin may configure preferences for resolving the dependencies (e.g. to prefer cloud-based or on-premise solutions). In the result, the end user is able to easily install applications with multiple dependencies, without knowledge of platform-specific configuration.
+
+Apart from installing applications, Voltron makes it easy to:
+- execute day-two operations (such as upgrade, backup, restore)
+- run any workflow - to process data, configure system, run serverless workloads etc. Possibilities are endless.
+
+Voltron aims to be platform-agnostic solution. However, the very first Voltron implementation is based on Kubernetes.
+
+### Goal
+
+This instruction will guide you how to install Jira on Kubernetes cluster using Voltron. 
+
+Jira depends on the PostgreSQL database. Depending on the cluster configuration, with Voltron project you can install Jira with managed Cloud SQL database or locally deployed PostgreSQL Helm chart.
 
 The bellow diagrams show possible scenarios:
 
@@ -13,6 +27,9 @@ The bellow diagrams show possible scenarios:
 **Install Jira with external CloudSQL database**
 
 ![in-gcp](./assets/install-gcp.svg)
+
+
+This tutorial will focus on Jira with Cloud SQL for PostgreSQL database installation. However, 
 
 ###  Prerequisites
 
@@ -266,19 +283,40 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 Repeat the steps from [Install Jira with managed Cloud SQL](#install-jira-with-managed-cloud-sql) in a different namespace and skip the 4th and 9th step. If the `gcp-credentials` secret does not exist, Engine renders the Workflow with the step to locally deploy PostgreSQL Helm chart. Shortly, we will provide dedicated policies that will allow cluster admins to set more complicated rules e.g. to associate GCP subscription with a given user.
 
+### Behind the scenes
+
+The following section extends the tutorial with additional topics, to learn Voltron concepts even deeper.
+
+#### OCF manifests
+
+User consumes content stored in Open Capability Hub (OCH). The content is defined using Open Capability Format (OCF) manifests. OCF specification defines the shape of manifests that Voltron understands, such as Interface or Implementation.
+
+To see all manifests that OCH stores, navigate to the [OCH content structure](https://github.com/Project-Voltron/go-voltron/tree/master/och-content).
+
+To see the Jira installation manifests, click on the following links:
+ - [Jira installation Interface](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/interface/productivity/jira/install.yaml) - which is a generic description of Jira installation (action name, input and output - similar concept to interfaces in programming languages),
+ - [Jira installation Implementation](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/implementation/atlassian/jira/install.yaml), which represents dynamic workflow for Jira Installation.
+
+#### Content development
+
+To make it easier to develop new OCH content, we implemented a dedicated CLI. Currently it exposes validation feature for OCF manifests. It detects manifest kind and OCF version to properly validate a given file. You can use it to validate single or multiple files at a single run.
+
+To validate all OCH manifests, navigate to the repository root directory and run the following command:
+```
+ocftool validate ./och-content/**/*.yaml
+```
+
+In future, we will extend the `ocftool` with additional features, such as:
+- manifests scaffolding,
+- manifests submission,
+- signing manifests.
+
 ###  Additional resources
 
 If you want to learn more about the project check the [go-voltron](https://github.com/Project-Voltron/go-voltron) repository.
 
 Here are some useful links:
 
-- OCH content showed during the demo:
-    * [OCH content structure](https://github.com/Project-Voltron/go-voltron/tree/master/och-content)
-    * [Jira installation Interface](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/interface/productivity/jira/install.yaml)
-    * [Jira installation Implementation](https://github.com/Project-Voltron/go-voltron/tree/master/och-content/implementation/atlassian/jira/install.yaml)
-
 - Documentation which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guidelines can be found [here](https://github.com/Project-Voltron/go-voltron/tree/master/docs),
-
 - Google Drive folder with the [initial draft concepts](https://drive.google.com/drive/u/1/folders/1SBpIR0QUn9Rp68w6N3G-hqXdi1HfZQsn),
-
 - The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
