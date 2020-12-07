@@ -1,0 +1,31 @@
+context:
+  name: "cloudsql-example"
+  dryRun: false
+  timeout: "10m"
+  platform: {}
+args:
+  command: "create"
+  generateName: true
+  instance:
+    tier: "db-g1-small"
+    databaseVersion: "POSTGRES_11"
+    region: "us-central"
+    settings:
+      tier: "db-g1-small"
+      ipConfiguration:
+        authorizedNetworks:
+          - name: internet
+            value: "0.0.0.0/0"
+  output:
+    directory: "."
+    helmRelease:
+      fileName: "helm-release"
+    additional:
+      fileName: "additional"
+      value: |-
+        host: "{{ template "postgresql.fullname" . }}"
+        port: "{{ template "postgresql.port" . }}"
+        defaultDBName: "{{ template "postgresql.database" . }}"
+        superuser:
+          username: "{{ template "postgresql.username" . }}"
+          password: "{{ template "postgresql.password" . }}"

@@ -1,0 +1,19 @@
+context:
+  name: dummy
+  dryRun: false
+  platform:
+    namespace: default
+    ownerRef:
+      apiVersion: core.projectvoltron.dev/v1alpha1
+      kind: Action
+      name: dummy
+      uid: 3826a747-cfac-49c7-a81e-1d48cc23096f
+args:
+  workflow:
+    entrypoint: main
+    templates:
+      - name: main
+        container:
+          image: docker/whalesay
+          command: [cowsay]
+          args: ["hello world"]
