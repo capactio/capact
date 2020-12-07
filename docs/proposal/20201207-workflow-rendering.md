@@ -12,14 +12,14 @@ This document describes the approach for rendering workflows in the Voltron engi
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
-  * [How to reference and call other Interfaces and Implementations](#reference-implementations)
-  * [How to render the final Argo workflow](#render-final-workflow)
+  * [How to reference and call other Interfaces and Implementations](#how-to-reference-and-call-other-interfaces-and-implementations)
+  * [How to render the final Argo workflow](#how-to-render-the-final-argo-workflow)
 - [Consequences](#consequences)
 <!-- tocstop -->
 
 ## Motivation
 
-In many cases you would like to leverage an already existing action in your workflow. For example - you are creating a workflow to provision Wordpress and you need an PostgreSQL database. You have already implementations for the `postgresql.install` interface available in you OCH and you would like to use them in your workflow.
+In many cases you would like to leverage an already existing action in your workflow. For example - you are creating a workflow to provision Wordpress and you need an PostgreSQL database. You have already an implementations for the `postgresql.install` interface available in your OCH and you would like to use it in your workflow.
 
 This proposal shows how we can import existing actions into a new workflow.
 
@@ -30,7 +30,7 @@ This proposal shows how we can import existing actions into a new workflow.
 
 ### Non-goal
 
-- How Action CR inputs and provided into the workflow
+- How Action CR inputs are provided into the workflow
 - How output TypeInstance are uploaded to OCH
 
 ## Proposal
@@ -39,7 +39,7 @@ This proposal shows how we can import existing actions into a new workflow.
 
 The following extensions are done to the Implementation definitions:
 
-- `.spec.action.args.workflow.entrypoint.templates[].steps[][].action` - defines the interface/implementation to be imported into the workflow
+- `.spec.action.args.workflow.entrypoint.templates[].steps[][].action` - defines the interface/implementation to be imported into the workflow steps. In case this is set, the Content Creator does not have to provide a `template` for this workflow step, as the renderer will automatically fill it.
 
 ```yaml
 action:                                   # optional
@@ -74,11 +74,11 @@ spec:
 2. Find all `WorkflowSteps` in the rendered workflow, which have the `Action` field set. If none are found the rendering is complete. If there are some, then foreach:
    - import the implementation/interface based on the `.action` property
    - create the workflow for the imported implementation
-   - append all templates from the imported workflow to the rendered workflow. Prefix the template names with `.action.namePrefix`
+   - append all templates from the imported workflow to the rendered workflow. Prefix the template names with `.action.namePrefix` or a random string
    - remove the `.action` property in the `WorkflowStep`. Set the `.template` property to the entrypoint of the imported workflow
 3. Repeat 2.
 
-From the rendering point of view it does not matter, if a reference to a interface or implementation is provided as long as we can get a implementation for the interface from OCH.
+From the rendering point of view it does not matter, if a reference to an interface or implementation is provided as long as we can get a implementation for the interface from OCH.
 
 #### PostgreSQL install example
 
@@ -174,11 +174,7 @@ Using this we can create the following `postgres.install` implementation:
                                 postgresqlDatabase: {{ defaultDBName }}
                                 postgresqlPassword: {{ superuser.password }}
                               output:{% raw %}
-                                directory: "/"
-                                helmRelease:
-                                  fileName: "helm-release"
                                 additional:
-                                  fileName: "additional"
                                   value: |-
                                     host: "{{ template "postgresql.fullname" . }}"
                                     port: "{{ template "postgresql.port" . }}"
@@ -251,10 +247,7 @@ spec:
                     postgresqlPassword: {{ superuser.password }}
                   output:{% raw %}
                     directory: "/"
-                    helmRelease:
-                      fileName: "helm-release"
                     additional:
-                      fileName: "additional"
                       value: |-
                         host: "{{ template "postgresql.fullname" . }}"
                         port: "{{ template "postgresql.port" . }}"
@@ -318,6 +311,7 @@ spec:
 
 ## Consequences
 
-- We are using standard Argo way of passing artifacts, no special syntax is added. Content Creator must know the inputs and output names of the artifacts used in the imported actions. This is not a problem, as they are defined by the required and optional TypeInstances of the imported actions.
-- We must rembember prefixing names in the imported actions. Workflows could generate global artifacts and we could have collisions. Open question is how to fetch the TypeInstance artifacts of imported actions (if there is a need for that).
-- Open point is how to handle conditional imports. Lets say we have a `jira.install` implementation, which requires a `postgresql.config` TypeInstance. You could provide it to the action or create it, if not provided. We could just use Argo conditions and check, if the `postgresql.config` TypeInstance artifacts is available or not, but maybe we could determine this during rendering instead, to avoid importing unnecesary actions.
+- We are using standard Argo way of passing artifacts, no special syntax is added. Content Creator must know the inputs and output names of the artifacts used in the imported actions. This is not a problem, as they are defined by the required and optional TypeInstances of the imported actions
+- We must remember prefixing names in the imported actions. Workflows could generate global artifacts and we could have collisions. Open question is how to fetch the TypeInstance artifacts of imported actions with changed names (if there is a need for that)
+- Open point is how to handle conditional imports. Lets say we have a `jira.install` implementation, which requires a `postgresql.config` TypeInstance. You could provide it to the action or create it, if not provided. We could just let Argo handle the conditions and check, if the `postgresql.config` TypeInstance artifacts is available or not, but maybe we could determine this during rendering instead, to avoid importing unnecesary actions. On the other hand:
+> Premature optimization is the root of all evil - Donald Knuth
