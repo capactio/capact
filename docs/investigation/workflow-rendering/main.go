@@ -38,7 +38,6 @@ func main() {
 	if !ok {
 		log.Fatalf("implementation %s does not exist", implementationPath)
 	}
-	//toRender := implementations["cap.implementation.atlassian.jira.install"]
 
 	data, err := renderer.Render(toRender)
 	if err != nil {

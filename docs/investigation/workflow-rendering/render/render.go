@@ -132,6 +132,7 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 	return nil
 }
 
+// #nosec G404: Use of weak random number generator (math/rand instead of crypto/rand) (gosec)
 var seededRand *rand.Rand = rand.New(
 	rand.NewSource(time.Now().UnixNano()))
 
