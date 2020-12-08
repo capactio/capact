@@ -34,5 +34,6 @@ ocftool validate ./och-content/**/*.yaml
 ## Hacking
 
 Main source code is in:
-- `cmd/ocftool` - binary main
-- `pkg/sdk/manifests` - manifest validation SDK
+- `cmd/ocftool/` - binary main
+- `pkg/sdk/manifests/` - manifest validation SDK
+- `internal/ocftool/` - private source code

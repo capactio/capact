@@ -58,3 +58,6 @@ coverage.txt
 # Vim
 *.swp
 *.swo
+
+# telepresence
+telepresence.log
