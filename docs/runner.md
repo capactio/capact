@@ -1,8 +1,22 @@
 #  Runner
 
-Runners are responsible for running a given Action, e.g. Argo Workflow Runner, Helm Runner, etc. The [runner](./../pkg/runner/) package provides Manager which holds the general logic and allows execution of a specific runner in the same fashion. By doing so, each runner implementation holds only business-specific logic.
+Runners, such as Argo Workflow Runner, Helm Runner, etc., are responsible for running a given Action. The [runner](./../pkg/runner/) package provides Manager, which holds the general logic and allows execution of all runners in the same fashion. This way, each runner implementation holds only business-specific logic.
 
-##  Development
+## Architecture
+
+![](./assets/runner-arch.svg)
+
+1. The Voltron Engine watches the Action custom resources. Once the Action is rendered and a user approved it, Engine executes it.
+
+1. The Voltron Engine creates a Kubernetes Secret with the [input data](#input-data).
+
+1. The Voltron Engine creates a Kubernetes Job with the Argo Workflow Runner, and mounts the Secret from the 2nd step as the volume.    
+
+1. The Argo Workflow Runner reads the input data from the filesystem and based on it creates the Argo Workflow custom resource.
+
+1. The Argo Workflow Controller watches Argo Workflows and executes them in a given Namespace. As a result, the actual Action is executed, e.g. Jira installation, cluster benchmarks, etc. 
+
+###  Input data
 
 Each runner must consume the following environment variables:
 
@@ -35,6 +49,10 @@ args:
 The runner must read input file from the `RUNNER_INPUT_PATH` location.
 
 To simplify the development process, we provide Manager, which handles reading the data from disk. All available data is passed for each method execution.
+
+## Development 
+
+Read this section to learn how to develop a new runner.
 
 ###  Add a runner implementation
 
