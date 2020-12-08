@@ -52,8 +52,8 @@ args:
             value: "0.0.0.0/0"
   output:
     directory: "."
-    helmRelease:
-      fileName: "helm-release"
+    cloudSQLInstance:
+      fileName: "cloudSQLInstance
     additional:
       fileName: "additional"
       value: |-
@@ -75,7 +75,7 @@ export RUNNER_INPUT_PATH=cloudsql-args.yaml
 4. Run the runner locally
 ```bash
 go run cmd/cloudsql-runner/main.go
-cat helm-release
+cat cloudSQLInstance
 cat additional
 ```
 

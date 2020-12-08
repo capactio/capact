@@ -1,38 +1,88 @@
-# ocftool
+# Argo runner
 
-ocftool is a command-line tool, which helps working with OCF manifests
+Argo runner is a runner, which executes Argo workflows
 
 ## Supported features:
 
-- validating OCF manifests agains JSON schemas
+- executing Argo workflows
 
 ## How to build
 
 ```bash
-make build-tool-ocftool
+make build-tool-argo-runner
 # or
-go build -o bin/ocftool cmd/ocftool/main.go
+go build -o bin/argo-runner cmd/argo-runner/main.go
 ```
 
 ## How to use
 
-Use the help included in the `ocftool`:
+1. Setup the dev KinD cluster
 ```bash
-ocftool --help
-ocftool validate --help
+make dev-cluster
+# or
+make dev-cluster-update
 ```
 
-### Manifest validation
+2. Ensure the Serivce Account used by the Argo workflow has proper RBAC permissions. Ex for using default namespace and default service account:
+```bash
+kubectl create clusterrolebinding default-default-admin --clusterrole admin --serviceaccount default:default
+```
+
+3. Create a dummy job to use for ownerReference for the workflow
 
 ```bash
-# validate a OCF manifest file `my-created-implementation.yml`
-ocftool validate my-created-implementation.yaml
-# validate all yaml's in och-content directory
-ocftool validate ./och-content/**/*.yaml
+kubectl create job dummy --image alpine
+```
+
+4. Create secret of the runners status reporter
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Secret
+metadata:
+  name: dummy
+EOF
+```
+
+5. Create runner input file
+```bash
+cat <<EOF > argo-args.yaml
+context:
+  name: dummy
+  dryRun: false
+  platform:
+    namespace: default
+    ownerRef:
+      apiVersion: batch/v1
+      kind: Job
+      name: dummy
+      uid: $(kubectl get jobs dummy -ojsonpath='{.metadata.uid}')
+args:
+  workflow:
+    entrypoint: main
+    templates:
+      - name: main
+        container:
+          image: docker/whalesay
+          command: ["/bin/bash", "-c"]
+          args: ["sleep 2 && cowsay hello world"]
+EOF
+
+export RUNNER_INPUT_PATH=argo-args.yaml
+```
+
+6. Run the runner:
+```bash
+go run cmd/argo-runner/main.go
+```
+
+7. Check the workflow status. You can use the Argo UI on http://localhost:2746, after you forward the ports:
+```bash
+kubectl port-forward -n argo svc/argo-server 2746
 ```
 
 ## Hacking
 
 Main source code is in:
-- `cmd/ocftool` - binary main
-- `pkg/sdk/manifests` - manifest validation SDK
+- `cmd/argo-runner/` - binary main
+- `pkg/runner/argo/` - manifest validation SDK
