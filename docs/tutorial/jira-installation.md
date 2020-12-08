@@ -33,7 +33,7 @@ The bellow diagrams show possible scenarios:
 * Install Docker
 * Install [Helm v3](https://helm.sh/docs/intro/install/)
 * Install [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-* Install [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.0.1-alpha.1)
+* Install [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
 * Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * Access to Google Cloud Platform 
 	
@@ -41,7 +41,7 @@ The bellow diagrams show possible scenarios:
 
 The below scenario installs Jira with Cloud SQL database because Engine detected the `gcp-credentials` secret in `gcp-scenario` namespace. 
 
-1. Clone the `go-voltron` repository in the `v0.0.1-alpha.1` version:
+1. Clone the `release-0.1` branch from the `go-voltron` repository:
 
 	```bash
 	git clone --depth 1 --branch release-0.1 https://github.com/Project-Voltron/go-voltron.git
@@ -51,7 +51,7 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 1. Create a local cluster with Voltron components installed:
 
 	```bash
-	MOCK_OCH_GRAPHQL=true make dev-cluster
+	make jira-tutorial-cluster
 	```
 
 	> **NOTE:** This takes around 5 minutes to finish.
@@ -218,7 +218,7 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
     
     ![gcp-cloudsql](./assets/gcp-cloudsql.png)
     
-1.	Wait until the Action is in the `SUCCEEDED` phase:
+1. Wait until the Action is in the `SUCCEEDED` phase:
 
 	<details><summary>Query</summary>
 
@@ -244,13 +244,13 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	</details>
 
-1.	Get Argo Workflow logs to check the uploaded TypeInstance ID: 
+1. Get Argo Workflow logs to check the uploaded TypeInstance ID: 
 
     From the **Workflows** view select `jira-instance`. Next, select the last step called `upload-type-instances` and get its logs. The logs contain the uploaded TypeInstance ID.
 
 	![get-logs](./assets/get-logs.png)
 
-1.	Get the TypeInstance details: 
+1. Get the TypeInstance details: 
 
     Use the ID from the previous step and fetch the TypeInstance details.
 
@@ -273,9 +273,15 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	![get-type-instance](./assets/get-type-instance.png)
 
-1.	Open Jira console using the **hostname** value from the previous step:
+1. Open Jira console using the **hostname** value from the previous step:
 
 	The installed Jira URL is: [https://jira-cloud.cluster.local/](https://gateway.voltron.local).
+
+1. When you are done, remove the Cloud SQL manually and delete the local cluster:
+
+    ```bash
+    make jira-tutorial-cluster-delete
+    ```
 
 ### Install Jira with on-premise PostgreSQL database
 
