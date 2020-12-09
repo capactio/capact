@@ -35,8 +35,8 @@ type WorkflowStep struct {
 }
 
 type Action struct {
-	Name   string `json:"name"`
-	Prefix string `json:"prefix"`
+	Name     string `json:"name"`
+	Revision string `json:"revision"`
 }
 
 type Renderer struct {
@@ -105,20 +105,18 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 		return errors.Wrap(err, "while creating workflow for imported implementation")
 	}
 
-	if step.Action.Prefix == "" {
-		step.Action.Prefix = StringWithCharset(6)
-	}
+	prefix := StringWithCharset(6)
 
 	// import templates
 	for _, template := range importedWorkflow.Templates {
-		templateName := fmt.Sprintf("%s-%s", step.Action.Prefix, template.Name)
+		templateName := fmt.Sprintf("%s-%s", prefix, template.Name)
 		template.Name = templateName
 
 		for parallelStepsIdx := range template.Steps {
 			parallelSteps := template.Steps[parallelStepsIdx]
 
 			for stepIdx := range parallelSteps {
-				templateName := fmt.Sprintf("%s-%s", step.Action.Prefix, template.Steps[parallelStepsIdx][stepIdx].Template)
+				templateName := fmt.Sprintf("%s-%s", prefix, template.Steps[parallelStepsIdx][stepIdx].Template)
 				template.Steps[parallelStepsIdx][stepIdx].Template = templateName
 			}
 		}
@@ -126,7 +124,7 @@ func (r *Renderer) resolveActionStep(step *WorkflowStep) error {
 	}
 
 	// replace action with template reference
-	step.Template = fmt.Sprintf("%s-%s", step.Action.Prefix, importedWorkflow.Entrypoint)
+	step.Template = fmt.Sprintf("%s-%s", prefix, importedWorkflow.Entrypoint)
 	step.Action = nil
 
 	return nil

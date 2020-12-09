@@ -41,8 +41,6 @@ spec:
   # - names of input artifacts
   # - names of output artifacts
   # this way he can reference the artifacts in his workflow
-  # this can work only for the 'action' as we use an implementation
-  # for 'actionFrom'... TBD
   action:
     runnerInterface: argo.run
     args:
