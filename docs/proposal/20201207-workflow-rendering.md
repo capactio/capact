@@ -11,7 +11,7 @@ This document shows how we can import existing Implementations into a new Implem
   * [Goal](#goal)
   * [Non-goal](#non-goal)
 - [Proposal](#proposal)
-  * [How to reference a Interface/specific Implementation to be called in a Implementation workflow](#how-to-reference-a-onterface-specific-implementation-to-be-called-in-a-implementation-workflow)
+  * [How to reference a Interface/specific Implementation to be called in a Implementation workflow](#how-to-reference-a-interfacespecific-implementation-to-be-called-in-a-implementation-workflow)
   * [How to reference inputs needed and outputs provided by the called Implementation](#how-to-reference-inputs-needed-and-outputs-provided-by-the-called-implementation)
   * [How to conditionally call the Implementation](#how-to-conditionally-call-the-implementation)
   * [How to render the final Argo workflow](#how-to-render-the-final-argo-workflow)

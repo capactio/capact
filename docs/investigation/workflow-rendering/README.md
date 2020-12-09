@@ -54,8 +54,10 @@ Render and execute PostgreSQL installation:
 
 ```bash
 go run docs/investigation/workflow-rendering/main.go 'cap.implementation.bitnami.postgresql.install' | kubectl apply -f -
+```
 
 Render and execute Jira installation:
 
+```bash
 go run docs/investigation/workflow-rendering/main.go 'cap.implementation.atlassian.jira.install' | kubectl apply -f -
 ```
