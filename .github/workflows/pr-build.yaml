@@ -5,6 +5,8 @@ on:
     types: [ opened, synchronize, reopened ]
     paths:
       - "**.go"
+      - "go.mod"
+      - "go.sum"
       - "**.graphql"
       - ".github/workflows/**"
       - "**.sh"

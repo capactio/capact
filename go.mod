@@ -16,17 +16,14 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
-	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
-	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
-	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
@@ -34,10 +31,8 @@ require (
 	github.com/vrischmann/envconfig v1.3.0
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/zap v1.10.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
-	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.20.0
 	gotest.tools v2.2.0+incompatible
@@ -51,8 +46,14 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-// Can be removed after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 replace (
+	// Remove when the issues are resolved:
+	// https://github.com/graphql-go/graphql/issues/586
+	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
+	// https://github.com/nautilus/gateway/issues/121
+	github.com/nautilus/graphql => github.com/pkosiec/graphql v0.0.13-0.20201208111257-86f2e16b2778
+
+	// Remove after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 	k8s.io/api => k8s.io/api v0.17.9
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.9
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.9
