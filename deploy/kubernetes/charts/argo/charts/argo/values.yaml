@@ -112,7 +112,15 @@ controller:
   # Source ranges to allow access to service from. Only applies to
   # service type `LoadBalancer`
   loadBalancerSourceRanges: []
-  resources: {}
+  # See https://argoproj.github.io/argo/cost-optimisation/#set-resources-requests-and-limits
+  # This may need adjustments when more workflows are run at the same time
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 128Mi
   replicas: 1
   pdb:
     enabled: false
@@ -135,7 +143,14 @@ executor:
   image:
     # Overrides .images.tag if defined.
     tag: ""
-  resources: {}
+  # see https://argoproj.github.io/argo/cost-optimisation/#configure-executor-resource-requests
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   # Adds environment variables for the executor.
   env: {}
   # sets security context for the executor container
@@ -176,7 +191,14 @@ server:
   # Source ranges to allow access to service from. Only applies to
   # service type `LoadBalancer`
   loadBalancerSourceRanges: []
-  resources: {}
+  # See https://argoproj.github.io/argo/cost-optimisation/#set-resources-requests-and-limits
+  resources:
+    requests:
+      cpu: 100m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 128Mi
   replicas: 1
   pdb:
     enabled: false

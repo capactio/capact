@@ -1,3 +1,5 @@
+# Resources values are copied from https://github.com/prometheus-operator/kube-prometheus/tree/master/manifests
+# or (if missing) calculated from current usage.
 kube-prometheus-stack:
   commonLabels:
     voltron.dev/scrape-metrics: "true"
@@ -10,10 +12,78 @@ kube-prometheus-stack:
       serviceMonitorSelector:
         matchLabels:
           voltron.dev/scrape-metrics: "true"
+      resources:
+        requests:
+          cpu: 200m
+          memory: 400Mi
+        limits:
+          cpu: 400m
+          memory: 800Mi
+
   grafana:
     adminPassword: okon
     sidecar:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 200Mi
+        limits:
+            cpu: 200m
+            memory: 400Mi
+
       dashboards:
         # If specified, the sidecar will search for dashboard config-maps inside this namespace.
         # Otherwise the namespace in which the sidecar is running will be used. It's also possible to specify ALL to search in all namespaces
         searchNamespace: ALL
+    resources:
+      requests:
+        cpu: 100m
+        memory: 200Mi
+      limits:
+        cpu: 200m
+        memory: 400Mi
+
+  prometheus-node-exporter:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 30Mi
+      limits:
+        cpu: 200m
+        memory: 60Mi
+
+  kube-state-metrics:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+  alertmanager:
+    alertmanagerSpec:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+        limits:
+          cpu: 100m
+          memory: 100Mi
+
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 100Mi
+      limits:
+        cpu: 200m
+        memory: 200Mi
+    tlsProxy:
+      resources:
+        requests:
+          cpu: 50m
+          memory: 50Mi
+        limits:
+          cpu: 100m
+          memory: 100Mi

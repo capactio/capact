@@ -9,6 +9,15 @@ ingress-nginx:
   controller:
     service:
       loadBalancerIP: 35.228.223.55
+    resources:
+      requests:
+        cpu: 100m
+        # it needs more memory than should: https://github.com/kubernetes/ingress-nginx/issues/5697
+        memory: 150Mi
+      limits:
+        cpu: 200m
+        memory: 300Mi
+
 tlsCertificate:
   create: false
   name: "default-ssl-cert"
