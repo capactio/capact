@@ -46,11 +46,14 @@ require (
 	sigs.k8s.io/yaml v1.2.0
 )
 
-// Can be removed after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 replace (
+	// Remove when the issues are resolved:
+	// https://github.com/graphql-go/graphql/issues/586
 	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
+	// https://github.com/nautilus/gateway/issues/121
 	github.com/nautilus/graphql => github.com/pkosiec/graphql v0.0.13-0.20201208111257-86f2e16b2778
 
+	// Remove after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 	k8s.io/api => k8s.io/api v0.17.9
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.17.9
 	k8s.io/apimachinery => k8s.io/apimachinery v0.17.9
