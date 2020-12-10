@@ -112,7 +112,7 @@ test-cover-html: test-unit
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code gen-docs
 .PHONY: generate
 
 gen-go-api-from-ocf-spec:
@@ -130,6 +130,14 @@ gen-graphql-resources:
 gen-go-source-code:
 	go generate -x ./...
 .PHONY: gen-go-source-code
+
+gen-docs: gen-docs-ocftool
+.PHONY: gen-docs
+
+gen-docs-ocftool:
+	go run cmd/ocftool/main.go gen-usage-docs
+.PHONY: gen-docs-ocftool
+
 ###############
 # Development #
 ###############

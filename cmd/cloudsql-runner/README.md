@@ -2,7 +2,7 @@
 
 ## Overview
 
-CloudSQL runner is a runner, which creates and manages CloudSQL instances and databases on Google Cloud Platform
+CloudSQL runner is a runner, which creates and manages CloudSQL instances and databases on Google Cloud Platform.
 
 ## Prerequisites
 

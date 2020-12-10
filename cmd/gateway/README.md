@@ -2,13 +2,13 @@
 
 ## Overview
 
-Voltron GraphQL gateway is a component, which aggregates GraphQL API from the Voltron Engine and Open Capability Hub
+Voltron GraphQL gateway is a component, which aggregates GraphQL API from the Voltron Engine and Open Capability Hub.
 
 ## Prerequisites
 
 - Running Kubernetes cluster with Voltron installed
 - Go compiler 1.14+
-- (optional) [Telepresence](https://www.telepresence.io/)
+- [Telepresence](https://www.telepresence.io/)
 
 ## Usage
 

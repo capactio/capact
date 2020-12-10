@@ -3,18 +3,18 @@
 # Overview
 
 Voltron Open Capability Hub (OCH) is a component, which stores the OCF manifests and TypeInstances. I can work in two modes:
-- local mode - it stores TypeInstances for a Voltron deployment
-- public mode - works as a public repository, which provides OCF manifests to local OCHs
+- local mode - In this mode it stores TypeInstances for a Voltron deployment.
+- public mode - In this mode it works as a public repository, which provides OCF manifests to local OCHs.
 
 ## Prerequisites
 
 - Running Kubernetes cluster with Voltron installed
 - Go compiler 1.14+
-- (optional) [Telepresence](https://www.telepresence.io/)
+- [Telepresence](https://www.telepresence.io/)
 
 ## Usage
 
-See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the OCH deployment on your development cluster
+See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the OCH deployment on your development cluster.
 
 After you have the Telepresence session created, you can run the OCH in the Telepresence shell:
 ```bash

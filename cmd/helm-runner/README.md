@@ -2,7 +2,7 @@
 
 ## Overview
 
-Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates and manages Helm releases
+Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates and manages Helm releases.
 
 ## Prerequisites
 

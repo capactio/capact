@@ -2,7 +2,7 @@
 
 ## Overview
 
-Voltron Engine is a component responsible for handling Action custom resources. It implements the Kubernetes controller pattern
+Voltron Engine is a component responsible for handling Action custom resources. It implements the Kubernetes controller pattern.
 
 ## Prerequisites
 

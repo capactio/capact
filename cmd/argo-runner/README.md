@@ -2,16 +2,16 @@
 
 ## Overview
 
-Argo runner is a [Voltron workflow runner](../../docs/runner.md), which executes Argo workflows. It is used as the main Voltron workflow runner
+Argo runner is a [Voltron workflow runner](../../docs/runner.md), which executes Argo workflows. It is used as the main Voltron workflow runner.
 
 ## Prerequisites
 
-- Running Kubernetes cluster with Argo installed
+- running Kubernetes cluster with Argo installed
 - kubectl
 - Go compiler 1.14+
 
 Before starting the runner you need to:
-1. Ensure the Service Account used by the Argo workflow has proper RBAC permissions. Example command to add permissions for using default service account in default namespace:
+1. Ensure the Service Account used by the Argo workflow has proper RBAC permissions. Here is an example command to add permissions for using default service account in default namespace:
 ```bash
 kubectl create clusterrolebinding default-default-admin --clusterrole admin --serviceaccount default:default
 ```
