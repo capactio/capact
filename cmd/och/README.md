@@ -2,7 +2,7 @@
 
 # Overview
 
-Voltron Open Capablity Hub (OCH) is a component, which stores the OCF manifests and TypeInstances. I can work in two modes:
+Voltron Open Capability Hub (OCH) is a component, which stores the OCF manifests and TypeInstances. I can work in two modes:
 - local mode - it stores TypeInstances for a Voltron deployment
 - public mode - works as a public repository, which provides OCF manifests to local OCHs
 

@@ -28,6 +28,6 @@ To validate OCF manifest you can use the `ocftool validate command`
 ```bash
 # validate a OCF manifest file `my-created-implementation.yml`
 ocftool validate my-created-implementation.yaml
-# validate all yaml's in och-content directory
+# validate all YAMLs in och-content directory
 ocftool validate ./och-content/**/*.yaml
 ```

@@ -140,14 +140,14 @@ make dev-cluster-update
 
 Use can use [Telepresence](https://www.telepresence.io/) to make it easier to develop services running on Kubernetes. Instead of rebuilding the component image and deploying it on Kubernetes, you can setup a Telepresence session and run the process locally. You can read more about how Telepresence work on [their webpage](https://www.telepresence.io/discussion/overview).
 
-To start the telepresence session use the following command. It will take down the current deployment, setup telepresence proxy and open a new shell in your terminal. This example shows how to replace the Voltron Gateway deployment:
+To start the Telepresence session use the following command. It will take down the current deployment, setup Telepresence proxy and open a new shell in your terminal. This example shows how to replace the Voltron Gateway deployment:
 ```bash
 telepresence --namespace voltron-system --swap-deployment voltron-gateway
 ```
 
-Now you can run the process in your telepresence shell. The shell has all the environment variables from the replaced pod set.
+Now you can run the process in your Telepresence shell. The shell has all the environment variables from the replaced pod set.
 
-Example to run Voltron Gateway after creating a telepresence session:
+Example to run Voltron Gateway after creating a Telepresence session:
 ```bash
 go run cmd/gateway/main.go
 ```
