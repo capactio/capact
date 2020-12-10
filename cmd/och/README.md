@@ -14,11 +14,21 @@ Voltron Open Capability Hub (OCH) is a component, which stores the OCF manifests
 
 ## Usage
 
-See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the OCH deployment on your development cluster.
+See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the OCH deployment on your development cluster. Note there are two deployment: one for the public and second for the local mode.
 
 After you have the Telepresence session created, you can run the OCH in the Telepresence shell:
 ```bash
-go run cmd/k8s-engine/main.go
+go run cmd/och/main.go
+```
+
+You can now access the OCH's GraphQL API via https://gateway.voltron.local/graphql. For example to list all interfaces on the public OCH make the following GraphQL query:
+```graphql
+query {
+  interfaces {
+    prefix,
+    name
+  }
+}
 ```
 
 ## Configuration

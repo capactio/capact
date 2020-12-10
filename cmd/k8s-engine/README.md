@@ -6,7 +6,7 @@ Voltron Engine is a component responsible for handling Action custom resources. 
 
 ## Prerequisites
 
-- Running Kubernetes cluster
+- Running Kubernetes cluster with Voltron installed
 - Go compiler 1.14+
 - (optional) [Telepresence](https://www.telepresence.io/)
 
@@ -17,6 +17,15 @@ See [this document](../../docs/development.md#replace-a-cluster-component-with-y
 After you have the Telepresence session created, you can run the Engine in the Telepresence shell:
 ```bash
 go run cmd/k8s-engine/main.go
+```
+
+You can now access the Engine's GraphQL API via https://gateway.voltron.local/graphql. For example to list all actions make the following GraphQL query:
+```graphql
+query {
+  actions {
+    name
+  }
+}
 ```
 
 ## Configuration

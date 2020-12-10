@@ -28,7 +28,7 @@ cat $HOME/.config/gcloud/application_default_credentials.json
 To start the runner type:
 ```bash
 RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH=$HOME/.config/gcloud/application_default_credentials.json \
-  RUNNER_INPUT_PATH=cmd/cloudsql-runner/example-input.yml
+  RUNNER_INPUT_PATH=cmd/cloudsql-runner/example-input.yml \
   go run cmd/cloudsql-runner/main.go
 ```
 

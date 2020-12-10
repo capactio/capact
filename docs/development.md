@@ -145,7 +145,7 @@ To start the Telepresence session use the following command. It will take down t
 telepresence --namespace voltron-system --swap-deployment voltron-gateway
 ```
 
-Now you can run the process in your Telepresence shell. The shell has all the environment variables from the replaced pod set.
+Now you can run your process in your Telepresence shell. The shell inherits all the environment variables from the replaced pod.
 
 Example to run Voltron Gateway after creating a Telepresence session:
 ```bash

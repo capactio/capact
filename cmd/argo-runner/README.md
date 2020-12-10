@@ -17,13 +17,38 @@ kubectl create clusterrolebinding default-default-admin --clusterrole admin --se
 ```
 2. Create a job to use for ownerReference for the workflow and a secret for status reporting:
 ```bash
-kubectl apply -f cmd/argo-runner/dummy-job.yml
+kubectl apply -f cmd/argo-runner/setup.yml
 ```
 ## Usage
 
-To start the runner type:
+1. Create the runner input YAML file:
 ```bash
-RUNNER_INPUT_PATH=cmd/argo-runner/example-input.yml go run cmd/argo-runner/main.go
+cat <<EOF > /tmp/argo-runner-args.yml
+context:
+  name: argo-runner-job
+  dryRun: false
+  platform:
+    namespace: default
+    ownerRef:
+      apiVersion: batch/v1
+      kind: Job
+      name: argo-runner-owner
+      uid: $(kubectl get jobs argo-runner-owner -ojsonpath='{.metadata.uid}')
+args:
+  workflow:
+    entrypoint: main
+    templates:
+      - name: main
+        container:
+          image: docker/whalesay
+          command: ["/bin/bash", "-c"]
+          args: ["sleep 2 && cowsay hello world"]
+EOF
+```
+
+2. Start the runner type:
+```bash
+RUNNER_INPUT_PATH=/tmp/argo-runner-args.yml go run cmd/argo-runner/main.go
 ```
 
 You can check the workflow status in Argo UI on http://localhost:2746 after setup port-forwarding:

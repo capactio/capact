@@ -15,7 +15,7 @@ args:
     postgresqlDatabase: postgres
     postgresqlPassword: s3cr3t
   output:
-    directory: "."
+    directory: "/tmp"
     helmRelease:
       fileName: "helm-release"
     additional:

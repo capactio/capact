@@ -30,18 +30,10 @@ You can access the GraphQL playground on the Gateway by opening http://localhost
 
 Then you should be able to make queries to the gateway:
 ```graphql
-query($implementationPath: NodePath!) {
-  implementation(path: $implementationPath) {
-    name,
+query {
+  implementations {
     prefix,
-    latestRevision {
-      spec {
-        action {
-          runnerInterface
-          args
-        }
-      }
-    }
+    name
   }
 }
 ```

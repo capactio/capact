@@ -4,7 +4,7 @@ context:
   timeout: "10m"
   platform: {}
 args:
-  command: "install"
+  command: "create"
   generateName: true
   instance:
     tier: "db-g1-small"
@@ -19,11 +19,11 @@ args:
           - name: internet
             value: "0.0.0.0/0"
   output:
-    directory: "."
+    directory: "/tmp"
     cloudSQLInstance:
-      fileName: "cloudSQLInstance
+      fileName: "cloudSQLInstance.yml"
     additional:
-      fileName: "additional"
+      fileName: "additional.yml"
       value:
         host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
         port: "{{ .Port }}"

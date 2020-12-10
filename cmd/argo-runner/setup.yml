@@ -14,4 +14,4 @@ spec:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: argo-runner-status
+  name: argo-runner-job
