@@ -1,40 +1,35 @@
 # Argo runner
 
-Argo runner is a runner, which executes Argo workflows
+## Overview
 
-## Supported features:
+Argo runner is a [Voltron workflow runner](../../docs/runner.md), which executes Argo workflows
 
-- executing Argo workflows
+## Prerequisites
 
-## How to build
+- Running Kubernetes cluster with Argo installed
+- kubectl
+- Go compiler 1.14+
 
-```bash
-make build-tool-argo-runner
-# or
-go build -o bin/argo-runner cmd/argo-runner/main.go
-```
+## Usage
 
-## How to use
+Normally the Argo runner is started by the Voltron Engine, but you can run the runner locally without the Engine.
 
-1. Setup the dev KinD cluster
-```bash
-make dev-cluster
-# or
-make dev-cluster-update
-```
+### Run Argo runner locally
 
-2. Ensure the Serivce Account used by the Argo workflow has proper RBAC permissions. Ex for using default namespace and default service account:
+The following steps show, how to execute an Argo workflow with the runner without the Voltron engine.
+
+1. Ensure the Serivce Account used by the Argo workflow has proper RBAC permissions. Example command to add permissions for using default service account in default namespace:
 ```bash
 kubectl create clusterrolebinding default-default-admin --clusterrole admin --serviceaccount default:default
 ```
 
-3. Create a dummy job to use for ownerReference for the workflow
+2. Create a dummy job to use for ownerReference for the workflow
 
 ```bash
 kubectl create job dummy --image alpine
 ```
 
-4. Create secret of the runners status reporter
+3. Create secret of the runners status reporter
 ```bash
 cat <<EOF | kubectl apply -f -
 apiVersion: v1
@@ -44,7 +39,7 @@ metadata:
 EOF
 ```
 
-5. Create runner input file
+4. Create runner input file
 ```bash
 cat <<EOF > argo-args.yaml
 context:
@@ -71,18 +66,12 @@ EOF
 export RUNNER_INPUT_PATH=argo-args.yaml
 ```
 
-6. Run the runner:
+5. Run the runner:
 ```bash
 go run cmd/argo-runner/main.go
 ```
 
-7. Check the workflow status. You can use the Argo UI on http://localhost:2746, after you forward the ports:
+6. Check the workflow status. You can use the Argo UI on http://localhost:2746, after you forward the ports:
 ```bash
 kubectl port-forward -n argo svc/argo-server 2746
 ```
-
-## Hacking
-
-Main source code is in:
-- `cmd/argo-runner/` - binary main
-- `pkg/runner/argo/` - manifest validation SDK

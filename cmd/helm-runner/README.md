@@ -1,22 +1,20 @@
 # Helm runner
 
-Helm runner is a runner, which creates and manages Helm releases
+## Overview
 
-## Supported features:
+Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates and manages Helm releases
 
-- creating new Helm releases
+## Prerequisites
 
-## How to build
+- Running Kubernetes cluster
+- Go compiler 1.14+
+- kubectl
 
-```bash
-# build docker image
-make build-app-image-helm-runner
+## Usage
 
-# build only binary
-go build -o bin/helm-runner cmd/helm-runner/main.go
-```
+Normally the runner is started by Voltron Engine, but you can run the runner locally without the Engine.
 
-## How to use
+### Run Helm runner locally
 
 1. Create the runner input file:
 ```bash
@@ -53,7 +51,7 @@ args:
 EOF
 ```
 
-2. Set the following env vars with the runner input file paths:
+2. Set the following env var with the runner input file paths:
 ```bash
 export RUNNER_INPUT_PATH=helm-args.yaml
 ```
@@ -61,12 +59,11 @@ export RUNNER_INPUT_PATH=helm-args.yaml
 3. Run the runner locally
 ```bash
 go run cmd/helm-runner/main.go
-cat helm-release
-cat additional
 ```
 
-## Hacking
-
-Main source code is in:
-- `cmd/helm-runner/` - binary main
-- `pkg/runner/helm/` - CloudSQL runner code
+4. Verify the results:
+```bash
+cat helm-release
+cat additional
+kubectl get pods
+```

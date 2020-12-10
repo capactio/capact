@@ -1,21 +1,18 @@
 # Voltron Open Capability Hub
 
+# Overview
+
 Voltron Open Capablity Hub (OCH) is a component, which stores the OCF manifests and TypeInstances. I can work in two modes:
+- local mode - it stores TypeInstances for a Voltron deployment
+- public mode - works as a public repository, which provides OCF manifests to local OCHs
 
-- local mode
-- public mode
+## Prerequisites
 
-## Supported features:
+- Running Kubernetes cluster with Voltron installed
+- Go compiler 1.14+
+- (optional) [Telepresence](https://www.telepresence.io/)
 
-- ...
-
-## How to build
-
-```bash
-make build-app-image-och
-```
-
-## How to use
+## Usage
 
 As the Voltron OCH is an integral part of Voltron is it hard to run it without the whole Voltron deployment. For development you can either:
 1. [Build new image and deploy on local KinD cluster](#build-new-image-and-deploy-on-local-kind-cluster)
@@ -43,10 +40,3 @@ telepresence --swap-deployment voltron-och-public
 # run the engine
 go run cmd/och/main.go
 ```
-
-## Hacking
-
-Main source code is in:
-- `cmd/och/` - binary main
-- `pkg/och/` - public source code
-- `internal/och/` - private source code

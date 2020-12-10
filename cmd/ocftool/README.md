@@ -1,28 +1,29 @@
 # ocftool
 
-ocftool is a command-line tool, which helps working with OCF manifests
+## Overview
 
-## Supported features:
+ocftool is a command-line tool, which helps working with OCF manifests. For now it supports validating OCF manifests against manifest JSON schemas
 
-- validating OCF manifests agains JSON schemas
+## Prerequisites
 
-## How to build
+- Go compiler 1.14+
+- Manifest JSON schemas
 
+## Usage
+
+To build the tool you just use the Go compiler:
 ```bash
-make build-tool-ocftool
-# or
-go build -o bin/ocftool cmd/ocftool/main.go
+go build cmd/ocftool/main.go
 ```
 
-## How to use
-
-Use the help included in the `ocftool`:
+Use the help included in the `ocftool` to view available commands:
 ```bash
 ocftool --help
-ocftool validate --help
 ```
 
 ### Manifest validation
+
+To validate OCF manifest you can use the `ocftool validate command`
 
 ```bash
 # validate a OCF manifest file `my-created-implementation.yml`
@@ -30,10 +31,3 @@ ocftool validate my-created-implementation.yaml
 # validate all yaml's in och-content directory
 ocftool validate ./och-content/**/*.yaml
 ```
-
-## Hacking
-
-Main source code is in:
-- `cmd/ocftool/` - binary main
-- `pkg/sdk/manifests/` - manifest validation SDK
-- `internal/ocftool/` - private source code

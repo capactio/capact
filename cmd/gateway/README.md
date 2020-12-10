@@ -1,17 +1,16 @@
 # Voltron GraphQL gateway
 
-## Supported features:
+## Overview
 
-- GraphQL reverse proxy for multiple GraphQL endpoints
-- basic auth authentication
+Voltron GraphQL gateway is a component, which aggregates GraphQL API from the Voltron Engine and Open Capability Hub
 
-## How to build
+## Prerequisites
 
-```bash
-make build-app-image-gateway
-```
+- Running Kubernetes cluster with Voltron installed
+- Go compiler 1.14+
+- (optional) [Telepresence](https://www.telepresence.io/)
 
-## How to use
+## Usage
 
 As the gateway is an integral part of Voltron is it hard to run it without the whole Voltron deployment. For development you can either:
 1. [Build new image and deploy on local KinD cluster](#build-new-image-and-deploy-on-local-kind-cluster)
@@ -26,7 +25,7 @@ make dev-cluster-update
 
 This will build all apps (including gateway) and deploy them to the dev KinD cluster.
 
-### Use telepresence]
+### Use telepresence
 
 [Telepresence](https://www.telepresence.io/) is a tool to make it easier to develop applications, which are running on Kubernetes.
 
@@ -73,10 +72,3 @@ query($implementationPath: NodePath!) {
   }
 }
 ```
-
-## Hacking
-
-Main source code is in:
-- `cmd/gateway` - binary main
-- `internal/gateway` - private gateway code
-- `pkg/gateway` - public gateway code

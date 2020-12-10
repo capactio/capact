@@ -1,22 +1,19 @@
 # CloudSQL runner
 
+## Overview
+
 CloudSQL runner is a runner, which creates and manages CloudSQL instances and databases on Google Cloud Platform
 
-## Supported features:
+## Prerequisites
 
-- creating new CloudSQL database instances
+- GCP project with CloudSQL access
+- Go compiler 1.14+
 
-## How to build
+## Usage
 
-```bash
-# build docker image
-make build-app-image-cloudsql-runner
+### Run locally
 
-# build only binary
-go build -o bin/cloudsql-runner cmd/cloudsql-runner/main.go
-```
-
-## How to use
+You can run the CloudSQL runner locally without Voltron Engine:
 
 1. Get your GCP credentials file using `gcloud` CLI. This should create the credentials file in `$HOME/.config/gcloud/application_default_credentials.json`. Verify the file has a `.project_id` key, if not, add it manually:
 ```bash
@@ -44,6 +41,8 @@ args:
     tier: "db-g1-small"
     databaseVersion: "POSTGRES_11"
     region: "us-central"
+    defaultDBName: postgres
+    rootPassword: s3cr3t
     settings:
       tier: "db-g1-small"
       ipConfiguration:
@@ -56,13 +55,13 @@ args:
       fileName: "cloudSQLInstance
     additional:
       fileName: "additional"
-      value: |-
-        host: "{{ template "postgresql.fullname" . }}"
-        port: "{{ template "postgresql.port" . }}"
-        defaultDBName: "{{ template "postgresql.database" . }}"
+      value:
+        host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+        port: "{{ .Port }}"
+        defaultDBName: "{{ .DefaultDBName }}"
         superuser:
-          username: "{{ template "postgresql.username" . }}"
-          password: "{{ template "postgresql.password" . }}"
+          username: "{{ .Username }}"
+          password: "{{ .Password }}"
 EOF
 ```
 
@@ -78,9 +77,3 @@ go run cmd/cloudsql-runner/main.go
 cat cloudSQLInstance
 cat additional
 ```
-
-## Hacking
-
-Main source code is in:
-- `cmd/cloudsql-runner/` - binary main
-- `pkg/runner/cloudsql` - CloudSQL runner code
