@@ -1,0 +1,29 @@
+context:
+  name: "helm-example"
+  dryRun: false
+  timeout: "10m"
+  platform:
+    namespace: "default"
+args:
+  command: "install"
+  generateName: true
+  chart:
+    name: "postgresql"
+    repo: "https://charts.bitnami.com/bitnami"
+  values:
+    fullnameOverride: postgresql-server
+    postgresqlDatabase: postgres
+    postgresqlPassword: s3cr3t
+  output:
+    directory: "."
+    helmRelease:
+      fileName: "helm-release"
+    additional:
+      fileName: "additional"
+      value: |-
+        host: "{{ template "postgresql.fullname" . }}"
+        port: "{{ template "postgresql.port" . }}"
+        defaultDBName: "{{ template "postgresql.database" . }}"
+        superuser:
+          username: "{{ template "postgresql.username" . }}"
+          password: "{{ template "postgresql.password" . }}"

@@ -17,6 +17,7 @@ Read this document to learn how to develop the project. Please also follow guide
 - [Development cluster](#development-cluster)
   * [Create a cluster and install components](#create-a-cluster-and-install-components)
   * [Rebuild Docker images and update cluster](#rebuild-docker-images-and-update-cluster)
+  * [Replace a cluster component with your local process](#replace-a-cluster-component-with-your-local-process)
   * [Delete cluster](#delete-cluster)
 - [Build and push Docker images](#build-and-push-docker-images)
   * [All components](#all-components)
@@ -133,6 +134,22 @@ To rebuild all Docker images and upgrade Helm chart on dev cluster with new imag
 
 ```bash
 make dev-cluster-update
+```
+
+### Replace a cluster component with your local process
+
+Use can use [Telepresence](https://www.telepresence.io/) to make it easier to develop services running on Kubernetes. Instead of rebuilding the component image and deploying it on Kubernetes, you can setup a Telepresence session and run the process locally. You can read more about how Telepresence work on [their webpage](https://www.telepresence.io/discussion/overview).
+
+To start the telepresence session use the following command. It will take down the current deployment, setup telepresence proxy and open a new shell in your terminal. This example shows how to replace the Voltron Gateway deployment:
+```bash
+telepresence --namespace voltron-system --swap-deployment voltron-gateway
+```
+
+Now you can run the process in your telepresence shell. The shell has all the environment variables from the replaced pod set.
+
+Example to run Voltron Gateway after creating a telepresence session:
+```bash
+go run cmd/gateway/main.go
 ```
 
 ### Delete cluster

@@ -12,43 +12,16 @@ Voltron GraphQL gateway is a component, which aggregates GraphQL API from the Vo
 
 ## Usage
 
-As the gateway is an integral part of Voltron is it hard to run it without the whole Voltron deployment. For development you can either:
-1. [Build new image and deploy on local KinD cluster](#build-new-image-and-deploy-on-local-kind-cluster)
-2. [Use telepresence](#use-telepresence)
+See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the Gateway deployment on your development Kubernetes cluster.
 
-### Build new image and deploy on local KinD cluster
-
-To deploy the gateway to your dev cluster type:
+After you have the Telepresence session created, you can run the gateway in the Telepresence shell:
 ```bash
-make dev-cluster-update
+go run cmd/gateway/main.go
 ```
 
-This will build all apps (including gateway) and deploy them to the dev KinD cluster.
+### Access GraphQL playground
 
-### Use telepresence
-
-[Telepresence](https://www.telepresence.io/) is a tool to make it easier to develop applications, which are running on Kubernetes.
-
-You can use the feature to replace a pod running on the cluster with a pod, which forward all traffic directed to this pod to your PC. In this way, you can run the process on your PC, like it would be in this pod.
-
-```bash
-# this will replace the pod with a telepresence proxy and open a new shell in your terminal
-telepresence --swap-deployment voltron-gateway
-
-# run the engine
-go run cmd/k8s-engine/main.go
-```
-
-### Testing
-
-During the local deployment an entry in `/etc/hosts` is added:
-```properties
-# /etc/hosts
-[...]
-127.0.0.1 gateway.voltron.local
-```
-
-You can access the GraphQL playground on the gateway by opening http://gateway.voltron.local/graphql. As currently the gateway is secured using basic auth you need to provide the following headers:
+You can access the GraphQL playground on the Gateway by opening http://localhost:8080. As currently the gateway is secured using basic auth you need to provide the following headers:
 ```json
 {
   "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"
@@ -72,3 +45,18 @@ query($implementationPath: NodePath!) {
   }
 }
 ```
+
+## Configration
+
+You can set the following environment variables to configure the Gateway:
+
+| Name                                | Default   | Description                                                                                                                                                           |
+|-------------------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| APP_GRAPHQL_ADDR                    | `:8080`   | TCP address the GraphQL endpoint binds to                                                                                                                             |
+| APP_HEALTHZ_ADDR                    | `:8082`   | TCP address the health probes endpoint binds to                                                                                                                       |
+| APP_LOGGER_DEV_MODE                 | `false`   | Enable development mode logging                                                                                                                                       |
+| APP_INTROSPECTION_GRAPHQL_ENDPOINTS | `false`   | Comma seperated list of GraphQL endpoint to introspect and merge into one unified GraphQL endpoint. Ex. `http://localhost:3000/graphql,http://localhost:3001/graphql` |
+| APP_INTROSPECTION_ATTEMPTS          | `120`     | Number of attempts to introspect the remote GraphQL endpoints                                                                                                         |
+| APP_INTROSPECTION_RETRY_DELAY       | `1s`      | Time delay between unsuccessful introspection attempts                                                                                                                |
+| APP_AUTH_USERNAME                   | `graphql` | Basic auth username used to secure the GraphQL endpoint                                                                                                               |
+| APP_AUTH_PASSWORD                   |           | Basic auth password used to secure the GraphQL endpoint                                                                                                               |

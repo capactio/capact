@@ -14,29 +14,21 @@ Voltron Open Capablity Hub (OCH) is a component, which stores the OCF manifests 
 
 ## Usage
 
-As the Voltron OCH is an integral part of Voltron is it hard to run it without the whole Voltron deployment. For development you can either:
-1. [Build new image and deploy on local KinD cluster](#build-new-image-and-deploy-on-local-kind-cluster)
-2. [Use telepresence](#use-telepresence)
+See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the OCH deployment on your development cluster
 
-### Build new image and deploy on local KinD cluster
-
-Running the following command will build new component images (including the Voltron OCH) and deploy to the local KinD cluster
+After you have the Telepresence session created, you can run the OCH in the Telepresence shell:
 ```bash
-make dev-cluster-update
+go run cmd/k8s-engine/main.go
 ```
 
-### Use telepresence
+## Configuration
 
-[Telepresence](https://www.telepresence.io/) is a tool to make it easier to develop applications, which are running on Kubernetes.
+The following environment variables can be set to configure OCH:
 
-You can use the feature to replace a pod running on the cluster with a pod, which forward all traffic directed to this pod to your PC. In this way, you can run the process on your PC, like it would be in this pod.
-
-```bash
-# this will replace the pod with a telepresence proxy and open a new shell in your terminal
-telepresence --swap-deployment voltron-och-local
-# or
-telepresence --swap-deployment voltron-och-public
-
-# run the engine
-go run cmd/och/main.go
-```
+| Name                | Default | Description                                            |
+|---------------------|---------|--------------------------------------------------------|
+| APP_OCH_MODE        |         | Mode, in which OCH is run. Must be "public" or "local" |
+| APP_GRAPHQL_ADDR    | `:8080` | TCP address the GraphQL endpoint binds to              |
+| APP_HEALTHZ_ADDR    | `:8082` | TCP address the health probes endpoint binds to        |
+| APP_LOGGER_DEV_MODE | `false` | Enable development mode logging                        |
+| APP_MOCK_GRAPHQL    | `false` | Use mocked data in GraphQL server                      |

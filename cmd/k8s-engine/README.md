@@ -12,27 +12,27 @@ Voltron Engine is a component responsible for handling Action custom resources. 
 
 ## Usage
 
-As the Voltron Engine is an integral part of Voltron is it hard to run it without the whole Voltron deployment. For development and testing you can either:
-1. [Build new image and deploy on local KinD cluster](#build-new-image-and-deploy-on-local-kind-cluster)
-2. [Use telepresence](#use-telepresence)
+See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the Voltron Engine deployment on your development Kubernetes cluster.
 
-### Build new image and deploy on local KinD cluster
-
-Running the following command will build new component images (including the Voltron Engine) and deploy to the local KinD cluster
+After you have the Telepresence session created, you can run the Engine in the Telepresence shell:
 ```bash
-make dev-cluster-update
-```
-
-### Use telepresence
-
-[Telepresence](https://www.telepresence.io/) is a tool to make it easier to develop applications, which are running on Kubernetes.
-
-You can use the feature to replace a pod running on the cluster with a pod, which forward all traffic directed to this pod to your PC. In this way, you can run the process on your PC, like it would be in this pod.
-
-```bash
-# this will replace the pod with a telepresence proxy and open a new shell in your terminal
-telepresence --swap-deployment voltron-engine
-
-# run the engine
 go run cmd/k8s-engine/main.go
 ```
+
+## Configuration
+
+| Name                          | Default                          | Description                                                                                                  |
+|-------------------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------|
+| APP_ENABLE_LEADER_ELECTION    | false                            | Enable leader election for Kubernetes controller. This ensures only 1 controller is active at any time point |
+| APP_LEADER_ELECTION_NAMESPACE |                                  | Set the Kubernetes namespace, in which the leader election ConfigMap is created                              |
+| APP_GRAPHQL_ADDR              | `:8080`                          | TCP address the metrics endpoint binds to                                                                    |
+| APP_GRAPHQL_ADDR              | `8081`                           | TCP address the metrics endpoint binds to                                                                    |
+| APP_HEALTHZ_ADDR              | `:8082`                          | TCP address the health probes endpoint binds to                                                              |
+| APP_LOGGER_DEV_MODE           | `false`                          | Enable development mode logging                                                                              |
+| APP_MAX_CONCURRENT_RECONCILES | `1`                              | Maximum number of concurrent reconcile loops in the controller                                               |
+| APP_MOCK_GRAPHQL              | `false`                          | Set mock responses on the GraphQL server                                                                     |
+| APP_GRAPHQL_GATEWAY_ENDPOINT  | `http://voltron-gateway/graphql` | Endpoint of the Voltron Gateway                                                                              |
+| APP_GRAPHQL_GATEWAY_USERNAME  |                                  | Basic auth username used to authenticate at the Voltron Gateway                                              |
+| APP_GRAPHQL_GATEWAY_PASSWORD  |                                  | Basic auth password used to authenticate at the Voltron Gateway                                              |
+| APP_BUILTIN_RUNNER_TIMEOUT    | `30m`                            | Set the timeout for the workflow execution of the builtin runners                                            |
+| APP_BUILTIN_RUNNER_IMAGE      |                                  | Set the image of the builtin runner                                                                          |
