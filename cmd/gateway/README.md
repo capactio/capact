@@ -2,7 +2,7 @@
 
 ## Overview
 
-Voltron GraphQL gateway is a component, which aggregates GraphQL API from the Voltron Engine and Open Capability Hub.
+Voltron GraphQL gateway is a component, which aggregates GraphQL APIs from the Voltron Engine and Open Capability Hub.
 
 ## Prerequisites
 
@@ -21,7 +21,7 @@ go run cmd/gateway/main.go
 
 ### Access GraphQL playground
 
-You can access the GraphQL playground on the Gateway by opening http://localhost:8080. As currently the gateway is secured using basic auth you need to provide the following headers:
+You can access the GraphQL playground on the Gateway by opening http://localhost:8080. As currently the gateway is secured using basic auth, you need to provide the following headers:
 ```json
 {
   "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"

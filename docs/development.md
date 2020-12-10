@@ -26,6 +26,7 @@ Read this document to learn how to develop the project. Please also follow guide
   * [Generate Go code from the OCF JSON Schemas](#generate-go-code-from-the-ocf-json-schemas)
   * [Generate K8s resources](#generate-k8s-resources)
   * [Generate code from GraphQL schema](#generate-code-from-graphql-schema)
+  * [Generate documentation](#generate-documentation)
 - [Instrumentation](#instrumentation)
   * [Enable metrics scrape](#enable-metrics-scrape)
   * [Add Grafana Dashboard](#add-grafana-dashboard)
@@ -272,6 +273,15 @@ Each time the GraphQL schema is change, you need to update generated resources. 
 
 ```bash
 make gen-graphql-resources
+```
+
+### Generate documentation
+
+For the `ocftool` we are using [Cobra](https://github.com/spf13/cobra) to generate the CLI. It supported automated documentation generation.
+
+When you update the `ocftool` CLI you have to generate the documentation files. To do this, execute:
+```bash
+make gen-docs
 ```
 
 ## Instrumentation

@@ -62,5 +62,5 @@ The following environment variables can be set:
 
 | Name                   | Default | Description                        |
 |------------------------|---------|------------------------------------|
-| RUNNER_INPUT_PATH      |         | Path of the runner YAML input file |
+| RUNNER_INPUT_PATH      |         | Path to the runner YAML input file |
 | RUNNER_LOGGER_DEV_MODE | `false` | Enable additional log messages     |
