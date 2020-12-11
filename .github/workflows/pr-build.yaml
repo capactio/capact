@@ -12,6 +12,7 @@ on:
       - "**.sh"
       - "Makefile"
       - "deploy/**"
+      - "!**.md"
     branches:
       - "master"
 
