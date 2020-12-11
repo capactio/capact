@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
@@ -46,9 +47,11 @@ func main() {
 
 	obj := &unstructured.Unstructured{}
 
+	workflowName := strings.Replace(implementationPath, ".", "-", -1)
+
 	obj.SetKind("Workflow")
 	obj.SetAPIVersion("argoproj.io/v1alpha1")
-	obj.SetName("render-poc")
+	obj.SetName(workflowName)
 
 	if err := mapstructure.Decode(map[string]interface{}{
 		"spec": data,

@@ -142,7 +142,7 @@ spec:
                                   hosts:
                                   - host: jira-cloud.voltron.local
                                     paths: ['/']
-                      - name: values
+                      - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
               - - name: install-jira

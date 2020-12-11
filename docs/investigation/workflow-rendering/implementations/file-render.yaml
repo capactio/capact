@@ -28,7 +28,7 @@ spec:
               artifacts:
                 - name: template
                   path: "/template.yml"
-                - name: values
+                - name: input-parameters
                   path: "/values.yml"
             outputs:
               artifacts:

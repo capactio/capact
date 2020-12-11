@@ -76,7 +76,7 @@ spec:
                     name: cap.implementation.jinja2.template # implementation of a Jinja2 template :D
                   arguments:
                     artifacts:
-                      - name: values
+                      - name: input-parameters
                         # mock cap.type.database.postgresql.install-input typeInstance artifact
                         raw:
                           data: |

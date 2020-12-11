@@ -1,6 +1,6 @@
 # Workflow rendering PoC
 
-This proof of concept show a way to build a single Argo workflow from a OCF Implementation, which offloads work to other Implementations.
+This proof of concept show a way to build a single Argo workflow from a OCF Implementation, which references to other Implementations.
 
 ```
 .
@@ -10,14 +10,14 @@ This proof of concept show a way to build a single Argo workflow from a OCF Impl
 
 ## How does it work
 
-It uses Argo Workflows feature to handle nested workflows. A single Implementation defines an Argo workflow. If at some point, we want to offload some work to other workflow (let's call it 'imported workflow'), we can in Argo:
+This proof of concept renders a final Argo workflow by merging all child Argo workflows into the root workflow. It works using the following algorithm:
 
-1. Include all templates from the imported workflow in our main workflow
-2. Add a step, which references the entrypoint template of the imported workflow
+1. Include all templates from a child workflow in the root workflow
+2. Modify the step, where the child workflow was referenced, to reference the entrypoint template of the child workflow
 
 To allow us reference, which workflow (which is defined in OCH Implementation) should be imported, we have to extend the syntax of the Argo workflow.
 
-This PoC extends the Argo workflow syntax by adding a optional `action` field in the Argo Workflow Step definition:
+This PoC extends the Argo workflow syntax by adding a optional `action` field in the Argo Workflow step definition:
 ```yaml
 workflow:
   entrypoint: main
@@ -40,12 +40,12 @@ workflow:
             template: imported-wf-entrypoint
 
     - name: imported-wf-entrypoint
-      # imported argo template definitions
+      # imported Argo template definitions
 ```
 
 ## Usage
 
-The default SA in the k8s namespace needs proper RBAC permissions, so the Argo workflow pod can monitor other pods. You can add temporary admin access to the default SA on the default namespace with:
+The default ServiceAccount in the `default` Namespace needs proper RBAC permissions, so the Argo workflow pod can run other pods. You can add temporary admin access to the default SA on the default namespace with:
 ```bash
 kubectl create clusterrolebinding default-default-admin --clusterrole admin --serviceaccount default:default
 ```
