@@ -14,7 +14,7 @@ kube-prometheus-stack:
           voltron.dev/scrape-metrics: "true"
       resources:
         requests:
-          cpu: 100m
+          cpu: 80m
           memory: 400Mi
         limits:
           cpu: 200m
@@ -72,7 +72,7 @@ kube-prometheus-stack:
           memory: 100Mi
 
   prometheusOperator:
-    configReloaderCpu: 10m
+    configReloaderCpu: 5m
     resources:
       requests:
         cpu: 50m
@@ -83,7 +83,7 @@ kube-prometheus-stack:
     tlsProxy:
       resources:
         requests:
-          cpu: 10m
+          cpu: 5m
           memory: 50Mi
         limits:
           cpu: 100m
