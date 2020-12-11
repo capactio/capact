@@ -1,8 +1,104 @@
-#  Runner
+# Runner
 
-Runners are responsible for running a given Action, e.g. Argo Workflow Runner, Helm Runner, etc. The [runner](./../pkg/runner/) package provides Manager which holds the general logic and allows execution of a specific runner in the same fashion. By doing so, each runner implementation holds only business-specific logic.
+Runner handles the execution of the Action according to the `action` property, which defines what should be executed. There are multiple runners, such as Helm Runner, CloudSQL Runner, Argo Workflow Runner.
 
-##  Development
+## Overview
+
+Each Engine implementation needs to have at least one built-in runner. The built-in runner has only the Interface and no Implementation definition. To ensure that, you need to add the `spec.abstract: true` property in the Interface that describes the runner.
+
+The [Kubernetes Engine](../cmd/k8s-engine) uses Argo Workflow as the built-in runner. The [cap.interface.runner.argo](../och-content/interface/runner/argo/run.yaml) Interface defines the schema for the runner arguments. The Argo Workflow was selected, as it is a Kubernetes-native implementation, and it supports passing data between steps.
+
+In the future, we will abstract all the built-in runners under a common Interface by using the [OCI Image](https://github.com/opencontainers/image-spec) and [OCI Runtime](https://github.com/opencontainers/runtime-spec) specifications. Each Engine implementation will have to fulfill this OCI runner Interface.
+
+The goal for the runner concept is not to limit you to built-in runners only but also to give you the ability to define and use different runners. You can define a different runner such as Helm Runner. First, you need to create an Interface definition to describe possible input and output values.
+
+```yaml
+ocfVersion: 0.0.1
+kind: Interface
+metadata:
+  prefix: cap.interface.runner.helm
+  name: run
+# ...
+spec:
+  input:
+    parameters:
+      jsonSchema:
+        value: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "title": "The name of installed release"
+              },
+              "namespace": {
+                "type": "string",
+                "title": "The namespace schema",
+              },
+           }
+  output:
+    typeInstances:
+      helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+```
+
+Next, you need to create at least one Implementation. To do so, you need to create an OCI image with a binary inside. The binary should read mounted data and execute a given functionality. For example, for Helm Runner it will be `helm install`, `helm delete`, etc.
+
+The custom runner Implementation manifest should be described using one of the built-in runners so Engine knows how to mount rendered input data and how to run the OCI image. For Argo Workflow Runner, it could look like this:
+
+```yaml
+ocfVersion: 0.0.1
+kind: Implementation
+metadata:
+  prefix: cap.implementation.runner.helm
+  name: run
+# ...
+action:
+  runnerInterface: cap.interface.runner.argo
+  args:
+    workflow:
+      entrypoint: helm
+      templates:
+        - name: helm
+          inputs:
+            artifacts:
+              - name: helm-values
+                path: "/out/helm-values"
+          outputs:
+            artifacts:
+              - name: helm-release
+                path: "/out/helm-release"
+          container:
+            image: gcr.io/projectvoltron/helm-runner:0.1.0
+            env:
+              - name: PARAMETERS_PATH
+                value: "{{inputs.artifacts.helm-values.path}}"
+              - name: RELEASE_OUTPUT_PATH
+                value: "{{outputs.artifacts.helm-release.path}}"
+```
+
+As you see, for this definition, as a part of Argo workflow, Kubernetes Engine runs the `gcr.io/projectvoltron/helm-runner:0.1.0` OCI image on Kubernetes and handles dedicated input and output data for this runner. The `helm-values` and `helm-release` arguments need to be described under dedicated Interface for Helm Runner.
+
+## Architecture
+
+The following diagram visualizes how Engine runs an Action using built-in Argo Workflow Runner.
+
+![](./assets/runner-arch.svg)
+
+1. Voltron Engine watches the Action custom resources. Once the Action is rendered and a user approved it, Engine executes it.
+
+2. Voltron Engine creates a Kubernetes Secret with the [input data](#input-data).
+
+3. Voltron Engine creates a Kubernetes Job with the Argo Workflow Runner, and mounts the Secret from the 2nd step as the volume.
+
+4. Argo Workflow Runner reads the input data from the filesystem and based on it creates the Argo Workflow custom resource.
+
+5. Argo Workflow Controller watches Argo Workflows and executes them in a given Namespace. As a result, the actual Action is executed, e.g. Jira installation, cluster benchmarks, etc.
+
+### Input data
 
 Each runner must consume the following environment variables:
 
@@ -36,7 +132,13 @@ The runner must read input file from the `RUNNER_INPUT_PATH` location.
 
 To simplify the development process, we provide Manager, which handles reading the data from disk. All available data is passed for each method execution.
 
-###  Add a runner implementation
+## Development
+
+Read this section to learn how to develop a new runner in Go language.
+
+The [`runner`](./../pkg/runner) package provides Manager, which holds the general logic and allows execution of all runners in the same fashion. This way, each runner implementation holds only business-specific logic.
+
+### Add a runner implementation
 
 Add a new runner under the `pkg/runner/{name}` directory, and implement the [Runner](./../pkg/runner/api.go) interface:
 
@@ -59,7 +161,7 @@ type LoggerInjector interface {
 }
 ```
 
-###  Create binary
+### Create binary
 
 A new runner can be added under the [cmd](../cmd) package.
 
@@ -89,9 +191,9 @@ Use the following environment variables to configure the Manager:
 |----------------------------|---------------------------------------------------------------------------------------------------------------------------------------|
 | **RUNNER_LOGGER_DEV_MODE** | Specifies whether to use the development logger that writes `DebugLevel` and above logs to standard error in a human-friendly format. |
 
-##  Available runners
+## Available runners
 
-###  Argo Workflow Runner
+### Argo Workflow Runner
 
 The Argo Workflow Runner implementation is defined in the [pkg/runner/argo](../pkg/runner/argo) package. It creates the Argo Workflow CR and waits for completion using the Kubernetes *watch* functionality. It exits with error when the Argo Workflow with the `context.name` name already exists. Argo Workflow ServiceAccount is always overridden with the one provided via the `context.platform.serviceAccountName` property in the input file.
 
