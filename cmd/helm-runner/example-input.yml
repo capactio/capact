@@ -17,11 +17,11 @@ args:
   output:
     directory: "/tmp"
     helmRelease:
-      fileName: "helm-release"
+      fileName: "helm-release.yml"
     additional:
-      fileName: "additional"
+      fileName: "additional.yml"
       value: |-
-        host: "{{ template "postgresql.fullname" . }}"
+        host: "{{ template "postgresql.primary.fullname" . }}"
         port: "{{ template "postgresql.port" . }}"
         defaultDBName: "{{ template "postgresql.database" . }}"
         superuser:

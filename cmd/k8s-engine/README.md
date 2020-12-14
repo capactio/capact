@@ -17,8 +17,9 @@ Voltron Engine is a component responsible for handling Action custom resources. 
 
 ## Usage
 
-You need to have access to an Voltron Gateway, so the Engine can fetch OCF TypeInstances, Interfaces and Implementations. You can use the Gateway running on local KinD cluster.
+You need to have access to an Voltron Gateway, so the Engine can fetch OCF TypeInstances, Interfaces and Implementations. You can use the Gateway running on local KinD cluster, which is accessible under `https://gateway.voltron.local/graphql`.
 
+To run the Engine, use:
 ```bash
 APP_GRAPHQLGATEWAY_ENDPOINT=https://gateway.voltron.local/graphql \
   APP_GRAPHQLGATEWAY_USERNAME=graphql \

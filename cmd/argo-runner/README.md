@@ -58,7 +58,7 @@ EOF
 RUNNER_INPUT_PATH=/tmp/argo-runner-args.yml go run cmd/argo-runner/main.go
 ```
 
-You can check the workflow status in Argo UI on http://localhost:2746 after setup port-forwarding:
+You can check the workflow status in Argo UI on http://localhost:2746 after setting port-forwarding:
 ```bash
 kubectl port-forward -n argo svc/argo-server 2746
 ```

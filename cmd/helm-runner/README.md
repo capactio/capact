@@ -8,7 +8,7 @@
 
 ## Overview
 
-Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates and manages Helm releases.
+Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm releases on Kubernetes.
 
 ## Prerequisites
 
@@ -18,15 +18,13 @@ Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates an
 
 ## Usage
 
-Normally the runner is started by Voltron Engine, but you can run the runner locally without the Engine.
-
-To start the runner type:
+To start the runner execute:
 ```bash
 RUNNER_INPUT_PATH=cmd/helm-runner/example-input.yml \
   go run cmd/helm-runner/main.go
 ```
 
-Running this should create a Helm PostgreSQL release:
+You can check, if the PostgreSQL Helm release was created:
 ```bash
 $ helm list
 NAME                    NAMESPACE       REVISION        UPDATED                                 STATUS       CHART                    APP VERSION
