@@ -1,33 +1,27 @@
 # CloudSQL runner
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Development](#development)
+
 ## Overview
 
-CloudSQL runner is a runner, which creates and manages CloudSQL instances and databases on Google Cloud Platform.
+CloudSQL runner is a [runner](../../docs/runner.md), which creates and manages CloudSQL instances and databases on Google Cloud Platform.
 
 ## Prerequisites
 
-- Go compiler 1.14+
-- GCP project with CloudSQL access
+- [Go](https://golang.org)
+- Google Cloud Platform credentials JSON for Service Account with `Cloud SQL Admin` role
 
-You need to get a GCP credentials file using `gcloud` CLI, so the runner can connect to your GCP project:
-```bash
-gcloud auth application-default login
-```
-This should create the credentials file in `$HOME/.config/gcloud/application_default_credentials.json`. Verify the file has a `.project_id` key. If not, add it manually:
-```bash
-cat $HOME/.config/gcloud/application_default_credentials.json
-{
-  [...]
-  "type": "authorized_user",
-  "project_id": "<your-gcp-project-id>" # add this, if not present
-}
-```
+To get the GCP Service Account you can follow the documentation [here](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Then generate the JSON key and download it, to get the credentials JSON.
 
 ## Usage
 
 To start the runner type:
 ```bash
-RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH=$HOME/.config/gcloud/application_default_credentials.json \
+RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH=<path-to-gcp-service-account-credentials-json> \
   RUNNER_INPUT_PATH=cmd/cloudsql-runner/example-input.yml \
   go run cmd/cloudsql-runner/main.go
 ```
@@ -36,8 +30,12 @@ RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH=$HOME/.config/gcloud/application_default_cre
 
 The following environment variables can be set:
 
-| Name                                | Default            | Description                           |
-|-------------------------------------|--------------------|---------------------------------------|
-| RUNNER_INPUT_PATH                   |                    | Path to the runner YAML input file    |
-| RUNNER_LOGGER_DEV_MODE              | `false`            | Enable additional log messages        |
-| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH | `/etc/gcp/sa.json` | Path to the GCP JSON credentials file |
+| Name                                | Required | Default            | Description                           |
+| ----------------------------------- | -------- | ------------------ | ------------------------------------- |
+| RUNNER_INPUT_PATH                   | yes      |                    | Path to the runner YAML input file    |
+| RUNNER_LOGGER_DEV_MODE              | no       | `false`            | Enable additional log messages        |
+| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH | no       | `/etc/gcp/sa.json` | Path to the GCP JSON credentials file |
+
+## Development
+
+To read more about development, see the [`development.md`](../../docs/development.md) document.

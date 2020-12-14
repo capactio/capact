@@ -1,14 +1,21 @@
 # Argo runner
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Development](#development)
+
 ## Overview
 
-Argo runner is a [Voltron workflow runner](../../docs/runner.md), which executes Argo workflows. It is used as the main Voltron workflow runner.
+Argo runner is a [runner](../../docs/runner.md), which executes Argo workflows. It is used as a built-in runner for Voltron Kubernetes implementation.
 
 ## Prerequisites
 
+
+- [Go](https://golang.org)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - running Kubernetes cluster with Argo installed
-- kubectl
-- Go compiler 1.14+
 
 Before starting the runner you need to:
 1. Ensure the Service Account used by the Argo workflow has proper RBAC permissions. Here is an example command to add permissions for using default service account in default namespace:
@@ -60,7 +67,12 @@ kubectl port-forward -n argo svc/argo-server 2746
 
 The following environment variables can be set:
 
-| Name                   | Default | Description                        |
-|------------------------|---------|------------------------------------|
-| RUNNER_INPUT_PATH      |         | Path to the runner YAML input file |
-| RUNNER_LOGGER_DEV_MODE | `false` | Enable additional log messages     |
+| Name                                | Required | Default            | Description                           |
+| ----------------------------------- | -------- | ------------------ | ------------------------------------- |
+| RUNNER_INPUT_PATH                   | yes      |                    | Path to the runner YAML input file    |
+| RUNNER_LOGGER_DEV_MODE              | no       | `false`            | Enable additional log messages        |
+| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH | no       | `/etc/gcp/sa.json` | Path to the GCP JSON credentials file |
+
+## Development
+
+To read more about development, see the [`development.md`](../../docs/development.md) document.

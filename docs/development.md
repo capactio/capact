@@ -137,21 +137,16 @@ To rebuild all Docker images and upgrade Helm chart on dev cluster with new imag
 make dev-cluster-update
 ```
 
-### Replace a cluster component with your local process
+### Swap a cluster deployment with your local process
 
-Use can use [Telepresence](https://www.telepresence.io/) to make it easier to develop services running on Kubernetes. Instead of rebuilding the component image and deploying it on Kubernetes, you can setup a Telepresence session and run the process locally. You can read more about how Telepresence work on [their webpage](https://www.telepresence.io/discussion/overview).
+To make it easier to develop services running on Kubernetes, you can use [Telepresence](https://www.telepresence.io/). Instead of rebuilding a component image and deploying it on Kubernetes, you can setup a Telepresence session and run the local process in your cluster.
 
-To start the Telepresence session use the following command. It will take down the current deployment, setup Telepresence proxy and open a new shell in your terminal. This example shows how to replace the Voltron Gateway deployment:
+To use Telepresence to swap a cluster deployment, execute the following command:
 ```bash
-telepresence --namespace voltron-system --swap-deployment voltron-gateway
+telepresence --namespace {namespace} --swap-deployment {deployment-name}
 ```
 
-Now you can run your process in your Telepresence shell. The shell inherits all the environment variables from the replaced pod.
-
-Example to run Voltron Gateway after creating a Telepresence session:
-```bash
-go run cmd/gateway/main.go
-```
+Now you can run your process in your Telepresence shell. The shell inherits all the environment variables from the replaced Pod. Refer to the Usage instructions for a particular component in a corresponding README file.
 
 ### Delete cluster
 
@@ -277,9 +272,9 @@ make gen-graphql-resources
 
 ### Generate documentation
 
-For the `ocftool` we are using [Cobra](https://github.com/spf13/cobra) to generate the CLI. It supported automated documentation generation.
+For the `ocftool` development we use [Cobra](https://github.com/spf13/cobra) library. The documentation for the CLI is generated automatically based on CLI commands code.
 
-When you update the `ocftool` CLI you have to generate the documentation files. To do this, execute:
+To regenerate the documentation for CLI, execute:
 ```bash
 make gen-docs
 ```

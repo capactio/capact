@@ -1,22 +1,36 @@
 # Voltron GraphQL gateway
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+  - [Access GraphQL playground](#access-graphql-playground)
+- [Configuration](#configuration)
+- [Development](#development)
+
 ## Overview
 
 Voltron GraphQL gateway is a component, which aggregates GraphQL APIs from the Voltron Engine and Open Capability Hub.
 
 ## Prerequisites
 
+
+- [Go](https://golang.org)
 - Running Kubernetes cluster with Voltron installed
-- Go compiler 1.14+
-- [Telepresence](https://www.telepresence.io/)
 
 ## Usage
 
-See [this document](../../docs/development.md#replace-a-cluster-component-with-your-local-process) for how to setup a Telepresence session to the Gateway deployment on your development Kubernetes cluster.
+You need to have a Voltron deployment to set some GraphQL endpoint, to which the Gateway can proxy the queries. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoint on the OCH and Voltron Engine:
+```
+kubectl port-forward svc/voltron-engine-graphql 3000:80 -n voltron-system
+kubectl port-forward svc/voltron-och-public 3001:80 -n voltron-system
+kubectl port-forward svc/voltron-och-local 3002:80 -n voltron-system
+```
 
-After you have the Telepresence session created, you can run the gateway in the Telepresence shell:
+To run the Gateway: 
 ```bash
-go run cmd/gateway/main.go
+APP_INTROSPECTION_GRAPH_QL_ENDPOINTS=http://localhost:3000/graphql,http://localhost:3001/graphql,http://localhost:3002/graphql \
+  APP_AUTH_PASSWORD=t0p_s3cr3t \
+  go run cmd/gateway/main.go
 ```
 
 ### Access GraphQL playground
@@ -42,13 +56,17 @@ query {
 
 You can set the following environment variables to configure the Gateway:
 
-| Name                                | Default   | Description                                                                                                                                                           |
-|-------------------------------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| APP_GRAPHQL_ADDR                    | `:8080`   | TCP address the GraphQL endpoint binds to                                                                                                                             |
-| APP_HEALTHZ_ADDR                    | `:8082`   | TCP address the health probes endpoint binds to                                                                                                                       |
-| APP_LOGGER_DEV_MODE                 | `false`   | Enable development mode logging                                                                                                                                       |
-| APP_INTROSPECTION_GRAPHQL_ENDPOINTS | `false`   | Comma separated list of GraphQL endpoint to introspect and merge into one unified GraphQL endpoint. Ex. `http://localhost:3000/graphql,http://localhost:3001/graphql` |
-| APP_INTROSPECTION_ATTEMPTS          | `120`     | Number of attempts to introspect the remote GraphQL endpoints                                                                                                         |
-| APP_INTROSPECTION_RETRY_DELAY       | `1s`      | Time delay between unsuccessful introspection attempts                                                                                                                |
-| APP_AUTH_USERNAME                   | `graphql` | Basic auth username used to secure the GraphQL endpoint                                                                                                               |
-| APP_AUTH_PASSWORD                   |           | Basic auth password used to secure the GraphQL endpoint                                                                                                               |
+| Name                                | Required | Default   | Description                                                                                                                                                           |
+| ----------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APP_GRAPHQL_ADDR                    | no       | `:8080`   | TCP address the GraphQL endpoint binds to                                                                                                                             |
+| APP_HEALTHZ_ADDR                    | no       | `:8082`   | TCP address the health probes endpoint binds to                                                                                                                       |
+| APP_LOGGER_DEV_MODE                 | no       | `false`   | Enable development mode logging                                                                                                                                       |
+| APP_INTROSPECTION_GRAPHQL_ENDPOINTS | yes      |           | Comma separated list of GraphQL endpoint to introspect and merge into one unified GraphQL endpoint. Ex. `http://localhost:3000/graphql,http://localhost:3001/graphql` |
+| APP_INTROSPECTION_ATTEMPTS          | no       | `120`     | Number of attempts to introspect the remote GraphQL endpoints                                                                                                         |
+| APP_INTROSPECTION_RETRY_DELAY       | no       | `1s`      | Time delay between unsuccessful introspection attempts                                                                                                                |
+| APP_AUTH_USERNAME                   | no       | `graphql` | Basic auth username used to secure the GraphQL endpoint                                                                                                               |
+| APP_AUTH_PASSWORD                   | yes      |           | Basic auth password used to secure the GraphQL endpoint                                                                                                               |
+
+## Development
+
+To read more about development, see the [`development.md`](../../docs/development.md) document.

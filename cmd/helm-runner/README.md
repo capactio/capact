@@ -1,14 +1,20 @@
 # Helm runner
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Development](#development)
+
 ## Overview
 
 Helm runner is a runner [Voltron runner](../../docs/runner.md), which creates and manages Helm releases.
 
 ## Prerequisites
 
+- [Go](https://golang.org)
+- [Helm 3](https://helm.sh/docs/intro/install/)
 - Running Kubernetes cluster
-- Go compiler 1.14+
-- Helm 3+
 
 ## Usage
 
@@ -31,7 +37,11 @@ postgresql-1607608471   default         1               2020-12-10 14:54:34.8823
 
 The following environment variables can be set:
 
-| Name                   | Default | Description                        |
-|------------------------|---------|------------------------------------|
-| RUNNER_INPUT_PATH      |         | Path to the runner YAML input file |
-| RUNNER_LOGGER_DEV_MODE | `false` | Enable additional log messages     |
+| Name                   | Required | Default | Description                        |
+| ---------------------- | -------- | ------- | ---------------------------------- |
+| RUNNER_INPUT_PATH      | yes      |         | Path to the runner YAML input file |
+| RUNNER_LOGGER_DEV_MODE | no       | `false` | Enable additional log messages     |
+
+## Development
+
+To read more about development, see the [`development.md`](../../docs/development.md) document.

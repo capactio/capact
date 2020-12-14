@@ -1,20 +1,27 @@
 # ocftool
 
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Usage](#usage)
+- [Development](#development)
+
 ## Overview
 
 ocftool is a command-line tool, which helps working with OCF manifests. For now it supports validating OCF manifests against manifest JSON schemas.
 
 ## Prerequisites
 
-- Go compiler 1.14+
+- [Go](https://golang.org)
 
 ## Usage
 
-To build the ocftool binary use make:
+To run the tool use the following command:
 ```bash
-make build-tool-ocftool        
+go run cmd/ocftool/main.go
 ```
 
-The built binaries for different operating systems are stored in `./bin` directory.
-
 See [ocftool.md](./docs/ocftool.md) for details how to use the tool.
+
+## Development
+
+To read more about development, see the [`development.md`](../../docs/development.md) document.
