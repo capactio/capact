@@ -17,7 +17,7 @@ Read this document to learn how to develop the project. Please also follow guide
 - [Development cluster](#development-cluster)
   * [Create a cluster and install components](#create-a-cluster-and-install-components)
   * [Rebuild Docker images and update cluster](#rebuild-docker-images-and-update-cluster)
-  * [Replace a cluster component with your local process](#replace-a-cluster-component-with-your-local-process)
+  * [Swap a cluster deployment with your local process](#swap-a-cluster-deployment-with-your-local-process)
   * [Delete cluster](#delete-cluster)
 - [Build and push Docker images](#build-and-push-docker-images)
   * [All components](#all-components)

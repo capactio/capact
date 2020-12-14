@@ -19,7 +19,7 @@ Voltron GraphQL gateway is a component, which aggregates GraphQL APIs from the V
 
 ## Usage
 
-You need to have a Voltron deployment to set some GraphQL endpoint, to which the Gateway can proxy the queries. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoint on the OCH and Voltron Engine:
+You need to have a Voltron deployment, to get some GraphQL endpoints, to which the Gateway can proxy the queries. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Voltron Engine:
 ```
 kubectl port-forward svc/voltron-engine-graphql 3000:80 -n voltron-system
 kubectl port-forward svc/voltron-och-public 3001:80 -n voltron-system
