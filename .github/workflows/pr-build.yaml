@@ -11,6 +11,8 @@ on:
       - ".github/workflows/**"
       - "**.sh"
       - "Makefile"
+      - "deploy/**"
+      - "!**.md"
     branches:
       - "master"
 
