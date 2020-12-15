@@ -12,8 +12,8 @@
 ## Overview
 
 Open Capability Hub (OCH) is a component, which stores the OCF manifests and exposes API to access and manage them. It can work in two modes:
-- Local mode - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete  operations),
-- Public mode - in this mode it exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
+- Local OCH - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete  operations),
+- Public OCH - in this mode it exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
 
 The OCHs are accessed via a GraphQL API.
 
