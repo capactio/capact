@@ -21,8 +21,9 @@ To get the GCP Service Account you can follow the documentation [here](https://c
 
 To start the runner type:
 ```bash
-RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH=<path-to-gcp-service-account-credentials-json> \
+RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH={path-to-gcp-service-account-credentials-json} \
   RUNNER_INPUT_PATH=cmd/cloudsql-runner/example-input.yml \
+  RUNNER_LOGGER_DEV_MODE=true \
   go run cmd/cloudsql-runner/main.go
 ```
 
@@ -35,6 +36,7 @@ The following environment variables can be set:
 | RUNNER_INPUT_PATH                   | yes      |                    | Path to the runner YAML input file    |
 | RUNNER_LOGGER_DEV_MODE              | no       | `false`            | Enable additional log messages        |
 | RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH | no       | `/etc/gcp/sa.json` | Path to the GCP JSON credentials file |
+| KUBECONFIG                          | no       | `~/.kube/config`   | Path to kubeconfig file               |
 
 ## Development
 

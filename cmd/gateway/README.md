@@ -13,20 +13,19 @@ Voltron GraphQL gateway is a component, which aggregates GraphQL APIs from the V
 
 ## Prerequisites
 
-
 - [Go](https://golang.org)
 - Running Kubernetes cluster with Voltron installed
 
 ## Usage
 
-You need to have a Voltron deployment, to get some GraphQL endpoints, to which the Gateway can proxy the queries. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Voltron Engine:
+As Gateway aggregates multiple GraphQL endpoints for Voltron components, an existing Voltron installation is needed. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Voltron Engine:
 ```
 kubectl port-forward svc/voltron-engine-graphql 3000:80 -n voltron-system
 kubectl port-forward svc/voltron-och-public 3001:80 -n voltron-system
 kubectl port-forward svc/voltron-och-local 3002:80 -n voltron-system
 ```
 
-To run the Gateway: 
+To run the Gateway, execute:
 ```bash
 APP_INTROSPECTION_GRAPH_QL_ENDPOINTS=http://localhost:3000/graphql,http://localhost:3001/graphql,http://localhost:3002/graphql \
   APP_AUTH_PASSWORD=t0p_s3cr3t \
@@ -35,7 +34,7 @@ APP_INTROSPECTION_GRAPH_QL_ENDPOINTS=http://localhost:3000/graphql,http://localh
 
 ### Access GraphQL playground
 
-You can access the GraphQL playground on the Gateway by opening http://localhost:8080. As currently the gateway is secured using basic auth, you need to provide the following headers:
+You can access the GraphQL playground on the Gateway by opening [http://localhost:8080](http://localhost:8080). As the Gateway is secured using basic auth, you need to provide the following headers:
 ```json
 {
   "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"

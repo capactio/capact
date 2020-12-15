@@ -17,7 +17,9 @@ Voltron Engine is a component responsible for handling Action custom resources. 
 
 ## Usage
 
-You need to have access to an Voltron Gateway, so the Engine can fetch OCF TypeInstances, Interfaces and Implementations. You can use the Gateway running on local KinD cluster, which is accessible under `https://gateway.voltron.local/graphql`.
+In order to run Engine, configure an access to a Kubernetes cluster. By default it is loaded from default location `.kube/config` in current user's home directory. To provide a different path, see the [Configuration](#configuration) section.
+
+Another requirement is to provide a Voltron Gateway URL, so the Engine can fetch OCF TypeInstances, Interfaces and Implementations. You can use the Gateway running on local kind cluster, which is accessible under `https://gateway.voltron.local/graphql`.
 
 To run the Engine, use:
 ```bash
@@ -54,6 +56,7 @@ query {
 | APP_GRAPHQLGATEWAY_PASSWORD   | yes      |                                  | Basic auth password used to authenticate at the Voltron Gateway                                              |
 | APP_BUILTIN_RUNNER_TIMEOUT    | no       | `30m`                            | Set the timeout for the workflow execution of the builtin runners                                            |
 | APP_BUILTIN_RUNNER_IMAGE      | yes      |                                  | Set the image of the builtin runner                                                                          |
+| KUBECONFIG                    | no       | `~/.kube/config`                 | Path to kubeconfig file                                                                                      |
 
 ## Development
 

@@ -7,7 +7,7 @@
 
 ## Overview
 
-ocftool is a command-line tool, which helps working with OCF manifests. For now it supports validating OCF manifests against manifest JSON schemas.
+The ocftool is a command-line tool, which helps working with OCF manifests. For now it supports validating OCF manifests against manifest JSON schemas.
 
 ## Prerequisites
 

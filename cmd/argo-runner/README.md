@@ -12,7 +12,6 @@ Argo runner is a [runner](../../docs/runner.md), which executes Argo workflows. 
 
 ## Prerequisites
 
-
 - [Go](https://golang.org)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - running Kubernetes cluster with Argo installed
@@ -55,7 +54,7 @@ EOF
 
 2. Start the runner type:
 ```bash
-RUNNER_INPUT_PATH=/tmp/argo-runner-args.yml go run cmd/argo-runner/main.go
+RUNNER_INPUT_PATH=/tmp/argo-runner-args.yml RUNNER_LOGGER_DEV_MODE=true go run cmd/argo-runner/main.go
 ```
 
 You can check the workflow status in Argo UI on http://localhost:2746 after setting port-forwarding:
@@ -67,11 +66,11 @@ kubectl port-forward -n argo svc/argo-server 2746
 
 The following environment variables can be set:
 
-| Name                                | Required | Default            | Description                           |
-| ----------------------------------- | -------- | ------------------ | ------------------------------------- |
-| RUNNER_INPUT_PATH                   | yes      |                    | Path to the runner YAML input file    |
-| RUNNER_LOGGER_DEV_MODE              | no       | `false`            | Enable additional log messages        |
-| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH | no       | `/etc/gcp/sa.json` | Path to the GCP JSON credentials file |
+| Name                   | Required | Default          | Description                        |
+| ---------------------- | -------- | ---------------- | ---------------------------------- |
+| RUNNER_INPUT_PATH      | yes      |                  | Path to the runner YAML input file |
+| RUNNER_LOGGER_DEV_MODE | no       | `false`          | Enable additional log messages     |
+| KUBECONFIG             | no       | `~/.kube/config` | Path to kubeconfig file            |
 
 ## Development
 

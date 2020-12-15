@@ -10,6 +10,7 @@ args:
   chart:
     name: "postgresql"
     repo: "https://charts.bitnami.com/bitnami"
+    version: "10.2.0"
   values:
     fullnameOverride: postgresql-server
     postgresqlDatabase: postgres

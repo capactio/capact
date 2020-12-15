@@ -11,9 +11,9 @@
 
 ## Overview
 
-Voltron Open Capability Hub (OCH) is a component, which stores the OCF manifests and TypeInstances. It can work in two modes:
-- local mode - In this mode it stores TypeInstances for a Voltron deployment.
-- public mode - In this mode it works as a public repository, which provides OCF manifests to local OCHs.
+Open Capability Hub (OCH) is a component, which stores the OCF manifests and exposes API to access and manage them. It can work in two modes:
+- Local mode - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete  operations),
+- Public mode - in this mode it exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
 
 The OCHs are accessed via a GraphQL API.
 
