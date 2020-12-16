@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: argo-runner-owner
+spec:
+  template:
+    spec:
+      containers:
+      - image: alpine
+        name: dummy
+        resources: {}
+      restartPolicy: Never
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: argo-runner-job

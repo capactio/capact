@@ -24,6 +24,7 @@ func NewRoot() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(NewValidate())
+	rootCmd.AddCommand(NewDocs())
 
 	return rootCmd
 }

@@ -17,6 +17,7 @@ Read this document to learn how to develop the project. Please also follow guide
 - [Development cluster](#development-cluster)
   * [Create a cluster and install components](#create-a-cluster-and-install-components)
   * [Rebuild Docker images and update cluster](#rebuild-docker-images-and-update-cluster)
+  * [Swap a cluster deployment with your local process](#swap-a-cluster-deployment-with-your-local-process)
   * [Delete cluster](#delete-cluster)
 - [Build and push Docker images](#build-and-push-docker-images)
   * [All components](#all-components)
@@ -25,6 +26,7 @@ Read this document to learn how to develop the project. Please also follow guide
   * [Generate Go code from the OCF JSON Schemas](#generate-go-code-from-the-ocf-json-schemas)
   * [Generate K8s resources](#generate-k8s-resources)
   * [Generate code from GraphQL schema](#generate-code-from-graphql-schema)
+  * [Generate documentation](#generate-documentation)
 - [Instrumentation](#instrumentation)
   * [Enable metrics scrape](#enable-metrics-scrape)
   * [Add Grafana Dashboard](#add-grafana-dashboard)
@@ -134,6 +136,17 @@ To rebuild all Docker images and upgrade Helm chart on dev cluster with new imag
 ```bash
 make dev-cluster-update
 ```
+
+### Swap a cluster deployment with your local process
+
+To make it easier to develop services running on Kubernetes, you can use [Telepresence](https://www.telepresence.io/). Instead of rebuilding a component image and deploying it on Kubernetes, you can setup a Telepresence session and run the local process in your cluster.
+
+To use Telepresence to swap a cluster deployment, execute the following command:
+```bash
+telepresence --namespace {namespace} --swap-deployment {deployment-name}
+```
+
+Now you can run your process in your Telepresence shell. The shell inherits all the environment variables from the replaced Pod. Refer to the Usage instructions for a particular component in a corresponding README file.
 
 ### Delete cluster
 
@@ -255,6 +268,15 @@ Each time the GraphQL schema is change, you need to update generated resources. 
 
 ```bash
 make gen-graphql-resources
+```
+
+### Generate documentation
+
+For the `ocftool` development we use [Cobra](https://github.com/spf13/cobra) library. The documentation for the CLI is generated automatically based on CLI commands code.
+
+To regenerate the documentation for CLI, execute:
+```bash
+make gen-docs
 ```
 
 ## Instrumentation
