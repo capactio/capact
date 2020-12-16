@@ -1,0 +1,11 @@
+
+type Interface {
+    path: String! @id @search(by: [regexp])
+    latestRevision: InterfaceRevision
+    revisions: [InterfaceRevision!]!
+}
+
+type InterfaceRevision {
+    id: ID!
+    revision: String! @search(by: [exact, regexp])
+}

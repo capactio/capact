@@ -1,0 +1,96 @@
+type Interface {
+    name: String!
+    prefix: String!
+    path: String! @id @search(by: [regexp])
+
+
+#    latestRevision: InterfaceRevision # custom resolver?
+#    revision: InterfaceRevision # (revision: String!)
+    revisions: [InterfaceRevision!]!
+}
+
+type InterfaceGroup {
+    metadata: GenericMetadata!
+    signature: Signature!
+    interfaces: [Interface!]!
+}
+
+type InterfaceRevision {
+    id: ID!
+    metadata: GenericMetadata!
+    revision: String! @search(by: [exact, regexp])
+    spec: InterfaceSpec!
+
+    """
+    List Implementations for a given Interface
+    implementations(filter: CustomImplementationFilter): [Implementation!]!
+    """
+    signature: Signature!
+}
+
+type InterfaceSpec {
+    input: InterfaceInput!
+    output: InterfaceOutput!
+}
+
+type InterfaceInput {
+    parameters: InputParameters
+    typeInstances: [InputTypeInstance]!
+}
+
+type InputParameters {
+    jsonSchema: String # Any? Maybe JSON type?
+}
+
+type InterfaceOutput {
+    typeInstances: [OutputTypeInstance]!
+}
+
+interface TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type InputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+    verbs: [TypeInstanceOperationVerb!]!
+}
+
+enum TypeInstanceOperationVerb {
+    CREATE, GET, LIST, UPDATE, DELETE
+}
+
+type OutputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type TypeReference {
+    path: String!
+    revision: String!
+}
+
+type GenericMetadata {
+    id: ID!
+    name: String! @search(by: [hash]) # Search by string https://dgraph.io/docs/graphql/schema/search/#string
+    prefix: String # resolver
+    path: String
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]!
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+}
+
+type Signature {
+    och: String!
+}
+
+type Maintainer {
+    name: String
+    email: String!
+    url: String
+}
+
