@@ -15,9 +15,14 @@
         "./pkg/och/api/graphql/public/**"
       ]
     },
-    "och-neo4j-poc": {
+    "och-neo4j-gogm-poc": {
       "includes": [
         "./docs/investigation/graph-db/neo4j-gogm/graphql/**"
+      ]
+    },
+    "och-neo4j-graphql-js-poc": {
+      "includes": [
+        "./docs/investigation/graph-db/neo4j-graphql-js/graphql/**"
       ]
     }
   }

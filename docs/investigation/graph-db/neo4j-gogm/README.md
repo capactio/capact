@@ -1,11 +1,11 @@
 # Using Neo4j as OCH database with GoGM
 
-This proof of concept shows GraphQL server with [GoGM library](https://github.com/mindstand/gogm) run against Neo4j database.
+This proof of concept shows GraphQL server with [GoGM library](https://github.com/mindstand/gogm) that uses Neo4j database.
 For GraphQL server implementation, the [gqlgen](https://gqlgen.com/) was used.
 
 ## Prerequisites
 - Go
-- Neo4J run on localhost, secured with `root` password for `neo4j` user
+- Neo4j run on localhost, secured with `root` password for `neo4j` user
 
 ## Usage
 
@@ -16,6 +16,7 @@ go run docs/investigation/graph-db/neo4j-gogm/main.go
 ```
 
 Navigate to [http://localhost:3000/](http://localhost:3000/) and execute the following query:
+
 ```graphql
 query {
     interfaceGroups {
