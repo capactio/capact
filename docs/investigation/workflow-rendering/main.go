@@ -2,22 +2,19 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"sigs.k8s.io/yaml"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 var (
-	implementationsDir = "docs/investigation/workflow-rendering/implementations"
-	implementations    = map[string]*types.Implementation{}
+	implementationsDir = "docs/investigation/workflow-rendering/manifests"
 )
 
 func main() {
@@ -27,20 +24,38 @@ func main() {
 
 	implementationPath := os.Args[1]
 
-	if err := loadImplementations(); err != nil {
+	manifestStore, err := render.NewManifestStore(implementationsDir)
+	if err != nil {
 		log.Fatal(err)
 	}
 
 	renderer := &render.Renderer{
-		Implementations: implementations,
+		ManifestStore: manifestStore,
 	}
 
-	toRender, ok := implementations[implementationPath]
-	if !ok {
+	toRender := manifestStore.GetImplementation(v1alpha1.ManifestReference{
+		Path: v1alpha1.NodePath(implementationPath),
+	})
+	if toRender == nil {
 		log.Fatalf("implementation %s does not exist", implementationPath)
 	}
 
-	data, err := renderer.Render(toRender)
+	data, err := renderer.Render(
+		toRender,
+		map[string]interface{}{
+			"superuser": map[string]interface{}{
+				"username": "postgres",
+				"password": "s3cr3t",
+			},
+			"defaultDBName": "test",
+		},
+		[]*v1alpha1.InputTypeInstance{
+			//{
+			//	Name: "postgresql",
+			//	ID:   "461a1c83-6054-43dd-8a4c-49acde791699",
+			//},
+		},
+	)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,51 +74,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	yamlData, err := yaml.Marshal(obj)
+	yamlData, err := yaml.Marshal(obj.Object)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	fmt.Println(string(yamlData))
-}
-
-func loadImplementations() error {
-	fis, err := ioutil.ReadDir(implementationsDir)
-	if err != nil {
-		return errors.Wrap(err, "while listing implementation dir")
-	}
-
-	for _, fi := range fis {
-		if fi.IsDir() {
-			continue
-		}
-
-		filepath := fmt.Sprintf("%s/%s", implementationsDir, fi.Name())
-		if err := loadImplementation(filepath); err != nil {
-			log.Printf("failed to load implementation %s: %v", filepath, err)
-		}
-	}
-
-	return nil
-}
-
-func loadImplementation(filepath string) error {
-	data, err := ioutil.ReadFile(filepath)
-	if err != nil {
-		return errors.Wrap(err, "while reading file")
-	}
-
-	jsonData, err := yaml.YAMLToJSON(data)
-	if err != nil {
-		return errors.Wrap(err, "while converting YAML to JSON")
-	}
-
-	impl, err := types.UnmarshalImplementation(jsonData)
-	if err != nil {
-		return errors.Wrap(err, "while unmarshaling implementation")
-	}
-
-	key := fmt.Sprintf("%s.%s", *impl.Metadata.Prefix, impl.Metadata.Name)
-	implementations[key] = &impl
-	return nil
 }

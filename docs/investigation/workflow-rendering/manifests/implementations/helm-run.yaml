@@ -36,11 +36,6 @@ spec:
         - name: run
           revision: 0.1.0
 
-  # it's easier to hardcode the input and outputs path than allow to parameterize it
-  # so the content creator only needs to know:
-  # - names of input artifacts
-  # - names of output artifacts
-  # this way he can reference the artifacts in his workflow
   action:
     runnerInterface: argo.run
     args:
@@ -50,11 +45,12 @@ spec:
           - name: helm
             inputs:
               artifacts:
-                - name: helm-args
+                - name: input-parameters
                   path: "/helm-args"
             outputs:
               artifacts:
                 - name: helm-release
+                  globalName: helm-release
                   path: "/helm-release"
                 - name: additional
                   path: "/additional"
@@ -62,7 +58,7 @@ spec:
               image: gcr.io/projectvoltron/helm-runner:de65286
               env:
                 - name: RUNNER_INPUT_PATH
-                  value: "{{inputs.artifacts.helm-args.path}}"
+                  value: "{{inputs.artifacts.input-parameters.path}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

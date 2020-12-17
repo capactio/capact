@@ -17,6 +17,10 @@ metadata:
 spec:
   appVersion: "1.x.x"
 
+  implements:
+    - path: cap.interface.jinja2.template
+      revision: 0.1.0
+
   action:
     runnerInterface: argo.run
     args:

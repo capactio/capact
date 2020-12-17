@@ -8,12 +8,38 @@ This proof of concept show a way to build a single Argo workflow from a OCF Impl
 └── render          # Golang rendering source code
 ```
 
+## NOTES
+
+- Input parameters are provided as scoped artifacts to the workflow. The can be acccessed using `{{inputs.artifacts.input-parameters}}`
+- Input TypeInstances are provided as global artifacts into the workflow.
+- Output TypeInstances must be define as global artifacts.
+- Some Implementation outputs are not TypeInstances, but are supposed to by used by someone else like `helm.run` `additional` output.
+
 ## How does it work
 
 This proof of concept renders a final Argo workflow by merging all child Argo workflows into the root workflow. It works using the following algorithm:
 
-1. Include all templates from a child workflow in the root workflow
-2. Modify the step, where the child workflow was referenced, to reference the entrypoint template of the child workflow
+Input:
+- Prefix
+- ManifestReference
+- Parameters
+- List of TypeInstances for the given level
+
+func render(prefix string, manifestReference, parameters, List of TypeInstances) -> (Workflow, globalArtifactMapping map[string]string)
+
+1. Prefix all template names, artifact `globalName` and `artifacts.from` `{{workflow.outputs.artifacts.name}}` with prefix
+2. `actionSteps` <- all Action Steps in the given level
+3. foreach `actionStep` in `actionSteps`
+   1. if providesInstance is not in TypeInstance list:
+      1. `childWorkflow`, `artifactNameMappings` <- render(`actionStep.name`, `actionStep.manifestReference`, ?, empty list)
+      2. add all templates from `childWorkflow` to `rootWorkflow` with prefixed name
+      3. set `actionStep.template` to `childWorkflow.entrypoint`
+      4. rename all `globalName` and `artifacts.from` according `artifactNameMappings`
+   2. else
+      1. remove `actionStep` from `rootWorkflow`
+
+4. Include all templates from a child workflow in the root workflow
+5. Modify the step, where the child workflow was referenced, to reference the entrypoint template of the child workflow
 
 To allow us reference, which workflow (which is defined in OCH Implementation) should be imported, we have to extend the syntax of the Argo workflow.
 

@@ -19,11 +19,6 @@ spec:
   appVersion: "10,11,12,13"
 
   additionalOutput:
-    typeInstances:
-      helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
     typeInstanceRelations:
       postgresql:
         uses:
@@ -58,32 +53,17 @@ spec:
         entrypoint: postgres-install
         templates:
           - name: postgres-install
-            outputs:
-              # artifact names match with the typeInstance names
-              # so they can be uploaded to OCH easily
+            inputs:
               artifacts:
-                - name: postgresql
-                  globalName: postgresql
-                  from: "{{steps.postgres-install.outputs.artifacts.additional}}"
-                - name: helm-release
-                  globalName: helm-release
-                  from: "{{steps.postgres-install.outputs.artifacts.helm-release}}"
+                - name: input-parameters
             steps:
               - - name: create-install-config
-                  # action imports templates in the Implementation workflow
-                  # and sets the template here to the entrypoint in the imported workflow
                   action:
-                    name: cap.implementation.jinja2.template # implementation of a Jinja2 template :D
+                    path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        # mock cap.type.database.postgresql.install-input typeInstance artifact
-                        raw:
-                          data: |
-                            superuser:
-                              username: postgres
-                              password: s3cr3t
-                            defaultDBName: postgres
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
                           data: |
@@ -112,7 +92,7 @@ spec:
                                 additional:
                                   fileName: "additional"
                                   value: |-
-                                    host: "{{ template "postgresql.fullname" . }}"
+                                    host: "{{ template "postgresql.primary.fullname" . }}"
                                     port: "{{ template "postgresql.port" . }}"
                                     defaultDBName: "{{ template "postgresql.database" . }}"
                                     superuser:
@@ -121,12 +101,16 @@ spec:
 
               - - name: postgres-install
                   action:
-                    name: cap.implementation.runner.helm.run
-                    prefix: helm-install
+                    path: cap.interface.runner.helm.run
                   arguments:
                     artifacts:
-                      - name: helm-args
+                      - name: input-parameters
                         from: "{{steps.create-install-config.outputs.artifacts.render}}"
+              
+              - - name: set-type-instance
+                  typeInstances:
+                    - name: postgresql
+                      from: "{{steps.postgres-install.outputs.artifacts.additional}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

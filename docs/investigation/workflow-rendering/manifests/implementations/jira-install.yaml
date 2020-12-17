@@ -27,27 +27,10 @@ spec:
         verbs: [ "get" ]
 
   additionalOutput:
-    typeInstances:
-      db:
-        typeRef:
-          path: cap.type.database.postgresql.database
-          revision: 0.1.0
-      postgresql:
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-      helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
     typeInstanceRelations:
       jira-config:
         uses:
           - helm-release
-          - postgresql
-          - db
-      db:
-        uses:
           - postgresql
 
   implements:
@@ -87,21 +70,27 @@ spec:
         entrypoint: jira-install
         templates:
           - name: jira-install
+            inputs:
+              artifacts:
+                - name: input-parameters
             steps:
               - - name: install-db
-                  action:
-                    name: cap.implementation.bitnami.postgresql.install
-                    prefix: postgres-install
-
-              - - name: show-psql-config
-                  template: cat-file 
+                  providesInstance: postgresql
                   arguments:
                     artifacts:
-                      - name: file
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-                - name: jira-input-converter
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: jira
+                              password: okon
+                            defaultDBName: jira
                   action:
-                    name: cap.implementation.jinja2.template
+                    path: cap.interface.database.postgresql.install
+
+              - - name: jira-input-converter
+                  action:
+                    path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -143,29 +132,15 @@ spec:
                                   - host: jira-cloud.voltron.local
                                     paths: ['/']
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
 
               - - name: install-jira
                   action:
-                    name: cap.implementation.runner.helm.run
-                    prefix: jira-install
+                    path: cap.interface.runner.helm.run
                   arguments:
                     artifacts:
-                      - name: helm-args
+                      - name: input-parameters
                         from: "{{steps.jira-input-converter.outputs.artifacts.render}}"
-
-              - - name: show-jira-helm-release
-                  template: cat-file
-                  arguments:
-                    artifacts:
-                      - name: file
-                        from: "{{steps.install-jira.outputs.artifacts.helm-release}}"
-                - name: show-jira-additional
-                  template: cat-file
-                  arguments:
-                    artifacts:
-                      - name: file
-                        from: "{{steps.install-jira.outputs.artifacts.additional}}"
 
           - name: cat-file
             inputs:
