@@ -14,6 +14,11 @@
       "includes": [
         "./pkg/och/api/graphql/public/**"
       ]
+    },
+    "och-neo4j-poc": {
+      "includes": [
+        "./docs/investigation/graph-db/neo4j-gogm/graphql/**"
+      ]
     }
   }
 }
