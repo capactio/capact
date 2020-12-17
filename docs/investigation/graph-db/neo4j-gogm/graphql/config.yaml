@@ -20,7 +20,7 @@ resolver:
 struct_tag: json
 
 autobind:
-  - "projectvoltron.dev/voltron/poc/graph-db/neo4j/graphql"
+  - "projectvoltron.dev/voltron/poc/graph-db/neo4j-gogm/graphql"
 
 # Uncomment and regenerate the schema
 #models:

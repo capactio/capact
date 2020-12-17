@@ -6,7 +6,7 @@ import (
 	"github.com/mindstand/gogm"
 	"log"
 	"net/http"
-	"projectvoltron.dev/voltron/poc/graph-db/neo4j/graphql"
+	"projectvoltron.dev/voltron/poc/graph-db/neo4j-gogm/graphql"
 )
 
 func main() {

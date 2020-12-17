@@ -12,7 +12,7 @@ For GraphQL server implementation, the [gqlgen](https://gqlgen.com/) was used.
 To run the PoC, execute:
 
 ```bash
-go run docs/investigation/graph-db/neo4j/main.go
+go run docs/investigation/graph-db/neo4j-gogm/main.go
 ```
 
 Navigate to [http://localhost:3000/](http://localhost:3000/) and execute the following query:
@@ -45,7 +45,7 @@ To regenerate the GraphQL schema, run:
 
 ```bash
 # gqlgen
-cd ./docs/investigation/graph-db/neo4j/graphql
+cd ./docs/investigation/graph-db/neo4j-gogm/graphql
 gqlgen generate --verbose --config ./config.yaml
 ```
 
@@ -53,7 +53,7 @@ To regenerate functions to attach/detach references between types, run:
 
 ```bash
 go get github.com/mindstand/gogm/cmd/gogmcli
-gogmcli generate ./docs/investigation/graph-db/neo4j/graphql
+gogmcli generate ./docs/investigation/graph-db/neo4j-gogm/graphql
 ```
 
 ## Summary

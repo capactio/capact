@@ -17,7 +17,7 @@
     },
     "och-neo4j-poc": {
       "includes": [
-        "./docs/investigation/graph-db/neo4j/graphql/**"
+        "./docs/investigation/graph-db/neo4j-gogm/graphql/**"
       ]
     }
   }
