@@ -55,14 +55,17 @@ spec:
           - name: postgres-install
             inputs:
               artifacts:
-                - name: input-parameters
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            typeInstanceOutput: # The typeInstanceOutput defines which artifacts are output TypeInstances
+              - name: postgresql # TypeInstance name
+                from: '{{steps.helm-run.outputs.artifacts.additional}}' # reference to workflow artifact
             steps:
-              - - name: create-install-config
-                  action:
+              - - name: create-helm-args
+                  action: # Action defines a OCF Interface reference to be used for this step
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
-                      - name: input-parameters
+                      - name: input-parameters # Passing user parameters to a Interface
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
@@ -84,6 +87,7 @@ spec:
                                 image:
                                   pullPolicy: Always
                                 postgresqlDatabase: {{ defaultDBName }}
+                                postgresqlUsername: {{ superuser.username }}
                                 postgresqlPassword: {{ superuser.password }}
                               output:{% raw %}
                                 directory: "/"
@@ -92,25 +96,20 @@ spec:
                                 additional:
                                   fileName: "additional"
                                   value: |-
-                                    host: "{{ template "postgresql.primary.fullname" . }}"
+                                    host: "{{ template "common.names.fullname" . }}"
                                     port: "{{ template "postgresql.port" . }}"
                                     defaultDBName: "{{ template "postgresql.database" . }}"
                                     superuser:
                                       username: "{{ template "postgresql.username" . }}"
                                       password: "{{ template "postgresql.password" . }}"{% endraw %}
 
-              - - name: postgres-install
+              - - name: helm-run
                   action:
                     path: cap.interface.runner.helm.run
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.create-install-config.outputs.artifacts.render}}"
-              
-              - - name: set-type-instance
-                  typeInstances:
-                    - name: postgresql
-                      from: "{{steps.postgres-install.outputs.artifacts.additional}}"
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

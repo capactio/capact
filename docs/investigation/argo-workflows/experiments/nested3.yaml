@@ -30,8 +30,6 @@ spec:
                 - name: in-artifact
                   from: "{{steps.nested.outputs.artifacts.nested-out-artifact}}"
 
-
-
     # container template which generates an output parameter and artifact
     - name: generate0
       container:

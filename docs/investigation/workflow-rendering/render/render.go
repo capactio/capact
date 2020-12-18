@@ -20,11 +20,12 @@ type Workflow struct {
 }
 
 type Template struct {
-	Name      string           `json:"name"`
-	Steps     []ParallelSteps  `json:"steps,omitempty"`
-	Inputs    wfv1.Inputs      `json:"inputs,omitempty"`
-	Outputs   wfv1.Outputs     `json:"outputs,omitempty"`
-	Container *apiv1.Container `json:"container,omitempty"`
+	Name               string                   `json:"name"`
+	Steps              []ParallelSteps          `json:"steps,omitempty"`
+	Inputs             wfv1.Inputs              `json:"inputs,omitempty"`
+	Outputs            wfv1.Outputs             `json:"outputs,omitempty"`
+	Container          *apiv1.Container         `json:"container,omitempty"`
+	TypeInstanceOutput []TypeInstanceDefinition `json:"typeInstanceOutput,omitempty"`
 }
 
 type ParallelSteps []*WorkflowStep
@@ -34,9 +35,8 @@ type WorkflowStep struct {
 	Template  string         `json:"template,omitempty"`
 	Arguments wfv1.Arguments `json:"arguments,omitempty"`
 
-	ProvidesInstance *string                     `json:"providesInstance,omitempty"`
-	Action           *v1alpha1.ManifestReference `json:"action,omitempty"`
-	TypeInstances    []TypeInstanceDefinition    `json:"typeInstances,omitempty"`
+	OCFWhen *string                     `json:"ocfWhen,omitempty"`
+	Action  *v1alpha1.ManifestReference `json:"action,omitempty"`
 }
 
 type Action struct {
@@ -61,10 +61,10 @@ type actionStepRef struct {
 
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
-func (r *Renderer) Render(implementation *types.Implementation, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance) (*Workflow, error) {
-	workflow, err := createWorkflow(implementation)
+func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance) (*Workflow, error) {
+	workflow, _, err := r.renderFunc("", ref)
 	if err != nil {
-		return nil, errors.Wrap(err, "while creating workflow")
+		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
 	r.RenderedWorkflow = workflow
@@ -114,21 +114,19 @@ func (r *Renderer) Render(implementation *types.Implementation, parameters map[s
 			break
 		}
 
-		artifactMappings := map[string]string{}
+		//artifactMappings := map[string]string{} //TODO maybe move to tmpl loop
 
 		for _, tmpl := range r.RenderedWorkflow.Templates {
+			artifactMappings := map[string]string{}
+
 			for _, parallelSteps := range tmpl.Steps {
 				for i := range parallelSteps {
 					step := parallelSteps[i]
 
-					// render TypeInstances step
-					if step.TypeInstances != nil {
-						r.renderSetTypeInstanceStep(r.RenderedWorkflow, step)
-					}
-
 					if step.Action != nil {
 						// flatten the workflows
-						importedWorkflow, newArtifactMappings, err := r.renderFunc(tmpl.Name, *step.Action)
+						workflowPrefix := fmt.Sprintf("%s-%s", tmpl.Name, step.Name)
+						importedWorkflow, newArtifactMappings, err := r.renderFunc(workflowPrefix, *step.Action)
 						if err != nil {
 							return workflow, errors.Wrap(err, "while creating workflow for action step")
 						}
@@ -156,15 +154,30 @@ func (r *Renderer) Render(implementation *types.Implementation, parameters map[s
 					}
 				}
 			}
+
+			for artIdx := range tmpl.Outputs.Artifacts {
+				artifact := &tmpl.Outputs.Artifacts[artIdx]
+
+				match := workflowArtifactRefRegex.FindStringSubmatch(artifact.From)
+				if len(match) > 0 {
+					oldArtifactName := match[1]
+					if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
+						artifact.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
+					}
+				}
+			}
 		}
 	}
 
 	return r.RenderedWorkflow, nil
 }
 
+// 1. Load workflow.
+// 3. Prefix template names, global artifacts.
 func (r *Renderer) renderFunc(prefix string,
 	manifestRef v1alpha1.ManifestReference,
 ) (*Workflow, map[string]string, error) {
+	// load workflow
 	implementation := r.ManifestStore.GetImplementationForInterface(manifestRef)
 	if implementation == nil {
 		return nil, nil, fmt.Errorf("implementation for %v not found", manifestRef)
@@ -175,38 +188,29 @@ func (r *Renderer) renderFunc(prefix string,
 		return nil, nil, errors.Wrap(err, "while creating workflow from implementation")
 	}
 
-	for _, tmpl := range workflow.Templates {
-		for _, parallelSteps := range tmpl.Steps {
-			for i := range parallelSteps {
-				step := parallelSteps[i]
-
-				if step.TypeInstances != nil {
-					r.renderSetTypeInstanceStep(workflow, step)
-				}
-
-				step.Name = fmt.Sprintf("%s-%s", prefix, step.Name)
-			}
-		}
-	}
-
 	artifactsNameMapping := map[string]string{}
 
+	// change global artifacts names
 	for i := range workflow.Templates {
 		tmpl := &workflow.Templates[i]
-		tmpl.Name = fmt.Sprintf("%s-%s", prefix, tmpl.Name)
 
-		for artIdx := range tmpl.Outputs.Artifacts {
-			artifact := &tmpl.Outputs.Artifacts[artIdx]
-
-			if artifact.GlobalName != "" {
-				newName := fmt.Sprintf("%s-%s", prefix, artifact.GlobalName)
-				artifactsNameMapping[artifact.GlobalName] = newName
-				artifact.GlobalName = newName
-			}
+		if prefix != "" {
+			tmpl.Name = fmt.Sprintf("%s-%s", prefix, tmpl.Name)
 		}
+
+		for _, ti := range tmpl.TypeInstanceOutput {
+			step, template := r.getOutputTypeInstanceTemplate(ti)
+
+			workflow.Templates = append(workflow.Templates, template)
+			tmpl.Steps = append(tmpl.Steps, ParallelSteps{&step})
+		}
+
+		tmpl.TypeInstanceOutput = nil
 	}
 
-	workflow.Entrypoint = fmt.Sprintf("%s-%s", prefix, workflow.Entrypoint)
+	if prefix != "" {
+		workflow.Entrypoint = fmt.Sprintf("%s-%s", prefix, workflow.Entrypoint)
+	}
 
 	return workflow, artifactsNameMapping, nil
 }
@@ -233,11 +237,11 @@ func (r *Renderer) removeActionStepForProvidedTypeInstances(instances []*v1alpha
 			for i := range parallelSteps {
 				step := parallelSteps[i]
 
-				if step.ProvidesInstance != nil && containsTypeInstance(instances, *step.ProvidesInstance) != nil {
+				if step.OCFWhen != nil && containsTypeInstance(instances, *step.OCFWhen) != nil {
 					continue
 				}
 
-				step.ProvidesInstance = nil
+				step.OCFWhen = nil
 
 				newParallelSteps = append(newParallelSteps, step)
 			}
@@ -313,42 +317,42 @@ func (r *Renderer) getInjectTypeInstanceTemplate(input v1alpha1.InputTypeInstanc
 	}, nil
 }
 
-func (r *Renderer) renderSetTypeInstanceStep(workflow *Workflow, step *WorkflowStep) {
-	template := Template{
-		Name: step.Name,
-		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
-			Command: []string{"sh", "-c"},
-			Args:    []string{"sleep 2"},
-		},
-		Inputs: wfv1.Inputs{
-			Artifacts: wfv1.Artifacts{},
-		},
-		Outputs: wfv1.Outputs{
-			Artifacts: wfv1.Artifacts{},
-		},
-	}
+func (r *Renderer) getOutputTypeInstanceTemplate(output TypeInstanceDefinition) (WorkflowStep, Template) {
+	artifactPath := "/typeinstance"
+	templateName := fmt.Sprintf("output-%s", output.Name)
 
-	for _, typeInstanceDef := range step.TypeInstances {
-		step.Arguments.Artifacts = append(step.Arguments.Artifacts, wfv1.Artifact{
-			Name: typeInstanceDef.Name,
-			From: typeInstanceDef.From,
-		})
-
-		template.Inputs.Artifacts = append(template.Inputs.Artifacts, wfv1.Artifact{
-			Name: typeInstanceDef.Name,
-			Path: "/type-instance",
-		})
-
-		template.Outputs.Artifacts = append(template.Outputs.Artifacts, wfv1.Artifact{
-			Name:       typeInstanceDef.Name,
-			GlobalName: typeInstanceDef.Name,
-			Path:       "/type-instance",
-		})
-	}
-
-	workflow.Templates = append(workflow.Templates, template)
-
-	step.TypeInstances = nil
-	step.Template = template.Name
+	return WorkflowStep{
+			Name:     templateName,
+			Template: templateName,
+			Arguments: wfv1.Arguments{Artifacts: wfv1.Artifacts{
+				wfv1.Artifact{
+					Name: output.Name,
+					From: output.From,
+				},
+			}},
+		}, Template{
+			Name: templateName,
+			Container: &apiv1.Container{
+				Image:   "alpine:3.7",
+				Command: []string{"sh", "-c"},
+				Args:    []string{"sleep 1"},
+			},
+			Inputs: wfv1.Inputs{
+				Artifacts: wfv1.Artifacts{
+					{
+						Name: output.Name,
+						Path: artifactPath,
+					},
+				},
+			},
+			Outputs: wfv1.Outputs{
+				Artifacts: wfv1.Artifacts{
+					{
+						Name:       output.Name,
+						GlobalName: output.Name,
+						Path:       artifactPath,
+					},
+				},
+			},
+		}
 }

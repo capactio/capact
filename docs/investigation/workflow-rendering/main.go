@@ -33,27 +33,24 @@ func main() {
 		ManifestStore: manifestStore,
 	}
 
-	toRender := manifestStore.GetImplementation(v1alpha1.ManifestReference{
+	toRender := v1alpha1.ManifestReference{
 		Path: v1alpha1.NodePath(implementationPath),
-	})
-	if toRender == nil {
-		log.Fatalf("implementation %s does not exist", implementationPath)
 	}
 
 	data, err := renderer.Render(
 		toRender,
 		map[string]interface{}{
-			"superuser": map[string]interface{}{
-				"username": "postgres",
-				"password": "s3cr3t",
-			},
-			"defaultDBName": "test",
+			//"superuser": map[string]interface{}{
+			//	"username": "postgres",
+			//	"password": "s3cr3t",
+			//},
+			//"defaultDBName": "test",
 		},
 		[]*v1alpha1.InputTypeInstance{
-			//{
-			//	Name: "postgresql",
-			//	ID:   "461a1c83-6054-43dd-8a4c-49acde791699",
-			//},
+			{
+				Name: "postgresql",
+				ID:   "461a1c83-6054-43dd-8a4c-49acde791699",
+			},
 		},
 	)
 	if err != nil {

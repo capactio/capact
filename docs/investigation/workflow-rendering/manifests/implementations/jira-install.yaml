@@ -73,9 +73,12 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+            typeInstanceOutput:
+              - name: jira-config
+                from: '{{workflow.outputs.artifacts.additional}}'
             steps:
               - - name: install-db
-                  providesInstance: postgresql
+                  ocfWhen: not postgresql # conditional execution
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -88,7 +91,7 @@ spec:
                   action:
                     path: cap.interface.database.postgresql.install
 
-              - - name: jira-input-converter
+              - - name: create-helm-args
                   action:
                     path: cap.interface.jinja2.template
                   arguments:
@@ -134,23 +137,13 @@ spec:
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
-              - - name: install-jira
+              - - name: helm-run
                   action:
                     path: cap.interface.runner.helm.run
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.jira-input-converter.outputs.artifacts.render}}"
-
-          - name: cat-file
-            inputs:
-              artifacts:
-                - name: file
-                  path: /file
-            container:
-              image: alpine:3.7
-              command: [sh, -c]
-              args: ["sleep 2 && cat /file"]
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

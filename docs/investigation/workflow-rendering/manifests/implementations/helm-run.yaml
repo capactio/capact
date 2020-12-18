@@ -53,6 +53,7 @@ spec:
                   globalName: helm-release
                   path: "/helm-release"
                 - name: additional
+                  globalName: additional
                   path: "/additional"
             container:
               image: gcr.io/projectvoltron/helm-runner:de65286

@@ -8,17 +8,21 @@ spec:
   templates:
   - name: global-output
     steps:
-    - - name: output-global-art
-        template: output-global-art
-    - - name: consume-global-art
+    - - name: nested
+        template: nested-level1
+    - - name: consume-global
+        template: consume-global
         arguments:
           artifacts:
-            - name: art
-              from: "{{workflow.outputs.artifacts.global-art}}"
-        template: consume-global-art
+          - name: art
+            from: "{{workflow.outputs.artifacts.global-art}}"
 
-  # Template which produces a global parameter and artifact
-  - name: output-global-art
+  - name: nested-level1
+    steps:
+      - - name: nested
+          template: output-global
+
+  - name: output-global
     container:
       image: alpine:3.7
       command: [sh, -c]
@@ -29,7 +33,7 @@ spec:
         path: /tmp/art.txt
         globalName: global-art
 
-  - name: consume-global-art
+  - name: consume-global
     inputs:
       artifacts:
       - name: art
