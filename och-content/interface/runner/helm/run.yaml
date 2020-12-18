@@ -34,7 +34,10 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-
+      custom-output:
+        typeRef:
+          path: cap.type.generic
+          revision: 0.1.0
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

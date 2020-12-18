@@ -1,0 +1,116 @@
+type Interface {
+	Interface.name
+	Interface.prefix
+	Interface.path
+	Interface.latestRevision
+	Interface.revisions
+}
+type Signature {
+	Signature.och
+}
+type Maintainer {
+	Maintainer.name
+	Maintainer.email
+	Maintainer.url
+}
+type TypeInstance {
+	TypeInstance.name
+	TypeInstance.typeRef
+}
+type InterfaceSpec {
+	InterfaceSpec.input
+	InterfaceSpec.output
+}
+type TypeReference {
+	TypeReference.path
+	TypeReference.revision
+}
+type InterfaceGroup {
+	InterfaceGroup.metadata
+	InterfaceGroup.signature
+	InterfaceGroup.interfaces
+}
+type InterfaceInput {
+	InterfaceInput.parameters
+	InterfaceInput.typeInstances
+}
+type GenericMetadata {
+	GenericMetadata.name
+	GenericMetadata.prefix
+	GenericMetadata.path
+	GenericMetadata.displayName
+	GenericMetadata.description
+	GenericMetadata.maintainers
+	GenericMetadata.documentationURL
+	GenericMetadata.supportURL
+	GenericMetadata.iconURL
+}
+type InputParameters {
+	InputParameters.jsonSchema
+}
+type InterfaceOutput {
+	InterfaceOutput.typeInstances
+}
+type InputTypeInstance {
+	TypeInstance.name
+	TypeInstance.typeRef
+	InputTypeInstance.verbs
+}
+type InterfaceRevision {
+	InterfaceRevision.metadata
+	InterfaceRevision.revision
+	InterfaceRevision.spec
+	InterfaceRevision.signature
+}
+type OutputTypeInstance {
+	TypeInstance.name
+	TypeInstance.typeRef
+}
+
+GenericMetadata.description: string .
+GenericMetadata.displayName: string .
+GenericMetadata.documentationURL: string .
+GenericMetadata.iconURL: string .
+GenericMetadata.maintainers: [uid] .
+GenericMetadata.name: string @index(hash) .
+GenericMetadata.path: string .
+GenericMetadata.prefix: string .
+GenericMetadata.supportURL: string .
+
+InputParameters.jsonSchema: string .
+InputTypeInstance.verbs: [string] @index(hash) .
+
+Interface.latestRevision: uid .
+Interface.name: string .
+Interface.path: string @index(hash,trigram) @upsert .
+Interface.prefix: string .
+Interface.revisions: [uid] .
+
+InterfaceGroup.interfaces: [uid] .
+InterfaceGroup.metadata: uid .
+InterfaceGroup.signature: uid .
+
+InterfaceInput.parameters: uid .
+InterfaceInput.typeInstances: [uid] .
+
+InterfaceOutput.typeInstances: [uid] .
+
+InterfaceRevision.metadata: uid .
+InterfaceRevision.revision: string @index(exact,trigram) .
+InterfaceRevision.signature: uid .
+InterfaceRevision.spec: uid .
+
+InterfaceSpec.input: uid .
+InterfaceSpec.output: uid .
+
+Maintainer.email: string .
+Maintainer.name: string .
+Maintainer.url: string .
+
+Signature.och: string .
+
+TypeInstance.name: string .
+TypeInstance.typeRef: uid .
+
+TypeReference.path: string .
+TypeReference.revision: string .

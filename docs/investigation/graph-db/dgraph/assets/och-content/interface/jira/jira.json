@@ -1,0 +1,24 @@
+{
+  "dgraph.type": "InterfaceGroup",
+  "InterfaceGroup.metadata": {
+    "name": "jira",
+    "path": "cap.interface.productivity.jira",
+    "prefix": "cap.interface.productivity",
+    "displayName": "Jira",
+    "description": "Jira Application",
+    "documentationURL": "https://projectvoltron.dev",
+    "supportURL": "https://projectvoltron.dev/contact",
+    "iconURL": "https://projectvoltron.dev/favicon.ico",
+    "maintainers": [
+      {
+        "dgraph.type": "Maintainer",
+        "Maintainer.name": "Voltron Dev Team",
+        "Maintainer.email": "team-dev@projectvoltron.dev",
+        "Maintainer.url": "https://projectvoltron.dev"
+      }
+    ]
+  },
+  "InterfaceGroup.signature": {
+    "Signature.och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+  }
+}
