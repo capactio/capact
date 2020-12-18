@@ -1,0 +1,32 @@
+schema: schema.graphql
+
+# Let gqlgen know where to put the generated server
+exec:
+  filename: schema_gen.go
+  package: graphql
+
+# Let gqlgen know where to the generated models (if any)
+model:
+  filename: models_gen.go
+  package: graphql
+
+resolver:
+  layout: follow-schema
+  dir: .
+  package: graphql
+  filename_template: "{name}.resolvers.go"
+
+# Optional turns on binding to field names by tag provided
+struct_tag: json
+
+autobind:
+  - "projectvoltron.dev/voltron/poc/graph-db/grakn/graphql"
+
+# Uncomment and regenerate the schema
+#models:
+#  Interface:
+#    fields:
+#      revision:
+#        resolver: true
+#      revisions:
+#        resolver: true

@@ -1,0 +1,112 @@
+define
+
+# Attributes
+
+och sub attribute,
+	value string;
+
+name sub attribute,
+	value string;
+
+displayName sub attribute,
+	value string;
+
+email sub attribute,
+	value string;
+
+url sub attribute,
+	value string;
+
+prefix sub attribute,
+	value string;
+
+path sub attribute,
+	value string;
+
+description sub attribute,
+	value string;
+
+documentationURL sub attribute,
+	value string;
+
+supportURL sub attribute,
+	value string;
+
+iconURL sub attribute,
+	value string;
+
+revision sub attribute,
+	value string;
+
+spec sub attribute,
+	value string;
+
+signature sub entity,
+	has och;
+
+maintainer sub entity,
+	key name,
+	has email,
+	has url,
+	plays maintaining;
+
+metadataBase sub entity,
+	has name,
+	has prefix,
+	has path,
+	has displayName,
+	has description,
+	has documentationURL,
+	has supportURL,
+	has iconURL,
+	plays maintained;
+
+tag sub metadataBase,
+	has revision,
+	has spec,
+	plays taggs;
+
+interfaceGroup sub metadataBase,
+	plays groups;
+
+interface sub metadataBase,
+	has revision,
+	has spec,
+	plays grouped, 
+	plays defines,
+	plays producer;
+
+implementation sub metadataBase,
+	has revision,
+	has spec,
+	plays tagged,
+	plays implements,
+	plays producer;
+
+type_ sub metadataBase,
+	has revision,
+	has spec,
+	plays tagged,
+	plays product;
+
+# Relations
+
+tagging sub relation,
+	relates taggs,
+	relates tagged;
+
+maintenance sub relation,
+	relates maintaining,
+	relates maintained;
+
+grouping sub relation,
+	relates groups,
+	relates grouped;
+
+implementator sub relation,
+	relates defines,
+	relates implements;
+
+producing sub relation,
+	relates producer,
+	relates product;
