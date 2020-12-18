@@ -4,7 +4,6 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.13.0
-	github.com/alecthomas/participle/v2 v2.0.0-alpha3 // indirect
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/fatih/color v1.10.0

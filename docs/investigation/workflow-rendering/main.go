@@ -40,11 +40,11 @@ func main() {
 	data, err := renderer.Render(
 		toRender,
 		map[string]interface{}{
-			//"superuser": map[string]interface{}{
-			//	"username": "postgres",
-			//	"password": "s3cr3t",
-			//},
-			//"defaultDBName": "test",
+			"superuser": map[string]interface{}{
+				"username": "postgres",
+				"password": "s3cr3t",
+			},
+			"defaultDBName": "test",
 		},
 		[]*v1alpha1.InputTypeInstance{
 			{
