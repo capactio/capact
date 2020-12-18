@@ -123,7 +123,7 @@ type UID struct {
 }
 type ReferenceInterfaceRevision struct {
 	UID
-	ImplRevision UID `json:"InterfaceRevision.implementations"`
+	ImplRevision UID `json:"InterfaceRevision.implementedBy"`
 }
 
 func getInterfacePaths(revs []InterfaceReference) string {

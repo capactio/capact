@@ -20,31 +20,17 @@ type InterfaceRevision {
     revision: String! @search(by: [exact, regexp])
     spec: InterfaceSpec!
 
+    implementedBy: [ImplementationRevision!]
+
     """
     List Implementations for a given Interface
     """
-    # implemented by?
-    implementations: [ImplementationRevision!] # Custom resolverd >>>>
-    customImplementations: [Implementation!] @custom(http: {
+    implementations: [Implementation!] @custom(http: {
         url: "http://host.docker.internal:8888/implementations"
         method: POST
         body: "{id:$id}"
     })
     signature: Signature!
-}
-
-input CustomImplementationFilter {
-    requirementsSatisfiedBy: [Requirement]
-}
-
-input Requirement {
-    typeRef: TypeRef
-    value: String
-}
-
-input TypeRef {
-    path: String
-    revision: String
 }
 
 type InterfaceSpec {
@@ -71,8 +57,6 @@ interface TypeInstance {
 }
 
 type InputTypeInstance implements TypeInstance {
-    name: String!
-    typeRef: TypeReference!
     verbs: [TypeInstanceOperationVerb!]!
 }
 
@@ -80,7 +64,7 @@ enum TypeInstanceOperationVerb {
     CREATE, GET, LIST, UPDATE, DELETE
 }
 
-type OutputTypeInstance implements TypeInstance {
+type OutputTypeInstance {
     name: String!
     typeRef: TypeReference!
 }
@@ -134,7 +118,7 @@ type ImplementationRevision {
     revision: String!
     spec: ImplementationSpec!
 
-    interfaces: [InterfaceRevision!]! @hasInverse(field: implementations) # resolver based on "implements" section
+    interfaces: [InterfaceRevision!]! @hasInverse(field: implementedBy) # resolver based on "implements" section
     signature: Signature!
 }
 
@@ -243,42 +227,3 @@ type TypeRevision {
     # spec: TypeSpec! for simplicity
     signature: Signature!
 }
-
-
-# Custom Queries
-
-type Query {
-    AllNodes(id: String!): [Tweets] @custom(dql: """
-	query q($search: string) {
-		var(func: type(Tweets)) @filter(anyoftext(Tweets.text, $search)) {
-			Tweets.author {
-				followers as User.followers
-			}
-			authorFollowerCount as sum(val(followers))
-		}
-		 AllNodes(func: type(Implementation)) @filter(uid_in(Implementation.latestRevision, 0x5c7)) {
-			dgraph.type
-			expand(_all_) {
-			  expand(_all_) {
-				expand(_all_) {
-				  expand(_all_)
-				}
-			  }
-			}
-
-		  }
-
-		queryTweetsSortedByAuthorFollowers(func: uid(authorFollowerCount), orderdesc: val(authorFollowerCount)) {
-			id: uid
-			text: Tweets.text
-			author: Tweets.author {
-			    screen_name: User.screen_name
-			    followers: User.followers
-			}
-			timestamp: Tweets.timestamp
-		}
-	}
-	""")
-
-}
-

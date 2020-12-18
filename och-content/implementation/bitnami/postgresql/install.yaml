@@ -86,8 +86,13 @@ spec:
 #                    values:
 #                      image:
 #                        tag: "{{ .Context.appVersion }}"
-#                    customOutput:
-#                        ref: xxxx
+#                    output:
+#                      directory: "/out"
+#                      helmRelease:
+#                        fileName: "helm-release.yaml"
+#                      additional:
+#                        fileName: "postgresql.yaml"
+#                      value: |-
 #                        host: "{{ template "postgresql.fullname" . }}"
 #                        port: "{{ template "postgresql.port" . }}"
 #                        defaultDBName: "{{ template "postgresql.database" . }}"

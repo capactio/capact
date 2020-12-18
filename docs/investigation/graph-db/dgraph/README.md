@@ -1,131 +1,129 @@
-# Dgraph as OCH graph database
+# Dgraph as the OCH graph database
 
-### Criteria
+This proof of concept shows OCH server with implemented using [Dgraph v20.07](https://dgraph.io/docs/v20.07/).
 
-Checklist:
--	[ ] Can we use just one graphql schema for storing and querying object
--	[ ] How to expose the GraphQL Playground
--	[ ] Is there an output schema that can be consumed by GraphQL playground
--	[ ] What is under the hood, is it also using [gql-gen](https://github.com/99designs/gqlgen) lib for generating types
--	[ ] How to write custom queries, mutations, scalars, types
--	[ ] Is there some directive for validation (e.g. checking SemVer syntax)
--	[ ] Resources consumption (run 1k queries/mutations)
--	[ ] Check transactions system
--	[ ] Check [type system](https://dgraph.io/docs/query-language/type-system/)
--	[ ] Check go client, execute some queries using Go client and some using GraphQL Playground
--	[ ] Check subscription
+## Motivation
 
+We need to select a graph database for the OCH server which stores the OCF content and relations between each entity using edges.
 
-OCF model -> domain model do the resolving logic -> DSO dgraph with all necessary edges etc.
+### Goal
 
+The main goal for this POC is to check whether we can use Dgraph seamlessly to expose the GraphQL client API without creating dedicated resolvers.
+
+### Non-goal
+
+Use the Dgraph only as of the database and create our own GraphQL server with dedicated resolvers' implementation for each entity.
+
+## Prerequisite
+-	Install Go
+-	Install Docker
+-	Install [Insomnia](https://insomnia.rest/download)
 
 ## Quick start
--	Start Dgraph GraphQL server
+1.	Start Dgraph GraphQL server:
 
 	```bash
-	$ docker run -it -p 8080:8080 dgraph/standalone:master
-	...
+	docker run --rm -it -p 8080:8080 -p 8000:8000 -p 9080:9080 dgraph/standalone:v20.07.2
 	```
-1.	Add a GraphQL Schema
+
+2.	Run database loader:
 
 	```bash
-	$ curl -X POST localhost:8080/admin/schema --data-binary '@assets/public-och-schema.graphql'
-	{"data":{"code":"Success","message":"Done"}}
+	go run cmd/db-loader/main.go
 	```
 
-## Conditional upsert
+3.	Run custom resolver server:
 
-It is not possible to execute using GraphQL mutation. You need to use DQL. You can use RDF or JSON syntax. You cannot use own filter functions. Currently, supported [`eq/le/lt/ge/gt`](https://discuss.dgraph.io/t/would-like-support-of-eq-le-lt-ge-gt-in-mutation-conditional-upsert-other-than-existing-len-function-only/8846).
+	```bash
+	go run cmd/resolver-svr/main.go
+	```
 
-#### Using string query:
+4.	Import [Insomnia_localhost_OCH.json](./assets/Insomnia_localhost_OCH.json) into Insomnia and you are ready to execute sample queries.
+
+### Simplifications
+1.	The `interface.implementations` field uses resolver which is able to return Implementations only for the `latestResvision` property.
+2.	The input filters for `interface.implementations` were not implemented as currently not possible.  
+3.	The OCH content has additional properties and different names in manifests. By doing, so I didn't have to focus on mappers between OCF Entities and data store model. In normal scenario we should read the OCF entity then convert it to domain model, calculate edges and map to Dgraph data storage object.
+4.	The OCH content is based on the mocked versions form [`hack/mock/graphql/public`](../../../../hack/mock/graphql/public).
+
+### Behind the scene
+
+The PoC has the following structure:
 
 ```
-upsert {
-  query {
-    u1 as inter(func: uid("0x5")) @filter(type(Interface)) @cascade {
-        Interface.latestRevision @filter( lt(InterfaceRevision.revision, "0.1.3")){
-         uid
-        }
-      }
-  }
-
-  mutation @if(not(eq(val(existingLines), "${lines}"))) {
-    set {
-      uid(fileId) <lines> "${lines}" .
-    }
-  }
-}
+.
+├── app 
+│  └── cmd
+│    ├── db-loader           # loader that is able to load GraphQL schema and entities from och-content
+│    └── resolver-svr
+└── assets
+    ├── Insomnia_localhost_OCH.json
+    ├── och-content                # simplified OCH content
+    │  ├── implementation       # sample Implementations
+    │  ├── interface            # sample Implementations
+    │  └── type                 # sample Implementations
+    ├── public-och-schema.graphql  # The GraphQL schema with Dgraph directives
+    ├── public-och-schema.rdf      # The RDF schema
+    └── schema.graphql
 ```
 
-- show all nodes 
-```
+### Conditional upsert
 
+We need to support situation when edges should always point to the latest revision. To ensure that state we can use [conditional upserts](https://dgraph.io/docs/v20.07/mutations/conditional-upsert/)
 
-{
-  showallnodes(func: has(dgraph.type)){
-    dgraph.type
-    expand(_all_) {
-      expand(_all_)
-    }
-  }
-}
-```
+It is not possible to execute conditional upsert using GraphQL mutation. You need to use DQL. You can use RDF or JSON syntax. You cannot use own filter functions. Currently, supported functions are: [`eq/le/lt/ge/gt`](https://discuss.dgraph.io/t/would-like-support-of-eq-le-lt-ge-gt-in-mutation-conditional-upsert-other-than-existing-len-function-only/8846).
 
-#### Using Dgo client
-
-Check the `loadInterfaceRevisions` function from the [client/internal/interface_populator.go](client/internal/interface_populator.go) file.
+Check the `loadInterfaceRevisions` function from the [client/internal/interface_populator.go](client/internal/interface_populator.go) file to see how the conditional upsert can be done using Dgo client.
 
 ## Pros
+-	Dgraph support GraphQL schema and expose GraphQL API out-of-the-box.
 -	GraphQL requires that the type repeats all the fields from the interface, Dgraph doesn’t need that repetition in the input schema and will generate the correct GraphQL.
 
 ## Cons
+-	The Ratel UI is simple, and it is not helpful during debugging.
 
-- probably cannot have the input type for custom field queries: 
-```
- cannot upload schema: response: {"errors":[{"message":"resolving updateGQLSchema failed because input:29: Type InterfaceRevision; Field customImplementations; @custom directive, body template must use fields defined within the type, found `input`.\n (Locations: [{Line: 3, Column: 4}])","extensions":{"code":"Error"}}]}
+-	There is only one [OGM](https://github.com/akshaydeo/dgogm) that has not been updated since 2017.
 
-```
-- cannot return error from custom queries (https://discuss.dgraph.io/t/remote-mutations-queries-how-to-return-errors/8696), it is possible (https://github.com/dgraph-io/dgraph/pull/6604)
--	Using the @hasInverse filed in GraphQL Schema is not reflected in DQL 
+-	Custom queries needs to return whole object. We are not able to query only those fields which were requested.
 
--	scalars do not work on custom queries: https://discuss.dgraph.io/t/a-scalar-type-was-returned-but-graphql-was-expecting-an-object/10908
-
--	No for each yet: https://discuss.dgraph.io/t/foreach-func-in-dql-loops-in-bulk-upsert/5533/9
-
--	`implementations(filter: CustomImplementationFilter): [Implementation!]!` transformed to `implementations: [Implementation!]`. Filters are added based on directive and it cannot be required as we will not be able to add interfaces.
-
--	some sections are not finished ![docs](assets/dgraph-missing-docs.png)
-
--	generates a lot of boilerplate. Each type has own mutations/queries. We can disable that but it is available on master: https://dgraph.io/docs/master/graphql/schema/generate
-
--	There is no `Any` scalar. How to replace that for **jsonSchema** property? https://discuss.dgraph.io/t/json-blob-as-a-scalar/11034/7
-
--	Support RDF and GraphQL Schemas but using only the RDF schema result in such error:
+-	We cannot have the input type for custom field queries:
 
 	```
+	cannot upload schema: response: {"errors":[{"message":"resolving updateGQLSchema failed because input:29: Type InterfaceRevision; Field customImplementations; @custom directive, body template must use fields defined within the type, found `input`.\n (Locations: [{Line: 3, Column: 4}])","extensions":{"code":"Error"}}]}
+	```
+
+	The `filters` keyword is reserved for queries
+
+-	Using the @hasInverse filed in GraphQL Schema is not reflected in DQL
+
+-	[Scalars do not work on custom queries](https://discuss.dgraph.io/t/a-scalar-type-was-returned-but-graphql-was-expecting-an-object/10908)
+
+-	[There is no implementation for `for each` like statements](https://discuss.dgraph.io/t/foreach-func-in-dql-loops-in-bulk-upsert/5533/9)
+
+-	By default, dgraph generates a lot of boilerplate. Each entity has own mutations/queries. We can disable that in the newest [version](https://dgraph.io/docs/master/graphql/schema/generate) which was not tested during this POC.
+
+-	There is no `Any` scalar. As a result we need to use string type for **jsonSchema** property. More info [here](https://discuss.dgraph.io/t/json-blob-as-a-scalar/11034/7).
+
+-	Dgraph supports RDF and GraphQL schemas but using only the RDF schema result in such error:
+
+	```bash
 	"Not resolving queryInterface. There's no GraphQL schema in Dgraph.  Use the /admin API to add a GraphQL schema"
 	```
 
-	It means that we need to always create the graphql schema
+	It means that we need to always create the graphql schema if we want to use GraphQL API.
 
-	## Extras
-
--	Populate database using RDF or JSON. Dgraph as of now supports mutation for two kinds of data: RDF and JSON.
-
--	Compression is out of the box: https://dgraph.io/docs/graphql/api/requests/#compression. Maybe we can use it at the beginning for cache sync?
-
--	Maybe use cascade to get implementation: https://dgraph.io/docs/graphql/queries/cascade. Use it to do not return interfaces without implementation.
-
--	To run with locally saved data:
-
-	```bash
-	docker run --rm -it -p 8080:8080 -p 9080:9080 -p 8000:8000 -v ~/dgraph:/dgraph dgraph/standalone:v20.03.0
-	```
+## Extras
+-	[Compression](https://dgraph.io/docs/graphql/api/requests/#compression) is out of the box. Maybe we can use it at the beginning for cache sync.
 
 -	Exclusive features like ACLs, binary backups, encryption at rest, and more: https://dgraph.io/docs/enterprise-features/
 
+## Needs investigation
+-	In the newest version they introduced Lambda fields which can help with writing custom resolvers. Unfortunately, it supports only JavaScript Lambdas and we will need to host our own lambda server for that.
 
-- Additionally, there is no support for slice input: https://discuss.dgraph.io/t/support-lists-in-query-variables-dgraphs-graphql-variable/8758
-I didnt change the schema too much but adding some new edges when injecting the data will help a lot e.g. adding relations between `implementations.requires.typeRef` and `types`. 
+-	Can facet help with query for Implementations that fulfil specific requirements?
 
-IMO we should flat the Metadata and be able to index by path
+-	How Dgraph maps the RDF entity to GraphQL types? Can we reuse that logic in our custom resolvers?
+
+## Summary
+
+TBD

@@ -1,11 +1,10 @@
-module github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/client
+module github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app
 
 go 1.15
 
 require (
-	github.com/davecgh/go-spew v1.1.1
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dgraph-io/dgo/v200 v200.0.0-20200805103119-a3544c464dd6
-	github.com/ghodss/yaml v1.0.1-0.20190212211648-25d852aebe32
 	github.com/golang/protobuf v1.3.5 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/kr/pretty v0.1.0 // indirect

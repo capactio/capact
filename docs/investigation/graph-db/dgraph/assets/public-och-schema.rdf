@@ -1,3 +1,6 @@
+type TagSpec {
+	TagSpec.additionalRefs
+}
 type Interface {
 	Interface.name
 	Interface.prefix
@@ -13,9 +16,28 @@ type Maintainer {
 	Maintainer.email
 	Maintainer.url
 }
+type TagRevision {
+	TagRevision.metadata
+	TagRevision.revision
+	TagRevision.spec
+	TagRevision.signature
+}
 type TypeInstance {
 	TypeInstance.name
 	TypeInstance.typeRef
+}
+type TypeRevision {
+	TypeRevision.name
+	TypeRevision.prefix
+	TypeRevision.path
+	TypeRevision.displayName
+	TypeRevision.description
+	TypeRevision.maintainers
+	TypeRevision.documentationURL
+	TypeRevision.supportURL
+	TypeRevision.iconURL
+	TypeRevision.revision
+	TypeRevision.signature
 }
 type InterfaceSpec {
 	InterfaceSpec.input
@@ -24,6 +46,13 @@ type InterfaceSpec {
 type TypeReference {
 	TypeReference.path
 	TypeReference.revision
+}
+type Implementation {
+	Implementation.name
+	Implementation.prefix
+	Implementation.path
+	Implementation.latestRevision
+	Implementation.revisions
 }
 type InterfaceGroup {
 	InterfaceGroup.metadata
@@ -34,16 +63,20 @@ type InterfaceInput {
 	InterfaceInput.parameters
 	InterfaceInput.typeInstances
 }
+type dgraph.graphql {
+	dgraph.graphql.schema
+	dgraph.graphql.xid
+}
 type GenericMetadata {
-	GenericMetadata.name
-	GenericMetadata.prefix
-	GenericMetadata.path
-	GenericMetadata.displayName
-	GenericMetadata.description
-	GenericMetadata.maintainers
-	GenericMetadata.documentationURL
-	GenericMetadata.supportURL
-	GenericMetadata.iconURL
+	name
+	prefix
+	path
+	displayName
+	description
+	maintainers
+	documentationURL
+	supportURL
+	iconURL
 }
 type InputParameters {
 	InputParameters.jsonSchema
@@ -60,57 +93,184 @@ type InterfaceRevision {
 	InterfaceRevision.metadata
 	InterfaceRevision.revision
 	InterfaceRevision.spec
+	InterfaceRevision.implementedBy
+	InterfaceRevision.implementations
 	InterfaceRevision.signature
 }
+type ImplementationSpec {
+	ImplementationSpec.appVersion
+	ImplementationSpec.implements
+	ImplementationSpec.requires
+	ImplementationSpec.imports
+	ImplementationSpec.action
+	ImplementationSpec.additionalInput
+	ImplementationSpec.additionalOutput
+}
+type InterfaceReference {
+	InterfaceReference.path
+	InterfaceReference.revision
+}
 type OutputTypeInstance {
-	TypeInstance.name
-	TypeInstance.typeRef
+	OutputTypeInstance.name
+	OutputTypeInstance.typeRef
+}
+type ImplementationAction {
+	ImplementationAction.runnerInterface
+	ImplementationAction.args
+}
+type ImplementationImport {
+	ImplementationImport.interfaceGroupPath
+	ImplementationImport.alias
+	ImplementationImport.appVersion
+	ImplementationImport.methods
+}
+type ImplementationMetadata {
+	name
+	prefix
+	path
+	displayName
+	description
+	maintainers
+	documentationURL
+	supportURL
+	iconURL
+	tags
+}
+type ImplementationRevision {
+	ImplementationRevision.metadata
+	ImplementationRevision.revision
+	ImplementationRevision.spec
+	ImplementationRevision.interfaces
+	ImplementationRevision.signature
+}
+type TypeInstanceRelationItem {
+	TypeInstanceRelationItem.typeInstanceName
+	TypeInstanceRelationItem.uses
+}
+type ImplementationRequirement {
+	ImplementationRequirement.prefix
+	ImplementationRequirement.oneOf
+	ImplementationRequirement.anyOf
+	ImplementationRequirement.allOf
+}
+type ImplementationImportMethod {
+	ImplementationImportMethod.name
+	ImplementationImportMethod.revision
+}
+type ImplementationAdditionalInput {
+	ImplementationAdditionalInput.typeInstances
+}
+type ImplementationRequirementItem {
+	ImplementationRequirementItem.typeRef
+	ImplementationRequirementItem.valueConstraints
+}
+type ImplementationAdditionalOutput {
+	ImplementationAdditionalOutput.typeInstances
+	ImplementationAdditionalOutput.typeInstanceRelations
 }
 
-GenericMetadata.description: string .
-GenericMetadata.displayName: string .
-GenericMetadata.documentationURL: string .
-GenericMetadata.iconURL: string .
-GenericMetadata.maintainers: [uid] .
-GenericMetadata.name: string @index(hash) .
-GenericMetadata.path: string .
-GenericMetadata.prefix: string .
-GenericMetadata.supportURL: string .
-
-InputParameters.jsonSchema: string .
-InputTypeInstance.verbs: [string] @index(hash) .
-
-Interface.latestRevision: uid .
-Interface.name: string .
-Interface.path: string @index(hash,trigram) @upsert .
-Interface.prefix: string .
-Interface.revisions: [uid] .
-
-InterfaceGroup.interfaces: [uid] .
-InterfaceGroup.metadata: uid .
-InterfaceGroup.signature: uid .
-
-InterfaceInput.parameters: uid .
-InterfaceInput.typeInstances: [uid] .
-
-InterfaceOutput.typeInstances: [uid] .
-
-InterfaceRevision.metadata: uid .
-InterfaceRevision.revision: string @index(exact,trigram) .
-InterfaceRevision.signature: uid .
-InterfaceRevision.spec: uid .
-
-InterfaceSpec.input: uid .
-InterfaceSpec.output: uid .
-
-Maintainer.email: string .
-Maintainer.name: string .
-Maintainer.url: string .
-
-Signature.och: string .
-
-TypeInstance.name: string .
-TypeInstance.typeRef: uid .
-
-TypeReference.path: string .
-TypeReference.revision: string .
+<och>:string .
+<url>:string .
+<name>:string .
+<path>:string @index(hash) .
+<tags>:[uid] .
+<email>:string .
+<verbs>:[string] .
+<prefix>:string .
+<iconURL>:string .
+<typeRef>:uid .
+<revision>:string .
+<supportURL>:string .
+<description>:string .
+<dgraph.type>:[string] @index(exact) .
+<displayName>:string .
+<maintainers>:[uid] .
+<Signature.och>:string .
+<Interface.name>:string .
+<Interface.path>:string @index(hash,trigram) @upsert .
+<Maintainer.url>:string .
+<Maintainer.name>:string .
+<Interface.prefix>:string .
+<Maintainer.email>:string .
+<TagRevision.spec>:uid .
+<documentationURL>:string .
+<TypeInstance.name>:string .
+<TypeRevision.name>:string .
+<TypeRevision.path>:string @index(hash) @upsert .
+<TypeRevision.tags>:[uid] .
+<TypeReference.path>:string .
+<dgraph.graphql.xid>:string @index(exact) @upsert .
+<Implementation.name>:string .
+<Implementation.path>:string @index(hash,trigram) @upsert .
+<Interface.revisions>:[uid] .
+<InterfaceSpec.input>:uid .
+<TypeRevision.prefix>:string .
+<InterfaceSpec.output>:uid .
+<TagRevision.metadata>:uid .
+<TagRevision.revision>:string .
+<TypeInstance.typeRef>:uid .
+<TypeRevision.iconURL>:string .
+<Implementation.prefix>:string .
+<TagRevision.signature>:uid .
+<TypeRevision.revision>:string .
+<dgraph.graphql.schema>:string .
+<InterfaceRevision.spec>:uid .
+<TagSpec.additionalRefs>:[string] .
+<TypeReference.revision>:string .
+<TypeRevision.signature>:uid .
+<InputTypeInstance.verbs>:[string] @index(hash) .
+<InterfaceGroup.metadata>:uid .
+<InterfaceReference.path>:string .
+<OutputTypeInstance.name>:string .
+<TypeRevision.supportURL>:string .
+<Implementation.revisions>:[uid] .
+<Interface.latestRevision>:uid .
+<InterfaceGroup.signature>:uid .
+<TypeRevision.description>:string .
+<TypeRevision.displayName>:string .
+<TypeRevision.maintainers>:[uid] .
+<ImplementationAction.args>:string .
+<ImplementationSpec.action>:uid .
+<InterfaceGroup.interfaces>:[uid] .
+<InterfaceInput.parameters>:uid .
+<ImplementationImport.alias>:string .
+<ImplementationSpec.imports>:[uid] .
+<InputParameters.jsonSchema>:string .
+<InterfaceRevision.metadata>:uid .
+<InterfaceRevision.revision>:string @index(exact,trigram) .
+<OutputTypeInstance.typeRef>:uid .
+<ImplementationRevision.spec>:uid .
+<ImplementationSpec.requires>:[uid] .
+<InterfaceReference.revision>:string .
+<InterfaceRevision.signature>:uid .
+<ImplementationImport.methods>:[uid] .
+<InterfaceInput.typeInstances>:[uid] .
+<Implementation.latestRevision>:uid .
+<ImplementationSpec.appVersion>:string .
+<ImplementationSpec.implements>:[uid] .
+<InterfaceOutput.typeInstances>:[uid] .
+<TypeInstanceRelationItem.uses>:[string] .
+<TypeRevision.documentationURL>:string .
+<ImplementationImport.appVersion>:string .
+<ImplementationImportMethod.name>:string .
+<ImplementationRequirement.allOf>:[uid] .
+<ImplementationRequirement.anyOf>:[uid] .
+<ImplementationRequirement.oneOf>:[uid] .
+<ImplementationRevision.metadata>:uid .
+<ImplementationRevision.revision>:string .
+<InterfaceRevision.implementedBy>:[uid] .
+<ImplementationRequirement.prefix>:string .
+<ImplementationRevision.signature>:uid .
+<ImplementationRevision.interfaces>:[uid] .
+<InterfaceRevision.implementations>:[uid] .
+<ImplementationSpec.additionalInput>:uid .
+<ImplementationImportMethod.revision>:string .
+<ImplementationSpec.additionalOutput>:uid .
+<ImplementationAction.runnerInterface>:string .
+<ImplementationRequirementItem.typeRef>:uid .
+<ImplementationImport.interfaceGroupPath>:string .
+<TypeInstanceRelationItem.typeInstanceName>:string .
+<ImplementationAdditionalInput.typeInstances>:[uid] .
+<ImplementationAdditionalOutput.typeInstances>:[uid] .
+<ImplementationRequirementItem.valueConstraints>:string .
+<ImplementationAdditionalOutput.typeInstanceRelations>:[uid] .

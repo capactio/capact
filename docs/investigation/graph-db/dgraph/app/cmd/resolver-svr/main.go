@@ -2,14 +2,19 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
 
-	"github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/client/internal/client"
+	"github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/internal/client"
 
 	"github.com/dgraph-io/dgo/v200"
 	"github.com/gorilla/mux"
 )
+
+var findJsonKeys = regexp.MustCompile(`"[a-zA-Z.]*":`)
 
 func main() {
 	cli, err := client.New()
@@ -62,7 +67,6 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
       ImplementationRevision.interfaces @filter(uid($interfaceID))
     }
 }`
-
 	resp, err := h.cli.NewTxn().QueryWithVars(r.Context(), q, map[string]string{
 		"$interfaceID": filter.InterfaceID,
 	})
@@ -81,11 +85,34 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//ids := getOnlySatisfiedImplIDs(decode.Implementations)
+	ids := getOnlySatisfiedImplIDs(decode.Implementations)
 
-	qAllNodes := `{
-		 AllNodes(func: type(Implementation)) @filter(uid_in(Implementation.latestRevision, 0x5c7)) {
-			dgraph.type
+	if len(ids) == 0 {
+		w.Write([]byte("[]"))
+		return
+	}
+
+	// The one option is to use aliases but it is problematic as we need to specify all possible key-value pairs
+	//
+	//qAllNodesWithCustomAliases := fmt.Sprintf(`{
+	//	 AllNodes(func: type(Implementation)) @filter(uid_in(Implementation.latestRevision, [%s])) {
+	//		name: Implementation.name
+	//		path: Implementation.path
+	//		prefix: Implementation.prefix
+	//		latestRevision: Implementation.latestRevision {
+	//		  metadata: ImplementationRevision.metadata {
+	//			expand(_all_)
+	//		  }
+	//		  revision: ImplementationRevision.revision
+	//
+	//		}
+	//
+	//	  }
+	//	}`, strings.Join(ids, ","))
+
+	// There is no support for slice input: https://discuss.dgraph.io/t/support-lists-in-query-variables-dgraphs-graphql-variable/8758
+	qAllNodes := fmt.Sprintf(`{
+		 AllNodes(func: type(Implementation)) @filter(uid_in(Implementation.latestRevision, [%s])) {
 			expand(_all_) {
 			  expand(_all_) {
 				expand(_all_) {
@@ -93,9 +120,8 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			  }
 			}
-			
 		  }
-		}`
+		}`, strings.Join(ids, ","))
 
 	resp, err = h.cli.NewTxn().Query(r.Context(), qAllNodes)
 	if err != nil {
@@ -111,14 +137,38 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Write(decodeAllNodes.AllNodes)
+
+	transformed := removeTypePrefixesFromJSONKeys(string(decodeAllNodes.AllNodes))
+	w.Write([]byte(transformed))
 }
 
-// dummy - return all
+// Benchmark: (we need to check how dgraph does it internally). Using regex is probably not a good idea at all.
+//
+// go test  -bench=. -benchmem -cpu 1 -benchtime 5s ./cmd/resolver-svr/...
+//   goos: darwin
+//   goarch: amd64
+//   pkg: github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr
+//   BenchmarkRemoveTypePrefixesFromJSONKeys            15492            403021 ns/op          139093 B/op        200 allocs/op
+//   PASS
+//   ok      github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr      10.420s
+func removeTypePrefixesFromJSONKeys(in string) string {
+	out := findJsonKeys.ReplaceAllStringFunc(in, func(match string) string {
+		idx := strings.LastIndex(match, ".")
+		if idx == -1 {
+			return match
+		}
+
+		return `"` + match[idx+1:]
+	})
+
+	return out
+}
+
+// dummy - return all but we have access here for required types by implementation so we can execute some business logic here.
 func getOnlySatisfiedImplIDs(in []DecodeImplementationsQuery) []string {
 	var ids []string
-	for _, impl := range in {
-		ids = append(ids, impl.Uid)
+	for idx := range in {
+		ids = append(ids, in[idx].Uid)
 	}
 
 	return ids
