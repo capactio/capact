@@ -60,6 +60,17 @@ type actionStepRef struct {
 	Step *WorkflowStep
 }
 
+type mapEvalParameters map[string]interface{}
+
+func (p mapEvalParameters) Get(name string) (interface{}, error) {
+	value, found := p[name]
+	if !found {
+		return nil, nil
+	}
+
+	return value, nil
+}
+
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
 func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance) (*Workflow, error) {
@@ -156,18 +167,6 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 					}
 				}
 			}
-
-			//for artIdx := range tmpl.Outputs.Artifacts {
-			//	artifact := &tmpl.Outputs.Artifacts[artIdx]
-
-			//	match := workflowArtifactRefRegex.FindStringSubmatch(artifact.From)
-			//	if len(match) > 0 {
-			//		oldArtifactName := match[1]
-			//		if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
-			//			artifact.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
-			//		}
-			//	}
-			//}
 		}
 	}
 
@@ -190,7 +189,7 @@ func (r *Renderer) renderFunc(prefix string,
 
 	artifactsNameMapping := map[string]string{}
 
-	for i := 0; i < len(workflow.Templates); i++ {
+	for i := range workflow.Templates {
 		tmpl := &workflow.Templates[i]
 
 		// Change global artifacts names
@@ -212,13 +211,7 @@ func (r *Renderer) renderFunc(prefix string,
 
 		// Add output TypeInstance workflow step.
 		for _, ti := range tmpl.TypeInstanceOutput {
-			step, template := r.getOutputTypeInstanceTemplate(prefix, ti)
-
-			if prefix != "" {
-				stepName := fmt.Sprintf("%s-%s", prefix, template.Name)
-				step.Template = stepName
-			}
-
+			step, template := r.getOutputTypeInstanceTemplate(ti, prefix)
 			workflow.Templates = append(workflow.Templates, template)
 			tmpl.Steps = append(tmpl.Steps, ParallelSteps{&step})
 		}
@@ -258,7 +251,7 @@ func (r *Renderer) removeConditionalActionSteps(instances []*v1alpha1.InputTypeI
 				if step.OCFWhen != nil {
 					if result, err := r.evaluateWhenExpression(instances, *step.OCFWhen); err != nil {
 						return errors.Wrap(err, "while evaluating OCFWhen")
-					} else if result != nil {
+					} else if result == false {
 						continue
 					}
 				}
@@ -280,7 +273,7 @@ func (r *Renderer) removeConditionalActionSteps(instances []*v1alpha1.InputTypeI
 }
 
 func (r *Renderer) evaluateWhenExpression(typeInstances []*v1alpha1.InputTypeInstance, exprString string) (interface{}, error) {
-	params := map[string]interface{}{}
+	params := mapEvalParameters{}
 
 	for _, ti := range typeInstances {
 		params[ti.Name] = ti
@@ -291,7 +284,7 @@ func (r *Renderer) evaluateWhenExpression(typeInstances []*v1alpha1.InputTypeIns
 		return nil, errors.Wrap(err, "while parsing expression")
 	}
 
-	result, err := expr.Evaluate(params)
+	result, err := expr.Eval(params)
 	if err != nil {
 		return nil, errors.Wrap(err, "while evaluating expression")
 	}

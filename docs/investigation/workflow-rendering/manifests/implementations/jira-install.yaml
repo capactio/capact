@@ -78,7 +78,7 @@ spec:
                 from: '{{workflow.outputs.artifacts.additional}}'
             steps:
               - - name: install-db
-                  ocfWhen: postgresql ?? nil # conditional execution
+                  ocfWhen: postgresql == nil # conditional execution
                   arguments:
                     artifacts:
                       - name: input-parameters

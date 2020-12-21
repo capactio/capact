@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/ghodss/yaml"
 	"github.com/mitchellh/mapstructure"
-	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"

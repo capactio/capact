@@ -9,8 +9,8 @@ spec:
     revision: 1.0.0
   value:
     superuser:
-      username: "jira"
-      password: "okon"
-    defaultDBName: "jira"
-    host: "postgresql-1608289689"
+      username: "postgres"
+      password: "s3cr3t"
+    defaultDBName: "test"
+    host: "postgresql-1608549900"
     port: 5432
