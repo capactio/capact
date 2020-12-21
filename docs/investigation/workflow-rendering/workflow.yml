@@ -8,10 +8,7 @@ spec:
     - name: input-parameters
       raw:
         data: |
-          defaultDBName: test
-          superuser:
-            password: s3cr3t
-            username: postgres
+          {}
   entrypoint: jira-install
   templates:
   - inputs:
@@ -20,9 +17,17 @@ spec:
     name: jira-install
     outputs: {}
     steps:
-    - - arguments: {}
-        name: inject-postgresql-step
-        template: inject-postgresql
+    - - arguments:
+          artifacts:
+          - name: input-parameters
+            raw:
+              data: |
+                superuser:
+                  username: jira
+                  password: okon
+                defaultDBName: jira
+        name: install-db
+        template: jira-install-install-db-postgres-install
     - - arguments:
           artifacts:
           - name: template
@@ -98,29 +103,84 @@ spec:
       - globalName: jira-config
         name: jira-config
         path: /typeinstance
+  - inputs:
+      artifacts:
+      - name: input-parameters
+    name: jira-install-install-db-postgres-install
+    outputs: {}
+    steps:
+    - - arguments:
+          artifacts:
+          - from: '{{inputs.artifacts.input-parameters}}'
+            name: input-parameters
+          - name: template
+            raw:
+              data: |
+                context:
+                  name: "helm-runner-example"
+                  dryRun: false
+                  timeout: "10m"
+                  platform:
+                    namespace: "default"
+                    serviceAccountName: "helm-runner-example"
+                args:
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "postgresql"
+                    repo: "https://charts.bitnami.com/bitnami"
+                  values:
+                    image:
+                      pullPolicy: Always
+                    postgresqlDatabase: {{ defaultDBName }}
+                    postgresqlUsername: {{ superuser.username }}
+                    postgresqlPassword: {{ superuser.password }}
+                  output:{% raw %}
+                    directory: "/"
+                    helmRelease:
+                      fileName: "helm-release"
+                    additional:
+                      fileName: "additional"
+                      value: |-
+                        host: "{{ template "common.names.fullname" . }}"
+                        port: "{{ template "postgresql.port" . }}"
+                        defaultDBName: "{{ template "postgresql.database" . }}"
+                        superuser:
+                          username: "{{ template "postgresql.username" . }}"
+                          password: "{{ template "postgresql.password" . }}"{% endraw %}
+        name: create-helm-args
+        template: jira-install-install-db-postgres-install-create-helm-args-template
+    - - arguments:
+          artifacts:
+          - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+            name: input-parameters
+        name: helm-run
+        template: jira-install-install-db-postgres-install-helm-run-helm
+    - - arguments:
+          artifacts:
+          - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+            name: postgresql
+        name: output-postgresql
+        template: jira-install-install-db-output-postgresql
   - container:
       args:
-      - |-
-        sleep 2 && echo 'defaultDBName: test
-        host: postgresql-1608549900
-        port: 5432
-        superuser:
-          password: s3cr3t
-          username: postgres
-        ' | tee /output
+      - sleep 1
       command:
       - sh
       - -c
       image: alpine:3.7
       name: ""
       resources: {}
-    inputs: {}
-    name: inject-postgresql
+    inputs:
+      artifacts:
+      - name: postgresql
+        path: /typeinstance
+    name: jira-install-install-db-output-postgresql
     outputs:
       artifacts:
       - globalName: postgresql
         name: postgresql
-        path: /output
+        path: /typeinstance
   - container:
       args:
       - /template.yml
@@ -160,6 +220,47 @@ spec:
         name: helm-release
         path: /helm-release
       - globalName: jira-install-helm-run-additional
+        name: additional
+        path: /additional
+  - container:
+      args:
+      - /template.yml
+      - /values.yml
+      - --format=yaml
+      - -o
+      - /render.yml
+      image: dinutac/jinja2docker
+      name: ""
+      resources: {}
+    inputs:
+      artifacts:
+      - name: template
+        path: /template.yml
+      - name: input-parameters
+        path: /values.yml
+    name: jira-install-install-db-postgres-install-create-helm-args-template
+    outputs:
+      artifacts:
+      - name: render
+        path: /render.yml
+  - container:
+      env:
+      - name: RUNNER_INPUT_PATH
+        value: '{{inputs.artifacts.input-parameters.path}}'
+      image: gcr.io/projectvoltron/helm-runner:de65286
+      name: ""
+      resources: {}
+    inputs:
+      artifacts:
+      - name: input-parameters
+        path: /helm-args
+    name: jira-install-install-db-postgres-install-helm-run-helm
+    outputs:
+      artifacts:
+      - globalName: jira-install-install-db-postgres-install-helm-run-helm-release
+        name: helm-release
+        path: /helm-release
+      - globalName: jira-install-install-db-postgres-install-helm-run-additional
         name: additional
         path: /additional
 

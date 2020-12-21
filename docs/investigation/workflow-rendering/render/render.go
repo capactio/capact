@@ -117,7 +117,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 
 	// Rendering iterations
 	for {
-		// Remove steps, which would create TypeInstances, which are already providedR
+		// Remove steps, which would create TypeInstances, which are already provided
 		if err := r.removeConditionalActionSteps(typeInstances); err != nil {
 			return nil, errors.Wrap(err, "while removing conditional action steps")
 		}

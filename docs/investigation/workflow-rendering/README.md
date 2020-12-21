@@ -1,89 +1,155 @@
 # Workflow rendering PoC
 
-This proof of concept show a way to build a single Argo workflow from a OCF Implementation, which references to other Implementations.
+## Overview
+
+This proof of concept shows a way to render an Argo workflow from an Voltron Action CR. It supports conditional execution, based on provided TypeInstances and allows to reference other Interfaces.
 
 ```
 .
-├── implementations # stores OCH Implementations used in this PoC
-└── render          # Golang rendering source code
+├── manifests             # OCF Manifests used in the PoC
+│   ├── implementations
+│   ├── interfaces
+│   └── typeinstances
+└── render                # Rendering algorithm source code
 ```
 
-## NOTES
+## Prerequisites
 
-- Input parameters are provided as scoped artifacts to the workflow. The can be acccessed using `{{inputs.artifacts.input-parameters}}`
-- Input TypeInstances are provided as global artifacts into the workflow.
-- Output TypeInstances must be define as global artifacts.
-- Some Implementation outputs are not TypeInstances, but are supposed to by used by someone else like `helm.run` `additional` output.
+- [Go](https://golang.org)
+- Kubernetes cluster with [Argo](https://argoproj.github.io/) installed
 
-## How does it work
+Currently there is a problem in Argo with referencing global artifacts created in nested workflows ([Github issue](https://github.com/argoproj/argo/issues/4772)).
 
-This proof of concept renders a final Argo workflow by merging all child Argo workflows into the root workflow. It works using the following algorithm:
+To make this PoC work you need to apply the following diff to the Argo v2.11.7 repository:
 
-Input:
-- Prefix
-- ManifestReference
-- Parameters
-- List of TypeInstances for the given level
+<details><summary>Git diff</summary>
 
-func render(prefix string, manifestReference, parameters, List of TypeInstances) -> (Workflow, globalArtifactMapping map[string]string)
-
-1. Prefix all template names, artifact `globalName` and `artifacts.from` `{{workflow.outputs.artifacts.name}}` with prefix
-2. `actionSteps` <- all Action Steps in the given level
-3. foreach `actionStep` in `actionSteps`
-   1. if providesInstance is not in TypeInstance list:
-      1. `childWorkflow`, `artifactNameMappings` <- render(`actionStep.name`, `actionStep.manifestReference`, ?, empty list)
-      2. add all templates from `childWorkflow` to `rootWorkflow` with prefixed name
-      3. set `actionStep.template` to `childWorkflow.entrypoint`
-      4. rename all `globalName` and `artifacts.from` according `artifactNameMappings`
-   2. else
-      1. remove `actionStep` from `rootWorkflow`
-
-4. Include all templates from a child workflow in the root workflow
-5. Modify the step, where the child workflow was referenced, to reference the entrypoint template of the child workflow
-
-To allow us reference, which workflow (which is defined in OCH Implementation) should be imported, we have to extend the syntax of the Argo workflow.
-
-This PoC extends the Argo workflow syntax by adding a optional `action` field in the Argo Workflow step definition:
-```yaml
-workflow:
-  entrypoint: main
-  templates:
-    - name: main
-      steps:
-        - - name: offload-work
-            action:
-              name: path.to.imported.implementation
 ```
+diff --git a/workflow/controller/operator.go b/workflow/controller/operator.go
+index 583d6fd7..0ea36620 100644
+--- a/workflow/controller/operator.go
++++ b/workflow/controller/operator.go
+@@ -47,7 +47,6 @@ import (
+ 	argosync "github.com/argoproj/argo/workflow/sync"
+ 	"github.com/argoproj/argo/workflow/templateresolution"
+ 	wfutil "github.com/argoproj/argo/workflow/util"
+-	"github.com/argoproj/argo/workflow/validate"
+ )
 
-In the rendering process, this gets changed to:
-```yaml
-workflow:
-  entrypoint: main
-  templates:
-    - name: main
-      steps:
-        - - name: offload-work
-            template: imported-wf-entrypoint
+ // wfOperationCtx is the context for evaluation and operation of a single workflow
+@@ -213,24 +212,24 @@ func (woc *wfOperationCtx) operate() {
+ 			return
+ 		}
+ 		woc.eventRecorder.Event(woc.wf, apiv1.EventTypeNormal, "WorkflowRunning", "Workflow Running")
+-		validateOpts := validate.ValidateOpts{ContainerRuntimeExecutor: woc.controller.GetContainerRuntimeExecutor()}
+-		wftmplGetter := templateresolution.WrapWorkflowTemplateInterface(woc.controller.wfclientset.ArgoprojV1alpha1().WorkflowTemplates(woc.wf.Namespace))
+-		cwftmplGetter := templateresolution.WrapClusterWorkflowTemplateInterface(woc.controller.wfclientset.ArgoprojV1alpha1().ClusterWorkflowTemplates())
++		//validateOpts := validate.ValidateOpts{ContainerRuntimeExecutor: woc.controller.GetContainerRuntimeExecutor()}
++		//wftmplGetter := templateresolution.WrapWorkflowTemplateInterface(woc.controller.wfclientset.ArgoprojV1alpha1().WorkflowTemplates(woc.wf.Namespace))
++		//cwftmplGetter := templateresolution.WrapClusterWorkflowTemplateInterface(woc.controller.wfclientset.ArgoprojV1alpha1().ClusterWorkflowTemplates())
 
-    - name: imported-wf-entrypoint
-      # imported Argo template definitions
+ 		// Validate the execution wfSpec
+-		wfConditions, err := validate.ValidateWorkflow(wftmplGetter, cwftmplGetter, woc.wf, validateOpts)
+-
+-		if err != nil {
+-			msg := fmt.Sprintf("invalid spec: %s", err.Error())
+-			woc.markWorkflowFailed(msg)
+-			woc.eventRecorder.Event(woc.wf, apiv1.EventTypeWarning, "WorkflowFailed", msg)
+-			return
+-		}
+-		// If we received conditions during validation (such as SpecWarnings), add them to the Workflow object
+-		if len(*wfConditions) > 0 {
+-			woc.wf.Status.Conditions.JoinConditions(wfConditions)
+-			woc.updated = true
+-		}
++		//wfConditions, err := validate.ValidateWorkflow(wftmplGetter, cwftmplGetter, woc.wf, validateOpts)
++
++		//if err != nil {
++		//	msg := fmt.Sprintf("invalid spec: %s", err.Error())
++		//	woc.markWorkflowFailed(msg)
++		//	woc.eventRecorder.Event(woc.wf, apiv1.EventTypeWarning, "WorkflowFailed", msg)
++		//	return
++		//}
++		//// If we received conditions during validation (such as SpecWarnings), add them to the Workflow object
++		//if len(*wfConditions) > 0 {
++		//	woc.wf.Status.Conditions.JoinConditions(wfConditions)
++		//	woc.updated = true
++		//}
+
+ 		woc.workflowDeadline = woc.getWorkflowDeadline()
 ```
+</details>
 
 ## Usage
 
-The default ServiceAccount in the `default` Namespace needs proper RBAC permissions, so the Argo workflow pod can run other pods. You can add temporary admin access to the default SA on the default namespace with:
+You can generate the workflows in this proof of concept:
+1. PostgreSQL install using Helm
+2. JIRA install with Helm and a provided PostgreSQL TypeInstance
+3. JIRA install and a nested PostgreSQL install wit Helm
+
+### PostgreSQL install using Helm
+
+To generate and run the workflow, execute:
 ```bash
-kubectl create clusterrolebinding default-default-admin --clusterrole admin --serviceaccount default:default
+go run main.go inputs/1-postgres.yml | kubectl apply -f -
 ```
 
-Render and execute PostgreSQL installation:
+### JIRA install with Helm and a provided PostgreSQL TypeInstance
 
-```bash
-go run docs/investigation/workflow-rendering/main.go 'cap.implementation.bitnami.postgresql.install' | kubectl apply -f -
+We will use the PostgreSQL installation created in [PostgreSQL install using Helm](#postgresql-install-using-helm), so if you did not make that step, do it now.
+
+Update the `.spec.value.host` in `manifests/typeinstances/postgresql-1.yaml` with the PostgreSQL service Kubernetes DNS, to reflect the connection details to the PostgreSQL server:
+```yaml
+spec:
+  value:
+    superuser:
+      username: "postgres"
+      password: "s3cr3t"
+    defaultDBName: "test"
+    host: "{ postgresql-service-name }"
+    port: 5432
 ```
 
-Render and execute Jira installation:
-
+To generate and run the workflow, execute:
 ```bash
-go run docs/investigation/workflow-rendering/main.go 'cap.implementation.atlassian.jira.install' | kubectl apply -f -
+go run main.go inputs/2-jira.yml | kubectl apply -f -
 ```
+
+### JIRA install and a nested PostgreSQL install wit Helm
+
+Remove the JIRA Helm release from [JIRA install with Helm and a provided PostgreSQL TypeInstance](jira-install-with-helm-and-a-provided-postgresql-typeinstance), if you did that step before.
+
+To generate and run the workflow, execute:
+```bash
+go run main.go inputs/3-jira-with-postgres.yml | kubectl apply -f -
+```
+
+## Rendering algorithm
+
+Input:
+- `manifestReference` <- Manifest reference to Interface
+- `inputParameters` <- Input parameters to the Action
+- `inputTypeInstances` <- List of Type Instances
+
+1. `workflow`, _ <- `render("", manifestReference)`
+2. Set `inputParameters` as Argo artifact argument for the workflow.
+3. Foreach `inputTypeInstance` in `inputTypeInstances`:
+   1. Add `inputTypeInstance` fetch steps at the start of the entrypoint `workflow` template.
+4. Repeat:
+   1. Evaluate and remove conditional steps in `workflow`.
+   2. Check, if there are remaining steps with `action` key. If no, then finish rendering.
+   3. Foreach `template` in `workflow`:
+      1. `artifactRenameMap` <- Initialize global artifacts rename map.
+      2. Foreach `step` in `template`:
+         1. If `step` has `action` key:
+            1. `nestedWorkflow`, `artifactRenames` <- `render(template.name-step.name, action)`
+            2. Add all renames from `artifactRenames` to `artifactRenameMap`.
+            3. Add all templates from `nestedWorkflow` to `workflow`
+            4. Remove `action` key from `step`
+         2. Foreach `artifact` in `step.arguments.artifacts`:
+            1. If `artifact.from` in `artifactRenameMap`:
+               1. Replace `artifact.from` based on `artifactRenameMap`
+
+
+The `render(prefix, manifestReference)` function is defined following:
+

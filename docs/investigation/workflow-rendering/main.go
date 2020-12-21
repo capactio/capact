@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/ghodss/yaml"
 	"github.com/mitchellh/mapstructure"
@@ -17,12 +17,29 @@ var (
 	implementationsDir = "manifests"
 )
 
+type renderInput struct {
+	Name              string                        `json:"name"`
+	ManifestReference v1alpha1.ManifestReference    `json:"manifestReference"`
+	Parameters        map[string]interface{}        `json:"parameters"`
+	TypeInstances     []*v1alpha1.InputTypeInstance `json:"typeInstances"`
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		log.Panic("missing implementation path argument")
+		log.Fatal("missing implementation path argument")
 	}
 
-	implementationPath := os.Args[1]
+	inputPath := os.Args[1]
+
+	renderInputData, err := ioutil.ReadFile(inputPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	renderInput := &renderInput{}
+	if err := yaml.Unmarshal(renderInputData, renderInput); err != nil {
+		log.Fatal(err)
+	}
 
 	manifestStore, err := render.NewManifestStore(implementationsDir)
 	if err != nil {
@@ -33,25 +50,10 @@ func main() {
 		ManifestStore: manifestStore,
 	}
 
-	toRender := v1alpha1.ManifestReference{
-		Path: v1alpha1.NodePath(implementationPath),
-	}
-
 	data, err := renderer.Render(
-		toRender,
-		map[string]interface{}{
-			"superuser": map[string]interface{}{
-				"username": "postgres",
-				"password": "s3cr3t",
-			},
-			"defaultDBName": "test",
-		},
-		[]*v1alpha1.InputTypeInstance{
-			{
-				Name: "postgresql",
-				ID:   "461a1c83-6054-43dd-8a4c-49acde791699",
-			},
-		},
+		renderInput.ManifestReference,
+		renderInput.Parameters,
+		renderInput.TypeInstances,
 	)
 	if err != nil {
 		log.Fatal(err)
@@ -59,11 +61,9 @@ func main() {
 
 	obj := &unstructured.Unstructured{}
 
-	workflowName := strings.Replace(implementationPath, ".", "-", -1)
-
 	obj.SetKind("Workflow")
 	obj.SetAPIVersion("argoproj.io/v1alpha1")
-	obj.SetName(workflowName)
+	obj.SetName(renderInput.Name)
 
 	if err := mapstructure.Decode(map[string]interface{}{
 		"spec": data,

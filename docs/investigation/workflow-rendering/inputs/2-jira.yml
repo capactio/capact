@@ -1,0 +1,10 @@
+name: jira
+
+manifestReference:
+  path: cap.interface.productivity.jira.install
+
+parameters: {}
+
+typeInstances:
+  - name: postgresql
+    id: 461a1c83-6054-43dd-8a4c-49acde791699

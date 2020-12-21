@@ -1,0 +1,10 @@
+name: postgresql
+
+manifestReference:
+  path: cap.interface.database.postgresql.install
+
+parameters:
+  superuser:
+    username: postgres
+    password: s3cr3t
+  defaultDBName: test
