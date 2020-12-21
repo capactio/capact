@@ -6,20 +6,20 @@ import (
 	"os"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/mitchellh/mapstructure"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 var (
-	implementationsDir = "docs/investigation/workflow-rendering/manifests"
+	implementationsDir = "manifests"
 )
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Fatal("missing implementation path argument")
+		log.Panic("missing implementation path argument")
 	}
 
 	implementationPath := os.Args[1]

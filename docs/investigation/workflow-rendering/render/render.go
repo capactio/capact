@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
@@ -74,7 +75,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 		return nil, errors.Wrap(err, "failed to marshal input parameters")
 	}
 
-	// add Action InputParamaters to Workflow
+	// Add Action InputParamaters to Workflow.
 	r.RenderedWorkflow.Arguments.Artifacts = append(workflow.Arguments.Artifacts, wfv1.Artifact{
 		Name: "input-parameters",
 		ArtifactLocation: wfv1.ArtifactLocation{
@@ -84,7 +85,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 		},
 	})
 
-	// inject TypeInstances to the workflow
+	// Inject TypeInstances to the workflow.
 	for _, tiInput := range typeInstances {
 		template, err := r.getInjectTypeInstanceTemplate(*tiInput)
 		if err != nil {
@@ -103,18 +104,18 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 		r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, *template)
 	}
 
-	// rendering iterations
+	// Rendering iterations
 	for {
-		// remove steps, which would create TypeInstances, which are already provided
-		r.removeActionStepForProvidedTypeInstances(typeInstances)
+		// Remove steps, which would create TypeInstances, which are already providedR
+		if err := r.removeConditionalActionSteps(typeInstances); err != nil {
+			return nil, errors.Wrap(err, "while removing conditional action steps")
+		}
 
-		// render action steps
+		// Stop rendering, if there are no more Action steps.
 		actionStepRefs := r.findActionSteps()
 		if len(actionStepRefs) == 0 {
 			break
 		}
-
-		//artifactMappings := map[string]string{} //TODO maybe move to tmpl loop
 
 		for _, tmpl := range r.RenderedWorkflow.Templates {
 			artifactMappings := map[string]string{}
@@ -124,7 +125,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 					step := parallelSteps[i]
 
 					if step.Action != nil {
-						// flatten the workflows
+						// Render the referenced action.
 						workflowPrefix := fmt.Sprintf("%s-%s", tmpl.Name, step.Name)
 						importedWorkflow, newArtifactMappings, err := r.renderFunc(workflowPrefix, *step.Action)
 						if err != nil {
@@ -135,12 +136,13 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 							artifactMappings[k] = v
 						}
 
+						// Include the rendered workflow.
 						r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, importedWorkflow.Templates...)
 						step.Template = importedWorkflow.Entrypoint
 						step.Action = nil
 					}
 
-					// replace global artifacts names in references
+					// Replace global artifacts names in references, based on previous gathered mappings.
 					for artIdx := range step.Arguments.Artifacts {
 						art := &step.Arguments.Artifacts[artIdx]
 
@@ -155,29 +157,27 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 				}
 			}
 
-			for artIdx := range tmpl.Outputs.Artifacts {
-				artifact := &tmpl.Outputs.Artifacts[artIdx]
+			//for artIdx := range tmpl.Outputs.Artifacts {
+			//	artifact := &tmpl.Outputs.Artifacts[artIdx]
 
-				match := workflowArtifactRefRegex.FindStringSubmatch(artifact.From)
-				if len(match) > 0 {
-					oldArtifactName := match[1]
-					if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
-						artifact.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
-					}
-				}
-			}
+			//	match := workflowArtifactRefRegex.FindStringSubmatch(artifact.From)
+			//	if len(match) > 0 {
+			//		oldArtifactName := match[1]
+			//		if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
+			//			artifact.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
+			//		}
+			//	}
+			//}
 		}
 	}
 
 	return r.RenderedWorkflow, nil
 }
 
-// 1. Load workflow.
-// 3. Prefix template names, global artifacts.
 func (r *Renderer) renderFunc(prefix string,
 	manifestRef v1alpha1.ManifestReference,
 ) (*Workflow, map[string]string, error) {
-	// load workflow
+	// Create workflow.
 	implementation := r.ManifestStore.GetImplementationForInterface(manifestRef)
 	if implementation == nil {
 		return nil, nil, fmt.Errorf("implementation for %v not found", manifestRef)
@@ -190,16 +190,34 @@ func (r *Renderer) renderFunc(prefix string,
 
 	artifactsNameMapping := map[string]string{}
 
-	// change global artifacts names
-	for i := range workflow.Templates {
+	for i := 0; i < len(workflow.Templates); i++ {
 		tmpl := &workflow.Templates[i]
 
+		// Change global artifacts names
 		if prefix != "" {
 			tmpl.Name = fmt.Sprintf("%s-%s", prefix, tmpl.Name)
+
+			for artIdx := range tmpl.Outputs.Artifacts {
+				artifact := &tmpl.Outputs.Artifacts[artIdx]
+
+				if artifact.GlobalName == "" {
+					continue
+				}
+
+				newName := fmt.Sprintf("%s-%s", prefix, artifact.GlobalName)
+				artifactsNameMapping[artifact.GlobalName] = newName
+				artifact.GlobalName = newName
+			}
 		}
 
+		// Add output TypeInstance workflow step.
 		for _, ti := range tmpl.TypeInstanceOutput {
-			step, template := r.getOutputTypeInstanceTemplate(ti)
+			step, template := r.getOutputTypeInstanceTemplate(prefix, ti)
+
+			if prefix != "" {
+				stepName := fmt.Sprintf("%s-%s", prefix, template.Name)
+				step.Template = stepName
+			}
 
 			workflow.Templates = append(workflow.Templates, template)
 			tmpl.Steps = append(tmpl.Steps, ParallelSteps{&step})
@@ -227,7 +245,7 @@ func createWorkflow(implementation *types.Implementation) (*Workflow, error) {
 	return tree, nil
 }
 
-func (r *Renderer) removeActionStepForProvidedTypeInstances(instances []*v1alpha1.InputTypeInstance) {
+func (r *Renderer) removeConditionalActionSteps(instances []*v1alpha1.InputTypeInstance) error {
 	for i, tmpl := range r.RenderedWorkflow.Templates {
 		newSteps := []ParallelSteps{}
 
@@ -237,8 +255,12 @@ func (r *Renderer) removeActionStepForProvidedTypeInstances(instances []*v1alpha
 			for i := range parallelSteps {
 				step := parallelSteps[i]
 
-				if step.OCFWhen != nil && containsTypeInstance(instances, *step.OCFWhen) != nil {
-					continue
+				if step.OCFWhen != nil {
+					if result, err := r.evaluateWhenExpression(instances, *step.OCFWhen); err != nil {
+						return errors.Wrap(err, "while evaluating OCFWhen")
+					} else if result != nil {
+						continue
+					}
 				}
 
 				step.OCFWhen = nil
@@ -253,6 +275,28 @@ func (r *Renderer) removeActionStepForProvidedTypeInstances(instances []*v1alpha
 
 		r.RenderedWorkflow.Templates[i].Steps = newSteps
 	}
+
+	return nil
+}
+
+func (r *Renderer) evaluateWhenExpression(typeInstances []*v1alpha1.InputTypeInstance, exprString string) (interface{}, error) {
+	params := map[string]interface{}{}
+
+	for _, ti := range typeInstances {
+		params[ti.Name] = ti
+	}
+
+	expr, err := govaluate.NewEvaluableExpression(exprString)
+	if err != nil {
+		return nil, errors.Wrap(err, "while parsing expression")
+	}
+
+	result, err := expr.Evaluate(params)
+	if err != nil {
+		return nil, errors.Wrap(err, "while evaluating expression")
+	}
+
+	return result, nil
 }
 
 func (r *Renderer) findActionSteps() []actionStepRef {
@@ -273,18 +317,6 @@ func (r *Renderer) findActionSteps() []actionStepRef {
 	}
 
 	return actionStepsRef
-}
-
-func containsTypeInstance(instances []*v1alpha1.InputTypeInstance, name string) *v1alpha1.InputTypeInstance {
-	for i := range instances {
-		instance := instances[i]
-
-		if instance.Name == name {
-			return instance
-		}
-	}
-
-	return nil
 }
 
 func (r *Renderer) getInjectTypeInstanceTemplate(input v1alpha1.InputTypeInstance) (*Template, error) {
@@ -317,12 +349,20 @@ func (r *Renderer) getInjectTypeInstanceTemplate(input v1alpha1.InputTypeInstanc
 	}, nil
 }
 
-func (r *Renderer) getOutputTypeInstanceTemplate(output TypeInstanceDefinition) (WorkflowStep, Template) {
+func (r *Renderer) getOutputTypeInstanceTemplate(output TypeInstanceDefinition, prefix string) (WorkflowStep, Template) {
 	artifactPath := "/typeinstance"
-	templateName := fmt.Sprintf("output-%s", output.Name)
+
+	stepName := fmt.Sprintf("output-%s", output.Name)
+
+	var templateName string
+	if prefix == "" {
+		templateName = stepName
+	} else {
+		templateName = fmt.Sprintf("%s-%s", prefix, stepName)
+	}
 
 	return WorkflowStep{
-			Name:     templateName,
+			Name:     stepName,
 			Template: templateName,
 			Arguments: wfv1.Arguments{Artifacts: wfv1.Artifacts{
 				wfv1.Artifact{

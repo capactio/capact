@@ -1,0 +1,477 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  name: cap-interface-productivity-jira-install
+spec:
+  templates:
+  - name: jira-install
+    steps:
+    - - name: inject-postgresql-step
+        template: inject-postgresql
+        arguments:
+          parameters: []
+          artifacts: []
+        ocfwhen: null
+        action: null
+    - - name: create-helm-args
+        template: jira-install-create-helm-args-template
+        arguments:
+          parameters: []
+          artifacts:
+          - name: template
+            path: ""
+            mode: null
+            from: ""
+            artifactlocation:
+              archivelogs: null
+              s3: null
+              git: null
+              http: null
+              artifactory: null
+              hdfs: null
+              raw:
+                data: |
+                  context:
+                    name: "helm-runner-example"
+                    dryRun: false
+                    timeout: "10m"
+                    platform:
+                      namespace: "default"
+                      serviceAccountName: "helm-runner-example"
+                  args:
+                    command: "install"
+                    generateName: true
+                    chart:
+                      name: "jira-software"
+                      repo: "https://helm.mox.sh"
+                    output:{% raw %}
+                      directory: "/"
+                      helmRelease:
+                        fileName: "helm-release"
+                      additional:
+                        fileName: "additional"
+                        value: |-
+                          version: "{{ .Values.image.tag }}"
+                          host: "{{ template "jira-software.fullname" . }}"{% endraw %}
+                    values:
+                      postgresql:
+                        enabled: false
+                      databaseConnection:
+                        host: "{{ host }}"
+                        user: "{{ superuser.username }}"
+                        password: "{{ superuser.password }}"
+                        database: "{{ defaultDBName }}"
+                      ingress:
+                        enabled: true
+                        hosts:
+                        - host: jira-cloud.voltron.local
+                          paths: ['/']
+            globalname: ""
+            archive: null
+            optional: false
+          - name: input-parameters
+            path: ""
+            mode: null
+            from: '{{workflow.outputs.artifacts.postgresql}}'
+            artifactlocation:
+              archivelogs: null
+              s3: null
+              git: null
+              http: null
+              artifactory: null
+              hdfs: null
+              raw: null
+            globalname: ""
+            archive: null
+            optional: false
+        ocfwhen: null
+        action: null
+    - - name: helm-run
+        template: jira-install-helm-run-helm
+        arguments:
+          parameters: []
+          artifacts:
+          - name: input-parameters
+            path: ""
+            mode: null
+            from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+            artifactlocation:
+              archivelogs: null
+              s3: null
+              git: null
+              http: null
+              artifactory: null
+              hdfs: null
+              raw: null
+            globalname: ""
+            archive: null
+            optional: false
+        ocfwhen: null
+        action: null
+    - - name: output-jira-config
+        template: output-jira-config
+        arguments:
+          parameters: []
+          artifacts:
+          - name: jira-config
+            path: ""
+            mode: null
+            from: '{{workflow.outputs.artifacts.jira-install-helm-run-additional}}'
+            artifactlocation:
+              archivelogs: null
+              s3: null
+              git: null
+              http: null
+              artifactory: null
+              hdfs: null
+              raw: null
+            globalname: ""
+            archive: null
+            optional: false
+        ocfwhen: null
+        action: null
+    inputs:
+      parameters: []
+      artifacts:
+      - name: input-parameters
+        path: ""
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+    outputs:
+      parameters: []
+      artifacts: []
+      result: null
+    container: null
+    typeinstanceoutput: []
+  - name: output-jira-config
+    steps: []
+    inputs:
+      parameters: []
+      artifacts:
+      - name: jira-config
+        path: /typeinstance
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+    outputs:
+      parameters: []
+      artifacts:
+      - name: jira-config
+        path: /typeinstance
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: jira-config
+        archive: null
+        optional: false
+      result: null
+    container:
+      name: ""
+      image: alpine:3.7
+      command:
+      - sh
+      - -c
+      args:
+      - sleep 1
+      workingdir: ""
+      ports: []
+      envfrom: []
+      env: []
+      resources:
+        limits: {}
+        requests: {}
+      volumemounts: []
+      volumedevices: []
+      livenessprobe: null
+      readinessprobe: null
+      startupprobe: null
+      lifecycle: null
+      terminationmessagepath: ""
+      terminationmessagepolicy: ""
+      imagepullpolicy: ""
+      securitycontext: null
+      stdin: false
+      stdinonce: false
+      tty: false
+    typeinstanceoutput: []
+  - name: inject-postgresql
+    steps: []
+    inputs:
+      parameters: []
+      artifacts: []
+    outputs:
+      parameters: []
+      artifacts:
+      - name: postgresql
+        path: /output
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: postgresql
+        archive: null
+        optional: false
+      result: null
+    container:
+      name: ""
+      image: alpine:3.7
+      command:
+      - sh
+      - -c
+      args:
+      - |-
+        sleep 2 && echo 'defaultDBName: jira
+        host: postgresql-1608289689
+        port: 5432
+        superuser:
+          password: okon
+          username: jira
+        ' | tee /output
+      workingdir: ""
+      ports: []
+      envfrom: []
+      env: []
+      resources:
+        limits: {}
+        requests: {}
+      volumemounts: []
+      volumedevices: []
+      livenessprobe: null
+      readinessprobe: null
+      startupprobe: null
+      lifecycle: null
+      terminationmessagepath: ""
+      terminationmessagepolicy: ""
+      imagepullpolicy: ""
+      securitycontext: null
+      stdin: false
+      stdinonce: false
+      tty: false
+    typeinstanceoutput: []
+  - name: jira-install-create-helm-args-template
+    steps: []
+    inputs:
+      parameters: []
+      artifacts:
+      - name: template
+        path: /template.yml
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+      - name: input-parameters
+        path: /values.yml
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+    outputs:
+      parameters: []
+      artifacts:
+      - name: render
+        path: /render.yml
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+      result: null
+    container:
+      name: ""
+      image: dinutac/jinja2docker
+      command: []
+      args:
+      - /template.yml
+      - /values.yml
+      - --format=yaml
+      - -o
+      - /render.yml
+      workingdir: ""
+      ports: []
+      envfrom: []
+      env: []
+      resources:
+        limits: {}
+        requests: {}
+      volumemounts: []
+      volumedevices: []
+      livenessprobe: null
+      readinessprobe: null
+      startupprobe: null
+      lifecycle: null
+      terminationmessagepath: ""
+      terminationmessagepolicy: ""
+      imagepullpolicy: ""
+      securitycontext: null
+      stdin: false
+      stdinonce: false
+      tty: false
+    typeinstanceoutput: []
+  - name: jira-install-helm-run-helm
+    steps: []
+    inputs:
+      parameters: []
+      artifacts:
+      - name: input-parameters
+        path: /helm-args
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: ""
+        archive: null
+        optional: false
+    outputs:
+      parameters: []
+      artifacts:
+      - name: helm-release
+        path: /helm-release
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: jira-install-helm-run-helm-release
+        archive: null
+        optional: false
+      - name: additional
+        path: /additional
+        mode: null
+        from: ""
+        artifactlocation:
+          archivelogs: null
+          s3: null
+          git: null
+          http: null
+          artifactory: null
+          hdfs: null
+          raw: null
+        globalname: jira-install-helm-run-additional
+        archive: null
+        optional: false
+      result: null
+    container:
+      name: ""
+      image: gcr.io/projectvoltron/helm-runner:de65286
+      command: []
+      args: []
+      workingdir: ""
+      ports: []
+      envfrom: []
+      env:
+      - name: RUNNER_INPUT_PATH
+        value: '{{inputs.artifacts.input-parameters.path}}'
+        valuefrom: null
+      resources:
+        limits: {}
+        requests: {}
+      volumemounts: []
+      volumedevices: []
+      livenessprobe: null
+      readinessprobe: null
+      startupprobe: null
+      lifecycle: null
+      terminationmessagepath: ""
+      terminationmessagepolicy: ""
+      imagepullpolicy: ""
+      securitycontext: null
+      stdin: false
+      stdinonce: false
+      tty: false
+    typeinstanceoutput: []
+  arguments:
+    parameters: []
+    artifacts:
+    - name: input-parameters
+      path: ""
+      mode: null
+      from: ""
+      artifactlocation:
+        archivelogs: null
+        s3: null
+        git: null
+        http: null
+        artifactory: null
+        hdfs: null
+        raw:
+          data: |
+            defaultDBName: test
+            superuser:
+              password: s3cr3t
+              username: postgres
+      globalname: ""
+      archive: null
+      optional: false
+  entrypoint: jira-install
+

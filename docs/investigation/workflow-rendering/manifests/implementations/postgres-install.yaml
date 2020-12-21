@@ -65,7 +65,7 @@ spec:
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
-                      - name: input-parameters # Passing user parameters to a Interface
+                      - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
