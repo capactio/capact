@@ -153,3 +153,16 @@ Input:
 
 The `render(prefix, manifestReference)` function is defined following:
 
+1. Get an `implementation` based on the `manifestReference`.
+2. Create a `workflow` from the `implementation`.
+3. `artifactsRenameMap` <- Initialize a global artifacts rename map.
+4. Foreach `template` in `workflow`:
+   1. If `prefix` is not empty:
+      1. Prefix the `template.name` and all global output artifacts with `prefix`. Save artifacts rename mapping in `artifactsRenameMap`
+   2. Foreach `typeInstanceOutput` in `template.TypeInstanceOutput`:
+      1. Append a output type instance template to the `workflow`.
+      2. Add a step to run the output type instance template at end of `template`
+   3. Unset the `template.TypeInstanceOutput` field
+5. If `prefix` is not empty:
+   1. Prefix the `workflow.Entrypoint` with `prefix`
+6. Return `workflow, artifactsRenameMap`
