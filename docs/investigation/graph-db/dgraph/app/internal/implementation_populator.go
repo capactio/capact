@@ -136,7 +136,9 @@ func getInterfacePaths(revs []InterfaceReference) string {
 
 func getImplementedInterfaceIds(cli *dgo.Dgraph, rev ImplementationRevision) []ReferenceInterfaceRevision {
 	// There is no for each yet: https://discuss.dgraph.io/t/foreach-func-in-dql-loops-in-bulk-upsert/5533/9
-	// We could repeat the query, but we can also query all revisions
+	// We could repeat the query for each path+revision pair, but we can also query all matching paths with all revisions and filter
+	// them programmatically.
+	//
 	// Additionally, there is no support for slice input: https://discuss.dgraph.io/t/support-lists-in-query-variables-dgraphs-graphql-variable/8758
 	qInterfaces := fmt.Sprintf(`
 					{
@@ -190,7 +192,7 @@ func getImplementedInterfaceIds(cli *dgo.Dgraph, rev ImplementationRevision) []R
 				Uid:   interfaceID,
 				DType: []string{"InterfaceRevision"},
 			},
-			ImplRevision: UID{ // TODO: why I need to add also the id here? In GraphQL it is not needed
+			ImplRevision: UID{ // TODO: why we need to add also the id here? In GraphQL it is not needed
 				Uid:   "_:impl",
 				DType: []string{"ImplementationRevision"},
 			},

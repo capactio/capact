@@ -111,6 +111,7 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//	}`, strings.Join(ids, ","))
 
 	// There is no support for slice input: https://discuss.dgraph.io/t/support-lists-in-query-variables-dgraphs-graphql-variable/8758
+	// SIMPLIFICATION: only the latest revision are filtered. The revisions entry is not taken into account.
 	qAllNodes := fmt.Sprintf(`{
 		 AllNodes(func: type(Implementation)) @filter(uid_in(Implementation.latestRevision, [%s])) {
 			expand(_all_) {
