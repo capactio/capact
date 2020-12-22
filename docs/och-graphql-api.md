@@ -131,12 +131,13 @@ query {
                         {
                             typeRef: {
                                 path: "cap.core.type.platform.kubernetes", revision: "1.0.1",},
-                            value: "{\"version\": \"1.18.9\"}"
+                                value: "{\"version\": \"1.18.9\"}"
                         },
                         {
                             typeRef: {
                                 path: "cap.type.database.mysql.config", revision: "1.0.1",},
-                            # if value is not provided, all value-related constraints are treated as satisfied.
+                                
+# if value is not provided, all value-related constraints are treated as satisfied.
                         }
                     ]
                 }) {

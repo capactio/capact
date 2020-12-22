@@ -1,0 +1,229 @@
+type InterfaceGroup {
+    id: ID!
+    metadata: GenericMetadata!
+    signature: Signature!
+    interfaces: [Interface!]
+}
+
+type Interface {
+    name: String!
+    prefix: String!
+    path: String! @id @search(by: [regexp])
+
+    latestRevision: InterfaceRevision
+    revisions: [InterfaceRevision!]!
+}
+
+type InterfaceRevision {
+    id: ID!
+    metadata: GenericMetadata!
+    revision: String! @search(by: [exact, regexp])
+    spec: InterfaceSpec!
+
+    implementedBy: [ImplementationRevision!]
+
+    """
+    List Implementations for a given Interface
+    """
+    implementations: [Implementation!] @custom(http: {
+        url: "http://host.docker.internal:8888/implementations"
+        method: POST
+        body: "{id:$id}"
+    })
+    signature: Signature!
+}
+
+type InterfaceSpec {
+    input: InterfaceInput!
+    output: InterfaceOutput!
+}
+
+type InterfaceInput {
+    parameters: InputParameters
+    typeInstances: [InputTypeInstance]!
+}
+
+type InputParameters {
+    jsonSchema: String # String? Maybe JSON type?
+}
+
+type InterfaceOutput {
+    typeInstances: [OutputTypeInstance]!
+}
+
+interface TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type InputTypeInstance implements TypeInstance {
+    verbs: [TypeInstanceOperationVerb!]!
+}
+
+enum TypeInstanceOperationVerb {
+    CREATE, GET, LIST, UPDATE, DELETE
+}
+
+type OutputTypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type TypeReference {
+    path: String!
+    revision: String!
+}
+
+type Signature {
+    och: String!
+}
+
+type Maintainer {
+    name: String
+    email: String!
+    url: String
+}
+
+# Generic Metadata
+interface GenericMetadata {
+    id: ID!
+    name: String! @dgraph(pred: "name") # Search by string https://dgraph.io/docs/graphql/schema/search/#string
+    prefix: String @dgraph(pred: "prefix") # resolver
+    path: String @search(by: [hash])  @dgraph(pred: "path")
+    displayName: String @dgraph(pred: "displayName")
+    description: String! @dgraph(pred: "description")
+    maintainers: [Maintainer!]! @dgraph(pred: "maintainers")
+    documentationURL: String @dgraph(pred: "documentationURL")
+    supportURL: String @dgraph(pred: "supportURL")
+    iconURL: String @dgraph(pred: "iconURL")
+}
+
+type ImplementationMetadata implements GenericMetadata {
+    tags: [TagRevision!]!  @dgraph(pred: "tags")
+}
+
+# Implementation
+type Implementation {
+    name: String!
+    prefix: String!
+    path: String! @id @search(by: [regexp])
+
+    latestRevision: ImplementationRevision
+    revisions: [ImplementationRevision!]
+}
+
+type ImplementationRevision {
+    id: ID!
+    metadata: ImplementationMetadata!
+    revision: String!
+    spec: ImplementationSpec!
+
+    interfaces: [InterfaceRevision!]! @hasInverse(field: implementedBy) # resolver based on "implements" section
+    signature: Signature!
+}
+
+type ImplementationSpec {
+    appVersion: String!
+    implements: [InterfaceReference!]!
+    requires: [ImplementationRequirement!]!
+    imports: [ImplementationImport!]
+    action: ImplementationAction!
+    additionalInput: ImplementationAdditionalInput
+    additionalOutput: ImplementationAdditionalOutput
+}
+
+type ImplementationAdditionalInput {
+    typeInstances: [InputTypeInstance!]!
+}
+
+type ImplementationAdditionalOutput {
+    typeInstances: [OutputTypeInstance!]!
+    typeInstanceRelations: [TypeInstanceRelationItem!]!
+}
+
+type TypeInstanceRelationItem {
+    typeInstanceName: String!
+
+    """
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    """
+    uses: [String!]!
+}
+
+
+type InterfaceReference {
+    path: String!
+    revision: String!
+}
+
+type ImplementationRequirement {
+    prefix: String!
+    oneOf: [ImplementationRequirementItem!]!
+    anyOf: [ImplementationRequirementItem!]!
+    allOf: [ImplementationRequirementItem!]!
+}
+
+type ImplementationRequirementItem {
+    typeRef: TypeReference!
+
+    """
+    Holds the configuration constraints for the given entry based on Type value.
+    Currently not supported.
+    """
+    valueConstraints: String
+}
+
+type ImplementationImport {
+    interfaceGroupPath: String!
+    alias: String
+    appVersion: String
+    methods: [ImplementationImportMethod!]!
+}
+
+type ImplementationImportMethod {
+    name: String!
+
+    """
+    If not provided, latest revision for a given Interface is used
+    """
+    revision: String
+}
+
+type ImplementationAction {
+    """
+    The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
+    """
+    runnerInterface: String!
+    args: String
+}
+
+
+# Tag
+type TagRevision {
+    id: ID!
+    metadata: GenericMetadata!
+    revision: String!
+    spec: TagSpec!
+    signature: Signature!
+}
+
+type TagSpec {
+    additionalRefs: [String!]!
+}
+
+# Simplified Type
+
+type TypeRevision {
+    name: String!
+    prefix: String
+    path: String! @id
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]!
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+    revision: String!
+    # spec: TypeSpec! for simplicity
+    signature: Signature!
+}
