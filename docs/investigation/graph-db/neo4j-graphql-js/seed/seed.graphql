@@ -1,0 +1,743 @@
+mutation mergeData(
+    $interfaceGroupID: ID!,
+    $interfaceID1: ID!,
+    $interfaceID2: ID!,
+    $maintainerID: ID!,
+    $interfaceGroupMetadataPath: NodePath!,
+    $interfaceGroupSignatureID: ID!,
+    $interfaceRevisionID1: ID!,
+    $interfaceRevisionID2: ID!,
+    $interfaceRevisionID3: ID!,
+    $interfaceRevision1MetadataPath: NodePath!,
+    $interfaceRevision2MetadataPath: NodePath!,
+    $interfaceRevision3MetadataPath: NodePath!,
+    $implementationID1: ID!,
+    $implementationID2: ID!,
+    $implementationRevisionID11: ID!,
+    $implementationRevisionID12: ID!,
+    $implementationRevisionID21: ID!,
+    $implementationRevisionID22: ID!
+) {
+    MergeInterfaceGroup(id: $interfaceGroupID) {
+        id
+    }
+
+    MergeGenericMetadata(,
+        name: "sample.interfacegroup"
+        prefix: "interface group prefix"
+        path: $interfaceGroupMetadataPath,
+        displayName: "Interface Group name"
+        description: "Foo"
+    ) {
+        path
+    }
+
+    MergeMaintainer(id: $maintainerID, name: "foo Bar", email: "foo@bar.com", url: "foo.bar") {
+        id
+    }
+
+    MergeGenericMetadataMaintainers(from: {
+        path: $interfaceGroupMetadataPath
+    }, to: {
+        id: $maintainerID
+    }) {
+        from {
+            path
+        }
+        to {
+            id
+        }
+    }
+
+    MergeInterfaceGroupMetadata(from: {
+        id: $interfaceGroupID
+    }, to: {
+        path: $interfaceGroupMetadataPath
+    }) {
+        from {
+            id
+        }
+        to {
+            path
+        }
+    }
+
+    MergeSignature(id: $interfaceGroupSignatureID, och: "och-sig") {
+        id
+    }
+
+    MergeInterfaceGroupSignature(from: {
+        id: $interfaceGroupID
+    }, to: {
+        id: $interfaceGroupSignatureID
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    interface1: MergeInterface(id: $interfaceID1, name: "Interface Foo", prefix: "interface.foo.prefix", path: "interface.foo.path") {
+        id
+        name
+        prefix
+    }
+
+    interface1r: MergeInterfaceGroupInterfaces(from: {
+        id: $interfaceGroupID
+    }, to: {
+        id: $interfaceID1
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    interface2: MergeInterface(id: $interfaceID2, name: "Interface Bar", prefix: "interface.bar.prefix", path: "interface.bar") {
+        id
+        name
+        prefix
+    }
+
+    interface2r: MergeInterfaceGroupInterfaces(from: {
+        id: $interfaceGroupID
+    }, to: {
+        id: $interfaceID2
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    interfaceRevision1: MergeInterfaceRevision(id: $interfaceRevisionID1, revision: "0.1.1") {
+        id
+    }
+
+    interfaceRevision2: MergeInterfaceRevision(id: $interfaceRevisionID2, revision: "0.1.0") {
+        id
+    }
+    interfaceRevision3: MergeInterfaceRevision(id: $interfaceRevisionID3, revision: "0.0.2") {
+        id
+    }
+
+    interfaceRevision1M:   MergeGenericMetadata(,
+        name: "sample.interfacerevision1"
+        prefix: "interface rev 1 prefix"
+        path: $interfaceRevision1MetadataPath,
+        displayName: "Interface Rev 1 name"
+        description: "Foo"
+    ) {
+        path
+    }
+
+    interfaceRevision2M:   MergeGenericMetadata(,
+        name: "sample.interfacerevision2"
+        prefix: "interface rev 2 prefix"
+        path: $interfaceRevision2MetadataPath,
+        displayName: "Interface Rev 2 name"
+        description: "Foo"
+    ) {
+        path
+    }
+    interfaceRevision3M:   MergeGenericMetadata(,
+        name: "sample.interfacerevision3"
+        prefix: "interface rev 3 prefix"
+        path: $interfaceRevision3MetadataPath,
+        displayName: "Interface Rev 3 name"
+        description: "Foo"
+    ) {
+        path
+    }
+
+    interfaceRevision1S: MergeInterfaceSpec(id: $interfaceRevisionID1, foo: "foo1") {
+        foo
+    }
+
+    interfaceRevision2S: MergeInterfaceSpec(id: $interfaceRevisionID2, foo: "foo2") {
+        foo
+    }
+
+    interfaceRevision3S: MergeInterfaceSpec(id: $interfaceRevisionID3, foo: "foo3") {
+        foo
+    }
+
+    interfaceRevision1SR: MergeInterfaceRevisionSpec(from: {
+        id: $interfaceRevisionID1
+    }, to: {
+        id: $interfaceRevisionID1
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    interfaceRevision2SR: MergeInterfaceRevisionSpec(from: {
+        id: $interfaceRevisionID2
+    }, to: {
+        id: $interfaceRevisionID2
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    interfaceRevision3SR: MergeInterfaceRevisionSpec(from: {
+        id: $interfaceRevisionID3
+    }, to: {
+        id: $interfaceRevisionID3
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+
+    interfaceRevision1MR: MergeInterfaceRevisionMetadata(from: {
+        id: $interfaceRevisionID1
+    }, to: {
+        path: $interfaceRevision1MetadataPath
+    }) {
+        from {
+            id
+        }
+        to {
+            path
+        }
+    }
+
+    interfaceRevision2MR: MergeInterfaceRevisionMetadata(from: {
+        id: $interfaceRevisionID2
+    }, to: {
+        path: $interfaceRevision2MetadataPath
+    }) {
+        from {
+            id
+        }
+        to {
+            path
+        }
+    }
+
+    interfaceRevision3MR: MergeInterfaceRevisionMetadata(from: {
+        id: $interfaceRevisionID3
+    }, to: {
+        path: $interfaceRevision3MetadataPath
+    }) {
+        from {
+            id
+        }
+        to {
+            path
+        }
+    }
+
+    iR1Merge: MergeInterfaceRevisions(from: {
+        id: $interfaceID1
+    }, to: {
+        id: $interfaceRevisionID1
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    iR2Merge: MergeInterfaceRevisions(from: {
+        id: $interfaceID1
+    }, to: {
+        id: $interfaceRevisionID2
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    iR3Merge: MergeInterfaceRevisions(from: {
+        id: $interfaceID2
+    }, to: {
+        id: $interfaceRevisionID3
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    impl1: MergeImplementation(id: $implementationID1, name: "Implementation 1", prefix: "impl 1 prefix", path: "impl 1 path") {
+        id
+    }
+
+    impl2: MergeImplementation(id: $implementationID2, name: "Implementation 2", prefix: "impl 2 prefix", path: "impl 2 path") {
+        id
+    }
+
+
+    implRev11: MergeImplementationRevision(id: $implementationRevisionID11, revision: "0.1.0") {
+        id
+    }
+
+    implRev12: MergeImplementationRevision(id: $implementationRevisionID12, revision: "0.1.1") {
+        id
+    }
+
+    implRev21: MergeImplementationRevision(id: $implementationRevisionID21, revision: "0.2.1") {
+        id
+    }
+
+    implRev22: MergeImplementationRevision(id: $implementationRevisionID22, revision: "0.1.2") {
+        id
+    }
+
+    implRev11Metadata: MergeImplementationMetadata(id: $implementationRevisionID11,
+        name: "Implementation 1", prefix: "impl 1 prefix", path: "impl 1 path"
+    ) {
+        id
+    }
+
+    implRev11MetadataRel: MergeImplementationRevisionMetadata(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: $implementationRevisionID11
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev12Metadata: MergeImplementationMetadata(id: $implementationRevisionID12,
+        name: "Implementation 1", prefix: "impl 1 prefix", path: "impl 1 path"
+    ) {
+        id
+    }
+
+    implRev12MetadataRel: MergeImplementationRevisionMetadata(from: {
+        id: $implementationRevisionID12
+    }, to: {
+        id: $implementationRevisionID12
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev21Metadata: MergeImplementationMetadata(id: $implementationRevisionID21,
+        name: "Implementation 2", prefix: "impl 2 prefix", path: "impl 2 path"
+    ) {
+        id
+    }
+
+    implRev21MetadataRel: MergeImplementationRevisionMetadata(from: {
+        id: $implementationRevisionID21
+    }, to: {
+        id: $implementationRevisionID21
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev22Metadata: MergeImplementationMetadata(id: $implementationRevisionID22,
+        name: "Implementation 2", prefix: "impl 2 prefix", path: "impl 2 path"
+    ) {
+        id
+    }
+
+    implRev22MetadataRel: MergeImplementationRevisionMetadata(from: {
+        id: $implementationRevisionID22
+    }, to: {
+        id: $implementationRevisionID22
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev11Spec: MergeImplementationSpec(id: $implementationRevisionID11, foo: "foo11") {
+        foo
+    }
+
+    implRev11SpecRel: MergeImplementationRevisionSpec(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: $implementationRevisionID11
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev12Spec: MergeImplementationSpec(id: $implementationRevisionID12, foo: "foo12") {
+        foo
+    }
+
+    implRev12SpecRel: MergeImplementationRevisionSpec(from: {
+        id: $implementationRevisionID12
+    }, to: {
+        id: $implementationRevisionID12
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev21Spec: MergeImplementationSpec(id: $implementationRevisionID21, foo: "foo21") {
+        foo
+    }
+
+    implRev21SpecRel: MergeImplementationRevisionSpec(from: {
+        id: $implementationRevisionID21
+    }, to: {
+        id: $implementationRevisionID21
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRev22Spec: MergeImplementationSpec(id: $implementationRevisionID22, foo: "foo22") {
+        foo
+    }
+
+    implRev22SpecRel: MergeImplementationRevisionSpec(from: {
+        id: $implementationRevisionID22
+    }, to: {
+        id: $implementationRevisionID22
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    implRevMerge11: MergeImplementationRevisions(from: {
+        id: $implementationID1
+    }, to: {
+        id: $implementationRevisionID11
+    }) {
+        from {
+            id
+        }
+
+        to {
+            id
+        }
+    }
+
+    implRevMerge12: MergeImplementationRevisions(from: {
+        id: $implementationID1
+    }, to: {
+        id: $implementationRevisionID12
+    }) {
+        from {
+            id
+        }
+
+        to {
+            id
+        }
+    }
+
+    implRevMerge21: MergeImplementationRevisions(from: {
+        id: $implementationID2
+    }, to: {
+        id: $implementationRevisionID21
+    }) {
+        from {
+            id
+        }
+
+        to {
+            id
+        }
+    }
+
+    implRevMerge22: MergeImplementationRevisions(from: {
+        id: $implementationID2
+    }, to: {
+        id: $implementationRevisionID22
+    }) {
+        from {
+            id
+        }
+
+        to {
+            id
+        }
+    }
+
+    impl11merge:   MergeImplementationRevisionInterfaces(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: $interfaceRevisionID1
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    impl12merge:   MergeImplementationRevisionInterfaces(from: {
+        id:  $implementationRevisionID12
+    }, to: {
+        id:$interfaceRevisionID2
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    impl21merge:   MergeImplementationRevisionInterfaces(from: {
+        id: $implementationRevisionID21
+    }, to: {
+        id: $interfaceRevisionID1
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    impl22merge:   MergeImplementationRevisionInterfaces(from: {
+        id: $implementationRevisionID22
+    }, to: {
+        id: $interfaceRevisionID2
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    # Requirements
+
+    Req1: MergeImplementationRequirement(id: "req1", prefix: "cap.core.type.platform") {
+        id
+    }
+
+    Req2: MergeImplementationRequirement(id: "req2", prefix: "cap.core.type.platform") {
+        id
+    }
+
+
+    ReqItem1: MergeImplementationRequirementItem(id: "reqItem1",typeRefPath: "cap.core.type.platform.kubernetes", typeRefRevision: "0.1.0") {
+        id
+    }
+
+    ReqItem1rel: MergeImplementationRequirementOneOf(from: {
+        id: "req1"
+    }, to: {
+        id: "reqItem1"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    ReqItem2: MergeImplementationRequirementItem(id: "reqItem2",typeRefPath: "cap.type.platform.cloudFoundry", typeRefRevision: "0.1.0") {
+        id
+    }
+
+    ReqItem2rel: MergeImplementationRequirementOneOf(from: {
+        id: "req1"
+    }, to: {
+        id: "reqItem2"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+
+    ReqItem3: MergeImplementationRequirementItem(id: "reqItem3",typeRefPath: "cap.core.type.platform.whatever", typeRefRevision: "0.2.0") {
+        id
+    }
+
+    ReqItem3rel: MergeImplementationRequirementOneOf(from: {
+        id: "req2"
+    }, to: {
+        id: "reqItem3"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    # Requirement Relations
+
+    Rev11Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: "req1"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev11Req2Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: "req2"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev12Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID12
+    }, to: {
+        id: "req2"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev21Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID21
+    }, to: {
+        id: "req1"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    # No requirements for Rev22
+
+
+    # Requirement Relations
+
+    Rev11Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: "req1"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev11Req2Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID11
+    }, to: {
+        id: "req2"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev12Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID12
+    }, to: {
+        id: "req2"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    Rev21Req1Rel: MergeImplementationSpecRequires(from: {
+        id: $implementationRevisionID21
+    }, to: {
+        id: "req1"
+    }) {
+        from {
+            id
+        }
+        to {
+            id
+        }
+    }
+
+    # No requirements for Rev22
+
+}

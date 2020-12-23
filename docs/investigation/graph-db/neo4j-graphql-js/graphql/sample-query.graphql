@@ -1,0 +1,141 @@
+query InterfaceGroup {
+    # These filtering capabilities have been generated
+    interfaceGroup(filter: { metadata: { path: "interfacegroup.path" } }) {
+        ...InterfaceGroup
+    }
+}
+
+query InterfaceGroupCustom {
+    # custom query with Cypher query defined in GraphQLschema
+    # this is basically the same query as above one
+    interfaceGroupCustom(path: "interfacegroup.path") {
+        ...InterfaceGroup
+    }
+}
+
+query InterfaceGroups {
+    interfaceGroups {
+        ...InterfaceGroup
+    }
+}
+
+fragment InterfaceGroup on InterfaceGroup {
+    id
+    metadata {
+        prefix
+        path
+        name
+        displayName
+        description
+        maintainers {
+            id
+            name
+            email
+        }
+        iconURL
+    }
+    interfaces {
+        id
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+fragment ImplementationsForInterface on InterfaceRevision {
+    implementationRevisions {
+        ...ImplementationRevision
+    }
+    implementationRevisionForRequirements(
+        filter: {
+            requirementsSatisfiedBy: [
+                "cap.core.type.platform.kubernetes"
+                "cap.core.type.platform.whatever"
+            ]
+        }
+    ) {
+        ...ImplementationRevision
+    }
+
+    implementationRevisionsForRequirementsCustom(
+        filter: {
+            requirementsSatisfiedBy: [
+                { typeRef: { path: "cap.core.type.platform.kubernetes" } }
+                { typeRef: { path: "cap.core.type.platform.whatever" } }
+            ]
+        }
+    ) {
+        id
+        revision
+
+        # nested fields won't work - in order to make it work,
+        # the custom resolver would need to return all nested objects
+        # metadata {
+        #   id
+        # }
+    }
+
+}
+
+fragment InterfaceRevision on InterfaceRevision {
+    _id
+    id
+    metadata {
+        prefix
+        path
+        name
+        displayName
+        description
+        maintainers {
+            id
+            name
+            email
+        }
+        iconURL
+    }
+    revision
+    spec {
+        foo
+    }
+    ...ImplementationsForInterface
+}
+
+fragment ImplementationRevision on ImplementationRevision {
+    id
+    metadata {
+        name
+        prefix
+        path
+        displayName
+    }
+    spec {
+        foo
+        requires {
+            prefix
+            oneOf {
+                typeRefPath
+                typeRefRevision
+                valueConstraints
+            }
+            anyOf {
+                typeRefPath
+                typeRefRevision
+                valueConstraints
+            }
+            allOf {
+                typeRefPath
+                typeRefRevision
+                valueConstraints
+            }
+        }
+    }
+}

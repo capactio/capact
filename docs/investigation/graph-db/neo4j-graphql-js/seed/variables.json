@@ -1,0 +1,20 @@
+{
+  "interfaceGroupID": "igID",
+  "interfaceID1": "intID1",
+  "interfaceID2": "intID2",
+  "maintainerID": "mID",
+  "interfaceGroupMetadataPath": "interfacegroup.path",
+  "interfaceGroupSignatureID": "sigID",
+  "interfaceRevisionID1": "iRevID1",
+  "interfaceRevisionID2": "iRevID2",
+  "interfaceRevisionID3": "iRevID3",
+  "interfaceRevision1MetadataPath": "revision.1",
+  "interfaceRevision2MetadataPath": "revision.2",
+  "interfaceRevision3MetadataPath": "revision.3",
+  "implementationID1": "id1",
+  "implementationID2": "id2",
+  "implementationRevisionID11": "11",
+  "implementationRevisionID12": "12",
+  "implementationRevisionID21": "21",
+  "implementationRevisionID22": "22"
+}

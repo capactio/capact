@@ -1,0 +1,504 @@
+"""
+Arbitrary data
+"""
+scalar Any
+
+"""
+Full path of a given node, e.g. cap.core.type.platform.kubernetes
+"""
+scalar NodePath
+
+"""
+Pattern of the path of a given node, e.g. cap.core.type.platform.*
+"""
+scalar NodePathPattern
+
+"""
+Path for the parent node, e.g. for Interface it is InterfaceGroup path.
+"""
+scalar NodePrefix
+
+"""
+Name of a given node. Name is immutable between different revisions of a given node.
+"""
+scalar NodeName
+
+"""
+Version in semantic versioning, e.g. 1.1.0
+"""
+scalar Version
+
+"""
+Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
+"""
+scalar VersionRange
+
+input InterfaceFilter {
+    prefixPattern: NodePathPattern
+}
+
+input ImplementationFilter {
+#    # Not supported
+#    prefixPattern: NodePathPattern
+
+    """
+    If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+    For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+    """
+    # For simplification it is string array
+    requirementsSatisfiedBy: [String!]
+
+#    # Not supported
+#    tags: [TagFilterInput!]
+}
+
+input CustomImplementationFilter {
+    requirementsSatisfiedBy: [TypeInstanceValue!]
+}
+
+input TypeInstanceValue {
+    typeRef: TypeReferenceInput
+
+    """
+    Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
+    Currently not supported.
+    """
+    value: Any
+}
+
+input TypeReferenceInput {
+    path: NodePath!
+
+    """
+    If not provided, latest revision for a given Type is used
+    """
+    revision: Version
+}
+
+input TagFilterInput {
+    path: NodePath!
+    rule: FilterRule = INCLUDE
+
+    """
+    If not provided, latest revision for a given Tag is used
+    """
+    revision: Version
+}
+
+enum FilterRule {
+    INCLUDE
+    EXCLUDE
+}
+
+input InterfaceGroupFilter {
+    prefixPattern: NodePathPattern
+}
+
+input TagFilter {
+    prefixPattern: NodePathPattern
+}
+
+input TypeFilter {
+    prefixPattern: NodePathPattern
+}
+
+type RepoMetadata {
+    name: NodeName!
+    prefix: NodePrefix!
+    path: NodePath!
+
+    latestRevision: RepoMetadataRevision
+    revision(revision: Version!): RepoMetadataRevision
+    revisions: [RepoMetadataRevision!]!
+}
+
+type RepoMetadataRevision {
+    metadata: GenericMetadata!
+    revision: Version!
+    spec: RepoMetadataSpec!
+    signature: Signature!
+}
+
+type RepoMetadataSpec {
+    ochVersion: Version!
+    ocfVersion: RepoOCFVersion!
+    implementation: RepoImplementationConfig!
+}
+
+type RepoImplementationConfig {
+    appVersion: RepoImplementationAppVersionConfig!
+}
+
+type RepoImplementationAppVersionConfig {
+    semVerTaggingStrategy: SemVerTaggingStrategy!
+}
+
+type SemVerTaggingStrategy {
+    latest: LatestSemVerTaggingStrategy!
+}
+
+type LatestSemVerTaggingStrategy {
+    pointsTo: SemVerTaggingStrategyTags!
+}
+
+enum SemVerTaggingStrategyTags {
+    STABLE, EDGE
+}
+
+type RepoOCFVersion {
+    default: Version!
+    supported: [Version!]!
+}
+
+type InterfaceGroup {
+    id: ID!
+    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+
+    interfaces: [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type Interface {
+    id: ID!
+    name: NodeName!
+    prefix: NodePrefix!
+    path: String! # it can be ID with id directive
+
+    latestRevision: InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
+    revision(revision: Version!): InterfaceRevision  @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir")
+    revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type InterfaceRevision {
+    id: ID!
+    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+    revision: Version!
+    spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+
+    """
+    List Implementations for a given Interface
+    """
+
+    # https://neo4j.com/developer/kb/conditional-cypher-execution/
+    implementationRevisionForRequirements(filter: ImplementationFilter): [ImplementationRevision!]! @cypher(statement: """
+    MATCH (this:InterfaceRevision)
+
+    // When Implementation doesn't require anything
+    CALL{
+    WITH this
+    MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
+    WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
+    RETURN implRev
+
+    UNION
+
+    // When Implementation has requirements using oneOf
+    WITH this
+    MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
+
+    // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
+    WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
+    RETURN implRev
+    }
+
+    // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
+    // because then a nested resolver for Implementation would return all revisions
+
+    RETURN implRev
+    """)
+
+    # Custom resolver with more advanced field
+    implementationRevisionsForRequirementsCustom(filter: CustomImplementationFilter): [ImplementationRevision!]! @neo4j_ignore
+
+    implementationRevisions: [ImplementationRevision!]! @relation(name: "IMPLEMENTS", direction: "IN")
+
+    implementationRevisionsCustom: [ImplementationRevision!]! @neo4j_ignore
+
+# Not relevant
+#    signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+}
+
+type InterfaceSpec {
+    id: ID!
+    foo: String! # Sample field for testing purposes
+}
+
+type InterfaceInput {
+    parameters: InputParameters
+    typeInstances: [InputTypeInstance]!
+}
+
+type InputParameters {
+    jsonSchema: Any
+}
+
+type InterfaceOutput {
+    typeInstances: [OutputTypeInstance]!
+}
+
+interface TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type InputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+    verbs: [TypeInstanceOperationVerb!]!
+}
+
+enum TypeInstanceOperationVerb {
+    CREATE, GET, LIST, UPDATE, DELETE
+}
+
+type OutputTypeInstance implements TypeInstance {
+    name: String!
+    typeRef: TypeReference!
+}
+
+type Type {
+    name: NodeName!
+    prefix: NodePrefix!
+    path: NodePath!
+
+    latestRevision: TypeRevision
+    revision(revision: Version!): TypeRevision
+    revisions: [TypeRevision!]!
+}
+
+type TypeRevision {
+    metadata: TypeMetadata!
+    revision: Version!
+    spec: TypeSpec!
+    signature: Signature!
+}
+
+type TypeSpec {
+    additionalRefs: [NodePath!]
+    jsonSchema: Any
+}
+
+type Implementation {
+    id: ID!
+
+    name: NodeName!
+    prefix: NodePrefix!
+    path: NodePath! # it can be ID with id directive
+
+    latestRevision: ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
+    revision(revision: Version!): ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir")
+    revisions: [ImplementationRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type ImplementationRevision {
+    id: ID!
+    revision: Version!
+
+    metadata: ImplementationMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+    spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+
+    interfaces: [InterfaceRevision!]! @relation(name: "IMPLEMENTS", direction: "OUT")
+#    signature: Signature!
+}
+
+type ImplementationSpec {
+    id: ID!
+#    implements: [InterfaceReference!]!
+    requires: [ImplementationRequirement!]! @relation(name: "REQUIRES", direction: "OUT")
+
+#    appVersion: VersionRange!
+#    imports: [ImplementationImport!]
+#    action: ImplementationAction!
+#    additionalInput: ImplementationAdditionalInput
+#    additionalOutput: ImplementationAdditionalOutput
+
+    foo: String
+}
+
+type ImplementationAdditionalInput {
+    typeInstances: [InputTypeInstance!]!
+}
+
+type ImplementationAdditionalOutput {
+    typeInstances: [OutputTypeInstance!]!
+    typeInstanceRelations: [TypeInstanceRelationItem!]!
+}
+
+type TypeInstanceRelationItem {
+    typeInstanceName: String!
+
+    """
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    """
+    uses: [String!]!
+}
+
+
+type InterfaceReference {
+    path: NodePath!
+    revision: Version!
+}
+
+type ImplementationRequirement {
+    id: ID!
+    prefix: NodePrefix!
+    oneOf: [ImplementationRequirementItem!]! @relation(name: "ONE_OF", direction: "OUT")
+    anyOf: [ImplementationRequirementItem!]! @relation(name: "ANY_OF", direction: "OUT")
+    allOf: [ImplementationRequirementItem!]! @relation(name: "ALL_OF", direction: "OUT")
+}
+
+type ImplementationRequirementItem {
+    id: ID!
+#    typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
+
+    # For simplicity the fields from typeRef was copied to the item itself
+    typeRefPath: NodePath!
+    typeRefRevision: Version!
+
+    """
+    Holds the configuration constraints for the given entry based on Type value.
+    Currently not supported.
+    """
+    valueConstraints: Any
+}
+
+type TypeReference {
+    path: NodePath!
+    revision: Version!
+}
+
+type ImplementationImport {
+    interfaceGroupPath: NodePath!
+    alias: String
+    appVersion: VersionRange
+    methods: [ImplementationImportMethod!]!
+}
+
+type ImplementationImportMethod {
+    name: NodeName!
+
+    """
+    If not provided, latest revision for a given Interface is used
+    """
+    revision: Version
+}
+
+type ImplementationAction {
+    """
+    The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
+    """
+    runnerInterface: String!
+    args: Any
+}
+
+type Tag {
+    name: NodeName!
+    prefix: NodePrefix!
+    path: NodePath!
+
+    latestRevision: TagRevision
+    revision(revision: Version!): TagRevision
+    revisions: [TagRevision!]!
+}
+
+type TagRevision {
+    metadata: GenericMetadata!
+    revision: Version!
+    spec: TagSpec!
+    signature: Signature!
+}
+
+# It is defined to make sure that all metadata types have the same base fields.
+# Unfortunately all Types that implement an Interface have to repeat the same fields,
+# however it's the only way to do so.
+interface MetadataBaseFields {
+    name: NodeName!
+    prefix: NodePrefix # resolver
+    path: NodePath
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+}
+
+type GenericMetadata implements MetadataBaseFields {
+    name: NodeName!
+    prefix: NodePrefix # resolver
+    path: NodePath @id
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+}
+
+type ImplementationMetadata implements MetadataBaseFields {
+    id: ID!
+    name: NodeName!
+    prefix: NodePrefix # resolver
+    path: NodePath
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+    tags: [TagRevision!]!
+}
+
+type TypeMetadata implements MetadataBaseFields {
+    id: ID!
+    name: NodeName!
+    prefix: NodePrefix # resolver
+    path: NodePath
+    displayName: String
+    description: String!
+    maintainers: [Maintainer!]!
+    documentationURL: String
+    supportURL: String
+    iconURL: String
+    tags: [TagRevision!]!
+}
+
+type Signature {
+    id: ID!
+    och: String!
+}
+
+type Maintainer {
+    id: ID!
+    name: String
+    email: String!
+    url: String
+}
+
+type TagSpec {
+    additionalRefs: [NodePath!]!
+}
+
+type Query {
+    repoMetadata: RepoMetadata
+
+    interfaceGroups: [InterfaceGroup!]!
+    interfaceGroup: InterfaceGroup
+
+    interfaceGroupCustom(path: NodePath!): InterfaceGroup @cypher(statement: "MATCH (g:InterfaceGroup)-[:DESCRIBED_BY]->(m:GenericMetadata {path: $path}) return g")
+
+    interfaces(filter: InterfaceFilter): [Interface!]!
+    interface(path: NodePath!): Interface
+
+    types(filter: TypeFilter): [Type!]!
+    type(path: NodePath!): Type
+
+    implementations: [Implementation!]!
+    implementation(path: NodePath!): Implementation
+
+    tags(filter: TagFilter): [Tag!]!
+    tag(path: NodePath!): Tag
+}
+
+# No mutations for now, as all resources are populated with DB populator
+
