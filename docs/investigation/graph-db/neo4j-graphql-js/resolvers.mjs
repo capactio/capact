@@ -28,7 +28,7 @@ export const resolvers = {
             
                 UNION
             
-                // When Implementation has requirements using AnyOf
+                // When Implementation has requirements using oneOf
                 WITH this
                 MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
             

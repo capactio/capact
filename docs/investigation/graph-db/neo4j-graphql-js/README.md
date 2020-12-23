@@ -13,6 +13,12 @@ with [`neo4j-graphql.js`](https://github.com/neo4j-graphql/neo4j-graphql-js) tha
 
 ## Usage
 
+Install dependencies:
+
+```bash
+npm install
+```
+
 Run the server:
 
 ```bash
