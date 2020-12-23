@@ -140,6 +140,8 @@ spec:
                   ocf-output-type-instances:
                     - name: jira-config
                       from: additional
+                    - name: helm-release
+                      from: helm-release
                   arguments:
                     artifacts:
                       - name: input-parameters

@@ -103,8 +103,10 @@ spec:
                   ocf-action:
                     path: cap.interface.runner.helm.run
                   ocf-output-type-instances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-                    - name: postgresql # TypeInstance name
-                      from: additional # reference to artifact
+                    - name: postgresql
+                      from: additional
+                    - name: helm-release
+                      from: helm-release
                   arguments:
                     artifacts:
                       - name: input-parameters

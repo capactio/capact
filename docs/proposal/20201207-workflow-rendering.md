@@ -25,29 +25,29 @@ This document shows how we can render the workflow in Voltron Engine.
 
 ## Motivation
 
-Voltron must, base on the available OCF Manifests, be able to render a complete workflow, which can be executed by [Runners](../../docs/runner.md). For now, we do not have a proposal for how the rendering will be done and what kind of syntax will be use to describe the workflows.
+Voltron must, bases on the available OCF Manifests, be able to render a complete workflow, which can be executed by [runners](../../docs/runner.md). For now, we do not have a proposal, for how the rendering will be done and what kind of syntax will be used to describe the workflow.
 
-Besides providing a syntax to define a workflow, in many cases Content Creators would like to call an other Interfaces, which is already available in OCH. For example - they are creating a workflow to provision Wordpress and they need an PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Actions.
-Voltron must have an option, to allow Content Creators reference another Interface in his workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
+Besides providing a syntax to define a workflow, in many cases Content Creators would like to call an other Interfaces, which is already available in OCH. For example - they are creating a workflow to provision Wordpress and they need an PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Action.
+Voltron must have an option, to allow Content Creators reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
 
 Content Creator should be able to:
 - reference a Interface to be called in a Action workflow,
-- use and pass input parameters to the Interfaces,
+- use and pass input parameters to Interfaces,
 - reference output TypeInstances from a called Interface,
-- conditionally call a Interface,
+- conditionally call an Interface,
 - define, which workflow artifacts are TypeInstances.
 
 Voltron Engine must be able to:
 - merge called Interfaces into the Action workflow.
 
-For now, we want to base on the Argo workflow syntax and only extend it, to support our additional use cases. In the future we might revisit this and change the syntax, so it is more user friendly.
+For now, we want to base on the Argo workflow syntax and only extend it, to support our additional use cases. In the future we might revisit this and change the syntax, so it is more user friendly and can support also non-Argo runners.
 
 ### Goals
 
 - How to reference a Interface to be called in a Action workflow.
-- How to use and pass input parameters to the Interfaces,
+- How to use and pass input parameters to Interfaces,
 - How to reference output TypeInstances from a called Interface.
-- How to conditionally call a Interface.
+- How to conditionally call an Interface.
 - How to define, which workflow artifacts are TypeInstances.
 - How to merge called Interfaces into the Action workflow.
 
@@ -78,16 +78,15 @@ spec:
           - name: jira-install
             steps:
               - - name: install-db
-                  ocf-action:
-                    path: postgres.install
+                  ocf-action: postgres.install
 ```
 
-### How to use and pass input parameters to the Interfaces
+### How to use and pass input parameters to Interfaces
 
 Interfaces need input parameters and Content Creators must have a way to use and also pass them to the Interfaces, they call.
 We have to somehow inject the input-parameters to the workflow, so the Content Creator can reference them.
 
-We propose, that the input parameters will be injected into the workflow as a local artifact named `input-parameters`. Fixing the artifact name, allows Voltron Engine to populate the proper artifact and also defines a standard on how to pass input parameters to Interfaces called by the Content Creator.
+We propose, that the input parameters will be injected into the workflow as a local artifact named `input-parameters`. Fixing the artifact name, allows Voltron Engine to populate the proper artifact and also defines a standard, on how to pass input parameters to Interfaces called by the Content Creator.
 
 ```yaml
 kind: Implementation
@@ -125,7 +124,7 @@ During the rendering phase, Voltron Engine will inject the `input-parameters` ar
 ```
 
 Content Creators can also pass input parameters to the Interfaces, they call in their Actions.
-The called Interfaces will be rendered into the workflow as a nested workflow. As the input parameters are passed to the workflow by the `input-parameters` artifact, Content Creators can use is to pass input parameters to the called Interface:
+The called Interface will be rendered into the workflow as a nested workflow. As the input parameters are passed to the workflow by the `input-parameters` artifact, Content Creators can use is to pass input parameters to the called Interface:
 ```yaml
 kind: Implementation
 spec:
@@ -194,8 +193,7 @@ spec:
           - name: jira-install
             steps:
               - - name: install-db
-                  ocf-action:
-                    name: cap.interface.postgresql.install
+                  ocf-action: postgresql.install
               - - name: install-jira
                   template: install-jira
                   arguments:
@@ -204,24 +202,31 @@ spec:
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 ```
 
-The Interface has a output TypeInstance called `postgresql` defined. To expose it to the Content Creators, we export it as a global artifact called `postgresql`.  They can then reference it using `{{workflow.outputs.artifacts.postgresql}}`.
+The Interface `postgresql.install` has a output TypeInstance called `postgresql` defined. To expose it to the Content Creators, we export it as a global artifact named `postgresql`.  They can then use `{{workflow.outputs.artifacts.postgresql}}` to reference the TypeInstance artifact.
 
-### How to conditionally call a Interface
+### How to conditionally call an Interface
 
-Content Creators might make their Actions self-sufficient and create the dependent TypeInstances in it, or allow the Voltron User to provide existing TypeInstances for the Action. To support this case we need an option to conditionally call Interfaces.
+Content Creators might make their Actions self-sufficient and create the dependent TypeInstances in it, or allow the Voltron User to provide existing TypeInstances for the Action. To support this case, we need an option to conditionally call an Interface.
 
-We decided to introduce a directive `ocf-when`. Argo conditionals are evaluated during workflow execution and we need to evaluate the conditions during render-time, to do not resolve Interfaces to Implementations and include unnecessary workflow steps.
+We decided to introduce a directive `ocf-when` for support this. Argo conditionals are evaluated during workflow execution and we need to evaluate the conditions during render-time, to do not resolve Interfaces to Implementations and include unnecessary workflow steps.
 
-Only input TypeInstances can be used in the condition syntax. If there is a input TypeInstance `postgresql` defined on the Interface you are implementing, then you can make conditions based on it. E.g. `ocf-when: postgresql == nil`.
+Only input TypeInstances can be used in the condition syntax. If the Content Creator defined an additional input TypeInstance `postgresql`, then he can make conditions based on it, for example `ocf-when: postgresql == nil`.
 
 For the actual implementation aspect, we propose to use the [Expr](https://github.com/antonmedv/expr) library to evaluate the condition expressions. It is used in Argo for the `depends` directive.
-In the [rendering proof-of-concept](../investigation/workflow-rendering) [govaluate](https://github.com/Knetic/govaluate) was used, but looks no longer maintained, based on GitHub activity.
-
-<details><summary>Example</summary>
+In the [rendering proof-of-concept](../investigation/workflow-rendering) the library [govaluate](https://github.com/Knetic/govaluate) was used, but it looks no longer maintained, based on GitHub activity.
 
 ```yaml
 kind: Implementation
 spec:
+  additionalInput:
+    typeInstances:
+      # Additional input TypeInstance postgresql is defined.
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
   action:
     runnerInterface: argo.run
     args:
@@ -230,18 +235,19 @@ spec:
         templates:
           - name: jira-install
             steps:
+                  # Execute this step only, if the postgresql TypeInstance was not provided.
               - - name: install-db
                   ocf-when: postgresql == nil
-                  ocf-action:
-                    name: cap.interface.postgresql.install
+                  ocf-action: postgresql.install
 ```
-</details>
 
 ### How to define, which workflow artifacts are TypeInstances
 
-Output TypeInstances are defined in the Interface, which is being implemented in an Implementation. We need a way for the Content Creator to say, that a artifact created in the Argo workflow is an TypeInstance and is supposed to be uploaded to OCH.
+We need a way for the Content Creator to say, that a artifact created in the Argo workflow is an TypeInstance and is supposed to be uploaded to OCH. The workflow could use some intermediate artifacts just for handling the data flow between workflow steps. Currently, there is no way to identify the TypeInstance artifacts in the workflow.
 
-TypeInstance artifacts must be global Argo artifacts, so they can be fetched from the Argo Artifact Repository. In addition to that, we define a directive `ocf-type-instances` on a workflow template.
+We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.additionalOutput.typeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `ocf-output-type-instances`.
+
+The `ocf-output-type-instances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to OCH. This also allows to track the TypeInstances produced in a workflow.
 
 The `ocf-output-type-instances` is a list of mappings between the output TypeInstance and Argo global artifacts:
 ```yaml
@@ -252,21 +258,30 @@ from: {argo-global-artifact-reference}
 ```yaml
 kind: Implementation
 spec:
+  additionalOutput:
+    typeInstanceRelations:
+      postgresql:
+        uses:
+          - helm-release
+
   action:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: jira-install
+        entrypoint: postgres-install
         templates:
-          - name: jira-install
-            ocf-output-type-instances:
-              - name: jira-config
-                from: "{{workflow.outputs.artifacts.some-artifact}}"
+          - name: postgres-install
             steps:
-              - - name: some-step # This steps creates some-artifact global artifact
+                  # This step produces Argo artifacts 'additional' and 'helm-release'.
+              - - name: helm-run
+                  ocf-action: cap.interface.runner.helm.run
+                  ocf-output-type-instances:
+                    # Artifacts mappings to the TypeInstances in .spec.additionalOutput.typeInstanceRelations
+                    - name: jira-config
+                      from: additional
+                    - name: helm-release
+                      from: helm-release
 ```
-
-Based on this, Voltron Engine will be able to add additional steps to upload the artifacts to OCH.
 
 ### How to merge called Interfaces into the Action workflow
 
@@ -285,5 +300,5 @@ To see example manifests, with the new workflow directives check the link below.
 
 ## Consequences
 
-- Add `ocf-output-type-instances`, `ocf-when`, `ocf-action` directives to the workflow syntax
-- Argo has currently (2020.12.20) a bug, which must be fixed, before the proposed rendering algorithm can work. Github ticket for this issue is [here](https://github.com/argoproj/argo/issues/4772)
+- Add `ocf-output-type-instances`, `ocf-when`, `ocf-action` directives to the workflow syntax.
+- Argo has currently (2020.12.20) a bug, which must be fixed, before the proposed rendering algorithm can work. Github ticket for this issue is [here](https://github.com/argoproj/argo/issues/4772).
