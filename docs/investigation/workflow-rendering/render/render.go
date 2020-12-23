@@ -217,9 +217,13 @@ func (r *Renderer) renderFunc(prefix string,
 				step := parallelSteps[sIdx]
 
 				for _, ti := range step.OCFTypeInstanceOutputs {
-					step, template := r.getOutputTypeInstanceTemplate(step, ti, prefix)
+					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, template)
-					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&step})
+					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
+
+					for k, v := range artifactMappings {
+						artifactsNameMapping[k] = v
+					}
 				}
 
 				step.OCFTypeInstanceOutputs = nil
@@ -350,16 +354,19 @@ func (r *Renderer) getInjectTypeInstanceTemplate(input v1alpha1.InputTypeInstanc
 	}, nil
 }
 
-func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template) {
+func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template, map[string]string) {
 	artifactPath := "/typeinstance"
 
 	stepName := fmt.Sprintf("output-%s", output.Name)
 
 	var templateName string
+	var artifactGlobalName string
 	if prefix == "" {
 		templateName = stepName
+		artifactGlobalName = output.Name
 	} else {
 		templateName = fmt.Sprintf("%s-%s", prefix, stepName)
+		artifactGlobalName = fmt.Sprintf("%s-%s", prefix, output.Name)
 	}
 
 	fromDirective := fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", step.Name, output.From)
@@ -392,10 +399,12 @@ func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output Type
 				Artifacts: wfv1.Artifacts{
 					{
 						Name:       output.Name,
-						GlobalName: output.Name,
+						GlobalName: artifactGlobalName,
 						Path:       artifactPath,
 					},
 				},
 			},
+		}, map[string]string{
+			output.Name: artifactGlobalName,
 		}
 }
