@@ -210,8 +210,11 @@ I sorted the problems that I faced during the investigation. The **HARD** catego
 
 -	Exclusive features like ACLs, binary backups, encryption at rest, and more: https://dgraph.io/docs/enterprise-features/
 
+## Dgraph Lambda Research
+
+Lambda is just a layer on top of custom resolvers. It has the same limitations as custom resolvers. The only advantage of it is that there is an already available lambda server that allows writing resolvers in JavaScript. A Go server could also be created for the same purpose.
+
 ## Needs investigation
--	In the newest version they introduced Lambda fields which can help with writing custom resolvers. Unfortunately, it supports only JavaScript Lambdas, and we will need to host our own lambda server for that.
 
 -	Can facet help with a query for Implementations that fulfill specific requirements?
 
