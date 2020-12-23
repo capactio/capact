@@ -35,6 +35,5 @@ spec:
           path: cap.type.helm.chart.release
           revision: 0.1.0
 
-
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -18,11 +18,10 @@ metadata:
 spec:
   appVersion: "10,11,12,13"
 
-  additionalOutput:
-    typeInstanceRelations:
-      postgresql:
-        uses:
-          - helm-release
+  typeInstanceRelations:
+    postgresql:
+      uses:
+        - helm-release
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -56,12 +55,9 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
-            typeInstanceOutput: # The typeInstanceOutput defines which artifacts are output TypeInstances
-              - name: postgresql # TypeInstance name
-                from: '{{steps.helm-run.outputs.artifacts.additional}}' # reference to workflow artifact
             steps:
               - - name: create-helm-args
-                  action: # Action defines a OCF Interface reference to be used for this step
+                  ocf-action:
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
@@ -104,8 +100,11 @@ spec:
                                       password: "{{ template "postgresql.password" . }}"{% endraw %}
 
               - - name: helm-run
-                  action:
+                  ocf-action:
                     path: cap.interface.runner.helm.run
+                  ocf-output-type-instances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                    - name: postgresql # TypeInstance name
+                      from: additional # reference to artifact
                   arguments:
                     artifacts:
                       - name: input-parameters

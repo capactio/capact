@@ -73,12 +73,9 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
-            typeInstanceOutput:
-              - name: jira-config
-                from: '{{workflow.outputs.artifacts.additional}}'
             steps:
               - - name: install-db
-                  ocfWhen: postgresql == nil # conditional execution
+                  ocf-when: postgresql == nil # conditional execution
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -88,11 +85,11 @@ spec:
                               username: jira
                               password: okon
                             defaultDBName: jira
-                  action:
+                  ocf-action:
                     path: cap.interface.database.postgresql.install
 
               - - name: create-helm-args
-                  action:
+                  ocf-action:
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
@@ -138,8 +135,11 @@ spec:
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
               - - name: helm-run
-                  action:
+                  ocf-action:
                     path: cap.interface.runner.helm.run
+                  ocf-output-type-instances:
+                    - name: jira-config
+                      from: additional
                   arguments:
                     artifacts:
                       - name: input-parameters
