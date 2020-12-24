@@ -12,10 +12,10 @@ This document shows how we can render the workflow in Voltron Engine.
   - [Motivation](#motivation)
     - [Goals](#goals)
   - [Proposal](#proposal)
-    - [How to reference a Interface to be called in a Action workflow](#how-to-reference-a-interface-to-be-called-in-a-action-workflow)
-    - [How to use and pass input parameters to the Interfaces](#how-to-use-and-pass-input-parameters-to-the-interfaces)
+    - [How to reference an Interface to be called in a Action workflow](#how-to-reference-an-interface-to-be-called-in-a-action-workflow)
+    - [How to use and pass input parameters to Interfaces](#how-to-use-and-pass-input-parameters-to-interfaces)
     - [How to reference output TypeInstances from a called Interface](#how-to-reference-output-typeinstances-from-a-called-interface)
-    - [How to conditionally call a Interface](#how-to-conditionally-call-a-interface)
+    - [How to conditionally call an Interface](#how-to-conditionally-call-an-interface)
     - [How to define, which workflow artifacts are TypeInstances](#how-to-define-which-workflow-artifacts-are-typeinstances)
     - [How to merge called Interfaces into the Action workflow](#how-to-merge-called-interfaces-into-the-action-workflow)
   - [Example manifests with new directives](#example-manifests-with-new-directives)
@@ -31,7 +31,7 @@ Besides providing a syntax to define a workflow, in many cases Content Creators 
 Voltron must have an option, to allow Content Creators reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
 
 Content Creator should be able to:
-- reference a Interface to be called in a Action workflow,
+- reference an Interface to be called in a Action workflow,
 - use and pass input parameters to Interfaces,
 - reference output TypeInstances from a called Interface,
 - conditionally call an Interface,
@@ -44,7 +44,7 @@ For now, we want to base on the Argo workflow syntax and only extend it, to supp
 
 ### Goals
 
-- How to reference a Interface to be called in a Action workflow.
+- How to reference an Interface to be called in a Action workflow.
 - How to use and pass input parameters to Interfaces,
 - How to reference output TypeInstances from a called Interface.
 - How to conditionally call an Interface.
@@ -53,7 +53,7 @@ For now, we want to base on the Argo workflow syntax and only extend it, to supp
 
 ## Proposal
 
-### How to reference a Interface to be called in a Action workflow
+### How to reference an Interface to be called in a Action workflow
 
 To reference the Interface, which has to be called, the following extensions to the Argo workflow is proposed:
 
