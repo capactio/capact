@@ -27,7 +27,7 @@ The repository has the following structure:
   │
   ├── och-content             # OCF Manifests for the Open Capability Hub
   │
-  ├── pkg                     # Component related logic
+  ├── pkg                     # Public component and SDK code
   │
   ├── test                    # Cross-functional test suites
   │
