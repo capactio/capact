@@ -1,0 +1,6 @@
+dependencies:
+- name: neo4j
+  repository: https://neo4j-contrib.github.io/neo4j-helm/
+  version: 4.2.0-1
+digest: sha256:92610d46ed25f0cc30b68d98b04305ebca34b204d1bc7d9cca308f18a5b71d71
+generated: "2020-12-30T13:24:14.893759504+01:00"
