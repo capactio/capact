@@ -1,0 +1,13 @@
+apiVersion: v2
+name: neo4j-helm
+description: A Helm chart for neo4j for Voltron installation
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: neo4j
+    version: "v4.2.0-1"
+    repository: https://neo4j-contrib.github.io/neo4j-helm/
+    condition: neo4j.enabled

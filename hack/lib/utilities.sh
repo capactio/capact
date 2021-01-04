@@ -240,6 +240,8 @@ voltron::install_upgrade::charts() {
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
+    voltron::install_upgrade::neo4j
+
     voltron::install_upgrade::ingress_controller
 
     voltron::install_upgrade::argo
@@ -295,6 +297,16 @@ voltron::install_upgrade::kubed() {
         --install \
         --create-namespace \
         --namespace="kubed"
+}
+
+voltron::install_upgrade::neo4j() {
+    # not waiting as Helm Charts installation takes additional ~5 minutes.
+    shout "- Installing Neo4j Helm chart..."
+
+    helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
+        --install \
+        --create-namespace \
+        --namespace="neo4j"
 }
 
 voltron::install_upgrade::ingress_controller() {

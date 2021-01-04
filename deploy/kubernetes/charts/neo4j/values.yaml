@@ -1,0 +1,12 @@
+neo4j:
+  core:
+    standalone: true
+    resources:
+      requests:
+        cpu: 200m
+        memory: 1024Mi
+      limits:
+        cpu: 400m
+        memory: 2048Mi
+  imageTag: 4.2.1
+  neo4jPassword: okon
