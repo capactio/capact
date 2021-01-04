@@ -31,7 +31,9 @@ The repository has the following structure:
   │
   ├── test                    # Cross-functional test suites
   │
-  └── Dockerfile              # Dockerfile template to build applications and tests images
+  ├── Dockerfile              # Dockerfile template to build applications and tests images
+  │
+  └── go.mod                  # Manages Go dependency. There is single dependency management across all components in this monorepo
 ```
 
 ## Components
