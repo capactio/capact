@@ -9,38 +9,45 @@ This repository contains the Go codebase for the Voltron project.
 The repository has the following structure:
 
 ```
-  ├── cmd
-  │ ├── gateway                 # GraphQL Gateway that consolidates all Voltron GraphQL APIs in one endpoint
-  │ ├── k8s-engine              # Kubernetes Voltron engine
-  │ └── och                     # OCH server
+  .
+  ├── cmd                     # Main application directory
   │
-  ├── deploy                    # Deployment configurations and templates
-  │ └── kubernetes              # Kubernetes related deployment (Helm charts, CRDs etc.)
+  ├── deploy                  # Deployment configurations and templates
   │
-  ├── docs                      # Documentation related to the project
-  │ ├── investigation           # Investigations and proof of concepts files
-  │ └── proposal                # Proposals for handling new features
+  ├── docs                    # Documentation related to the project
+  │   ├── investigation       # Investigations and proof of concepts files
+  │   ├── proposal            # Proposals for handling new features
+  │   └── tutorial            # Tutorial on how to use Voltron
   │
-  ├── hack                      # Scripts used by the Voltron developers
+  ├── hack                    # Scripts used by the Voltron developers
   │
-  ├── ocf-spec                  # Open Capability Format Specification
+  ├── internal                # Private component code
   │
-  ├── pkg                       # Component related logic
-  │ ├── db-populator            # Populates Voltron entities to graph database
-  │ ├── engine                  # Voltron engine
-  │ │ ├── api                   # Engine platform-agnostic api 
-  │ │ └── k8s                   # Code related to k8s platform engine implementation 
-  │ ├── gateway                 # GraphQL Gateway
-  │ ├── och                     # Open Capability Hub server 
-  │ ├── runner                  # Voltron runners, e.g. Argo Workflow runner, Helm runner etc.
-  │ └── sdk                     # SDK for Voltron eco-system
+  ├── ocf-spec                # Open Capability Format Specification
   │
-  │── test                      # Cross-functional test suites
+  ├── och-content             # OCF Manifests for the Open Capability Hub
   │
-  ├── Dockerfile                # Dockerfile template to build applications and tests images
+  ├── pkg                     # Public component and SDK code
   │
-  └── go.mod                    # Manages Go dependency. There is single dependency management across all components in this monorepo
+  ├── test                    # Cross-functional test suites
+  │
+  ├── Dockerfile              # Dockerfile template to build applications and tests images
+  │
+  └── go.mod                  # Manages Go dependency. There is single dependency management across all components in this monorepo
 ```
+
+## Components
+
+The following Voltron components are in this repository
+- [Argo runner](./cmd/argo-runner) - Runner, which executes Argo workflows.
+- [CloudSQL runner](./cmd/cloudsql-runner) - Runner, which manages Google CloudSQL instances.
+- [Gateway](./cmd/gateway) - GraphQL Gateway, which consolidates Voltron GraphQL APIs in one endpoint.
+- [Helm runner](./cmd/helm-runner) - Runner, which manages Helm releases.
+- [Engine](./cmd/k8s-engine) - Kubernetes Voltron Engine, which handles Action execution.
+- [ocftool](./cmd/ocftool) - A CLI tool for working with OCF Manifests.
+- [Open Capability Hub](./cmd/och) - Component, which stores OCF Manifests and exposes API to manage them.
+
+Check the README files in the component directories, for more details about how to use and develop them.
 
 ## Development
 
