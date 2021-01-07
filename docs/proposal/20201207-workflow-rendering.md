@@ -27,7 +27,7 @@ This document shows how we can render the workflow in Voltron Engine.
 
 Voltron must, bases on the available OCF Manifests, be able to render a complete workflow, which can be executed by [runners](../../docs/runner.md). For now, we do not have a proposal, for how the rendering will be done and what kind of syntax will be used to describe the workflow.
 
-Besides providing a syntax to define a workflow, in many cases Content Creators would like to call an other Interfaces, which is already available in OCH. For example - they are creating a workflow to provision Wordpress and they need an PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Action.
+Besides providing a syntax to define a workflow, in many cases Content Creators would like to call other Interfaces, which are already available in OCH. For example - they are creating a workflow to provision Wordpress and they need an PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Action.
 Voltron must have an option, to allow Content Creators reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
 
 Content Creator should be able to:
