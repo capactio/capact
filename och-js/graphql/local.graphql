@@ -1,0 +1,86 @@
+"""
+Arbitrary data
+"""
+scalar Any
+
+"""
+Full path of a given node, e.g. cap.core.type.platform.kubernetes
+"""
+scalar NodePath
+
+"""
+Version in semantic versioning, e.g. 1.1.0
+"""
+scalar Version
+
+type TypeInstance {
+  id: ID!
+  resourceVersion: Int!
+  metadata: TypeInstanceMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeInstanceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+}
+
+type TypeInstanceSpec {
+  id: ID!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  value: Any!
+  instrumentation: TypeInstanceInstrumentation @relation(name: "INSTRUMENTED_BY", direction: "OUT")
+}
+
+type TypeInstanceMetadata {
+  id: ID! @unique
+  tags: [TagReference!]! @relation(name: "TAGGED_WITH", direction: "OUT")
+}
+
+type TypeReference {
+  path: NodePath!
+  revision: Version!
+}
+
+input TagReferenceInput {
+  path: NodePath!
+  revision: Version!
+}
+
+type TagReference {
+  path: NodePath!
+  revision: Version!
+}
+
+type TypeInstanceInstrumentation {
+  metrics: TypeInstanceInstrumentationMetrics @relation(name: "HAS_METRICS", direction: "OUT")
+  health: TypeInstanceInstrumentationHealth @relation(name: "HAS_HEALTH", direction: "OUT")
+}
+
+type TypeInstanceInstrumentationMetrics {
+  endpoint: String
+  regex: String # optional regex for scraping metrics
+  dashboards: [TypeInstanceInstrumentationMetricsDashboard!]!
+}
+
+type TypeInstanceInstrumentationMetricsDashboard {
+  url: String!
+}
+
+type TypeInstanceInstrumentationHealth {
+  url: String
+  method: HTTPRequestMethod
+
+  # resolver, which does a HTTP call on a given URL
+  # and expects status code greater than or equal to 200
+  # and less than 400
+  status: TypeInstanceInstrumentationHealthStatus
+}
+
+enum TypeInstanceInstrumentationHealthStatus {
+  UNKNOWN
+  READY
+  FAILING
+}
+
+enum HTTPRequestMethod {
+  GET
+  POST
+}
+
+# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

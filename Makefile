@@ -7,8 +7,8 @@ export GOPROXY = https://proxy.golang.org
 # enable the BuildKit builder in the Docker CLI.
 export DOCKER_BUILDKIT = 1
 
-DOCKER_REPOSITORY ?= gcr.io/projectvoltron
-DOCKER_TAG ?= latest
+export DOCKER_REPOSITORY ?= gcr.io/projectvoltron
+export DOCKER_TAG ?= latest
 
 all: generate build-all-images test-ocf-manifests test-unit test-lint
 .PHONY: all
@@ -39,6 +39,10 @@ push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-ima
 .PHONY: push-all-images
 
 # App images
+build-app-image-och:
+	cd och-js && $(MAKE) build-app-image
+.PHONY: build-app-image-och
+
 build-app-image-%:
 	$(eval APP := $*)
 	docker build --build-arg COMPONENT=$(APP) -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .

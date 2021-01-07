@@ -5,6 +5,11 @@
         "./pkg/engine/api/graphql/**"
       ]
     },
+    "och" : {
+      "includes": [
+        "./och-js/graphql/**"
+      ]
+    },
     "localOCH": {
       "includes": [
         "./pkg/och/api/graphql/local/**"

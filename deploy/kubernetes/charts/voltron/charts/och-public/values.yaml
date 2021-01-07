@@ -3,6 +3,11 @@ image:
   name: och
   pullPolicy: IfNotPresent
 
+database:
+  endpoint: ""
+  username: ""
+  password: ""
+
 replicaCount: 1
 
 imagePullSecrets: []
@@ -36,7 +41,7 @@ service:
 resources:
    limits:
      cpu: 100m
-     memory: 32Mi
+     memory: 128Mi
    requests:
      cpu: 80m
      memory: 16Mi

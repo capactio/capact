@@ -34,28 +34,26 @@ spec:
           image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
-            - name: APP_GRAPH_QL_ADDR
-              value: ":8080"
-            - name: APP_HEALTHZ_ADDR
-              value: ":8082"
-            - name: APP_OCH_MODE
+            - name: OCH_MODE
               value: "local"
-            - name: APP_LOGGER_DEV_MODE
-              value: "true"
-            - name: APP_MOCKGRAPHQL
-              value: "{{ .Values.global.mockOCHGraphQL }}"
+            - name: NEO4J_ENDPOINT
+              value: "{{ .Values.database.endpoint }}"
+            - name: NEO4J_USERNAME
+              value: "{{ .Values.database.username }}"
+            - name: NEO4J_PASSWORD
+              value: "{{ .Values.database.password }}"
           ports:
             - name: http
-              containerPort: 8080
+              containerPort: 3000
               protocol: TCP
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8082
+              port: 3000
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 8082
+              port: 3000
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
