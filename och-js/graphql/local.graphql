@@ -1,3 +1,8 @@
+# TODO neo4j-graphql-js adds some directives during parsing
+# to make it work for other graphql client we need to add them to the schema manually, based on:
+# https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
+directive @relation(name: String, direction: String, from: String, to: String) on FIELD_DEFINITION | OBJECT
+
 """
 Arbitrary data
 """
@@ -28,7 +33,7 @@ type TypeInstanceSpec {
 }
 
 type TypeInstanceMetadata {
-  id: ID! @unique
+  id: ID!
   tags: [TagReference!]! @relation(name: "TAGGED_WITH", direction: "OUT")
 }
 

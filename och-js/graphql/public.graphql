@@ -1,3 +1,12 @@
+# TODO neo4j-graphql-js adds some directives during parsing
+# to make it work for other graphql client we need to add them to the schema manually, based on:
+# https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
+directive @relation(name: String, direction: String, from: String, to: String) on FIELD_DEFINITION | OBJECT
+directive @id on FIELD_DEFINITION
+directive @cypher(statement: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @neo4j_ignore on FIELD_DEFINITION
+
+
 """
 Arbitrary data
 """
@@ -300,7 +309,7 @@ type InterfaceReference {
 }
 
 type ImplementationRequirement {
-    id: ID! @unique
+    id: ID!
     prefix: NodePrefix!
     oneOf: [ImplementationRequirementItem!]! @relation(name: "ONE_OF", direction: "OUT")
     anyOf: [ImplementationRequirementItem!]! @relation(name: "ANY_OF", direction: "OUT")

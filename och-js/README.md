@@ -45,7 +45,7 @@ To run OCH in local mode, use the following command:
 ```bash
 NEO4J_ENDPOINT=bolt://localhost:7687 \
   NEO4J_PASSWORD=okon \
-  OCH_MODE=public \
+  OCH_MODE=local \
   yarn dev
 ```
 
@@ -55,7 +55,7 @@ To run OCH in local mode, use the following command:
 ```bash
 NEO4J_ENDPOINT=bolt://localhost:7687 \
   NEO4J_PASSWORD=okon \
-  OCH_MODE=local \
+  OCH_MODE=public \
   yarn dev
 ```
 
@@ -80,7 +80,7 @@ The following environment variables can be set to configure OCH:
 | OCH_MODE          | yes      |         | Mode, in which OCH is run. Must be "public" or "local" |
 | GRAPHQL_BIND_PORT | no       | `3000`  | TCP port the GraphQL endpoint binds to                 |
 | NEO4J_ENDPOINT    | yes      |         | The Neo4j database Bolt protocol endpoint              |
-| NEO4J_USERNAME    | no       | `false` | Neo4j database username                                |
+| NEO4J_USERNAME    | no       | `neo4j` | Neo4j database username                                |
 | NEO4J_PASSWORD    | yes      |         | Neo4j database password                                |
 
 ## Development

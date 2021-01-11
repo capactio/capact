@@ -20,6 +20,7 @@ och-public:
     username: neo4j
     password: okon
 
+# TODO add configuration for the OCH tests
 integrationTest:
   image:
     name: e2e-test
