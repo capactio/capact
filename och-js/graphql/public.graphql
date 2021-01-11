@@ -6,7 +6,6 @@ directive @id on FIELD_DEFINITION
 directive @cypher(statement: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
 directive @neo4j_ignore on FIELD_DEFINITION
 
-
 """
 Arbitrary data
 """
@@ -42,23 +41,19 @@ Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
 """
 scalar VersionRange
 
+input InterfaceFilter {
+    prefixPattern: NodePathPattern
+}
+
 input ImplementationFilter {
-#    # Not supported
-#    prefixPattern: NodePathPattern
+    prefixPattern: NodePathPattern
 
     """
     If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
     For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
     """
-    # For simplification it is string array
-    requirementsSatisfiedBy: [String!]
-
-#    # Not supported
-#    tags: [TagFilterInput!]
-}
-
-input CustomImplementationFilter {
     requirementsSatisfiedBy: [TypeInstanceValue!]
+    tags: [TagFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -73,46 +68,78 @@ input TypeInstanceValue {
 
 input TypeReferenceInput {
     path: NodePath!
-    revision: Version!
+
+    """
+    If not provided, latest revision for a given Type is used
+    """
+    revision: Version
+}
+
+input TagFilterInput {
+    path: NodePath!
+    rule: FilterRule = INCLUDE
+
+    """
+    If not provided, latest revision for a given Tag is used
+    """
+    revision: Version
+}
+
+enum FilterRule {
+    INCLUDE
+    EXCLUDE
+}
+
+input InterfaceGroupFilter {
+    prefixPattern: NodePathPattern
+}
+
+input TagFilter {
+    prefixPattern: NodePathPattern
+}
+
+input TypeFilter {
+    prefixPattern: NodePathPattern
 }
 
 type RepoMetadata {
+    path: NodePath! @id
     name: NodeName!
     prefix: NodePrefix!
-    path: NodePath! @id
 
-    latestRevision: RepoMetadataRevision
-    revision(revision: Version!): RepoMetadataRevision
-    revisions: [RepoMetadataRevision!]!
+    latestRevision: RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
+    revision(revision: Version!): RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
+    revisions: [RepoMetadataRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type RepoMetadataRevision {
-    metadata: GenericMetadata!
-    revision: Version!
-    spec: RepoMetadataSpec!
-    signature: Signature!
+    revision: Version! @id
+
+    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+    spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 }
 
 type RepoMetadataSpec {
     ochVersion: Version!
-    ocfVersion: RepoOCFVersion!
-    implementation: RepoImplementationConfig!
+    ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS_OCF_VERSIONS", direction: "OUT")
+    implementation: RepoImplementationConfig! @relation(name: "HOLDS_IMPLEMENTATION", direction: "OUT")
 }
 
 type RepoImplementationConfig {
-    appVersion: RepoImplementationAppVersionConfig!
+    appVersion: RepoImplementationAppVersionConfig! @relation(name: "APP_VERSION", direction: "OUT")
 }
 
 type RepoImplementationAppVersionConfig {
-    semVerTaggingStrategy: SemVerTaggingStrategy!
+    semVerTaggingStrategy: SemVerTaggingStrategy! @relation(name: "TAGGING_STRATEGY", direction: "OUT")
 }
 
 type SemVerTaggingStrategy {
-    latest: LatestSemVerTaggingStrategy!
+    latest: LatestSemVerTaggingStrategy! @relation(name: "LATEST", direction: "OUT")
 }
 
 type LatestSemVerTaggingStrategy {
-    pointsTo: SemVerTaggingStrategyTags!
+    pointsTo: SemVerTaggingStrategyTags! @relation(name: "POINTS_TO", direction: "OUT")
 }
 
 enum SemVerTaggingStrategyTags {
@@ -120,85 +147,73 @@ enum SemVerTaggingStrategyTags {
 }
 
 type RepoOCFVersion {
-    default: Version!
     supported: [Version!]!
+    default: Version!
 }
 
 type InterfaceGroup {
-    id: ID!
+    path: NodePath! @id
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
-
-    interfaces: [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
+    interfaces(filter: InterfaceFilter): [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type Interface {
+    path: NodePath! @id
     name: NodeName!
     prefix: NodePrefix!
-    path: String! @id
 
     latestRevision: InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
-    revision(revision: Version!): InterfaceRevision  @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir")
+    revision(revision: Version!): InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir")
     revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type InterfaceRevision {
-    id: ID!
-    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     revision: Version!
+
+    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 
     """
     List Implementations for a given Interface
     """
-
-    # https://neo4j.com/developer/kb/conditional-cypher-execution/
     implementationRevisionForRequirements(filter: ImplementationFilter): [ImplementationRevision!]! @cypher(statement: """
-    MATCH (this:InterfaceRevision)
+        MATCH (this:InterfaceRevision)
 
-    // When Implementation doesn't require anything
-    CALL{
-    WITH this
-    MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
-    WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
-    RETURN implRev
+        // When Implementation doesn't require anything
+        CALL{
+        WITH this
+        MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
+        WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
+        RETURN implRev
 
-    UNION
+        UNION
 
-    // When Implementation has requirements using oneOf
-    WITH this
-    MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
+        // When Implementation has requirements using oneOf
+        WITH this
+        MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
 
-    // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
-    WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
-    RETURN implRev
-    }
+        // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
+        WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
+        RETURN implRev
+        }
 
-    // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
-    // because then a nested resolver for Implementation would return all revisions
+        // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
+        // because then a nested resolver for Implementation would return all revisions
 
-    RETURN implRev
+        RETURN implRev
     """)
-
-    # Custom resolver with more advanced field
-    implementationRevisionsForRequirementsCustom(filter: CustomImplementationFilter): [ImplementationRevision!]! @neo4j_ignore
-
-    implementationRevisions: [ImplementationRevision!]! @relation(name: "IMPLEMENTS", direction: "IN")
-
-    implementationRevisionsCustom: [ImplementationRevision!]! @neo4j_ignore
-
-# Not relevant
-#    signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type InterfaceSpec {
-    id: ID!
-    foo: String! # Sample field for testing purposes
+    input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
+    output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 type InterfaceInput {
-    parameters: InputParameters
-    typeInstances: [InputTypeInstance]!
+    parameters: InputParameters @relation(name: "HAS_PARAMETERS", direction: "OUT")
+    typeInstances: [InputTypeInstance]! @relation(name: "HAS_TYPE_INSTANCES", direction: "OUT")
 }
 
 type InputParameters {
@@ -206,15 +221,15 @@ type InputParameters {
 }
 
 type InterfaceOutput {
-    typeInstances: [OutputTypeInstance]!
+    typeInstances: [OutputTypeInstance]! @relation(name: "OUTPUTS_TYPE_INSTANCES", direction: "OUT")
 }
 
-interface TypeInstanceFields {
+interface TypeInstance {
     name: String!
     typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstanceFields {
+type InputTypeInstance implements TypeInstance {
     name: String!
     typeRef: TypeReference!
     verbs: [TypeInstanceOperationVerb!]!
@@ -224,26 +239,27 @@ enum TypeInstanceOperationVerb {
     CREATE, GET, LIST, UPDATE, DELETE
 }
 
-type OutputTypeInstance implements TypeInstanceFields {
+type OutputTypeInstance implements TypeInstance {
     name: String!
     typeRef: TypeReference!
 }
 
 type Type {
-    name: NodeName!
-    prefix: NodePrefix!
     path: NodePath! @id
+    name: NodeName!
+    prefix: NodePrefix! # TODO resolver
 
-    latestRevision: TypeRevision
-    revision(revision: Version!): TypeRevision
-    revisions: [TypeRevision!]!
+    latestRevision: TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
+    revision(revision: Version!): TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
+    revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type TypeRevision {
-    metadata: TypeMetadata!
     revision: Version!
-    spec: TypeSpec!
-    signature: Signature!
+
+    metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+    spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 }
 
 type TypeSpec {
@@ -252,45 +268,42 @@ type TypeSpec {
 }
 
 type Implementation {
+    path: NodePath! @id
     name: NodeName!
     prefix: NodePrefix!
-    path: NodePath! @id
 
-    latestRevision: ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
+    latestRevision: Implementation @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
     revision(revision: Version!): ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir")
     revisions: [ImplementationRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type ImplementationRevision {
-    id: ID!
     revision: Version!
+    signature: Signature!
 
     metadata: ImplementationMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-
     interfaces: [InterfaceRevision!]! @relation(name: "IMPLEMENTS", direction: "OUT")
-#    signature: Signature!
 }
 
 type ImplementationSpec {
-    id: ID!
-    implements: [InterfaceReference!]!
-    requires: [ImplementationRequirement!]! @relation(name: "REQUIRES", direction: "OUT")
-
     appVersion: VersionRange!
-    imports: [ImplementationImport!]
-    action: ImplementationAction!
-    additionalInput: ImplementationAdditionalInput
-    additionalOutput: ImplementationAdditionalOutput
+
+    implements: [InterfaceReference!]! @relation(name: "IMPLEMENTS", direction: "OUT")
+    requires: [ImplementationRequirement!]! @relation(name: "REQUIRES", direction: "OUT")
+    imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
+    action: ImplementationAction! @relation(name: "DO", direction: "OUT")
+    additionalInput: ImplementationAdditionalInput @relation(name: "USES", direction: "OUT")
+    additionalOutput: ImplementationAdditionalOutput @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 type ImplementationAdditionalInput {
-    typeInstances: [InputTypeInstance!]!
+    typeInstances: [InputTypeInstance!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type ImplementationAdditionalOutput {
-    typeInstances: [OutputTypeInstance!]!
-    typeInstanceRelations: [TypeInstanceRelationItem!]!
+    typeInstances: [OutputTypeInstance!]! @relation(name: "CONTAINS", direction: "OUT")
+    typeInstanceRelations: [TypeInstanceRelationItem!]! @relation(name: "RELATIONS", direction: "OUT")
 }
 
 type TypeInstanceRelationItem {
@@ -302,14 +315,12 @@ type TypeInstanceRelationItem {
     uses: [String!]!
 }
 
-
 type InterfaceReference {
     path: NodePath!
     revision: Version!
 }
 
 type ImplementationRequirement {
-    id: ID!
     prefix: NodePrefix!
     oneOf: [ImplementationRequirementItem!]! @relation(name: "ONE_OF", direction: "OUT")
     anyOf: [ImplementationRequirementItem!]! @relation(name: "ANY_OF", direction: "OUT")
@@ -317,12 +328,7 @@ type ImplementationRequirement {
 }
 
 type ImplementationRequirementItem {
-    id: ID!
-#    typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
-
-    # For simplicity the fields from typeRef was copied to the item itself
-    typeRefPath: NodePath!
-    typeRefRevision: Version!
+    typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
 
     """
     Holds the configuration constraints for the given entry based on Type value.
@@ -340,7 +346,8 @@ type ImplementationImport {
     interfaceGroupPath: NodePath!
     alias: String
     appVersion: VersionRange
-    methods: [ImplementationImportMethod!]!
+
+    methods: [ImplementationImportMethod!]! @relation(name: "HAS", direction: "OUT")
 }
 
 type ImplementationImportMethod {
@@ -360,21 +367,23 @@ type ImplementationAction {
     args: Any
 }
 
+# TODO implement
 type Tag {
+    path: NodePath! @id
     name: NodeName!
     prefix: NodePrefix!
-    path: NodePath! @id
 
-    latestRevision: TagRevision
-    revision(revision: Version!): TagRevision
-    revisions: [TagRevision!]!
+    latestRevision: TagRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:TagRevision) RETURN r ORDER BY r.revision DESC LIMIT 1")
+    revision(revision: Version!): TagRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:TagRevision {revision: $revision}) RETURN r")
+    revisions: [TagRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type TagRevision {
-    metadata: GenericMetadata!
     revision: Version!
     spec: TagSpec!
     signature: Signature!
+
+    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
 # It is defined to make sure that all metadata types have the same base fields.
@@ -395,7 +404,7 @@ interface MetadataBaseFields {
 type GenericMetadata implements MetadataBaseFields {
     name: NodeName!
     prefix: NodePrefix
-    path: NodePath @id
+    path: NodePath
     displayName: String
     description: String!
     maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -407,7 +416,7 @@ type GenericMetadata implements MetadataBaseFields {
 type ImplementationMetadata implements MetadataBaseFields {
     name: NodeName!
     prefix: NodePrefix
-    path: NodePath @id
+    path: NodePath
     displayName: String
     description: String!
     maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -420,7 +429,7 @@ type ImplementationMetadata implements MetadataBaseFields {
 type TypeMetadata implements MetadataBaseFields {
     name: NodeName!
     prefix: NodePrefix
-    path: NodePath @id
+    path: NodePath
     displayName: String
     description: String!
     maintainers: [Maintainer!]!
@@ -435,7 +444,6 @@ type Signature {
 }
 
 type Maintainer {
-    id: ID!
     name: String
     email: String!
     url: String
@@ -446,5 +454,24 @@ type TagSpec {
 }
 
 type Query {
-    interfaceGroupCustom(path: NodePath!): InterfaceGroup @cypher(statement: "MATCH (g:InterfaceGroup)-[:DESCRIBED_BY]->(m:GenericMetadata {path: $path}) return g")
+    repoMetadata: RepoMetadata
+
+    interfaceGroups(filter: InterfaceGroupFilter): [InterfaceGroup!]!
+    interfaceGroup(path: NodePath!): InterfaceGroup
+
+    interfaces(filter: InterfaceFilter): [Interface!]!
+    interface(path: NodePath!): Interface
+
+    types(filter: TypeFilter): [Type!]!
+    type(path: NodePath!): Type
+
+    implementations(filter: ImplementationFilter): [Implementation!]!
+    implementation(path: NodePath!): Implementation
+
+    tags(filter: TagFilter): [Tag!]!
+    tag(path: NodePath!): Tag
 }
+
+# No mutations for now, as all resources are populated with DB populator
+
+# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
