@@ -15,11 +15,17 @@ Created on 2020-12-09 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec/))
     + [High-level scenario](#high-level-scenario)
     + [Low-level scenario](#low-level-scenario)
   * [Changes in TypeInstance manifest](#changes-in-typeinstance-manifest)
+    + [Renaming `resourceVersion` to `revision`](#renaming-resourceversion-to-revision)
+    + [New `spec.rollbackActionRef` property](#new-specrollbackactionref-property)
+    + [New `spec.standalone` property](#new-specstandalone-property)
   * [Changes in Local OCH API](#changes-in-local-och-api)
   * [Changes in Implementation manifest](#changes-in-implementation-manifest)
+    + [New `spec.rollback` property](#new-specrollback-property)
+    + [Summary](#summary)
+    + [Examples](#examples)
   * [Changes in Engine](#changes-in-engine)
     + [New `Rollback` Custom Resource](#new-rollback-custom-resource)
-    + [Rollback controller in Engine Controller Manager](#rollback-controller-in-engine-controller-manager)
+    + [New Rollback Controller](#new-rollback-controller)
     + [New GraphQL API operations for Rollback](#new-graphql-api-operations-for-rollback)
   * [Example E2E flows](#example-e2e-flows)
     + [Detailed example of Jira installation and rollback](#detailed-example-of-jira-installation-and-rollback)
@@ -28,8 +34,10 @@ Created on 2020-12-09 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec/))
     + [Rollback of shared dependency](#rollback-of-shared-dependency)
     + [Rollback to previous revision of updated TypeInstance](#rollback-to-previous-revision-of-updated-typeinstance)
     + [Deleting updated TypeInstance - Rollback with "delete" strategy](#deleting-updated-typeinstance---rollback-with-delete-strategy)
-  * [Rejected ideas](#rejected-ideas)
-    + [Rollback defined as a separate Implementation manifest](#rollback-defined-as-a-separate-implementation-manifest)
+  * [Alternative: Rollback defined as a separate Implementation manifest](#alternative-rollback-defined-as-a-separate-implementation-manifest)
+    + [Example 1: PostgreSQL uninstallation](#example-1-postgresql-uninstallation)
+    + [Example 2: Jira uninstallation](#example-2-jira-uninstallation)
+    + [Summary](#summary-1)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
@@ -51,12 +59,11 @@ are:
 
 ### Non-goal
 
-- Updating TypeInstances in workflow
-- TypeInstance revision bump strategy
+- TypeInstance revision update strategy
 
 ## Remarks
 
-- Every state change (regardless it is cluster state, state of external system, etc.) must be represented by a proper
+- Every state change (regardless if it is cluster state, state of external system, etc.) must be represented by a proper
   TypeInstance CRUD operation.
 
 - Rollback of a workflow has to be performed with steps in a proper order. For example, uninstall Action should perform
@@ -67,33 +74,35 @@ are:
 
   **Example**
 
-    1. User runs Action `cap.interface.postgresql.install`, which installs PostgreSQL.
+    1. User runs `cap.interface.postgresql.install` Action, which installs PostgreSQL.
     1. Engine picks Implementation that installs PostgreSQL via Helm chart. PostgreSQL is installed on the cluster.
     1. User runs rollback for given Action.
     1. Engine has to use dedicated rollback Action for PostgreSQL installation, which has been installed via Helm chart.
        Engine cannot use rollback for different Implementation,
        e.g. `cap.implementation.gcp.cloudsql.postgresql.install`.
 
-- Rollback should take an input TypeInstance and process all the TypeInstance dependency subtree, to delete unused dependencies.
+- Rollback for application installation should take a TypeInstance as an input and delete it along with all its dependencies, which are not used by other TypeInstances.
 
-- A given TypeInstance cannot be removed, if it is a dependency for other TypeInstances (it has ancestors).
+- A given TypeInstance cannot be removed, if it has ancestors. In other words, if it is a dependency for other TypeInstances.
 
-- TypeInstance `typeRef` cannot be updated keeping the same TypeInstance ID. In order to "upgrade" referenced Type for a given TypeInstance, Content Creator or User has to create new TypeInstance.
+- TypeInstance `typeRef` cannot be updated preserving the same TypeInstance ID. In order to "upgrade" referenced Type for a given TypeInstance, Content Creator or User has to create new TypeInstance.
 
 ## Proposal
 
 ### Triggering rollback action
 
+> **NOTE**: This paragraph is based on "delete" rollback strategy. To see how it behaves during TypeInstance downgrade, see the [Example E2E flows](#example-e2e-flows) paragraph.
+> 
 The rollback action is always triggered by User. User triggers it in the following way:
-
-> **NOTE**: This paragraph is based on "delete" rollback strategy. To see how it behaves during TypeInstance downgrade, see the [Example E2E flows](#example-e2e-flows) paragraph. 
 
 #### High-level scenario
 
 1. User navigates to the TypeInstance tree view.
 1. User selects a given TypeInstance.
+    
     - If the TypeInstance is not `standalone`, the "Delete" button is disabled.
     - If the TypeInstance is a dependency for at least one different TypeInstance, the "Delete" button is disabled.
+    
 1. User clicks the "Delete" button for a given TypeInstance.
 1. A new Rollback Action workflow is created.
 1. Engine renders complete Rollback workflow.
@@ -107,8 +116,8 @@ The rollback action is always triggered by User. User triggers it in the followi
 1. UI renders TypeInstances.
 1. User selects a given TypeInstance.
 
-- If the TypeInstance has `standalone: false` property set, the "Delete" button is disabled.
-- If the TypeInstance has at least one ancestor (defined in the `ancestors` property), the "Delete" button is disabled.
+    - If the TypeInstance has `standalone: false` property set, the "Delete" button is disabled.
+    - If the TypeInstance has at least one ancestor (defined in the `ancestors` property), the "Delete" button is disabled.
 
 1. User clicks the "Delete" button for a given TypeInstance.
 1. UI calls Engine GraphQL API to create Rollback Custom Resource via `createRollback` GraphQL mutation.
@@ -121,7 +130,7 @@ The rollback action is always triggered by User. User triggers it in the followi
     - Engine fetches details for a given TypeInstance with ancestors and descendants.
     - Based on the `actionRollbackRef` property for every TypeInstance in the subtree, Engine renders full workflow to delete the TypeInstance and all dependent unused TypeInstances.
    
-   To learn the details, read the [Rollback controller in Engine Controller Manager](#rollback-controller-in-engine-controller-manager) paragraph.
+   To learn the details, read the [New Rollback Controller](#new-rollback-controller) paragraph.
    
 1. User approves the rollback workflow. UI calls Engine GraphQL API to set `run: true` for the Rollback operation.   
 1. The rollback workflow is run.
@@ -146,7 +155,7 @@ spec:
   standalone: true # specifies if the TypeInstance was created with a separate Action
 ```
 
-**`revision`**
+#### Renaming `resourceVersion` to `revision`
 
 To enable User to rollback TypeInstance to previous version or `n` versions back in time, all historical revisions for a given TypeInstances must be stored.
 For naming consistency, the `resourceVersion` could be renamed to `revision`.
@@ -156,7 +165,7 @@ For naming consistency, the `resourceVersion` could be renamed to `revision`.
 > - Force Content Developer to specify which type of TypeInstance update is done in a given workflow (e.g. whether it is a major, minor, or patch). User needs to provide revision during manual TypeInstance creation/update.
 > - bring TypeInstance version history, keeping `resourceVersion` naming.
 
-**`spec.rollbackActionRef`**
+#### New `spec.rollbackActionRef` property
 
 ```yaml
 spec:
@@ -176,7 +185,7 @@ If the Implementation which creates a given TypeInstance has empty `spec.rollbac
 If the TypeInstance was created by a given Implementation which contains `spec.rollback` workflow defined, Engine sets the `rollbackActionRef` to point for the Implementation, from which the TypeInstance originated from.
 If an Action updates a given TypeInstance, it bumps the TypeInstance revision. In the new revision the `rollbackActionRef` is also updated, pointing to the Implementation, which updated the TypeInstance.
 
-**`spec.standalone`**
+#### New `spec.standalone` property
 
 ```yaml
 spec:
@@ -187,7 +196,7 @@ Specifies, whether a given TypeInstance was created with a separate Action.
 
 - Engine sets the value of the `standalone` property automatically during TypeInstance creation based on the `spec.typeInstanceRelations` field from Implementation.
     
-    If a given TypeInstance doesn't have an ancestors in the TypeInstance relations tree, the value is set to `standalone: true`. In other case, it is set to `false`.
+    If a given TypeInstance doesn't have an ancestors in the TypeInstance relations tree, the value is set to `standalone: true`. In other cases, it is set to `false`.
 
 - The `standalone: false` value means that the TypeInstance was created as a dependency for other TypeInstance. In a
   result, TypeInstance with `standalone:false` property cannot exist by its own, and it should be cleaned up with last
@@ -223,7 +232,7 @@ spec:
       workflow: # (...) - workflow that rollbacks PostgreSQL installation
 ```
 
-**`spec.rollback`**
+#### New `spec.rollback` property
 
 ```yaml
 spec:
@@ -250,6 +259,8 @@ In this way, Content Developer can run some Actions before and after actual clea
 
 > **NOTE**: Content Developer is required to define rollback only for TypeInstances created directly in the `spec.action`. Any dependent TypeInstances will be cleaned up automatically.
 
+#### Summary
+
 The following approach brings the following consequences:
 - Little of boilerplate (e.g. reusing existing imports).
 - Rollback code is as close as possible to the Implementation.
@@ -258,6 +269,8 @@ The following approach brings the following consequences:
 In future, the solution may be extended with:
 - Custom name definition for rollback Action (to show on UI different labels, such as "Downgrade", "Deprovision" or "Uninstall")
 - Reusable snippets with templating helper functions (similar to `_helpers.tpl` from Helm), to support equal parts of rollback workflow.
+
+#### Examples
 
 <details>
 <summary>Example 1: Rollback workflow for Helm install</summary>
@@ -425,7 +438,6 @@ The uninstallation workflow for `cap.implementation.bitnami.postgresql.install` 
 
 </details>
 
-
 For alternative syntax which was also considered, see the [Rollback defined as a separate Implementation manifest](#rollback-defined-as-a-separate-implementation-manifest) paragraph.
 
 ### Changes in Engine
@@ -452,17 +464,18 @@ spec:
   dryRun: false
 ```
 
-The `Rollback` Custom Resource described action rollback. Based on input TypeInstance, full rollback workflow is rendered.
+The Rollback Custom Resource described action rollback. Based on input TypeInstance, full rollback workflow is rendered.
 Once User approves it,  
 
 Initially, only one input TypeInstance is supported. In the future, multiple input TypeInstances will be supported. 
 The behavior of Rollback Custom Resource is very similar to `Action` Custom Resource.
 
-To read more about the Rollback controller behavior, read the [Rollback controller in Engine Controller Manager](#rollback-controller-in-engine-controller-manager) section.
+To read more about the Rollback controller behavior, read the [New Rollback Controller](#new-rollback-controller) section.
 
-#### Rollback controller in Engine Controller Manager
+#### New Rollback Controller
 
-To properly handle rollback, there is a dedicated Rollback Controller in Engine. It watches for Rollback Custom Resources and reacts on theirs changes following the algorithm:
+To properly handle rollback, there is a dedicated Rollback Controller as a part of Engine Controller Manager.
+It watches for Rollback Custom Resources and reacts on theirs changes according to the following logic:
 
 **Create**
 
@@ -473,6 +486,7 @@ Based on the Rollback CR, render rollback workflow:
     > **NOTE:** It could be implemented by Admission Webhook.
 
 1. Check rollback strategy from `spec.strategy` in Rollback CR.
+   
     - If the strategy is to rollback to previous revision or go back `n` revisions in time, get proper previous revision and prepare Argo workflow which updates it. Finish rendering and exit. 
     - If strategy is "Delete", continue.
 
@@ -724,17 +738,14 @@ This section covers a few different example scenarios to  how the rollback works
 1. User runs workflow.
 1. User uninstalls Jira with all unused dependencies.
 
-### Rejected ideas
+### Alternative: Rollback defined as a separate Implementation manifest
 
-The following paragraph lists all alternatives, which have been rejected during the proposal brainstorming.
-
-#### Rollback defined as a separate Implementation manifest
+> **NOTE:** The following paragraph describes an alternative idea, which have been rejected during the brainstorming phase.
 
 Instead of introducing `Rollback` Custom Resource, Rollback Action could be defined as an ordinary separate Implementation manifest.
+The examples from this paragraph assume that there is a separate Interface and Implementation for Helm uninstall action.
 
-> **NOTE** The examples from this paragraph assume that there is a separate Interface and Implementation for Helm uninstall action.
-
-**Example 1: PostgreSQL uninstallation**
+#### Example 1: PostgreSQL uninstallation
 
 Consider the Implementation for PostgreSQL installation via Helm chart:
 
@@ -890,7 +901,7 @@ In order to define an PostgreSQL uninstallation, Content Developer would need to
     ```
     </details>
 
-**Example 2: Jira uninstallation**
+#### Example 2: Jira uninstallation
 
 Things are getting complicated for more advanced workflows. Consider the Jira uninstallation example:
 
@@ -1004,7 +1015,7 @@ Things are getting complicated for more advanced workflows. Consider the Jira un
     ```
     </details>
 
-**Summary**
+#### Summary
 
 - Interface and Implementation inputs don't say the truth. Engine must inject any additional input TypeInstances used
   for dependencies. For example, there is no way to specify the `helm-release` for PostgreSQL installation via Helm
@@ -1032,8 +1043,10 @@ Because of the first summary point, this solution cannot be accepted.
 - Expose TypeInstance relations in Local OCH GraphQL API:
     - Add `uses` (or `descendants`) field,
     - Add `usedBy` (or `ancestors`) field.
-- Create `rollbackAction` mutation for Engine GraphQL API to make it easier to rollback an Action.
+- Block User access for `deleteTypeInstance` mutation in Local OCH GraphQL API
+- Create [Rollback-related queries, mutations and types](#new-graphql-api-operations-for-rollback) for Engine GraphQL API
+- Create Rollback Custom Resource Definition
+- Implement rollback handling logic in Engine  
 - Change `resourceVersion` to `revision` for TypeInstance
     - Update OCF schema
     - Update Local OCH GraphQL API
-- Implement rollback handling logic in Engine
