@@ -152,7 +152,7 @@ type RepoOCFVersion {
 }
 
 type InterfaceGroup {
-    path: NodePath! @id
+    path: NodePath!
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
     interfaces(filter: InterfaceFilter): [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
@@ -178,7 +178,7 @@ type InterfaceRevision {
     """
     List Implementations for a given Interface
     """
-    implementationRevisionForRequirements(filter: ImplementationFilter): [ImplementationRevision!]! @cypher(statement: """
+    implementationRevisions(filter: ImplementationFilter): [ImplementationRevision!]! @cypher(statement: """
         MATCH (this:InterfaceRevision)
 
         // When Implementation doesn't require anything

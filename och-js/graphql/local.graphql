@@ -18,24 +18,6 @@ Version in semantic versioning, e.g. 1.1.0
 """
 scalar Version
 
-input CreateTypeInstanceInput {
-  typeRef: TypeReferenceInput!
-  tags: [TagReferenceInput!]
-  value: Any
-}
-
-input UpdateTypeInstanceInput {
-  typeRef: TypeReferenceInput!
-  tags: [TagReferenceInput!]
-  value: Any
-  resourceVersion: Int!
-}
-
-input TypeReferenceInput {
-  path: NodePath!
-  revision: Version!
-}
-
 type TypeInstance {
   resourceVersion: Int!
   metadata: TypeInstanceMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -133,6 +115,24 @@ input TypeRefFilterInput {
   revision: Version
 }
 
+input TypeReferenceInput {
+  path: NodePath!
+  revision: Version!
+}
+
+input CreateTypeInstanceInput {
+  typeRef: TypeReferenceInput!
+  tags: [TagReferenceInput!]
+  value: Any
+}
+
+input UpdateTypeInstanceInput {
+  typeRef: TypeReferenceInput
+  tags: [TagReferenceInput!]
+  value: Any
+  resourceVersion: Int!
+}
+
 type Query {
   typeInstances(filter: TypeInstanceFilter): [TypeInstance!]!
   typeInstance(id: ID!): TypeInstance
@@ -151,8 +151,58 @@ type Mutation {
 
     RETURN ti
   """)
-  updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
-  deleteTypeInstance(id: ID!): TypeInstance!
+  updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance! @cypher(statement: """
+    MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
+    MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
+    MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
+
+    CALL apoc.do.when(
+      $in.value IS NOT NULL,
+      'SET spec.value = in.value RETURN spec',
+      '',
+      {spec:spec, in: $in}
+    ) YIELD value
+
+    WITH ti, metadata, spec, typeRef
+    CALL apoc.do.when(
+      $in.typeRef IS NOT NULL,
+      'SET typeRef.path = in.typeRef.path, typeRef.revision = in.typeRef.revision RETURN typeRef',
+      '',
+      {typeRef: typeRef, in: $in}
+    ) YIELD value
+
+    WITH ti, metadata, spec, typeRef
+    CALL apoc.do.when(
+      $in.tags IS NOT NULL,
+      '
+        // Remove current tag references
+        OPTIONAL MATCH (metadata)-[:TAGGED_WITH]->(oldTagRef: TagReference) DETACH DELETE oldTagRef
+        WITH metadata, in, collect(oldTagRef) as ignored
+  
+        // Add new tag refs
+        FOREACH (tag in in.tags |
+          CREATE (metadata)-[:TAGGED_WITH]->(tagRef: TagReference {path: tag.path, revision: tag.revision})
+        )
+        RETURN metadata
+      ',
+      '',
+      {metadata: metadata, in: $in}
+    ) YIELD value
+
+    WITH ti, metadata, spec, typeRef
+    SET ti.resourceVersion = $in.resourceVersion
+
+    RETURN ti
+  """)
+  deleteTypeInstance(id: ID!): ID! @cypher(statement: """
+    MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
+    MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
+    MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
+    OPTIONAL MATCH (metadata)-[:TAGGED_WITH]->(tagRef: TagReference)
+
+    DETACH DELETE ti, metadata, spec, typeRef, tagRef
+    RETURN $id
+  """)
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

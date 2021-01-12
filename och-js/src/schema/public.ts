@@ -2,8 +2,6 @@ import { readFileSync } from 'fs';
 import { makeAugmentedSchema } from 'neo4j-graphql-js';
 import { IResolvers } from 'graphql-tools';
 
-// import { runSingleQuery } from '../neo4j';
-
 const typeDefs = readFileSync('./graphql/public.graphql', 'utf-8');
 
 const nameResolver = (object: { path: string }) => object.path.split('.').pop();
