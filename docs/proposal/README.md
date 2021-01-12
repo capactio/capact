@@ -5,3 +5,4 @@ The directory contains proposals to enhance the Voltron project. Please use [YYY
 This directory contains the following documents:
 
 - [`20201102-typeinstances-flow.md`](20201102-typeinstances-flow.md) - Describes the approach for handling the TypeInstances (artifacts) between different Voltron components.
+- [`20201209-action-rollback.md`](20201209-action-rollback.md) - Describes the approach of Action rollback.
