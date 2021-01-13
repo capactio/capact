@@ -29,8 +29,11 @@ dump_logs() {
     LOGS_DIR=${ARTIFACTS:-./tmp}/logs
     mkdir -p "${LOGS_DIR}"
 
-    echo "Dumping logs from namespace ${DUMP_NAMESPACE} into ${LOGS_DIR}"
-    kubectl cluster-info dump --namespace="${DUMP_NAMESPACE}" --output-directory="${LOGS_DIR}"
+    echo "Dumping cluster info into ${LOGS_DIR}"
+    kubectl cluster-info dump --all-namespaces --output-directory="${LOGS_DIR}"
+
+    echo "Dumping nodes description into ${LOGS_DIR}"
+    kubectl describe nodes > "${LOGS_DIR}/nodes-describe.json"
 }
 
 # Installs kubebuilder dependency locally.

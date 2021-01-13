@@ -14,7 +14,7 @@ kube-prometheus-stack:
           voltron.dev/scrape-metrics: "true"
       resources:
         requests:
-          cpu: 80m
+          cpu: 50m
           memory: 400Mi
         limits:
           cpu: 200m

@@ -3,7 +3,7 @@ neo4j:
     standalone: true
     resources:
       requests:
-        cpu: 200m
+        cpu: 150m
         memory: 1024Mi
       limits:
         cpu: 400m

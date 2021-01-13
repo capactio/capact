@@ -175,8 +175,16 @@ jobs:
       - name: Run cross-functional integration tests
         env:
           BUILD_IMAGES: "false"
+          ARTIFACTS: "output/"
         run: |
           make test-integration
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: cluster_dump_${{github.sha}}
+          path: "output"
+          retention-days: 5 # Default 90 days
 
   update-cluster:
     name: Update cluster
