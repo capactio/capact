@@ -30,9 +30,11 @@ cleanup() {
     if [[ "${DUMP_CLUSTER_INFO}" == true ]]; then
         shout '- Creating artifacts...'
 
-        export DUMP_NAMESPACE=${VOLTRON_NAMESPACE}
-        dump_logs || true
+        dump_cluster_info || true
     fi
+
+    shout "Nodes description"
+    kubectl describe nodes
 
     kind::delete_cluster || true
 
