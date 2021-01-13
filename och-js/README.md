@@ -75,13 +75,13 @@ query {
 
 The following environment variables can be set to configure OCH:
 
-| Name              | Required | Default | Description                                            |
-| ----------------- | -------- | ------- | ------------------------------------------------------ |
-| OCH_MODE          | yes      |         | Mode, in which OCH is run. Must be "public" or "local" |
-| GRAPHQL_BIND_PORT | no       | `3000`  | TCP port the GraphQL endpoint binds to                 |
-| NEO4J_ENDPOINT    | yes      |         | The Neo4j database Bolt protocol endpoint              |
-| NEO4J_USERNAME    | no       | `neo4j` | Neo4j database username                                |
-| NEO4J_PASSWORD    | yes      |         | Neo4j database password                                |
+| Name                  | Required | Default | Description                                            |
+| --------------------- | -------- | ------- | ------------------------------------------------------ |
+| APP_OCH_MODE          | yes      |         | Mode, in which OCH is run. Must be "public" or "local" |
+| APP_GRAPHQL_BIND_PORT | no       | `3000`  | TCP port the GraphQL endpoint binds to                 |
+| APP_NEO4J_ENDPOINT    | yes      |         | The Neo4j database Bolt protocol endpoint              |
+| APP_NEO4J_USERNAME    | no       | `neo4j` | Neo4j database username                                |
+| APP_NEO4J_PASSWORD    | yes      |         | Neo4j database password                                |
 
 ## Development
 

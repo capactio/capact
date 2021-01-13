@@ -17,7 +17,7 @@ all: generate build-all-images test-ocf-manifests test-unit test-lint
 # Building #
 ############
 
-APPS = gateway k8s-engine och argo-runner helm-runner cloudsql-runner
+APPS = gateway k8s-engine och och-js argo-runner helm-runner cloudsql-runner
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter
 
@@ -39,9 +39,10 @@ push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-ima
 .PHONY: push-all-images
 
 # App images
-build-app-image-och:
+build-app-image-och-js:
+	$(eval APP := och-js)
 	cd och-js && $(MAKE) build-app-image
-.PHONY: build-app-image-och
+.PHONY: build-app-image-och-js
 
 build-app-image-%:
 	$(eval APP := $*)

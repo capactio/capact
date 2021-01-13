@@ -6,7 +6,8 @@ import (
 
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 // Client used to communicate with the Voltron OCH GraphQL APIs
@@ -24,9 +25,28 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 	}
 }
 
+func (c *Client) GetInterfaces(ctx context.Context) ([]ochpublicgraphql.Interface, error) {
+	req := graphql.NewRequest(`query {
+		interfaces {
+			name
+			prefix
+			path
+		}		
+	}`)
+
+	var resp struct {
+		Interfaces []ochpublicgraphql.Interface `json:"interfaces"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
+	}
+
+	return resp.Interfaces, nil
+}
+
 // TODO simple implementation for demo, does return only some fields
 // TODO: add support for not found errors
-func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
@@ -46,7 +66,7 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 
 	req.Var("interfacePath", path)
 	var resp struct {
-		Interface ochgraphql.Interface `json:"interface"`
+		Interface ochpublicgraphql.Interface `json:"interface"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
@@ -59,4 +79,8 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 	}
 
 	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
+}
+
+func (c *Client) CreateTypeInstance(ctx context.Context, typeInstance *ochlocalgraphql.TypeInstance) (*ochlocalgraphql.TypeInstance, error) {
+	return nil, nil
 }

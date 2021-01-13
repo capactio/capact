@@ -105,7 +105,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	CreateTypeInstance(ctx context.Context, in *CreateTypeInstanceInput) (*TypeInstance, error)
 	UpdateTypeInstance(ctx context.Context, id string, in *UpdateTypeInstanceInput) (*TypeInstance, error)
-	DeleteTypeInstance(ctx context.Context, id string) (*TypeInstance, error)
+	DeleteTypeInstance(ctx context.Context, id string) (string, error)
 }
 type QueryResolver interface {
 	TypeInstances(ctx context.Context, filter *TypeInstanceFilter) ([]*TypeInstance, error)
@@ -544,7 +544,7 @@ type Query {
 type Mutation {
   createTypeInstance(in: CreateTypeInstanceInput): TypeInstance!
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput): TypeInstance!
-  deleteTypeInstance(id: ID!): TypeInstance!
+  deleteTypeInstance(id: ID!): ID!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
@@ -884,9 +884,9 @@ func (ec *executionContext) _Mutation_deleteTypeInstance(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*TypeInstance)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNTypeInstance2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeInstance(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_typeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {

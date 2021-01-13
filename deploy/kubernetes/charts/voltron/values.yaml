@@ -20,6 +20,11 @@ och-public:
     username: neo4j
     password: okon
 
+gateway:
+  auth:
+    username: graphql
+    password: t0p_s3cr3t
+
 # TODO add configuration for the OCH tests
 integrationTest:
   image:

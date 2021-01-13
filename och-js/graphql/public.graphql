@@ -1,5 +1,5 @@
-# TODO neo4j-graphql-js adds some directives during parsing
-# to make it work for other graphql client we need to add them to the schema manually, based on:
+# neo4j-graphql-js adds some directives during parsing
+# To make it work for other GraphQL client we need to add them to the schema manually, based on:
 # https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
 directive @relation(name: String, direction: String, from: String, to: String) on FIELD_DEFINITION | OBJECT
 directive @id on FIELD_DEFINITION
@@ -68,11 +68,7 @@ input TypeInstanceValue {
 
 input TypeReferenceInput {
     path: NodePath!
-
-    """
-    If not provided, latest revision for a given Type is used
-    """
-    revision: Version
+    revision: Version!
 }
 
 input TagFilterInput {
@@ -107,8 +103,8 @@ type RepoMetadata {
     name: NodeName!
     prefix: NodePrefix!
 
-    latestRevision: RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
-    revision(revision: Version!): RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
+    latestRevision: RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision) RETURN r ORDER BY r.revision DESC LIMIT 1")
+    revision(revision: Version!): RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision {revision: $revision}) RETURN r")
     revisions: [RepoMetadataRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
@@ -224,12 +220,12 @@ type InterfaceOutput {
     typeInstances: [OutputTypeInstance]! @relation(name: "OUTPUTS_TYPE_INSTANCES", direction: "OUT")
 }
 
-interface TypeInstance {
+interface TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstance {
+type InputTypeInstance implements TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
     verbs: [TypeInstanceOperationVerb!]!
@@ -239,7 +235,7 @@ enum TypeInstanceOperationVerb {
     CREATE, GET, LIST, UPDATE, DELETE
 }
 
-type OutputTypeInstance implements TypeInstance {
+type OutputTypeInstance implements TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
 }
@@ -247,7 +243,7 @@ type OutputTypeInstance implements TypeInstance {
 type Type {
     path: NodePath! @id
     name: NodeName!
-    prefix: NodePrefix! # TODO resolver
+    prefix: NodePrefix!
 
     latestRevision: TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
     revision(revision: Version!): TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
@@ -367,7 +363,6 @@ type ImplementationAction {
     args: Any
 }
 
-# TODO implement
 type Tag {
     path: NodePath! @id
     name: NodeName!
@@ -471,7 +466,5 @@ type Query {
     tags(filter: TagFilter): [Tag!]!
     tag(path: NodePath!): Tag
 }
-
-# No mutations for now, as all resources are populated with DB populator
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

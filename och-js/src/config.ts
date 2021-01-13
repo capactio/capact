@@ -1,23 +1,23 @@
 declare let process: {
   env: {
-    NEO4J_ENDPOINT: string
-    NEO4J_USERNAME: string | undefined
-    NEO4J_PASSWORD: string
+    APP_NEO4J_ENDPOINT: string
+    APP_NEO4J_USERNAME: string | undefined
+    APP_NEO4J_PASSWORD: string
 
-    GRAPHQL_BIND_PORT: number | undefined
+    APP_GRAPHQL_BIND_PORT: number | undefined
 
-    OCH_MODE: string | undefined
+    APP_OCH_MODE: string | undefined
   }
 };
 
 export default {
   neo4j: {
-    endpoint: process.env.NEO4J_ENDPOINT,
-    username: process.env.NEO4J_USERNAME || 'neo4j',
-    password: process.env.NEO4J_PASSWORD,
+    endpoint: process.env.APP_NEO4J_ENDPOINT,
+    username: process.env.APP_NEO4J_USERNAME || 'neo4j',
+    password: process.env.APP_NEO4J_PASSWORD,
   },
   graphql: {
-    bindPort: process.env.GRAPHQL_BIND_PORT || 3000,
+    bindPort: process.env.APP_GRAPHQL_BIND_PORT || 8080,
   },
-  ochMode: process.env.OCH_MODE,
+  ochMode: process.env.APP_OCH_MODE,
 };

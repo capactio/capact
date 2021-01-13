@@ -3,12 +3,16 @@
 package e2e
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/vrischmann/envconfig"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -20,7 +24,14 @@ import (
 
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
+	"projectvoltron.dev/voltron/pkg/och/client"
 )
+
+type GatewayConfig struct {
+	Endpoint string
+	Username string
+	Password string
+}
 
 type Config struct {
 	StatusEndpoints []string
@@ -29,6 +40,14 @@ type Config struct {
 	IgnoredPodsNames            []string
 	PollingInterval             time.Duration `envconfig:"default=2s"`
 	PollingTimeout              time.Duration `envconfig:"default=1m"`
+	Gateway                     GatewayConfig
+}
+
+func requireConfig(t *testing.T) Config {
+	var cfg Config
+	err := envconfig.Init(&cfg)
+	require.NoError(t, err)
+	return cfg
 }
 
 var _ = Describe("E2E", func() {
@@ -68,7 +87,6 @@ var _ = Describe("E2E", func() {
 
 				clientset, err := kubernetes.NewForConfig(k8sCfg)
 				Expect(err).ToNot(HaveOccurred())
-
 				Eventually(func() (int, error) {
 					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
 						FieldSelector: fields.OneTermNotEqualSelector("metadata.namespace", "kube-system").String(),
@@ -124,4 +142,28 @@ func nowStamp() string {
 
 func log(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+format+"\n", args...)
+}
+
+func TestGatewayGetInterfaces(t *testing.T) {
+	cfg := requireConfig(t)
+	httpClient := httputil.NewClient(
+		20*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
+
+	_, err := cli.GetInterfaces(context.Background())
+
+	assert.NoError(t, err)
+}
+
+func TestOperationsOnTypeInstance(t *testing.T) {
+	cfg := requireConfig(t)
+	httpClient := httputil.NewClient(
+		20*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
 }

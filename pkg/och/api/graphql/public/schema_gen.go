@@ -1771,12 +1771,12 @@ type InterfaceOutput {
     typeInstances: [OutputTypeInstance]!
 }
 
-interface TypeInstance {
+interface TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstance {
+type InputTypeInstance implements TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
     verbs: [TypeInstanceOperationVerb!]!
@@ -1786,7 +1786,7 @@ enum TypeInstanceOperationVerb {
     CREATE, GET, LIST, UPDATE, DELETE
 }
 
-type OutputTypeInstance implements TypeInstance {
+type OutputTypeInstance implements TypeInstanceFields {
     name: String!
     typeRef: TypeReference!
 }
@@ -9033,7 +9033,7 @@ func (ec *executionContext) _MetadataBaseFields(ctx context.Context, sel ast.Sel
 	}
 }
 
-func (ec *executionContext) _TypeInstance(ctx context.Context, sel ast.SelectionSet, obj TypeInstance) graphql.Marshaler {
+func (ec *executionContext) _TypeInstanceFields(ctx context.Context, sel ast.SelectionSet, obj TypeInstanceFields) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
@@ -9694,7 +9694,7 @@ func (ec *executionContext) _InputParameters(ctx context.Context, sel ast.Select
 	return out
 }
 
-var inputTypeInstanceImplementors = []string{"InputTypeInstance", "TypeInstance"}
+var inputTypeInstanceImplementors = []string{"InputTypeInstance", "TypeInstanceFields"}
 
 func (ec *executionContext) _InputTypeInstance(ctx context.Context, sel ast.SelectionSet, obj *InputTypeInstance) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, inputTypeInstanceImplementors)
@@ -10066,7 +10066,7 @@ func (ec *executionContext) _Maintainer(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
-var outputTypeInstanceImplementors = []string{"OutputTypeInstance", "TypeInstance"}
+var outputTypeInstanceImplementors = []string{"OutputTypeInstance", "TypeInstanceFields"}
 
 func (ec *executionContext) _OutputTypeInstance(ctx context.Context, sel ast.SelectionSet, obj *OutputTypeInstance) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, outputTypeInstanceImplementors)

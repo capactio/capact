@@ -29,8 +29,8 @@ func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string
 	return dummyTypeInstance(id), nil
 }
 
-func (r *TypeInstanceResolver) DeleteTypeInstance(ctx context.Context, id string) (*gqllocalapi.TypeInstance, error) {
-	return dummyTypeInstance(id), nil
+func (r *TypeInstanceResolver) DeleteTypeInstance(ctx context.Context, id string) (string, error) {
+	return dummyTypeInstance(id).Metadata.ID, nil
 }
 
 func dummyTypeInstance(id string) *gqllocalapi.TypeInstance {

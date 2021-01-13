@@ -144,7 +144,7 @@ type Query {
 type Mutation {
   createTypeInstance(in: CreateTypeInstanceInput): TypeInstance!
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput): TypeInstance!
-  deleteTypeInstance(id: ID!): TypeInstance!
+  deleteTypeInstance(id: ID!): ID!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
