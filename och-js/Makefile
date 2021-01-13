@@ -1,5 +1,5 @@
-DOCKER_REPOSITORY ?= local
-DOCKER_TAG ?= devel
+DOCKER_REPOSITORY ?= gcr.io/projectvoltron
+DOCKER_TAG ?= latest
 APP ?= och-js
 
 build-app-image:

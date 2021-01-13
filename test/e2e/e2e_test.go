@@ -24,6 +24,7 @@ import (
 
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
+	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"projectvoltron.dev/voltron/pkg/och/client"
 )
 
@@ -166,4 +167,39 @@ func TestOperationsOnTypeInstance(t *testing.T) {
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
 	cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
+	ctx := context.Background()
+
+	createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
+		TypeRef: &graphql.TypeReferenceInput{
+			Path:     "com.voltron.ti",
+			Revision: strPtr("0.1.0"),
+		},
+		Tags: []*graphql.TagReferenceInput{
+			{
+				Path:     "com.voltron.tag1",
+				Revision: strPtr("0.1.0"),
+			},
+		},
+		Value: map[string]interface{}{
+			"foo": "bar",
+		},
+	})
+
+	require.NoErrorf(t, err, "while creating TypeInstance: %v", err)
+	require.Equal(t, map[string]interface{}{
+		"foo": "bar",
+	}, createdTypeInstance.Spec.Value)
+
+	typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
+	require.NoErrorf(t, err, "while getting TypeInstance: %v", err)
+	require.Equal(t, map[string]interface{}{
+		"foo": "bar",
+	}, typeInstance.Spec.Value)
+
+	err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)
+	require.NoErrorf(t, err, "while deleting TypeInstance: %v", err)
+}
+
+func strPtr(s string) *string {
+	return &s
 }

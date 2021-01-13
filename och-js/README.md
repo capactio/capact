@@ -43,9 +43,9 @@ docker run -d \
 
 To run OCH in local mode, use the following command:
 ```bash
-NEO4J_ENDPOINT=bolt://localhost:7687 \
-  NEO4J_PASSWORD=okon \
-  OCH_MODE=local \
+APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
+  APP_NEO4J_PASSWORD=okon \
+  APP_OCH_MODE=local \
   yarn dev
 ```
 
