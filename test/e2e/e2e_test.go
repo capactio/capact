@@ -46,7 +46,7 @@ const (
 	// poll is how often to poll pods
 	poll = 2 * time.Second
 	// total number of pods that should be scheduled
-	expectedNumberOfPods = 25
+	expectedNumberOfRunningPods = 25
 )
 
 func TestAllPodsRunning(t *testing.T) {
@@ -55,38 +55,37 @@ func TestAllPodsRunning(t *testing.T) {
 	require.NoError(t, err)
 
 	clientset, err := kubernetes.NewForConfig(k8sCfg)
+	require.NoError(t, err)
 
-	numberOfPods := 0
+	numberOfRunningPods := 0
 	err = wait.PollImmediate(poll, time.Minute, func() (done bool, err error) {
 		pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{})
 		if err != nil {
 			return false, err
 		}
-		numberOfPods = len(pods.Items)
 
 		atLeastOneNotReady := false
-		for _, p := range pods.Items {
-			running, err := podRunningAndReady(t, &p)
-			if err != nil {
-				return false, err
-			}
-
+		numberOfRunningPods = 0
+		for idx := range pods.Items {
+			running := podRunningAndReady(t, &pods.Items[idx])
 			if !running {
 				atLeastOneNotReady = true
+			} else {
+				numberOfRunningPods++
 			}
 		}
 		return !atLeastOneNotReady, nil
 	})
 
 	require.NoError(t, err)
-	assert.Equal(t, expectedNumberOfPods, numberOfPods, "got unexpected number of Pods in cluster")
+	assert.Equal(t, expectedNumberOfRunningPods, numberOfRunningPods, "got unexpected number of Pods in cluster")
 }
 
-func podRunningAndReady(t *testing.T, pod *v1.Pod) (bool, error) {
+func podRunningAndReady(t *testing.T, pod *v1.Pod) bool {
 	switch pod.Status.Phase {
 	case v1.PodRunning:
-		return podutils.IsPodReady(pod), nil
+		return podutils.IsPodReady(pod)
 	}
 	t.Logf("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
-	return false, nil
+	return false
 }
