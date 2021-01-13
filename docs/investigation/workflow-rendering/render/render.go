@@ -35,9 +35,9 @@ type WorkflowStep struct {
 	Template  string         `json:"template,omitempty"`
 	Arguments wfv1.Arguments `json:"arguments,omitempty"`
 
-	OCFWhen                *string                     `json:"ocf-when,omitempty"`
-	OCFAction              *v1alpha1.ManifestReference `json:"ocf-action,omitempty"`
-	OCFTypeInstanceOutputs []TypeInstanceDefinition    `json:"ocf-output-type-instances,omitempty"`
+	VoltronWhen                *string                     `json:"voltron-when,omitempty"`
+	VoltronAction              *v1alpha1.ManifestReference `json:"voltron-action,omitempty"`
+	VoltronTypeInstanceOutputs []TypeInstanceDefinition    `json:"voltron-outputTypeInstances,omitempty"`
 }
 
 type TypeInstanceDefinition struct {
@@ -135,11 +135,11 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 				for i := range parallelSteps {
 					step := parallelSteps[i]
 
-					if step.OCFAction != nil {
+					if step.VoltronAction != nil {
 						// Get Implementation for action
-						implementation := r.ManifestStore.GetImplementationForInterface(*step.OCFAction)
+						implementation := r.ManifestStore.GetImplementationForInterface(*step.VoltronAction)
 						if implementation == nil {
-							return nil, fmt.Errorf("implementation for %v not found", *step.OCFAction)
+							return nil, fmt.Errorf("implementation for %v not found", *step.VoltronAction)
 						}
 
 						// Render the referenced action.
@@ -156,7 +156,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 						// Include the rendered workflow.
 						r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, importedWorkflow.Templates...)
 						step.Template = importedWorkflow.Entrypoint
-						step.OCFAction = nil
+						step.VoltronAction = nil
 					}
 
 					// Replace global artifacts names in references, based on previous gathered mappings.
@@ -216,7 +216,7 @@ func (r *Renderer) renderFunc(prefix string,
 			for sIdx := range parallelSteps {
 				step := parallelSteps[sIdx]
 
-				for _, ti := range step.OCFTypeInstanceOutputs {
+				for _, ti := range step.VoltronTypeInstanceOutputs {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
@@ -226,7 +226,7 @@ func (r *Renderer) renderFunc(prefix string,
 					}
 				}
 
-				step.OCFTypeInstanceOutputs = nil
+				step.VoltronTypeInstanceOutputs = nil
 			}
 		}
 	}
@@ -260,15 +260,15 @@ func (r *Renderer) removeConditionalActionSteps(instances []*v1alpha1.InputTypeI
 			for i := range parallelSteps {
 				step := parallelSteps[i]
 
-				if step.OCFWhen != nil {
-					if result, err := r.evaluateWhenExpression(instances, *step.OCFWhen); err != nil {
+				if step.VoltronWhen != nil {
+					if result, err := r.evaluateWhenExpression(instances, *step.VoltronWhen); err != nil {
 						return errors.Wrap(err, "while evaluating OCFWhen")
 					} else if result == false {
 						continue
 					}
 				}
 
-				step.OCFWhen = nil
+				step.VoltronWhen = nil
 
 				newParallelSteps = append(newParallelSteps, step)
 			}
@@ -311,7 +311,7 @@ func (r *Renderer) findActionSteps() []actionStepRef {
 		for _, parallelSteps := range tmpl.Steps {
 			for i := range parallelSteps {
 				step := parallelSteps[i]
-				if step.OCFAction != nil {
+				if step.VoltronAction != nil {
 					actionStepsRef = append(actionStepsRef, actionStepRef{
 						Path: tmpl.Name,
 						Step: step,

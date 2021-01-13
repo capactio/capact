@@ -57,7 +57,7 @@ spec:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
             steps:
               - - name: create-helm-args
-                  ocf-action:
+                  voltron-action:
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
@@ -100,9 +100,9 @@ spec:
                                       password: "{{ template "postgresql.password" . }}"{% endraw %}
 
               - - name: helm-run
-                  ocf-action:
+                  voltron-action:
                     path: cap.interface.runner.helm.run
-                  ocf-output-type-instances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
                     - name: helm-release

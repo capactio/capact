@@ -75,7 +75,7 @@ spec:
                 - name: input-parameters
             steps:
               - - name: install-db
-                  ocf-when: postgresql == nil # conditional execution
+                  voltron-when: postgresql == nil # conditional execution
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -85,11 +85,11 @@ spec:
                               username: jira
                               password: okon
                             defaultDBName: jira
-                  ocf-action:
+                  voltron-action:
                     path: cap.interface.database.postgresql.install
 
               - - name: create-helm-args
-                  ocf-action:
+                  voltron-action:
                     path: cap.interface.jinja2.template
                   arguments:
                     artifacts:
@@ -135,9 +135,9 @@ spec:
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
               - - name: helm-run
-                  ocf-action:
+                  voltron-action:
                     path: cap.interface.runner.helm.run
-                  ocf-output-type-instances:
+                  voltron-outputTypeInstances:
                     - name: jira-config
                       from: additional
                     - name: helm-release

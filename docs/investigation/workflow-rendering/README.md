@@ -2,7 +2,7 @@
 
 ## Overview
 
-This proof of concept shows a way to render an Argo workflow from an Voltron Action CR. It supports conditional execution, based on provided TypeInstances and allows to reference other Interfaces.
+This proof of concept shows a way to render an Argo workflow from a Voltron Action CR. It supports conditional execution, based on provided TypeInstances and allows us to reference other Interfaces.
 
 ```
 .
@@ -18,7 +18,7 @@ This proof of concept shows a way to render an Argo workflow from an Voltron Act
 - [Go](https://golang.org)
 - Kubernetes cluster with [Argo](https://argoproj.github.io/) installed
 
-Currently there is a problem in Argo with referencing global artifacts created in nested workflows ([Github issue](https://github.com/argoproj/argo/issues/4772)).
+Currently, there is a problem in Argo with referencing global artifacts created in nested workflows ([Github issue](https://github.com/argoproj/argo/issues/4772)).
 
 To make this PoC work you need to apply the following diff to the Argo v2.11.7 repository:
 
@@ -78,7 +78,13 @@ index 583d6fd7..0ea36620 100644
 
  		woc.workflowDeadline = woc.getWorkflowDeadline()
 ```
+
 </details>
+
+You can also use the pre-built controller image for that:
+```
+kubectl -n argo set image deployment/argo-workflow-controller controller=gcr.io/projectvoltron/argo/workflow-controller:rendering-poc
+```
 
 ## Usage
 
@@ -87,16 +93,16 @@ You can generate the workflows in this proof of concept:
 2. JIRA install with Helm and a provided PostgreSQL TypeInstance
 3. JIRA install and a nested PostgreSQL install wit Helm
 
-### PostgreSQL install using Helm
+### PostgreSQL installation
 
 To generate and run the workflow, execute:
 ```bash
 go run main.go inputs/1-postgres.yml | kubectl apply -f -
 ```
 
-### JIRA install with Helm and a provided PostgreSQL TypeInstance
+### JIRA installation with a provided PostgreSQL TypeInstance
 
-We will use the PostgreSQL installation created in [PostgreSQL install using Helm](#postgresql-install-using-helm), so if you did not make that step, do it now.
+We will use the PostgreSQL installation created in [PostgreSQL install using Helm](#postgresql-install-using-helm), so if you did not take that step, do it now.
 
 Update the `.spec.value.host` in `manifests/typeinstances/postgresql-1.yaml` with the PostgreSQL service Kubernetes DNS, to reflect the connection details to the PostgreSQL server:
 ```yaml
@@ -115,7 +121,7 @@ To generate and run the workflow, execute:
 go run main.go inputs/2-jira.yml | kubectl apply -f -
 ```
 
-### JIRA install and a nested PostgreSQL install wit Helm
+### JIRA installation with embedded PostgreSQL
 
 Remove the JIRA Helm release from [JIRA install with Helm and a provided PostgreSQL TypeInstance](jira-install-with-helm-and-a-provided-postgresql-typeinstance), if you did that step before.
 
