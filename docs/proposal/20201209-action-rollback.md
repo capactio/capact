@@ -100,8 +100,7 @@ The rollback action is always triggered by User. User triggers it in the followi
 1. User navigates to the TypeInstance tree view.
 1. User selects a given TypeInstance.
     
-    - If the TypeInstance is not `standalone`, the "Delete" button is disabled.
-    - If the TypeInstance is a dependency for at least one different TypeInstance, the "Delete" button is disabled.
+    If the TypeInstance is a dependency for at least one different TypeInstance, the "Delete" button is disabled.
     
 1. User clicks the "Delete" button for a given TypeInstance.
 1. A new Rollback Action workflow is created.
@@ -116,8 +115,7 @@ The rollback action is always triggered by User. User triggers it in the followi
 1. UI renders TypeInstances.
 1. User selects a given TypeInstance.
 
-    - If the TypeInstance has `standalone: false` property set, the "Delete" button is disabled.
-    - If the TypeInstance has at least one ancestor (defined in the `ancestors` property), the "Delete" button is disabled.
+    If the TypeInstance has at least one ancestor (defined in the `ancestors` property), the "Delete" button is disabled.
 
 1. User clicks the "Delete" button for a given TypeInstance.
 1. UI calls Engine GraphQL API to create Rollback Custom Resource via `createRollback` GraphQL mutation.
@@ -128,7 +126,7 @@ The rollback action is always triggered by User. User triggers it in the followi
 1. Engine renders the rollback workflow.
 
     - Engine fetches details for a given TypeInstance with ancestors and descendants.
-    - Based on the `actionRollbackRef` property for every TypeInstance in the subtree, Engine renders full workflow to delete the TypeInstance and all dependent unused TypeInstances.
+    - Based on the `rollbackActionRef` property for every TypeInstance in the subtree, Engine renders full workflow to delete the TypeInstance and all dependent unused TypeInstances.
    
    To learn the details, read the [New Rollback Controller](#new-rollback-controller) paragraph.
    
@@ -154,6 +152,8 @@ spec:
     revision: 0.1.0
   standalone: true # specifies if the TypeInstance was created with a separate Action
 ```
+
+In the future, we may bring an additional feature to limit the revision history, for example by a dedicated `spec.revisionHistoryLimit` field, similar to Kubernetes.
 
 #### Renaming `resourceVersion` to `revision`
 
@@ -203,7 +203,7 @@ Specifies, whether a given TypeInstance was created with a separate Action.
   parent of the TypeInstance.
 - If User triggered an Action which created a given TypeInstance, then the TypeInstance has the `standalone: true`
   property.
-- User can trigger rollback Action only for a TypeInstance which has `standalone` property set to `true` and if they are not used by any other TypeInstances (in other words - they don't have any ancestor).
+- User can trigger rollback Action only for a TypeInstance which has `standalone` property set to `true`. In case of the "delete" rollback strategy, another condition is if they are not used by any other TypeInstances (in other words - they don't have any ancestor).
 
 ### Changes in Local OCH API
 
@@ -293,7 +293,7 @@ spec:
   implements:
     - path: cap.core.interface.runner.generic.run
       revision: 0.1.0
-    - path: cap.interface.runner.helm.run
+    - path: cap.interface.runner.helm.install
       revision: 0.1.0
 
   requires:
@@ -327,6 +327,7 @@ spec:
             container:
               image: gcr.io/projectvoltron/helm-runner:0.1.0
               args:
+                - "--install"
                 - "--parameters-path"
                 - "{{ inputParametersToArtifact.path }}"
                 - "--output-path"
@@ -350,9 +351,9 @@ spec:
             container:
               image: gcr.io/projectvoltron/helm-runner:0.1.0 # The same image handles `helm uninstall`, based on input arguments
               args:
+                - "--uninstall"
                 - "--input-path"
                 - "{{ inputParametersToArtifact.path }}"
-                - "--uninstall"
 ```
 
 </details>
@@ -408,9 +409,8 @@ spec:
                   globalName: postgresql
                   path: "/out/postgresql.yaml"
             action:
-              runnerInterface: helm.run
+              runnerInterface: helm.install
               args:
-                command: "install"
                 generateName: true
                 chart:
                   name: "postgresql"
@@ -464,18 +464,18 @@ spec:
   dryRun: false
 ```
 
-The Rollback Custom Resource described action rollback. Based on input TypeInstance, full rollback workflow is rendered.
-Once User approves it,  
+The Rollback Custom Resource describes action rollback. Based on input TypeInstance, full rollback workflow is rendered. Once User approves it, the workflow is run.
 
-Initially, only one input TypeInstance is supported. In the future, multiple input TypeInstances will be supported. 
+Initially, only one input TypeInstance is supported. In the future, we may consider to support multiple input TypeInstances. 
 The behavior of Rollback Custom Resource is very similar to `Action` Custom Resource.
 
 To read more about the Rollback controller behavior, read the [New Rollback Controller](#new-rollback-controller) section.
 
 #### New Rollback Controller
 
-To properly handle rollback, there is a dedicated Rollback Controller as a part of Engine Controller Manager.
-It watches for Rollback Custom Resources and reacts on theirs changes according to the following logic:
+To properly handle rollback, there is a dedicated Rollback Controller as a part of Engine Controller Manager. To run rollback workflow, Rollback Controller uses Action Custom Resources, that are sequentially executed.
+
+Rollback Controller watches for Rollback Custom Resources and reacts on theirs changes according to the following logic:
 
 **Create**
 
@@ -487,7 +487,11 @@ Based on the Rollback CR, render rollback workflow:
 
 1. Check rollback strategy from `spec.strategy` in Rollback CR.
    
-    - If the strategy is to rollback to previous revision or go back `n` revisions in time, get proper previous revision and prepare Argo workflow which updates it. Finish rendering and exit. 
+    - If the strategy is to rollback to previous revision or go back `n` revisions in time:
+        - get proper previous revision,
+        - prepare rollback plan, which consists of sequentially triggered Action Custom Resources, 
+        - finish rendering and exit.
+
     - If strategy is "Delete", continue.
 
 1. If the TypeInstance has ancestors, return error and exit.  
@@ -497,7 +501,10 @@ Based on the Rollback CR, render rollback workflow:
     - if a given TypeInstance has more than two ancestors, skip it and its descendants.
     - get first revision for every TypeInstance nad collect `rollbackActionRef` value. Skip if empty.
 
-1. Prepare workflow, which combines `rollbackActionRef` workflows for every TypeInstance into one workflow and deletes all unused TypeInstances as a final step.    
+1. Prepare rollback plan.
+
+   - Rollback plan combines `rollbackActionRef` workflows for every TypeInstance as sequence of Action Custom Resources. 
+   - Last step of the full rollback plan deletes all unused TypeInstances as a final step.    
 
 **Update**
 
@@ -505,6 +512,7 @@ The update behavior is equal to the Action update controller. That is:
 - If `run: true`, run the workflow and update status.
 - If `cancel: true`, cancel the workflow and update status.
 - If input or strategy changed, rerender final workflow and update status.
+- Already approved or cancelled rollbacks cannot be updated.
 
 #### New GraphQL API operations for Rollback
 
@@ -529,7 +537,7 @@ The `Rollback` and `RollbackDetailsInput` GraphQL types are based on the propert
 
 ### Example E2E flows
 
-This section covers a few different example scenarios to  how the rollback works.
+This section covers a few different example scenarios to present how the rollback works.
 
 #### Detailed example of Jira installation and rollback
 
@@ -717,8 +725,9 @@ This section covers a few different example scenarios to  how the rollback works
    
 1. User creates Rollback for `jira-config` TypeInstance with `strategy.restoreLastRevision: true` or `strategy.steps: 1`.
 1. Engine renders workflow which:
-- Runs rollback workflow for `cap.implementation.atlassian.jira.upgrade` Implementation using its `spec.rollback` workflow.
-- Restores previous revision of TypeInstances using Local OCH GraphQL API
+   
+    - Runs rollback workflow for `cap.implementation.atlassian.jira.upgrade` Implementation using its `spec.rollback` workflow.
+    - Restores previous revision of TypeInstances using Local OCH GraphQL API
 1. User runs workflow.
 1. The previous TypeInstance revision is restored.
   
@@ -731,10 +740,10 @@ This section covers a few different example scenarios to  how the rollback works
 
 1. User creates Rollback for `jira-config` TypeInstance with `strategy.delete: true`.
 1. Engine renders workflow which:
-- Runs rollback workflow for `cap.implementation.atlassian.jira.install` Implementation using its `spec.rollback` workflow.
-- Runs rollback workflow for `cap.implementation.bitnami.postgresql.install` Implementation using its `spec.rollback` workflow.
-- Runs rollback workflow for Helm release TypeInstances for Jira and PostgreSQL.   
-- Removes `jira-config` TypeInstance with all unused dependencies (including `postgresql` TypeInstance).
+    - Runs rollback workflow for `cap.implementation.atlassian.jira.install` Implementation using its `spec.rollback` workflow.
+    - Runs rollback workflow for `cap.implementation.bitnami.postgresql.install` Implementation using its `spec.rollback` workflow.
+    - Runs rollback workflow for Helm release TypeInstances for Jira and PostgreSQL.   
+    - Removes `jira-config` TypeInstance with all unused dependencies (including `postgresql` TypeInstance).
 1. User runs workflow.
 1. User uninstalls Jira with all unused dependencies.
 
@@ -798,7 +807,7 @@ spec:
                   globalName: postgresql
                   path: "/out/postgresql.yaml"
             action:
-              runnerInterface: helm.run
+              runnerInterface: helm.install
               args:
                 command: "install"
                 generateName: true
