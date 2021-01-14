@@ -151,7 +151,7 @@ var _ = Describe("E2E", func() {
 					},
 					Attributes: []*graphql.AttributeReferenceInput{
 						{
-							Path:     "com.voltron.tag1",
+							Path:     "com.voltron.attribute1",
 							Revision: strPtr("0.1.0"),
 						},
 					},
