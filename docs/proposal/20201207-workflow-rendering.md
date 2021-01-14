@@ -12,8 +12,8 @@ This document shows how we can render the workflow in Voltron Engine.
   - [Motivation](#motivation)
     - [Goals](#goals)
   - [Proposal](#proposal)
-    - [How to reference an Interface to be called in a Action workflow](#how-to-reference-an-interface-to-be-called-in-a-action-workflow)
-    - [How to use and pass input parameters to Interfaces](#how-to-use-and-pass-input-parameters-to-interfaces)
+    - [How to reference an Interface to be called in an Action workflow](#how-to-reference-an-interface-to-be-called-in-an-action-workflow)
+    - [How to use and pass user input parameters to Interfaces](#how-to-use-and-pass-user-input-parameters-to-interfaces)
     - [How to reference output TypeInstances from a called Interface](#how-to-reference-output-typeinstances-from-a-called-interface)
     - [How to conditionally call an Interface](#how-to-conditionally-call-an-interface)
     - [How to define, which workflow artifacts are TypeInstances](#how-to-define-which-workflow-artifacts-are-typeinstances)
@@ -81,7 +81,7 @@ spec:
                   voltron-action: postgres.install
 ```
 
-### How to use and pass input parameters to Interfaces
+### How to use and pass user input parameters to Interfaces
 
 Interfaces need input parameters and Content Creators must have a way to use and also pass them to the Interfaces, they call.
 We have to somehow inject the input-parameters into the workflow, so the Content Creator can reference them.
