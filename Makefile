@@ -54,7 +54,7 @@ build-test-image-%:
 	$(eval APP := $*)
 	docker build --build-arg COMPONENT=$(APP) \
 		--build-arg BUILD_CMD="go test -v -c" \
-		--build-arg SOURCE_PATH="./test/$(APP)/$(APP)_test.go" \
+		--build-arg SOURCE_PATH="./test/$(APP)/*_test.go" \
 		-t $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) .
 .PHONY: build-test-image
 

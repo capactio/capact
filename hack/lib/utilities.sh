@@ -25,12 +25,12 @@ shout() {
 "
 }
 
-dump_logs() {
+dump_cluster_info() {
     LOGS_DIR=${ARTIFACTS:-./tmp}/logs
     mkdir -p "${LOGS_DIR}"
 
-    echo "Dumping logs from namespace ${DUMP_NAMESPACE} into ${LOGS_DIR}"
-    kubectl cluster-info dump --namespace="${DUMP_NAMESPACE}" --output-directory="${LOGS_DIR}"
+    echo "Dumping cluster info into ${LOGS_DIR}"
+    kubectl cluster-info dump --all-namespaces --output-directory="${LOGS_DIR}"
 }
 
 # Installs kubebuilder dependency locally.

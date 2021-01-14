@@ -7,12 +7,15 @@ metadata:
   annotations:
     "helm.sh/hook": test-success
 spec:
+  serviceAccountName: "{{ include "voltron.fullname" . }}-test-e2e"
   containers:
     - name: tests-runner
       image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.integrationTest.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
       env:
         - name: STATUS_ENDPOINTS
           value: "http://voltron-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/healthz"
+        - name: IGNORED_PODS_NAMES
+          value: "{{ .Release.Namespace}}/{{ include "voltron.fullname" . }}-test-e2e"
       command:
         - /app
       args:
