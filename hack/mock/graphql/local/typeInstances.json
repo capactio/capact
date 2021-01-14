@@ -2,7 +2,7 @@
   {
     "metadata": {
       "id": "00000000-ab4a-4fbf-a312-f96f11b07d0b",
-      "tags": [
+      "attributes": [
         {
           "path": "cap.core.type.platform.kubernetes",
           "revision": "0.1.0"
@@ -42,7 +42,7 @@
   {
     "metadata": {
       "id": "13343627-ab4a-4fbf-a312-f96f11b07d0b",
-      "tags": [
+      "attributes": [
         {
           "path": "cap.type.productivity.jira",
           "revision": "0.1.0"
@@ -65,7 +65,7 @@
   {
     "metadata": {
       "id": "45678917-ab4a-4fbf-a312-f96f11b07d0b",
-      "tags": [
+      "attributes": [
         {
           "path": "cap.type.productivity.jira",
           "revision": "0.1.0"

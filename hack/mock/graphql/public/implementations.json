@@ -21,7 +21,7 @@
           "prefix": "cap.implementation.attlasian.jira",
           "path": "cap.implementation.attlasian.jira.install",
           "supportURL": " https://mox.sh/helm",
-          "tags": []
+          "attributes": []
         },
         "revision": "0.1.0",
         "spec": {
@@ -406,7 +406,7 @@
           "prefix": "cap.implementation.attlasian.jira",
           "path": "cap.implementation.attlasian.jira.update",
           "supportURL": " https://mox.sh/helm",
-          "tags": []
+          "attributes": []
         },
         "revision": "0.1.0",
         "spec": {
@@ -477,7 +477,7 @@
           "prefix": "cap.implementation.attlasian.jira",
           "path": "cap.implementation.attlasian.jira.install-local",
           "supportURL": " https://mox.sh/helm",
-          "tags": []
+          "attributes": []
         },
         "revision": "0.1.0",
         "spec": {

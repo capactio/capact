@@ -55,10 +55,10 @@ func TestUnmarshalAndMarshalActionProduceSameResults(t *testing.T) {
 				return &obj, nil
 			},
 		},
-		"Tag": {
-			examplePath: "tag.yaml",
+		"Attribute": {
+			examplePath: "attribute.yaml",
 			unmarshalMethod: func(data []byte) (marshaler, error) {
-				obj, err := types.UnmarshalTag(data)
+				obj, err := types.UnmarshalAttribute(data)
 				if err != nil {
 					return nil, err
 				}

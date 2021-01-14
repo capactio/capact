@@ -84,8 +84,8 @@
             "license"
           ],
           "properties": {
-            "tags": {
-              "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
+            "attributes": {
+              "$ref": "https://projectvoltron.dev/schemas/common/metadata-attributes.json"
             },
             "license": {
               "$id": "#/properties/metadata/properties/license",

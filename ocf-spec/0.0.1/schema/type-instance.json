@@ -40,8 +40,8 @@
           "type": "string",
           "description": "The unique identifier of a given TypeInstance."
         },
-        "tags": {
-          "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
+        "attributes": {
+          "$ref": "https://projectvoltron.dev/schemas/common/metadata-attributes.json"
         }
       },
       "additionalProperties": false

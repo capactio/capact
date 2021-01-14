@@ -7,8 +7,8 @@ issues:
     # This is a special case. We want to have a different name for each Resolver
     # as we are using struct embedding pattern in root_resolver.go files. Each name needs
     # to be unique example:
-    #  - typeinstance.Resolver == tags.Resolver (same field name in embedded struct)
-    #  - typeinstance.TypeInstanceResolver != tags.TagResolver (diff field name in embedded struct)
+    #  - typeinstance.Resolver == attributes.Resolver (same field name in embedded struct)
+    #  - typeinstance.TypeInstanceResolver != attributes.AttributeResolver (diff field name in embedded struct)
     - path: internal/.*/graphql/.*resolver/.*.go
       text: "consider calling this Resolver"
       linters:

@@ -96,13 +96,13 @@
               "url": "https://projectvoltron.dev"
             }
           ],
-          "tags": [
+          "attributes": [
             {
               "metadata": {
                 "name": "baseline",
-                "prefix": "cap.core.tag.system",
-                "path": "cap.core.tag.system.name",
-                "description": "Indication that tagged item is an essential system capability.",
+                "prefix": "cap.core.attribute.system",
+                "path": "cap.core.attribute.system.name",
+                "description": "Indication that marked item is an essential system capability.",
                 "displayName": "Baseline Capability",
                 "documentationURL": "https://projectvoltron.dev",
                 "supportURL": "https://projectvoltron.dev/contact",

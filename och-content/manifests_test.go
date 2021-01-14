@@ -47,11 +47,11 @@ func TestManifestsValid(t *testing.T) {
 				"type",
 			},
 		},
-		"Tag manifests should be valid": {
-			jsonSchemaPath: "tag.json",
+		"Attribute manifests should be valid": {
+			jsonSchemaPath: "attribute.json",
 			manifestDirectories: []string{
-				"core/tag",
-				"tag",
+				"core/attribute",
+				"attribute",
 			},
 		},
 		"Vendor manifests should be valid": {

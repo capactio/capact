@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
 revision: 0.1.0
-kind: Tag
+kind: Attribute
 metadata:
-  prefix: cap.core.tag.system # Computed during fetching the manifest
+  prefix: cap.core.attribute.system # Computed during fetching the manifest
   name: baseline
   displayName: Baseline Capability
-  description: Indication that tagged item is an essential system capability.
+  description: Indication that marked item is an essential system capability.
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   iconURL: https://projectvoltron.dev/favicon.ico

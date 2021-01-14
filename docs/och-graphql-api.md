@@ -12,7 +12,7 @@ Public OCH API contains GraphQL operations for the following entities:
 - Interface
 - Type
 - Implementation
-- Tag
+- Attribute
 
 Currently, there are no GraphQL mutations or subscriptions available. Once populated with DB populator, all resources are read-only.
 
@@ -35,15 +35,15 @@ For every entity which has revision support, three queries are available:
 - getting a specific revision content
 - getting all revisions content
 
-The following example shows the possibilities on Tag entity:
+The following example shows the possibilities on Attribute entity:
 
 ```graphql
 query {
-    tags {
+    attributes {
         # name, path and prefix are immutable across all revisions of a given node.
         name # equal metadata.name, e.g. stateless
-        path # equal to metadata.path, e.g. cap.core.tag.workload.stateless
-        prefix # equal to metadata.prefix, e.g. cap.core.tag.workload
+        path # equal to metadata.path, e.g. cap.core.attribute.workload.stateless
+        prefix # equal to metadata.prefix, e.g. cap.core.attribute.workload
 
         # latest revision
         latestRevision {
@@ -126,7 +126,7 @@ query {
                     }
                 }
                 implementations(filter: {
-                    tags: [{path: "cap.tag.foo.bar", rule: INCLUDE}],
+                    attributes: [{path: "cap.attribute.foo.bar", rule: INCLUDE}],
                     requirementsSatisfiedBy: [
                         {
                             typeRef: {

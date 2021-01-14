@@ -3,8 +3,8 @@ resourceVersion: 2
 kind: TypeInstance
 metadata:
   id: 461a1c83-6054-43dd-8a4c-49acde791699
-  tags:
-    cap.tag.cncf.graduated:
+  attributes:
+    cap.attribute.cncf.graduated:
       revision: 1.0.0
 spec:
   typeRef:

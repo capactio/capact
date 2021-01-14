@@ -35,6 +35,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Attribute() AttributeResolver
 	Implementation() ImplementationResolver
 	ImplementationRevision() ImplementationRevisionResolver
 	Interface() InterfaceResolver
@@ -42,7 +43,6 @@ type ResolverRoot interface {
 	InterfaceRevision() InterfaceRevisionResolver
 	Query() QueryResolver
 	RepoMetadata() RepoMetadataResolver
-	Tag() TagResolver
 	Type() TypeResolver
 }
 
@@ -50,6 +50,26 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	Attribute struct {
+		LatestRevision func(childComplexity int) int
+		Name           func(childComplexity int) int
+		Path           func(childComplexity int) int
+		Prefix         func(childComplexity int) int
+		Revision       func(childComplexity int, revision string) int
+		Revisions      func(childComplexity int) int
+	}
+
+	AttributeRevision struct {
+		Metadata  func(childComplexity int) int
+		Revision  func(childComplexity int) int
+		Signature func(childComplexity int) int
+		Spec      func(childComplexity int) int
+	}
+
+	AttributeSpec struct {
+		AdditionalRefs func(childComplexity int) int
+	}
+
 	GenericMetadata struct {
 		Description      func(childComplexity int) int
 		DisplayName      func(childComplexity int) int
@@ -98,6 +118,7 @@ type ComplexityRoot struct {
 	}
 
 	ImplementationMetadata struct {
+		Attributes       func(childComplexity int) int
 		Description      func(childComplexity int) int
 		DisplayName      func(childComplexity int) int
 		DocumentationURL func(childComplexity int) int
@@ -107,7 +128,6 @@ type ComplexityRoot struct {
 		Path             func(childComplexity int) int
 		Prefix           func(childComplexity int) int
 		SupportURL       func(childComplexity int) int
-		Tags             func(childComplexity int) int
 	}
 
 	ImplementationRequirement struct {
@@ -208,6 +228,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		Attribute       func(childComplexity int, path string) int
+		Attributes      func(childComplexity int, filter *AttributeFilter) int
 		Implementation  func(childComplexity int, path string) int
 		Implementations func(childComplexity int, filter *ImplementationFilter) int
 		Interface       func(childComplexity int, path string) int
@@ -215,8 +237,6 @@ type ComplexityRoot struct {
 		InterfaceGroups func(childComplexity int, filter *InterfaceGroupFilter) int
 		Interfaces      func(childComplexity int, filter *InterfaceFilter) int
 		RepoMetadata    func(childComplexity int) int
-		Tag             func(childComplexity int, path string) int
-		Tags            func(childComplexity int, filter *TagFilter) int
 		Type            func(childComplexity int, path string) int
 		Types           func(childComplexity int, filter *TypeFilter) int
 	}
@@ -264,26 +284,6 @@ type ComplexityRoot struct {
 		Och func(childComplexity int) int
 	}
 
-	Tag struct {
-		LatestRevision func(childComplexity int) int
-		Name           func(childComplexity int) int
-		Path           func(childComplexity int) int
-		Prefix         func(childComplexity int) int
-		Revision       func(childComplexity int, revision string) int
-		Revisions      func(childComplexity int) int
-	}
-
-	TagRevision struct {
-		Metadata  func(childComplexity int) int
-		Revision  func(childComplexity int) int
-		Signature func(childComplexity int) int
-		Spec      func(childComplexity int) int
-	}
-
-	TagSpec struct {
-		AdditionalRefs func(childComplexity int) int
-	}
-
 	Type struct {
 		LatestRevision func(childComplexity int) int
 		Name           func(childComplexity int) int
@@ -299,6 +299,7 @@ type ComplexityRoot struct {
 	}
 
 	TypeMetadata struct {
+		Attributes       func(childComplexity int) int
 		Description      func(childComplexity int) int
 		DisplayName      func(childComplexity int) int
 		DocumentationURL func(childComplexity int) int
@@ -308,7 +309,6 @@ type ComplexityRoot struct {
 		Path             func(childComplexity int) int
 		Prefix           func(childComplexity int) int
 		SupportURL       func(childComplexity int) int
-		Tags             func(childComplexity int) int
 	}
 
 	TypeReference struct {
@@ -329,6 +329,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type AttributeResolver interface {
+	Revision(ctx context.Context, obj *Attribute, revision string) (*AttributeRevision, error)
+}
 type ImplementationResolver interface {
 	Revision(ctx context.Context, obj *Implementation, revision string) (*ImplementationRevision, error)
 }
@@ -354,14 +357,11 @@ type QueryResolver interface {
 	Type(ctx context.Context, path string) (*Type, error)
 	Implementations(ctx context.Context, filter *ImplementationFilter) ([]*Implementation, error)
 	Implementation(ctx context.Context, path string) (*Implementation, error)
-	Tags(ctx context.Context, filter *TagFilter) ([]*Tag, error)
-	Tag(ctx context.Context, path string) (*Tag, error)
+	Attributes(ctx context.Context, filter *AttributeFilter) ([]*Attribute, error)
+	Attribute(ctx context.Context, path string) (*Attribute, error)
 }
 type RepoMetadataResolver interface {
 	Revision(ctx context.Context, obj *RepoMetadata, revision string) (*RepoMetadataRevision, error)
-}
-type TagResolver interface {
-	Revision(ctx context.Context, obj *Tag, revision string) (*TagRevision, error)
 }
 type TypeResolver interface {
 	Revision(ctx context.Context, obj *Type, revision string) (*TypeRevision, error)
@@ -381,6 +381,88 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	ec := executionContext{nil, e}
 	_ = ec
 	switch typeName + "." + field {
+
+	case "Attribute.latestRevision":
+		if e.complexity.Attribute.LatestRevision == nil {
+			break
+		}
+
+		return e.complexity.Attribute.LatestRevision(childComplexity), true
+
+	case "Attribute.name":
+		if e.complexity.Attribute.Name == nil {
+			break
+		}
+
+		return e.complexity.Attribute.Name(childComplexity), true
+
+	case "Attribute.path":
+		if e.complexity.Attribute.Path == nil {
+			break
+		}
+
+		return e.complexity.Attribute.Path(childComplexity), true
+
+	case "Attribute.prefix":
+		if e.complexity.Attribute.Prefix == nil {
+			break
+		}
+
+		return e.complexity.Attribute.Prefix(childComplexity), true
+
+	case "Attribute.revision":
+		if e.complexity.Attribute.Revision == nil {
+			break
+		}
+
+		args, err := ec.field_Attribute_revision_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Attribute.Revision(childComplexity, args["revision"].(string)), true
+
+	case "Attribute.revisions":
+		if e.complexity.Attribute.Revisions == nil {
+			break
+		}
+
+		return e.complexity.Attribute.Revisions(childComplexity), true
+
+	case "AttributeRevision.metadata":
+		if e.complexity.AttributeRevision.Metadata == nil {
+			break
+		}
+
+		return e.complexity.AttributeRevision.Metadata(childComplexity), true
+
+	case "AttributeRevision.revision":
+		if e.complexity.AttributeRevision.Revision == nil {
+			break
+		}
+
+		return e.complexity.AttributeRevision.Revision(childComplexity), true
+
+	case "AttributeRevision.signature":
+		if e.complexity.AttributeRevision.Signature == nil {
+			break
+		}
+
+		return e.complexity.AttributeRevision.Signature(childComplexity), true
+
+	case "AttributeRevision.spec":
+		if e.complexity.AttributeRevision.Spec == nil {
+			break
+		}
+
+		return e.complexity.AttributeRevision.Spec(childComplexity), true
+
+	case "AttributeSpec.additionalRefs":
+		if e.complexity.AttributeSpec.AdditionalRefs == nil {
+			break
+		}
+
+		return e.complexity.AttributeSpec.AdditionalRefs(childComplexity), true
 
 	case "GenericMetadata.description":
 		if e.complexity.GenericMetadata.Description == nil {
@@ -569,6 +651,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationImportMethod.Revision(childComplexity), true
 
+	case "ImplementationMetadata.attributes":
+		if e.complexity.ImplementationMetadata.Attributes == nil {
+			break
+		}
+
+		return e.complexity.ImplementationMetadata.Attributes(childComplexity), true
+
 	case "ImplementationMetadata.description":
 		if e.complexity.ImplementationMetadata.Description == nil {
 			break
@@ -631,13 +720,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImplementationMetadata.SupportURL(childComplexity), true
-
-	case "ImplementationMetadata.tags":
-		if e.complexity.ImplementationMetadata.Tags == nil {
-			break
-		}
-
-		return e.complexity.ImplementationMetadata.Tags(childComplexity), true
 
 	case "ImplementationRequirement.allOf":
 		if e.complexity.ImplementationRequirement.AllOf == nil {
@@ -997,6 +1079,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OutputTypeInstance.TypeRef(childComplexity), true
 
+	case "Query.attribute":
+		if e.complexity.Query.Attribute == nil {
+			break
+		}
+
+		args, err := ec.field_Query_attribute_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Attribute(childComplexity, args["path"].(string)), true
+
+	case "Query.attributes":
+		if e.complexity.Query.Attributes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_attributes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Attributes(childComplexity, args["filter"].(*AttributeFilter)), true
+
 	case "Query.implementation":
 		if e.complexity.Query.Implementation == nil {
 			break
@@ -1075,30 +1181,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.RepoMetadata(childComplexity), true
-
-	case "Query.tag":
-		if e.complexity.Query.Tag == nil {
-			break
-		}
-
-		args, err := ec.field_Query_tag_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Tag(childComplexity, args["path"].(string)), true
-
-	case "Query.tags":
-		if e.complexity.Query.Tags == nil {
-			break
-		}
-
-		args, err := ec.field_Query_tags_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.Tags(childComplexity, args["filter"].(*TagFilter)), true
 
 	case "Query.type":
 		if e.complexity.Query.Type == nil {
@@ -1262,88 +1344,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Signature.Och(childComplexity), true
 
-	case "Tag.latestRevision":
-		if e.complexity.Tag.LatestRevision == nil {
-			break
-		}
-
-		return e.complexity.Tag.LatestRevision(childComplexity), true
-
-	case "Tag.name":
-		if e.complexity.Tag.Name == nil {
-			break
-		}
-
-		return e.complexity.Tag.Name(childComplexity), true
-
-	case "Tag.path":
-		if e.complexity.Tag.Path == nil {
-			break
-		}
-
-		return e.complexity.Tag.Path(childComplexity), true
-
-	case "Tag.prefix":
-		if e.complexity.Tag.Prefix == nil {
-			break
-		}
-
-		return e.complexity.Tag.Prefix(childComplexity), true
-
-	case "Tag.revision":
-		if e.complexity.Tag.Revision == nil {
-			break
-		}
-
-		args, err := ec.field_Tag_revision_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Tag.Revision(childComplexity, args["revision"].(string)), true
-
-	case "Tag.revisions":
-		if e.complexity.Tag.Revisions == nil {
-			break
-		}
-
-		return e.complexity.Tag.Revisions(childComplexity), true
-
-	case "TagRevision.metadata":
-		if e.complexity.TagRevision.Metadata == nil {
-			break
-		}
-
-		return e.complexity.TagRevision.Metadata(childComplexity), true
-
-	case "TagRevision.revision":
-		if e.complexity.TagRevision.Revision == nil {
-			break
-		}
-
-		return e.complexity.TagRevision.Revision(childComplexity), true
-
-	case "TagRevision.signature":
-		if e.complexity.TagRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.TagRevision.Signature(childComplexity), true
-
-	case "TagRevision.spec":
-		if e.complexity.TagRevision.Spec == nil {
-			break
-		}
-
-		return e.complexity.TagRevision.Spec(childComplexity), true
-
-	case "TagSpec.additionalRefs":
-		if e.complexity.TagSpec.AdditionalRefs == nil {
-			break
-		}
-
-		return e.complexity.TagSpec.AdditionalRefs(childComplexity), true
-
 	case "Type.latestRevision":
 		if e.complexity.Type.LatestRevision == nil {
 			break
@@ -1404,6 +1404,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeInstanceRelationItem.Uses(childComplexity), true
+
+	case "TypeMetadata.attributes":
+		if e.complexity.TypeMetadata.Attributes == nil {
+			break
+		}
+
+		return e.complexity.TypeMetadata.Attributes(childComplexity), true
 
 	case "TypeMetadata.description":
 		if e.complexity.TypeMetadata.Description == nil {
@@ -1467,13 +1474,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeMetadata.SupportURL(childComplexity), true
-
-	case "TypeMetadata.tags":
-		if e.complexity.TypeMetadata.Tags == nil {
-			break
-		}
-
-		return e.complexity.TypeMetadata.Tags(childComplexity), true
 
 	case "TypeReference.path":
 		if e.complexity.TypeReference.Path == nil {
@@ -1628,7 +1628,7 @@ input ImplementationFilter {
     For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
     """
     requirementsSatisfiedBy: [TypeInstanceValue!]
-    tags: [TagFilterInput!]
+    attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -1650,12 +1650,12 @@ input TypeReferenceInput {
     revision: Version
 }
 
-input TagFilterInput {
+input AttributeFilterInput {
     path: NodePath!
     rule: FilterRule = INCLUDE
 
     """
-    If not provided, latest revision for a given Tag is used
+    If not provided, latest revision for a given Attribute is used
     """
     revision: Version
 }
@@ -1669,7 +1669,7 @@ input InterfaceGroupFilter {
     prefixPattern: NodePathPattern
 }
 
-input TagFilter {
+input AttributeFilter {
     prefixPattern: NodePathPattern
 }
 
@@ -1912,20 +1912,20 @@ type ImplementationAction {
     args: Any
 }
 
-type Tag {
+type Attribute {
     name: NodeName!
     prefix: NodePrefix!
     path: NodePath!
 
-    latestRevision: TagRevision
-    revision(revision: Version!): TagRevision
-    revisions: [TagRevision!]!
+    latestRevision: AttributeRevision
+    revision(revision: Version!): AttributeRevision
+    revisions: [AttributeRevision!]!
 }
 
-type TagRevision {
+type AttributeRevision {
     metadata: GenericMetadata!
     revision: Version!
-    spec: TagSpec!
+    spec: AttributeSpec!
     signature: Signature!
 }
 
@@ -1966,7 +1966,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type TypeMetadata implements MetadataBaseFields {
@@ -1979,7 +1979,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type Signature {
@@ -1992,7 +1992,7 @@ type Maintainer {
     url: String
 }
 
-type TagSpec {
+type AttributeSpec {
     additionalRefs: [NodePath!]!
 }
 
@@ -2011,8 +2011,8 @@ type Query {
     implementations(filter: ImplementationFilter): [Implementation!]!
     implementation(path: NodePath!): Implementation
 
-    tags(filter: TagFilter): [Tag!]!
-    tag(path: NodePath!): Tag
+    attributes(filter: AttributeFilter): [Attribute!]!
+    attribute(path: NodePath!): Attribute
 }
 
 # No mutations for now, as all resources are populated with DB populator
@@ -2025,6 +2025,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) field_Attribute_revision_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["revision"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
+		arg0, err = ec.unmarshalNVersion2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["revision"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Implementation_revision_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2098,6 +2113,36 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_attribute_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["path"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+		arg0, err = ec.unmarshalNNodePath2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["path"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_attributes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *AttributeFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg0, err = ec.unmarshalOAttributeFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
 	return args, nil
 }
 
@@ -2191,36 +2236,6 @@ func (ec *executionContext) field_Query_interfaces_args(ctx context.Context, raw
 	return args, nil
 }
 
-func (ec *executionContext) field_Query_tag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["path"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
-		arg0, err = ec.unmarshalNNodePath2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["path"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_tags_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *TagFilter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOTagFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["filter"] = arg0
-	return args, nil
-}
-
 func (ec *executionContext) field_Query_type_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -2252,21 +2267,6 @@ func (ec *executionContext) field_Query_types_args(ctx context.Context, rawArgs 
 }
 
 func (ec *executionContext) field_RepoMetadata_revision_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["revision"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-		arg0, err = ec.unmarshalNVersion2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["revision"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Tag_revision_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2333,6 +2333,392 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 // endregion ************************** directives.gotpl **************************
 
 // region    **************************** field.gotpl *****************************
+
+func (ec *executionContext) _Attribute_name(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodeName2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attribute_prefix(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Prefix, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attribute_path(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attribute_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LatestRevision, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*AttributeRevision)
+	fc.Result = res
+	return ec.marshalOAttributeRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevision(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attribute_revision(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Attribute_revision_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Attribute().Revision(rctx, obj, args["revision"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*AttributeRevision)
+	fc.Result = res
+	return ec.marshalOAttributeRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevision(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Attribute_revisions(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Revisions, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*AttributeRevision)
+	fc.Result = res
+	return ec.marshalNAttributeRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevisionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Metadata, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GenericMetadata)
+	fc.Result = res
+	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeRevision_revision(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Revision, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNVersion2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeRevision_spec(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Spec, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*AttributeSpec)
+	fc.Result = res
+	return ec.marshalNAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeRevision_signature(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Signature, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*Signature)
+	fc.Result = res
+	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeSpec_additionalRefs(ctx context.Context, field graphql.CollectedField, obj *AttributeSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeSpec",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalRefs, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNNodePath2ᚕstringᚄ(ctx, field.Selections, res)
+}
 
 func (ec *executionContext) _GenericMetadata_name(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
 	defer func() {
@@ -3512,7 +3898,7 @@ func (ec *executionContext) _ImplementationMetadata_iconURL(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImplementationMetadata_tags(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _ImplementationMetadata_attributes(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3530,7 +3916,7 @@ func (ec *executionContext) _ImplementationMetadata_tags(ctx context.Context, fi
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Tags, nil
+		return obj.Attributes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3542,9 +3928,9 @@ func (ec *executionContext) _ImplementationMetadata_tags(ctx context.Context, fi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*TagRevision)
+	res := resTmp.([]*AttributeRevision)
 	fc.Result = res
-	return ec.marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttributeRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationRequirement_prefix(ctx context.Context, field graphql.CollectedField, obj *ImplementationRequirement) (ret graphql.Marshaler) {
@@ -5609,7 +5995,7 @@ func (ec *executionContext) _Query_implementation(ctx context.Context, field gra
 	return ec.marshalOImplementation2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementation(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_attributes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5626,7 +6012,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_tags_args(ctx, rawArgs)
+	args, err := ec.field_Query_attributes_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -5634,7 +6020,7 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tags(rctx, args["filter"].(*TagFilter))
+		return ec.resolvers.Query().Attributes(rctx, args["filter"].(*AttributeFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5646,12 +6032,12 @@ func (ec *executionContext) _Query_tags(ctx context.Context, field graphql.Colle
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Tag)
+	res := resTmp.([]*Attribute)
 	fc.Result = res
-	return ec.marshalNTag2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttribute2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_attribute(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -5668,7 +6054,7 @@ func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.Collec
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Query_tag_args(ctx, rawArgs)
+	args, err := ec.field_Query_attribute_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -5676,7 +6062,7 @@ func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.Collec
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Tag(rctx, args["path"].(string))
+		return ec.resolvers.Query().Attribute(rctx, args["path"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5685,9 +6071,9 @@ func (ec *executionContext) _Query_tag(ctx context.Context, field graphql.Collec
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*Tag)
+	res := resTmp.(*Attribute)
 	fc.Result = res
-	return ec.marshalOTag2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTag(ctx, field.Selections, res)
+	return ec.marshalOAttribute2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttribute(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -6427,392 +6813,6 @@ func (ec *executionContext) _Signature_och(ctx context.Context, field graphql.Co
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Tag_name(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodeName2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Tag_prefix(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Prefix, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Tag_path(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Tag_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*TagRevision)
-	fc.Result = res
-	return ec.marshalOTagRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevision(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Tag_revision(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   true,
-		IsResolver: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Tag_revision_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Tag().Revision(rctx, obj, args["revision"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*TagRevision)
-	fc.Result = res
-	return ec.marshalOTagRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevision(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Tag_revisions(ctx context.Context, field graphql.CollectedField, obj *Tag) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Tag",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*TagRevision)
-	fc.Result = res
-	return ec.marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TagRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *TagRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TagRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*GenericMetadata)
-	fc.Result = res
-	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TagRevision_revision(ctx context.Context, field graphql.CollectedField, obj *TagRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TagRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revision, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNVersion2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TagRevision_spec(ctx context.Context, field graphql.CollectedField, obj *TagRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TagRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*TagSpec)
-	fc.Result = res
-	return ec.marshalNTagSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TagRevision_signature(ctx context.Context, field graphql.CollectedField, obj *TagRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TagRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TagSpec_additionalRefs(ctx context.Context, field graphql.CollectedField, obj *TagSpec) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TagSpec",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AdditionalRefs, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]string)
-	fc.Result = res
-	return ec.marshalNNodePath2ᚕstringᚄ(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Type_name(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7391,7 +7391,7 @@ func (ec *executionContext) _TypeMetadata_iconURL(ctx context.Context, field gra
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TypeMetadata_tags(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
+func (ec *executionContext) _TypeMetadata_attributes(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -7409,7 +7409,7 @@ func (ec *executionContext) _TypeMetadata_tags(ctx context.Context, field graphq
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Tags, nil
+		return obj.Attributes, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7421,9 +7421,9 @@ func (ec *executionContext) _TypeMetadata_tags(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*TagRevision)
+	res := resTmp.([]*AttributeRevision)
 	fc.Result = res
-	return ec.marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx, field.Selections, res)
+	return ec.marshalNAttributeRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeReference_path(ctx context.Context, field graphql.CollectedField, obj *TypeReference) (ret graphql.Marshaler) {
@@ -8787,6 +8787,66 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAttributeFilter(ctx context.Context, obj interface{}) (AttributeFilter, error) {
+	var it AttributeFilter
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "prefixPattern":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefixPattern"))
+			it.PrefixPattern, err = ec.unmarshalONodePathPattern2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputAttributeFilterInput(ctx context.Context, obj interface{}) (AttributeFilterInput, error) {
+	var it AttributeFilterInput
+	var asMap = obj.(map[string]interface{})
+
+	if _, present := asMap["rule"]; !present {
+		asMap["rule"] = "INCLUDE"
+	}
+
+	for k, v := range asMap {
+		switch k {
+		case "path":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+			it.Path, err = ec.unmarshalNNodePath2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "rule":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rule"))
+			it.Rule, err = ec.unmarshalOFilterRule2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐFilterRule(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "revision":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
+			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputImplementationFilter(ctx context.Context, obj interface{}) (ImplementationFilter, error) {
 	var it ImplementationFilter
 	var asMap = obj.(map[string]interface{})
@@ -8809,11 +8869,11 @@ func (ec *executionContext) unmarshalInputImplementationFilter(ctx context.Conte
 			if err != nil {
 				return it, err
 			}
-		case "tags":
+		case "attributes":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tags"))
-			it.Tags, err = ec.unmarshalOTagFilterInput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilterInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attributes"))
+			it.Attributes, err = ec.unmarshalOAttributeFilterInput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilterInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -8854,66 +8914,6 @@ func (ec *executionContext) unmarshalInputInterfaceGroupFilter(ctx context.Conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefixPattern"))
 			it.PrefixPattern, err = ec.unmarshalONodePathPattern2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputTagFilter(ctx context.Context, obj interface{}) (TagFilter, error) {
-	var it TagFilter
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "prefixPattern":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefixPattern"))
-			it.PrefixPattern, err = ec.unmarshalONodePathPattern2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputTagFilterInput(ctx context.Context, obj interface{}) (TagFilterInput, error) {
-	var it TagFilterInput
-	var asMap = obj.(map[string]interface{})
-
-	if _, present := asMap["rule"]; !present {
-		asMap["rule"] = "INCLUDE"
-	}
-
-	for k, v := range asMap {
-		switch k {
-		case "path":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
-			it.Path, err = ec.unmarshalNNodePath2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "rule":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rule"))
-			it.Rule, err = ec.unmarshalOFilterRule2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐFilterRule(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "revision":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9059,6 +9059,130 @@ func (ec *executionContext) _TypeInstance(ctx context.Context, sel ast.Selection
 // endregion ************************** interface.gotpl ***************************
 
 // region    **************************** object.gotpl ****************************
+
+var attributeImplementors = []string{"Attribute"}
+
+func (ec *executionContext) _Attribute(ctx context.Context, sel ast.SelectionSet, obj *Attribute) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attributeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Attribute")
+		case "name":
+			out.Values[i] = ec._Attribute_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "prefix":
+			out.Values[i] = ec._Attribute_prefix(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "path":
+			out.Values[i] = ec._Attribute_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "latestRevision":
+			out.Values[i] = ec._Attribute_latestRevision(ctx, field, obj)
+		case "revision":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Attribute_revision(ctx, field, obj)
+				return res
+			})
+		case "revisions":
+			out.Values[i] = ec._Attribute_revisions(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var attributeRevisionImplementors = []string{"AttributeRevision"}
+
+func (ec *executionContext) _AttributeRevision(ctx context.Context, sel ast.SelectionSet, obj *AttributeRevision) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attributeRevisionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AttributeRevision")
+		case "metadata":
+			out.Values[i] = ec._AttributeRevision_metadata(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "revision":
+			out.Values[i] = ec._AttributeRevision_revision(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "spec":
+			out.Values[i] = ec._AttributeRevision_spec(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "signature":
+			out.Values[i] = ec._AttributeRevision_signature(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var attributeSpecImplementors = []string{"AttributeSpec"}
+
+func (ec *executionContext) _AttributeSpec(ctx context.Context, sel ast.SelectionSet, obj *AttributeSpec) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, attributeSpecImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AttributeSpec")
+		case "additionalRefs":
+			out.Values[i] = ec._AttributeSpec_additionalRefs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
 
 var genericMetadataImplementors = []string{"GenericMetadata", "MetadataBaseFields"}
 
@@ -9355,8 +9479,8 @@ func (ec *executionContext) _ImplementationMetadata(ctx context.Context, sel ast
 			out.Values[i] = ec._ImplementationMetadata_supportURL(ctx, field, obj)
 		case "iconURL":
 			out.Values[i] = ec._ImplementationMetadata_iconURL(ctx, field, obj)
-		case "tags":
-			out.Values[i] = ec._ImplementationMetadata_tags(ctx, field, obj)
+		case "attributes":
+			out.Values[i] = ec._ImplementationMetadata_attributes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10100,7 +10224,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 				res = ec._Query_implementation(ctx, field)
 				return res
 			})
-		case "tags":
+		case "attributes":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -10108,13 +10232,13 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tags(ctx, field)
+				res = ec._Query_attributes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}
 				return res
 			})
-		case "tag":
+		case "attribute":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -10122,7 +10246,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_tag(ctx, field)
+				res = ec._Query_attribute(ctx, field)
 				return res
 			})
 		case "__type":
@@ -10414,130 +10538,6 @@ func (ec *executionContext) _Signature(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
-var tagImplementors = []string{"Tag"}
-
-func (ec *executionContext) _Tag(ctx context.Context, sel ast.SelectionSet, obj *Tag) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Tag")
-		case "name":
-			out.Values[i] = ec._Tag_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "prefix":
-			out.Values[i] = ec._Tag_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Tag_path(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "latestRevision":
-			out.Values[i] = ec._Tag_latestRevision(ctx, field, obj)
-		case "revision":
-			field := field
-			out.Concurrently(i, func() (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Tag_revision(ctx, field, obj)
-				return res
-			})
-		case "revisions":
-			out.Values[i] = ec._Tag_revisions(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var tagRevisionImplementors = []string{"TagRevision"}
-
-func (ec *executionContext) _TagRevision(ctx context.Context, sel ast.SelectionSet, obj *TagRevision) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagRevisionImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("TagRevision")
-		case "metadata":
-			out.Values[i] = ec._TagRevision_metadata(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "revision":
-			out.Values[i] = ec._TagRevision_revision(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "spec":
-			out.Values[i] = ec._TagRevision_spec(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "signature":
-			out.Values[i] = ec._TagRevision_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var tagSpecImplementors = []string{"TagSpec"}
-
-func (ec *executionContext) _TagSpec(ctx context.Context, sel ast.SelectionSet, obj *TagSpec) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, tagSpecImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("TagSpec")
-		case "additionalRefs":
-			out.Values[i] = ec._TagSpec_additionalRefs(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
 var typeImplementors = []string{"Type"}
 
 func (ec *executionContext) _Type(ctx context.Context, sel ast.SelectionSet, obj *Type) graphql.Marshaler {
@@ -10663,8 +10663,8 @@ func (ec *executionContext) _TypeMetadata(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._TypeMetadata_supportURL(ctx, field, obj)
 		case "iconURL":
 			out.Values[i] = ec._TypeMetadata_iconURL(ctx, field, obj)
-		case "tags":
-			out.Values[i] = ec._TypeMetadata_tags(ctx, field, obj)
+		case "attributes":
+			out.Values[i] = ec._TypeMetadata_attributes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -11023,6 +11023,115 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 // endregion **************************** object.gotpl ****************************
 
 // region    ***************************** type.gotpl *****************************
+
+func (ec *executionContext) marshalNAttribute2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeᚄ(ctx context.Context, sel ast.SelectionSet, v []*Attribute) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttribute2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttribute(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNAttribute2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttribute(ctx context.Context, sel ast.SelectionSet, v *Attribute) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Attribute(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAttributeFilterInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilterInput(ctx context.Context, v interface{}) (*AttributeFilterInput, error) {
+	res, err := ec.unmarshalInputAttributeFilterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAttributeRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevisionᚄ(ctx context.Context, sel ast.SelectionSet, v []*AttributeRevision) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttributeRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevision(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNAttributeRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevision(ctx context.Context, sel ast.SelectionSet, v *AttributeRevision) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AttributeRevision(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx context.Context, sel ast.SelectionSet, v *AttributeSpec) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AttributeSpec(ctx, sel, v)
+}
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
@@ -12004,115 +12113,6 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) marshalNTag2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagᚄ(ctx context.Context, sel ast.SelectionSet, v []*Tag) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTag2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTag(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNTag2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTag(ctx context.Context, sel ast.SelectionSet, v *Tag) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Tag(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNTagFilterInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilterInput(ctx context.Context, v interface{}) (*TagFilterInput, error) {
-	res, err := ec.unmarshalInputTagFilterInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNTagRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevisionᚄ(ctx context.Context, sel ast.SelectionSet, v []*TagRevision) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNTagRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevision(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNTagRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevision(ctx context.Context, sel ast.SelectionSet, v *TagRevision) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._TagRevision(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNTagSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagSpec(ctx context.Context, sel ast.SelectionSet, v *TagSpec) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._TagSpec(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNType2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*Type) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -12661,6 +12661,52 @@ func (ec *executionContext) marshalOAny2interface(ctx context.Context, sel ast.S
 	return graphql.MarshalAny(v)
 }
 
+func (ec *executionContext) marshalOAttribute2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttribute(ctx context.Context, sel ast.SelectionSet, v *Attribute) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Attribute(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOAttributeFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilter(ctx context.Context, v interface{}) (*AttributeFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputAttributeFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalOAttributeFilterInput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilterInputᚄ(ctx context.Context, v interface{}) ([]*AttributeFilterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*AttributeFilterInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAttributeFilterInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeFilterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOAttributeRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevision(ctx context.Context, sel ast.SelectionSet, v *AttributeRevision) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AttributeRevision(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12952,52 +12998,6 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
-}
-
-func (ec *executionContext) marshalOTag2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTag(ctx context.Context, sel ast.SelectionSet, v *Tag) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Tag(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOTagFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilter(ctx context.Context, v interface{}) (*TagFilter, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputTagFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOTagFilterInput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilterInputᚄ(ctx context.Context, v interface{}) ([]*TagFilterInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*TagFilterInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNTagFilterInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagFilterInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOTagRevision2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTagRevision(ctx context.Context, sel ast.SelectionSet, v *TagRevision) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._TagRevision(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOType2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐType(ctx context.Context, sel ast.SelectionSet, v *Type) graphql.Marshaler {

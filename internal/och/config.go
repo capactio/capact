@@ -12,7 +12,7 @@ const (
 	//  - Interface
 	//  - Type
 	//  - Implementation
-	//  - Tag
+	//  - Attribute
 	PublicMode Mode = "public"
 	// LocalMode is the read-write mode for local OCH. Manages TypeInstance entity.
 	LocalMode Mode = "local"

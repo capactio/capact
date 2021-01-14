@@ -14,8 +14,8 @@ metadata:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-  tags:
-    cap.tag.cloud.provider.gcp:
+  attributes:
+    cap.attribute.cloud.provider.gcp:
       revision: 0.1.0
 
 spec:

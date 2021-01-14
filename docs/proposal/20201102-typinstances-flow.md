@@ -431,7 +431,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 
 ####  Alternatives
 
-1.	We could introduce and use Tags defined on Interfaces to explicitly mark its behavior.
+1.	We could introduce and use Attributes defined on Interfaces to explicitly mark its behavior.
 
 	<details> <summary>Details</summary>
 

@@ -29,8 +29,8 @@ func TestManifestsValid(t *testing.T) {
 		"RepoMetadata should be valid": {
 			manifestPath: "repo-metadata.yaml",
 		},
-		"Tag should be valid": {
-			manifestPath: "tag.yaml",
+		"Attribute should be valid": {
+			manifestPath: "attribute.yaml",
 		},
 		"TypeInstance should be valid": {
 			manifestPath: "type-instance.yaml",

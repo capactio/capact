@@ -45,7 +45,7 @@ input ImplementationFilter {
     For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
     """
     requirementsSatisfiedBy: [TypeInstanceValue!]
-    tags: [TagFilterInput!]
+    attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -67,12 +67,12 @@ input TypeReferenceInput {
     revision: Version
 }
 
-input TagFilterInput {
+input AttributeFilterInput {
     path: NodePath!
     rule: FilterRule = INCLUDE
 
     """
-    If not provided, latest revision for a given Tag is used
+    If not provided, latest revision for a given Attribute is used
     """
     revision: Version
 }
@@ -86,7 +86,7 @@ input InterfaceGroupFilter {
     prefixPattern: NodePathPattern
 }
 
-input TagFilter {
+input AttributeFilter {
     prefixPattern: NodePathPattern
 }
 
@@ -329,20 +329,20 @@ type ImplementationAction {
     args: Any
 }
 
-type Tag {
+type Attribute {
     name: NodeName!
     prefix: NodePrefix!
     path: NodePath!
 
-    latestRevision: TagRevision
-    revision(revision: Version!): TagRevision
-    revisions: [TagRevision!]!
+    latestRevision: AttributeRevision
+    revision(revision: Version!): AttributeRevision
+    revisions: [AttributeRevision!]!
 }
 
-type TagRevision {
+type AttributeRevision {
     metadata: GenericMetadata!
     revision: Version!
-    spec: TagSpec!
+    spec: AttributeSpec!
     signature: Signature!
 }
 
@@ -383,7 +383,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type TypeMetadata implements MetadataBaseFields {
@@ -396,7 +396,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type Signature {
@@ -409,7 +409,7 @@ type Maintainer {
     url: String
 }
 
-type TagSpec {
+type AttributeSpec {
     additionalRefs: [NodePath!]!
 }
 
@@ -428,8 +428,8 @@ type Query {
     implementations(filter: ImplementationFilter): [Implementation!]!
     implementation(path: NodePath!): Implementation
 
-    tags(filter: TagFilter): [Tag!]!
-    tag(path: NodePath!): Tag
+    attributes(filter: AttributeFilter): [Attribute!]!
+    attribute(path: NodePath!): Attribute
 }
 
 # No mutations for now, as all resources are populated with DB populator
