@@ -119,6 +119,64 @@ var _ = Describe("E2E", func() {
 			})
 		})
 	})
+
+	Describe("GraphQL API", func() {
+		Context("Get Interfaces", func() {
+			It("should not error", func() {
+				httpClient := httputil.NewClient(
+					20*time.Second,
+					true,
+					httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+				)
+				cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
+
+				_, err := cli.GetInterfaces(context.Background())
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+
+		Context("TypeInstance operations", func() {
+			It("should be to create and delete", func() {
+				httpClient := httputil.NewClient(
+					20*time.Second,
+					true,
+					httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+				)
+				cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
+				ctx := context.Background()
+
+				createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
+					TypeRef: &graphql.TypeReferenceInput{
+						Path:     "com.voltron.ti",
+						Revision: strPtr("0.1.0"),
+					},
+					Tags: []*graphql.TagReferenceInput{
+						{
+							Path:     "com.voltron.tag1",
+							Revision: strPtr("0.1.0"),
+						},
+					},
+					Value: map[string]interface{}{
+						"foo": "bar",
+					},
+				})
+
+				Expect(err).ToNot(HaveOccurred())
+				Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
+					"foo": "bar",
+				}))
+
+				typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
+				Expect(err).ToNot(HaveOccurred())
+				Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
+					"foo": "bar",
+				}))
+
+				err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)
+				Expect(err).ToNot(HaveOccurred())
+			})
+		})
+	})
 })
 
 func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
