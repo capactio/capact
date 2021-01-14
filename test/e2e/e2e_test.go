@@ -22,18 +22,13 @@ import (
 	"projectvoltron.dev/voltron/pkg/iosafety"
 )
 
-const (
-	// poll is how often to poll pods
-	poll = 2 * time.Second
-	// timeout for checking if all pods are running
-	timeout = time.Minute
-)
-
 type Config struct {
 	StatusEndpoints []string
 	// total number of pods that should be scheduled
 	ExpectedNumberOfRunningPods int `envconfig:"default=25"`
 	IgnoredPodsNames            []string
+	PollingInterval             time.Duration `envconfig:"default=2s"`
+	PollingTimeout              time.Duration `envconfig:"default=1m"`
 }
 
 var _ = Describe("E2E", func() {
@@ -99,7 +94,7 @@ var _ = Describe("E2E", func() {
 						return 0, errors.New("detected not running pod(s)")
 					}
 					return numberOfRunningPods, nil
-				}, timeout, poll).Should(Equal(cfg.ExpectedNumberOfRunningPods), "Got unexpected number of Pods in cluster")
+				}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(cfg.ExpectedNumberOfRunningPods), "Got unexpected number of Pods in cluster")
 			})
 		})
 	})
