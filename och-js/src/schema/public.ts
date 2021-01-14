@@ -28,7 +28,7 @@ const resolvers: IResolvers = {
     name: nameResolver,
     prefix: prefixResolver,
   },
-  Tag: {
+  Attribute: {
     name: nameResolver,
     prefix: prefixResolver,
   },

@@ -11,7 +11,6 @@ import (
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/vrischmann/envconfig"
 	v1 "k8s.io/api/core/v1"
@@ -150,7 +149,7 @@ var _ = Describe("E2E", func() {
 						Path:     "com.voltron.ti",
 						Revision: strPtr("0.1.0"),
 					},
-					Tags: []*graphql.TagReferenceInput{
+					Attributes: []*graphql.AttributeReferenceInput{
 						{
 							Path:     "com.voltron.tag1",
 							Revision: strPtr("0.1.0"),
@@ -201,61 +200,6 @@ func nowStamp() string {
 
 func log(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+format+"\n", args...)
-}
-
-func TestGatewayGetInterfaces(t *testing.T) {
-	cfg := requireConfig(t)
-	httpClient := httputil.NewClient(
-		20*time.Second,
-		true,
-		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-	)
-	cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
-
-	_, err := cli.GetInterfaces(context.Background())
-
-	assert.NoError(t, err)
-}
-
-func TestOperationsOnTypeInstance(t *testing.T) {
-	cfg := requireConfig(t)
-	httpClient := httputil.NewClient(
-		20*time.Second,
-		true,
-		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-	)
-	cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
-	ctx := context.Background()
-
-	createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
-		TypeRef: &graphql.TypeReferenceInput{
-			Path:     "com.voltron.ti",
-			Revision: strPtr("0.1.0"),
-		},
-		Tags: []*graphql.TagReferenceInput{
-			{
-				Path:     "com.voltron.tag1",
-				Revision: strPtr("0.1.0"),
-			},
-		},
-		Value: map[string]interface{}{
-			"foo": "bar",
-		},
-	})
-
-	require.NoErrorf(t, err, "while creating TypeInstance: %v", err)
-	require.Equal(t, map[string]interface{}{
-		"foo": "bar",
-	}, createdTypeInstance.Spec.Value)
-
-	typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
-	require.NoErrorf(t, err, "while getting TypeInstance: %v", err)
-	require.Equal(t, map[string]interface{}{
-		"foo": "bar",
-	}, typeInstance.Spec.Value)
-
-	err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)
-	require.NoErrorf(t, err, "while deleting TypeInstance: %v", err)
 }
 
 func strPtr(s string) *string {

@@ -89,7 +89,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 	    resourceVersion
 	    metadata {
 	      id
-	      tags {
+	      attributes {
 	        path
 	        revision
 	      }
@@ -121,7 +121,7 @@ func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraph
 	    resourceVersion
 	    metadata {
 	      id
-	      tags {
+	      attributes {
 	        path
 	        revision
 	      }
