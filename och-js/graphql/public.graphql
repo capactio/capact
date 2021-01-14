@@ -109,7 +109,7 @@ type RepoMetadata {
 }
 
 type RepoMetadataRevision {
-    revision: Version! @id
+    revision: Version!
 
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
     spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -118,8 +118,8 @@ type RepoMetadataRevision {
 
 type RepoMetadataSpec {
     ochVersion: Version!
-    ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS_OCF_VERSIONS", direction: "OUT")
-    implementation: RepoImplementationConfig! @relation(name: "HOLDS_IMPLEMENTATION", direction: "OUT")
+    ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
+    implementation: RepoImplementationConfig! @relation(name: "CONFIGURED", direction: "OUT")
 }
 
 type RepoImplementationConfig {
@@ -150,7 +150,7 @@ type RepoOCFVersion {
 type InterfaceGroup {
     path: NodePath!
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
     interfaces(filter: InterfaceFilter): [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
@@ -208,8 +208,8 @@ type InterfaceSpec {
 }
 
 type InterfaceInput {
-    parameters: InputParameters @relation(name: "HAS_PARAMETERS", direction: "OUT")
-    typeInstances: [InputTypeInstance]! @relation(name: "HAS_TYPE_INSTANCES", direction: "OUT")
+    parameters: InputParameters @relation(name: "HAS", direction: "OUT")
+    typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
 type InputParameters {
@@ -217,7 +217,7 @@ type InputParameters {
 }
 
 type InterfaceOutput {
-    typeInstances: [OutputTypeInstance]! @relation(name: "OUTPUTS_TYPE_INSTANCES", direction: "OUT")
+    typeInstances: [OutputTypeInstance]! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 interface TypeInstanceFields {

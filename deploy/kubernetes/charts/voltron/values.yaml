@@ -25,7 +25,6 @@ gateway:
     username: graphql
     password: t0p_s3cr3t
 
-# TODO add configuration for the OCH tests
 integrationTest:
   image:
     name: e2e-test

@@ -53,15 +53,15 @@ APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
 
 To run OCH in local mode, use the following command:
 ```bash
-NEO4J_ENDPOINT=bolt://localhost:7687 \
-  NEO4J_PASSWORD=okon \
-  OCH_MODE=public \
+APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
+  APP_NEO4J_PASSWORD=okon \
+  APP_OCH_MODE=public \
   yarn dev
 ```
 
 ### GraphQL Playground
 
-You can now access the OCH's GraphQL Playground via http://localhost:3000/graphql. For example to list all Interfaces on the public OCH make the following GraphQL query:
+You can now access the OCH's GraphQL Playground via http://localhost:3000/graphql. For example, to list all Interfaces on the public OCH make the following GraphQL query:
 ```graphql
 query {
   Interface {

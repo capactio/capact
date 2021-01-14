@@ -33,6 +33,8 @@ const driver = neo4j.driver(
 );
 
 const schema = getSchemaForMode(config.ochMode);
+
+// TODO figure out, who should create the schema on the Neo4j database
 assertSchemaOnDatabase(schema, driver);
 
 const server = setupHttpServer(schema, driver);
