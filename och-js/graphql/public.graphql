@@ -53,7 +53,7 @@ input ImplementationFilter {
     For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
     """
     requirementsSatisfiedBy: [TypeInstanceValue!]
-    tags: [TagFilterInput!]
+    attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -71,12 +71,12 @@ input TypeReferenceInput {
     revision: Version!
 }
 
-input TagFilterInput {
+input AttributeFilterInput {
     path: NodePath!
     rule: FilterRule = INCLUDE
 
     """
-    If not provided, latest revision for a given Tag is used
+    If not provided, latest revision for a given Attribute is used
     """
     revision: Version
 }
@@ -90,7 +90,7 @@ input InterfaceGroupFilter {
     prefixPattern: NodePathPattern
 }
 
-input TagFilter {
+input AttributeFilter {
     prefixPattern: NodePathPattern
 }
 
@@ -363,19 +363,19 @@ type ImplementationAction {
     args: Any
 }
 
-type Tag {
+type Attribute {
     path: NodePath! @id
     name: NodeName!
     prefix: NodePrefix!
 
-    latestRevision: TagRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:TagRevision) RETURN r ORDER BY r.revision DESC LIMIT 1")
-    revision(revision: Version!): TagRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:TagRevision {revision: $revision}) RETURN r")
-    revisions: [TagRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+    latestRevision: AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision) RETURN r ORDER BY r.revision DESC LIMIT 2")
+    revision(revision: Version!): AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision {revision: $revision}) RETURN r")
+    revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TagRevision {
+type AttributeRevision {
     revision: Version!
-    spec: TagSpec!
+    spec: AttributeSpec!
     signature: Signature!
 
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -418,7 +418,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type TypeMetadata implements MetadataBaseFields {
@@ -431,7 +431,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    tags: [TagRevision!]!
+    attributes: [AttributeRevision!]!
 }
 
 type Signature {
@@ -444,7 +444,7 @@ type Maintainer {
     url: String
 }
 
-type TagSpec {
+type AttributeSpec {
     additionalRefs: [NodePath!]!
 }
 
@@ -463,8 +463,8 @@ type Query {
     implementations(filter: ImplementationFilter): [Implementation!]!
     implementation(path: NodePath!): Implementation
 
-    tags(filter: TagFilter): [Tag!]!
-    tag(path: NodePath!): Tag
+    attributes(filter: AttributeFilter): [Attribute!]!
+    attribute(path: NodePath!): Attribute 
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
