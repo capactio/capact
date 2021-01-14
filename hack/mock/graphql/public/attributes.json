@@ -1,8 +1,8 @@
 [
   {
     "name": "baseline",
-    "prefix": "cap.core.tag.system",
-    "path": "cap.core.tag.system.baseline",
+    "prefix": "cap.core.attribute.system",
+    "path": "cap.core.attribute.system.baseline",
     "revisions": [
       {
         "revision": "0.1.0",
@@ -13,9 +13,9 @@
         },
         "metadata": {
           "name": "baseline",
-          "path": "cap.core.tag.system.baseline",
-          "prefix": "cap.core.tag.system",
-          "description": "Indication that tagged item is an essential system capability.",
+          "path": "cap.core.attribute.system.baseline",
+          "prefix": "cap.core.attribute.system",
+          "description": "Indication that marked item is an essential system capability.",
           "displayName": "Baseline Capability",
           "documentationURL": "https://projectvoltron.dev",
           "supportURL": "https://projectvoltron.dev/contact",
@@ -36,8 +36,8 @@
   },
   {
     "name": "gcp",
-    "prefix": "cap.tag.cloud.provider",
-    "path": "cap.tag.cloud.provider.gcp",
+    "prefix": "cap.attribute.cloud.provider",
+    "path": "cap.attribute.cloud.provider.gcp",
     "revisions": [
       {
         "revision": "0.1.0",
@@ -48,7 +48,7 @@
         },
         "metadata": {
           "name": "gcp",
-          "prefix": "cap.tag.cloud.provider",
+          "prefix": "cap.attribute.cloud.provider",
           "dsecription": "Specifies that a given manifest is related to GCP",
           "displayName": "Google Cloud Platform Cloud Provider",
           "documentationURL": "https://projectvoltron.dev",

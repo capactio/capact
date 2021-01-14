@@ -38,9 +38,9 @@ func dummyTypeInstance(id string) *gqllocalapi.TypeInstance {
 	return &gqllocalapi.TypeInstance{
 		Metadata: &gqllocalapi.TypeInstanceMetadata{
 			ID: id,
-			Tags: []*gqllocalapi.TagReference{
+			Attributes: []*gqllocalapi.AttributeReference{
 				{
-					Path:     "cap.tag.platform.kubernetes",
+					Path:     "cap.attribute.platform.kubernetes",
 					Revision: "1.0.0",
 				},
 			},

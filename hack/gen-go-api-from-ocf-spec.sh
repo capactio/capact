@@ -53,7 +53,7 @@ gen_go_api_from_ocf_specs() {
   docker pull "${JSON_GO_GEN_IMAGE}"
   docker run -v "${PWD}:/local" "${JSON_GO_GEN_IMAGE}" -l go -s schema --package types \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata.json" \
-    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-tags.json" \
+    --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/metadata-attributes.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/json-schema-type.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/type-ref.json" \
     --additional-schema "/local/ocf-spec/${OCF_VERSION}/schema/common/input-type-instances.json" \
@@ -61,7 +61,7 @@ gen_go_api_from_ocf_specs() {
     --src "/local/ocf-spec/${OCF_VERSION}/schema/interface.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/implementation.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
-    --src "/local/ocf-spec/${OCF_VERSION}/schema/tag.json" \
+    --src "/local/ocf-spec/${OCF_VERSION}/schema/attribute.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/type.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/type-instance.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \

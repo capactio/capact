@@ -65,25 +65,25 @@ func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in *gqllo
 		revision = ""
 	}
 
-	tags := []*gqllocalapi.TagReference{}
-	for _, tag := range in.Tags {
+	attributes := []*gqllocalapi.AttributeReference{}
+	for _, attribute := range in.Attributes {
 		var revision string
-		if tag.Revision != nil {
-			revision = *tag.Revision
+		if attribute.Revision != nil {
+			revision = *attribute.Revision
 		} else {
 			revision = ""
 		}
 
-		tags = append(tags, &gqllocalapi.TagReference{
-			Path:     tag.Path,
+		attributes = append(attributes, &gqllocalapi.AttributeReference{
+			Path:     attribute.Path,
 			Revision: revision,
 		})
 	}
 
 	newTypeInstance := &gqllocalapi.TypeInstance{
 		Metadata: &gqllocalapi.TypeInstanceMetadata{
-			ID:   uuid.New().String(),
-			Tags: tags,
+			ID:         uuid.New().String(),
+			Attributes: attributes,
 		},
 		Spec: &gqllocalapi.TypeInstanceSpec{
 			TypeRef: &gqllocalapi.TypeReference{

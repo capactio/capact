@@ -1,11 +1,11 @@
 package public
 
 import (
+	"projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/attributes"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/implementations"
 	interfacegroups "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/interface-groups"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/interfaces"
 	repometadata "projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/repo-metadata"
-	"projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/tags"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/mocked-resolver/types"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
@@ -19,7 +19,7 @@ type MockedRootResolver struct {
 	implementationResolver         gqlpublicapi.ImplementationResolver
 	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
 	repoMetadataResolver           gqlpublicapi.RepoMetadataResolver
-	tagResolver                    gqlpublicapi.TagResolver
+	attributeResolver              gqlpublicapi.AttributeResolver
 	typeResolver                   gqlpublicapi.TypeResolver
 }
 
@@ -30,7 +30,7 @@ func NewMockedRootResolver() *MockedRootResolver {
 			InterfaceResolver:      interfaces.NewResolver(),
 			InterfaceGroupResolver: interfacegroups.NewResolver(),
 			RepoMetadataResolver:   repometadata.NewResolver(),
-			TagResolver:            tags.NewResolver(),
+			AttributeResolver:      attributes.NewResolver(),
 			TypeResolver:           types.NewResolver(),
 		},
 		interfaceResolver:              interfaces.NewResolver(),
@@ -39,7 +39,7 @@ func NewMockedRootResolver() *MockedRootResolver {
 		implementationResolver:         implementations.NewResolver(),
 		implementationRevisionResolver: implementations.NewRevisionResolver(),
 		repoMetadataResolver:           repometadata.NewResolver(),
-		tagResolver:                    tags.NewResolver(),
+		attributeResolver:              attributes.NewResolver(),
 		typeResolver:                   types.NewResolver(),
 	}
 }
@@ -53,7 +53,7 @@ type mockedQueryResolver struct {
 	*interfaces.InterfaceResolver
 	*interfacegroups.InterfaceGroupResolver
 	*repometadata.RepoMetadataResolver
-	*tags.TagResolver
+	*attributes.AttributeResolver
 	*types.TypeResolver
 }
 
@@ -81,8 +81,8 @@ func (r *MockedRootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
 	return r.repoMetadataResolver
 }
 
-func (r *MockedRootResolver) Tag() gqlpublicapi.TagResolver {
-	return r.tagResolver
+func (r *MockedRootResolver) Attribute() gqlpublicapi.AttributeResolver {
+	return r.attributeResolver
 }
 
 func (r *MockedRootResolver) Type() gqlpublicapi.TypeResolver {

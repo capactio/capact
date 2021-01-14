@@ -15,13 +15,13 @@ scalar Version
 
 input CreateTypeInstanceInput {
   typeRef: TypeReferenceInput!
-  tags: [TagReferenceInput!]
+  attributes: [AttributeReferenceInput!]
   value: Any
 }
 
 input UpdateTypeInstanceInput {
   typeRef: TypeReferenceInput!
-  tags: [TagReferenceInput!]
+  attributes: [AttributeReferenceInput!]
   value: Any
   resourceVersion: Int!
 }
@@ -49,7 +49,7 @@ type TypeInstanceSpec {
 
 type TypeInstanceMetadata {
   id: ID!
-  tags: [TagReference!]!
+  attributes: [AttributeReference!]!
 }
 
 type TypeReference {
@@ -57,16 +57,16 @@ type TypeReference {
   revision: Version!
 }
 
-input TagReferenceInput {
+input AttributeReferenceInput {
   path: NodePath!
 
   """
-  If not provided, latest revision for a given Tag is used
+  If not provided, latest revision for a given Attribute is used
   """
   revision: Version
 }
 
-type TagReference {
+type AttributeReference {
   path: NodePath!
   revision: Version!
 }
@@ -107,12 +107,12 @@ enum HTTPRequestMethod {
   POST
 }
 
-input TagFilterInput {
+input AttributeFilterInput {
   path: NodePath!
   rule: FilterRule = INCLUDE
 
   """
-  If not provided, latest revision for a given Tag is used
+  If not provided, latest revision for a given Attribute is used
   """
   revision: Version
 }
@@ -123,7 +123,7 @@ enum FilterRule {
 }
 
 input TypeInstanceFilter {
-  tag: [TagFilterInput]
+  attribute: [AttributeFilterInput]
   typeRef: TypeRefFilterInput
 }
 

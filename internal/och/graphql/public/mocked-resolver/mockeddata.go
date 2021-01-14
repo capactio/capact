@@ -65,21 +65,21 @@ func MockedTypes() ([]*gqlpublicapi.Type, error) {
 	return types, nil
 }
 
-func MockedTags() ([]*gqlpublicapi.Tag, error) {
-	buff, err := ioutil.ReadFile(path.Join(MocksPath, "tags.json"))
+func MockedAttributes() ([]*gqlpublicapi.Attribute, error) {
+	buff, err := ioutil.ReadFile(path.Join(MocksPath, "attributes.json"))
 	if err != nil {
 		return nil, err
 	}
 
-	tags := []*gqlpublicapi.Tag{}
-	err = json.Unmarshal(buff, &tags)
+	attributes := []*gqlpublicapi.Attribute{}
+	err = json.Unmarshal(buff, &attributes)
 	if err != nil {
 		return nil, err
 	}
-	for _, tag := range tags {
-		tag.LatestRevision = tag.Revisions[0]
+	for _, attribute := range attributes {
+		attribute.LatestRevision = attribute.Revisions[0]
 	}
-	return tags, nil
+	return attributes, nil
 }
 
 func MockedRepoMetadata() (*gqlpublicapi.RepoMetadata, error) {

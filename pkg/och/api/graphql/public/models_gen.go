@@ -16,6 +16,37 @@ type TypeInstance interface {
 	IsTypeInstance()
 }
 
+type Attribute struct {
+	Name           string               `json:"name"`
+	Prefix         string               `json:"prefix"`
+	Path           string               `json:"path"`
+	LatestRevision *AttributeRevision   `json:"latestRevision"`
+	Revision       *AttributeRevision   `json:"revision"`
+	Revisions      []*AttributeRevision `json:"revisions"`
+}
+
+type AttributeFilter struct {
+	PrefixPattern *string `json:"prefixPattern"`
+}
+
+type AttributeFilterInput struct {
+	Path string      `json:"path"`
+	Rule *FilterRule `json:"rule"`
+	// If not provided, latest revision for a given Attribute is used
+	Revision *string `json:"revision"`
+}
+
+type AttributeRevision struct {
+	Metadata  *GenericMetadata `json:"metadata"`
+	Revision  string           `json:"revision"`
+	Spec      *AttributeSpec   `json:"spec"`
+	Signature *Signature       `json:"signature"`
+}
+
+type AttributeSpec struct {
+	AdditionalRefs []string `json:"additionalRefs"`
+}
+
 type GenericMetadata struct {
 	Name             string        `json:"name"`
 	Prefix           *string       `json:"prefix"`
@@ -58,8 +89,8 @@ type ImplementationFilter struct {
 	PrefixPattern *string `json:"prefixPattern"`
 	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
 	// For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-	RequirementsSatisfiedBy []*TypeInstanceValue `json:"requirementsSatisfiedBy"`
-	Tags                    []*TagFilterInput    `json:"tags"`
+	RequirementsSatisfiedBy []*TypeInstanceValue    `json:"requirementsSatisfiedBy"`
+	Attributes              []*AttributeFilterInput `json:"attributes"`
 }
 
 type ImplementationImport struct {
@@ -76,16 +107,16 @@ type ImplementationImportMethod struct {
 }
 
 type ImplementationMetadata struct {
-	Name             string         `json:"name"`
-	Prefix           *string        `json:"prefix"`
-	Path             *string        `json:"path"`
-	DisplayName      *string        `json:"displayName"`
-	Description      string         `json:"description"`
-	Maintainers      []*Maintainer  `json:"maintainers"`
-	DocumentationURL *string        `json:"documentationURL"`
-	SupportURL       *string        `json:"supportURL"`
-	IconURL          *string        `json:"iconURL"`
-	Tags             []*TagRevision `json:"tags"`
+	Name             string               `json:"name"`
+	Prefix           *string              `json:"prefix"`
+	Path             *string              `json:"path"`
+	DisplayName      *string              `json:"displayName"`
+	Description      string               `json:"description"`
+	Maintainers      []*Maintainer        `json:"maintainers"`
+	DocumentationURL *string              `json:"documentationURL"`
+	SupportURL       *string              `json:"supportURL"`
+	IconURL          *string              `json:"iconURL"`
+	Attributes       []*AttributeRevision `json:"attributes"`
 }
 
 func (ImplementationMetadata) IsMetadataBaseFields() {}
@@ -245,37 +276,6 @@ type Signature struct {
 	Och string `json:"och"`
 }
 
-type Tag struct {
-	Name           string         `json:"name"`
-	Prefix         string         `json:"prefix"`
-	Path           string         `json:"path"`
-	LatestRevision *TagRevision   `json:"latestRevision"`
-	Revision       *TagRevision   `json:"revision"`
-	Revisions      []*TagRevision `json:"revisions"`
-}
-
-type TagFilter struct {
-	PrefixPattern *string `json:"prefixPattern"`
-}
-
-type TagFilterInput struct {
-	Path string      `json:"path"`
-	Rule *FilterRule `json:"rule"`
-	// If not provided, latest revision for a given Tag is used
-	Revision *string `json:"revision"`
-}
-
-type TagRevision struct {
-	Metadata  *GenericMetadata `json:"metadata"`
-	Revision  string           `json:"revision"`
-	Spec      *TagSpec         `json:"spec"`
-	Signature *Signature       `json:"signature"`
-}
-
-type TagSpec struct {
-	AdditionalRefs []string `json:"additionalRefs"`
-}
-
 type Type struct {
 	Name           string          `json:"name"`
 	Prefix         string          `json:"prefix"`
@@ -303,16 +303,16 @@ type TypeInstanceValue struct {
 }
 
 type TypeMetadata struct {
-	Name             string         `json:"name"`
-	Prefix           *string        `json:"prefix"`
-	Path             *string        `json:"path"`
-	DisplayName      *string        `json:"displayName"`
-	Description      string         `json:"description"`
-	Maintainers      []*Maintainer  `json:"maintainers"`
-	DocumentationURL *string        `json:"documentationURL"`
-	SupportURL       *string        `json:"supportURL"`
-	IconURL          *string        `json:"iconURL"`
-	Tags             []*TagRevision `json:"tags"`
+	Name             string               `json:"name"`
+	Prefix           *string              `json:"prefix"`
+	Path             *string              `json:"path"`
+	DisplayName      *string              `json:"displayName"`
+	Description      string               `json:"description"`
+	Maintainers      []*Maintainer        `json:"maintainers"`
+	DocumentationURL *string              `json:"documentationURL"`
+	SupportURL       *string              `json:"supportURL"`
+	IconURL          *string              `json:"iconURL"`
+	Attributes       []*AttributeRevision `json:"attributes"`
 }
 
 func (TypeMetadata) IsMetadataBaseFields() {}

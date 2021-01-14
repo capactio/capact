@@ -16,8 +16,8 @@ metadata:
     - email: foo@example.com
       name: Foo Bar
       url: https://examples.com/foo/bar
-  tags:
-    cap.tag.cncf.graduated:
+  attributes:
+    cap.attribute.cncf.graduated:
       revision: 1.0.0
 spec:
   additionalRefs:

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "Tag is a primitive, which is used to categorize Implementations. You can use Tags to find and filter Implementations.",
+  "description": "Attribute is a primitive, which is used to categorize Implementations. You can use Attributes to find and filter Implementations.",
   "required": [
     "ocfVersion",
     "kind",
@@ -19,7 +19,7 @@
       "$id": "#/properties/kind",
       "type": "string",
       "enum": [
-        "Tag"
+        "Attribute"
       ]
     },
     "revision": {
@@ -49,19 +49,19 @@
     "spec": {
       "$id": "#/properties/spec",
       "type": "object",
-      "description": "A container for the Tag specification definition.",
+      "description": "A container for the Attribute specification definition.",
       "additionalProperties": false,
       "properties": {
         "additionalRefs": {
           "$id": "#/properties/spec/properties/additionalRefs",
           "type": "array",
-          "description": "List of the full path of additional parent nodes the Tag is attached to. The parent nodes MUST reside under “cap.core.tag” or “cap.tag” subtree. The connection means that the Tag becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.",
+          "description": "List of the full path of additional parent nodes the Attribute is attached to. The parent nodes MUST reside under “cap.core.attribute” or “cap.attribute” subtree. The connection means that the Attribute becomes a child of the referenced parent nodes. In a result, the Attribute has multiple parents.",
           "additionalProperties": false,
           "additionalItems": false,
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "description": "Full path of additional parent nodes the Tag is attached to."
+            "description": "Full path of additional parent nodes the Attribute is attached to."
           }
         }
       }

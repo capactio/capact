@@ -12,8 +12,8 @@ metadata:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-  tags:
-    cap.core.tag.capability.baseline:
+  attributes:
+    cap.core.attribute.capability.baseline:
       revision: 0.1.0
 spec:
   # regex from https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string

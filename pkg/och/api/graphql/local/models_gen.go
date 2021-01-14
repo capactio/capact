@@ -8,28 +8,28 @@ import (
 	"strconv"
 )
 
-type CreateTypeInstanceInput struct {
-	TypeRef *TypeReferenceInput  `json:"typeRef"`
-	Tags    []*TagReferenceInput `json:"tags"`
-	Value   interface{}          `json:"value"`
-}
-
-type TagFilterInput struct {
+type AttributeFilterInput struct {
 	Path string      `json:"path"`
 	Rule *FilterRule `json:"rule"`
-	// If not provided, latest revision for a given Tag is used
+	// If not provided, latest revision for a given Attribute is used
 	Revision *string `json:"revision"`
 }
 
-type TagReference struct {
+type AttributeReference struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
 }
 
-type TagReferenceInput struct {
+type AttributeReferenceInput struct {
 	Path string `json:"path"`
-	// If not provided, latest revision for a given Tag is used
+	// If not provided, latest revision for a given Attribute is used
 	Revision *string `json:"revision"`
+}
+
+type CreateTypeInstanceInput struct {
+	TypeRef    *TypeReferenceInput        `json:"typeRef"`
+	Attributes []*AttributeReferenceInput `json:"attributes"`
+	Value      interface{}                `json:"value"`
 }
 
 type TypeInstance struct {
@@ -39,8 +39,8 @@ type TypeInstance struct {
 }
 
 type TypeInstanceFilter struct {
-	Tag     []*TagFilterInput   `json:"tag"`
-	TypeRef *TypeRefFilterInput `json:"typeRef"`
+	Attribute []*AttributeFilterInput `json:"attribute"`
+	TypeRef   *TypeRefFilterInput     `json:"typeRef"`
 }
 
 type TypeInstanceInstrumentation struct {
@@ -65,8 +65,8 @@ type TypeInstanceInstrumentationMetricsDashboard struct {
 }
 
 type TypeInstanceMetadata struct {
-	ID   string          `json:"id"`
-	Tags []*TagReference `json:"tags"`
+	ID         string                `json:"id"`
+	Attributes []*AttributeReference `json:"attributes"`
 }
 
 type TypeInstanceSpec struct {
@@ -93,10 +93,10 @@ type TypeReferenceInput struct {
 }
 
 type UpdateTypeInstanceInput struct {
-	TypeRef         *TypeReferenceInput  `json:"typeRef"`
-	Tags            []*TagReferenceInput `json:"tags"`
-	Value           interface{}          `json:"value"`
-	ResourceVersion int                  `json:"resourceVersion"`
+	TypeRef         *TypeReferenceInput        `json:"typeRef"`
+	Attributes      []*AttributeReferenceInput `json:"attributes"`
+	Value           interface{}                `json:"value"`
+	ResourceVersion int                        `json:"resourceVersion"`
 }
 
 type FilterRule string

@@ -53,8 +53,8 @@
         },
         {
           "properties": {
-            "tags": {
-              "$ref": "https://projectvoltron.dev/schemas/common/metadata-tags.json"
+            "attributes": {
+              "$ref": "https://projectvoltron.dev/schemas/common/metadata-attributes.json"
             }
           }
         }
@@ -81,7 +81,7 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "description": "Full path of additional parent nodes the Tag is attached to."
+            "description": "Full path of additional parent nodes the Attribute is attached to."
           }
         }
       }

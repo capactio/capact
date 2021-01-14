@@ -1,9 +1,9 @@
 ocfVersion: 0.0.1
 revision: 0.0.1
-kind: Tag
+kind: Attribute
 metadata:
   name: stateless
-  prefix: cap.tag.workload  # Computed during fetching the manifest
+  prefix: cap.attribute.workload  # Computed during fetching the manifest
   displayName: Stateless Workload
   description: -|
     A stateless application does not preserve its state and saves no data
@@ -21,7 +21,7 @@ metadata:
 spec:
   # Additional refs gives you an option to extend other parent node.
   additionalRefs:
-    - cap.core.tag.workload
+    - cap.core.attribute.workload
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

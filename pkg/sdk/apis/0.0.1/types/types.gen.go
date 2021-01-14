@@ -10,8 +10,8 @@
 //    repoMetadata, err := UnmarshalRepoMetadata(bytes)
 //    bytes, err = repoMetadata.Marshal()
 //
-//    tag, err := UnmarshalTag(bytes)
-//    bytes, err = tag.Marshal()
+//    attribute, err := UnmarshalAttribute(bytes)
+//    bytes, err = attribute.Marshal()
 //
 //    type, err := UnmarshalType(bytes)
 //    bytes, err = type.Marshal()
@@ -56,13 +56,13 @@ func (r *RepoMetadata) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
-func UnmarshalTag(data []byte) (Tag, error) {
-	var r Tag
+func UnmarshalAttribute(data []byte) (Attribute, error) {
+	var r Attribute
 	err := json.Unmarshal(data, &r)
 	return r, err
 }
 
-func (r *Tag) Marshal() ([]byte, error) {
+func (r *Attribute) Marshal() ([]byte, error) {
 	return json.Marshal(r)
 }
 
@@ -189,16 +189,23 @@ type Implementation struct {
 
 // A container for the OCF metadata definitions.
 type ImplementationMetadata struct {
-	Description      string                 `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
-	DisplayName      *string                `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
-	DocumentationURL *string                `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
-	IconURL          *string                `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
-	Maintainers      []Maintainer           `json:"maintainers"`               // The list of maintainers with contact information.
-	Name             string                 `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
-	Prefix           *string                `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
-	SupportURL       *string                `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
-	License          License                `json:"license"`                   // This entry allows you to specify a license, so people know how they are permitted to use; it, and what kind of restrictions you are placing on it.
-	Tags             map[string]MetadataTag `json:"tags,omitempty"`            
+	Description      string                       `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
+	DisplayName      *string                      `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
+	DocumentationURL *string                      `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
+	IconURL          *string                      `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
+	Maintainers      []Maintainer                 `json:"maintainers"`               // The list of maintainers with contact information.
+	Name             string                       `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
+	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	SupportURL       *string                      `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
+	Attributes       map[string]MetadataAttribute `json:"attributes,omitempty"`      
+	License          License                      `json:"license"`                   // This entry allows you to specify a license, so people know how they are permitted to use; it, and what kind of restrictions you are placing on it.
+}
+
+// The attribute object contains OCF Attributes references. It provides generic
+// categorization for Implementations, Types and TypeInstances. Attributes are used to
+// filter out a specific Implementation.
+type MetadataAttribute struct {
+	Revision string `json:"revision"`// The exact Attribute revision.
 }
 
 // This entry allows you to specify a license, so people know how they are permitted to use
@@ -206,13 +213,6 @@ type ImplementationMetadata struct {
 type License struct {
 	Name *string `json:"name,omitempty"`// If you are using a common license such as BSD-2-Clause or MIT, add a current SPDX license; identifier for the license you’re using e.g. BSD-3-Clause. If your package is licensed; under multiple common licenses, use an SPDX license expression syntax version 2.0 string,; e.g. (ISC OR GPL-3.0)
 	Ref  *string `json:"ref,omitempty"` // If you are using a license that hasn’t been assigned an SPDX identifier, or if you are; using a custom license, use the direct link to the license file e.g.; https://raw.githubusercontent.com/project/v1/license.md. The resource under given link; MUST be immutable and publicly accessible.
-}
-
-// The tag object contains OCF Tags references. It provides generic categorization for
-// Implementations, Types and TypeInstances. Tags are used to filter out a specific
-// Implementation.
-type MetadataTag struct {
-	Revision string `json:"revision"`// The exact Tag revision.
 }
 
 // Ensures the authenticity and integrity of a given manifest.
@@ -333,25 +333,25 @@ type OcfVersion struct {
 	Supported []string `json:"supported"`// The supported OCF version that OCH is able to serve. In general, the OCH takes the stored; version and converts it to the supported one.
 }
 
-// Tag is a primitive, which is used to categorize Implementations. You can use Tags to find
-// and filter Implementations.
-type Tag struct {
-	Kind       TagKind           `json:"kind"`          
-	Metadata   InterfaceMetadata `json:"metadata"`      
-	OcfVersion string            `json:"ocfVersion"`    
-	Revision   string            `json:"revision"`      // Version of the manifest content in the SemVer format.
-	Signature  TagSignature      `json:"signature"`     // Ensures the authenticity and integrity of a given manifest.
-	Spec       *TagSpec          `json:"spec,omitempty"`// A container for the Tag specification definition.
+// Attribute is a primitive, which is used to categorize Implementations. You can use
+// Attributes to find and filter Implementations.
+type Attribute struct {
+	Kind       AttributeKind      `json:"kind"`          
+	Metadata   InterfaceMetadata  `json:"metadata"`      
+	OcfVersion string             `json:"ocfVersion"`    
+	Revision   string             `json:"revision"`      // Version of the manifest content in the SemVer format.
+	Signature  AttributeSignature `json:"signature"`     // Ensures the authenticity and integrity of a given manifest.
+	Spec       *AttributeSpec     `json:"spec,omitempty"`// A container for the Attribute specification definition.
 }
 
 // Ensures the authenticity and integrity of a given manifest.
-type TagSignature struct {
+type AttributeSignature struct {
 	Och string `json:"och"`// The signature signed with the HUB key.
 }
 
-// A container for the Tag specification definition.
-type TagSpec struct {
-	AdditionalRefs []string `json:"additionalRefs,omitempty"`// List of the full path of additional parent nodes the Tag is attached to. The parent nodes; MUST reside under “cap.core.tag” or “cap.tag” subtree. The connection means that the Tag; becomes a child of the referenced parent nodes. In a result, the Tag has multiple parents.
+// A container for the Attribute specification definition.
+type AttributeSpec struct {
+	AdditionalRefs []string `json:"additionalRefs,omitempty"`// List of the full path of additional parent nodes the Attribute is attached to. The parent; nodes MUST reside under “cap.core.attribute” or “cap.attribute” subtree. The connection; means that the Attribute becomes a child of the referenced parent nodes. In a result, the; Attribute has multiple parents.
 }
 
 // Primitive, that holds the JSONSchema which describes that Type. It’s also used for
@@ -368,15 +368,15 @@ type Type struct {
 
 // A container for the OCF metadata definitions.
 type TypeMetadata struct {
-	Description      string                 `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
-	DisplayName      *string                `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
-	DocumentationURL *string                `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
-	IconURL          *string                `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
-	Maintainers      []Maintainer           `json:"maintainers"`               // The list of maintainers with contact information.
-	Name             string                 `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
-	Prefix           *string                `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
-	SupportURL       *string                `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
-	Tags             map[string]MetadataTag `json:"tags,omitempty"`            
+	Description      string                       `json:"description"`               // A short description of the OCF manifest. Must be a non-empty string.
+	DisplayName      *string                      `json:"displayName,omitempty"`     // The name of the OCF manifest to be displayed in graphical clients.
+	DocumentationURL *string                      `json:"documentationURL,omitempty"`// Link to documentation page for the OCF manifest.
+	IconURL          *string                      `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
+	Maintainers      []Maintainer                 `json:"maintainers"`               // The list of maintainers with contact information.
+	Name             string                       `json:"name"`                      // The name of OCF manifest that uniquely identifies this object within the entity sub-tree.; Must be a non-empty string. We recommend using a CLI-friendly name.
+	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	SupportURL       *string                      `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
+	Attributes       map[string]MetadataAttribute `json:"attributes,omitempty"`      
 }
 
 // Ensures the authenticity and integrity of a given manifest.
@@ -401,8 +401,8 @@ type TypeInstance struct {
 }
 
 type TypeInstanceMetadata struct {
-	ID   string                 `json:"id"`            // The unique identifier of a given TypeInstance.
-	Tags map[string]MetadataTag `json:"tags,omitempty"`
+	Attributes map[string]MetadataAttribute `json:"attributes,omitempty"`
+	ID         string                       `json:"id"`                  // The unique identifier of a given TypeInstance.
 }
 
 // A container for the TypeInstance specification definition.
@@ -494,9 +494,9 @@ const (
 	PointsToStable PointsTo = "Stable"
 )
 
-type TagKind string
+type AttributeKind string
 const (
-	KindTag TagKind = "Tag"
+	KindAttribute AttributeKind = "Attribute"
 )
 
 type TypeKind string

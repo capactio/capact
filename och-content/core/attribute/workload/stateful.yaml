@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
 revision: 0.1.0
-kind: Tag
+kind: Attribute
 metadata:
-  name: stateless
-  prefix: cap.core.tag.workload  # Computed during fetching the manifest
-  displayName: Stateless Workload
-  description: A stateless application does not preserve its state and saves no data to persistent storage — all user and session data stays with the client.
+  name: stateful
+  prefix: cap.core.attribute.workload  # Computed during fetching the manifest
+  displayName: Stateful Workload
+  description: A stateful application preserves its state and saves data to persistent storage.
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   iconURL: https://projectvoltron.dev/favicon.ico

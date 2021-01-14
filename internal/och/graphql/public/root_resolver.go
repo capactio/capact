@@ -1,11 +1,11 @@
 package public
 
 import (
+	"projectvoltron.dev/voltron/internal/och/graphql/public/resolver/attributes"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/resolver/implementations"
 	interfacegroups "projectvoltron.dev/voltron/internal/och/graphql/public/resolver/interface-groups"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/resolver/interfaces"
 	repometadata "projectvoltron.dev/voltron/internal/och/graphql/public/resolver/repo-metadata"
-	"projectvoltron.dev/voltron/internal/och/graphql/public/resolver/tags"
 	"projectvoltron.dev/voltron/internal/och/graphql/public/resolver/types"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
@@ -19,7 +19,7 @@ type RootResolver struct {
 	implementationResolver         gqlpublicapi.ImplementationResolver
 	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
 	repoMetadataResolver           gqlpublicapi.RepoMetadataResolver
-	tagResolver                    gqlpublicapi.TagResolver
+	attributeResolver              gqlpublicapi.AttributeResolver
 	typeResolver                   gqlpublicapi.TypeResolver
 }
 
@@ -30,7 +30,7 @@ func NewRootResolver() *RootResolver {
 			InterfaceResolver:      interfaces.NewResolver(),
 			InterfaceGroupResolver: interfacegroups.NewResolver(),
 			RepoMetadataResolver:   repometadata.NewResolver(),
-			TagResolver:            tags.NewResolver(),
+			AttributeResolver:      attributes.NewResolver(),
 			TypeResolver:           types.NewResolver(),
 		},
 		interfaceResolver:              interfaces.NewResolver(),
@@ -39,7 +39,7 @@ func NewRootResolver() *RootResolver {
 		implementationResolver:         implementations.NewResolver(),
 		implementationRevisionResolver: implementations.NewRevisionResolver(),
 		repoMetadataResolver:           repometadata.NewResolver(),
-		tagResolver:                    tags.NewResolver(),
+		attributeResolver:              attributes.NewResolver(),
 		typeResolver:                   types.NewResolver(),
 	}
 }
@@ -53,7 +53,7 @@ type queryResolver struct {
 	*interfaces.InterfaceResolver
 	*interfacegroups.InterfaceGroupResolver
 	*repometadata.RepoMetadataResolver
-	*tags.TagResolver
+	*attributes.AttributeResolver
 	*types.TypeResolver
 }
 
@@ -81,8 +81,8 @@ func (r *RootResolver) RepoMetadata() gqlpublicapi.RepoMetadataResolver {
 	return r.repoMetadataResolver
 }
 
-func (r *RootResolver) Tag() gqlpublicapi.TagResolver {
-	return r.tagResolver
+func (r *RootResolver) Attribute() gqlpublicapi.AttributeResolver {
+	return r.attributeResolver
 }
 
 func (r *RootResolver) Type() gqlpublicapi.TypeResolver {

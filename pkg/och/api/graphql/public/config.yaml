@@ -38,7 +38,7 @@ models:
     fields:
       revision:
         resolver: true
-  Tag:
+  Attribute:
     fields:
       revision:
         resolver: true
