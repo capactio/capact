@@ -14,7 +14,6 @@ type RootResolver struct {
 	queryResolver queryResolver
 
 	interfaceResolver              gqlpublicapi.InterfaceResolver
-	interfaceRevisionResolver      gqlpublicapi.InterfaceRevisionResolver
 	interfaceGroupResolver         gqlpublicapi.InterfaceGroupResolver
 	implementationResolver         gqlpublicapi.ImplementationResolver
 	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
@@ -34,7 +33,6 @@ func NewRootResolver() *RootResolver {
 			TypeResolver:           types.NewResolver(),
 		},
 		interfaceResolver:              interfaces.NewResolver(),
-		interfaceRevisionResolver:      interfaces.NewRevisionResolver(),
 		interfaceGroupResolver:         interfacegroups.NewInterfacesResolver(),
 		implementationResolver:         implementations.NewResolver(),
 		implementationRevisionResolver: implementations.NewRevisionResolver(),
@@ -59,10 +57,6 @@ type queryResolver struct {
 
 func (r *RootResolver) Interface() gqlpublicapi.InterfaceResolver {
 	return r.interfaceResolver
-}
-
-func (r *RootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
-	return r.interfaceRevisionResolver
 }
 
 func (r *RootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {

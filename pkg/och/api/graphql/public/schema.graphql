@@ -166,7 +166,7 @@ type InterfaceRevision {
     """
     List Implementations for a given Interface
     """
-    implementations(filter: ImplementationFilter): [Implementation!]!
+    implementationRevisions(filter: ImplementationFilter): [ImplementationRevision!]!
     signature: Signature!
 }
 

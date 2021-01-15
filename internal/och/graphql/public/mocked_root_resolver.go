@@ -14,7 +14,6 @@ type MockedRootResolver struct {
 	queryResolver mockedQueryResolver
 
 	interfaceResolver              gqlpublicapi.InterfaceResolver
-	interfaceRevisionResolver      gqlpublicapi.InterfaceRevisionResolver
 	interfaceGroupResolver         gqlpublicapi.InterfaceGroupResolver
 	implementationResolver         gqlpublicapi.ImplementationResolver
 	implementationRevisionResolver gqlpublicapi.ImplementationRevisionResolver
@@ -34,7 +33,6 @@ func NewMockedRootResolver() *MockedRootResolver {
 			TypeResolver:           types.NewResolver(),
 		},
 		interfaceResolver:              interfaces.NewResolver(),
-		interfaceRevisionResolver:      interfaces.NewRevisionResolver(),
 		interfaceGroupResolver:         interfacegroups.NewInterfacesResolver(),
 		implementationResolver:         implementations.NewResolver(),
 		implementationRevisionResolver: implementations.NewRevisionResolver(),
@@ -59,10 +57,6 @@ type mockedQueryResolver struct {
 
 func (r *MockedRootResolver) Interface() gqlpublicapi.InterfaceResolver {
 	return r.interfaceResolver
-}
-
-func (r *MockedRootResolver) InterfaceRevision() gqlpublicapi.InterfaceRevisionResolver {
-	return r.interfaceRevisionResolver
 }
 
 func (r *MockedRootResolver) InterfaceGroup() gqlpublicapi.InterfaceGroupResolver {

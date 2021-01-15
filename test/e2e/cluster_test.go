@@ -77,21 +77,86 @@ var _ = Describe("Cluster check", func() {
 				}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(cfg.ExpectedNumberOfRunningPods), "Got unexpected number of Pods in cluster")
 			})
 		})
+	})
+})
 
-		Context("Action CR", func() {
-			It("should execute a workflow successfully", func() {
-				httpClient := httputil.NewClient(30*time.Second, true, httputil.WithBasicAuth("graphql", "t0p_s3cr3t"))
-				engineClient := client.New("https://gateway.voltron.local/graphql", httpClient)
+var _ = Describe("Action E2E", func() {
+	var engineClient *client.Client
 
-				_, err := engineClient.CreateAction(context.Background(), &enginegraphql.ActionDetailsInput{
-					Name: "passing-e2e-test",
-					ActionRef: &enginegraphql.ManifestReferenceInput{
-						Path: "com.voltron.e2e.passing",
-					},
-				})
+	actionName := "e2e-test"
+	ctx := context.Background()
 
-				Expect(err).ToNot(HaveOccurred())
+	BeforeEach(func() {
+		httpClient := httputil.NewClient(30*time.Second, true, httputil.WithBasicAuth("graphql", "t0p_s3cr3t"))
+		engineClient = client.New("https://gateway.voltron.local/graphql", httpClient)
+	})
+
+	AfterEach(func() {
+		// cleanup Action
+		engineClient.DeleteAction(ctx, actionName)
+	})
+
+	Context("Action CR", func() {
+		It("should execute a workflow successfully", func() {
+			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+				Name: actionName,
+				ActionRef: &enginegraphql.ManifestReferenceInput{
+					Path: "cap.interface.voltron.e2e.passing",
+				},
 			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
+				action, err := engineClient.GetAction(ctx, actionName)
+				if err != nil {
+					return "", err
+				}
+				return action.Status.Condition, err
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+
+			err = engineClient.RunAction(ctx, actionName)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
+				action, err := engineClient.GetAction(ctx, actionName)
+				if err != nil {
+					return "", err
+				}
+				return action.Status.Condition, err
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionSucceeded))
+		})
+
+		It("should execute a failing workflow", func() {
+			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+				Name: actionName,
+				ActionRef: &enginegraphql.ManifestReferenceInput{
+					Path: "cap.interface.voltron.e2e.failing",
+				},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
+				action, err := engineClient.GetAction(ctx, actionName)
+				if err != nil {
+					return "", err
+				}
+				return action.Status.Condition, err
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+
+			err = engineClient.RunAction(ctx, actionName)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
+				action, err := engineClient.GetAction(ctx, actionName)
+				if err != nil {
+					return "", err
+				}
+				return action.Status.Condition, err
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionFailed))
 		})
 	})
 })

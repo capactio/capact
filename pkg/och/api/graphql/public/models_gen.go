@@ -207,8 +207,8 @@ type InterfaceRevision struct {
 	Revision string           `json:"revision"`
 	Spec     *InterfaceSpec   `json:"spec"`
 	// List Implementations for a given Interface
-	Implementations []*Implementation `json:"implementations"`
-	Signature       *Signature        `json:"signature"`
+	ImplementationRevisions []*ImplementationRevision `json:"implementationRevisions"`
+	Signature               *Signature                `json:"signature"`
 }
 
 type InterfaceSpec struct {
