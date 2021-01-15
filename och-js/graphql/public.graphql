@@ -227,7 +227,7 @@ interface TypeInstanceFields {
 
 type InputTypeInstance implements TypeInstanceFields {
     name: String!
-    typeRef: TypeReference!
+    typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
     verbs: [TypeInstanceOperationVerb!]!
 }
 
@@ -237,7 +237,7 @@ enum TypeInstanceOperationVerb {
 
 type OutputTypeInstance implements TypeInstanceFields {
     name: String!
-    typeRef: TypeReference!
+    typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type Type {
@@ -375,9 +375,9 @@ type Attribute {
 
 type AttributeRevision {
     revision: Version!
-    spec: AttributeSpec!
-    signature: Signature!
 
+    spec: AttributeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
     metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
