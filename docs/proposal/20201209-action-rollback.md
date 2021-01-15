@@ -478,9 +478,9 @@ metadata:
   name: "jira-uninstall"
 spec:
   input:
-    typeInstances: # Based on the TypeInstance, Engine uses `rollbackActionRef`
-      - name: postgresql
-        id: fee33a5e-d957-488a-86bd-5dacd4120312
+    typeInstance: # Based on the TypeInstance, Engine uses `rollbackActionRef`
+      name: postgresql
+      id: fee33a5e-d957-488a-86bd-5dacd4120312
   strategy:
     delete: true # Executes rollback action for the very first revision of the given TypeInstance, which results in TypeInstance deletion.
     # Additional possibilities:
@@ -494,8 +494,7 @@ spec:
 The Rollback Custom Resource describes action rollback. Based on input TypeInstance, full rollback workflow is rendered.
 Once User approves it, the workflow is run.
 
-Initially, only one input TypeInstance is supported. In the future, we may consider to support multiple input
-TypeInstances. The behavior of Rollback Custom Resource is very similar to `Action` Custom Resource.
+Only one input TypeInstance is supported. The behavior of Rollback Custom Resource is very similar to `Action` Custom Resource.
 
 To read more about the Rollback controller behavior, read the [New Rollback Controller](#new-rollback-controller)
 section.
