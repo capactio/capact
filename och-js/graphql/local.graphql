@@ -164,7 +164,7 @@ type Mutation {
 
     CALL apoc.do.when(
       $in.value IS NOT NULL,
-      'SET spec.value = in.value RETURN spec',
+      'SET spec.value = apoc.convert.toJson($in.value) RETURN spec',
       '',
       {spec:spec, in: $in}
     ) YIELD value

@@ -418,7 +418,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    attributes: [AttributeRevision!]!
+    attributes: [AttributeRevision!]! @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
 type TypeMetadata implements MetadataBaseFields {
@@ -431,7 +431,7 @@ type TypeMetadata implements MetadataBaseFields {
     documentationURL: String
     supportURL: String
     iconURL: String
-    attributes: [AttributeRevision!]!
+    attributes: [AttributeRevision!]! @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
 type Signature {
