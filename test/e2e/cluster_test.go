@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -16,6 +17,11 @@ import (
 	"k8s.io/kubectl/pkg/util/podutils"
 	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+
+	"projectvoltron.dev/voltron/pkg/httputil"
+
+	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	client "projectvoltron.dev/voltron/pkg/engine/client"
 )
 
 var _ = Describe("Cluster check", func() {
@@ -69,6 +75,22 @@ var _ = Describe("Cluster check", func() {
 					}
 					return numberOfRunningPods, nil
 				}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(cfg.ExpectedNumberOfRunningPods), "Got unexpected number of Pods in cluster")
+			})
+		})
+
+		Context("Action CR", func() {
+			It("should execute a workflow successfully", func() {
+				httpClient := httputil.NewClient(30*time.Second, true, httputil.WithBasicAuth("graphql", "t0p_s3cr3t"))
+				engineClient := client.New("https://gateway.voltron.local/graphql", httpClient)
+
+				_, err := engineClient.CreateAction(context.Background(), &enginegraphql.ActionDetailsInput{
+					Name: "passing-e2e-test",
+					ActionRef: &enginegraphql.ManifestReferenceInput{
+						Path: "com.voltron.e2e.passing",
+					},
+				})
+
+				Expect(err).ToNot(HaveOccurred())
 			})
 		})
 	})
