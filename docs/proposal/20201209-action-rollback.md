@@ -775,6 +775,31 @@ This section covers a few different example scenarios to present how the rollbac
 1. User runs workflow.
 1. The previous TypeInstance revision is restored.
 
+#### Rollback of Action which creates and updates TypeInstances
+
+> **NOTE:** This example assumes that the Ingress configuration for Jira with `cap.implementation.atlassian.k8s.jira.expose` modifies Jira TypeInstance and creates another TypeInstance for Ingress configuration.
+
+1. User installs Jira. The `cap.type.productivity.jira.config` TypeInstance is created.
+    - The `standalone` field is set to `true`.
+    - The `rollback` property of the Jira installation is set to `cap.implementation.atlassian.jira.install`.
+
+1. User configures Ingress for Jira installation with Action `cap.implementation.atlassian.k8s.jira.expose`.
+
+    1. The `cap.type.networking.k8s.ingress.config` TypeInstance is created.
+        - The `standalone` field is set to `true`.
+        - The `rollback` field is set to `cap.implementation.atlassian.k8s.jira.expose`.
+    1. A new revision of the `jira.config` TypeInstance is created.
+        - The `host` property of the `jira.config` TypeInstance is updated.
+        - The `rollback` field is set to `cap.implementation.atlassian.k8s.jira.expose`.
+    1. The relation between `jira.config` and `ingress.config` is created automatically, according
+       to `typeInstanceRelations` from the `cap.implementation.atlassian.k8s.jira.expose` Implementation. In this
+       case, `ingress.config` uses `jira.config`, as it is an additional functionality built on top of Jira
+       installation.
+       
+1. User rollbacks Ingress configuration. 
+    - The `ingress.config` TypeInstance is removed, as there are no previous revisions of it.
+    - The previous `jira.config` TypeInstance revision is restored.
+
 #### Deleting updated TypeInstance - Rollback with "delete" strategy
 
 1. User installs Jira with `cap.implementation.atlassian.jira.install` along with new PostgreSQL installation using
