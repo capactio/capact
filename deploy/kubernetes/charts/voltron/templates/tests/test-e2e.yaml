@@ -16,6 +16,8 @@ spec:
           value: "http://voltron-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://voltron-och-public.{{.Release.Namespace}}.svc.cluster.local/healthz"
         - name: IGNORED_PODS_NAMES
           value: "{{ .Release.Namespace}}/{{ include "voltron.fullname" . }}-test-e2e"
+        - name: EXPECTED_NUMBER_OF_RUNNING_PODS
+          value: "{{ .Values.integrationTest.expectedNumberOfRunningPods }}"
       command:
         - /app
       args:

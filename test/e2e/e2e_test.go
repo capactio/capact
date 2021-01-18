@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"time"
 
-	"k8s.io/utils/strings"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/vrischmann/envconfig"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubectl/pkg/util/podutils"
+	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"projectvoltron.dev/voltron/pkg/httputil"
@@ -25,7 +25,7 @@ import (
 type Config struct {
 	StatusEndpoints []string
 	// total number of pods that should be scheduled
-	ExpectedNumberOfRunningPods int `envconfig:"default=25"`
+	ExpectedNumberOfRunningPods int
 	IgnoredPodsNames            []string
 	PollingInterval             time.Duration `envconfig:"default=2s"`
 	PollingTimeout              time.Duration `envconfig:"default=1m"`
@@ -62,7 +62,7 @@ var _ = Describe("E2E", func() {
 		})
 
 		Context("Pods in cluster", func() {
-			It("should be in running phase", func() {
+			It("should be in running phase  (ignored kube-system)", func() {
 				k8sCfg, err := config.GetConfig()
 				Expect(err).ToNot(HaveOccurred())
 
@@ -70,7 +70,9 @@ var _ = Describe("E2E", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Eventually(func() (int, error) {
-					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{})
+					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
+						FieldSelector: fields.OneTermNotEqualSelector("metadata.namespace", "kube-system").String(),
+					})
 					if err != nil {
 						return 0, err
 					}
@@ -83,7 +85,7 @@ var _ = Describe("E2E", func() {
 							continue
 						}
 
-						running := podRunningAndReady(&pods.Items[idx])
+						running := podRunningAndReadyOrFinished(&pods.Items[idx])
 						if !running {
 							atLeastOneNotReady = true
 						} else {
@@ -100,13 +102,20 @@ var _ = Describe("E2E", func() {
 	})
 })
 
-func podRunningAndReady(pod *v1.Pod) bool {
+func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 	switch pod.Status.Phase {
+	case v1.PodSucceeded:
+		return true
 	case v1.PodRunning:
-		return podutils.IsPodReady(pod)
+		ready := podutils.IsPodReady(pod)
+		if !ready {
+			log("The status of Pod %s/%s, waiting to be Ready", pod.Namespace, pod.Name)
+		}
+		return ready
+	default:
+		log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
+		return false
 	}
-	log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
-	return false
 }
 
 func nowStamp() string {
