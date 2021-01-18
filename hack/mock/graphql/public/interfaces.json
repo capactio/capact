@@ -248,9 +248,9 @@
     ]
   },
   {
-    "name": "passing",
+    "name": "passing-local",
     "prefix": "cap.interface.voltron.e2e",
-    "path": "cap.interface.voltron.e2e.passing",
+    "path": "cap.interface.voltron.e2e.passing-local",
     "revisions": [
       {
         "implementationRevisions": [
@@ -297,9 +297,9 @@
     ]
   },
   {
-    "name": "failing",
+    "name": "failing-local",
     "prefix": "cap.interface.voltron.e2e",
-    "path": "cap.interface.voltron.e2e.failing",
+    "path": "cap.interface.voltron.e2e.failing-local",
     "revisions": [
       {
         "implementationRevisions": [

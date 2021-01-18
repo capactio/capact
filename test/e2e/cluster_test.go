@@ -97,70 +97,68 @@ var _ = Describe("Action E2E", func() {
 		engineClient.DeleteAction(ctx, actionName)
 	})
 
-	Context("Action CR", func() {
-		It("should execute a workflow successfully", func() {
+	Context("Action execution", func() {
+		It("should have succeeded status after a passed workflow", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.passing",
+					Path: "cap.interface.voltron.e2e.passing-local",
 				},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
-				action, err := engineClient.GetAction(ctx, actionName)
-				if err != nil {
-					return "", err
-				}
-				return action.Status.Condition, err
-			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
 
 			err = engineClient.RunAction(ctx, actionName)
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
-				action, err := engineClient.GetAction(ctx, actionName)
-				if err != nil {
-					return "", err
-				}
-				return action.Status.Condition, err
-			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionSucceeded))
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusConditionSucceeded))
 		})
 
-		It("should execute a failing workflow", func() {
+		It("should have failed status after a failed workflow", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.failing",
+					Path: "cap.interface.voltron.e2e.failing-local",
 				},
 			})
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
-				action, err := engineClient.GetAction(ctx, actionName)
-				if err != nil {
-					return "", err
-				}
-				return action.Status.Condition, err
-			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
 
 			err = engineClient.RunAction(ctx, actionName)
 
 			Expect(err).ToNot(HaveOccurred())
 
-			Eventually(func() (enginegraphql.ActionStatusCondition, error) {
-				action, err := engineClient.GetAction(ctx, actionName)
-				if err != nil {
-					return "", err
-				}
-				return action.Status.Condition, err
-			}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(enginegraphql.ActionStatusConditionFailed))
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusConditionFailed))
 		})
 	})
 })
+
+func getActionStatusFunc(ctx context.Context, cl *client.Client, name string) func() (enginegraphql.ActionStatusCondition, error) {
+	return func() (enginegraphql.ActionStatusCondition, error) {
+		action, err := cl.GetAction(ctx, name)
+		if err != nil {
+			return "", err
+		}
+		return action.Status.Condition, err
+	}
+}
 
 func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 	switch pod.Status.Phase {

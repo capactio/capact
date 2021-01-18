@@ -28,29 +28,29 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 		createAction(
 			in: $in
 		) {
-    	name
-    	createdAt
-    	input {
-    	  parameters
-    	  typeInstances {
-    	    id
-    	    name
-    	    typeRef {
-    	      path
-    	      revision
-    	    }
-    	  }
-    	}
-    	output {
-    	  typeInstances {
-    	    id
-    	    name
-    	    typeRef {
-    	      path
-    	      revision
-    	    }
-    	  }
-    	}
+			name
+			createdAt
+			input {
+				parameters
+				typeInstances {
+					id
+					name
+					typeRef {
+						path
+						revision
+					}
+				}
+			}
+			output {
+				typeInstances {
+					id
+					name
+					typeRef {
+						path
+						revision
+					}
+				}
+			}
 		}
 	}`)
 
@@ -68,36 +68,36 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Action, error) {
 	req := graphql.NewRequest(`query($name: String!) {
 		action(name: $name) {
-    	name
-    	createdAt
-    	input {
-    	  parameters
-    	  typeInstances {
-    	    id
-    	    name
-    	    typeRef {
-    	      path
-    	      revision
-    	    }
-    	  }
-    	}
-    	output {
-    	  typeInstances {
-    	    id
-    	    name
-    	    typeRef {
-    	      path
-    	      revision
-    	    }
-    	  }
-    	}
-    	actionRef {
-    	  path
-    	  revision
-    	}
-    	run
-    	cancel
-    	dryRun
+			name
+			createdAt
+			input {
+				parameters
+				typeInstances {
+					id
+					name
+					typeRef {
+						path
+						revision
+					}
+				}
+			}
+			output {
+				typeInstances {
+					id
+					name
+					typeRef {
+						path
+						revision
+					}
+				}
+			}
+			actionRef {
+				path
+				revision
+			}
+			run
+			cancel
+			dryRun
 			renderedAction
 			status {
 				condition
@@ -121,7 +121,7 @@ func (c *Client) RunAction(ctx context.Context, name string) error {
 		runAction(
 			name: $name
 		) {
-    	name
+			name
 		}
 	}`)
 
@@ -141,7 +141,7 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 		deleteAction(
 			name: $name
 		) {
-    	name
+			name
 		}
 	}`)
 

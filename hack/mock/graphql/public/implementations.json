@@ -29,6 +29,14 @@
             "runnerInterface": "cap.interface.runner.argo",
             "args": {
               "workflow": {
+                "volumes": [
+                  {
+                    "name": "gcp-credentials",
+                    "secret": {
+                      "secretName": "gcp-credentials"
+                    }
+                  }
+                ],
                 "entrypoint": "jira",
                 "templates": [
                   {
