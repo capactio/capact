@@ -12,8 +12,8 @@ type MetadataBaseFields interface {
 	IsMetadataBaseFields()
 }
 
-type TypeInstanceFields interface {
-	IsTypeInstanceFields()
+type TypeInstance interface {
+	IsTypeInstance()
 }
 
 type Attribute struct {
@@ -163,7 +163,7 @@ type InputTypeInstance struct {
 	Verbs   []TypeInstanceOperationVerb `json:"verbs"`
 }
 
-func (InputTypeInstance) IsTypeInstanceFields() {}
+func (InputTypeInstance) IsTypeInstance() {}
 
 type Interface struct {
 	Name           string               `json:"name"`
@@ -231,7 +231,7 @@ type OutputTypeInstance struct {
 	TypeRef *TypeReference `json:"typeRef"`
 }
 
-func (OutputTypeInstance) IsTypeInstanceFields() {}
+func (OutputTypeInstance) IsTypeInstance() {}
 
 type RepoImplementationAppVersionConfig struct {
 	SemVerTaggingStrategy *SemVerTaggingStrategy `json:"semVerTaggingStrategy"`

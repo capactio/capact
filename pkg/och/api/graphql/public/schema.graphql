@@ -188,12 +188,12 @@ type InterfaceOutput {
     typeInstances: [OutputTypeInstance]!
 }
 
-interface TypeInstanceFields {
+interface TypeInstance {
     name: String!
     typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstanceFields {
+type InputTypeInstance implements TypeInstance {
     name: String!
     typeRef: TypeReference!
     verbs: [TypeInstanceOperationVerb!]!
@@ -203,7 +203,7 @@ enum TypeInstanceOperationVerb {
     CREATE, GET, LIST, UPDATE, DELETE
 }
 
-type OutputTypeInstance implements TypeInstanceFields {
+type OutputTypeInstance implements TypeInstance {
     name: String!
     typeRef: TypeReference!
 }

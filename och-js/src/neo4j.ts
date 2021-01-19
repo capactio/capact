@@ -1,12 +1,12 @@
-const getSession = (context) => context.driver.session();
+const getSession = (context: any) => context.driver.session();
 
-export async function runSingleQuery(context, query: string, cypherParams) {
+export async function runSingleQuery(context: any, query: string, cypherParams: any) {
   const session = getSession(context);
 
   let result: any;
 
   try {
-    result = await session.readTransaction(async (tx) => {
+    result = await session.readTransaction(async (tx: any) => {
       const res = await tx.run(query, cypherParams);
       return res.records;
     });
@@ -16,13 +16,13 @@ export async function runSingleQuery(context, query: string, cypherParams) {
   return result;
 }
 
-export async function runSingleMutation(context, query: string, cypherParams) {
+export async function runSingleMutation(context: any, query: string, cypherParams: any) {
   const session = getSession(context);
 
   let result: any;
 
   try {
-    result = await session.writeTransaction(async (tx) => {
+    result = await session.writeTransaction(async (tx: any) => {
       const res = await tx.run(query, cypherParams);
       return res.records;
     });

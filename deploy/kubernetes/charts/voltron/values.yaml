@@ -8,22 +8,10 @@ global:
   mockOCHGraphQL: "false"
   mockEngineGraphQL: "false"
 
-och-local:
   database:
     endpoint: bolt://neo4j-neo4j.neo4j:7687
     username: neo4j
     password: okon
-
-och-public:
-  database:
-    endpoint: bolt://neo4j-neo4j.neo4j:7687
-    username: neo4j
-    password: okon
-
-gateway:
-  auth:
-    username: graphql
-    password: t0p_s3cr3t
 
 integrationTest:
   image:

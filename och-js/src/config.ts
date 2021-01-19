@@ -1,23 +1,19 @@
-declare let process: {
-  env: {
-    APP_NEO4J_ENDPOINT: string
-    APP_NEO4J_USERNAME: string | undefined
-    APP_NEO4J_PASSWORD: string
+if (process.env.APP_NEO4J_PASSWORD === undefined) {
+  throw new Error('APP_NEO4J_PASSWORD not defined');
+}
 
-    APP_GRAPHQL_BIND_PORT: number | undefined
-
-    APP_OCH_MODE: string | undefined
-  }
-};
+const graphqlBindAddress = process.env.APP_GRAPH_QL_ADDR || ':8080';
+const [graphQLAddr, graphQLPort] = graphqlBindAddress.split(':', 2);
 
 export default {
   neo4j: {
-    endpoint: process.env.APP_NEO4J_ENDPOINT,
+    endpoint: process.env.APP_NEO4J_ENDPOINT || 'bolt://localhost:7687',
     username: process.env.APP_NEO4J_USERNAME || 'neo4j',
     password: process.env.APP_NEO4J_PASSWORD,
   },
   graphql: {
-    bindPort: process.env.APP_GRAPHQL_BIND_PORT || 8080,
+    bindAddress: graphQLAddr,
+    bindPort: Number(graphQLPort),
   },
-  ochMode: process.env.APP_OCH_MODE,
+  ochMode: process.env.APP_OCH_MODE || 'public',
 };

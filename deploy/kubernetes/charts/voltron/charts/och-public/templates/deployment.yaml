@@ -36,12 +36,16 @@ spec:
           env:
             - name: APP_OCH_MODE
               value: "public"
+            - name: APP_LOGGER_DEV_MODE
+              value: "true"
+            - name: APP_GRAPH_QL_ADDR
+              value: ":8080"
             - name: APP_NEO4J_ENDPOINT
-              value: "{{ .Values.database.endpoint }}"
+              value: "{{ .Values.global.database.endpoint }}"
             - name: APP_NEO4J_USERNAME
-              value: "{{ .Values.database.username }}"
+              value: "{{ .Values.global.database.username }}"
             - name: APP_NEO4J_PASSWORD
-              value: "{{ .Values.database.password }}"
+              value: "{{ .Values.global.database.password }}"
             - name: APP_MOCKGRAPHQL
               value: "{{ .Values.global.mockOCHGraphQL }}"
           ports:

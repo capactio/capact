@@ -3,7 +3,7 @@
 # https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
 directive @relation(name: String, direction: String, from: String, to: String) on FIELD_DEFINITION | OBJECT
 directive @id on FIELD_DEFINITION
-directive @cypher(statement: String) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION
+directive @cypher(statement: String) on FIELD_DEFINITION
 directive @neo4j_ignore on FIELD_DEFINITION
 
 """

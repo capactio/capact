@@ -3,11 +3,6 @@ image:
   name: och
   pullPolicy: IfNotPresent
 
-database:
-  endpoint: ""
-  username: ""
-  password: ""
-
 replicaCount: 1
 
 imagePullSecrets: []

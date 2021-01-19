@@ -1,8 +1,8 @@
 import { ApolloServer } from 'apollo-server-express';
-import express from 'express';
+import * as express from 'express';
 import neo4j, { Driver } from 'neo4j-driver';
 import { createTerminus } from '@godaddy/terminus';
-import http from 'http';
+import * as http from 'http';
 import { GraphQLSchema } from 'graphql';
 
 import { getSchemaForMode, assertSchemaOnDatabase } from './schema';
@@ -38,10 +38,10 @@ const schema = getSchemaForMode(config.ochMode);
 assertSchemaOnDatabase(schema, driver);
 
 const server = setupHttpServer(schema, driver);
-const port = config.graphql.bindPort;
+const { bindPort, bindAddress } = config.graphql;
 
 logger.info(`Starting OCH in ${config.ochMode} mode`);
 
-server.listen(port, () => {
-  logger.info(`GraphQL API listening on http://0.0.0.0:${port}...`);
+server.listen(bindPort, bindAddress, () => {
+  logger.info(`GraphQL API listening on http://${bindAddress}:${bindPort}...`);
 });

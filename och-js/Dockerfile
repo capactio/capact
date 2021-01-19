@@ -1,12 +1,12 @@
-FROM node:15 as builder
+FROM node:14 as builder
 
 WORKDIR /app/
 
 COPY . /app/
-RUN yarn && \
-    yarn build
+RUN npm install && \
+    npm run build
 
-FROM node:15
+FROM node:14
 
 COPY --from=builder /app/dist /app/dist
 COPY --from=builder /app/node_modules /app/node_modules

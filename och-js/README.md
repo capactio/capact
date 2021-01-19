@@ -20,13 +20,7 @@ The OCHs are accessed via a GraphQL API.
 ## Prerequisites
 
 - [Node v15](https://nodejs.org/)
-- [yarn](https://yarnpkg.com/)
 - A running Neo4j database with APOC plugin
-
-You can install `yarn` with NPM using:
-```
-npm install -g yarn
-```
 
 For the Neo4j database, you can run it locally using Docker:
 ```
@@ -46,7 +40,7 @@ To run OCH in local mode, use the following command:
 APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
   APP_NEO4J_PASSWORD=okon \
   APP_OCH_MODE=local \
-  yarn dev
+  npm run dev
 ```
 
 ### Public OCH
@@ -56,7 +50,7 @@ To run OCH in local mode, use the following command:
 APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
   APP_NEO4J_PASSWORD=okon \
   APP_OCH_MODE=public \
-  yarn dev
+  npm run dev
 ```
 
 ### GraphQL Playground
@@ -75,13 +69,13 @@ query {
 
 The following environment variables can be set to configure OCH:
 
-| Name                  | Required | Default | Description                                            |
-| --------------------- | -------- | ------- | ------------------------------------------------------ |
-| APP_OCH_MODE          | yes      |         | Mode, in which OCH is run. Must be "public" or "local" |
-| APP_GRAPHQL_BIND_PORT | no       | `3000`  | TCP port the GraphQL endpoint binds to                 |
-| APP_NEO4J_ENDPOINT    | yes      |         | The Neo4j database Bolt protocol endpoint              |
-| APP_NEO4J_USERNAME    | no       | `neo4j` | Neo4j database username                                |
-| APP_NEO4J_PASSWORD    | yes      |         | Neo4j database password                                |
+| Name               | Required | Default                 | Description                                            |
+| ------------------ | -------- | ----------------------- | ------------------------------------------------------ |
+| APP_OCH_MODE       | no       | `public`                | Mode, in which OCH is run. Must be "public" or "local" |
+| APP_GRAPH_QL_ADDR  | no       | `:8080`                 | The address, where GraphQL endpoins binds to           |
+| APP_NEO4J_ENDPOINT | no       | `bolt://localhost:7687` | The Neo4j database Bolt protocol endpoint              |
+| APP_NEO4J_USERNAME | no       | `neo4j`                 | Neo4j database username                                |
+| APP_NEO4J_PASSWORD | yes      |                         | Neo4j database password                                |
 
 ## Development
 

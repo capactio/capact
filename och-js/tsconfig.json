@@ -3,11 +3,19 @@
     "lib": [
       "ES2020"
     ],
-    "module": "ES2020",
+    "module": "CommonJS",
     "target": "ES2020",
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "sourceMap": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "outDir": "dist",
     "typeRoots": [
       "src/types"
@@ -17,6 +25,7 @@
     "src/**/*",
   ],
   "exclude": [
+    "node_modules",
     "src/types/**/*"
   ]
 }
