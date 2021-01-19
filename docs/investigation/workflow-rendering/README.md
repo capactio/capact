@@ -18,7 +18,12 @@ This proof of concept shows a way to render an Argo workflow from a Voltron Acti
 - [Go](https://golang.org)
 - Kubernetes cluster with [Argo](https://argoproj.github.io/) installed
 
-Currently, there is a problem in Argo with referencing global artifacts created in nested workflows ([Github issue](https://github.com/argoproj/argo/issues/4772)).
+You have to add some RBAC permission on for the default service account on the namespace, where Argo runs the workflow pods. To do this, execute:
+```
+kubectl create rolebinding default-admin --clusterrole=admin --serviceaccount=default:default -n default
+```
+
+Currently, there is a problem in Argo with referencing global artifacts created in nested workflows ([GitHub issue](https://github.com/argoproj/argo/issues/4772)).
 
 To make this PoC work you need to apply the following diff to the Argo v2.11.7 repository:
 
@@ -97,7 +102,7 @@ You can generate the workflows in this proof of concept:
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/1-postgres.yml | kubectl apply -f -
+go run main.go inputs/1-postgres.yml | kubectl apply -n default -f -
 ```
 
 ### JIRA installation with a provided PostgreSQL TypeInstance
@@ -118,7 +123,7 @@ spec:
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/2-jira.yml | kubectl apply -f -
+go run main.go inputs/2-jira.yml | kubectl apply -n default -f -
 ```
 
 ### JIRA installation with embedded PostgreSQL
@@ -127,7 +132,7 @@ Remove the JIRA Helm release from [JIRA install with Helm and a provided Postgre
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/3-jira-with-postgres.yml | kubectl apply -f -
+go run main.go inputs/3-jira-with-postgres.yml | kubectl apply -n default -f -
 ```
 
 ## Rendering algorithm
