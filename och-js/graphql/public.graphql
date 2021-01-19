@@ -100,8 +100,8 @@ input TypeFilter {
 
 type RepoMetadata {
     path: NodePath! @id
-    name: NodeName!
-    prefix: NodePrefix!
+    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
 
     latestRevision: RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision) RETURN r ORDER BY r.revision DESC LIMIT 1")
     revision(revision: Version!): RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision {revision: $revision}) RETURN r")
@@ -156,8 +156,8 @@ type InterfaceGroup {
 
 type Interface {
     path: NodePath! @id
-    name: NodeName!
-    prefix: NodePrefix!
+    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
 
     latestRevision: InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
     revision(revision: Version!): InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir")
@@ -242,8 +242,8 @@ type OutputTypeInstance implements TypeInstanceFields {
 
 type Type {
     path: NodePath! @id
-    name: NodeName!
-    prefix: NodePrefix!
+    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
 
     latestRevision: TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
     revision(revision: Version!): TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
@@ -265,8 +265,8 @@ type TypeSpec {
 
 type Implementation {
     path: NodePath! @id
-    name: NodeName!
-    prefix: NodePrefix!
+    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
 
     latestRevision: Implementation @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
     revision(revision: Version!): ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir")
@@ -365,8 +365,8 @@ type ImplementationAction {
 
 type Attribute {
     path: NodePath! @id
-    name: NodeName!
-    prefix: NodePrefix!
+    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
 
     latestRevision: AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision) RETURN r ORDER BY r.revision DESC LIMIT 2")
     revision(revision: Version!): AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision {revision: $revision}) RETURN r")
@@ -385,7 +385,7 @@ type AttributeRevision {
 # Unfortunately all Types that implement an Interface have to repeat the same fields,
 # however it's the only way to do so.
 interface MetadataBaseFields {
-    name: NodeName!
+    name: NodeName
     prefix: NodePrefix
     path: NodePath
     displayName: String
@@ -397,9 +397,9 @@ interface MetadataBaseFields {
 }
 
 type GenericMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix
     path: NodePath
+    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
     displayName: String
     description: String!
     maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -409,9 +409,9 @@ type GenericMetadata implements MetadataBaseFields {
 }
 
 type ImplementationMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix
     path: NodePath
+    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
     displayName: String
     description: String!
     maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -422,9 +422,9 @@ type ImplementationMetadata implements MetadataBaseFields {
 }
 
 type TypeMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix
     path: NodePath
+    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
     displayName: String
     description: String!
     maintainers: [Maintainer!]!
