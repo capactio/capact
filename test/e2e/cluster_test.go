@@ -3,16 +3,12 @@
 package e2e
 
 import (
-	"context"
 	"errors"
 	"fmt"
-	"testing"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/stretchr/testify/require"
-	"github.com/vrischmann/envconfig"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -23,41 +19,12 @@ import (
 
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
-	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client"
 )
 
-type GatewayConfig struct {
-	Endpoint string
-	Username string
-	Password string
-}
-
-type Config struct {
-	StatusEndpoints []string
-	// total number of pods that should be scheduled
-	ExpectedNumberOfRunningPods int
-	IgnoredPodsNames            []string
-	PollingInterval             time.Duration `envconfig:"default=2s"`
-	PollingTimeout              time.Duration `envconfig:"default=1m"`
-	Gateway                     GatewayConfig
-}
-
-func requireConfig(t *testing.T) Config {
-	var cfg Config
-	err := envconfig.Init(&cfg)
-	require.NoError(t, err)
-	return cfg
-}
-
-var _ = Describe("E2E", func() {
-	cfg := Config{}
+var _ = Describe("Cluster check", func() {
 	ignoredPodsNames := map[string]struct{}{}
 
-	BeforeSuite(func() {
-		err := envconfig.Init(&cfg)
-		Expect(err).ToNot(HaveOccurred())
-
+	BeforeEach(func() {
 		for _, n := range cfg.IgnoredPodsNames {
 			ignoredPodsNames[n] = struct{}{}
 		}
@@ -118,64 +85,6 @@ var _ = Describe("E2E", func() {
 			})
 		})
 	})
-
-	Describe("GraphQL API", func() {
-		Context("Get Interfaces", func() {
-			It("should not error", func() {
-				httpClient := httputil.NewClient(
-					20*time.Second,
-					true,
-					httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-				)
-				cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
-
-				_, err := cli.GetInterfaces(context.Background())
-				Expect(err).ToNot(HaveOccurred())
-			})
-		})
-
-		Context("TypeInstance operations", func() {
-			It("should be to create and delete", func() {
-				httpClient := httputil.NewClient(
-					20*time.Second,
-					true,
-					httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-				)
-				cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
-				ctx := context.Background()
-
-				createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
-					TypeRef: &graphql.TypeReferenceInput{
-						Path:     "com.voltron.ti",
-						Revision: strPtr("0.1.0"),
-					},
-					Attributes: []*graphql.AttributeReferenceInput{
-						{
-							Path:     "com.voltron.attribute1",
-							Revision: strPtr("0.1.0"),
-						},
-					},
-					Value: map[string]interface{}{
-						"foo": "bar",
-					},
-				})
-
-				Expect(err).ToNot(HaveOccurred())
-				Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
-					"foo": "bar",
-				}))
-
-				typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
-				Expect(err).ToNot(HaveOccurred())
-				Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
-					"foo": "bar",
-				}))
-
-				err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)
-				Expect(err).ToNot(HaveOccurred())
-			})
-		})
-	})
 })
 
 func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
@@ -200,8 +109,4 @@ func nowStamp() string {
 
 func log(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+format+"\n", args...)
-}
-
-func strPtr(s string) *string {
-	return &s
 }

@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/machinebox/graphql"
@@ -25,7 +26,7 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 	}
 }
 
-func (c *Client) GetInterfaces(ctx context.Context) ([]ochpublicgraphql.Interface, error) {
+func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql.Interface, error) {
 	req := graphql.NewRequest(`query {
 		interfaces {
 			name
@@ -82,27 +83,14 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {
-	req := graphql.NewRequest(`mutation($in: CreateTypeInstanceInput!) {
-	  createTypeInstance(
-	    in: $in
-	  ) {
-	    resourceVersion
-	    metadata {
-	      id
-	      attributes {
-	        path
-	        revision
-	      }
-	    }
-	    spec {
-	      typeRef {
-	        path
-	        revision
-	      }
-	      value
-	    }
-	  }
-	}`)
+	query := fmt.Sprintf(`mutation($in: CreateTypeInstanceInput!) {
+  createTypeInstance(
+    in: $in
+  ) {
+		%s			
+}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
 	req.Var("in", in)
 
 	var resp struct {
@@ -116,25 +104,12 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 }
 
 func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
-	req := graphql.NewRequest(`query($id: ID!) {
+	query := fmt.Sprintf(`query($id: ID!) {
 	  typeInstance(id: $id) {
-	    resourceVersion
-	    metadata {
-	      id
-	      attributes {
-	        path
-	        revision
-	      }
-	    }
-	    spec {
-	      typeRef {
-	        path
-	        revision
-	      }
-	      value
-	    }
-	  }
-	}`)
+			%s	
+	}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
 	req.Var("id", id)
 
 	var resp struct {
@@ -162,3 +137,21 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 
 	return nil
 }
+
+const typeInstanceFields = `
+	resourceVersion
+	metadata {
+	  id
+	  attributes {
+	    path
+	    revision
+	  }
+	}
+	spec {
+	  typeRef {
+	    path
+	    revision
+	  }
+	  value
+	}
+`
