@@ -1,0 +1,65 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.runner.helm # Computed during fetching the manifest
+  name: run
+  license:
+    name: "Apache 2.0"
+  displayName: Run Action for Helm Runner
+  description: Running Helm operations
+  documentationURL: https://helm.sh/
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "3.x.x"
+
+  implements:
+    - path: cap.core.interface.runner.generic.run
+      revision: 0.1.0
+    - path: cap.interface.runner.helm.run
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: helm
+        templates:
+          - name: helm
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: "/helm-args"
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/helm-release"
+                - name: additional
+                  globalName: additional
+                  path: "/additional"
+            container:
+              image: gcr.io/projectvoltron/helm-runner:de65286
+              env:
+                - name: RUNNER_INPUT_PATH
+                  value: "{{inputs.artifacts.input-parameters.path}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
