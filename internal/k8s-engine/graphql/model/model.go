@@ -10,3 +10,14 @@ type ActionToCreateOrUpdate struct {
 	Action            v1alpha1.Action
 	InputParamsSecret *v1.Secret
 }
+
+// ActionFilter defines filtering options for Actions
+type ActionFilter struct {
+	Phase *v1alpha1.ActionPhase
+}
+
+// Input used for continuing Action rendering in advanced mode
+type AdvancedModeContinueRenderingInput struct {
+	// TypeInstances that are optional for a given rendering iteration
+	TypeInstances *[]v1alpha1.InputTypeInstance
+}

@@ -153,10 +153,10 @@ type AdvancedRendering struct {
 // RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 type RenderingIteration struct {
 
-	// Continue specifies the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input.
+	// ApprovedIterationName specifies the name of rendering iteration, which has been approved by user.
+	// Iteration approval is the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input.
 	// User may or may not add additional optional TypeInstances to the list and continue Action rendering.
-	// +kubebuilder:default=false
-	Continue bool `json:"continue"`
+	ApprovedIterationName string `json:"approvedIterationName"`
 }
 
 // InputTypeInstance holds input TypeInstance reference.
@@ -288,6 +288,16 @@ type CommonTypeInstanceDetails struct {
 	TypeRef *ManifestReference `json:"typeReference"`
 }
 
+// InputTypeInstanceToProvide describes optional input TypeInstance for advanced rendering mode iteration.
+type InputTypeInstanceToProvide struct {
+
+	// Name refers to TypeInstance name.
+	Name string `json:"name"`
+
+	// TypeRef contains data needed to resolve Type manifest.
+	TypeRef *ManifestReference `json:"typeReference"`
+}
+
 // ManifestReference contains data needed to resolve a manifest.
 type ManifestReference struct {
 
@@ -310,9 +320,12 @@ type AdvancedRenderingStatus struct {
 // RenderingIterationStatus holds status for current rendering iteration in advanced rendering mode.
 type RenderingIterationStatus struct {
 
+	// CurrentIterationName contains name of current iteration in advanced rendering.
+	CurrentIterationName string `json:"currentIterationName"`
+
 	// InputTypeInstancesToProvide describes which input TypeInstances might be provided in a given rendering iteration.
 	// +optional
-	InputTypeInstancesToProvide *[]InputTypeInstanceDetails `json:"inputTypeInstancesToProvide,omitempty"`
+	InputTypeInstancesToProvide *[]InputTypeInstanceToProvide `json:"inputTypeInstancesToProvide,omitempty"`
 }
 
 // RunnerStatus holds data related to built-in Runner that runs the Action.

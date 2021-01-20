@@ -4,7 +4,8 @@ import (
 	"context"
 
 	"go.uber.org/zap"
-
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
@@ -29,6 +30,10 @@ func NewService(log *zap.Logger, actionCli client.Client) *Service {
 	}
 }
 
+// TODO: For Create and Update for Action CR:
+// Validate the list of input TypeInstances with validation webhook,
+// to make sure there are no TypeInstances with duplicated names and different IDs
+
 func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) error {
 	log := s.logWithNameAndNs(item.Action.Name, item.Action.Namespace)
 
@@ -40,39 +45,39 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 		return errors.Wrap(err, errContext)
 	}
 
-	if item.InputParamsSecret != nil {
-		owner := item.Action
-		secret := item.InputParamsSecret
-		secret.SetOwnerReferences([]v1.OwnerReference{
-			{
-				APIVersion: v1alpha1.GroupVersion.Identifier(),
-				Kind:       v1alpha1.ActionKind,
-				Name:       owner.Name,
-				UID:        owner.UID,
-			},
-		})
-
-		log.Info("Creating Secret with params")
-		err = s.k8sCli.Create(ctx, secret)
-		if err != nil {
-			errContext := "while creating Secret for input parameters"
-			log.Error(errContext, zap.Error(err))
-			return errors.Wrap(err, errContext)
-		}
+	err = s.createInputParamsSecretIfShould(ctx, item)
+	if err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (s *Service) updateAction(ctx context.Context, item v1alpha1.Action) error {
-	log := s.logWithNameAndNs(item.Name, item.Namespace)
-	log.Info("Updating Action")
-
-	err := s.k8sCli.Update(ctx, &item)
+func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) error {
+	oldAction, err := s.FindByName(ctx, item.Action.Name)
 	if err != nil {
-		errContext := "while updating item"
-		log.Error(errContext, zap.Error(err))
-		return errors.Wrap(err, errContext)
+		return err
+	}
+
+	newAction := oldAction.DeepCopy()
+	newAction.Spec = item.Action.Spec
+
+	// update action with all fields filled from K8s API
+	item.Action = *newAction
+
+	err = s.updateAction(ctx, *newAction)
+	if err != nil {
+		return err
+	}
+
+	err = s.deleteInputParamsSecretIfShould(ctx, oldAction)
+	if err != nil {
+		return err
+	}
+
+	err = s.createInputParamsSecretIfShould(ctx, item)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -97,14 +102,14 @@ func (s *Service) FindByName(ctx context.Context, name string) (v1alpha1.Action,
 			return v1alpha1.Action{}, errors.Wrap(ErrActionNotFound, errContext)
 		default:
 			log.Error(errContext, zap.Error(err))
-			return v1alpha1.Action{}, errors.Wrap(ErrActionNotFound, errContext)
+			return v1alpha1.Action{}, errors.Wrap(err, errContext)
 		}
 	}
 
 	return item, nil
 }
 
-func (s *Service) List(ctx context.Context) ([]v1alpha1.Action, error) {
+func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while reading namespace from context")
@@ -114,16 +119,31 @@ func (s *Service) List(ctx context.Context) ([]v1alpha1.Action, error) {
 	log.Info("Listing Actions")
 
 	var itemList v1alpha1.ActionList
-	err = s.k8sCli.List(ctx, &itemList, &client.ListOptions{
-		Namespace: ns,
-	})
+
+	err = s.k8sCli.List(ctx, &itemList, &client.ListOptions{Namespace: ns})
 	if err != nil {
 		errContext := "while listing Actions"
 		log.Error(errContext, zap.Error(err))
 		return nil, errors.Wrap(err, errContext)
 	}
 
-	return itemList.Items, nil
+	if filter.Phase == nil {
+		return itemList.Items, nil
+	}
+
+	// field selectors for CRDs are not supported (apart from name and namespace)
+	log.Info("Filtering Actions", zap.String("status.phase", string(*filter.Phase)))
+
+	var filteredItems []v1alpha1.Action
+	for _, item := range itemList.Items {
+		if item.Status.Phase != *filter.Phase {
+			continue
+		}
+
+		filteredItems = append(filteredItems, item)
+	}
+
+	return filteredItems, nil
 }
 
 func (s *Service) DeleteByName(ctx context.Context, name string) error {
@@ -177,15 +197,15 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 
 	log := s.logWithNameAndNs(item.Name, item.Namespace)
 
-	// TODO: Validate it using validation webhook
-	if item.Spec.IsRun() {
-		log.Info("Action not run, so it cannot be cancelled")
-		return ErrActionNotCancellable
-	}
-
 	if item.Spec.IsCancelled() {
 		log.Info("Action already cancelled")
 		return nil
+	}
+
+	// TODO: Validate it using validation webhook
+	if !item.Spec.IsRun() {
+		log.Info("Action not run, so it cannot be cancelled")
+		return ErrActionNotCancellable
 	}
 
 	item.Spec.Cancel = ptr.Bool(true)
@@ -193,6 +213,167 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 
 	err = s.updateAction(ctx, item)
 	return err
+}
+
+func (s *Service) ContinueAdvancedRendering(ctx context.Context, actionName string, in model.AdvancedModeContinueRenderingInput) error {
+	item, err := s.FindByName(ctx, actionName)
+	if err != nil {
+		return err
+	}
+
+	if item.Spec.AdvancedRendering == nil ||
+		!item.Spec.AdvancedRendering.Enabled {
+		return ErrActionAdvancedRenderingDisabled
+	}
+
+	if item.Status.Phase != v1alpha1.AdvancedModeRenderingIterationActionPhase ||
+		item.Status.Rendering == nil ||
+		item.Status.Rendering.AdvancedRendering == nil ||
+		item.Status.Rendering.AdvancedRendering.RenderingIteration == nil {
+		return ErrActionAdvancedRenderingIterationNotContinuable
+	}
+
+	err = s.validateInputTypeInstancesForRenderingIteration(
+		item.Status.Rendering.AdvancedRendering.RenderingIteration.InputTypeInstancesToProvide,
+		in.TypeInstances,
+	)
+	if err != nil {
+		return err
+	}
+
+	if in.TypeInstances != nil {
+		// merge input TypeInstances
+		if item.Spec.Input == nil {
+			item.Spec.Input = &v1alpha1.ActionInput{}
+		}
+		item.Spec.Input.TypeInstances = s.mergeTypeInstances(item.Spec.Input.TypeInstances, in.TypeInstances)
+	}
+
+	// continue rendering
+	item.Spec.AdvancedRendering.RenderingIteration = &v1alpha1.RenderingIteration{
+		ApprovedIterationName: item.Status.Rendering.AdvancedRendering.RenderingIteration.CurrentIterationName,
+	}
+
+	err = s.updateAction(ctx, item)
+	return err
+}
+
+func (s *Service) validateInputTypeInstancesForRenderingIteration(optionalTypeInstancesToProvide *[]v1alpha1.InputTypeInstanceToProvide, providedTypeInstances *[]v1alpha1.InputTypeInstance) error {
+	if providedTypeInstances == nil {
+		return nil
+	}
+
+	if optionalTypeInstancesToProvide == nil {
+		optionalTypeInstancesToProvide = &[]v1alpha1.InputTypeInstanceToProvide{}
+	}
+
+	// prepare a map for provided TypeInstances
+	providedTypeInstancesMap := make(map[string]struct{})
+	for _, providedTypeInstance := range *providedTypeInstances {
+		providedTypeInstancesMap[providedTypeInstance.Name] = struct{}{}
+	}
+
+	// prepare a map for optional TypeInstances
+	optionalTypeInstancesToProvideMap := make(map[string]struct{})
+	for _, optionalTypeInstance := range *optionalTypeInstancesToProvide {
+		optionalTypeInstancesToProvideMap[optionalTypeInstance.Name] = struct{}{}
+	}
+
+	// check if all provided TypeInstances are in the set of optional TypeInstances to provide
+	for key := range providedTypeInstancesMap {
+		if _, ok := optionalTypeInstancesToProvideMap[key]; !ok {
+			return ErrInvalidTypeInstanceSetProvidedForRenderingIteration
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) createInputParamsSecretIfShould(ctx context.Context, item model.ActionToCreateOrUpdate) error {
+	if item.InputParamsSecret == nil {
+		// no secret to create
+		return nil
+	}
+
+	log := s.logWithNameAndNs(item.Action.Name, item.Action.Namespace)
+
+	owner := item.Action
+	secret := item.InputParamsSecret
+	secret.SetOwnerReferences([]v1.OwnerReference{
+		{
+			APIVersion: v1alpha1.GroupVersion.Identifier(),
+			Kind:       v1alpha1.ActionKind,
+			Name:       owner.Name,
+			UID:        owner.UID,
+		},
+	})
+
+	log.Info("Creating Secret with input params")
+	err := s.k8sCli.Create(ctx, secret)
+	if err != nil {
+		errContext := "while creating Secret for input parameters"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
+	}
+
+	return nil
+}
+
+func (s *Service) deleteInputParamsSecretIfShould(ctx context.Context, item v1alpha1.Action) error {
+	if item.Spec.Input == nil ||
+		item.Spec.Input.Parameters == nil {
+		// no secret to delete
+		return nil
+	}
+
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
+
+	secretToDelete := corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      item.Spec.Input.Parameters.SecretRef.Name,
+			Namespace: item.Namespace,
+		},
+	}
+
+	log.Info("Deleting secret with input params")
+	err := s.k8sCli.Delete(ctx, &secretToDelete)
+	if err != nil {
+		errContext := "while deleting Secret for input parameters"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
+	}
+
+	return nil
+}
+
+func (s *Service) updateAction(ctx context.Context, item v1alpha1.Action) error {
+	log := s.logWithNameAndNs(item.Name, item.Namespace)
+	log.Info("Updating Action")
+
+	err := s.k8sCli.Update(ctx, &item)
+	if err != nil {
+		errContext := "while updating item"
+		log.Error(errContext, zap.Error(err))
+		return errors.Wrap(err, errContext)
+	}
+
+	return nil
+}
+
+func (s *Service) mergeTypeInstances(slice1, slice2 *[]v1alpha1.InputTypeInstance) *[]v1alpha1.InputTypeInstance {
+	if slice1 == nil && slice2 == nil {
+		return nil
+	}
+
+	var merged []v1alpha1.InputTypeInstance
+	if slice1 != nil {
+		merged = append(merged, *slice1...)
+	}
+	if slice2 != nil {
+		merged = append(merged, *slice2...)
+	}
+
+	return &merged
 }
 
 func (s *Service) objectKey(ctx context.Context, name string) (client.ObjectKey, error) {

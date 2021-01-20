@@ -68,22 +68,6 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace st
 	}
 }
 
-func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name, namespace string) *v1.Secret {
-	if in == nil || in.Parameters == nil {
-		return nil
-	}
-
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
-		},
-		StringData: map[string]string{
-			ParametersSecretDataKey: string(*in.Parameters),
-		},
-	}
-}
-
 func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 	var run bool
 	if in.Spec.Run != nil {
@@ -112,29 +96,54 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 
 	actionOutput := c.actionOutputToGraphQL(in.Status.Output)
 
-	var advancedRenderingEnabled bool
-	if in.Spec.AdvancedRendering != nil {
-		advancedRenderingEnabled = in.Spec.AdvancedRendering.Enabled
-	}
-
 	actionRef := c.manifestRefToGraphQL(&in.Spec.ActionRef)
 
 	return graphql.Action{
-		Name:           in.Name,
-		CreatedAt:      graphql.Timestamp(in.CreationTimestamp.Time),
-		Input:          actionInput,
-		Output:         actionOutput,
-		DryRun:         dryRun,
-		Run:            run,
-		ActionRef:      actionRef,
-		Cancel:         cancel,
-		RenderedAction: renderedAction,
-		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
-			Enabled:                            advancedRenderingEnabled,
-			TypeInstancesForRenderingIteration: nil, // TODO: Implement once advanced rendering is supported
-		},
+		Name:                   in.Name,
+		CreatedAt:              graphql.Timestamp(in.CreationTimestamp.Time),
+		Input:                  actionInput,
+		Output:                 actionOutput,
+		DryRun:                 dryRun,
+		Run:                    run,
+		ActionRef:              actionRef,
+		Cancel:                 cancel,
+		RenderedAction:         renderedAction,
+		RenderingAdvancedMode:  c.advancedRenderingToGraphQL(&in),
 		RenderedActionOverride: c.runtimeExtensionToJSONRawMessage(in.Spec.RenderedActionOverride),
 		Status:                 c.statusToGraphQL(&in.Status),
+	}
+}
+
+func (c *Converter) FilterFromGraphQL(in graphql.ActionFilter) model.ActionFilter {
+	var phase *v1alpha1.ActionPhase
+	if in.Phase != nil {
+		phaseValue := c.phaseFromGraphQL(*in.Phase)
+		phase = &phaseValue
+	}
+	return model.ActionFilter{
+		Phase: phase,
+	}
+}
+
+func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput {
+	return model.AdvancedModeContinueRenderingInput{
+		TypeInstances: c.inputTypeInstanceDataFromGraphQL(in.TypeInstances),
+	}
+}
+
+func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name, namespace string) *v1.Secret {
+	if in == nil || in.Parameters == nil {
+		return nil
+	}
+
+	return &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			ParametersSecretDataKey: string(*in.Parameters),
+		},
 	}
 }
 
@@ -190,6 +199,8 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 	}
 
 	actionInput := &v1alpha1.ActionInput{}
+	actionInput.TypeInstances = c.inputTypeInstanceDataFromGraphQL(in.TypeInstances)
+
 	if in.TypeInstances != nil && len(in.TypeInstances) > 0 {
 		var inputTypeInstances []v1alpha1.InputTypeInstance
 
@@ -212,6 +223,59 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 	return actionInput
 }
 
+func (c *Converter) inputTypeInstanceDataFromGraphQL(in []*graphql.InputTypeInstanceData) *[]v1alpha1.InputTypeInstance {
+	if len(in) == 0 {
+		return nil
+	}
+
+	var inputTypeInstances []v1alpha1.InputTypeInstance
+	for _, item := range in {
+		if item == nil {
+			continue
+		}
+
+		inputTypeInstances = append(inputTypeInstances, v1alpha1.InputTypeInstance{
+			Name: item.Name,
+			ID:   item.ID,
+		})
+	}
+
+	return &inputTypeInstances
+}
+
+func (c *Converter) advancedRenderingToGraphQL(in *v1alpha1.Action) *graphql.ActionRenderingAdvancedMode {
+	if in == nil || in.Spec.AdvancedRendering == nil {
+		return nil
+	}
+
+	return &graphql.ActionRenderingAdvancedMode{
+		Enabled:                            in.Spec.AdvancedRendering.Enabled,
+		TypeInstancesForRenderingIteration: c.typeInstancesForRenderingIterationToGraphQL(in),
+	}
+}
+
+func (c *Converter) typeInstancesForRenderingIterationToGraphQL(in *v1alpha1.Action) []*graphql.InputTypeInstanceToProvide {
+	if in == nil ||
+		in.Spec.AdvancedRendering == nil ||
+		in.Status.Rendering == nil ||
+		in.Status.Rendering.AdvancedRendering == nil ||
+		in.Status.Rendering.AdvancedRendering.RenderingIteration == nil ||
+		in.Status.Rendering.AdvancedRendering.RenderingIteration.InputTypeInstancesToProvide == nil {
+		return nil
+	}
+
+	var typeInstancesForRenderingIteration []*graphql.InputTypeInstanceToProvide
+
+	for _, typeInstance := range *in.Status.Rendering.AdvancedRendering.RenderingIteration.InputTypeInstancesToProvide {
+		typeInstancesForRenderingIteration = append(typeInstancesForRenderingIteration, &graphql.InputTypeInstanceToProvide{
+			Name:    typeInstance.Name,
+			TypeRef: c.manifestRefToGraphQL(typeInstance.TypeRef),
+		})
+	}
+
+	return typeInstancesForRenderingIteration
+}
+
 func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionStatus {
 	var runnerStatus *graphql.RunnerStatus
 	if in.Runner != nil {
@@ -221,7 +285,7 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 	}
 
 	return &graphql.ActionStatus{
-		Condition:   c.phaseToGraphQL(in.Phase),
+		Phase:       c.phaseToGraphQL(in.Phase),
 		Timestamp:   graphql.Timestamp(in.LastTransitionTime.Time),
 		Message:     in.Message,
 		Runner:      runnerStatus,
@@ -268,29 +332,54 @@ func (c *Converter) manifestRefToGraphQL(in *v1alpha1.ManifestReference) *graphq
 	}
 }
 
-func (c *Converter) phaseToGraphQL(in v1alpha1.ActionPhase) graphql.ActionStatusCondition {
+func (c *Converter) phaseToGraphQL(in v1alpha1.ActionPhase) graphql.ActionStatusPhase {
 	switch in {
 	case v1alpha1.InitialActionPhase:
-		return graphql.ActionStatusConditionInitial
+		return graphql.ActionStatusPhaseInitial
 	case v1alpha1.BeingRenderedActionPhase:
-		return graphql.ActionStatusConditionBeingRendered
+		return graphql.ActionStatusPhaseBeingRendered
 	case v1alpha1.AdvancedModeRenderingIterationActionPhase:
-		return graphql.ActionStatusConditionAdvancedModeRenderingIteration
+		return graphql.ActionStatusPhaseAdvancedModeRenderingIteration
 	case v1alpha1.ReadyToRunActionPhase:
-		return graphql.ActionStatusConditionReadyToRun
+		return graphql.ActionStatusPhaseReadyToRun
 	case v1alpha1.RunningActionPhase:
-		return graphql.ActionStatusConditionRunning
+		return graphql.ActionStatusPhaseRunning
 	case v1alpha1.BeingCancelledActionPhase:
-		return graphql.ActionStatusConditionBeingCancelled
+		return graphql.ActionStatusPhaseBeingCancelled
 	case v1alpha1.CancelledActionPhase:
-		return graphql.ActionStatusConditionCancelled
+		return graphql.ActionStatusPhaseCancelled
 	case v1alpha1.SucceededActionPhase:
-		return graphql.ActionStatusConditionSucceeded
+		return graphql.ActionStatusPhaseSucceeded
 	case v1alpha1.FailedActionPhase:
-		return graphql.ActionStatusConditionFailed
+		return graphql.ActionStatusPhaseFailed
 	}
 
-	return graphql.ActionStatusConditionInitial
+	return graphql.ActionStatusPhaseInitial
+}
+
+func (c *Converter) phaseFromGraphQL(in graphql.ActionStatusPhase) v1alpha1.ActionPhase {
+	switch in {
+	case graphql.ActionStatusPhaseInitial:
+		return v1alpha1.InitialActionPhase
+	case graphql.ActionStatusPhaseBeingRendered:
+		return v1alpha1.BeingRenderedActionPhase
+	case graphql.ActionStatusPhaseAdvancedModeRenderingIteration:
+		return v1alpha1.AdvancedModeRenderingIterationActionPhase
+	case graphql.ActionStatusPhaseReadyToRun:
+		return v1alpha1.ReadyToRunActionPhase
+	case graphql.ActionStatusPhaseRunning:
+		return v1alpha1.RunningActionPhase
+	case graphql.ActionStatusPhaseBeingCancelled:
+		return v1alpha1.BeingCancelledActionPhase
+	case graphql.ActionStatusPhaseCancelled:
+		return v1alpha1.CancelledActionPhase
+	case graphql.ActionStatusPhaseSucceeded:
+		return v1alpha1.SucceededActionPhase
+	case graphql.ActionStatusPhaseFailed:
+		return v1alpha1.FailedActionPhase
+	}
+
+	return v1alpha1.InitialActionPhase
 }
 
 func (c *Converter) runtimeExtensionToJSONRawMessage(extension *runtime.RawExtension) *json.RawMessage {

@@ -2,7 +2,6 @@ package action
 
 import (
 	"context"
-	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
@@ -15,15 +14,19 @@ import (
 type actionConverter interface {
 	FromGraphQLInput(in graphql.ActionDetailsInput, namespace string) model.ActionToCreateOrUpdate
 	ToGraphQL(in v1alpha1.Action) graphql.Action
+	FilterFromGraphQL(in graphql.ActionFilter) model.ActionFilter
+	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
 }
 
 type actionService interface {
 	Create(ctx context.Context, item model.ActionToCreateOrUpdate) error
+	Update(ctx context.Context, item model.ActionToCreateOrUpdate) error
 	FindByName(ctx context.Context, name string) (v1alpha1.Action, error)
-	List(ctx context.Context) ([]v1alpha1.Action, error)
+	List(ctx context.Context, filter model.ActionFilter) ([]v1alpha1.Action, error)
 	DeleteByName(ctx context.Context, name string) error
 	RunByName(ctx context.Context, name string) error
 	CancelByName(ctx context.Context, name string) error
+	ContinueAdvancedRendering(ctx context.Context, actionName string, in model.AdvancedModeContinueRenderingInput) error
 }
 
 type Resolver struct {
@@ -52,9 +55,13 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 	return &gqlItem, nil
 }
 
-// TODO: Implement filter as a part of SV-60
-func (r *Resolver) Actions(ctx context.Context, filter []*graphql.ActionFilter) ([]*graphql.Action, error) {
-	items, err := r.svc.List(ctx)
+func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
+	var svcFilter model.ActionFilter
+	if filter != nil {
+		svcFilter = r.conv.FilterFromGraphQL(*filter)
+	}
+
+	items, err := r.svc.List(ctx, svcFilter)
 	if err != nil {
 		return nil, errors.Wrap(err, "while listing Actions")
 	}
@@ -130,44 +137,29 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 	return &gqlItem, nil
 }
 
-// TODO: To implement as a part of SV-61
-
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
-	return dummyAction(in.Name), nil
+	ns, err := namespace.FromContext(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "while reading namespace from context")
+	}
+
+	actionToUpdate := r.conv.FromGraphQLInput(in, ns)
+
+	err = r.svc.Update(ctx, actionToUpdate)
+	if err != nil {
+		return nil, errors.Wrap(err, "while creating Action")
+	}
+
+	return r.findAndConvertToGQL(ctx, in.Name)
 }
 
 func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {
-	return dummyAction(actionName), nil
-}
+	continueRenderingInput := r.conv.AdvancedModeContinueRenderingInputFromGraphQL(in)
 
-func dummyAction(name string) *graphql.Action {
-	return &graphql.Action{
-		Name:      name,
-		CreatedAt: graphql.Timestamp(time.Now()),
-		ActionRef: &graphql.ManifestReference{
-			Path:     "deploy",
-			Revision: "0.1.0",
-		},
-		RenderedAction: nil,
-		RenderingAdvancedMode: &graphql.ActionRenderingAdvancedMode{
-			Enabled: false,
-		},
-		Status: &graphql.ActionStatus{
-			Condition: graphql.ActionStatusConditionRunning,
-			Timestamp: graphql.Timestamp(time.Now()),
-			CreatedBy: &graphql.UserInfo{
-				Username: "mszostok",
-			},
-			RunBy: &graphql.UserInfo{
-				Username: "mszostok",
-			},
-			Runner: &graphql.RunnerStatus{
-				Status: struct {
-					ArgoWorkflowRef string
-				}{
-					ArgoWorkflowRef: "default/WorkflowRun01",
-				},
-			},
-		},
+	err := r.svc.ContinueAdvancedRendering(ctx, actionName, continueRenderingInput)
+	if err != nil {
+		return nil, errors.Wrap(err, "while continuing advanced rendering for Action")
 	}
+
+	return r.findAndConvertToGQL(ctx, actionName)
 }
