@@ -177,6 +177,7 @@ The following section describes the DB Populator algorithm for populating the OC
 - It is not optimal solution regarding performance, as we need to update many nodes in one transaction (add and delete
   labels).
 - All `neo4j-graphql-js` features are still supported after these adjustments.
+- This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
 - In the future, we may expose `ContentMetadata` node details as a part of `repoMetadata` GraphQL query.
 
 ### Alternative: Entrypoint node
@@ -269,10 +270,11 @@ The following section describes the DB Populator algorithm for populating the OC
 
 #### Summary
 
-- Easy setup: Custom `@cypher` directives on all queries
+- Easy setup: Custom `@cypher` directives on all queries.
 - Limitation: Losing ability to use [built-in filtering capabilities](https://grandstack.io/docs/graphql-filtering) for
-  generated queries
-- Most performant solution: publishing content is a matter of unlabeling one node and labeling another
+  generated queries.
+- Most performant solution: publishing content is a matter of unlabeling one node and labeling another.
+- This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
 - In the future, we may expose `Pointer` node details as a part of `repoMetadata` GraphQL query.
 
 Because of serious limitation of this solution, it is not suggested.
@@ -285,7 +287,7 @@ Because of serious limitation of this solution, it is not suggested.
 
 - Swapping Neo4j deployment.
 
-  Two running Neo4j at the same time would consume too much resources.
+  Two running Neo4j at the same time would consume too much resources. Also, the solution would depend on Kubernetes, which would be an issue at some point, when we will go platform-agnostic.
 
 - Creating new database, populating it and then switching connection for OCH.
 
