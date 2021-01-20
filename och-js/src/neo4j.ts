@@ -1,6 +1,10 @@
 const getSession = (context: any) => context.driver.session();
 
-export async function runSingleQuery(context: any, query: string, cypherParams: any) {
+export async function runSingleQuery(
+  context: any,
+  query: string,
+  cypherParams: any
+) {
   const session = getSession(context);
 
   let result: any;
@@ -16,7 +20,11 @@ export async function runSingleQuery(context: any, query: string, cypherParams: 
   return result;
 }
 
-export async function runSingleMutation(context: any, query: string, cypherParams: any) {
+export async function runSingleMutation(
+  context: any,
+  query: string,
+  cypherParams: any
+) {
   const session = getSession(context);
 
   let result: any;
@@ -32,5 +40,4 @@ export async function runSingleMutation(context: any, query: string, cypherParam
   return result;
 }
 
-export default {
-};
+export default {};

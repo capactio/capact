@@ -1,7 +1,7 @@
 import { ApolloServer } from "apollo-server-express";
 import * as express from "express";
 import neo4j, { Driver } from "neo4j-driver";
-import { createTerminus } from "@godaddy/terminus"
+import { createTerminus } from "@godaddy/terminus";
 import * as http from "http";
 import { GraphQLSchema } from "graphql";
 
