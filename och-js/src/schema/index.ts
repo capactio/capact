@@ -1,11 +1,11 @@
-import { GraphQLSchema } from 'graphql';
-import { Driver } from 'neo4j-driver';
-import { assertSchema } from 'neo4j-graphql-js';
-import publicSchema from './public';
-import localSchema from './local';
+import { GraphQLSchema } from "graphql";
+import { Driver } from "neo4j-driver";
+import { assertSchema } from "neo4j-graphql-js";
+import { schema as publicSchema } from "./public";
+import { schema as localSchema } from "./local";
 
-const LocalMode = 'local';
-const PublicMode = 'public';
+const LocalMode = "local";
+const PublicMode = "public";
 
 export function getSchemaForMode(mode: string): GraphQLSchema {
   switch (mode) {
@@ -20,12 +20,8 @@ export function getSchemaForMode(mode: string): GraphQLSchema {
   }
 }
 
-export const assertSchemaOnDatabase = (schema: GraphQLSchema, driver: Driver) => assertSchema({
-  schema,
-  driver,
-});
-
-export default {
-  getSchemaForMode,
-  assertSchemaOnDatabase,
-};
+export const assertSchemaOnDatabase = (schema: GraphQLSchema, driver: Driver) =>
+  assertSchema({
+    schema,
+    driver,
+  });

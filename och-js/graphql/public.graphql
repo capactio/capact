@@ -1,7 +1,12 @@
 # neo4j-graphql-js adds some directives during parsing
 # To make it work for other GraphQL client we need to add them to the schema manually, based on:
 # https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
-directive @relation(name: String, direction: String, from: String, to: String) on FIELD_DEFINITION | OBJECT
+directive @relation(
+  name: String
+  direction: String
+  from: String
+  to: String
+) on FIELD_DEFINITION | OBJECT
 directive @id on FIELD_DEFINITION
 directive @cypher(statement: String) on FIELD_DEFINITION
 directive @neo4j_ignore on FIELD_DEFINITION
@@ -42,429 +47,517 @@ Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
 scalar VersionRange
 
 input InterfaceFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input ImplementationFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 
-    """
-    If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
-    For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-    """
-    requirementsSatisfiedBy: [TypeInstanceValue!]
-    attributes: [AttributeFilterInput!]
+  """
+  If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+  For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+  """
+  requirementsSatisfiedBy: [TypeInstanceValue!]
+  attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
-    typeRef: TypeReferenceInput
+  typeRef: TypeReferenceInput
 
-    """
-    Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
-    Currently not supported.
-    """
-    value: Any
+  """
+  Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
+  Currently not supported.
+  """
+  value: Any
 }
 
 input TypeReferenceInput {
-    path: NodePath!
-    revision: Version!
+  path: NodePath!
+  revision: Version!
 }
 
 input AttributeFilterInput {
-    path: NodePath!
-    rule: FilterRule = INCLUDE
+  path: NodePath!
+  rule: FilterRule = INCLUDE
 
-    """
-    If not provided, latest revision for a given Attribute is used
-    """
-    revision: Version
+  """
+  If not provided, latest revision for a given Attribute is used
+  """
+  revision: Version
 }
 
 enum FilterRule {
-    INCLUDE
-    EXCLUDE
+  INCLUDE
+  EXCLUDE
 }
 
 input InterfaceGroupFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input AttributeFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input TypeFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 type RepoMetadata {
-    path: NodePath! @id
-    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
+  path: NodePath! @id
+  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix!
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
 
-    latestRevision: RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision) RETURN r ORDER BY r.revision DESC LIMIT 1")
-    revision(revision: Version!): RepoMetadataRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision {revision: $revision}) RETURN r")
-    revisions: [RepoMetadataRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+  latestRevision: RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision {revision: $revision}) RETURN r"
+    )
+  revisions: [RepoMetadataRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type RepoMetadataRevision {
-    revision: Version!
+  revision: Version!
 
-    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 }
 
 type RepoMetadataSpec {
-    ochVersion: Version!
-    ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
-    implementation: RepoImplementationConfig! @relation(name: "CONFIGURED", direction: "OUT")
+  ochVersion: Version!
+  ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
+  implementation: RepoImplementationConfig!
+    @relation(name: "CONFIGURED", direction: "OUT")
 }
 
 type RepoImplementationConfig {
-    appVersion: RepoImplementationAppVersionConfig! @relation(name: "APP_VERSION", direction: "OUT")
+  appVersion: RepoImplementationAppVersionConfig!
+    @relation(name: "APP_VERSION", direction: "OUT")
 }
 
 type RepoImplementationAppVersionConfig {
-    semVerTaggingStrategy: SemVerTaggingStrategy! @relation(name: "TAGGING_STRATEGY", direction: "OUT")
+  semVerTaggingStrategy: SemVerTaggingStrategy!
+    @relation(name: "TAGGING_STRATEGY", direction: "OUT")
 }
 
 type SemVerTaggingStrategy {
-    latest: LatestSemVerTaggingStrategy! @relation(name: "LATEST", direction: "OUT")
+  latest: LatestSemVerTaggingStrategy!
+    @relation(name: "LATEST", direction: "OUT")
 }
 
 type LatestSemVerTaggingStrategy {
-    pointsTo: SemVerTaggingStrategyTags! @relation(name: "POINTS_TO", direction: "OUT")
+  pointsTo: SemVerTaggingStrategyTags!
+    @relation(name: "POINTS_TO", direction: "OUT")
 }
 
 enum SemVerTaggingStrategyTags {
-    STABLE, EDGE
+  STABLE
+  EDGE
 }
 
 type RepoOCFVersion {
-    supported: [Version!]!
-    default: Version!
+  supported: [Version!]!
+  default: Version!
 }
 
 type InterfaceGroup {
-    path: NodePath!
-    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
-    interfaces(filter: InterfaceFilter): [Interface!]! @relation(name: "CONTAINS", direction: "OUT")
+  path: NodePath!
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  interfaces(filter: InterfaceFilter): [Interface!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type Interface {
-    path: NodePath! @id
-    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
+  path: NodePath! @id
+  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix!
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
 
-    latestRevision: InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
-    revision(revision: Version!): InterfaceRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir")
-    revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+  latestRevision: InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir"
+    )
+  revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type InterfaceRevision {
-    revision: Version!
+  revision: Version!
 
-    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 
-    """
-    List Implementations for a given Interface
-    """
-    implementationRevisions(filter: ImplementationFilter): [ImplementationRevision!]! @cypher(statement: """
-        MATCH (this:InterfaceRevision)
+  """
+  List Implementations for a given Interface
+  """
+  implementationRevisions(
+    filter: ImplementationFilter
+  ): [ImplementationRevision!]!
+    @cypher(
+      statement: """
+      MATCH (this:InterfaceRevision)
 
-        // When Implementation doesn't require anything
-        CALL{
-        WITH this
-        MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
-        WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
-        RETURN implRev
+      // When Implementation doesn't require anything
+      CALL{
+      WITH this
+      MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
+      WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
+      RETURN implRev
 
-        UNION
+      UNION
 
-        // When Implementation has requirements using oneOf
-        WITH this
-        MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
+      // When Implementation has requirements using oneOf
+      WITH this
+      MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
 
-        // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
-        WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
-        RETURN implRev
-        }
+      // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
+      WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
+      RETURN implRev
+      }
 
-        // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
-        // because then a nested resolver for Implementation would return all revisions
+      // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
+      // because then a nested resolver for Implementation would return all revisions
 
-        RETURN implRev
-    """)
+      RETURN implRev
+      """
+    )
 }
 
 type InterfaceSpec {
-    input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
-    output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
+  input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
+  output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 type InterfaceInput {
-    parameters: InputParameters @relation(name: "HAS", direction: "OUT")
-    typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
+  parameters: InputParameters @relation(name: "HAS", direction: "OUT")
+  typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
 type InputParameters {
-    jsonSchema: Any
+  jsonSchema: Any
 }
 
 type InterfaceOutput {
-    typeInstances: [OutputTypeInstance]! @relation(name: "OUTPUTS", direction: "OUT")
+  typeInstances: [OutputTypeInstance]!
+    @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 interface TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference!
+  name: String!
+  typeRef: TypeReference!
 }
 
 type InputTypeInstance implements TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
-    verbs: [TypeInstanceOperationVerb!]!
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  verbs: [TypeInstanceOperationVerb!]!
 }
 
 enum TypeInstanceOperationVerb {
-    CREATE, GET, LIST, UPDATE, DELETE
+  CREATE
+  GET
+  LIST
+  UPDATE
+  DELETE
 }
 
 type OutputTypeInstance implements TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type Type {
-    path: NodePath! @id
-    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
+  path: NodePath! @id
+  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix!
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
 
-    latestRevision: TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
-    revision(revision: Version!): TypeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
-    revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+  latestRevision: TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r"
+    )
+  revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type TypeRevision {
-    revision: Version!
+  revision: Version!
 
-    metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
 }
 
 type TypeSpec {
-    additionalRefs: [NodePath!]
-    jsonSchema: Any
+  additionalRefs: [NodePath!]
+  jsonSchema: Any
 }
 
 type Implementation {
-    path: NodePath! @id
-    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
+  path: NodePath! @id
+  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix!
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
 
-    latestRevision: Implementation @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
-    revision(revision: Version!): ImplementationRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir")
-    revisions: [ImplementationRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+  latestRevision: Implementation
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): ImplementationRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir"
+    )
+  revisions: [ImplementationRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type ImplementationRevision {
-    revision: Version!
-    signature: Signature!
+  revision: Version!
+  signature: Signature!
 
-    metadata: ImplementationMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-    spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-    interfaces: [InterfaceRevision!]! @relation(name: "IMPLEMENTS", direction: "OUT")
+  metadata: ImplementationMetadata!
+    @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  interfaces: [InterfaceRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
 }
 
 type ImplementationSpec {
-    appVersion: VersionRange!
+  appVersion: VersionRange!
 
-    implements: [InterfaceReference!]! @relation(name: "IMPLEMENTS", direction: "OUT")
-    requires: [ImplementationRequirement!]! @relation(name: "REQUIRES", direction: "OUT")
-    imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
-    action: ImplementationAction! @relation(name: "DO", direction: "OUT")
-    additionalInput: ImplementationAdditionalInput @relation(name: "USES", direction: "OUT")
-    additionalOutput: ImplementationAdditionalOutput @relation(name: "OUTPUTS", direction: "OUT")
+  implements: [InterfaceReference!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
+  requires: [ImplementationRequirement!]!
+    @relation(name: "REQUIRES", direction: "OUT")
+  imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
+  action: ImplementationAction! @relation(name: "DO", direction: "OUT")
+  additionalInput: ImplementationAdditionalInput
+    @relation(name: "USES", direction: "OUT")
+  additionalOutput: ImplementationAdditionalOutput
+    @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 type ImplementationAdditionalInput {
-    typeInstances: [InputTypeInstance!]! @relation(name: "CONTAINS", direction: "OUT")
+  typeInstances: [InputTypeInstance!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type ImplementationAdditionalOutput {
-    typeInstances: [OutputTypeInstance!]! @relation(name: "CONTAINS", direction: "OUT")
-    typeInstanceRelations: [TypeInstanceRelationItem!]! @relation(name: "RELATIONS", direction: "OUT")
+  typeInstances: [OutputTypeInstance!]!
+    @relation(name: "CONTAINS", direction: "OUT")
+  typeInstanceRelations: [TypeInstanceRelationItem!]!
+    @relation(name: "RELATIONS", direction: "OUT")
 }
 
 type TypeInstanceRelationItem {
-    typeInstanceName: String!
+  typeInstanceName: String!
 
-    """
-    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
-    """
-    uses: [String!]!
+  """
+  Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+  """
+  uses: [String!]!
 }
 
 type InterfaceReference {
-    path: NodePath!
-    revision: Version!
+  path: NodePath!
+  revision: Version!
 }
 
 type ImplementationRequirement {
-    prefix: NodePrefix!
-    oneOf: [ImplementationRequirementItem!]! @relation(name: "ONE_OF", direction: "OUT")
-    anyOf: [ImplementationRequirementItem!]! @relation(name: "ANY_OF", direction: "OUT")
-    allOf: [ImplementationRequirementItem!]! @relation(name: "ALL_OF", direction: "OUT")
+  prefix: NodePrefix!
+  oneOf: [ImplementationRequirementItem!]!
+    @relation(name: "ONE_OF", direction: "OUT")
+  anyOf: [ImplementationRequirementItem!]!
+    @relation(name: "ANY_OF", direction: "OUT")
+  allOf: [ImplementationRequirementItem!]!
+    @relation(name: "ALL_OF", direction: "OUT")
 }
 
 type ImplementationRequirementItem {
-    typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
+  typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
 
-    """
-    Holds the configuration constraints for the given entry based on Type value.
-    Currently not supported.
-    """
-    valueConstraints: Any
+  """
+  Holds the configuration constraints for the given entry based on Type value.
+  Currently not supported.
+  """
+  valueConstraints: Any
 }
 
 type TypeReference {
-    path: NodePath!
-    revision: Version!
+  path: NodePath!
+  revision: Version!
 }
 
 type ImplementationImport {
-    interfaceGroupPath: NodePath!
-    alias: String
-    appVersion: VersionRange
+  interfaceGroupPath: NodePath!
+  alias: String
+  appVersion: VersionRange
 
-    methods: [ImplementationImportMethod!]! @relation(name: "HAS", direction: "OUT")
+  methods: [ImplementationImportMethod!]!
+    @relation(name: "HAS", direction: "OUT")
 }
 
 type ImplementationImportMethod {
-    name: NodeName!
+  name: NodeName!
 
-    """
-    If not provided, latest revision for a given Interface is used
-    """
-    revision: Version
+  """
+  If not provided, latest revision for a given Interface is used
+  """
+  revision: Version
 }
 
 type ImplementationAction {
-    """
-    The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
-    """
-    runnerInterface: String!
-    args: Any
+  """
+  The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
+  """
+  runnerInterface: String!
+  args: Any
 }
 
 type Attribute {
-    path: NodePath! @id
-    name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix! @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
+  path: NodePath! @id
+  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix!
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
 
-    latestRevision: AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision) RETURN r ORDER BY r.revision DESC LIMIT 2")
-    revision(revision: Version!): AttributeRevision @cypher(statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision {revision: $revision}) RETURN r")
-    revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+  latestRevision: AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision) RETURN r ORDER BY r.revision DESC LIMIT 2"
+    )
+  revision(revision: Version!): AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision {revision: $revision}) RETURN r"
+    )
+  revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type AttributeRevision {
-    revision: Version!
+  revision: Version!
 
-    spec: AttributeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-    signature: Signature! @relation(name: "SIGNED", direction: "OUT")
-    metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: AttributeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
 # It is defined to make sure that all metadata types have the same base fields.
 # Unfortunately all Types that implement an Interface have to repeat the same fields,
 # however it's the only way to do so.
 interface MetadataBaseFields {
-    name: NodeName
-    prefix: NodePrefix
-    path: NodePath
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
-    documentationURL: String
-    supportURL: String
-    iconURL: String
+  name: NodeName
+  prefix: NodePrefix
+  path: NodePath
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
 }
 
 type GenericMetadata implements MetadataBaseFields {
-    path: NodePath
-    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
-    documentationURL: String
-    supportURL: String
-    iconURL: String
+  path: NodePath
+  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
 }
 
 type ImplementationMetadata implements MetadataBaseFields {
-    path: NodePath
-    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
-    documentationURL: String
-    supportURL: String
-    iconURL: String
-    attributes: [AttributeRevision!]! @relation(name: "CHARACTERIZED_BY", direction: "OUT")
+  path: NodePath
+  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
 type TypeMetadata implements MetadataBaseFields {
-    path: NodePath
-    name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
-    prefix: NodePrefix @cypher(statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')")
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]!
-    documentationURL: String
-    supportURL: String
-    iconURL: String
-    attributes: [AttributeRevision!]! @relation(name: "CHARACTERIZED_BY", direction: "OUT")
+  path: NodePath
+  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  prefix: NodePrefix
+    @cypher(
+      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
+    )
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]!
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
 type Signature {
-    och: String!
+  och: String!
 }
 
 type Maintainer {
-    name: String
-    email: String!
-    url: String
+  name: String
+  email: String!
+  url: String
 }
 
 type AttributeSpec {
-    additionalRefs: [NodePath!]!
+  additionalRefs: [NodePath!]!
 }
 
 type Query {
-    repoMetadata: RepoMetadata
+  repoMetadata: RepoMetadata
 
-    interfaceGroups(filter: InterfaceGroupFilter): [InterfaceGroup!]!
-    interfaceGroup(path: NodePath!): InterfaceGroup
+  interfaceGroups(filter: InterfaceGroupFilter): [InterfaceGroup!]!
+  interfaceGroup(path: NodePath!): InterfaceGroup
 
-    interfaces(filter: InterfaceFilter): [Interface!]!
-    interface(path: NodePath!): Interface
+  interfaces(filter: InterfaceFilter): [Interface!]!
+  interface(path: NodePath!): Interface
 
-    types(filter: TypeFilter): [Type!]!
-    type(path: NodePath!): Type
+  types(filter: TypeFilter): [Type!]!
+  type(path: NodePath!): Type
 
-    implementations(filter: ImplementationFilter): [Implementation!]!
-    implementation(path: NodePath!): Implementation
+  implementations(filter: ImplementationFilter): [Implementation!]!
+  implementation(path: NodePath!): Implementation
 
-    attributes(filter: AttributeFilter): [Attribute!]!
-    attribute(path: NodePath!): Attribute 
+  attributes(filter: AttributeFilter): [Attribute!]!
+  attribute(path: NodePath!): Attribute
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

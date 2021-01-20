@@ -12,7 +12,8 @@
 ## Overview
 
 Open Capability Hub (OCH) is a component, which stores the OCF manifests and exposes API to access, and manage them. It can work in two modes:
-- Local OCH - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete  operations),
+
+- Local OCH - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete operations),
 - Public OCH - in this mode it exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
 
 The OCHs are accessed via a GraphQL API.
@@ -23,6 +24,7 @@ The OCHs are accessed via a GraphQL API.
 - A running Neo4j database with APOC plugin
 
 For the Neo4j database, you can run it locally using Docker:
+
 ```
 docker run -d \
   -p 7687:7687 -p 7474:7474 \
@@ -36,6 +38,7 @@ docker run -d \
 ### Local OCH
 
 To run OCH in local mode, use the following command:
+
 ```bash
 APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
   APP_NEO4J_PASSWORD=okon \
@@ -46,6 +49,7 @@ APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
 ### Public OCH
 
 To run OCH in local mode, use the following command:
+
 ```bash
 APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
   APP_NEO4J_PASSWORD=okon \
@@ -56,10 +60,11 @@ APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
 ### GraphQL Playground
 
 You can now access the OCH's GraphQL Playground via http://localhost:3000/graphql. For example, to list all Interfaces on the public OCH make the following GraphQL query:
+
 ```graphql
 query {
   Interface {
-    prefix,
+    prefix
     name
   }
 }

@@ -6,8 +6,8 @@ import * as http from "http";
 import { GraphQLSchema } from "graphql";
 
 import { getSchemaForMode, assertSchemaOnDatabase } from "./schema";
-import config from "./config";
-import logger from "./logger";
+import { config } from "./config";
+import { logger } from "./logger";
 
 function setupHttpServer(schema: GraphQLSchema, driver: Driver): http.Server {
   const app = express();

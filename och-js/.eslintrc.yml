@@ -3,18 +3,21 @@ env:
   es2020: true
 extends:
   - airbnb-base
+  - prettier
 
-parser: '@typescript-eslint/parser'
+parser: "@typescript-eslint/parser"
 parserOptions:
   project: ./tsconfig.json
 plugins:
-  - '@typescript-eslint'
+  - prettier
+  - "@typescript-eslint"
 
 settings:
   import/resolver:
     node:
-      extensions: ['.ts', '.js']
+      extensions: [".ts", ".js"]
 
 rules:
-  import/extensions: ['off']
-  max-len: [1, 120]
+  prettier/prettier: "error"
+  import/extensions: ["off"]
+  import/prefer-default-export: ["off"]

@@ -1,12 +1,17 @@
-import { createLogger, format, transports } from 'winston';
+import { createLogger, format, transports } from "winston";
 
-const logger = createLogger({
-  level: 'info',
+export const logger = createLogger({
+  level: "info",
   format: format.combine(
-    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    format.printf(({ timestamp, level, message }) => `${timestamp} ${level}: ${message}`),
+    format.timestamp(),
+    format.printf(({ timestamp, level, message, ...fields }) => {
+      let fmt = `${timestamp}\t${level.toUpperCase()}\t${message}`;
+      if (Object.keys(fields).length > 0) {
+        fmt += `\t${JSON.stringify(fields)}`;
+      }
+
+      return fmt;
+    })
   ),
   transports: [new transports.Console()],
 });
-
-export default logger;
