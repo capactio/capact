@@ -33,6 +33,7 @@ Created on 2020-12-09 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec/))
     + [Rollback of standalone dependency](#rollback-of-standalone-dependency)
     + [Rollback of shared dependency](#rollback-of-shared-dependency)
     + [Rollback to previous revision of updated TypeInstance](#rollback-to-previous-revision-of-updated-typeinstance)
+    + [Rollback of Action which creates and updates TypeInstances](#rollback-of-action-which-creates-and-updates-typeinstances)
     + [Deleting updated TypeInstance - Rollback with "delete" strategy](#deleting-updated-typeinstance---rollback-with-delete-strategy)
   * [Alternative: Rollback defined as a separate Implementation manifest](#alternative-rollback-defined-as-a-separate-implementation-manifest)
     + [Example 1: PostgreSQL uninstallation](#example-1-postgresql-uninstallation)
@@ -89,6 +90,9 @@ are:
 
 - TypeInstance `typeRef` cannot be updated preserving the same TypeInstance ID. In order to "upgrade" referenced Type
   for a given TypeInstance, Content Creator or User has to create new TypeInstance.
+
+- TypeInstance dependency tree is built based on the TypeInstance's `uses` relation. If TypeInstance A uses TypeInstance B, the
+  TypeInstance A is ancestor of TypeInstance B. TypeInstance B is a descendant of the TypeInstance A.
 
 ## Proposal
 
@@ -494,7 +498,8 @@ spec:
 The Rollback Custom Resource describes action rollback. Based on input TypeInstance, full rollback workflow is rendered.
 Once User approves it, the workflow is run.
 
-Only one input TypeInstance is supported. The behavior of Rollback Custom Resource is very similar to `Action` Custom Resource.
+Only one input TypeInstance is supported. The behavior of Rollback Custom Resource is very similar to `Action` Custom
+Resource.
 
 To read more about the Rollback controller behavior, read the [New Rollback Controller](#new-rollback-controller)
 section.
@@ -795,8 +800,8 @@ This section covers a few different example scenarios to present how the rollbac
        to `typeInstanceRelations` from the `cap.implementation.atlassian.k8s.jira.expose` Implementation. In this
        case, `ingress.config` uses `jira.config`, as it is an additional functionality built on top of Jira
        installation.
-       
-1. User rollbacks Ingress configuration. 
+
+1. User rollbacks Ingress configuration.
     - The `ingress.config` TypeInstance is removed, as there are no previous revisions of it.
     - The previous `jira.config` TypeInstance revision is restored.
 
