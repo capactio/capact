@@ -15,7 +15,7 @@ Open Capability Hub (OCH) is a component, which stores the OCF manifests and exp
 - Local OCH - in this mode it exposes GraphQL API for managing TypeInstances (create, read, delete  operations),
 - Public OCH - in this mode it exposes read-only GraphQL API for querying all OCF manifests except TypeInstances.
 
-The OCHs are accessed via a GraphQL API.
+The OCHs are accessed via a GraphQL API. OCH uses [Neo4j](https://neo4j.com) database.
 
 ## Prerequisites
 
@@ -63,5 +63,22 @@ The following environment variables can be set to configure OCH:
 | APP_MOCK_GRAPHQL    | no       | `false` | Use mocked data in GraphQL server                      |
 
 ## Development
+
+### Accessing Neo4j Browser
+
+To access Neo4j Browser, follow the steps:
+
+1. Run the following commands:
+  
+  ```bash
+  kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
+  kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687                                             
+  ```
+
+1. Navigate to [http://localhost:7474](http://localhost:7474).
+1. Change the connection URL to `neo4j://localhost:7687`.
+1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../../deploy/kubernetes/charts/neo4j/values.yaml) file.
+
+#### Common development guides
 
 To read more about development, see the [`development.md`](../../docs/development.md) document.

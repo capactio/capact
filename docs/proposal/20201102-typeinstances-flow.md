@@ -60,7 +60,7 @@ Currently, we are struggling with defining the flow for passing, creating, and d
 
 ##  Proposal
 
-Terminology
+### Terminology
 
 | Term             | Definition                                                                                                                        |
 |------------------|-----------------------------------------------------------------------------------------------------------------------------------|
@@ -68,20 +68,20 @@ Terminology
 | TypeInstance     | An instance of a given Type that is stored in the Local OCH. Artifacts uploaded from workflow to Local OCH becomes TypeInstances. |
 | Action developer | Person who defines the `action` property in Implementation manifest.                                                              |
 
-General notes
+### General notes
 
 1.	The required input TypeInstances are defined on Interfaces only.
 2.	The optional input TypeInstances are defined on Implementation only.
 3.	The input and output TypeInstances always have a name. This solves the problem when there are multiple input/output TypeInstances which refer to the same Type (e.g. backup and main database)  
 4.	Action can produce only TypeInstances. We don't support output parameters, outputted for user (e.g. similar to `NOTES.txt` from Helm). We can revisit it after GA as this won't be a breaking change.
 
-###  Required input and output TypeInstances
+### Required input and output TypeInstances
 
 Actors
 
 -	Action developer
 
-####  Suggested solution
+#### Suggested solution
 
 We have the Interface entity which defines the input and output parameters. To fulfill a given Interface, Implementation needs to accept the same input and returns the same output parameters.
 
@@ -547,7 +547,7 @@ Actors
 
 ####  Suggested solution
 
-If Action requires input TypeInstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{workflow.outputs.artifacts.<name>}}`.
+If Action requires input TypeInstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
 
 The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 

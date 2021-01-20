@@ -4,5 +4,7 @@ The directory contains proposals to enhance the Voltron project. Please use [YYY
 
 This directory contains the following documents:
 
-- [`20201102-typinstances-flow.md`](20201102-typinstances-flow.md) - Describes the approach for handling the TypeInstances (artifacts) between different Voltron components.
+- [`20201102-typeinstances-flow.md`](20201102-typeinstances-flow.md) - Describes the approach for handling the TypeInstances (artifacts) between different Voltron components.
+- [`20201209-action-rollback.md`](20201209-action-rollback.md) - Describes the approach of Action rollback.
+- [`20200114-och-content-lifecycle.md`](20200114-och-content-lifecycle.md) - Describes the approach for zero-downtime update of the OCH content.
 - [`20210112-db-populator.md`](20210112-db-populator.md) - Describes the approach for populating OCH manifests into Neo4j.
