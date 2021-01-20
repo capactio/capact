@@ -1,4 +1,4 @@
-# db-populator
+# Strategy to populate OCF manifest to OCH
 
 Created on 2021-01-12 by Łukasz Oleś (@lukaszo)
 
@@ -24,7 +24,7 @@ This document describes way, how to populate OCF manifests from Git repository i
 
 ## Motivation
 
-OCF manifests are stored in yaml format defined in OCF spec. We need a fast way to populate the manifests into the Neo4j db.
+OCF manifests are stored in YAML format defined in OCF spec. We need a fast way to populate the manifests into the Neo4j db.
 
 ### Goal
 
@@ -32,16 +32,16 @@ OCF manifests are stored in yaml format defined in OCF spec. We need a fast way 
 
 ### Non-goal
 
-- Preparing strategy for life-cycle-management
+- Preparing strategy for life-cycle-management.
 
 ## Proposal
 
 ### Load as JSON using Cypher and APOC
 
-1. Convert manifests to JSON
+1. Convert manifests to JSON.
    
-   yaml format:
-   ```
+   YAML format:
+   ```yaml
    ocfVersion: 0.0.1
    revision: 0.1.0
    kind: InterfaceGroup
@@ -62,7 +62,7 @@ OCF manifests are stored in yaml format defined in OCF spec. We need a fast way 
    ```
 
    JSON format:
-   ```
+   ```json
    {
      "ocfVersion": "0.0.1",
      "revision": "0.1.0",
@@ -90,36 +90,32 @@ OCF manifests are stored in yaml format defined in OCF spec. We need a fast way 
    }
    ```
 
-2. Upload JSON to minio object store
-3. Use APOC function and CYPHER to load data
-  ```
-  cypher
-  call apoc.load.json("http://minio.svc.argo.cluster.local:8000/interfaceGroups.json") yield value
-  merge (g:GroupInterface)
-  with value, g
-  unwind value.metadata as m
-  merge (gim:GroupInterfaceMetadata {name: m.name, prefix: m.prefix, path: m.path})
-  with value, g, gim
-  unwind value.signature as sig
-  merge (s:Signature{och: sig.och})
-  merge (g)-[:DESCRIBED_BY]->(gim)
-  merge (g)-[:SIGNED_WITH]->(s);
-
-  ```
+2. Serve JSON from populator.
+3. Use APOC function and CYPHER to load data.
+   ```
+   call apoc.load.json("http://populator.svc.och.cluster.local:8000/interfaceGroups.json") yield value
+   merge (g:GroupInterface)
+   with value, g
+   unwind value.metadata as m
+   merge (gim:GroupInterfaceMetadata {name: m.name, prefix: m.prefix, path: m.path})
+   with value, g, gim
+   unwind value.signature as sig
+   merge (s:Signature{och: sig.och})
+   merge (g)-[:DESCRIBED_BY]->(gim)
+   merge (g)-[:SIGNED_WITH]->(s);
+   ```
 
 #### Summary 
 
-1. Pros
-    - Fast approach, should be good for up to 10M nodes.
-    - JSON structure is similar to GraphQL output.
-2. Cons
-    - Additional storage is required to store JSON objects which are lated downloaded by Neo4j.
+Pros
+ - Fast approach, should be good for up to 10M nodes.
+ - JSON structure is similar to GraphQL output.
 
 ### Alternatives
 
 #### neo4j-admin import 
 Example:
-```
+```bash
   ../bin/neo4j-admin import --database public
        --nodes=GroupInterface=groupInterface.csv
        --nodes=groupInterfaceMetadata.csv
@@ -129,48 +125,52 @@ Example:
 ```
 
 *groupInterface.csv*
-```
+```csv
 groupInterfaceId:ID(GroupInterface)
 1
 ```
 
 *groupInterfaceMetadata.csv*
-```
+```csv
 groupInterfaceMetadataId:ID(GroupInterfaceMetadata), name, path, prefix
 1,jira,cap.interface.productivity.jira,cap.interface.productivity
 ```
 
 *metadataForGroupInterface.csv*
-```
+```csv
 :START_ID(GroupInterface),:END_ID(GroupInterfaceMetadata)
 1,1
 ```
 
-1. Pros
-    - The fastest approach
-2. Cons
-    - Requires using neo4j admin binary which I guess is written in java. There may be also some licensing issues.
-    - Requires converting yaml to CSV.
+##### Summary
 
+Pros
+  - The fastest approach.
 
-  
+Cons
+  - Requires using neo4j admin binary which I guess is written in java. There may be also some licensing issues.
+  - Requires converting YAML to CSV.
+
 #### Cypher - LOAD CSV
+
+It works in the same was as for JSON but requires CSV.
+
 https://neo4j.com/developer/guide-import-csv/#import-load-csv
 
 Groups.csv
-```
+```csv
 groupID,GroupMetadataID,SignatureID
 1,1,12
 ```
   
 *GroupMetadata.csv*
-```
+```csv
 id, name, path, prefix
 1,jira,cap.interface.productivity.jira,cap.interface.productivity
 ```
 
 *Signatures.csv*
-```
+```csv
 id, och
 12,eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
@@ -194,32 +194,41 @@ MERGE (g)-[:DESCRIBED_BY]->(m)
 RETURN *;
 ```
 
-1. Pros
-    - Should be good enough for 10M records.
-2. Cons
-    - Requires converting yaml to CSV.
+##### Summary
+
+Pros
+  - Should be good enough for 10M records.
+
+Cons
+  - Requires converting YAML to CSV.
   
 #### Cypher - CREATE/MERGE
-1. Create everything converting manifests to CYPHER queries
+Create everything converting manifests to CYPHER queries
     ```
     CREATE p = (GroupInterfaceMetadata {name: "jira", path: "cap.interface.productivity.jira", prefix: "cap.interface.productivity.jira"})-[:DESCRIBED_BY]->(:GroupInterface)<-[:SIGNED_WITH]-(:Signature {och: "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"}) Return p
     ```
-2. Pros
-    - We control every aspect of the process
-3. Cons
-    - Queries will be generated from Go code. It will be harder to debug and maintain.
+
+##### Summary
+Pros
+  - We control every aspect of the proces.
+
+Cons
+  - Queries will be generated from Go code. It will be harder to debug and maintain.
 
 
 #### GraphQL Mutations
 
-1. Pros
-    - One GrapQL API for everything
-    - One schema
+Instead of writing Cypher directly we could use generated mutation in Neo4j-graphql-js.
+Another option would be to create custom mutations and write Cypher queries there.
 
-2. Cons
-    - Slower than JSON/CSV approach.
-    - Requires restricting public OCH mutations.
+##### Summary
+Pros
+  - One GrapQL API for everything.
+  - One schema.
+
+Cons
+  - Slower than JSON/CSV approach.
+  - Requires restricting public OCH mutations.
 
 # Consequences
-
-- Additional integration with Object Store is required.
+None
