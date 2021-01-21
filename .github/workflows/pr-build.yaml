@@ -41,12 +41,12 @@ jobs:
           make test-generated
 
   documentation-sanity:
-    if: github.event_name == 'pull_request'
-    name: runner / languagetool (github-pr-check)
+    name: Check documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Run LanguageTool
+        # This image was build from this branch https://github.com/mszostok/action-languagetool/tree/update-lang-tool
         uses: docker://gcr.io/projectvoltron/infra/action-languagetool:1.5.0
         with:
           github_token: ${{ secrets.github_token }}
