@@ -40,6 +40,36 @@ jobs:
         run: |
           make test-generated
 
+  documentation-sanity:
+    name: Check documentation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run LanguageTool
+        # This image was build from this branch https://github.com/mszostok/action-languagetool/tree/update-lang-tool
+        uses: docker://gcr.io/projectvoltron/infra/action-languagetool:1.5.0
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          patterns: "**.md"
+          custom_api_endpoint: ''
+          ### Flags for LanguageTool ###
+          # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
+          language: 'en-US'
+          enabled_rules: ''
+          disabled_rules: 'WHITESPACE_RULE,EN_QUOTES,DASH_RULE,WORD_CONTAINS_UNDERSCORE,UPPERCASE_SENTENCE_START,ARROWS,COMMA_PARENTHESIS_WHITESPACE,UNLIKELY_OPENING_PUNCTUATION,SENTENCE_WHITESPACE,CURRENCY,EN_UNPAIRED_BRACKETS,PHRASE_REPETITION,PUNCTUATION_PARAGRAPH_END,METRIC_UNITS_EN_US,ENGLISH_WORD_REPEAT_BEGINNING_RULE'
+          enabled_categories: ''
+          disabled_categories: 'TYPOS,TYPOGRAPHY,CASING'
+          enabled_only: 'false'
+      - name: Run misspell check
+        uses: reviewdog/action-misspell@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          locale: "US"
+
   prepare-matrix:
     name: Prepare components build matrix
     runs-on: ubuntu-latest
