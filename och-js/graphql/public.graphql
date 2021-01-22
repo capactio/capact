@@ -1,3 +1,5 @@
+# TODO remove dynamic name and prefix calculation
+
 # neo4j-graphql-js adds some directives during parsing
 # To make it work for other GraphQL client we need to add them to the schema manually, based on:
 # https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
@@ -52,6 +54,10 @@ input InterfaceFilter {
 
 input ImplementationFilter {
   prefixPattern: NodePathPattern
+}
+
+input ImplementationRevisionFilter {
+  prefixPattern: NodePathPattern
 
   """
   If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
@@ -104,12 +110,9 @@ input TypeFilter {
 }
 
 type RepoMetadata {
-  path: NodePath! @id
-  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName!
   prefix: NodePrefix!
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
 
   latestRevision: RepoMetadataRevision
     @cypher(
@@ -128,7 +131,7 @@ type RepoMetadataRevision {
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type RepoMetadataSpec {
@@ -171,18 +174,15 @@ type RepoOCFVersion {
 type InterfaceGroup {
   path: NodePath!
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   interfaces(filter: InterfaceFilter): [Interface!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
 type Interface {
-  path: NodePath! @id
-  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName!
   prefix: NodePrefix!
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
 
   latestRevision: InterfaceRevision
     @cypher(
@@ -200,40 +200,92 @@ type InterfaceRevision {
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
-  """
-  List Implementations for a given Interface
-  """
-  implementationRevisions(
-    filter: ImplementationFilter
+  implementationRevisions: [ImplementationRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "IN")
+
+  implementationRevisionForRequirements(
+    filter: ImplementationRevisionFilter = {}
   ): [ImplementationRevision!]!
     @cypher(
       statement: """
-      MATCH (this:InterfaceRevision)
+      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
+        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
 
-      // When Implementation doesn't require anything
-      CALL{
-      WITH this
-      MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)
-      WHERE NOT (implRevSpec)-[:REQUIRES]->(:ImplementationRequirement)
-      RETURN implRev
-
-      UNION
-
-      // When Implementation has requirements using oneOf
-      WITH this
-      MATCH (implRev:ImplementationRevision)-[:IMPLEMENTS]->(this), (implRev)-[:SPECIFIED_BY]->(implRevSpec:ImplementationSpec)-[:REQUIRES]->(:ImplementationRequirement)-[:ONE_OF]->(reqItem:ImplementationRequirementItem)
-
-      // TODO: hardcoded typeRefPath - we could use https://stackoverflow.com/questions/51208263/pass-set-of-parameters-to-neo4j-query
-      WHERE reqItem.typeRefPath IN $filter.requirementsSatisfiedBy
-      RETURN implRev
+      // Get all Attribute nodes, which cannot be in the Implementation graph.
+      CALL {
+        WITH excluded
+        UNWIND excluded AS f
+        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        RETURN collect(ex) as excludedAttributes
       }
 
-      // Unfortunately we cannot do `MATCH (implRev)<-[:CONTAINS]-(impl:Implementation)` and return `impl`,
-      // because then a nested resolver for Implementation would return all revisions
+      // Get all Attribute nodes, which must be in the Implementation graph.
+      CALL {
+        WITH included
+        UNWIND included AS f
+        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        RETURN collect(ex) as includedAttributes
+      }
 
-      RETURN implRev
+      // Get all ImplementationRequirementItem nodes, which are considered by the filter.
+      CALL {
+        UNWIND $filter.requirementsSatisfiedBy AS instance
+        MATCH (items:ImplementationRequirementItem)-[:REFERENCES_TYPE]->(:TypeReference {path: instance.typeRef.path, revision: instance.typeRef.revision})
+        RETURN collect(items) as matchedItems
+      }
+
+      // Flatten and group requirements for ImplementationRevision.
+      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision)-[:SPECIFIED_BY]->(spec:ImplementationSpec)
+      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement)
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem)
+        WITH collect(oneOfItem) as oneOfReq
+        RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs
+      }
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem)
+        WITH collect(anyOfItem) as anyOfReq
+        RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs
+      }
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem)
+        WITH collect(allOfItem) as allOfReq
+        RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs
+      }
+
+      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata)
+      MATCH (rev)
+      WHERE
+        ($filter.prefixPattern IS null OR meta.prefix =~ $filter.prefixPattern)
+        AND
+        (
+          all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))
+          AND
+          all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))
+          AND
+          all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))
+        )
+        AND
+        (
+          $filter.attributes IS NULL
+          OR
+          (
+            all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))
+            AND
+            none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))
+          )
+        )
+
+      RETURN rev
       """
     )
 }
@@ -282,12 +334,9 @@ type OutputTypeInstance implements TypeInstanceFields {
 }
 
 type Type {
-  path: NodePath! @id
-  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName!
   prefix: NodePrefix!
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
 
   latestRevision: TypeRevision
     @cypher(
@@ -305,7 +354,7 @@ type TypeRevision {
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type TypeSpec {
@@ -314,12 +363,9 @@ type TypeSpec {
 }
 
 type Implementation {
-  path: NodePath! @id
-  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName!
   prefix: NodePrefix!
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
 
   latestRevision: Implementation
     @cypher(
@@ -352,7 +398,7 @@ type ImplementationSpec {
   requires: [ImplementationRequirement!]!
     @relation(name: "REQUIRES", direction: "OUT")
   imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
-  action: ImplementationAction! @relation(name: "DO", direction: "OUT")
+  action: ImplementationAction! @relation(name: "DOES", direction: "OUT")
   additionalInput: ImplementationAdditionalInput
     @relation(name: "USES", direction: "OUT")
   additionalOutput: ImplementationAdditionalOutput
@@ -437,12 +483,9 @@ type ImplementationAction {
 }
 
 type Attribute {
-  path: NodePath! @id
-  name: NodeName! @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName!
   prefix: NodePrefix!
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
 
   latestRevision: AttributeRevision
     @cypher(
@@ -459,7 +502,7 @@ type AttributeRevision {
   revision: Version!
 
   spec: AttributeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
@@ -480,11 +523,9 @@ interface MetadataBaseFields {
 
 type GenericMetadata implements MetadataBaseFields {
   path: NodePath
-  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  name: NodeName
   prefix: NodePrefix
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
+
   displayName: String
   description: String!
   maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -494,12 +535,10 @@ type GenericMetadata implements MetadataBaseFields {
 }
 
 type ImplementationMetadata implements MetadataBaseFields {
-  path: NodePath
-  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName
   prefix: NodePrefix
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
+
   displayName: String
   description: String!
   maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -511,12 +550,9 @@ type ImplementationMetadata implements MetadataBaseFields {
 }
 
 type TypeMetadata implements MetadataBaseFields {
-  path: NodePath
-  name: NodeName @cypher(statement: "RETURN last(split(this.path, '.'))")
+  path: NodePath!
+  name: NodeName
   prefix: NodePrefix
-    @cypher(
-      statement: "RETURN apoc.text.join(reverse(tail(reverse(split(this.path, '.')))), '.')"
-    )
   displayName: String
   description: String!
   maintainers: [Maintainer!]!
@@ -544,19 +580,50 @@ type AttributeSpec {
 type Query {
   repoMetadata: RepoMetadata
 
-  interfaceGroups(filter: InterfaceGroupFilter): [InterfaceGroup!]!
+  interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
+    @cypher(
+      statement: """
+      MATCH (this:InterfaceGroup)
+      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      """
+    )
   interfaceGroup(path: NodePath!): InterfaceGroup
 
-  interfaces(filter: InterfaceFilter): [Interface!]!
+  interfaces(filter: InterfaceFilter = {}): [Interface!]!
+    @cypher(
+      statement: """
+      MATCH (this:Interface)
+      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      """
+    )
   interface(path: NodePath!): Interface
 
-  types(filter: TypeFilter): [Type!]!
+  types(filter: TypeFilter = {}): [Type!]!
+    @cypher(
+      statement: """
+      MATCH (this:Type)
+      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      """
+    )
   type(path: NodePath!): Type
 
-  implementations(filter: ImplementationFilter): [Implementation!]!
+  implementations(filter: ImplementationFilter = {}): [Implementation!]!
+    @cypher(
+      statement: """
+      MATCH (this:Implementation)
+      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      """
+    )
+
   implementation(path: NodePath!): Implementation
 
-  attributes(filter: AttributeFilter): [Attribute!]!
+  attributes(filter: AttributeFilter = {}): [Attribute!]!
+    @cypher(
+      statement: """
+      MATCH (this:Attribute)
+      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      """
+    )
   attribute(path: NodePath!): Attribute
 }
 

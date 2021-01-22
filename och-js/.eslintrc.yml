@@ -21,6 +21,7 @@ rules:
   prettier/prettier: "error"
   import/extensions: ["off"]
   import/prefer-default-export: ["off"]
+  no-use-before-define: ["error", { "functions": false }]
   no-unused-vars: "off"
   "@typescript-eslint/no-unused-vars": "error"
   no-shadow: "off"

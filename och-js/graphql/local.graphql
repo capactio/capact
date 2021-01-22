@@ -45,7 +45,7 @@ type TypeInstanceSpec {
       """
     )
   instrumentation: TypeInstanceInstrumentation
-    @relation(name: "MONITORED_BY", direction: "OUT")
+    @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
 
 type TypeReference {
@@ -65,9 +65,9 @@ type AttributeReference {
 
 type TypeInstanceInstrumentation {
   metrics: TypeInstanceInstrumentationMetrics
-    @relation(name: "MEASURES", direction: "OUT")
+    @relation(name: "MEASURED_BY", direction: "OUT")
   health: TypeInstanceInstrumentationHealth
-    @relation(name: "INDICATED", direction: "OUT")
+    @relation(name: "INDICATED_BY", direction: "OUT")
 }
 
 type TypeInstanceInstrumentationMetrics {
@@ -118,7 +118,7 @@ enum FilterRule {
 }
 
 input TypeInstanceFilter {
-  attribute: [AttributeFilterInput]
+  attributes: [AttributeFilterInput]
   typeRef: TypeRefFilterInput
 }
 
@@ -150,12 +150,54 @@ input UpdateTypeInstanceInput {
 }
 
 type Query {
-  typeInstances(filter: TypeInstanceFilter): [TypeInstance!]!
+  typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
+    @cypher(
+      statement: """
+      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
+        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
+
+      CALL {
+        WITH excluded
+        UNWIND excluded AS f
+        MATCH (ex:AttributeReference {path: f.path})
+        RETURN collect(ex) as excludedAttributes
+      }
+
+      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
+      MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
+      WHERE
+      $filter = {} OR
+      (
+        (
+          $filter.typeRef IS NULL
+          OR
+          (
+            ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)
+            OR
+            (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)
+          )
+        )
+        AND
+        (
+        	$filter.attributes IS NULL
+          OR
+          (
+            all(inc IN included WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path}))
+            AND
+            none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))
+          )
+        )
+      )
+
+      RETURN DISTINCT ti
+      """
+    )
+
   typeInstance(id: ID!): TypeInstance
     @cypher(
       statement: """
-      MATCH (ti: TypeInstance)-[:DESCRIBED_BY]->(metadata: TypeInstanceMetadata {id: $id})
-      RETURN ti
+      MATCH (this:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata {id: $id})
+      RETURN this
       """
     )
 }

@@ -15,8 +15,8 @@ import (
 )
 
 var _ = Describe("GraphQL API", func() {
-	Context("Get Interfaces", func() {
-		It("should not error", func() {
+	Context("Public OCH", func() {
+		It("lists interfaces", func() {
 			httpClient := httputil.NewClient(
 				20*time.Second,
 				true,
@@ -24,13 +24,15 @@ var _ = Describe("GraphQL API", func() {
 			)
 			cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
 
-			_, err := cli.ListInterfacesMetadata(context.Background())
+			interfaces, err := cli.ListInterfacesMetadata(context.Background())
+
 			Expect(err).ToNot(HaveOccurred())
+			Expect(interfaces).To(BeEmpty())
 		})
 	})
 
-	Context("TypeInstance operations", func() {
-		It("should be to create and delete", func() {
+	Context("Local OCH", func() {
+		It("creates and deletes TypeInstance", func() {
 			httpClient := httputil.NewClient(
 				20*time.Second,
 				true,
