@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
@@ -35,9 +36,9 @@ type WorkflowStep struct {
 	Template  string         `json:"template,omitempty"`
 	Arguments wfv1.Arguments `json:"arguments,omitempty"`
 
-	VoltronWhen                *string                     `json:"voltron-when,omitempty"`
-	VoltronAction              *v1alpha1.ManifestReference `json:"voltron-action,omitempty"`
-	VoltronTypeInstanceOutputs []TypeInstanceDefinition    `json:"voltron-outputTypeInstances,omitempty"`
+	VoltronWhen                *string                  `json:"voltron-when,omitempty"`
+	VoltronAction              *string                  `json:"voltron-action,omitempty"`
+	VoltronTypeInstanceOutputs []TypeInstanceDefinition `json:"voltron-outputTypeInstances,omitempty"`
 }
 
 type TypeInstanceDefinition struct {
@@ -69,7 +70,7 @@ func (p mapEvalParameters) Get(name string) (interface{}, error) {
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
 func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance) (*Workflow, error) {
-	implementation := r.ManifestStore.GetImplementationForInterface(ref)
+	implementation := r.ManifestStore.GetImplementationForInterface(string(ref.Path))
 	if implementation == nil {
 		return nil, fmt.Errorf("implementation for %v not found", ref)
 	}
@@ -137,9 +138,13 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 
 					if step.VoltronAction != nil {
 						// Get Implementation for action
-						implementation := r.ManifestStore.GetImplementationForInterface(*step.VoltronAction)
+						actionRef := resolveActionPathFromImports(implementation, *step.VoltronAction)
+						if actionRef == "" {
+							return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
+						}
+						implementation := r.ManifestStore.GetImplementationForInterface(actionRef)
 						if implementation == nil {
-							return nil, fmt.Errorf("implementation for %v not found", *step.VoltronAction)
+							return nil, fmt.Errorf("implementation for %v not found", actionRef)
 						}
 
 						// Render the referenced action.
@@ -177,6 +182,17 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 	}
 
 	return r.RenderedWorkflow, nil
+}
+
+func resolveActionPathFromImports(impl *types.Implementation, voltronAction string) string {
+	action := strings.SplitN(voltronAction, ".", 2)
+	alias, name := action[0], action[1]
+	for _, i := range impl.Spec.Imports {
+		if *i.Alias == alias {
+			return fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name)
+		}
+	}
+	return ""
 }
 
 func (r *Renderer) renderFunc(prefix string,

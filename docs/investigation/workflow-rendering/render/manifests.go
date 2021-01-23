@@ -40,12 +40,12 @@ func (s *ManifestStore) GetImplementation(ref v1alpha1.ManifestReference) *types
 	return s.Implementations[ref]
 }
 
-func (s *ManifestStore) GetImplementationForInterface(ref v1alpha1.ManifestReference) *types.Implementation {
+func (s *ManifestStore) GetImplementationForInterface(actionPath string) *types.Implementation {
 	for key := range s.Implementations {
 		impl := s.Implementations[key]
 
 		for _, implements := range impl.Spec.Implements {
-			if implements.Path == string(ref.Path) {
+			if implements.Path == actionPath {
 				return impl
 			}
 		}

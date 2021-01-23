@@ -62,6 +62,11 @@ spec:
           revision: 0.1.0
         - name: create-db
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
@@ -85,12 +90,10 @@ spec:
                               username: jira
                               password: okon
                             defaultDBName: jira
-                  voltron-action:
-                    path: cap.interface.database.postgresql.install
+                  voltron-action: postgresql.install
 
               - - name: create-helm-args
-                  voltron-action:
-                    path: cap.interface.jinja2.template
+                  voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -135,8 +138,7 @@ spec:
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
               - - name: helm-run
-                  voltron-action:
-                    path: cap.interface.runner.helm.run
+                  voltron-action: helm.run
                   voltron-outputTypeInstances:
                     - name: jira-config
                       from: additional

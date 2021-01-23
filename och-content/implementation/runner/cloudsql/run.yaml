@@ -54,12 +54,10 @@ spec:
                   globalName: cloudsql-instance
                   path: "/out/cloudsql-instance.yaml"
             container:
-              image: gcr.io/projectvoltron/cloudsql-runner:0.1.0
-              args:
-                - --parameters-path
-                - "{{ inputParametersToArtifact.path }}"
-                - --credentials-path
-                - "{{`{{inputs.artifacts.gcp-sa.path}}`}}"
+              image: gcr.io/projectvoltron/cloudsql-runner:f5e51e3
+              env:
+                - name: RUNNER_INPUT_PATH
+                  value: "{{inputs.artifacts.input-parameters.path}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
