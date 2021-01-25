@@ -1,5 +1,8 @@
 # This file contains example GraphQL operations for Engine.
 
+# Required variables:
+# actionName: String
+
 query Actions {
     actions(filter: { phase: BEING_RENDERED }) {
         ...ActionFields
