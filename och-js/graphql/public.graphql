@@ -1,7 +1,5 @@
-# TODO remove dynamic name and prefix calculation
-
-# neo4j-graphql-js adds some directives during parsing
-# To make it work for other GraphQL client we need to add them to the schema manually, based on:
+# Neo4j-graphql-js adds some directives during parsing of the schema.
+# To make it work for other GraphQL clients, we need to add them to the schema manually, based on:
 # https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
 directive @relation(
   name: String
@@ -9,9 +7,7 @@ directive @relation(
   from: String
   to: String
 ) on FIELD_DEFINITION | OBJECT
-directive @id on FIELD_DEFINITION
 directive @cypher(statement: String) on FIELD_DEFINITION
-directive @neo4j_ignore on FIELD_DEFINITION
 
 """
 Arbitrary data
@@ -367,7 +363,7 @@ type Implementation {
   name: NodeName!
   prefix: NodePrefix!
 
-  latestRevision: Implementation
+  latestRevision: ImplementationRevision
     @cypher(
       statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
     )
@@ -584,7 +580,7 @@ type Query {
     @cypher(
       statement: """
       MATCH (this:InterfaceGroup)
-      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
   interfaceGroup(path: NodePath!): InterfaceGroup
@@ -593,7 +589,7 @@ type Query {
     @cypher(
       statement: """
       MATCH (this:Interface)
-      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
   interface(path: NodePath!): Interface
@@ -602,7 +598,7 @@ type Query {
     @cypher(
       statement: """
       MATCH (this:Type)
-      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
   type(path: NodePath!): Type
@@ -611,7 +607,7 @@ type Query {
     @cypher(
       statement: """
       MATCH (this:Implementation)
-      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
 
@@ -621,7 +617,7 @@ type Query {
     @cypher(
       statement: """
       MATCH (this:Attribute)
-      WHERE $filter = {} OR this.path =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
   attribute(path: NodePath!): Attribute
