@@ -39,6 +39,10 @@ spec:
         typeRef:
           path: cap.type.gcp.cloudsql.instance
           revision: 0.1.0
+      additional: # Maybe this could be more restricted after split `run` into `install`, `upgrade`, `uninstall`
+        typeRef:
+          path: cap.core.type.generic.value
+          revision: 0.0.1
 
 
 signature:

@@ -69,8 +69,8 @@ func (p mapEvalParameters) Get(name string) (interface{}, error) {
 
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
-func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance, filter RequiresFilter) (*Workflow, error) {
-	implementation := r.ManifestStore.GetImplementationForInterface(string(ref.Path), GetImplementationForInterfaceInput{})
+func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance, policies map[string]FilterPolicies) (*Workflow, error) {
+	implementation := r.ManifestStore.GetImplementationForInterface(string(ref.Path), GetImplementationForInterfaceInput{Policies: policies})
 	if implementation == nil {
 		return nil, fmt.Errorf("implementation for %v not found", ref)
 	}
@@ -116,6 +116,10 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 		r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, *template)
 	}
 
+	// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows. Check
+	// 					 other TODO(impl-issue)
+	importsCollection := implementation.Spec.Imports
+
 	// Rendering iterations
 	for {
 		// Remove steps, which would create TypeInstances, which are already provided
@@ -138,15 +142,19 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 
 					if step.VoltronAction != nil {
 						// Get Implementation for action
-						actionRef := resolveActionPathFromImports(implementation, *step.VoltronAction)
+						actionRef := resolveActionPathFromImports(importsCollection, *step.VoltronAction)
 						if actionRef == "" {
 							return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
 						}
 
-						implementation := r.ManifestStore.GetImplementationForInterface(actionRef, GetImplementationForInterfaceInput{RequireFilter: filter})
+						implementation := r.ManifestStore.GetImplementationForInterface(actionRef, GetImplementationForInterfaceInput{Policies: policies})
 						if implementation == nil {
-							return nil, fmt.Errorf("implementation for %v not found", actionRef)
+							return nil, fmt.Errorf("[step: %s] implementation for %v not found", step.Name, actionRef)
 						}
+
+						// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows. Check
+						// 					 other TODO(impl-issue)
+						importsCollection = append(importsCollection, implementation.Spec.Imports...)
 
 						// Render the referenced action.
 						workflowPrefix := fmt.Sprintf("%s-%s", tmpl.Name, step.Name)
@@ -160,6 +168,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 						}
 
 						// Include the rendered workflow.
+						// TODO(impl-issue): this should be changed to be fully rendered or associated with a proper Implementation metadata
 						r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, importedWorkflow.Templates...)
 						step.Template = importedWorkflow.Entrypoint
 						step.VoltronAction = nil
@@ -185,10 +194,10 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 	return r.RenderedWorkflow, nil
 }
 
-func resolveActionPathFromImports(impl *types.Implementation, voltronAction string) string {
+func resolveActionPathFromImports(imports []types.Import, voltronAction string) string {
 	action := strings.SplitN(voltronAction, ".", 2)
 	alias, name := action[0], action[1]
-	for _, i := range impl.Spec.Imports {
+	for _, i := range imports {
 		if *i.Alias == alias {
 			return fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name)
 		}

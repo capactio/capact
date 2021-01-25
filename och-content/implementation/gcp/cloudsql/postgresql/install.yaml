@@ -21,14 +21,6 @@ metadata:
 spec:
   appVersion: "10, 11, 12, 13"
 
-  additionalInput:
-    typeInstances:
-      gcp-sa:
-        typeRef:
-          path: cap.type.gcp.auth.service-account
-          revision: 0.1.0
-        verbs: [ "get" ]
-
   additionalOutput:
     typeInstances:
       cloudsql-instance:
@@ -49,8 +41,6 @@ spec:
       allOf:
         - name: kubernetes
           revision: 0.1.0
-        - name: cap.type.platform.gcp # MUST extends the cap.core.type.platform
-          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.cloudsql
@@ -63,65 +53,77 @@ spec:
       methods:
         - name: run
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: workflow
+        entrypoint: postgres-install
         templates:
-          - name: workflow
-            steps:
-              - - name: provision
-                  template: provision
-              - - name: produce-config
-                  template: produce-config
-
-          - name: provision
+          - name: postgres-install
             inputs:
               artifacts:
-                - name: gcp-sa
-                  path: "/in/gcp-sa"
-            outputs:
-              artifacts:
-                - name: cloudsql-instance
-                  globalName: cloudsql-instance
-                  path: "/out/cloudsql-instance.yaml"
-                - name: postgresql
-                  globalName: postgresql
-                  path: "/out/postgresql.yaml"
-            container:
-# TODO: Uncomment once proper manifest validation is implemented in https://cshark.atlassian.net/browse/SV-21
-#                      {{ action:
-#                          runnerInterface: cloudsql.run
-#                          args:
-#                            group: "sql"
-#                            command: "create"
-#                            generateName: true
-#                            instance:
-#                              tier: "db-g1-small"
-#                              databaseVersion: "POSTGRES_{{ .Context.appVersion }}"
-#                              region: "us-central"
-#                              settings:
-#                                tier: "db-g1-small"
-#                                ipConfiguration:
-#                                  authorizedNetworks:
-#                                    - name: internet
-#                                      value: "0.0.0.0/0"
-#                            output:
-#                              directory: "/out"
-#                              cloudSQLInstance:
-#                                fileName: "cloudsql-instance.yaml"
-#                              additional:
-#                                fileName: "postgresql.yaml"
-#                                value:
-#                                  host: "{{`{{ (index .DBInstance.IpAddresses 0).IpAddress  }}`}}"
-#                                  port: "{{`{{ .Port }}`}}"
-#                                  defaultDBName: "{{`{{ .DefaultDBName }}`}}"
-#                                  superuser:
-#                                    username: "{{`{{ .Username }}`}}"
-#                                    password: "{{`{{ .Password }}`}}"
-#                        }}
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            steps:
+              - - name: create-cloudsql-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          # TODO: remove the context data. Should be injected by engine
+                          # TODO: currently `{{ superuser.username }}` is not supported
+                          data: |
+                            context:
+                              name: "cloudsql-runner-example"
+                              dryRun: false
+                              timeout: "10m"
+                            args:
+                              group: "sql"
+                              command: "create"
+                              generateName: true
+                              instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+                                databaseVersion: "POSTGRES_11"
+                                region: "us-central"
+                                defaultDBName: {{ defaultDBName }}
+                                rootPassword: {{ superuser.password }}
+                                settings:
+                                  tier: "db-g1-small"
+                                  ipConfiguration:
+                                    authorizedNetworks:
+                                      - name: internet
+                                        value: "0.0.0.0/0"
+                              output:{% raw %}
+                                directory: /
+                                cloudSQLInstance:
+                                  filename: "instance.yaml"
+                                additional:
+                                  filename: "additional.yaml"
+                                  value:
+                                    host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+                                    port: "{{ .Port }}"
+                                    defaultDBName: "{{ .DefaultDBName }}"
+                                    superuser:
+                                      username: "{{ .Username }}"
+                                      password: "{{ .Password }}"{% endraw %}
+              - - name: cloudsql-run
+                  voltron-action: cloudsql.run
+                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                    - name: postgresql
+                      from: additional
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-cloudsql-args.outputs.artifacts.render}}"
+                      - name: gcp-sa
+                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

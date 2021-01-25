@@ -43,23 +43,28 @@ func (s *ManifestStore) GetImplementation(ref v1alpha1.ManifestReference) *types
 	return s.Implementations[ref]
 }
 
-type RequiresFilter struct {
-	Excluded []string `json:"excluded"`
+type PolicyItem struct {
+	Attribute string `json:"attribute"`
+}
+
+type FilterPolicies struct {
+	Included []PolicyItem `json:"included"`
+	Excluded []PolicyItem `json:"excluded"`
 }
 
 type GetImplementationForInterfaceInput struct {
-	RequireFilter RequiresFilter
+	Policies map[string]FilterPolicies
 }
 
 func (s *ManifestStore) GetImplementationForInterface(actionPath string, in GetImplementationForInterfaceInput) *types.Implementation {
 	for key := range s.Implementations {
 		impl := s.Implementations[key]
 
-		if !requirementsAreSatisfied(impl.Spec.Requires, in) {
+		policies, found := in.Policies[actionPath]
+		if found && !policiesAreSatisfied(impl, policies) {
 			continue
 		}
 		for _, implements := range impl.Spec.Implements {
-
 			if implements.Path == actionPath {
 				return impl
 			}
@@ -70,46 +75,53 @@ func (s *ManifestStore) GetImplementationForInterface(actionPath string, in GetI
 }
 
 // TODO: dummy impl, needs to be fixed.
-func requirementsAreSatisfied(requires map[string]types.Require, in GetImplementationForInterfaceInput) bool {
-	for _, req := range requires {
+func policiesAreSatisfied(impl *types.Implementation, in FilterPolicies) bool {
+	// Support only Attributes
+	if len(in.Excluded) > 0 && containsAttributes(impl.Metadata.Attributes, in.Excluded) {
+		return false
+	}
 
-		if len(req.AllOf) > 0 {
-			aReq := filterOut(req.AllOf, in.RequireFilter.Excluded)
-			if len(aReq) != len(req.AllOf) { // sth was excluded by filter but need by impl
-				return false
-			}
-		}
-		if len(req.OneOf) > 0 {
-			oReq := filterOut(req.OneOf, in.RequireFilter.Excluded)
-			if len(oReq) < 1 { // everything was filter out but at least one needs to stay
-				return false
-			}
-		}
-
-		if len(req.AnyOf) > 0 {
-			oReq := filterOut(req.AnyOf, in.RequireFilter.Excluded)
-			if len(oReq) < 1 { // everything was filter out but at least one needs to stay
-				return false
-			}
-		}
+	if len(in.Included) > 0 && !containsAttributes(impl.Metadata.Attributes, in.Included) {
+		return false
 	}
 
 	return true
 }
 
-func filterOut(req []types.RequireEntity, excluded []string) []types.RequireEntity {
-	if len(excluded) == 0 {
+//  contains returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
+func containsAttributes(implAtr map[string]types.MetadataAttribute, expAtr []PolicyItem) bool {
+	expected := map[string]struct{}{}
+	for _, v := range expAtr {
+		expected[v.Attribute] = struct{}{}
+	}
+
+	matchedEntries := map[string]struct{}{}
+	for atrName := range implAtr {
+		if _, found := expected[atrName]; found {
+			matchedEntries[atrName] = struct{}{}
+		}
+	}
+
+	if len(matchedEntries) != len(expected) {
+		return false
+	}
+
+	return true
+}
+
+func filterOut(req []types.RequireEntity, skip []PolicyItem) []types.RequireEntity {
+	if len(skip) == 0 {
 		return req
 	}
 
-	toExclude := map[string]struct{}{}
-	for _, v := range excluded {
-		toExclude[v] = struct{}{}
+	toSkip := map[string]struct{}{}
+	for _, v := range skip {
+		toSkip[v.Attribute] = struct{}{}
 	}
 
 	var out []types.RequireEntity
 	for _, aReq := range req {
-		if _, exclude := toExclude[aReq.Name]; exclude {
+		if _, skip := toSkip[aReq.Name]; skip {
 			continue
 		}
 		out = append(out, aReq)

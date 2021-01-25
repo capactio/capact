@@ -13,11 +13,11 @@ import (
 )
 
 type renderInput struct {
-	Name                    string                        `json:"name"`
-	ManifestReference       v1alpha1.ManifestReference    `json:"manifestReference"`
-	Parameters              map[string]interface{}        `json:"parameters"`
-	TypeInstances           []*v1alpha1.InputTypeInstance `json:"typeInstances"`
-	RequirementsSatisfiedBy render.RequiresFilter         `json:"requirementsSatisfiedBy"`
+	Name              string                           `json:"name"`
+	ManifestReference v1alpha1.ManifestReference       `json:"manifestReference"`
+	Parameters        map[string]interface{}           `json:"parameters"`
+	TypeInstances     []*v1alpha1.InputTypeInstance    `json:"typeInstances"`
+	Policies          map[string]render.FilterPolicies `json:"policies"`
 }
 
 func main() {
@@ -53,7 +53,7 @@ func main() {
 		renderInput.ManifestReference,
 		renderInput.Parameters,
 		renderInput.TypeInstances,
-		renderInput.RequirementsSatisfiedBy,
+		renderInput.Policies,
 	)
 	if err != nil {
 		log.Fatal(err)

@@ -113,7 +113,6 @@ spec:
                               timeout: "10m"
                               platform:
                                 namespace: "default"
-                                serviceAccountName: "helm-runner-example"
                             args:
                               command: "install"
                               generateName: true

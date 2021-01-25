@@ -5,9 +5,11 @@ manifestReference:
 
 parameters: {}
 
-typeInstances: []
+typeInstances:
+  - name: gcp-sa
+    id: c268d3f5-8834-434b-bea2-b677793611c5
 
 policies:
   cap.interface.database.postgresql.install:
-    excluded:
+    included:
       - attribute: cap.attribute.cloud.provider.gcp

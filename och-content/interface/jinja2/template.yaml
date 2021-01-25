@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.implementation.jinja2 # Computed during fetching the manifest
+  prefix: cap.interface.jinja2 # Computed during fetching the manifest
   name: template
   displayName: Jinja2 Template
   description: Generate output using Jinja2 template engine
@@ -30,7 +30,7 @@ spec:
           }
   output:
     typeInstances:
-      postgresql:
+      render:
         typeRef:
           path: cap.core.type.generic.value
           revision: 0.0.1

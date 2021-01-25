@@ -5,12 +5,12 @@ metadata:
   id: 461a1c83-6054-43dd-8a4c-49acde791699
 spec:
   typeRef:
-    path: cap.core.type.platform.kubernetes
-    revision: 1.0.0
+    path: cap.type.database.postgresql.config
+    revision: 0.1.0
   value:
     superuser:
       username: "postgres"
       password: "s3cr3t"
     defaultDBName: "test"
-    host: "postgresql-1608716363"
+    host: "postgresql-1611593821"
     port: 5432
