@@ -198,10 +198,7 @@ type InterfaceRevision {
   spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
-  implementationRevisions: [ImplementationRevision!]!
-    @relation(name: "IMPLEMENTS", direction: "IN")
-
-  implementationRevisionForRequirements(
+  implementationRevision(
     filter: ImplementationRevisionFilter = {}
   ): [ImplementationRevision!]!
     @cypher(
