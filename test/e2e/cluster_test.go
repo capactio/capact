@@ -3,12 +3,12 @@
 package e2e
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -16,9 +16,6 @@ import (
 	"k8s.io/kubectl/pkg/util/podutils"
 	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/iosafety"
 )
 
 var _ = Describe("Cluster check", func() {
@@ -33,17 +30,7 @@ var _ = Describe("Cluster check", func() {
 	Describe("Voltron cluster health", func() {
 		Context("Services status endpoint", func() {
 			It("should be available", func() {
-				cli := httputil.NewClient(30*time.Second, true)
-
-				for _, endpoint := range cfg.StatusEndpoints {
-					resp, err := cli.Get(endpoint)
-					Expect(err).ToNot(HaveOccurred(), "Get on %s", endpoint)
-
-					err = iosafety.DrainReader(resp.Body)
-					Expect(err).ToNot(HaveOccurred())
-					err = resp.Body.Close()
-					Expect(err).ToNot(HaveOccurred())
-				}
+				waitTillServiceEndpointsAreReady()
 			})
 		})
 

@@ -84,11 +84,12 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`mutation($in: CreateTypeInstanceInput!) {
-  createTypeInstance(
-    in: $in
-  ) {
-		%s			
-}`, typeInstanceFields)
+		createTypeInstance(
+			in: $in
+		) {
+			%s
+		}
+	}`, typeInstanceFields)
 
 	req := graphql.NewRequest(query)
 	req.Var("in", in)
@@ -105,8 +106,9 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 
 func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query($id: ID!) {
-	  typeInstance(id: $id) {
+		typeInstance(id: $id) {
 			%s	
+		}
 	}`, typeInstanceFields)
 
 	req := graphql.NewRequest(query)
