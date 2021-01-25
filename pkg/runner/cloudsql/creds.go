@@ -34,7 +34,7 @@ func (h CredentialsFormat) Validate() error {
 	return fmt.Errorf("Wrong credentials format. Possible options: %s and %s", JSON, YAML)
 }
 
-// Unmarshal fulfils the envconfig interface for unmarshaling.
+// Unmarshal fulfills the envconfig interface for unmarshaling.
 func (h *CredentialsFormat) Unmarshal(s string) error {
 	hub := CredentialsFormat(s)
 	if err := hub.Validate(); err != nil {

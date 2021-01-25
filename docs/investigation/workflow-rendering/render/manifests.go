@@ -74,9 +74,8 @@ func (s *ManifestStore) GetImplementationForInterface(actionPath string, in GetI
 	return nil
 }
 
-// TODO: dummy impl, needs to be fixed.
+// policiesAreSatisfied verifies only Attributes
 func policiesAreSatisfied(impl *types.Implementation, in FilterPolicies) bool {
-	// Support only Attributes
 	if len(in.Excluded) > 0 && containsAttributes(impl.Metadata.Attributes, in.Excluded) {
 		return false
 	}

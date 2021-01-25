@@ -116,8 +116,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 		r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, *template)
 	}
 
-	// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows. Check
-	// 					 other TODO(impl-issue)
+	// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows. Check other TODO(impl-issue)
 	importsCollection := implementation.Spec.Imports
 
 	// Rendering iterations
@@ -152,8 +151,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 							return nil, fmt.Errorf("[step: %s] implementation for %v not found", step.Name, actionRef)
 						}
 
-						// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows. Check
-						// 					 other TODO(impl-issue)
+						// TODO(impl-issue): hack to overcome problem with getting lost the Implementation details for nested workflows
 						importsCollection = append(importsCollection, implementation.Spec.Imports...)
 
 						// Render the referenced action.

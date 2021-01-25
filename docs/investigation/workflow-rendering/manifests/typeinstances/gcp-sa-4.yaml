@@ -18,5 +18,3 @@ spec:
     token_uri: "fake"
     auth_provider_x509_cert_url: "fake"
     client_x509_cert_url: "fake"
-
-
