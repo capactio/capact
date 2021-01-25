@@ -9,7 +9,7 @@ import {
 import * as http from "http";
 import { GraphQLSchema } from "graphql";
 
-import { getSchemaForMode } from "./schema";
+import { assertSchemaOnDatabase, getSchemaForMode, OCHMode } from "./schema";
 import { config } from "./config";
 import { logger } from "./logger";
 
@@ -22,6 +22,10 @@ function main() {
   );
 
   const schema = getSchemaForMode(config.ochMode);
+
+  if (config.ochMode === OCHMode.Local) {
+    assertSchemaOnDatabase(schema, driver);
+  }
 
   const healthCheck = async () => {
     try {

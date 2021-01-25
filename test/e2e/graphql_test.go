@@ -62,14 +62,29 @@ var _ = Describe("GraphQL API", func() {
 			})
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
-				"foo": "bar",
-			}))
 
 			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(createdTypeInstance.Spec.Value).To(Equal(map[string]interface{}{
-				"foo": "bar",
+			Expect(typeInstance).To(Equal(&graphql.TypeInstance{
+				ResourceVersion: 1,
+				Metadata: &graphql.TypeInstanceMetadata{
+					ID: createdTypeInstance.Metadata.ID,
+					Attributes: []*graphql.AttributeReference{
+						{
+							Path:     "com.voltron.attribute1",
+							Revision: "0.1.0",
+						},
+					},
+				},
+				Spec: &graphql.TypeInstanceSpec{
+					TypeRef: &graphql.TypeReference{
+						Path:     "com.voltron.ti",
+						Revision: "0.1.0",
+					},
+					Value: map[string]interface{}{
+						"foo": "bar",
+					},
+				},
 			}))
 
 			err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)

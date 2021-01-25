@@ -32,7 +32,7 @@ type TypeInstance {
 }
 
 type TypeInstanceMetadata {
-  id: ID!
+  id: ID! @id
   attributes: [AttributeReference!]!
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }

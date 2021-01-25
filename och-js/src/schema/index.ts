@@ -4,7 +4,7 @@ import { assertSchema } from "neo4j-graphql-js";
 import { schema as publicSchema } from "./public";
 import { schema as localSchema } from "./local";
 
-enum OCHMode {
+export enum OCHMode {
   Local = "local",
   Public = "public",
 }
