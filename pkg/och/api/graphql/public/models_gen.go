@@ -87,10 +87,6 @@ type ImplementationAdditionalOutput struct {
 
 type ImplementationFilter struct {
 	PrefixPattern *string `json:"prefixPattern"`
-	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
-	// For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-	RequirementsSatisfiedBy []*TypeInstanceValue    `json:"requirementsSatisfiedBy"`
-	Attributes              []*AttributeFilterInput `json:"attributes"`
 }
 
 type ImplementationImport struct {
@@ -141,6 +137,14 @@ type ImplementationRevision struct {
 	Spec       *ImplementationSpec     `json:"spec"`
 	Interfaces []*Interface            `json:"interfaces"`
 	Signature  *Signature              `json:"signature"`
+}
+
+type ImplementationRevisionFilter struct {
+	PrefixPattern *string `json:"prefixPattern"`
+	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+	// For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+	RequirementsSatisfiedBy []*TypeInstanceValue    `json:"requirementsSatisfiedBy"`
+	Attributes              []*AttributeFilterInput `json:"attributes"`
 }
 
 type ImplementationSpec struct {

@@ -199,7 +199,7 @@ type ComplexityRoot struct {
 	}
 
 	InterfaceRevision struct {
-		ImplementationRevisions func(childComplexity int, filter *ImplementationFilter) int
+		ImplementationRevisions func(childComplexity int, filter *ImplementationRevisionFilter) int
 		Metadata                func(childComplexity int) int
 		Revision                func(childComplexity int) int
 		Signature               func(childComplexity int) int
@@ -989,7 +989,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.InterfaceRevision.ImplementationRevisions(childComplexity, args["filter"].(*ImplementationFilter)), true
+		return e.complexity.InterfaceRevision.ImplementationRevisions(childComplexity, args["filter"].(*ImplementationRevisionFilter)), true
 
 	case "InterfaceRevision.metadata":
 		if e.complexity.InterfaceRevision.Metadata == nil {
@@ -1617,14 +1617,18 @@ input InterfaceFilter {
 }
 
 input ImplementationFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
+}
 
-    """
-    If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
-    For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-    """
-    requirementsSatisfiedBy: [TypeInstanceValue!]
-    attributes: [AttributeFilterInput!]
+input ImplementationRevisionFilter {
+  prefixPattern: NodePathPattern
+
+  """
+  If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+  For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+  """
+  requirementsSatisfiedBy: [TypeInstanceValue!]
+  attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -1745,7 +1749,7 @@ type InterfaceRevision {
     """
     List Implementations for a given Interface
     """
-    implementationRevisions(filter: ImplementationFilter): [ImplementationRevision!]!
+    implementationRevisions(filter: ImplementationRevisionFilter = {}): [ImplementationRevision!]!
     signature: Signature!
 }
 
@@ -2070,10 +2074,10 @@ func (ec *executionContext) field_InterfaceGroup_interfaces_args(ctx context.Con
 func (ec *executionContext) field_InterfaceRevision_implementationRevisions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *ImplementationFilter
+	var arg0 *ImplementationRevisionFilter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOImplementationFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationFilter(ctx, tmp)
+		arg0, err = ec.unmarshalOImplementationRevisionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -8857,6 +8861,26 @@ func (ec *executionContext) unmarshalInputImplementationFilter(ctx context.Conte
 			if err != nil {
 				return it, err
 			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputImplementationRevisionFilter(ctx context.Context, obj interface{}) (ImplementationRevisionFilter, error) {
+	var it ImplementationRevisionFilter
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "prefixPattern":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("prefixPattern"))
+			it.PrefixPattern, err = ec.unmarshalONodePathPattern2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "requirementsSatisfiedBy":
 			var err error
 
@@ -12808,6 +12832,14 @@ func (ec *executionContext) marshalOImplementationRevision2ᚖprojectvoltronᚗd
 		return graphql.Null
 	}
 	return ec._ImplementationRevision(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOImplementationRevisionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionFilter(ctx context.Context, v interface{}) (*ImplementationRevisionFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputImplementationRevisionFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOInputParameters2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameters(ctx context.Context, sel ast.SelectionSet, v *InputParameters) graphql.Marshaler {
