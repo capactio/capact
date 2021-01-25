@@ -107,7 +107,7 @@ func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action,
 func (r *Resolver) CancelAction(ctx context.Context, name string) (*graphql.Action, error) {
 	err := r.svc.CancelByName(ctx, name)
 	if err != nil {
-		return nil, errors.Wrap(err, "while cancelling Action")
+		return nil, errors.Wrap(err, "while canceling Action")
 	}
 
 	return r.findAndConvertToGQL(ctx, name)

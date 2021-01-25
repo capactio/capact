@@ -22,7 +22,7 @@ type Action struct {
 	ActionRef *ManifestReference `json:"actionRef"`
 	// Indicates if user approved this Action to run
 	Run bool `json:"run"`
-	// Indicates if user cancelled the workflow
+	// Indicates if user canceled the workflow
 	Cancel bool `json:"cancel"`
 	// Specifies whether the Action performs server-side test without actually running the Action.
 	DryRun                 bool                         `json:"dryRun"`
@@ -79,13 +79,13 @@ type ActionRenderingAdvancedMode struct {
 
 // Status of the Action
 type ActionStatus struct {
-	Phase       ActionStatusPhase `json:"phase"`
-	Timestamp   Timestamp         `json:"timestamp"`
-	Message     *string           `json:"message"`
-	Runner      *RunnerStatus     `json:"runner"`
-	CreatedBy   *UserInfo         `json:"createdBy"`
-	RunBy       *UserInfo         `json:"runBy"`
-	CancelledBy *UserInfo         `json:"cancelledBy"`
+	Phase      ActionStatusPhase `json:"phase"`
+	Timestamp  Timestamp         `json:"timestamp"`
+	Message    *string           `json:"message"`
+	Runner     *RunnerStatus     `json:"runner"`
+	CreatedBy  *UserInfo         `json:"createdBy"`
+	RunBy      *UserInfo         `json:"runBy"`
+	CanceledBy *UserInfo         `json:"canceledBy"`
 }
 
 // Input used for continuing Action rendering in advanced mode
@@ -159,8 +159,8 @@ const (
 	ActionStatusPhaseAdvancedModeRenderingIteration ActionStatusPhase = "ADVANCED_MODE_RENDERING_ITERATION"
 	ActionStatusPhaseReadyToRun                     ActionStatusPhase = "READY_TO_RUN"
 	ActionStatusPhaseRunning                        ActionStatusPhase = "RUNNING"
-	ActionStatusPhaseBeingCancelled                 ActionStatusPhase = "BEING_CANCELLED"
-	ActionStatusPhaseCancelled                      ActionStatusPhase = "CANCELLED"
+	ActionStatusPhaseBeingCanceled                  ActionStatusPhase = "BEING_CANCELED"
+	ActionStatusPhaseCanceled                       ActionStatusPhase = "CANCELED"
 	ActionStatusPhaseSucceeded                      ActionStatusPhase = "SUCCEEDED"
 	ActionStatusPhaseFailed                         ActionStatusPhase = "FAILED"
 )
@@ -171,15 +171,15 @@ var AllActionStatusPhase = []ActionStatusPhase{
 	ActionStatusPhaseAdvancedModeRenderingIteration,
 	ActionStatusPhaseReadyToRun,
 	ActionStatusPhaseRunning,
-	ActionStatusPhaseBeingCancelled,
-	ActionStatusPhaseCancelled,
+	ActionStatusPhaseBeingCanceled,
+	ActionStatusPhaseCanceled,
 	ActionStatusPhaseSucceeded,
 	ActionStatusPhaseFailed,
 }
 
 func (e ActionStatusPhase) IsValid() bool {
 	switch e {
-	case ActionStatusPhaseInitial, ActionStatusPhaseBeingRendered, ActionStatusPhaseAdvancedModeRenderingIteration, ActionStatusPhaseReadyToRun, ActionStatusPhaseRunning, ActionStatusPhaseBeingCancelled, ActionStatusPhaseCancelled, ActionStatusPhaseSucceeded, ActionStatusPhaseFailed:
+	case ActionStatusPhaseInitial, ActionStatusPhaseBeingRendered, ActionStatusPhaseAdvancedModeRenderingIteration, ActionStatusPhaseReadyToRun, ActionStatusPhaseRunning, ActionStatusPhaseBeingCanceled, ActionStatusPhaseCanceled, ActionStatusPhaseSucceeded, ActionStatusPhaseFailed:
 		return true
 	}
 	return false

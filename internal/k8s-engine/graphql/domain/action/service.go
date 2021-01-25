@@ -173,9 +173,9 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 
 	log := s.logWithNameAndNs(item.Name, item.Namespace)
 
-	if item.Spec.IsCancelled() {
-		log.Info("Action already cancelled, so it cannot be run")
-		return ErrActionCancelledNotRunnable
+	if item.Spec.IsCanceled() {
+		log.Info("Action already canceled, so it cannot be run")
+		return ErrActionCanceledNotRunnable
 	}
 
 	if item.Spec.IsRun() {
@@ -197,15 +197,15 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 
 	log := s.logWithNameAndNs(item.Name, item.Namespace)
 
-	if item.Spec.IsCancelled() {
-		log.Info("Action already cancelled")
+	if item.Spec.IsCanceled() {
+		log.Info("Action already canceled")
 		return nil
 	}
 
 	// TODO: Validate it using validation webhook
 	if !item.Spec.IsRun() {
-		log.Info("Action not run, so it cannot be cancelled")
-		return ErrActionNotCancellable
+		log.Info("Action not run, so it cannot be canceled")
+		return ErrActionNotCancelable
 	}
 
 	item.Spec.Cancel = ptr.Bool(true)

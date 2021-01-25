@@ -48,10 +48,10 @@ var conditionsGraph = map[graphql.ActionStatusPhase][]conditionsGraphNode{
 		{condition: graphql.ActionStatusPhaseFailed},
 	},
 
-	graphql.ActionStatusPhaseBeingCancelled: {
-		{condition: graphql.ActionStatusPhaseCancelled},
+	graphql.ActionStatusPhaseBeingCanceled: {
+		{condition: graphql.ActionStatusPhaseCanceled},
 	},
-	graphql.ActionStatusPhaseCancelled: {},
+	graphql.ActionStatusPhaseCanceled:  {},
 	graphql.ActionStatusPhaseSucceeded: {},
 	graphql.ActionStatusPhaseFailed:    {},
 }
@@ -62,8 +62,8 @@ var conditionMessages = map[graphql.ActionStatusPhase]string{
 	graphql.ActionStatusPhaseAdvancedModeRenderingIteration: "Action in advanced rendering mode",
 	graphql.ActionStatusPhaseReadyToRun:                     "Action is ready to run",
 	graphql.ActionStatusPhaseRunning:                        "Action is running",
-	graphql.ActionStatusPhaseBeingCancelled:                 "Action is being canceled",
-	graphql.ActionStatusPhaseCancelled:                      "Action canceled",
+	graphql.ActionStatusPhaseBeingCanceled:                  "Action is being canceled",
+	graphql.ActionStatusPhaseCanceled:                       "Action canceled",
 	graphql.ActionStatusPhaseSucceeded:                      "Action succeeded",
 	graphql.ActionStatusPhaseFailed:                         "Action failed",
 }
@@ -232,10 +232,10 @@ func (a *ActionResolver) CancelAction(ctx context.Context, id string) (*graphql.
 	}
 	action.Cancel = true
 
-	message := conditionMessages[graphql.ActionStatusPhaseBeingCancelled]
+	message := conditionMessages[graphql.ActionStatusPhaseBeingCanceled]
 
-	action.Status.CancelledBy = mockUser
-	action.Status.Phase = graphql.ActionStatusPhaseBeingCancelled
+	action.Status.CanceledBy = mockUser
+	action.Status.Phase = graphql.ActionStatusPhaseBeingCanceled
 	action.Status.Message = &message
 	action.Status.Timestamp = graphql.Timestamp(time.Now())
 

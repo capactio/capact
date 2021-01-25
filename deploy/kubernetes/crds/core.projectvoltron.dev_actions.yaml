@@ -103,7 +103,7 @@ spec:
               cancel:
                 default: false
                 description: Cancel specifies whether the Action execution should
-                  be cancelled.
+                  be canceled.
                 type: boolean
               dryRun:
                 default: false
@@ -167,8 +167,8 @@ spec:
           status:
             description: ActionStatus defines the observed state of Action.
             properties:
-              cancelledBy:
-                description: CancelledBy holds user data which cancelled a given Action.
+              canceledBy:
+                description: CanceledBy holds user data which canceled a given Action.
                 properties:
                   extra:
                     additionalProperties:
@@ -280,8 +280,8 @@ spec:
                 - AdvancedModeRenderingIteration
                 - ReadyToRun
                 - Running
-                - BeingCancelled
-                - Cancelled
+                - BeingCanceled
+                - Canceled
                 - Succeeded
                 - Failed
                 type: string

@@ -111,9 +111,9 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 			Runner: &graphql.RunnerStatus{
 				Status: ptrToJSONRawMessage(`{"runner":true}`),
 			},
-			CreatedBy:   &userInfo,
-			RunBy:       &userInfo,
-			CancelledBy: &userInfo,
+			CreatedBy:  &userInfo,
+			RunBy:      &userInfo,
+			CanceledBy: &userInfo,
 		},
 	}
 }
@@ -249,7 +249,7 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 			},
 			CreatedBy:          &userInfo,
 			RunBy:              &userInfo,
-			CancelledBy:        &userInfo,
+			CanceledBy:         &userInfo,
 			LastTransitionTime: metav1.NewTime(timestamp),
 		},
 	}

@@ -147,7 +147,7 @@ fragment ActionFields on Action {
         runner {
             status
         }
-        cancelledBy {
+        canceledBy {
             username
             groups
             extra

@@ -202,8 +202,8 @@ func (in *ActionStatus) DeepCopyInto(out *ActionStatus) {
 		*out = new(v1.UserInfo)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.CancelledBy != nil {
-		in, out := &in.CancelledBy, &out.CancelledBy
+	if in.CanceledBy != nil {
+		in, out := &in.CanceledBy, &out.CanceledBy
 		*out = new(v1.UserInfo)
 		(*in).DeepCopyInto(*out)
 	}

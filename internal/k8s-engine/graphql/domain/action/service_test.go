@@ -221,10 +221,10 @@ func TestService_CancelByName(t *testing.T) {
 
 		// then
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, action.ErrActionNotCancellable))
+		assert.True(t, errors.Is(err, action.ErrActionNotCancelable))
 	})
 
-	t.Run("Already Cancelled", func(t *testing.T) {
+	t.Run("Already Canceled", func(t *testing.T) {
 		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
@@ -281,7 +281,7 @@ func TestService_RunByName(t *testing.T) {
 
 		// then
 		require.Error(t, err)
-		assert.True(t, errors.Is(err, action.ErrActionCancelledNotRunnable))
+		assert.True(t, errors.Is(err, action.ErrActionCanceledNotRunnable))
 	})
 
 	t.Run("Already Run", func(t *testing.T) {

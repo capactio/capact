@@ -6,9 +6,9 @@ import (
 
 var ErrActionNotFound = errors.New("action not found")
 
-var ErrActionCancelledNotRunnable = errors.New("action is not runnable, as it has been already cancelled")
+var ErrActionCanceledNotRunnable = errors.New("action is not runnable, as it has been already canceled")
 
-var ErrActionNotCancellable = errors.New("action cannot be cancelled, as it is not run")
+var ErrActionNotCancelable = errors.New("action cannot be canceled, as it is not run")
 
 var ErrActionAdvancedRenderingDisabled = errors.New("action advanced rendering mode is disabled")
 

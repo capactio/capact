@@ -549,7 +549,7 @@ The update behavior is equal to the Action update controller. That is:
 - If `run: true`, run the workflow and update status.
 - If `cancel: true`, cancel the workflow and update status.
 - If input or strategy changed, rerender final workflow and update status.
-- Already approved or cancelled rollbacks cannot be updated.
+- Already approved or canceled rollbacks cannot be updated.
 
 #### New GraphQL API operations for Rollback
 

@@ -285,13 +285,13 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 	}
 
 	return &graphql.ActionStatus{
-		Phase:       c.phaseToGraphQL(in.Phase),
-		Timestamp:   graphql.Timestamp(in.LastTransitionTime.Time),
-		Message:     in.Message,
-		Runner:      runnerStatus,
-		CreatedBy:   c.userInfoToGraphQL(in.CreatedBy),
-		RunBy:       c.userInfoToGraphQL(in.RunBy),
-		CancelledBy: c.userInfoToGraphQL(in.CancelledBy),
+		Phase:      c.phaseToGraphQL(in.Phase),
+		Timestamp:  graphql.Timestamp(in.LastTransitionTime.Time),
+		Message:    in.Message,
+		Runner:     runnerStatus,
+		CreatedBy:  c.userInfoToGraphQL(in.CreatedBy),
+		RunBy:      c.userInfoToGraphQL(in.RunBy),
+		CanceledBy: c.userInfoToGraphQL(in.CanceledBy),
 	}
 }
 
@@ -344,10 +344,10 @@ func (c *Converter) phaseToGraphQL(in v1alpha1.ActionPhase) graphql.ActionStatus
 		return graphql.ActionStatusPhaseReadyToRun
 	case v1alpha1.RunningActionPhase:
 		return graphql.ActionStatusPhaseRunning
-	case v1alpha1.BeingCancelledActionPhase:
-		return graphql.ActionStatusPhaseBeingCancelled
-	case v1alpha1.CancelledActionPhase:
-		return graphql.ActionStatusPhaseCancelled
+	case v1alpha1.BeingCanceledActionPhase:
+		return graphql.ActionStatusPhaseBeingCanceled
+	case v1alpha1.CanceledActionPhase:
+		return graphql.ActionStatusPhaseCanceled
 	case v1alpha1.SucceededActionPhase:
 		return graphql.ActionStatusPhaseSucceeded
 	case v1alpha1.FailedActionPhase:
@@ -369,10 +369,10 @@ func (c *Converter) phaseFromGraphQL(in graphql.ActionStatusPhase) v1alpha1.Acti
 		return v1alpha1.ReadyToRunActionPhase
 	case graphql.ActionStatusPhaseRunning:
 		return v1alpha1.RunningActionPhase
-	case graphql.ActionStatusPhaseBeingCancelled:
-		return v1alpha1.BeingCancelledActionPhase
-	case graphql.ActionStatusPhaseCancelled:
-		return v1alpha1.CancelledActionPhase
+	case graphql.ActionStatusPhaseBeingCanceled:
+		return v1alpha1.BeingCanceledActionPhase
+	case graphql.ActionStatusPhaseCanceled:
+		return v1alpha1.CanceledActionPhase
 	case graphql.ActionStatusPhaseSucceeded:
 		return v1alpha1.SucceededActionPhase
 	case graphql.ActionStatusPhaseFailed:

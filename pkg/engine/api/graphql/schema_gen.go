@@ -73,13 +73,13 @@ type ComplexityRoot struct {
 	}
 
 	ActionStatus struct {
-		CancelledBy func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
-		Message     func(childComplexity int) int
-		Phase       func(childComplexity int) int
-		RunBy       func(childComplexity int) int
-		Runner      func(childComplexity int) int
-		Timestamp   func(childComplexity int) int
+		CanceledBy func(childComplexity int) int
+		CreatedBy  func(childComplexity int) int
+		Message    func(childComplexity int) int
+		Phase      func(childComplexity int) int
+		RunBy      func(childComplexity int) int
+		Runner     func(childComplexity int) int
+		Timestamp  func(childComplexity int) int
 	}
 
 	InputTypeInstanceDetails struct {
@@ -277,12 +277,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionRenderingAdvancedMode.TypeInstancesForRenderingIteration(childComplexity), true
 
-	case "ActionStatus.cancelledBy":
-		if e.complexity.ActionStatus.CancelledBy == nil {
+	case "ActionStatus.canceledBy":
+		if e.complexity.ActionStatus.CanceledBy == nil {
 			break
 		}
 
-		return e.complexity.ActionStatus.CancelledBy(childComplexity), true
+		return e.complexity.ActionStatus.CanceledBy(childComplexity), true
 
 	case "ActionStatus.createdBy":
 		if e.complexity.ActionStatus.CreatedBy == nil {
@@ -702,7 +702,7 @@ type Action {
     run: Boolean!
 
     """
-    Indicates if user cancelled the workflow
+    Indicates if user canceled the workflow
     """
     cancel: Boolean!
 
@@ -741,7 +741,7 @@ type ActionStatus {
 
     createdBy: UserInfo
     runBy: UserInfo
-    cancelledBy: UserInfo
+    canceledBy: UserInfo
 }
 
 """
@@ -840,8 +840,8 @@ enum ActionStatusPhase {
     ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
     READY_TO_RUN,
     RUNNING,
-    BEING_CANCELLED,
-    CANCELLED,
+    BEING_CANCELED,
+    CANCELED,
     SUCCEEDED,
     FAILED
 }
@@ -1823,7 +1823,7 @@ func (ec *executionContext) _ActionStatus_runBy(ctx context.Context, field graph
 	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ActionStatus_cancelledBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _ActionStatus_canceledBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1841,7 +1841,7 @@ func (ec *executionContext) _ActionStatus_cancelledBy(ctx context.Context, field
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CancelledBy, nil
+		return obj.CanceledBy, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4261,8 +4261,8 @@ func (ec *executionContext) _ActionStatus(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._ActionStatus_createdBy(ctx, field, obj)
 		case "runBy":
 			out.Values[i] = ec._ActionStatus_runBy(ctx, field, obj)
-		case "cancelledBy":
-			out.Values[i] = ec._ActionStatus_cancelledBy(ctx, field, obj)
+		case "canceledBy":
+			out.Values[i] = ec._ActionStatus_canceledBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

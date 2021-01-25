@@ -109,7 +109,7 @@ type Action {
     run: Boolean!
 
     """
-    Indicates if user cancelled the workflow
+    Indicates if user canceled the workflow
     """
     cancel: Boolean!
 
@@ -148,7 +148,7 @@ type ActionStatus {
 
     createdBy: UserInfo
     runBy: UserInfo
-    cancelledBy: UserInfo
+    canceledBy: UserInfo
 }
 
 """
@@ -247,8 +247,8 @@ enum ActionStatusPhase {
     ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
     READY_TO_RUN,
     RUNNING,
-    BEING_CANCELLED,
-    CANCELLED,
+    BEING_CANCELED,
+    CANCELED,
     SUCCEEDED,
     FAILED
 }
