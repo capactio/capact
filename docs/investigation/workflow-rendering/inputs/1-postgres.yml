@@ -8,3 +8,7 @@ parameters:
     username: postgres
     password: s3cr3t
   defaultDBName: test
+
+requirementsSatisfiedBy:
+  excluded:
+    - cap.type.platform.gcp

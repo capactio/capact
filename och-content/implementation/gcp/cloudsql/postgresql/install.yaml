@@ -46,8 +46,10 @@ spec:
 
   requires:
     cap.core.type.platform:
-      oneOf:
+      allOf:
         - name: kubernetes
+          revision: 0.1.0
+        - name: cap.type.platform.gcp # MUST extends the cap.core.type.platform
           revision: 0.1.0
 
   imports:

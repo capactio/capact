@@ -69,8 +69,8 @@ func (p mapEvalParameters) Get(name string) (interface{}, error) {
 
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
-func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance) (*Workflow, error) {
-	implementation := r.ManifestStore.GetImplementationForInterface(string(ref.Path))
+func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]interface{}, typeInstances []*v1alpha1.InputTypeInstance, filter RequiresFilter) (*Workflow, error) {
+	implementation := r.ManifestStore.GetImplementationForInterface(string(ref.Path), GetImplementationForInterfaceInput{})
 	if implementation == nil {
 		return nil, fmt.Errorf("implementation for %v not found", ref)
 	}
@@ -142,7 +142,8 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 						if actionRef == "" {
 							return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
 						}
-						implementation := r.ManifestStore.GetImplementationForInterface(actionRef)
+
+						implementation := r.ManifestStore.GetImplementationForInterface(actionRef, GetImplementationForInterfaceInput{RequireFilter: filter})
 						if implementation == nil {
 							return nil, fmt.Errorf("implementation for %v not found", actionRef)
 						}

@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.runner.helm # Computed during fetching the manifest
-  name: run
-  displayName: "Run"
-  description: "Run action for Helm Runner"
-  documentationURL: https://projectvoltron.dev
-  supportURL: https://projectvoltron.dev
+  prefix: cap.implementation.jinja2 # Computed during fetching the manifest
+  name: template
+  displayName: Jinja2 Template
+  description: Generate output using Jinja2 template engine
+  documentationURL: https://jinja.palletsprojects.com/en/2.11.x/
+  iconURL: https://raw.githubusercontent.com/pallets/jinja/5f79ba633db0e6f56fc2d13cfc78547495f3d395/artwork/jinjalogo.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -22,19 +22,15 @@ spec:
             "$schema": "http://json-schema.org/draft-07/schema",
             "$ocfRefs": {
               "inputType": {
-                "name": "cap.type.runner.helm.run-input",
-                "revision": "0.1.0"
+                "name": "cap.core.type.generic.value",
+                "revision": "0.0.1"
               }
             },
             "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
           }
   output:
     typeInstances:
-      helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
-      additional: # Maybe this could be more restricted after split `run` into `install`, `upgrade`, `uninstall`
+      postgresql:
         typeRef:
           path: cap.core.type.generic.value
           revision: 0.0.1

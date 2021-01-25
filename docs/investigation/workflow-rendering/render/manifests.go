@@ -13,38 +13,53 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const manifestsExtension = ".yaml"
+
 type ManifestStore struct {
-	ManifestDir     string
 	Implementations map[v1alpha1.ManifestReference]*types.Implementation
 	Interfaces      map[v1alpha1.ManifestReference]*types.Interface
 	TypeInstance    map[string]*types.TypeInstance
 }
 
-func NewManifestStore(manifestDir string) (*ManifestStore, error) {
+func NewManifestStore(manifestDir string, typeInstanceDir string) (*ManifestStore, error) {
 	store := &ManifestStore{
-		ManifestDir:     manifestDir,
 		Implementations: map[v1alpha1.ManifestReference]*types.Implementation{},
 		Interfaces:      map[v1alpha1.ManifestReference]*types.Interface{},
 		TypeInstance:    map[string]*types.TypeInstance{},
 	}
 
-	err := store.loadManifests()
-	if err != nil {
-		return nil, errors.Wrap(err, "while loading manifests")
+	if err := store.loadManifests(manifestDir); err != nil {
+		return nil, errors.Wrap(err, "while loading OCH manifests")
 	}
 
-	return store, err
+	if err := store.loadManifests(typeInstanceDir); err != nil {
+		return nil, errors.Wrap(err, "while loading TypeInstances manifests")
+	}
+
+	return store, nil
 }
 
 func (s *ManifestStore) GetImplementation(ref v1alpha1.ManifestReference) *types.Implementation {
 	return s.Implementations[ref]
 }
 
-func (s *ManifestStore) GetImplementationForInterface(actionPath string) *types.Implementation {
+type RequiresFilter struct {
+	Excluded []string `json:"excluded"`
+}
+
+type GetImplementationForInterfaceInput struct {
+	RequireFilter RequiresFilter
+}
+
+func (s *ManifestStore) GetImplementationForInterface(actionPath string, in GetImplementationForInterfaceInput) *types.Implementation {
 	for key := range s.Implementations {
 		impl := s.Implementations[key]
 
+		if !requirementsAreSatisfied(impl.Spec.Requires, in) {
+			continue
+		}
 		for _, implements := range impl.Spec.Implements {
+
 			if implements.Path == actionPath {
 				return impl
 			}
@@ -52,6 +67,54 @@ func (s *ManifestStore) GetImplementationForInterface(actionPath string) *types.
 	}
 
 	return nil
+}
+
+// TODO: dummy impl, needs to be fixed.
+func requirementsAreSatisfied(requires map[string]types.Require, in GetImplementationForInterfaceInput) bool {
+	for _, req := range requires {
+
+		if len(req.AllOf) > 0 {
+			aReq := filterOut(req.AllOf, in.RequireFilter.Excluded)
+			if len(aReq) != len(req.AllOf) { // sth was excluded by filter but need by impl
+				return false
+			}
+		}
+		if len(req.OneOf) > 0 {
+			oReq := filterOut(req.OneOf, in.RequireFilter.Excluded)
+			if len(oReq) < 1 { // everything was filter out but at least one needs to stay
+				return false
+			}
+		}
+
+		if len(req.AnyOf) > 0 {
+			oReq := filterOut(req.AnyOf, in.RequireFilter.Excluded)
+			if len(oReq) < 1 { // everything was filter out but at least one needs to stay
+				return false
+			}
+		}
+	}
+
+	return true
+}
+
+func filterOut(req []types.RequireEntity, excluded []string) []types.RequireEntity {
+	if len(excluded) == 0 {
+		return req
+	}
+
+	toExclude := map[string]struct{}{}
+	for _, v := range excluded {
+		toExclude[v] = struct{}{}
+	}
+
+	var out []types.RequireEntity
+	for _, aReq := range req {
+		if _, exclude := toExclude[aReq.Name]; exclude {
+			continue
+		}
+		out = append(out, aReq)
+	}
+	return out
 }
 
 func (s *ManifestStore) GetInterface(ref v1alpha1.ManifestReference) *types.Interface {
@@ -66,9 +129,13 @@ type manifestMetadata struct {
 	Kind string `json:"kind"`
 }
 
-func (s *ManifestStore) loadManifests() error {
-	err := filepath.Walk(s.ManifestDir, func(path string, info os.FileInfo, err error) error {
+func (s *ManifestStore) loadManifests(dir string) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
+			return nil
+		}
+
+		if ext := filepath.Ext(path); ext != manifestsExtension {
 			return nil
 		}
 

@@ -6,3 +6,7 @@ manifestReference:
 parameters: {}
 
 typeInstances: []
+
+requirementsSatisfiedBy:
+  excluded:
+    - cap.type.platform.gcp

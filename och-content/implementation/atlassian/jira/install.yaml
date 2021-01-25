@@ -28,26 +28,14 @@ spec:
 
   additionalOutput:
     typeInstances:
-      db:
-        typeRef:
-          path: cap.type.database.postgresql.database
-          revision: 0.1.0
-      postgresql:
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-      helm-release:
+      jira-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
     typeInstanceRelations:
       jira-config:
         uses:
-          - helm-release
-          - postgresql
-          - db
-      db:
-        uses:
+          - jira-helm-release
           - postgresql
 
   implements:
@@ -79,143 +67,95 @@ spec:
           revision: 0.1.0
         - name: create-db
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
     args:
       workflow:
-        spec:
-          volumes:
-            - name: gcp-credentials
-              secret:
-                secretName: gcp-credentials
-          entrypoint: jira
-          templates:
-            - name: jira
-              steps:
-                - - name: generate-artifacts
-                    template: fetch-type-instances
-                - - name: postgresql-install
-                    template: postgresql-install
-                    arguments:
-                      artifacts:
-                        - name: postgresql
-                          from: "{{steps.generate-artifacts.outputs.artifacts.postgresql}}"
-                - - name: produce-helm-values
-                    template: produce-helm-values
-                    arguments:
-                      artifacts:
-                        - name: postgresql
-                          from: "{{steps.postgresql-install.outputs.artifacts.additional}}"
-                - - name: jira-install
-                    template: jira-install
-                    arguments:
-                      artifacts:
-                        - name: jira-helm-input
-                          from: "{{steps.generate-artifacts.outputs.artifacts.jira-helm}}"
-                        - name: jira-helm-values
-                          from: "{{steps.produce-helm-values.outputs.artifacts.jira-helm-values}}"
-                - - name: upload-type-instances
-                    template: upload-type-instances
-                    arguments:
-                      artifacts:
-                        - name: jira-output
-                          from: "{{steps.jira-install.outputs.artifacts.additional}}"
+        entrypoint: jira-install
+        templates:
+          - name: jira-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
+              - - name: install-db
+                  voltron-when: postgresql == nil # conditional execution
+                  arguments:
+                    # TODO: password should be generated or populated by user
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: jira
+                              password: okon
+                            defaultDBName: jira
+                  voltron-action: postgresql.install
 
-            - name: fetch-type-instances
-              container:
-                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
-                imagePullPolicy: Always
-              outputs:
-                artifacts:
-                  - name: postgresql
-                    path: /out/postgresql-input.yaml
-                  - name: jira-helm
-                    path: /out/jira-cloud-input.yaml
+              - - name: create-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          # TODO: context should be removed
+                          # TODO: `args.output` should be simplified.
+                          data: |
+                            context:
+                              name: "jira-helm-release"
+                              dryRun: false
+                              timeout: "10m"
+                              platform:
+                                namespace: "default"
+                                serviceAccountName: "helm-runner-example"
+                            args:
+                              command: "install"
+                              generateName: true
+                              chart:
+                                name: "jira-software"
+                                repo: "https://helm.mox.sh"
+                              output:{% raw %}
+                                directory: "/"
+                                helmRelease:
+                                  fileName: "helm-release"
+                                additional:
+                                  fileName: "additional"
+                                  value: |-
+                                    version: "{{ .Values.image.tag }}"
+                                    host: "{{ template "jira-software.fullname" . }}"{% endraw %}
+                              values:
+                                postgresql:
+                                  enabled: false
+                                databaseConnection:
+                                  host: "{{ host }}"
+                                  user: "{{ superuser.username }}"
+                                  password: "{{ superuser.password }}"
+                                  database: "{{ defaultDBName }}"
+                                ingress:
+                                  enabled: true
+                                  hosts:
+                                  - host: jira-cloud.voltron.local
+                                    paths: ['/']
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
 
-            - name: postgresql-install
-              actionFrom:
-                path: "cap.interface.database.postgresql.install"
-                revision: "0.1.0"
-              inputs:
-                artifacts:
-                  - name: postgresql
-                    path: /input.yaml
-              outputs:
-                artifacts:
-                  - name: instance
-                    path: /instance.yaml
-                  - name: additional
-                    path: /additional.yaml
-
-            - name: produce-helm-values
-              inputs:
-                artifacts:
-                  - name: postgresql
-                    path: "/input.yaml"
-              outputs:
-                artifacts:
-                  - name: jira-helm-values
-                    globalName: jira-helm-values
-                    path: "/out/jira-cloud-values.yaml"
-              container:
-                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
-                command: [ "/produce-helm-values.sh" ]
-                args:
-                  - --input
-                  - "postgresql={{`{{ inputs.artifacts.postgresql.path }}`}}"
-                  - --input
-                  - "params={{ inputParametersToArtifact.path }}"
-                  - --output-path
-                  - "{{`{{workflow.outputs.artifacts.postgresql}}`}}"
-                  - --output-format
-                  - >
-                    image:
-                      tag: {{ .Context.appVersion }}
-                    postgresql:
-                      enabled: false # do not install Postgres along the Jira installation
-                    databaseConnection:
-                      host: {{`{{ .postgresql.host }}`}}
-                      port: {{`{{ .postgresql.port }}`}}
-                      user: {{`{{ .postgresql.superuser.username }}`}}
-                      password: {{`{{ .postgresql.superuser.password }}`}}
-                      database: {{`{{ .postgresql.defaultDBName }}`}}
-                    ingress:
-                      enabled: true
-                      ingress:
-                        hosts:
-                          - host: {{`{{ .params.host }}`}}
-                            paths: []
-
-            - name: jira-install
-              container:
-                image: gcr.io/projectvoltron/pr/helm-runner:PR-62
-                env:
-                  - name: RUNNER_INPUT_PATH
-                    value: "/input.yaml"
-                  - name: RUNNER_LOGGER_DEV_MODE
-                    value: "true"
-              inputs:
-                artifacts:
-                  - name: jira-helm-input
-                    path: /input.yaml
-                  - name: jira-helm-values
-                    path: /values.yaml
-              outputs:
-                artifacts:
-                  - name: release
-                    path: /release.yaml
-                  - name: additional
-                    path: /additional.yaml
-
-            - name: upload-type-instances
-              container:
-                image: gcr.io/projectvoltron/pr/voltron-helper:PR-136
-                command: [ "/upload-type-instances.sh" ]
-              inputs:
-                artifacts:
-                  - name: jira-output
-                    path: /input.yaml
+              - - name: helm-run
+                  voltron-action: helm.run
+                  voltron-outputTypeInstances:
+                    - name: jira-config
+                      from: additional
+                    - name: jira-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
