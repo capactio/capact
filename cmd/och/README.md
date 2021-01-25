@@ -64,7 +64,6 @@ The following environment variables can be set to configure OCH:
 
 ## Development
 
-<<<<<<< HEAD
 ### Accessing Neo4j Browser
 
 To access Neo4j Browser, follow the steps:
@@ -82,6 +81,4 @@ To access Neo4j Browser, follow the steps:
 
 #### Common development guides
 
-=======
->>>>>>> f753f44... mock and typescript deploy
 To read more about development, see the [`development.md`](../../docs/development.md) document.
