@@ -375,6 +375,7 @@ type Implementation {
 type ImplementationRevision {
   revision: Version!
   signature: Signature!
+    @relation(name: "SIGNED_WITH", direction: "OUT")
 
   metadata: ImplementationMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -548,7 +549,7 @@ type TypeMetadata implements MetadataBaseFields {
   prefix: NodePrefix
   displayName: String
   description: String!
-  maintainers: [Maintainer!]!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
   documentationURL: String
   supportURL: String
   iconURL: String
