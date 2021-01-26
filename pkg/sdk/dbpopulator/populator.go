@@ -16,14 +16,15 @@ type Populator struct {
 var attributeQuery = `
 MERGE (signature:Signature{och: value.signature.och})
 
-MERGE (attribute:Attribute{path: "<PATH>", name: value.metadata.name})
+MERGE (attribute:Attribute{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
 CREATE (metadata:GenericMetadata {
   path: "<PATH>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
-  supportURL: value.metadata.supportURL})
+  supportURL: value.metadata.supportURL,
+  iconURL: value.metadata.supportURL})
 
 CREATE (attributeRevision: AttributeRevision {revision: value.revision})
 
@@ -262,10 +263,60 @@ MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
 //TODO: Attributes
 `
 
+var repoMetadataQuery = `
+MERGE (repo:RepoMetadata{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
+CREATE (repoRevision:RepoMetadataRevision {revision: value.revision})
+CREATE (repo)-[:CONTAINS]->(repoRevision)
+
+CREATE (metadata:GenericMetadata {
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name,
+  displayName: value.metadata.displayName,
+  description: value.metadata.description,
+  documentationURL: value.metadata.documentationURL,
+  supportURL: value.metadata.supportURL,
+  iconURL: value.metadata.supportURL})
+CREATE (repoRevision)-[:DESCRIBED_BY]->(metadata)
+
+MERGE (signature:Signature{och: value.signature.och})
+CREATE (repoRevision)-[:SIGNED_WITH]->(signature)
+
+CREATE (spec:RepoMetadataSpec{ochVersion: value.spec.ochVersion})
+CREATE (repoRevision)-[:SPECIFIED_BY]->(spec)
+
+CREATE (ocfVersion:RepoOCFVersion {
+  supported: value.spec.ocfVersion.supported,
+  default: value.spec.ocfVersion.default})
+CREATE (spec)-[:SUPPORTS]->(ocfVersion)
+
+CREATE (implementation: RepoImplementationConfig)
+CREATE (spec)-[:CONFIGURED]->(implementation)
+
+CREATE (appVersion: RepoImplementationAppVersionConfig)
+CREATE (implementation)-[:APP_VERSION]->(appVersion)
+
+CREATE (semVerTaggingStrategy:SemVerTaggingStrategy)
+CREATE (appVersion)-[:TAGGING_STRATEGY]->(semVerTaggingStrategy)
+
+CREATE (latest:LatestSemVerTaggingStrategy{
+  pointsTo: value.spec.implementation.appVersion.semVerTaggingStrategy.latest.pointsTo})
+CREATE (semVerTaggingStrategy)-[:LATEST]->(latest)
+
+WITH value, metadata
+UNWIND value.metadata.maintainers as m
+MERGE (maintainer:Maintainer {
+  email: m.email,
+  name: m.name,
+  url: m.url})
+CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
+`
+
 //TODO performance: switch merge with create wherever possible
 
 func Populate(session neo4j.Session, paths []string, prefixPath string, publishPath string) error {
 	var queries = map[string]string{
+		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
 		"Type":           typeQuery,
 		"InterfaceGroup": interfaceGroupQuery,
