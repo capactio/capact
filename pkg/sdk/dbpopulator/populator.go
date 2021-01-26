@@ -16,7 +16,10 @@ type Populator struct {
 var attributeQuery = `
 MERGE (signature:Signature{och: value.signature.och})
 
-MERGE (attribute:Attribute{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
+MERGE (attribute:Attribute{
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name})
 CREATE (metadata:GenericMetadata {
   path: "<PATH>",
   name: value.metadata.name,
@@ -44,7 +47,10 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 // TODO handle optional fields
 var typeQuery = `
 MERGE (signature:Signature{och: value.signature.och})
-MERGE (type:Type{path: "<PATH>", name: value.metadata.name})
+MERGE (type:Type{
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name})
 CREATE (metadata:TypeMetadata {
   path: "<PATH>",
   prefix: "<PREFIX>",
@@ -79,7 +85,10 @@ MERGE (metadata:GenericMetadata {
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
   supportURL: value.metadata.supportURL})
-MERGE (interfaceGroup:InterfaceGroup{path: "<PATH>"})
+MERGE (interfaceGroup:InterfaceGroup{
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name})
 
 MERGE (interfaceGroup)-[:DESCRIBED_BY]->(metadata)
 MERGE (interfaceGroup)-[:SIGNED_WITH]->(signature)
@@ -95,6 +104,12 @@ MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
 
 var interfaceQuery = `
 MATCH (interfaceGroup:InterfaceGroup{path: "<PREFIX>"})
+
+MERGE (interface:Interface{
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name})
+
 CREATE (input:InterfaceInput)
 CREATE (inputParameters:InputParameters {
   jsonSchema: value.spec.input.parameters.jsonSchema.value})
@@ -119,10 +134,10 @@ CREATE (interfaceRevision:InterfaceRevision {revision: value.revision})
 MERGE (interfaceRevision)-[:DESCRIBED_BY]->(metadata)
 MERGE (interfaceRevision)-[:SIGNED_WITH]->(signature)
 MERGE (interfaceRevision)-[:SPECIFIED_BY]->(spec)
-MERGE (interface:Interface {path: "<PATH>"})
 MERGE (interface)-[:CONTAINS]->(interfaceRevision)
 
 MERGE (interfaceGroup)-[:CONTAINS]->(interface)
+MERGE (interface)-[:CONTAINED_BY]->(interfaceGroup)
 
 WITH output, input, value, metadata, value.spec.input.typeInstances as typeInstances
 UNWIND (CASE keys(typeInstances) WHEN null then [null] else keys(typeInstances) end) as name
@@ -154,8 +169,11 @@ MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
 var implementationQuery = `
-MERGE (implementation:Implementation{path: "<PATH>", prefix: "<PREFIX>"})
-CREATE (implementationRevision:ImplementationRevision {revision: value.Revision})
+MERGE (implementation:Implementation{
+  path: "<PATH>",
+  prefix: "<PREFIX>",
+  name: value.metadata.name})
+CREATE (implementationRevision:ImplementationRevision {revision: value.revision})
 
 CREATE (implementation)-[:CONTAINS]->(implementationRevision)
 
@@ -196,11 +214,16 @@ UNWIND (CASE keys(requires) WHEN null then [null] else keys(requires) end) as r
  WITH *
  UNWIND (CASE keys(requires[r]) WHEN null then [null] else keys(requires[r]) end) as of
   UNWIND requires[r][of] as listItem
+   MATCH (type:Type{path: apoc.text.join([r, listItem.name], ".")})-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
+
+   CREATE (typeReference:TypeReference{
+	 path: apoc.text.join([r, listItem.name], "."),
+	 revision: listItem.revision})
    CREATE (item:ImplementationRequirementItem)
-   CREATE (type:TypeReference{path:listItem.name, revision:listItem.revision})
-   CREATE (item)-[:REFERENCES_TYPE]->(type)
+   CREATE (item)-[:REFERENCES_TYPE]->(typeReference)
    WITH *, {oneOf: "ONE_OF", anyOf: "ANY_OF", allOf: "ALL_OF"} as requirementTypes
-   CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, item) YIELD rel
+   CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, item) YIELD rel as t1
+   CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, typeRevision) YIELD rel as t2
 
 WITH distinct value, spec, metadata, value.spec.imports as imports
 UNWIND (CASE imports WHEN null then [null] else imports end) as import
