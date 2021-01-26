@@ -17,7 +17,7 @@ var attributeQuery = `
 MERGE (signature:Signature{och: value.signature.och})
 
 MERGE (attribute:Attribute{path: "<PATH>", name: value.metadata.name})
-MERGE (metadata:GenericMetadata {
+CREATE (metadata:GenericMetadata {
   path: "<PATH>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -27,9 +27,9 @@ MERGE (metadata:GenericMetadata {
 
 CREATE (attributeRevision: AttributeRevision {revision: value.revision})
 
-merge (attributeRevision)-[:DESCRIBED_BY]->(metadata)
-merge (attribute)-[:CONTAINS]->(attributeRevision)
-merge (attributeRevision)-[:SIGNED_WITH]->(signature)
+CREATE (attributeRevision)-[:DESCRIBED_BY]->(metadata)
+CREATE (attribute)-[:CONTAINS]->(attributeRevision)
+CREATE (attributeRevision)-[:SIGNED_WITH]->(signature)
 
 WITH value, metadata 
 UNWIND value.metadata.maintainers as m
