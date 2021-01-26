@@ -37,9 +37,10 @@ spec:
       revision: 0.1.0
 
   requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
+    cap.type.gcp.auth:
+      allOf:
+        - name: service-account
+          # alias: gcp-sa
           revision: 0.1.0
 
   imports:

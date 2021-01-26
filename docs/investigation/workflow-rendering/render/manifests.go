@@ -108,26 +108,6 @@ func containsAttributes(implAtr map[string]types.MetadataAttribute, expAtr []Pol
 	return true
 }
 
-func filterOut(req []types.RequireEntity, skip []PolicyItem) []types.RequireEntity {
-	if len(skip) == 0 {
-		return req
-	}
-
-	toSkip := map[string]struct{}{}
-	for _, v := range skip {
-		toSkip[v.Attribute] = struct{}{}
-	}
-
-	var out []types.RequireEntity
-	for _, aReq := range req {
-		if _, skip := toSkip[aReq.Name]; skip {
-			continue
-		}
-		out = append(out, aReq)
-	}
-	return out
-}
-
 func (s *ManifestStore) GetInterface(ref v1alpha1.ManifestReference) *types.Interface {
 	return s.Interfaces[ref]
 }
