@@ -154,7 +154,6 @@ type SemVerTaggingStrategy {
 
 type LatestSemVerTaggingStrategy {
   pointsTo: SemVerTaggingStrategyTags!
-    @relation(name: "POINTS_TO", direction: "OUT")
 }
 
 enum SemVerTaggingStrategyTags {
