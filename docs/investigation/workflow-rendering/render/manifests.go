@@ -13,45 +13,99 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const manifestsExtension = ".yaml"
+
 type ManifestStore struct {
-	ManifestDir     string
 	Implementations map[v1alpha1.ManifestReference]*types.Implementation
 	Interfaces      map[v1alpha1.ManifestReference]*types.Interface
 	TypeInstance    map[string]*types.TypeInstance
 }
 
-func NewManifestStore(manifestDir string) (*ManifestStore, error) {
+func NewManifestStore(manifestDir string, typeInstanceDir string) (*ManifestStore, error) {
 	store := &ManifestStore{
-		ManifestDir:     manifestDir,
 		Implementations: map[v1alpha1.ManifestReference]*types.Implementation{},
 		Interfaces:      map[v1alpha1.ManifestReference]*types.Interface{},
 		TypeInstance:    map[string]*types.TypeInstance{},
 	}
 
-	err := store.loadManifests()
-	if err != nil {
-		return nil, errors.Wrap(err, "while loading manifests")
+	if err := store.loadManifests(manifestDir); err != nil {
+		return nil, errors.Wrap(err, "while loading OCH manifests")
 	}
 
-	return store, err
+	if err := store.loadManifests(typeInstanceDir); err != nil {
+		return nil, errors.Wrap(err, "while loading TypeInstances manifests")
+	}
+
+	return store, nil
 }
 
 func (s *ManifestStore) GetImplementation(ref v1alpha1.ManifestReference) *types.Implementation {
 	return s.Implementations[ref]
 }
 
-func (s *ManifestStore) GetImplementationForInterface(ref v1alpha1.ManifestReference) *types.Implementation {
+type PolicyItem struct {
+	Attribute string `json:"attribute"`
+}
+
+type FilterPolicies struct {
+	Included []PolicyItem `json:"included"`
+	Excluded []PolicyItem `json:"excluded"`
+}
+
+type GetImplementationForInterfaceInput struct {
+	Policies map[string]FilterPolicies
+}
+
+func (s *ManifestStore) GetImplementationForInterface(actionPath string, in GetImplementationForInterfaceInput) *types.Implementation {
 	for key := range s.Implementations {
 		impl := s.Implementations[key]
 
+		policies, found := in.Policies[actionPath]
+		if found && !policiesAreSatisfied(impl, policies) {
+			continue
+		}
 		for _, implements := range impl.Spec.Implements {
-			if implements.Path == string(ref.Path) {
+			if implements.Path == actionPath {
 				return impl
 			}
 		}
 	}
 
 	return nil
+}
+
+// policiesAreSatisfied verifies only Attributes
+func policiesAreSatisfied(impl *types.Implementation, in FilterPolicies) bool {
+	if len(in.Excluded) > 0 && containsAttributes(impl.Metadata.Attributes, in.Excluded) {
+		return false
+	}
+
+	if len(in.Included) > 0 && !containsAttributes(impl.Metadata.Attributes, in.Included) {
+		return false
+	}
+
+	return true
+}
+
+//  contains returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
+func containsAttributes(implAtr map[string]types.MetadataAttribute, expAtr []PolicyItem) bool {
+	expected := map[string]struct{}{}
+	for _, v := range expAtr {
+		expected[v.Attribute] = struct{}{}
+	}
+
+	matchedEntries := map[string]struct{}{}
+	for atrName := range implAtr {
+		if _, found := expected[atrName]; found {
+			matchedEntries[atrName] = struct{}{}
+		}
+	}
+
+	if len(matchedEntries) != len(expected) {
+		return false
+	}
+
+	return true
 }
 
 func (s *ManifestStore) GetInterface(ref v1alpha1.ManifestReference) *types.Interface {
@@ -66,9 +120,13 @@ type manifestMetadata struct {
 	Kind string `json:"kind"`
 }
 
-func (s *ManifestStore) loadManifests() error {
-	err := filepath.Walk(s.ManifestDir, func(path string, info os.FileInfo, err error) error {
+func (s *ManifestStore) loadManifests(dir string) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
+			return nil
+		}
+
+		if ext := filepath.Ext(path); ext != manifestsExtension {
 			return nil
 		}
 

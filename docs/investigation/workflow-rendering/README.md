@@ -102,12 +102,12 @@ You can generate the workflows in this proof of concept:
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/1-postgres.yml | kubectl apply -n default -f -
+go run main.go -och-dir=../../../och-content/ -render-input=inputs/1-postgres.yml | kubectl apply -n default -f -
 ```
 
 ### JIRA installation with a provided PostgreSQL TypeInstance
 
-We will use the PostgreSQL installation created in [PostgreSQL install using Helm](#postgresql-install-using-helm), so if you did not take that step, do it now.
+We will use the PostgreSQL installation created in [PostgreSQL install using Helm](#postgresql-installation), so if you did not take that step, do it now.
 
 Update the `.spec.value.host` in `manifests/typeinstances/postgresql-1.yaml` with the PostgreSQL service Kubernetes DNS, to reflect the connection details to the PostgreSQL server:
 ```yaml
@@ -123,7 +123,7 @@ spec:
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/2-jira.yml | kubectl apply -n default -f -
+go run main.go -och-dir=../../../och-content/ -render-input=inputs/2-jira.yml | kubectl apply -n default -f -
 ```
 
 ### JIRA installation with embedded PostgreSQL
@@ -132,9 +132,20 @@ Remove the JIRA Helm release from [JIRA install with Helm and a provided Postgre
 
 To generate and run the workflow, execute:
 ```bash
-go run main.go inputs/3-jira-with-postgres.yml | kubectl apply -n default -f -
+go run main.go -och-dir=../../../och-content/ -render-input=inputs/3-jira-with-postgres.yml | kubectl apply -n default -f -
 ```
 
+### JIRA installation with CloudSQL
+
+Update the `.spec.value` property in `manifests/typeinstances/gcp-sa-4.yaml` with the [GCP service account key](https://cloud.google.com/iam/docs/creating-managing-service-account-keys). The service account key must have the `Cloud SQL Admin` role.
+
+To generate and run the workflow, execute:
+```bash
+go run main.go -och-dir=../../../och-content/ -render-input=inputs/3-jira-with-cloudsql.yml | kubectl apply -n default -f -
+```
+
+Navigate to your [GCP CloudSQL Console](https://console.cloud.google.com/sql/instances). You should see that a new CloudSQL instance is being created.
+ 
 ## Rendering algorithm
 
 Input:

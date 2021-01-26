@@ -2,13 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.implementation.jinja2 # Computed during fetching the manifest
+  prefix: cap.interface.jinja2 # Computed during fetching the manifest
   name: template
-  displayName: "Install"
-  description: "Install action for PostgreSQL"
-  documentationURL: https://www.postgresql.org/docs/
-  supportURL: https://www.postgresql.org/
-  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
+  displayName: Jinja2 Template
+  description: Generate output using Jinja2 template engine
+  documentationURL: https://jinja.palletsprojects.com/en/2.11.x/
+  iconURL: https://raw.githubusercontent.com/pallets/jinja/5f79ba633db0e6f56fc2d13cfc78547495f3d395/artwork/jinjalogo.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -23,18 +22,18 @@ spec:
             "$schema": "http://json-schema.org/draft-07/schema",
             "$ocfRefs": {
               "inputType": {
-                "name": "cap.type.database.postgresql.install-input",
-                "revision": "0.1.0"
+                "name": "cap.core.type.generic.value",
+                "revision": "0.0.1"
               }
             },
             "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
           }
   output:
     typeInstances:
-      postgresql:
+      render:
         typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
+          path: cap.core.type.generic.value
+          revision: 0.0.1
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

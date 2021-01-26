@@ -8,3 +8,15 @@ parameters:
     username: postgres
     password: s3cr3t
   defaultDBName: test
+
+# Simplified version of this draft: https://docs.google.com/document/d/1iTV0pnOm0b649IPPaHhuoAQiopTLAS5kh0krHlleUqs/edit#heading=h.6vqknw7s28if
+# - do not support regex
+# - preferred -> included
+# - add exclude opt
+# - remove no groups support
+# - only `attribute` supported
+# - no support for `inputOverride`
+policies:
+  cap.interface.database.postgresql.install:
+    excluded:
+      - attribute: cap.attribute.cloud.provider.gcp

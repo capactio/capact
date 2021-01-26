@@ -1,37 +1,36 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
-
 	"github.com/ghodss/yaml"
 	"github.com/mitchellh/mapstructure"
+	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"log"
 	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
-var (
-	implementationsDir = "manifests"
-)
-
 type renderInput struct {
-	Name              string                        `json:"name"`
-	ManifestReference v1alpha1.ManifestReference    `json:"manifestReference"`
-	Parameters        map[string]interface{}        `json:"parameters"`
-	TypeInstances     []*v1alpha1.InputTypeInstance `json:"typeInstances"`
+	Name              string                           `json:"name"`
+	ManifestReference v1alpha1.ManifestReference       `json:"manifestReference"`
+	Parameters        map[string]interface{}           `json:"parameters"`
+	TypeInstances     []*v1alpha1.InputTypeInstance    `json:"typeInstances"`
+	Policies          map[string]render.FilterPolicies `json:"policies"`
 }
 
 func main() {
-	if len(os.Args) < 2 {
-		log.Fatal("missing implementation path argument")
+	ochDir := flag.String("och-dir", "manifests", "Directory with OCH manifests")
+	typeInstanceDir := flag.String("type-instances-dir", "manifests/typeinstances", "Directory with OCH manifests")
+	renderInputPath := flag.String("render-input", "", "Filepath to render input")
+	flag.Parse()
+
+	if *renderInputPath == "" {
+		log.Fatal("missing render-input filepath")
 	}
 
-	inputPath := os.Args[1]
-
-	renderInputData, err := ioutil.ReadFile(inputPath)
+	renderInputData, err := ioutil.ReadFile(*renderInputPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -41,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	manifestStore, err := render.NewManifestStore(implementationsDir)
+	manifestStore, err := render.NewManifestStore(*ochDir, *typeInstanceDir)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -54,6 +53,7 @@ func main() {
 		renderInput.ManifestReference,
 		renderInput.Parameters,
 		renderInput.TypeInstances,
+		renderInput.Policies,
 	)
 	if err != nil {
 		log.Fatal(err)

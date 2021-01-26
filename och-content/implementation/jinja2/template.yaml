@@ -39,7 +39,7 @@ spec:
                 - name: render
                   path: "/render.yml"
             container:
-              image: dinutac/jinja2docker
+              image: gcr.io/projectvoltron/jinja2:v2.11.2
               args:
                 - /template.yml 
                 - /values.yml 
