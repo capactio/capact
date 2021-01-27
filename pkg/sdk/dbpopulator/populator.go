@@ -135,25 +135,37 @@ MERGE (interface)-[:CONTAINS]->(interfaceRevision)
 MERGE (interfaceGroup)-[:CONTAINS]->(interface)
 MERGE (interface)-[:CONTAINED_BY]->(interfaceGroup)
 
-WITH output, input, value, metadata, value.spec.input.typeInstances as typeInstances
+WITH output, input, value, interfaceRevision, metadata, value.spec.input.typeInstances as typeInstances
 UNWIND (CASE keys(typeInstances) WHEN null then [null] else keys(typeInstances) end) as name
-CREATE (inputTypeInstance: InputTypeInstance{
-  name: name,
-  verbs: typeInstances[name].verbs})
-CREATE (typeReference: TypeReference{
-  path: typeInstances[name].typeRef.path,
-  revision: typeInstances[name].typeRef.revision})
-MERGE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
-MERGE (input)-[:HAS]->(inputTypeInstance)
+ CREATE (inputTypeInstance: InputTypeInstance{
+   name: name,
+   verbs: typeInstances[name].verbs})
+ CREATE (typeReference: TypeReference{
+   path: typeInstances[name].typeRef.path,
+   revision: typeInstances[name].typeRef.revision})
+ MERGE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
+ MERGE (input)-[:HAS]->(inputTypeInstance)
+ WITH *
+ MATCH (:Type{
+   path: typeInstances[name].typeRef.path})-[:CONTAINS]->(typeRevision:TypeRevision{revision:typeInstances[name].typeRef.revision})
+ MERGE (input)-[:HAS]->(typeRevision)
+ MERGE (typeRevision)-[:USED_BY]->(interfaceRevision)
+ 
+ 
 
 WITH distinct output, value, metadata, value.spec.output.typeInstances as typeInstances
 UNWIND (CASE keys(typeInstances) WHEN null then [null] else keys(typeInstances) end) as name
-CREATE (outputTypeInstance: OutputTypeInstance{name: name})
-CREATE (typeReference: TypeReference{
-  path: typeInstances[name].typeRef.path,
-  revision: typeInstances[name].typeRef.revision})
-MERGE (outputTypeInstance)-[:OF_TYPE]->(typeReference)
-MERGE (output)-[:HAS]->(outputTypeInstance)
+ CREATE (outputTypeInstance: OutputTypeInstance{name: name})
+ CREATE (typeReference: TypeReference{
+   path: typeInstances[name].typeRef.path,
+   revision: typeInstances[name].typeRef.revision})
+ MERGE (outputTypeInstance)-[:OF_TYPE]->(typeReference)
+ MERGE (output)-[:HAS]->(outputTypeInstance)
+ WITH *
+ MATCH (:Type{
+   path: typeInstances[name].typeRef.path})-[:CONTAINS]->(typeRevision:TypeRevision{revision:typeInstances[name].typeRef.revision})
+ MERGE (output)-[:HAS]->(typeRevision)
+ MERGE (typeRevision)-[:USED_BY]->(interfaceRevision)
 
 WITH value, metadata
 UNWIND value.metadata.maintainers as m
@@ -224,7 +236,7 @@ UNWIND (CASE keys(requires) WHEN null then [null] else keys(requires) end) as r
 WITH distinct value, spec, metadata, value.spec.imports as imports
 UNWIND (CASE imports WHEN null then [null] else imports end) as import
  CREATE (implementationImport:ImplementationImport {
-   interfaceGroupPath: import.interfaceGrupPath,
+   interfaceGroupPath: import.interfaceGroupPath,
    alias: import.alias,
    appVersion: import.appVersion})
  CREATE (spec)-[:IMPORTS]->(implementationImport)
