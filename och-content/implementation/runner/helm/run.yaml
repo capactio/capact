@@ -52,15 +52,19 @@ spec:
               artifacts:
                 - name: helm-release
                   globalName: helm-release
-                  path: "/helm-release"
+                  path: "/helm-release.yaml"
                 - name: additional
                   globalName: additional
-                  path: "/additional"
+                  path: "/additional.yaml"
             container:
               image: gcr.io/projectvoltron/helm-runner:f5e51e3
               env:
                 - name: RUNNER_INPUT_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
+                - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+                  value: "{{inputs.artifacts.helm-release.path}}"
+                - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+                  value: "{{inputs.artifacts.additional.path}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

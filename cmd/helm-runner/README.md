@@ -34,13 +34,17 @@ postgresql-1607608471   default         1               2020-12-10 14:54:34.8823
 
 The following environment variables can be set:
 
-| Name                         | Required | Default          | Description                                    |
-| ---------------------------- | -------- | ---------------- | ---------------------------------------------- |
-| RUNNER_INPUT_PATH            | yes      |                  | Path to the runner YAML input file             |
-| RUNNER_LOGGER_DEV_MODE       | no       | `false`          | Enable additional log messages                 |
-| RUNNER_HELM_DRIVER           | no       | `secrets`        | Set Helm backend storage driver                |
-| RUNNER_REPOSITORY_CACHE_PATH | no       | `/tmp/helm`      | Set the path to the repository cache directory |
-| KUBECONFIG                   | no       | `~/.kube/config` | Path to kubeconfig file                        |
+| Name                                 | Required | Default                  | Description                                                  |
+|--------------------------------------|----------|--------------------------|--------------------------------------------------------------|
+| RUNNER_INPUT_PATH                    | yes      |                          | Path to the runner YAML input file                           |
+| RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                               |
+| RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                              |
+| RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory               |
+| RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved |
+| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved      |
+| KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                      |
+
+
 
 ## Development
 

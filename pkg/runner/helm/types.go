@@ -6,6 +6,11 @@ import "projectvoltron.dev/voltron/pkg/runner"
 type Config struct {
 	HelmDriver          string `envconfig:"default=secrets"`
 	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
+	Output              struct {
+		HelmReleaseFilePath string `envconfig:"default=/tmp/helm-release.yaml"`
+		// Extracting resource metadata from Kubernetes as outputs
+		AdditionalFilePath string `envconfig:"default=/tmp/additional.yaml"`
+	}
 }
 
 type CommandType string
@@ -27,19 +32,11 @@ type Arguments struct {
 	Output OutputArgs `json:"output"`
 }
 
+type OutputArtifacts struct {
+}
+
 type OutputArgs struct {
-	Directory   string           `json:"directory"`
-	HelmRelease ReleaseOutput    `json:"helmRelease"`
-	Additional  AdditionalOutput `json:"additional"`
-}
-
-type ReleaseOutput struct {
-	FileName string `json:"fileName"`
-}
-
-type AdditionalOutput struct {
-	FileName string `json:"fileName"`
-	Value    string `json:"value"`
+	GoTemplate string `json:"goTemplate"`
 }
 
 type Chart struct {
@@ -55,8 +52,8 @@ type ChartRelease struct {
 }
 
 type Input struct {
-	Args    Arguments
-	ExecCtx runner.ExecutionContext
+	Args                Arguments
+	ExecCtx             runner.ExecutionContext
 }
 
 type Status struct {
@@ -65,11 +62,6 @@ type Status struct {
 }
 
 type Output struct {
-	Release    File
-	Additional *File
-}
-
-type File struct {
-	Path  string
-	Value []byte
+	Release    []byte
+	Additional []byte
 }
