@@ -326,7 +326,7 @@ CREATE (semVerTaggingStrategy:SemVerTaggingStrategy)
 CREATE (appVersion)-[:TAGGING_STRATEGY]->(semVerTaggingStrategy)
 
 CREATE (latest:LatestSemVerTaggingStrategy{
-  pointsTo: value.spec.implementation.appVersion.semVerTaggingStrategy.latest.pointsTo})
+  pointsTo: toUpper(value.spec.implementation.appVersion.semVerTaggingStrategy.latest.pointsTo)})
 CREATE (semVerTaggingStrategy)-[:LATEST]->(latest)
 
 WITH value, metadata
