@@ -7,11 +7,8 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"sync"
 
-	"github.com/hashicorp/go-getter"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
-	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
 	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 )
@@ -49,6 +46,17 @@ func main() {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt)
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	go func() {
+		select {
+		case <-c:
+			signal.Reset(os.Interrupt)
+			cancel()
+		}
+	}()
+
 	var cfg Config
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
@@ -58,14 +66,14 @@ func main() {
 	dstDir := path.Join(parent, "och")
 	defer os.RemoveAll(dstDir)
 
-	err = download(src, dstDir, c)
+	err = dbpopulator.Download(ctx, src, dstDir)
 	exitOnError(err, "while downloading och content")
 
-	prefixPath := path.Join(dstDir, "och-content/")
-	files, err := dbpopulator.List(prefixPath)
+	rootDir := path.Join(dstDir, "och-content/")
+	files, err := dbpopulator.List(rootDir)
 	exitOnError(err, "when loading manifests")
 
-	dbpopulator.ServeJson(files)
+	go dbpopulator.ServeJson(ctx, files)
 
 	driver, err := neo4j.NewDriver(cfg.Neo4jAddr, neo4j.BasicAuth(cfg.Neo4jUser, cfg.Neo4jPassword, ""))
 	exitOnError(err, "when connecting to Neo4j db")
@@ -74,55 +82,12 @@ func main() {
 	session := driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
-	err = dbpopulator.Populate(session, files, prefixPath, cfg.JSONPublishAddr)
+	err = dbpopulator.Populate(ctx, session, files, rootDir, cfg.JSONPublishAddr)
 	exitOnError(err, "when populating manifests")
 }
 
 func exitOnError(err error, context string) {
 	if err != nil {
-		log.Fatalf("%s: %v", context, err)
+		log.Fatalf("Error %s: %v", context, err)
 	}
-}
-
-func download(src string, dst string, c chan os.Signal) error {
-	// Get the pwd
-	pwd, err := os.Getwd()
-	if err != nil {
-		return errors.Wrap(err, "Error getting pwd")
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	// Build the client
-	client := &getter.Client{
-		Ctx:  ctx,
-		Src:  src,
-		Dst:  dst,
-		Pwd:  pwd,
-		Mode: getter.ClientModeDir,
-	}
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	errChan := make(chan error, 2)
-	go func() {
-		defer wg.Done()
-		defer cancel()
-		if err := client.Get(); err != nil {
-			errChan <- err
-		}
-	}()
-
-	select {
-	case sig := <-c:
-		signal.Reset(os.Interrupt)
-		cancel()
-		wg.Wait()
-		log.Printf("signal %v", sig)
-	case <-ctx.Done():
-		wg.Wait()
-	case err := <-errChan:
-		wg.Wait()
-		return err
-	}
-	return nil
 }

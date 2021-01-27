@@ -1,16 +1,13 @@
 package dbpopulator
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/pkg/errors"
 )
-
-type Populator struct {
-	Session neo4j.Session
-}
 
 // TODO: add AtributeSpec
 var attributeQuery = `
@@ -44,7 +41,6 @@ MERGE (maintainer:Maintainer {
 CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
-// TODO handle optional fields
 var typeQuery = `
 MERGE (signature:Signature{och: value.signature.och})
 MERGE (type:Type{
@@ -277,15 +273,22 @@ UNWIND (CASE keys(typeInstanceRelations) WHEN null then [null] else keys(typeIns
 
 WITH value, metadata
 UNWIND value.metadata.maintainers as m
-MERGE (maintainer:Maintainer {
-  email: m.email,
-  name: m.name,
-  url: m.url})
-MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
-
-//TODO: Attributes
+ MERGE (maintainer:Maintainer {
+   email: m.email,
+   name: m.name,
+   url: m.url})
+ MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
+/*
+
+WITH value, metadata, value.spec.attributes as attributes
+UNWIND (CASE keys(attributes) WHEN null then [null] else keys(attributes) end) as attribute
+ MATCH (attribute:AttributeRevision{
+   path: attribute,
+   revision: attributes[attribute].revision})
+`
+*/
 var repoMetadataQuery = `
 MERGE (repo:RepoMetadata{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
 CREATE (repoRevision:RepoMetadataRevision {revision: value.revision})
@@ -335,9 +338,7 @@ MERGE (maintainer:Maintainer {
 CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
-//TODO performance: switch merge with create wherever possible
-
-func Populate(session neo4j.Session, paths []string, prefixPath string, publishPath string) error {
+func Populate(ctx context.Context, session neo4j.Session, paths []string, rootDir string, publishPath string) error {
 	var queries = map[string]string{
 		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
@@ -354,30 +355,25 @@ func Populate(session neo4j.Session, paths []string, prefixPath string, publishP
 	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
 
 		for _, kind := range ordered {
-			manifests := grouped[kind]
+			paths = grouped[kind]
 			query := queries[kind]
-			for _, manifest := range manifests {
-				// TODO move it to a function
-				path := strings.TrimPrefix(manifest, prefixPath)
-				path = strings.TrimSuffix(path, ".yaml")
-				path = strings.ReplaceAll(path, "/", ".")
-				path = strings.TrimPrefix(path, ".")
-				path = "cap." + path
-				parts := strings.Split(path, ".")
-				prefix := strings.Join(parts[:len(parts)-1], ".")
+			for _, manifestPath := range paths {
+				path, prefix := getPathPrefix(manifestPath, rootDir)
+				q := renderQuery(query, publishPath, manifestPath, path, prefix)
 
-				json := fmt.Sprintf("call apoc.load.json(\"%s/%s\") yield value", publishPath, manifest)
-				renderedQuery := strings.ReplaceAll(query, "<PATH>", path)
-				renderedQuery = strings.ReplaceAll(renderedQuery, "<PREFIX>", prefix)
-				q := fmt.Sprintf("%s\n%s", json, renderedQuery)
-
-				result, err := transaction.Run(q, nil)
-				if err != nil {
-					return nil, errors.Wrapf(err, "when adding manifest %s", manifest)
-				}
-				err = result.Err()
-				if err != nil {
-					return nil, errors.Wrapf(err, "when adding manifest %s", manifest)
+				select {
+				case <-ctx.Done():
+					// returning error to not commit transaction
+					return nil, errors.New("canceled")
+				default:
+					result, err := transaction.Run(q, nil)
+					if err != nil {
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+					}
+					err = result.Err()
+					if err != nil {
+						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
+					}
 				}
 			}
 		}
@@ -387,4 +383,21 @@ func Populate(session neo4j.Session, paths []string, prefixPath string, publishP
 		return err
 	}
 	return nil
+}
+
+func getPathPrefix(manifestPath string, rootDir string) (string, string) {
+	path := strings.TrimPrefix(manifestPath, rootDir)
+	path = strings.TrimSuffix(path, ".yaml")
+	path = strings.ReplaceAll(path, "/", ".")
+	path = "cap" + path
+	parts := strings.Split(path, ".")
+	prefix := strings.Join(parts[:len(parts)-1], ".")
+	return path, prefix
+}
+
+func renderQuery(query, publishPath, manifestPath, path, prefix string) string {
+	json := fmt.Sprintf("call apoc.load.json(\"%s/%s\") yield value", publishPath, manifestPath)
+	renderedQuery := strings.ReplaceAll(query, "<PATH>", path)
+	renderedQuery = strings.ReplaceAll(renderedQuery, "<PREFIX>", prefix)
+	return fmt.Sprintf("%s\n%s", json, renderedQuery)
 }

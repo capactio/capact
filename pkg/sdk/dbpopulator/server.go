@@ -1,6 +1,7 @@
 package dbpopulator
 
 import (
+	"context"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -8,11 +9,21 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// TODO https://stackoverflow.com/questions/39320025/how-to-stop-http-listenandserve
-func ServeJson(validPaths []string) {
+// ServeJson serves OCH Manifests
+// manifests are converted from YAML to JSON when requested
+func ServeJson(ctx context.Context, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))
 	srv := http.Server{Addr: "0.0.0.0:8080"}
-	go srv.ListenAndServe()
+	go func() {
+		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
+			log.Fatalf("ListenAndServe(): %v", err)
+		}
+	}()
+
+	select {
+	case <-ctx.Done():
+		srv.Shutdown(ctx)
+	}
 }
 
 func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
@@ -34,6 +45,5 @@ func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
 		}
 		converted, err := yaml.YAMLToJSON(content)
 		w.Write(converted)
-
 	}
 }
