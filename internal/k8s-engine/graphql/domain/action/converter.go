@@ -104,7 +104,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 
 	return graphql.Action{
 		Name:                   in.Name,
-		CreatedAt:              graphql.Timestamp(in.CreationTimestamp.Time),
+		CreatedAt:              graphql.Timestamp{in.CreationTimestamp.Time},
 		Input:                  actionInput,
 		Output:                 actionOutput,
 		DryRun:                 dryRun,
@@ -293,7 +293,7 @@ func (c *Converter) statusToGraphQL(in *v1alpha1.ActionStatus) *graphql.ActionSt
 
 	return &graphql.ActionStatus{
 		Phase:      c.phaseToGraphQL(in.Phase),
-		Timestamp:  graphql.Timestamp(in.LastTransitionTime.Time),
+		Timestamp:  graphql.Timestamp{in.LastTransitionTime.Time},
 		Message:    in.Message,
 		Runner:     runnerStatus,
 		CreatedBy:  c.userInfoToGraphQL(in.CreatedBy),
