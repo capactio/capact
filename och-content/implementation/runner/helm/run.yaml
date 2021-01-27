@@ -57,7 +57,7 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/helm-runner:f5e51e3
+              image: gcr.io/projectvoltron/pr/helm-runner:PR-102
               env:
                 - name: RUNNER_INPUT_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
