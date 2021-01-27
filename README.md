@@ -48,6 +48,7 @@ The following Voltron components are in this repository
 - [Engine](./cmd/k8s-engine) - Kubernetes Voltron Engine, which handles Action execution.
 - [ocftool](./cmd/ocftool) - A CLI tool for working with OCF Manifests.
 - [Open Capability Hub](./och-js) - Component, which stores OCF Manifests and exposes API to manage them.
+- [Mocked Open Capability Hub](./cmd/och) - Mocked version of the Open Capability Hub. It does not use the database, but exposes mocks from `./hack/mock/graphql` on the API.
 
 Check the README files in the component directories, for more details about how to use and develop them.
 

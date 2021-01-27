@@ -35,6 +35,8 @@ var cfg Config
 var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
+
+	waitTillServiceEndpointsAreReady()
 })
 
 func TestE2E(t *testing.T) {

@@ -89,6 +89,7 @@ type TypeInstanceInstrumentationHealth {
   # resolver, which does a HTTP call on a given URL
   # and expects status code greater than or equal to 200
   # and less than 400
+  # TODO implement TypeInstance health check, for resolution of this field
   status: TypeInstanceInstrumentationHealthStatus
 }
 
@@ -151,6 +152,7 @@ input UpdateTypeInstanceInput {
 }
 
 type Query {
+  # TODO implement revision checks in the attribute filters (excluded and included)
   typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
     @cypher(
       statement: """
@@ -204,6 +206,7 @@ type Query {
 }
 
 type Mutation {
+  # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """
@@ -220,6 +223,7 @@ type Mutation {
       RETURN ti
       """
     )
+
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """

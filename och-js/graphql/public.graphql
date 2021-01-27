@@ -313,6 +313,12 @@ type InputTypeInstance implements TypeInstanceFields {
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   verbs: [TypeInstanceOperationVerb!]!
+    @cypher(
+      statement: """
+      MATCH (this)
+      RETURN [verb IN this.verbs | toUpper(verb)] as verbs
+      """
+    )
 }
 
 enum TypeInstanceOperationVerb {
@@ -376,8 +382,7 @@ type Implementation {
 
 type ImplementationRevision {
   revision: Version!
-  signature: Signature!
-    @relation(name: "SIGNED_WITH", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   metadata: ImplementationMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -497,7 +502,7 @@ type Attribute {
 type AttributeRevision {
   revision: Version!
 
-  spec: AttributeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
@@ -541,7 +546,7 @@ type ImplementationMetadata implements MetadataBaseFields {
   documentationURL: String
   supportURL: String
   iconURL: String
-  license: License! @relation(name:"LICENSED_WITH", direction: "OUT")
+  license: License! @relation(name: "LICENSED_WITH", direction: "OUT")
   attributes: [AttributeRevision!]!
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }

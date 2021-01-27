@@ -15,10 +15,6 @@ import (
 )
 
 var _ = Describe("GraphQL API", func() {
-	BeforeEach(func() {
-		waitTillServiceEndpointsAreReady()
-	})
-
 	Context("Public OCH", func() {
 		It("lists interfaces", func() {
 			httpClient := httputil.NewClient(
