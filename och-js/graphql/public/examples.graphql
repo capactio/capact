@@ -1,0 +1,516 @@
+# This file contains example GraphQL operations for Public OCH.
+# How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+
+# To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
+
+query RepoMetadata {
+    repoMetadata {
+        path
+        name
+        prefix
+        revision(revision: "0.1.0") {
+            ...RepoMetadataRevision
+        }
+        latestRevision {
+            ...RepoMetadataRevision
+        }
+        revisions {
+            ...RepoMetadataRevision
+        }
+    }
+}
+
+# Example variables: {"interfaceGroupPath": "cap.interface.productivity.jira"}
+query InterfaceGroup($interfaceGroupPath: NodePath!) {
+    interfaceGroup(path: $interfaceGroupPath) {
+        ...InterfaceGroup
+    }
+}
+
+query InterfaceGroups {
+    interfaceGroups {
+        ...InterfaceGroup
+    }
+}
+
+# Example variables: {"interfaceGroupPrefixPattern": "cap.interface.*"}
+query InterfaceGroupsWithPrefixFilter(
+    $interfaceGroupPrefixPattern: NodePathPattern!
+) {
+    interfaceGroups(filter: { prefixPattern: $interfaceGroupPrefixPattern }) {
+        ...InterfaceGroup
+    }
+}
+
+query InterfaceGroupsWithInterfacesAndImplementations {
+    interfaceGroups {
+        ...InterfaceGroup
+        interfaces {
+            name
+            prefix
+            path
+            revision(revision: "0.1.0") {
+                ...InterfaceRevision
+            }
+            latestRevision {
+                ...InterfaceRevision
+            }
+            revisions {
+                ...InterfaceRevision
+                ...ImplementationsForInterface
+            }
+        }
+    }
+}
+
+# Example variables: {"interfacePath": "cap.interface.productivity.jira.install"}
+query Interface($interfacePath: NodePath!) {
+    interface(path: $interfacePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+query Interfaces {
+    interfaces {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+# Example variables: {"interfacesPrefixPattern": "cap.interface.*"}
+query InterfacesWithPrefixFilter($interfacesPrefixPattern: NodePathPattern!) {
+    interfaces(filter: { prefixPattern: $interfacesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+# Example variables: {"implementationPath": "cap.implementation.database.postgresql.create-db"}
+query Implementation($implementationPath: NodePath!) {
+    implementation(path: $implementationPath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+}
+
+query Implementations {
+    implementations {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+}
+
+# Example variables: {"implementationsPrefixPattern": "cap.implementation.gcp.*"}
+query ImplementationsWithPrefixFilter(
+    $implementationsPrefixPattern: NodePathPattern!
+) {
+    implementations(filter: { prefixPattern: $implementationsPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+}
+
+# Example variables: {"typePath": "cap.core.type.networking.hostname"}
+query Type($typePath: NodePath!) {
+    type(path: $typePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+}
+
+query Types {
+    types {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+}
+
+# Example variables: {"typesPrefixPattern": "cap.core.type.*"}
+query TypesWithPrefixFilter($typesPrefixPattern: NodePathPattern!) {
+    types(filter: { prefixPattern: $typesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+}
+
+# Example variables: {"attributePath": "cap.core.attribute.workload.stateless"}
+query Attribute($attributePath: NodePath!) {
+    attribute(path: $attributePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+}
+
+query Attributes {
+    attributes {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+}
+
+
+# Lists all Attributes with a given prefix.
+# Example variables: {"attributesPrefixPattern": "cap.core.attribute.workload.*"}
+query AttributesWithPrefixFilter($attributesPrefixPattern: NodePathPattern!) {
+    attributes(filter: { prefixPattern: $attributesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+}
+
+#
+# Fragments with all possible fields for Public OCH entities
+#
+
+fragment InterfaceGroup on InterfaceGroup {
+    metadata {
+        ...GenericMetadata
+    }
+    interfaces {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+fragment GenericMetadata on MetadataBaseFields {
+    prefix
+    path
+    name
+    displayName
+    description
+    maintainers {
+        name
+        email
+    }
+    iconURL
+    documentationURL
+    supportURL
+    iconURL
+}
+
+fragment InterfaceRevision on InterfaceRevision {
+    metadata {
+        prefix
+        path
+        name
+        displayName
+        description
+        maintainers {
+            name
+            email
+        }
+        iconURL
+    }
+    revision
+    spec {
+        input {
+            parameters {
+                jsonSchema
+            }
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+                verbs
+            }
+        }
+    }
+    signature {
+        och
+    }
+}
+
+fragment ImplementationRevision on ImplementationRevision {
+    metadata {
+        ...GenericMetadata
+        attributes {
+            ...AttributeRevision
+        }
+    }
+    revision
+    spec {
+        appVersion
+        implements {
+            path
+            revision
+        }
+        requires {
+            prefix
+            oneOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+            anyOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+            allOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+        }
+        imports {
+            interfaceGroupPath
+            alias
+            appVersion
+            methods {
+                name
+                revision
+            }
+        }
+        additionalInput {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+                verbs
+            }
+        }
+        additionalOutput {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+            }
+            typeInstanceRelations {
+                typeInstanceName
+                uses
+            }
+        }
+        action {
+            runnerInterface
+            args
+        }
+    }
+    signature {
+        och
+    }
+}
+
+fragment AttributeRevision on AttributeRevision {
+    metadata {
+        ...GenericMetadata
+    }
+    revision
+    spec {
+        additionalRefs
+    }
+    signature {
+        och
+    }
+}
+
+fragment TypeRevision on TypeRevision {
+    revision
+    metadata {
+        ...GenericMetadata
+        attributes {
+            ...AttributeRevision
+        }
+    }
+    spec {
+        additionalRefs
+        jsonSchema
+    }
+    signature {
+        och
+    }
+}
+
+fragment RepoMetadataRevision on RepoMetadataRevision {
+    revision
+    metadata {
+        ...GenericMetadata
+    }
+    spec {
+        ochVersion
+        ocfVersion {
+            supported
+            default
+        }
+        implementation {
+            appVersion {
+                semVerTaggingStrategy {
+                    latest {
+                        pointsTo
+                    }
+                }
+            }
+        }
+    }
+    signature {
+        och
+    }
+}
+
+# Additional resolvers for Interface
+fragment ImplementationsForInterface on InterfaceRevision {
+    implementationRevisions {
+        ...ImplementationRevision
+    }
+    implementationRevisionsForRequirements(
+        filter: {
+            prefixPattern: "cap"
+            attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+            requirementsSatisfiedBy: [
+                {
+                    typeRef: {
+                        path: "cap.core.type.platform.kubernetes"
+                        revision: "0.1.0"
+                    }
+                }
+                {
+                    typeRef: { path: "cap.type.platform.cloudFoundry", revision: "0.1.0" }
+                }
+            ]
+        }
+    ) {
+        ...ImplementationRevision
+    }
+}
