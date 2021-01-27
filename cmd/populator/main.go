@@ -24,14 +24,14 @@ type Config struct {
 	// Neo4jAddr is the TCP address the GraphQL endpoint binds to.
 	Neo4jAddr string `envconfig:"default=neo4j://localhost:7687"`
 
-	// Neo4jUser is the TCP address the GraphQL endpoint binds to.
+	// Neo4jUser is the Neo4j admin user name.
 	Neo4jUser string `envconfig:"default=neo4j"`
 
-	// Neo4jPassword is the TCP address the GraphQL endpoint binds to.
+	// Neo4jUser is the Neo4j admin password.
 	Neo4jPassword string `envconfig:"default=okon"`
 
 	// JSONPublishAddr is the address on which populator will serve
-	// convert YAML files. It can be k8s service or for example
+	// converted YAML files. It can be k8s service or for example
 	// local IP address
 	JSONPublishAddr string `envconfig:""`
 }
