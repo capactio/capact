@@ -96,6 +96,10 @@ func (in *ActionSpec) IsCanceled() bool {
 	return isBoolSet(in.Cancel)
 }
 
+func (in *ActionSpec) IsAdvancedRenderingEnabled() bool {
+	return in.AdvancedRendering != nil && in.AdvancedRendering.Enabled
+}
+
 func (in *Action) IsExecuted() bool {
 	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCanceledActionPhase
 }

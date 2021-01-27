@@ -21,7 +21,7 @@ type actionConverter interface {
 type actionService interface {
 	Create(ctx context.Context, item model.ActionToCreateOrUpdate) error
 	Update(ctx context.Context, item model.ActionToCreateOrUpdate) error
-	FindByName(ctx context.Context, name string) (v1alpha1.Action, error)
+	GetByName(ctx context.Context, name string) (v1alpha1.Action, error)
 	List(ctx context.Context, filter model.ActionFilter) ([]v1alpha1.Action, error)
 	DeleteByName(ctx context.Context, name string) error
 	RunByName(ctx context.Context, name string) error
@@ -42,7 +42,7 @@ func NewResolver(svc actionService, conv actionConverter) *Resolver {
 }
 
 func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, error) {
-	item, err := r.svc.FindByName(ctx, name)
+	item, err := r.svc.GetByName(ctx, name)
 	if err != nil {
 		if errors.Is(err, ErrActionNotFound) {
 			return nil, nil
@@ -128,7 +128,7 @@ func (r *Resolver) DeleteAction(ctx context.Context, name string) (*graphql.Acti
 }
 
 func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graphql.Action, error) {
-	item, err := r.svc.FindByName(ctx, name)
+	item, err := r.svc.GetByName(ctx, name)
 	if err != nil {
 		return nil, errors.Wrap(err, "while finding Action by name")
 	}
@@ -147,7 +147,7 @@ func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInp
 
 	err = r.svc.Update(ctx, actionToUpdate)
 	if err != nil {
-		return nil, errors.Wrap(err, "while creating Action")
+		return nil, errors.Wrap(err, "while updating Action")
 	}
 
 	return r.findAndConvertToGQL(ctx, in.Name)

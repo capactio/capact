@@ -1,6 +1,9 @@
 package action
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/pkg/errors"
 )
 
@@ -14,4 +17,14 @@ var ErrActionAdvancedRenderingDisabled = errors.New("action advanced rendering m
 
 var ErrActionAdvancedRenderingIterationNotContinuable = errors.New("action advanced rendering iteration is not ready to be continued")
 
-var ErrInvalidTypeInstanceSetProvidedForRenderingIteration = errors.New("invalid set of TypeInstances provided for a given rendering iteration")
+type ErrInvalidSetOfTypeInstancesForRenderingIteration struct {
+	Names []string
+}
+
+func NewErrInvalidSetOfTypeInstancesForRenderingIteration(names []string) *ErrInvalidSetOfTypeInstancesForRenderingIteration {
+	return &ErrInvalidSetOfTypeInstancesForRenderingIteration{Names: names}
+}
+
+func (e ErrInvalidSetOfTypeInstancesForRenderingIteration) Error() string {
+	return fmt.Sprintf("invalid set of TypeInstances provided for a given rendering iteration: [ %s ]", strings.Join(e.Names, ", "))
+}

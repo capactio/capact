@@ -24,8 +24,10 @@ import (
 
 func TestService_Create(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	svc, k8sCli := newServiceWithFakeClient(t)
 
@@ -43,8 +45,10 @@ func TestService_Create(t *testing.T) {
 
 func TestService_Update(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	inputActionModel := fixModel(name, ns)
 
@@ -71,9 +75,11 @@ func TestService_Update(t *testing.T) {
 	getSecretAndAssertEqual(t, k8sCli, *inputActionModel.InputParamsSecret)
 }
 
-func TestService_FindByName(t *testing.T) {
-	name := "foo"
-	ns := "bar"
+func TestService_GetByName(t *testing.T) {
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	t.Run("Success", func(t *testing.T) {
 		// given
@@ -84,7 +90,7 @@ func TestService_FindByName(t *testing.T) {
 		ctxWithNs := namespace.NewContext(context.Background(), ns)
 
 		// when
-		actual, err := svc.FindByName(ctxWithNs, name)
+		actual, err := svc.GetByName(ctxWithNs, name)
 
 		// then
 		require.NoError(t, err)
@@ -98,7 +104,7 @@ func TestService_FindByName(t *testing.T) {
 		ctxWithNs := namespace.NewContext(context.Background(), ns)
 
 		// when
-		_, err := svc.FindByName(ctxWithNs, name)
+		_, err := svc.GetByName(ctxWithNs, name)
 
 		// then
 		require.Error(t, err)
@@ -108,7 +114,7 @@ func TestService_FindByName(t *testing.T) {
 
 func TestService_List(t *testing.T) {
 	// given
-	ns := "namespace"
+	const ns = "namespace"
 
 	succeededPhase := corev1alpha1.SucceededActionPhase
 
@@ -156,8 +162,10 @@ func TestService_List(t *testing.T) {
 
 func TestService_DeleteByName(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	inputAction := fixModel(name, ns).Action
 
@@ -182,8 +190,10 @@ func TestService_DeleteByName(t *testing.T) {
 
 func TestService_CancelByName(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	t.Run("Success", func(t *testing.T) {
 		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
@@ -205,7 +215,7 @@ func TestService_CancelByName(t *testing.T) {
 			Name:      name,
 		}, &actual)
 		require.NoError(t, err)
-		assert.NotNil(t, actual.Spec.Cancel)
+		require.NotNil(t, actual.Spec.Cancel)
 		assert.True(t, *actual.Spec.Cancel)
 	})
 
@@ -242,8 +252,10 @@ func TestService_CancelByName(t *testing.T) {
 
 func TestService_RunByName(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	t.Run("Success", func(t *testing.T) {
 		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase)
@@ -302,8 +314,10 @@ func TestService_RunByName(t *testing.T) {
 
 func TestService_ContinueAdvancedRendering(t *testing.T) {
 	// given
-	name := "foo"
-	ns := "bar"
+	const (
+		name = "foo"
+		ns   = "bar"
+	)
 
 	t.Run("Success - TypeInstances provided", func(t *testing.T) {
 		inputAction := fixK8sActionForRenderingIteration(name, ns)
@@ -378,19 +392,26 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 
 	t.Run("Error - invalid TypeInstances provided", func(t *testing.T) {
 		// given
-		name := "foo"
-		ns := "bar"
+		const (
+			name = "foo"
+			ns   = "bar"
+		)
 
 		t.Run("Success", func(t *testing.T) {
 			inputAction := fixK8sActionForRenderingIteration(name, ns)
 			renderingInput := model.AdvancedModeContinueRenderingInput{
 				TypeInstances: &[]corev1alpha1.InputTypeInstance{
 					{
-						Name: "invalid-name",
+						Name: "invalid-name1",
+						ID:   "8349b98c-bb01-4ef0-a815-3b48454a3bd0",
+					},
+					{
+						Name: "invalid-name2",
 						ID:   "8349b98c-bb01-4ef0-a815-3b48454a3bd0",
 					},
 				},
 			}
+			expectedErrMessage := "invalid set of TypeInstances provided for a given rendering iteration: [ invalid-name1, invalid-name2 ]"
 
 			svc, _ := newServiceWithFakeClient(t, &inputAction)
 
@@ -401,7 +422,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 
 			// then
 			require.Error(t, err)
-			assert.Equal(t, err, action.ErrInvalidTypeInstanceSetProvidedForRenderingIteration)
+			assert.EqualError(t, err, expectedErrMessage)
 		})
 
 		t.Run("Error - Advanced rendering disabled", func(t *testing.T) {

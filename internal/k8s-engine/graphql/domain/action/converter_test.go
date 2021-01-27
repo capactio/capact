@@ -3,24 +3,25 @@ package action_test
 import (
 	"testing"
 
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-
 	"github.com/stretchr/testify/assert"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
+	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
-	name := "foo"
-	namespace := "bar"
+	const (
+		name = "name"
+		ns   = "ns"
+	)
 	gqlInput := fixGQLInput(name)
-	expectedModel := fixModel(name, namespace)
+	expectedModel := fixModel(name, ns)
 
 	c := action.NewConverter()
 
 	// when
-	actualModel := c.FromGraphQLInput(gqlInput, namespace)
+	actualModel := c.FromGraphQLInput(gqlInput, ns)
 
 	// then
 	assert.Equal(t, expectedModel, actualModel)
@@ -28,7 +29,8 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	// given
-	name := "foo"
+	const name = "name"
+
 	expectedGQLAction := fixGQLAction(t, name)
 	k8sAction := fixK8sAction(t, name, "ns")
 

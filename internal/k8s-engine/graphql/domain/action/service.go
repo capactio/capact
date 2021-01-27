@@ -54,7 +54,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 }
 
 func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) error {
-	oldAction, err := s.FindByName(ctx, item.Action.Name)
+	oldAction, err := s.GetByName(ctx, item.Action.Name)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate)
 	return nil
 }
 
-func (s *Service) FindByName(ctx context.Context, name string) (v1alpha1.Action, error) {
+func (s *Service) GetByName(ctx context.Context, name string) (v1alpha1.Action, error) {
 	objKey, err := s.objectKey(ctx, name)
 	if err != nil {
 		return v1alpha1.Action{}, err
@@ -147,7 +147,7 @@ func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alph
 }
 
 func (s *Service) DeleteByName(ctx context.Context, name string) error {
-	item, err := s.FindByName(ctx, name)
+	item, err := s.GetByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (s *Service) DeleteByName(ctx context.Context, name string) error {
 }
 
 func (s *Service) RunByName(ctx context.Context, name string) error {
-	item, err := s.FindByName(ctx, name)
+	item, err := s.GetByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 }
 
 func (s *Service) CancelByName(ctx context.Context, name string) error {
-	item, err := s.FindByName(ctx, name)
+	item, err := s.GetByName(ctx, name)
 	if err != nil {
 		return err
 	}
@@ -216,13 +216,12 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 }
 
 func (s *Service) ContinueAdvancedRendering(ctx context.Context, actionName string, in model.AdvancedModeContinueRenderingInput) error {
-	item, err := s.FindByName(ctx, actionName)
+	item, err := s.GetByName(ctx, actionName)
 	if err != nil {
 		return err
 	}
 
-	if item.Spec.AdvancedRendering == nil ||
-		!item.Spec.AdvancedRendering.Enabled {
+	if !item.Spec.IsAdvancedRenderingEnabled() {
 		return ErrActionAdvancedRenderingDisabled
 	}
 
@@ -280,10 +279,15 @@ func (s *Service) validateInputTypeInstancesForRenderingIteration(optionalTypeIn
 	}
 
 	// check if all provided TypeInstances are in the set of optional TypeInstances to provide
+	var invalidTypeInstanceNames []string
 	for key := range providedTypeInstancesMap {
 		if _, ok := optionalTypeInstancesToProvideMap[key]; !ok {
-			return ErrInvalidTypeInstanceSetProvidedForRenderingIteration
+			invalidTypeInstanceNames = append(invalidTypeInstanceNames, key)
 		}
+	}
+
+	if len(invalidTypeInstanceNames) > 0 {
+		return NewErrInvalidSetOfTypeInstancesForRenderingIteration(invalidTypeInstanceNames)
 	}
 
 	return nil

@@ -1,5 +1,7 @@
 # This file contains example GraphQL operations for Engine.
 
+# How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+
 # Required variables:
 # actionName: String
 
