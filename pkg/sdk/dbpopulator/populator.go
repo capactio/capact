@@ -197,6 +197,8 @@ CREATE (implementation)-[:CONTAINS]->(implementationRevision)
 MERGE (signature:Signature{och: value.signature.och})
 CREATE (implementationRevision)-[:SIGNED_WITH]->(signature)
 
+MERGE (license: License{name: value.metadata.license.name})
+
 CREATE (metadata:ImplementationMetadata {
   path: "<PATH>",
   prefix: "<PREFIX>",
@@ -207,6 +209,7 @@ CREATE (metadata:ImplementationMetadata {
   supportURL: value.metadata.supportURL,
   iconURL: value.metadata.supportURL})
 CREATE (implementationRevision)-[:DESCRIBED_BY]->(metadata)
+CREATE (metadata)-[:LICENSED_WITH]->(license)
 
 CREATE (spec:ImplementationSpec{appVersion: value.spec.appVersion})
 CREATE (implementationRevision)-[:SPECIFIED_BY]->(spec)
