@@ -354,12 +354,11 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 	}
 }
 
-func fixModel(name, namespace string) model.ActionToCreateOrUpdate {
+func fixModel(name string) model.ActionToCreateOrUpdate {
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace,
+				Name: name,
 			},
 			Spec: v1alpha1.ActionSpec{
 				ActionRef: v1alpha1.ManifestReference{
@@ -392,8 +391,7 @@ func fixModel(name, namespace string) model.ActionToCreateOrUpdate {
 		},
 		InputParamsSecret: &corev1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      name,
-				Namespace: namespace,
+				Name: name,
 			},
 			StringData: map[string]string{
 				"parameters": `{"param":"one"}`,

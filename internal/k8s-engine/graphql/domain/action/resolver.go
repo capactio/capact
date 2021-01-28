@@ -3,24 +3,22 @@ package action
 import (
 	"context"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-
 	"github.com/pkg/errors"
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 type actionConverter interface {
-	FromGraphQLInput(in graphql.ActionDetailsInput, namespace string) model.ActionToCreateOrUpdate
+	FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate
 	ToGraphQL(in v1alpha1.Action) graphql.Action
 	FilterFromGraphQL(in graphql.ActionFilter) model.ActionFilter
 	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
 }
 
 type actionService interface {
-	Create(ctx context.Context, item model.ActionToCreateOrUpdate) error
-	Update(ctx context.Context, item model.ActionToCreateOrUpdate) error
+	Create(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error)
+	Update(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error)
 	GetByName(ctx context.Context, name string) (v1alpha1.Action, error)
 	List(ctx context.Context, filter model.ActionFilter) ([]v1alpha1.Action, error)
 	DeleteByName(ctx context.Context, name string) error
@@ -80,19 +78,15 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.New("input cannot be empty")
 	}
 
-	ns, err := namespace.FromContext(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "while reading namespace from context")
-	}
+	actionToCreate := r.conv.FromGraphQLInput(*in)
 
-	actionToCreate := r.conv.FromGraphQLInput(*in, ns)
-
-	err = r.svc.Create(ctx, actionToCreate)
+	out, err := r.svc.Create(ctx, actionToCreate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating Action")
 	}
 
-	return r.findAndConvertToGQL(ctx, in.Name)
+	gqlItem := r.conv.ToGraphQL(out)
+	return &gqlItem, nil
 }
 
 func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action, error) {
@@ -138,19 +132,15 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 }
 
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
-	ns, err := namespace.FromContext(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "while reading namespace from context")
-	}
+	actionToUpdate := r.conv.FromGraphQLInput(in)
 
-	actionToUpdate := r.conv.FromGraphQLInput(in, ns)
-
-	err = r.svc.Update(ctx, actionToUpdate)
+	out, err := r.svc.Update(ctx, actionToUpdate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while updating Action")
 	}
 
-	return r.findAndConvertToGQL(ctx, in.Name)
+	gqlItem := r.conv.ToGraphQL(out)
+	return &gqlItem, nil
 }
 
 func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {

@@ -11,6 +11,11 @@ type ActionToCreateOrUpdate struct {
 	InputParamsSecret *v1.Secret
 }
 
+func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
+	m.Action.Namespace = namespace
+	m.InputParamsSecret.Namespace = namespace
+}
+
 // ActionFilter defines filtering options for Actions
 type ActionFilter struct {
 	Phase *v1alpha1.ActionPhase

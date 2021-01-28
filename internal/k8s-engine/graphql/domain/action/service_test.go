@@ -31,15 +31,21 @@ func TestService_Create(t *testing.T) {
 
 	svc, k8sCli := newServiceWithFakeClient(t)
 
-	inputActionModel := fixModel(name, ns)
+	inputActionModel := fixModel(name)
+
+	expected := inputActionModel.Action.DeepCopy()
+	expected.Namespace = ns
+
+	ctxWithNs := namespace.NewContext(context.Background(), ns)
 
 	// when
-	err := svc.Create(context.Background(), inputActionModel)
+	_, err := svc.Create(ctxWithNs, inputActionModel)
 
 	// then
 	require.NoError(t, err)
 
-	findActionAndAssertEqual(t, k8sCli, inputActionModel.Action)
+	//assertActionEqual(t, *expected, out)
+	findActionAndAssertEqual(t, k8sCli, *expected)
 	getSecretAndAssertEqual(t, k8sCli, *inputActionModel.InputParamsSecret)
 }
 
@@ -50,7 +56,8 @@ func TestService_Update(t *testing.T) {
 		ns   = "bar"
 	)
 
-	inputActionModel := fixModel(name, ns)
+	inputActionModel := fixModel(name)
+	inputActionModel.SetNamespace(ns)
 
 	svc, k8sCli := newServiceWithFakeClient(t, &inputActionModel.Action, inputActionModel.InputParamsSecret)
 
@@ -66,12 +73,12 @@ func TestService_Update(t *testing.T) {
 	}
 
 	// when
-	err := svc.Update(ctxWithNs, inputActionModel)
+	out, err := svc.Update(ctxWithNs, inputActionModel)
 
 	// then
 	require.NoError(t, err)
 
-	findActionAndAssertEqual(t, k8sCli, inputActionModel.Action)
+	assertActionEqual(t, inputActionModel.Action, out)
 	getSecretAndAssertEqual(t, k8sCli, *inputActionModel.InputParamsSecret)
 }
 
@@ -83,7 +90,8 @@ func TestService_GetByName(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		// given
-		inputAction := fixModel(name, ns).Action
+		inputAction := fixModel(name).Action
+		inputAction.Namespace = ns
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
 
@@ -167,7 +175,8 @@ func TestService_DeleteByName(t *testing.T) {
 		ns   = "bar"
 	)
 
-	inputAction := fixModel(name, ns).Action
+	inputAction := fixModel(name).Action
+	inputAction.Namespace = ns
 
 	svc, k8sCli := newServiceWithFakeClient(t, &inputAction)
 	ctxWithNs := namespace.NewContext(context.Background(), ns)
@@ -411,7 +420,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 					},
 				},
 			}
-			expectedErrMessage := "invalid set of TypeInstances provided for a given rendering iteration: [ invalid-name1, invalid-name2 ]"
+			expectedErrMessage := "invalid set of TypeInstances provided for a given rendering iteration:"
 
 			svc, _ := newServiceWithFakeClient(t, &inputAction)
 
@@ -422,7 +431,10 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 
 			// then
 			require.Error(t, err)
-			assert.EqualError(t, err, expectedErrMessage)
+			assert.Contains(t, err.Error(), expectedErrMessage)
+			for _, typeInstance := range *renderingInput.TypeInstances {
+				assert.Contains(t, err.Error(), typeInstance.Name)
+			}
 		})
 
 		t.Run("Error - Advanced rendering disabled", func(t *testing.T) {

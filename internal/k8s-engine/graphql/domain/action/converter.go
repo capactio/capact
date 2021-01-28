@@ -21,7 +21,7 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace string) model.ActionToCreateOrUpdate {
+func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
 		advancedRendering = &v1alpha1.AdvancedRendering{
@@ -36,7 +36,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace st
 		}
 	}
 
-	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, in.Name, namespace)
+	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, in.Name)
 	var inputParamsSecretName *string
 	if inputParamsSecret != nil {
 		inputParamsSecretName = &in.Name
@@ -53,8 +53,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput, namespace st
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:      in.Name,
-				Namespace: namespace,
+				Name: in.Name,
 			},
 			Spec: v1alpha1.ActionSpec{
 				DryRun:                 in.DryRun,
@@ -131,15 +130,14 @@ func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.Adv
 	}
 }
 
-func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name, namespace string) *v1.Secret {
+func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) *v1.Secret {
 	if in == nil || in.Parameters == nil {
 		return nil
 	}
 
 	return &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      name,
-			Namespace: namespace,
+			Name: name,
 		},
 		StringData: map[string]string{
 			ParametersSecretDataKey: string(*in.Parameters),

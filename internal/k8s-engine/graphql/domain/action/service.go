@@ -34,29 +34,43 @@ func NewService(log *zap.Logger, actionCli client.Client) *Service {
 // Validate the list of input TypeInstances with validation webhook,
 // to make sure there are no TypeInstances with duplicated names and different IDs
 
-func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) error {
+func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
+	ns, err := namespace.FromContext(ctx)
+	if err != nil {
+		return v1alpha1.Action{}, errors.Wrap(err, "while reading namespace from context")
+	}
+
+	item.SetNamespace(ns)
+
 	log := s.logWithNameAndNs(item.Action.Name, item.Action.Namespace)
 
 	log.Info("Creating Action")
-	err := s.k8sCli.Create(ctx, &item.Action)
+	err = s.k8sCli.Create(ctx, &item.Action)
 	if err != nil {
 		errContext := "while creating Action"
 		log.Error(errContext, zap.Error(err))
-		return errors.Wrap(err, errContext)
+		return v1alpha1.Action{}, errors.Wrap(err, errContext)
 	}
 
 	err = s.createInputParamsSecretIfShould(ctx, item)
 	if err != nil {
-		return err
+		return v1alpha1.Action{}, err
 	}
 
-	return nil
+	return item.Action, nil
 }
 
-func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) error {
+func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
+	ns, err := namespace.FromContext(ctx)
+	if err != nil {
+		return v1alpha1.Action{}, errors.Wrap(err, "while reading namespace from context")
+	}
+
+	item.SetNamespace(ns)
+
 	oldAction, err := s.GetByName(ctx, item.Action.Name)
 	if err != nil {
-		return err
+		return v1alpha1.Action{}, err
 	}
 
 	newAction := oldAction.DeepCopy()
@@ -67,20 +81,20 @@ func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate)
 
 	err = s.updateAction(ctx, *newAction)
 	if err != nil {
-		return err
+		return v1alpha1.Action{}, err
 	}
 
 	err = s.deleteInputParamsSecretIfShould(ctx, oldAction)
 	if err != nil {
-		return err
+		return v1alpha1.Action{}, err
 	}
 
 	err = s.createInputParamsSecretIfShould(ctx, item)
 	if err != nil {
-		return err
+		return v1alpha1.Action{}, err
 	}
 
-	return nil
+	return item.Action, nil
 }
 
 func (s *Service) GetByName(ctx context.Context, name string) (v1alpha1.Action, error) {

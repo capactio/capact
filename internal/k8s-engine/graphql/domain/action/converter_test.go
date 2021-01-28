@@ -13,15 +13,14 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
 	const (
 		name = "name"
-		ns   = "ns"
 	)
 	gqlInput := fixGQLInput(name)
-	expectedModel := fixModel(name, ns)
+	expectedModel := fixModel(name)
 
 	c := action.NewConverter()
 
 	// when
-	actualModel := c.FromGraphQLInput(gqlInput, ns)
+	actualModel := c.FromGraphQLInput(gqlInput)
 
 	// then
 	assert.Equal(t, expectedModel, actualModel)
@@ -29,10 +28,13 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	// given
-	const name = "name"
+	const (
+		name = "name"
+		ns   = "ns"
+	)
 
 	expectedGQLAction := fixGQLAction(t, name)
-	k8sAction := fixK8sAction(t, name, "ns")
+	k8sAction := fixK8sAction(t, name, ns)
 
 	c := action.NewConverter()
 
