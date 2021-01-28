@@ -217,99 +217,127 @@ CREATE (action:ImplementationAction {
 CREATE (spec)-[:DOES]->(action)
 
 WITH *
-UNWIND value.spec.implements as interface
- MATCH (interfaceRevision: InterfaceRevision {revision: interface.revision})-[:DESCRIBED_BY]->(m:GenericMetadata{path: interface.path})
- CREATE (interfaceReference: InterfaceReference{path: interface.path, revision: interface.revision})
- MERGE (spec)-[:IMPLEMENTS]->(interfaceReference)
- MERGE (implementationRevision)-[:IMPLEMENTS]->(interfaceRevision)
- MERGE (interfaceRevision)-[:IMPLEMENTED_BY]->(implementationRevision)
+CALL {
+ WITH value, implementationRevision, spec
+ UNWIND value.spec.implements as interface
+  MATCH (interfaceRevision: InterfaceRevision {revision: interface.revision})-[:DESCRIBED_BY]->(m:GenericMetadata{path: interface.path})
+  CREATE (interfaceReference: InterfaceReference{path: interface.path, revision: interface.revision})
+  MERGE (spec)-[:IMPLEMENTS]->(interfaceReference)
+  MERGE (implementationRevision)-[:IMPLEMENTS]->(interfaceRevision)
+  MERGE (interfaceRevision)-[:IMPLEMENTED_BY]->(implementationRevision)
+ return count([]) as _tmp1
+}
 
-WITH distinct value, spec, metadata, value.spec.requires as requires
-UNWIND (CASE keys(requires) WHEN null then [null] else keys(requires) end) as r
- CREATE (implementationRequirement:ImplementationRequirement{prefix: r})
- CREATE (spec)-[:REQUIRES]->(implementationRequirement)
- WITH *
- UNWIND (CASE keys(requires[r]) WHEN null then [null] else keys(requires[r]) end) as of
-  UNWIND requires[r][of] as listItem
-   MATCH (type:Type{path: apoc.text.join([r, listItem.name], ".")})-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
+WITH *, value.spec.requires as requires
+CALL {
+ WITH value, spec, requires
+ UNWIND keys(requires) as r
+  CREATE (implementationRequirement:ImplementationRequirement{prefix: r})
+  CREATE (spec)-[:REQUIRES]->(implementationRequirement)
+  WITH *
+  UNWIND keys(requires[r]) as of
+   UNWIND requires[r][of] as listItem
+    MATCH (type:Type{path: apoc.text.join([r, listItem.name], ".")})-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
+    CREATE (typeReference:TypeReference{
+      path: apoc.text.join([r, listItem.name], "."),
+      revision: listItem.revision})
+    CREATE (item:ImplementationRequirementItem {valueConstraints: listItem.valueConstraints})
+    CREATE (item)-[:REFERENCES_TYPE]->(typeReference)
+    WITH *, {oneOf: "ONE_OF", anyOf: "ANY_OF", allOf: "ALL_OF"} as requirementTypes
+    CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, item) YIELD rel as t1
+    CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, typeRevision) YIELD rel as t2
+ RETURN count([]) as _tmp2
+}
 
-   CREATE (typeReference:TypeReference{
-	 path: apoc.text.join([r, listItem.name], "."),
-	 revision: listItem.revision})
-   CREATE (item:ImplementationRequirementItem {valueConstraints: listItem.valueConstraints})
-   CREATE (item)-[:REFERENCES_TYPE]->(typeReference)
-   WITH *, {oneOf: "ONE_OF", anyOf: "ANY_OF", allOf: "ALL_OF"} as requirementTypes
-   CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, item) YIELD rel as t1
-   CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, typeRevision) YIELD rel as t2
+WITH *, value.spec.imports as imports
+CALL {
+ WITH value, imports, spec
+ UNWIND imports as import
+  CREATE (implementationImport:ImplementationImport {
+    interfaceGroupPath: import.interfaceGroupPath,
+    alias: import.alias,
+    appVersion: import.appVersion})
+  CREATE (spec)-[:IMPORTS]->(implementationImport)
+  WITH *
+  UNWIND import.methods as method
+   CREATE (implementationImportMethod:ImplementationImportMethod {
+     name: method.name,
+     revision: method.revision})
+   CREATE (implementationImport)-[:HAS]->(implementationImportMethod)
+ RETURN count([]) as _tmp3
+}
 
-WITH distinct value, spec, metadata, value.spec.imports as imports
-UNWIND (CASE imports WHEN null then [null] else imports end) as import
- CREATE (implementationImport:ImplementationImport {
-   interfaceGroupPath: import.interfaceGroupPath,
-   alias: import.alias,
-   appVersion: import.appVersion})
- CREATE (spec)-[:IMPORTS]->(implementationImport)
- WITH *
- UNWIND (CASE import.methods WHEN null then [null] else import.methods end) as method
-  CREATE (implementationImportMethod:ImplementationImportMethod {
-    name: method.name,
-	revision: method.revision})
-  CREATE (implementationImport)-[:HAS]->(implementationImportMethod)
-
-WITH distinct value, spec, metadata, value.spec.additionalInput.typeInstances as typeInstances
+WITH *, value.spec.additionalInput.typeInstances as typeInstances
 CREATE (implementationAdditionalInput:ImplementationAdditionalInput)
 CREATE (spec)-[:USES]->(implementationAdditionalInput)
 WITH *
-UNWIND (CASE keys(typeInstances) WHEN null then [null] else keys(typeInstances) end) as name
- CREATE (inputTypeInstance: InputTypeInstance {
-   name: name,
-   verbs: typeInstances[name].verbs})
- CREATE (implementationAdditionalInput)-[:CONTAINS]->(inputTypeInstance)
- CREATE (typeReference: TypeReference{
-   path: typeInstances[name].typeRef.path,
-   revision: typeInstances[name].typeRef.revision})
- CREATE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
+CALL {
+ WITH typeInstances, implementationAdditionalInput
+ UNWIND keys(typeInstances) as name
+  CREATE (inputTypeInstance: InputTypeInstance {
+    name: name,
+    verbs: typeInstances[name].verbs})
+  CREATE (implementationAdditionalInput)-[:CONTAINS]->(inputTypeInstance)
+  CREATE (typeReference: TypeReference{
+    path: typeInstances[name].typeRef.path,
+    revision: typeInstances[name].typeRef.revision})
+  CREATE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
+  RETURN count([]) as _tmp4
+}
 
-WITH distinct value, spec, metadata, value.spec.additionalOutput.typeInstances as typeInstances
-CREATE (implementationAdditionalOutput:ImplementationAdditionalOutput)
-CREATE (spec)-[:OUTPUTS]->(implementationAdditionalOutput)
+WITH *, value.spec.additionalOutput.typeInstances as typeInstances
+CALL {
+ WITH typeInstances, spec
+ CREATE (implementationAdditionalOutput:ImplementationAdditionalOutput)
+ CREATE (spec)-[:OUTPUTS]->(implementationAdditionalOutput)
+ WITH *
+ UNWIND keys(typeInstances) as name
+  CREATE (outputTypeInstance: OutputTypeInstance {
+    name: name,
+    verbs: typeInstances[name].verbs})
+  CREATE (implementationAdditionalOutput)-[:CONTAINS]->(outputTypeInstance)
+  CREATE (typeReference: TypeReference{
+    path: typeInstances[name].typeRef.path,
+    revision: typeInstances[name].typeRef.revision})
+  MERGE (outputTypeInstance)-[:OF_TYPE]->(typeReference)
+ RETURN count([]) as _tmp5
+}
+
+WITH *, value.spec.additionalOutput.typeInstanceRelations as typeInstanceRelations
+CALL {
+ WITH typeInstanceRelations, spec
+ UNWIND keys(typeInstanceRelations) as name
+  CREATE (typeInstanceRelationItem:TypeInstanceRelationItem{
+    typeInstanceName: name,
+    uses: typeInstanceRelations[name].uses})
+  CREATE (spec)-[:RELATIONS]->(typeInstanceRelationItem)
+ RETURN count([]) as _tmp6
+}
+
 WITH *
-UNWIND (CASE keys(typeInstances) WHEN null then [null] else keys(typeInstances) end) as name
- CREATE (outputTypeInstance: OutputTypeInstance {
-   name: name,
-   verbs: typeInstances[name].verbs})
- CREATE (implementationAdditionalOutput)-[:CONTAINS]->(outputTypeInstance)
- CREATE (typeReference: TypeReference{
-   path: typeInstances[name].typeRef.path,
-   revision: typeInstances[name].typeRef.revision})
- MERGE (outputTypeInstance)-[:OF_TYPE]->(typeReference)
+CALL {
+ WITH value, metadata
+ UNWIND value.metadata.maintainers as m
+  MERGE (maintainer:Maintainer {
+    email: m.email,
+    name: m.name,
+    url: m.url})
+  MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
+ RETURN count([]) as _tmp7
+}
 
-WITH distinct value, spec, metadata, value.spec.additionalOutput.typeInstanceRelations as typeInstanceRelations
-UNWIND (CASE keys(typeInstanceRelations) WHEN null then [null] else keys(typeInstanceRelations) end) as name
- CREATE (typeInstanceRelationItem:TypeInstanceRelationItem{
-   typeInstanceName: name,
-   uses: typeInstanceRelations[name].uses})
- CREATE (spec)-[:RELATIONS]->(typeInstanceRelationItem)
+WITH *, value.metadata.attributes as attributes
+CALL {
+ WITH attributes, metadata
+ UNWIND keys(attributes) as path
+  MATCH (attribute:Attribute{path: path})-[:CONTAINS]->(revision:AttributeRevision {revision: attributes[path].revision})
+  CREATE (metadata)-[:CHARACTERIZED_BY]->(revision)
+ RETURN count([]) as _tmp8
+}
 
-
-WITH value, metadata
-UNWIND value.metadata.maintainers as m
- MERGE (maintainer:Maintainer {
-   email: m.email,
-   name: m.name,
-   url: m.url})
- MERGE (metadata)-[:MAINTAINED_BY]->(maintainer)
+RETURN []
 `
 
-/*
-
-WITH value, metadata, value.spec.attributes as attributes
-UNWIND (CASE keys(attributes) WHEN null then [null] else keys(attributes) end) as attribute
- MATCH (attribute:AttributeRevision{
-   path: attribute,
-   revision: attributes[attribute].revision})
-`
-*/
 var repoMetadataQuery = `
 MERGE (repo:RepoMetadata{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
 CREATE (repoRevision:RepoMetadataRevision {revision: value.revision})
