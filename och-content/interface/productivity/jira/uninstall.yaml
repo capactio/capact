@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.productivity.jira # Computed during fetching the manifest
-  name: install
+  name: uninstall
   displayName: "Uninstall"
   description: "Uninstall action for Jira"
   documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
