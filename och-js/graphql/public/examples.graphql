@@ -356,6 +356,15 @@ fragment InterfaceRevision on InterfaceRevision {
                 verbs
             }
         }
+        output {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+            }
+        }
     }
     signature {
         och
