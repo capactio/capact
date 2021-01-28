@@ -36,7 +36,7 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.passing-local",
+					Path: "cap.interface.voltron.e2e.passing",
 				},
 			})
 
@@ -61,7 +61,7 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.failing-local",
+					Path: "cap.interface.voltron.e2e.failing",
 				},
 			})
 
