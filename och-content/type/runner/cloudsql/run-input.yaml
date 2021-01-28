@@ -114,52 +114,14 @@ spec:
                 "type": "object",
                 "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["directory", "cloudSQLInstance"],
+                "required": ["goTemplate"],
                 "properties": {
-                  "directory": {
-                    "$id": "#/properties/args/properties/output/properties/directory",
-                    "type": "string",
-                    "title": "Directory for the output files"
-                  },
-                  "cloudSQLInstance": {
-                    "$id": "#/properties/args/properties/output/properties/cloudSQLInstance",
+                  "goTemplate": {
+                    "$id": "#/properties/args/properties/output/properties/goTemplate",
                     "type": "object",
-                    "title": "Parameters for the CloudSQL instance (cap.type.gcp.cloudsql) output file",
-                    "additionalProperties": false,
-                    "required": [
-                        "fileName"
-                    ],
-                    "properties": {
-                      "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/cloudSQLInstance/properties/fileName",
-                        "type": "string",
-                        "title": "The file name of the CloudSQLInstance output file"
-                      }
-                    }
+                    "title": "The shape for additional output file defined with support for Go template syntax",
+                    "additionalProperties": true
                   },
-                  "additional": {
-                    "$id": "#/properties/args/properties/output/properties/additional",
-                    "type": "object",
-                    "title": "The parameters for additional output file",
-                    "additionalProperties": false,
-                    "required": [
-                        "value",
-                        "fileName"
-                    ],
-                    "properties": {
-                      "value": {
-                        "$id": "#/properties/args/properties/output/properties/additional/properties/value",
-                        "type": "object",
-                        "title": "The shape for additional output file",
-                        "additionalProperties": true
-                      },
-                      "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/additional/properties/fileName",
-                        "type": "string",
-                        "title": "The file name of the output file"
-                      }
-                    }
-                  }
                 }
               }
             }

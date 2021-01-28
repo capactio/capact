@@ -59,7 +59,7 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-100
+              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-102
               env:
                 - name: RUNNER_INPUT_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
@@ -67,6 +67,12 @@ spec:
                   value: "{{inputs.artifacts.gcp-sa.path}}"
                 - name: RUNNER_GCP_SERVICE_ACCOUNT_FILE_FORMAT
                   value: "YAML"
+                - name: RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH
+                  value: "{{inputs.artifacts.cloudsql-instance.path}}"
+                - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+                  value: "{{inputs.artifacts.additional.path}}"
+                - name: RUNNER_LOGGER_DEV_MODE
+                  value: "true"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

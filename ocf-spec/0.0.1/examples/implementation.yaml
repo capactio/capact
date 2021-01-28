@@ -77,9 +77,7 @@ spec:
     args:
       workflow:
         steps:
-          # {{ if not .additionalInput.typeInstances.mysqlConfig }}
           - name: mysql-install
-          # {{ end }}
           - name: mysql-create-db
           - name: wp-install
 

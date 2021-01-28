@@ -102,18 +102,13 @@ spec:
                                       - name: internet
                                         value: "0.0.0.0/0"
                               output:{% raw %}
-                                directory: /
-                                cloudSQLInstance:
-                                  filename: "instance.yaml"
-                                additional:
-                                  filename: "additional.yaml"
-                                  value:
-                                    host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
-                                    port: "{{ .Port }}"
-                                    defaultDBName: "{{ .DefaultDBName }}"
-                                    superuser:
-                                      username: "{{ .Username }}"
-                                      password: "{{ .Password }}"{% endraw %}
+                                goTemplate:
+                                  host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+                                  port: "{{ .Port }}"
+                                  defaultDBName: "{{ .DefaultDBName }}"
+                                  superuser:
+                                    username: "{{ .Username }}"
+                                    password: "{{ .Password }}"{% endraw %}
               - - name: cloudsql-run
                   voltron-action: cloudsql.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances

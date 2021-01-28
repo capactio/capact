@@ -8,12 +8,13 @@ import (
 	"os"
 	"time"
 
+	"projectvoltron.dev/voltron/pkg/runner"
+
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sethvargo/go-password/password"
 	"go.uber.org/zap"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
-	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,39 +24,10 @@ type createAction struct {
 	gcpProjectName  string
 	args            *Args
 	dbInstance      *sqladmin.DatabaseInstance
+	outputCfg       OutputConfig
 }
 
-type createOutputValues struct {
-	DBInstance    *sqladmin.DatabaseInstance
-	Port          int    `json:"port"`
-	DefaultDBName string `json:"defaultDBName"`
-	Username      string `json:"username"`
-	Password      string `json:"password"`
-}
-
-type cloudSQLOutput struct {
-	Name            string `json:"name"`
-	Project         string `json:"project"`
-	Region          string `json:"region"`
-	DatabaseVersion string `json:"databaseVersion"`
-}
-
-const (
-	PostgresPort          = 5432
-	PostgresDefaultDBName = "postgres"
-	PostgresRootUser      = "postgres"
-
-	createWaitDelay = 10 * time.Second
-
-	artifactsDirFileMode os.FileMode = 0775
-	artifactsFileMode    os.FileMode = 0644
-)
-
-var (
-	ErrInstanceCreateTimeout = errors.New("timed out waiting for DB instance to be ready")
-)
-
-func (a *createAction) Start(ctx context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
+func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 
 	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, a.args)
@@ -94,7 +66,7 @@ func (a *createAction) WaitForCompletion(ctx context.Context, _ runner.WaitForCo
 		Password:      a.dbInstance.RootPassword,
 	}
 
-	if err := a.createOutputFiles(&a.args.Output, output); err != nil {
+	if err := a.createOutputFiles(a.outputCfg, &a.args.Output, output); err != nil {
 		return nil, errors.Wrap(err, "while writing output")
 	}
 
@@ -153,25 +125,23 @@ func (a *createAction) getDatabaseInstance(name string) (*sqladmin.DatabaseInsta
 	return a.sqladminService.Instances.Get(a.gcpProjectName, name).Do()
 }
 
-func (a *createAction) createOutputFiles(args *OutputArgs, values *createOutputValues) error {
-	if err := os.MkdirAll(args.Directory, artifactsDirFileMode); err != nil {
-		return err
-	}
-
-	if err := a.createCloudSQLInstanceOutputFile(args, values); err != nil {
+func (a *createAction) createOutputFiles(cfg OutputConfig, args *OutputArgs, values *createOutputValues) error {
+	if err := a.createCloudSQLInstanceOutputFile(cfg.CloudSQLInstanceFilePath, values); err != nil {
 		return errors.Wrap(err, "while creating default artifact")
 	}
 
-	if args.Additional != nil {
-		if err := a.createAdditionalOutputFile(args, values); err != nil {
-			return errors.Wrap(err, "while creating additional artifact")
-		}
+	if args.GoTemplate == nil {
+		return nil
+	}
+
+	if err := a.createAdditionalOutputFile(cfg.AdditionalFilePath, args, values); err != nil {
+		return errors.Wrap(err, "while creating additional artifact")
 	}
 
 	return nil
 }
 
-func (a *createAction) createCloudSQLInstanceOutputFile(args *OutputArgs, output *createOutputValues) error {
+func (a *createAction) createCloudSQLInstanceOutputFile(path string, output *createOutputValues) error {
 	artifact := &cloudSQLOutput{
 		Name:            output.DBInstance.Name,
 		Project:         output.DBInstance.Project,
@@ -184,29 +154,20 @@ func (a *createAction) createCloudSQLInstanceOutputFile(args *OutputArgs, output
 		return errors.Wrap(err, "while marshaling artifact to YAML")
 	}
 
-	artifactFilepath := fmt.Sprintf("%s/%s", args.Directory, args.CloudSQLInstance.Filename)
-
-	if err := ioutil.WriteFile(artifactFilepath, data, artifactsFileMode); err != nil {
-		return errors.Wrapf(err, "while writing artifact file %s", artifactFilepath)
+	if err := ioutil.WriteFile(path, data, artifactsFileMode); err != nil {
+		return errors.Wrapf(err, "while writing artifact file %s", path)
 	}
 
 	return nil
 }
 
-func (a *createAction) createAdditionalOutputFile(args *OutputArgs, values *createOutputValues) error {
-	artifactTemplate, err := yaml.JSONToYAML(args.Additional.Value)
-	if err != nil {
-		return errors.Wrap(err, "while converting JSON to YAML")
-	}
-
-	tmpl, err := template.New("output").Parse(string(artifactTemplate))
+func (a *createAction) createAdditionalOutputFile(path string, args *OutputArgs, values *createOutputValues) error {
+	tmpl, err := template.New("output").Parse(string(args.GoTemplate))
 	if err != nil {
 		return errors.Wrap(err, "failed to load template")
 	}
 
-	filepath := fmt.Sprintf("%s/%s", args.Directory, args.Additional.Path)
-
-	fd, err := os.Create(filepath)
+	fd, err := os.Create(path)
 	if err != nil {
 		return errors.Wrap(err, "cannot open output file to write")
 	}
