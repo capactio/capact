@@ -36,18 +36,23 @@ spec:
           env:
             - name: APP_GRAPH_QL_ADDR
               value: ":8080"
-            - name: APP_HEALTHZ_ADDR
-              value: ":8082"
             - name: APP_OCH_MODE
               value: "public"
             - name: APP_LOGGER_DEV_MODE
               value: "true"
+            - name: APP_NEO4J_ENDPOINT
+              value: "{{ .Values.global.database.endpoint }}"
+            - name: APP_NEO4J_USERNAME
+              value: "{{ .Values.global.database.username }}"
+            - name: APP_NEO4J_PASSWORD
+              value: "{{ .Values.global.database.password }}"
             - name: APP_MOCKGRAPHQL
               value: "{{ .Values.global.mockOCHGraphQL }}"
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
+          {{- if .Values.global.mockOCHGraphQL }}
           livenessProbe:
             httpGet:
               path: /healthz
@@ -56,6 +61,16 @@ spec:
             httpGet:
               path: /healthz
               port: 8082
+          {{- else }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

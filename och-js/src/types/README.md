@@ -1,0 +1,1 @@
+The content from [neo4j-graphql-js](./neo4j-graphql-js) was copied over from https://github.com/Nopzen/DefinitelyTyped/tree/feature/neo4j-graphql-js/types/neo4j-graphql-js, as it's not available on NPM.

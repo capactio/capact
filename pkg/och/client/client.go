@@ -2,11 +2,13 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 // Client used to communicate with the Voltron OCH GraphQL APIs
@@ -24,9 +26,28 @@ func NewClient(endpoint string, httpClient *http.Client) *Client {
 	}
 }
 
+func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql.Interface, error) {
+	req := graphql.NewRequest(`query {
+		interfaces {
+			name
+			prefix
+			path
+		}		
+	}`)
+
+	var resp struct {
+		Interfaces []ochpublicgraphql.Interface `json:"interfaces"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
+	}
+
+	return resp.Interfaces, nil
+}
+
 // TODO simple implementation for demo, does return only some fields
 // TODO: add support for not found errors
-func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
+func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
@@ -46,7 +67,7 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 
 	req.Var("interfacePath", path)
 	var resp struct {
-		Interface ochgraphql.Interface `json:"interface"`
+		Interface ochpublicgraphql.Interface `json:"interface"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
@@ -60,3 +81,79 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 
 	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
 }
+
+func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {
+	query := fmt.Sprintf(`mutation($in: CreateTypeInstanceInput!) {
+		createTypeInstance(
+			in: $in
+		) {
+			%s
+		}
+	}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	var resp struct {
+		TypeInstance ochlocalgraphql.TypeInstance `json:"createTypeInstance"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to create TypeInstance")
+	}
+
+	return &resp.TypeInstance, nil
+}
+
+func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
+	query := fmt.Sprintf(`query($id: ID!) {
+		typeInstance(id: $id) {
+			%s	
+		}
+	}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
+	req.Var("id", id)
+
+	var resp struct {
+		TypeInstance ochlocalgraphql.TypeInstance `json:"typeInstance"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to get TypeInstance")
+	}
+
+	return &resp.TypeInstance, nil
+}
+
+func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
+	req := graphql.NewRequest(`mutation ($id: ID!) {
+	  deleteTypeInstance(
+	    id: $id
+	  )
+	}`)
+	req.Var("id", id)
+
+	var resp struct{}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return errors.Wrap(err, "while executing query to get TypeInstance")
+	}
+
+	return nil
+}
+
+const typeInstanceFields = `
+	resourceVersion
+	metadata {
+	  id
+	  attributes {
+	    path
+	    revision
+	  }
+	}
+	spec {
+	  typeRef {
+	    path
+	    revision
+	  }
+	  value
+	}
+`

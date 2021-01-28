@@ -269,14 +269,22 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_OVERRIDES=""
     fi
 
+    if [ "${MOCK_OCH_GRAPHQL}" == "false" ]; then
+      readonly OCH_IMAGE="och-js"
+    else
+      readonly OCH_IMAGE="och"
+    fi
+
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --install \
         --create-namespace \
         --namespace="${VOLTRON_NAMESPACE}" \
-        --set global.containerRegistry.path="$DOCKER_REPOSITORY" \
-        --set global.containerRegistry.overrideTag="$DOCKER_TAG" \
-        --set global.mockOCHGraphQL="$MOCK_OCH_GRAPHQL" \
-        --set global.mockEngineGraphQL="$MOCK_ENGINE_GRAPHQL" \
+        --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
+        --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
+        --set global.mockOCHGraphQL="${MOCK_OCH_GRAPHQL}" \
+        --set global.mockEngineGraphQL="${MOCK_ENGINE_GRAPHQL}" \
+        --set och-local.image.name="${OCH_IMAGE}" \
+        --set och-public.image.name="${OCH_IMAGE}" \
         -f "${VOLTRON_OVERRIDES}" \
         --wait
 }

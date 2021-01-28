@@ -3,13 +3,12 @@
 package e2e
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/vrischmann/envconfig"
+	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/fields"
@@ -17,28 +16,12 @@ import (
 	"k8s.io/kubectl/pkg/util/podutils"
 	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/iosafety"
 )
 
-type Config struct {
-	StatusEndpoints []string
-	// total number of pods that should be scheduled
-	ExpectedNumberOfRunningPods int
-	IgnoredPodsNames            []string
-	PollingInterval             time.Duration `envconfig:"default=2s"`
-	PollingTimeout              time.Duration `envconfig:"default=1m"`
-}
-
-var _ = Describe("E2E", func() {
-	cfg := Config{}
+var _ = Describe("Cluster check", func() {
 	ignoredPodsNames := map[string]struct{}{}
 
-	BeforeSuite(func() {
-		err := envconfig.Init(&cfg)
-		Expect(err).ToNot(HaveOccurred())
-
+	BeforeEach(func() {
 		for _, n := range cfg.IgnoredPodsNames {
 			ignoredPodsNames[n] = struct{}{}
 		}
@@ -47,17 +30,7 @@ var _ = Describe("E2E", func() {
 	Describe("Voltron cluster health", func() {
 		Context("Services status endpoint", func() {
 			It("should be available", func() {
-				cli := httputil.NewClient(30*time.Second, true)
-
-				for _, endpoint := range cfg.StatusEndpoints {
-					resp, err := cli.Get(endpoint)
-					Expect(err).ToNot(HaveOccurred(), "Get on %s", endpoint)
-
-					err = iosafety.DrainReader(resp.Body)
-					Expect(err).ToNot(HaveOccurred())
-					err = resp.Body.Close()
-					Expect(err).ToNot(HaveOccurred())
-				}
+				waitTillServiceEndpointsAreReady()
 			})
 		})
 
@@ -68,7 +41,6 @@ var _ = Describe("E2E", func() {
 
 				clientset, err := kubernetes.NewForConfig(k8sCfg)
 				Expect(err).ToNot(HaveOccurred())
-
 				Eventually(func() (int, error) {
 					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
 						FieldSelector: fields.OneTermNotEqualSelector("metadata.namespace", "kube-system").String(),

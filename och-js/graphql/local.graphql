@@ -1,0 +1,291 @@
+# neo4j-graphql-js adds some directives during parsing
+# To make it work for other graphql client we need to add them to the schema manually, based on:
+# https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
+directive @relation(
+  name: String
+  direction: String
+  from: String
+  to: String
+) on FIELD_DEFINITION | OBJECT
+directive @cypher(statement: String) on FIELD_DEFINITION
+
+"""
+Arbitrary data
+"""
+scalar Any
+
+"""
+Full path of a given node, e.g. cap.core.type.platform.kubernetes
+"""
+scalar NodePath
+
+"""
+Version in semantic versioning, e.g. 1.1.0
+"""
+scalar Version
+
+type TypeInstance {
+  resourceVersion: Int!
+  metadata: TypeInstanceMetadata!
+    @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeInstanceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+}
+
+type TypeInstanceMetadata {
+  id: ID! @id
+  attributes: [AttributeReference!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
+}
+
+type TypeInstanceSpec {
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  value: Any!
+    @cypher(
+      statement: """
+      RETURN apoc.convert.fromJsonMap(this.value)
+      """
+    )
+  instrumentation: TypeInstanceInstrumentation
+    @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
+}
+
+type TypeReference {
+  path: NodePath!
+  revision: Version!
+}
+
+input AttributeReferenceInput {
+  path: NodePath!
+  revision: Version!
+}
+
+type AttributeReference {
+  path: NodePath!
+  revision: Version!
+}
+
+type TypeInstanceInstrumentation {
+  metrics: TypeInstanceInstrumentationMetrics
+    @relation(name: "MEASURED_BY", direction: "OUT")
+  health: TypeInstanceInstrumentationHealth
+    @relation(name: "INDICATED_BY", direction: "OUT")
+}
+
+type TypeInstanceInstrumentationMetrics {
+  endpoint: String
+  regex: String # optional regex for scraping metrics
+  dashboards: [TypeInstanceInstrumentationMetricsDashboard!]!
+    @relation(name: "ON", direction: "OUT")
+}
+
+type TypeInstanceInstrumentationMetricsDashboard {
+  url: String!
+}
+
+type TypeInstanceInstrumentationHealth {
+  url: String
+  method: HTTPRequestMethod
+
+  # resolver, which does a HTTP call on a given URL
+  # and expects status code greater than or equal to 200
+  # and less than 400
+  # TODO implement TypeInstance health check, for resolution of this field
+  status: TypeInstanceInstrumentationHealthStatus
+}
+
+enum TypeInstanceInstrumentationHealthStatus {
+  UNKNOWN
+  READY
+  FAILING
+}
+
+enum HTTPRequestMethod {
+  GET
+  POST
+}
+
+input AttributeFilterInput {
+  path: NodePath!
+  rule: FilterRule = INCLUDE
+
+  """
+  If not provided, any revision of the Attribute applies to this filter
+  """
+  revision: Version
+}
+
+enum FilterRule {
+  INCLUDE
+  EXCLUDE
+}
+
+input TypeInstanceFilter {
+  attributes: [AttributeFilterInput]
+  typeRef: TypeRefFilterInput
+}
+
+input TypeRefFilterInput {
+  path: NodePath!
+
+  """
+  If not provided, it returns TypeInstances for all revisions of given Type
+  """
+  revision: Version
+}
+
+input TypeReferenceInput {
+  path: NodePath!
+  revision: Version!
+}
+
+input CreateTypeInstanceInput {
+  typeRef: TypeReferenceInput!
+  attributes: [AttributeReferenceInput!]
+  value: Any
+}
+
+input UpdateTypeInstanceInput {
+  typeRef: TypeReferenceInput
+  attributes: [AttributeReferenceInput!]
+  value: Any
+  resourceVersion: Int!
+}
+
+type Query {
+  typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
+    @cypher(
+      statement: """
+      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
+        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
+
+      CALL {
+        WITH excluded
+        UNWIND excluded AS f
+        MATCH (ex:AttributeReference {path: f.path})
+        WHERE (f.revision IS NULL) OR (ex.revision = f.revision)
+        RETURN collect(ex) as excludedAttributes
+      }
+
+      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
+      MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
+      WHERE
+      $filter = {} OR
+      (
+        (
+          $filter.typeRef IS NULL
+          OR
+          (
+            ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)
+            OR
+            (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)
+          )
+        )
+        AND
+        (
+        	$filter.attributes IS NULL
+          OR
+          (
+            all(inc IN included WHERE
+              (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})
+              AND
+              (inc.revision IS NULL OR attr.revision = inc.revision)
+            )
+            AND
+            none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))
+          )
+        )
+      )
+
+      RETURN DISTINCT ti
+      """
+    )
+
+  typeInstance(id: ID!): TypeInstance
+    @cypher(
+      statement: """
+      MATCH (this:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata {id: $id})
+      RETURN this
+      """
+    )
+}
+
+type Mutation {
+  # TODO extend input with TypeInstanceInstrumentation
+  createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
+    @cypher(
+      statement: """
+      WITH apoc.convert.toJson($in.value) as value
+      CREATE (ti: TypeInstance {resourceVersion: 1})
+      CREATE (ti)-[:DESCRIBED_BY]->(metadata: TypeInstanceMetadata {id: apoc.create.uuid()})
+      CREATE (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec {value: value})
+      CREATE (spec)-[:OF_TYPE]->(typeRef: TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
+
+      FOREACH (attr in $in.attributes |
+        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+      )
+
+      RETURN ti
+      """
+    )
+
+  updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
+    @cypher(
+      statement: """
+      MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
+      MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
+      MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
+
+      CALL apoc.do.when(
+        $in.value IS NOT NULL,
+        'SET spec.value = apoc.convert.toJson($in.value) RETURN spec',
+        '',
+        {spec:spec, in: $in}
+      ) YIELD value
+
+      WITH ti, metadata, spec, typeRef
+      CALL apoc.do.when(
+        $in.typeRef IS NOT NULL,
+        'SET typeRef.path = in.typeRef.path, typeRef.revision = in.typeRef.revision RETURN typeRef',
+        '',
+        {typeRef: typeRef, in: $in}
+      ) YIELD value
+
+      WITH ti, metadata, spec, typeRef
+      CALL apoc.do.when(
+        $in.attributes IS NOT NULL,
+        '
+          // Remove current attribute references
+          OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(oldAttrRef: AttributeReference) DETACH DELETE oldAttrRef
+          WITH metadata, in, collect(oldAttrRef) as ignored
+
+          // Add new attribute refs
+          FOREACH (attr in in.attributes |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+          )
+          RETURN metadata
+        ',
+        '',
+        {metadata: metadata, in: $in}
+      ) YIELD value
+
+      WITH ti, metadata, spec, typeRef
+      SET ti.resourceVersion = $in.resourceVersion
+
+      RETURN ti
+      """
+    )
+  deleteTypeInstance(id: ID!): ID!
+    @cypher(
+      statement: """
+      MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
+      MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
+      MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
+      OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
+
+      DETACH DELETE ti, metadata, spec, typeRef, attrRef
+      RETURN $id
+      """
+    )
+}
+
+# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

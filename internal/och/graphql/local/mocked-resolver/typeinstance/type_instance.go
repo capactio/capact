@@ -127,10 +127,10 @@ func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string
 	return typeInstance, nil
 }
 
-func (r *TypeInstanceResolver) DeleteTypeInstance(ctx context.Context, id string) (*gqllocalapi.TypeInstance, error) {
+func (r *TypeInstanceResolver) DeleteTypeInstance(ctx context.Context, id string) (string, error) {
 	err := r.init()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	index := -1
@@ -143,10 +143,10 @@ func (r *TypeInstanceResolver) DeleteTypeInstance(ctx context.Context, id string
 		}
 	}
 	if index == -1 {
-		return nil, nil
+		return "", nil
 	}
 	r.typeInstances[index] = r.typeInstances[len(r.typeInstances)-1]
 	r.typeInstances[len(r.typeInstances)-1] = nil
 	r.typeInstances = r.typeInstances[:len(r.typeInstances)-1]
-	return typeInstance, nil
+	return typeInstance.Metadata.ID, nil
 }

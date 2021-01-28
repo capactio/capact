@@ -18,6 +18,12 @@ spec:
           value: "{{ .Release.Namespace}}/{{ include "voltron.fullname" . }}-test-e2e"
         - name: EXPECTED_NUMBER_OF_RUNNING_PODS
           value: "{{ .Values.integrationTest.expectedNumberOfRunningPods }}"
+        - name: GATEWAY_ENDPOINT
+          value: "http://voltron-gateway.{{.Release.Namespace}}.svc.cluster.local/graphql"
+        - name: GATEWAY_USERNAME
+          value: "{{ .Values.gateway.auth.username }}"
+        - name: GATEWAY_PASSWORD
+          value: "{{ .Values.gateway.auth.password }}"
       command:
         - /app
       args:
