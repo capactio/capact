@@ -68,9 +68,9 @@ spec:
                 - name: RUNNER_GCP_SERVICE_ACCOUNT_FILE_FORMAT
                   value: "YAML"
                 - name: RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH
-                  value: "{{inputs.artifacts.cloudsql-instance.path}}"
+                  value: "{{outputs.artifacts.cloudsql-instance.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
-                  value: "{{inputs.artifacts.additional.path}}"
+                  value: "{{outputs.artifacts.additional.path}}"
                 - name: RUNNER_LOGGER_DEV_MODE
                   value: "true"
 

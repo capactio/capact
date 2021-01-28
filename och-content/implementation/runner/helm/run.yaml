@@ -62,9 +62,9 @@ spec:
                 - name: RUNNER_INPUT_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
                 - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
-                  value: "{{inputs.artifacts.helm-release.path}}"
+                  value: "{{outputs.artifacts.helm-release.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
-                  value: "{{inputs.artifacts.additional.path}}"
+                  value: "{{outputs.artifacts.additional.path}}"
                 - name: RUNNER_LOGGER_DEV_MODE
                   value: "true"
 
