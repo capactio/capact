@@ -67,8 +67,8 @@ input TypeInstanceValue {
   typeRef: TypeReferenceInput
 
   """
-  Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
   Currently not supported.
+  Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
   """
   value: Any
 }
@@ -83,7 +83,7 @@ input AttributeFilterInput {
   rule: FilterRule = INCLUDE
 
   """
-  If not provided, latest revision for a given Attribute is used
+  If not provided, any revision of the Attribute applies to this filter
   """
   revision: Version
 }

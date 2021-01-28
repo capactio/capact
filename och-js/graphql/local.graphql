@@ -109,7 +109,7 @@ input AttributeFilterInput {
   rule: FilterRule = INCLUDE
 
   """
-  If not provided, latest revision for a given Attribute is used
+  If not provided, any revision of the Attribute applies to this filter
   """
   revision: Version
 }
@@ -128,7 +128,7 @@ input TypeRefFilterInput {
   path: NodePath!
 
   """
-  If not provided, it returns TypeInstances for all revisions
+  If not provided, it returns TypeInstances for all revisions of given Type
   """
   revision: Version
 }
