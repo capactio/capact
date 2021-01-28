@@ -21,13 +21,6 @@ converts them into JSON and uploads to database.
 
 ## Usage
 
-DB populator requires few environment variables set:
- * APP_NEO4JADDR - is the TCP address the GraphQL endpoint binds to. Defualts to neo4j://localhost:7687
- * APP_NEO4JUSER - is the Neo4j admin user. Defaults to neo4j
- * APP_NEO4JPASSWORD - is the Neo4j admin password.
- * APP_JSONPUBLISHADDR -is the address on which populator will serve
-   converted YAML files. It can be k8s service or for example local IP address
-
 It requires one argument, which is a path to directory with `och-content` directory. Internally it uses
 [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations
 and in different formats.
