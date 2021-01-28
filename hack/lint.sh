@@ -93,6 +93,8 @@ graphql::run_checks() {
     --src ./pkg/engine/api/graphql/schema.graphql \
     --src ./pkg/och/api/graphql/public/schema.graphql \
     --src ./pkg/och/api/graphql/local/schema.graphql \
+    --src ./och-js/graphql/public/schema.graphql \
+    --src ./och-js/graphql/local/schema.graphql \
     --linter-args "-c ./ --format compact"
   echo -e "${GREEN}√ run graphql-schema-linter${NC}"
 }
