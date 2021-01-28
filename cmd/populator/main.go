@@ -55,11 +55,9 @@ func main() {
 	defer cancel()
 
 	go func() {
-		select {
-		case <-c:
-			signal.Reset(os.Interrupt)
-			cancel()
-		}
+		<-c
+		signal.Reset(os.Interrupt)
+		cancel()
 	}()
 
 	var cfg Config
@@ -78,7 +76,7 @@ func main() {
 	files, err := dbpopulator.List(rootDir)
 	exitOnError(err, "while loading manifests")
 
-	go dbpopulator.MustServeJson(ctx, cfg.JSONPublishPort, files)
+	go dbpopulator.MustServeJSON(ctx, cfg.JSONPublishPort, files)
 
 	driver, err := neo4j.NewDriver(cfg.Neo4jAddr, neo4j.BasicAuth(cfg.Neo4jUser, cfg.Neo4jPassword, ""))
 	exitOnError(err, "while connecting to Neo4j db")

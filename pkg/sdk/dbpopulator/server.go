@@ -13,7 +13,7 @@ import (
 
 // ServeJson serves OCH Manifests
 // manifests are converted from YAML to JSON when requested
-func MustServeJson(ctx context.Context, listenPort int, validPaths []string) {
+func MustServeJSON(ctx context.Context, listenPort int, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))
 	srv := http.Server{Addr: fmt.Sprintf("0.0.0.0:%d", listenPort)}
 	go func() {
@@ -22,10 +22,8 @@ func MustServeJson(ctx context.Context, listenPort int, validPaths []string) {
 		}
 	}()
 
-	select {
-	case <-ctx.Done():
-		srv.Shutdown(ctx)
-	}
+	<-ctx.Done()
+	_ = srv.Shutdown(ctx)
 }
 
 func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
@@ -51,6 +49,10 @@ func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
 			errMsg := errors.Wrapf(err, "cannot convert %s to JSON", r.URL.Path).Error()
 			http.Error(w, errMsg, http.StatusInternalServerError)
 		}
-		w.Write(converted)
+		_, err = w.Write(converted)
+		if err != nil {
+			errMsg := errors.Wrapf(err, "cannot write response for %s", r.URL.Path).Error()
+			http.Error(w, errMsg, http.StatusInternalServerError)
+		}
 	}
 }

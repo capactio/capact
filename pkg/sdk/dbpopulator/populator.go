@@ -405,7 +405,6 @@ func Populate(ctx context.Context, session neo4j.Session, paths []string, rootDi
 	}
 
 	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
-
 		for _, kind := range ordered {
 			paths = grouped[kind]
 			query := queries[kind]
