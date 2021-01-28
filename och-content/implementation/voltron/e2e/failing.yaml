@@ -18,7 +18,7 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.e2e.failing
+    - path: cap.interface.voltron.e2e.failing-local # TODO remove -local, after rendering is implemented in engine
       revision: 0.1.0
 
   requires:

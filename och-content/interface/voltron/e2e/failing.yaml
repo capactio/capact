@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.voltron.e2e
-  name: failing
+  name: failing-local # TODO remove -local, after rendering is implemented in engine
   displayName: "Failing Voltron test action"
   description: ""
   documentationURL: ""

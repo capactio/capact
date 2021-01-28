@@ -18,7 +18,7 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.e2e.passing
+    - path: cap.interface.voltron.e2e.passing-local # TODO remove -local, after rendering is implemented in engine
       revision: 0.1.0
 
   requires:

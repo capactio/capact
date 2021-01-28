@@ -3,7 +3,6 @@
 package e2e
 
 import (
-	"context"
 	"fmt"
 	"time"
 
@@ -17,11 +16,6 @@ import (
 	"k8s.io/kubectl/pkg/util/podutils"
 	"k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-
-	"projectvoltron.dev/voltron/pkg/httputil"
-
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	client "projectvoltron.dev/voltron/pkg/engine/client"
 )
 
 var _ = Describe("Cluster check", func() {
@@ -79,86 +73,6 @@ var _ = Describe("Cluster check", func() {
 		})
 	})
 })
-
-var _ = Describe("Action E2E", func() {
-	var engineClient *client.Client
-
-	actionName := "e2e-test"
-	ctx := context.Background()
-
-	BeforeEach(func() {
-		httpClient := httputil.NewClient(30*time.Second, true,
-			httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password))
-		engineClient = client.New(cfg.Gateway.Endpoint, httpClient)
-	})
-
-	AfterEach(func() {
-		// cleanup Action
-		engineClient.DeleteAction(ctx, actionName)
-	})
-
-	Context("Action execution", func() {
-		It("should have succeeded status after a passed workflow", func() {
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.passing-local",
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionSucceeded))
-		})
-
-		It("should have failed status after a failed workflow", func() {
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.failing-local",
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionFailed))
-		})
-	})
-})
-
-func getActionStatusFunc(ctx context.Context, cl *client.Client, name string) func() (enginegraphql.ActionStatusCondition, error) {
-	return func() (enginegraphql.ActionStatusCondition, error) {
-		action, err := cl.GetAction(ctx, name)
-		if err != nil {
-			return "", err
-		}
-		return action.Status.Condition, err
-	}
-}
 
 func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 	switch pod.Status.Phase {
