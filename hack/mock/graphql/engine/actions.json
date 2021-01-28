@@ -220,7 +220,7 @@
           "par1": "val2"
         }
       },
-      "cancelledBy": {
+      "canceledBy": {
         "username": "voltron1",
         "groups": [
           "users"

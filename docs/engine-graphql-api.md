@@ -35,7 +35,7 @@ Once Action is in `READY_TO_RUN` mode, user can run the Action, or, in other wor
 1. User (approver) runs the Action with `runAction` mutation.
 1. Engine changes the Action status to `RUNNING`.
 1. Depending on what happens, Engine changes the Action status:
-    1. If user cancelled the Action, it changes to `BEING_CANCELLED` and after that to `CANCELLED`. 
+    1. If user canceled the Action, it changes to `BEING_CANCELED` and after that to `CANCELED`. 
     1. If user didn't cancel the action, it changes to `SUCCEEDED` or `FAILED`. 
 
 ## Implementation Specific Behavior

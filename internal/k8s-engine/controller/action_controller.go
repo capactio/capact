@@ -157,7 +157,7 @@ func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Ac
 
 // executeAction executes action (run, dryRun, cancel etc) and set v1alpha1.RunningActionPhase.
 //
-// TODO: add support v1alpha1.BeingCancelledActionPhase phase.
+// TODO: add support v1alpha1.BeingCanceledActionPhase phase.
 func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
@@ -182,7 +182,7 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 }
 
 // handleRunningAction checks execution status. If completed, sets final state v1alpha1.SucceededActionPhase,
-// v1alpha1.CancelledActionPhase, or v1alpha1.FailedActionPhase depends on currently scheduled activity.
+// v1alpha1.CanceledActionPhase, or v1alpha1.FailedActionPhase depends on currently scheduled activity.
 //
 // TODO: add support for cancel phase.
 func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {

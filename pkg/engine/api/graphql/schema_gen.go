@@ -73,13 +73,13 @@ type ComplexityRoot struct {
 	}
 
 	ActionStatus struct {
-		CancelledBy func(childComplexity int) int
-		Condition   func(childComplexity int) int
-		CreatedBy   func(childComplexity int) int
-		Message     func(childComplexity int) int
-		RunBy       func(childComplexity int) int
-		Runner      func(childComplexity int) int
-		Timestamp   func(childComplexity int) int
+		CanceledBy func(childComplexity int) int
+		CreatedBy  func(childComplexity int) int
+		Message    func(childComplexity int) int
+		Phase      func(childComplexity int) int
+		RunBy      func(childComplexity int) int
+		Runner     func(childComplexity int) int
+		Timestamp  func(childComplexity int) int
 	}
 
 	InputTypeInstanceDetails struct {
@@ -87,6 +87,11 @@ type ComplexityRoot struct {
 		Name     func(childComplexity int) int
 		Optional func(childComplexity int) int
 		TypeRef  func(childComplexity int) int
+	}
+
+	InputTypeInstanceToProvide struct {
+		Name    func(childComplexity int) int
+		TypeRef func(childComplexity int) int
 	}
 
 	ManifestReference struct {
@@ -111,7 +116,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		Action  func(childComplexity int, name string) int
-		Actions func(childComplexity int, filter []*ActionFilter) int
+		Actions func(childComplexity int, filter *ActionFilter) int
 	}
 
 	RunnerStatus struct {
@@ -135,7 +140,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Action(ctx context.Context, name string) (*Action, error)
-	Actions(ctx context.Context, filter []*ActionFilter) ([]*Action, error)
+	Actions(ctx context.Context, filter *ActionFilter) ([]*Action, error)
 }
 
 type executableSchema struct {
@@ -272,19 +277,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionRenderingAdvancedMode.TypeInstancesForRenderingIteration(childComplexity), true
 
-	case "ActionStatus.cancelledBy":
-		if e.complexity.ActionStatus.CancelledBy == nil {
+	case "ActionStatus.canceledBy":
+		if e.complexity.ActionStatus.CanceledBy == nil {
 			break
 		}
 
-		return e.complexity.ActionStatus.CancelledBy(childComplexity), true
-
-	case "ActionStatus.condition":
-		if e.complexity.ActionStatus.Condition == nil {
-			break
-		}
-
-		return e.complexity.ActionStatus.Condition(childComplexity), true
+		return e.complexity.ActionStatus.CanceledBy(childComplexity), true
 
 	case "ActionStatus.createdBy":
 		if e.complexity.ActionStatus.CreatedBy == nil {
@@ -299,6 +297,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActionStatus.Message(childComplexity), true
+
+	case "ActionStatus.phase":
+		if e.complexity.ActionStatus.Phase == nil {
+			break
+		}
+
+		return e.complexity.ActionStatus.Phase(childComplexity), true
 
 	case "ActionStatus.runBy":
 		if e.complexity.ActionStatus.RunBy == nil {
@@ -348,6 +353,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InputTypeInstanceDetails.TypeRef(childComplexity), true
+
+	case "InputTypeInstanceToProvide.name":
+		if e.complexity.InputTypeInstanceToProvide.Name == nil {
+			break
+		}
+
+		return e.complexity.InputTypeInstanceToProvide.Name(childComplexity), true
+
+	case "InputTypeInstanceToProvide.typeRef":
+		if e.complexity.InputTypeInstanceToProvide.TypeRef == nil {
+			break
+		}
+
+		return e.complexity.InputTypeInstanceToProvide.TypeRef(childComplexity), true
 
 	case "ManifestReference.path":
 		if e.complexity.ManifestReference.Path == nil {
@@ -478,7 +497,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.Actions(childComplexity, args["filter"].([]*ActionFilter)), true
+		return e.complexity.Query.Actions(childComplexity, args["filter"].(*ActionFilter)), true
 
 	case "RunnerStatus.status":
 		if e.complexity.RunnerStatus.Status == nil {
@@ -683,7 +702,7 @@ type Action {
     run: Boolean!
 
     """
-    Indicates if user cancelled the workflow
+    Indicates if user canceled the workflow
     """
     cancel: Boolean!
 
@@ -708,21 +727,21 @@ type ActionRenderingAdvancedMode {
     """
     Optional TypeInstances for current rendering iteration
     """
-    typeInstancesForRenderingIteration: [InputTypeInstanceDetails!]!
+    typeInstancesForRenderingIteration: [InputTypeInstanceToProvide!]!
 }
 
 """
 Status of the Action
 """
 type ActionStatus {
-    condition: ActionStatusCondition!
+    phase: ActionStatusPhase!
     timestamp: Timestamp!
     message: String
     runner: RunnerStatus
 
     createdBy: UserInfo
     runBy: UserInfo
-    cancelledBy: UserInfo
+    canceledBy: UserInfo
 }
 
 """
@@ -770,6 +789,14 @@ type InputTypeInstanceDetails implements TypeInstanceDetails {
 }
 
 """
+Describes optional input TypeInstance of advanced rendering iteration
+"""
+type InputTypeInstanceToProvide {
+    name: String!
+    typeRef: ManifestReference!
+}
+
+"""
 Describes output TypeInstance of an Action
 """
 type OutputTypeInstanceDetails implements TypeInstanceDetails {
@@ -791,7 +818,7 @@ type UserInfo {
 Set of filters for Action list
 """
 input ActionFilter {
-    condition: ActionStatusCondition
+    phase: ActionStatusPhase
 }
 
 """
@@ -805,23 +832,23 @@ input AdvancedModeContinueRenderingInput {
 }
 
 """
-Current state of the Action
+Current phase of the Action
 """
-enum ActionStatusCondition {
+enum ActionStatusPhase {
     INITIAL,
     BEING_RENDERED,
     ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
     READY_TO_RUN,
     RUNNING,
-    BEING_CANCELLED,
-    CANCELLED,
+    BEING_CANCELED,
+    CANCELED,
     SUCCEEDED,
     FAILED
 }
 
 type Query {
     action(name: String!): Action
-    actions(filter: [ActionFilter!]): [Action!]!
+    actions(filter: ActionFilter): [Action!]!
 }
 
 type Mutation {
@@ -974,10 +1001,10 @@ func (ec *executionContext) field_Query_action_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_actions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*ActionFilter
+	var arg0 *ActionFilter
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOActionFilter2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilterᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalOActionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1593,12 +1620,12 @@ func (ec *executionContext) _ActionRenderingAdvancedMode_typeInstancesForRenderi
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*InputTypeInstanceDetails)
+	res := resTmp.([]*InputTypeInstanceToProvide)
 	fc.Result = res
-	return ec.marshalNInputTypeInstanceDetails2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceDetailsᚄ(ctx, field.Selections, res)
+	return ec.marshalNInputTypeInstanceToProvide2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceToProvideᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ActionStatus_condition(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _ActionStatus_phase(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1616,7 +1643,7 @@ func (ec *executionContext) _ActionStatus_condition(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Condition, nil
+		return obj.Phase, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1628,9 +1655,9 @@ func (ec *executionContext) _ActionStatus_condition(ctx context.Context, field g
 		}
 		return graphql.Null
 	}
-	res := resTmp.(ActionStatusCondition)
+	res := resTmp.(ActionStatusPhase)
 	fc.Result = res
-	return ec.marshalNActionStatusCondition2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx, field.Selections, res)
+	return ec.marshalNActionStatusPhase2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActionStatus_timestamp(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
@@ -1796,7 +1823,7 @@ func (ec *executionContext) _ActionStatus_runBy(ctx context.Context, field graph
 	return ec.marshalOUserInfo2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ActionStatus_cancelledBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
+func (ec *executionContext) _ActionStatus_canceledBy(ctx context.Context, field graphql.CollectedField, obj *ActionStatus) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1814,7 +1841,7 @@ func (ec *executionContext) _ActionStatus_cancelledBy(ctx context.Context, field
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CancelledBy, nil
+		return obj.CanceledBy, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1966,6 +1993,76 @@ func (ec *executionContext) _InputTypeInstanceDetails_optional(ctx context.Conte
 	res := resTmp.(bool)
 	fc.Result = res
 	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InputTypeInstanceToProvide_name(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceToProvide) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InputTypeInstanceToProvide",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InputTypeInstanceToProvide_typeRef(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceToProvide) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InputTypeInstanceToProvide",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TypeRef, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ManifestReference)
+	fc.Result = res
+	return ec.marshalNManifestReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ManifestReference_path(ctx context.Context, field graphql.CollectedField, obj *ManifestReference) (ret graphql.Marshaler) {
@@ -2459,7 +2556,7 @@ func (ec *executionContext) _Query_actions(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Actions(rctx, args["filter"].([]*ActionFilter))
+		return ec.resolvers.Query().Actions(rctx, args["filter"].(*ActionFilter))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3834,11 +3931,11 @@ func (ec *executionContext) unmarshalInputActionFilter(ctx context.Context, obj 
 
 	for k, v := range asMap {
 		switch k {
-		case "condition":
+		case "phase":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("condition"))
-			it.Condition, err = ec.unmarshalOActionStatusCondition2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("phase"))
+			it.Phase, err = ec.unmarshalOActionStatusPhase2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4146,8 +4243,8 @@ func (ec *executionContext) _ActionStatus(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ActionStatus")
-		case "condition":
-			out.Values[i] = ec._ActionStatus_condition(ctx, field, obj)
+		case "phase":
+			out.Values[i] = ec._ActionStatus_phase(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4164,8 +4261,8 @@ func (ec *executionContext) _ActionStatus(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._ActionStatus_createdBy(ctx, field, obj)
 		case "runBy":
 			out.Values[i] = ec._ActionStatus_runBy(ctx, field, obj)
-		case "cancelledBy":
-			out.Values[i] = ec._ActionStatus_cancelledBy(ctx, field, obj)
+		case "canceledBy":
+			out.Values[i] = ec._ActionStatus_canceledBy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4205,6 +4302,38 @@ func (ec *executionContext) _InputTypeInstanceDetails(ctx context.Context, sel a
 			}
 		case "optional":
 			out.Values[i] = ec._InputTypeInstanceDetails_optional(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var inputTypeInstanceToProvideImplementors = []string{"InputTypeInstanceToProvide"}
+
+func (ec *executionContext) _InputTypeInstanceToProvide(ctx context.Context, sel ast.SelectionSet, obj *InputTypeInstanceToProvide) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, inputTypeInstanceToProvideImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InputTypeInstanceToProvide")
+		case "name":
+			out.Values[i] = ec._InputTypeInstanceToProvide_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "typeRef":
+			out.Values[i] = ec._InputTypeInstanceToProvide_typeRef(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4758,18 +4887,13 @@ func (ec *executionContext) unmarshalNActionDetailsInput2projectvoltronᚗdevᚋ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNActionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilter(ctx context.Context, v interface{}) (*ActionFilter, error) {
-	res, err := ec.unmarshalInputActionFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNActionStatusCondition2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx context.Context, v interface{}) (ActionStatusCondition, error) {
-	var res ActionStatusCondition
+func (ec *executionContext) unmarshalNActionStatusPhase2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx context.Context, v interface{}) (ActionStatusPhase, error) {
+	var res ActionStatusPhase
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNActionStatusCondition2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx context.Context, sel ast.SelectionSet, v ActionStatusCondition) graphql.Marshaler {
+func (ec *executionContext) marshalNActionStatusPhase2projectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx context.Context, sel ast.SelectionSet, v ActionStatusPhase) graphql.Marshaler {
 	return v
 }
 
@@ -4858,6 +4982,53 @@ func (ec *executionContext) marshalNInputTypeInstanceDetails2ᚖprojectvoltron�
 		return graphql.Null
 	}
 	return ec._InputTypeInstanceDetails(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInputTypeInstanceToProvide2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceToProvideᚄ(ctx context.Context, sel ast.SelectionSet, v []*InputTypeInstanceToProvide) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInputTypeInstanceToProvide2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceToProvide(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNInputTypeInstanceToProvide2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceToProvide(ctx context.Context, sel ast.SelectionSet, v *InputTypeInstanceToProvide) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._InputTypeInstanceToProvide(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNManifestReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReference(ctx context.Context, sel ast.SelectionSet, v *ManifestReference) graphql.Marshaler {
@@ -5251,28 +5422,12 @@ func (ec *executionContext) unmarshalOActionDetailsInput2ᚖprojectvoltronᚗdev
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalOActionFilter2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilterᚄ(ctx context.Context, v interface{}) ([]*ActionFilter, error) {
+func (ec *executionContext) unmarshalOActionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilter(ctx context.Context, v interface{}) (*ActionFilter, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*ActionFilter, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNActionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionFilter(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
+	res, err := ec.unmarshalInputActionFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOActionInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionInput(ctx context.Context, sel ast.SelectionSet, v *ActionInput) graphql.Marshaler {
@@ -5311,16 +5466,16 @@ func (ec *executionContext) marshalOActionStatus2ᚖprojectvoltronᚗdevᚋvoltr
 	return ec._ActionStatus(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOActionStatusCondition2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx context.Context, v interface{}) (*ActionStatusCondition, error) {
+func (ec *executionContext) unmarshalOActionStatusPhase2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx context.Context, v interface{}) (*ActionStatusPhase, error) {
 	if v == nil {
 		return nil, nil
 	}
-	var res = new(ActionStatusCondition)
+	var res = new(ActionStatusPhase)
 	err := res.UnmarshalGQL(v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalOActionStatusCondition2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusCondition(ctx context.Context, sel ast.SelectionSet, v *ActionStatusCondition) graphql.Marshaler {
+func (ec *executionContext) marshalOActionStatusPhase2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐActionStatusPhase(ctx context.Context, sel ast.SelectionSet, v *ActionStatusPhase) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

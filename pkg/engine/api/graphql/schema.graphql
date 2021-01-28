@@ -109,7 +109,7 @@ type Action {
     run: Boolean!
 
     """
-    Indicates if user cancelled the workflow
+    Indicates if user canceled the workflow
     """
     cancel: Boolean!
 
@@ -134,21 +134,21 @@ type ActionRenderingAdvancedMode {
     """
     Optional TypeInstances for current rendering iteration
     """
-    typeInstancesForRenderingIteration: [InputTypeInstanceDetails!]!
+    typeInstancesForRenderingIteration: [InputTypeInstanceToProvide!]!
 }
 
 """
 Status of the Action
 """
 type ActionStatus {
-    condition: ActionStatusCondition!
+    phase: ActionStatusPhase!
     timestamp: Timestamp!
     message: String
     runner: RunnerStatus
 
     createdBy: UserInfo
     runBy: UserInfo
-    cancelledBy: UserInfo
+    canceledBy: UserInfo
 }
 
 """
@@ -196,6 +196,14 @@ type InputTypeInstanceDetails implements TypeInstanceDetails {
 }
 
 """
+Describes optional input TypeInstance of advanced rendering iteration
+"""
+type InputTypeInstanceToProvide {
+    name: String!
+    typeRef: ManifestReference!
+}
+
+"""
 Describes output TypeInstance of an Action
 """
 type OutputTypeInstanceDetails implements TypeInstanceDetails {
@@ -217,7 +225,7 @@ type UserInfo {
 Set of filters for Action list
 """
 input ActionFilter {
-    condition: ActionStatusCondition
+    phase: ActionStatusPhase
 }
 
 """
@@ -231,23 +239,23 @@ input AdvancedModeContinueRenderingInput {
 }
 
 """
-Current state of the Action
+Current phase of the Action
 """
-enum ActionStatusCondition {
+enum ActionStatusPhase {
     INITIAL,
     BEING_RENDERED,
     ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
     READY_TO_RUN,
     RUNNING,
-    BEING_CANCELLED,
-    CANCELLED,
+    BEING_CANCELED,
+    CANCELED,
     SUCCEEDED,
     FAILED
 }
 
 type Query {
     action(name: String!): Action
-    actions(filter: [ActionFilter!]): [Action!]!
+    actions(filter: ActionFilter): [Action!]!
 }
 
 type Mutation {

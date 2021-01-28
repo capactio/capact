@@ -22,7 +22,7 @@ type Action struct {
 	ActionRef *ManifestReference `json:"actionRef"`
 	// Indicates if user approved this Action to run
 	Run bool `json:"run"`
-	// Indicates if user cancelled the workflow
+	// Indicates if user canceled the workflow
 	Cancel bool `json:"cancel"`
 	// Specifies whether the Action performs server-side test without actually running the Action.
 	DryRun                 bool                         `json:"dryRun"`
@@ -47,7 +47,7 @@ type ActionDetailsInput struct {
 
 // Set of filters for Action list
 type ActionFilter struct {
-	Condition *ActionStatusCondition `json:"condition"`
+	Phase *ActionStatusPhase `json:"phase"`
 }
 
 // Describes input of an Action
@@ -74,18 +74,18 @@ type ActionOutput struct {
 type ActionRenderingAdvancedMode struct {
 	Enabled bool `json:"enabled"`
 	// Optional TypeInstances for current rendering iteration
-	TypeInstancesForRenderingIteration []*InputTypeInstanceDetails `json:"typeInstancesForRenderingIteration"`
+	TypeInstancesForRenderingIteration []*InputTypeInstanceToProvide `json:"typeInstancesForRenderingIteration"`
 }
 
 // Status of the Action
 type ActionStatus struct {
-	Condition   ActionStatusCondition `json:"condition"`
-	Timestamp   Timestamp             `json:"timestamp"`
-	Message     *string               `json:"message"`
-	Runner      *RunnerStatus         `json:"runner"`
-	CreatedBy   *UserInfo             `json:"createdBy"`
-	RunBy       *UserInfo             `json:"runBy"`
-	CancelledBy *UserInfo             `json:"cancelledBy"`
+	Phase      ActionStatusPhase `json:"phase"`
+	Timestamp  Timestamp         `json:"timestamp"`
+	Message    *string           `json:"message"`
+	Runner     *RunnerStatus     `json:"runner"`
+	CreatedBy  *UserInfo         `json:"createdBy"`
+	RunBy      *UserInfo         `json:"runBy"`
+	CanceledBy *UserInfo         `json:"canceledBy"`
 }
 
 // Input used for continuing Action rendering in advanced mode
@@ -109,6 +109,12 @@ type InputTypeInstanceDetails struct {
 }
 
 func (InputTypeInstanceDetails) IsTypeInstanceDetails() {}
+
+// Describes optional input TypeInstance of advanced rendering iteration
+type InputTypeInstanceToProvide struct {
+	Name    string             `json:"name"`
+	TypeRef *ManifestReference `json:"typeRef"`
+}
 
 type ManifestReference struct {
 	Path     string `json:"path"`
@@ -144,58 +150,58 @@ type UserInfo struct {
 	Extra    interface{} `json:"extra"`
 }
 
-// Current state of the Action
-type ActionStatusCondition string
+// Current phase of the Action
+type ActionStatusPhase string
 
 const (
-	ActionStatusConditionInitial                        ActionStatusCondition = "INITIAL"
-	ActionStatusConditionBeingRendered                  ActionStatusCondition = "BEING_RENDERED"
-	ActionStatusConditionAdvancedModeRenderingIteration ActionStatusCondition = "ADVANCED_MODE_RENDERING_ITERATION"
-	ActionStatusConditionReadyToRun                     ActionStatusCondition = "READY_TO_RUN"
-	ActionStatusConditionRunning                        ActionStatusCondition = "RUNNING"
-	ActionStatusConditionBeingCancelled                 ActionStatusCondition = "BEING_CANCELLED"
-	ActionStatusConditionCancelled                      ActionStatusCondition = "CANCELLED"
-	ActionStatusConditionSucceeded                      ActionStatusCondition = "SUCCEEDED"
-	ActionStatusConditionFailed                         ActionStatusCondition = "FAILED"
+	ActionStatusPhaseInitial                        ActionStatusPhase = "INITIAL"
+	ActionStatusPhaseBeingRendered                  ActionStatusPhase = "BEING_RENDERED"
+	ActionStatusPhaseAdvancedModeRenderingIteration ActionStatusPhase = "ADVANCED_MODE_RENDERING_ITERATION"
+	ActionStatusPhaseReadyToRun                     ActionStatusPhase = "READY_TO_RUN"
+	ActionStatusPhaseRunning                        ActionStatusPhase = "RUNNING"
+	ActionStatusPhaseBeingCanceled                  ActionStatusPhase = "BEING_CANCELED"
+	ActionStatusPhaseCanceled                       ActionStatusPhase = "CANCELED"
+	ActionStatusPhaseSucceeded                      ActionStatusPhase = "SUCCEEDED"
+	ActionStatusPhaseFailed                         ActionStatusPhase = "FAILED"
 )
 
-var AllActionStatusCondition = []ActionStatusCondition{
-	ActionStatusConditionInitial,
-	ActionStatusConditionBeingRendered,
-	ActionStatusConditionAdvancedModeRenderingIteration,
-	ActionStatusConditionReadyToRun,
-	ActionStatusConditionRunning,
-	ActionStatusConditionBeingCancelled,
-	ActionStatusConditionCancelled,
-	ActionStatusConditionSucceeded,
-	ActionStatusConditionFailed,
+var AllActionStatusPhase = []ActionStatusPhase{
+	ActionStatusPhaseInitial,
+	ActionStatusPhaseBeingRendered,
+	ActionStatusPhaseAdvancedModeRenderingIteration,
+	ActionStatusPhaseReadyToRun,
+	ActionStatusPhaseRunning,
+	ActionStatusPhaseBeingCanceled,
+	ActionStatusPhaseCanceled,
+	ActionStatusPhaseSucceeded,
+	ActionStatusPhaseFailed,
 }
 
-func (e ActionStatusCondition) IsValid() bool {
+func (e ActionStatusPhase) IsValid() bool {
 	switch e {
-	case ActionStatusConditionInitial, ActionStatusConditionBeingRendered, ActionStatusConditionAdvancedModeRenderingIteration, ActionStatusConditionReadyToRun, ActionStatusConditionRunning, ActionStatusConditionBeingCancelled, ActionStatusConditionCancelled, ActionStatusConditionSucceeded, ActionStatusConditionFailed:
+	case ActionStatusPhaseInitial, ActionStatusPhaseBeingRendered, ActionStatusPhaseAdvancedModeRenderingIteration, ActionStatusPhaseReadyToRun, ActionStatusPhaseRunning, ActionStatusPhaseBeingCanceled, ActionStatusPhaseCanceled, ActionStatusPhaseSucceeded, ActionStatusPhaseFailed:
 		return true
 	}
 	return false
 }
 
-func (e ActionStatusCondition) String() string {
+func (e ActionStatusPhase) String() string {
 	return string(e)
 }
 
-func (e *ActionStatusCondition) UnmarshalGQL(v interface{}) error {
+func (e *ActionStatusPhase) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = ActionStatusCondition(str)
+	*e = ActionStatusPhase(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid ActionStatusCondition", str)
+		return fmt.Errorf("%s is not a valid ActionStatusPhase", str)
 	}
 	return nil
 }
 
-func (e ActionStatusCondition) MarshalGQL(w io.Writer) {
+func (e ActionStatusPhase) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }

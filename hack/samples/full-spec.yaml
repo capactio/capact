@@ -4,7 +4,7 @@ metadata:
   name: "full-spec"
 spec:
   actionRef:
-    path: "cap.interface.database.postgresql.install"
+    path: "cap.interface.productivity.jira.install"
     revision: "0.1.0"
   input:
     parameters:
@@ -18,7 +18,7 @@ spec:
   advancedRendering:
     enabled: true
     renderingIteration:
-      continue: true
+      approvedIterationName: postgresql-install
   run: false
   dryRun: false
   cancel: false

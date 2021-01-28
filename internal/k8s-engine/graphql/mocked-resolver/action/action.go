@@ -15,57 +15,57 @@ import (
 
 var stateChangeWaitTime = 10 * time.Second
 
-type isConditionPossible func(a *graphql.Action) bool
+type isPhasePossible func(a *graphql.Action) bool
 
 func canBeRun(a *graphql.Action) bool {
 	return a.Run
 }
 
 type conditionsGraphNode struct {
-	condition      graphql.ActionStatusCondition
-	conditionValid isConditionPossible
+	condition      graphql.ActionStatusPhase
+	conditionValid isPhasePossible
 }
 
-var conditionsGraph = map[graphql.ActionStatusCondition][]conditionsGraphNode{
-	graphql.ActionStatusConditionInitial: {
-		{condition: graphql.ActionStatusConditionBeingRendered},
+var conditionsGraph = map[graphql.ActionStatusPhase][]conditionsGraphNode{
+	graphql.ActionStatusPhaseInitial: {
+		{condition: graphql.ActionStatusPhaseBeingRendered},
 	},
-	graphql.ActionStatusConditionBeingRendered: {
-		{condition: graphql.ActionStatusConditionReadyToRun},
+	graphql.ActionStatusPhaseBeingRendered: {
+		{condition: graphql.ActionStatusPhaseReadyToRun},
 	},
-	graphql.ActionStatusConditionAdvancedModeRenderingIteration: {
-		{condition: graphql.ActionStatusConditionReadyToRun},
-		{condition: graphql.ActionStatusConditionAdvancedModeRenderingIteration},
+	graphql.ActionStatusPhaseAdvancedModeRenderingIteration: {
+		{condition: graphql.ActionStatusPhaseReadyToRun},
+		{condition: graphql.ActionStatusPhaseAdvancedModeRenderingIteration},
 	},
-	graphql.ActionStatusConditionReadyToRun: {
+	graphql.ActionStatusPhaseReadyToRun: {
 		{
-			condition:      graphql.ActionStatusConditionRunning,
+			condition:      graphql.ActionStatusPhaseRunning,
 			conditionValid: canBeRun,
 		},
 	},
-	graphql.ActionStatusConditionRunning: {
-		{condition: graphql.ActionStatusConditionSucceeded},
-		{condition: graphql.ActionStatusConditionFailed},
+	graphql.ActionStatusPhaseRunning: {
+		{condition: graphql.ActionStatusPhaseSucceeded},
+		{condition: graphql.ActionStatusPhaseFailed},
 	},
 
-	graphql.ActionStatusConditionBeingCancelled: {
-		{condition: graphql.ActionStatusConditionCancelled},
+	graphql.ActionStatusPhaseBeingCanceled: {
+		{condition: graphql.ActionStatusPhaseCanceled},
 	},
-	graphql.ActionStatusConditionCancelled: {},
-	graphql.ActionStatusConditionSucceeded: {},
-	graphql.ActionStatusConditionFailed:    {},
+	graphql.ActionStatusPhaseCanceled:  {},
+	graphql.ActionStatusPhaseSucceeded: {},
+	graphql.ActionStatusPhaseFailed:    {},
 }
 
-var conditionMessages = map[graphql.ActionStatusCondition]string{
-	graphql.ActionStatusConditionInitial:                        "Action initialized",
-	graphql.ActionStatusConditionBeingRendered:                  "Action is being rendered",
-	graphql.ActionStatusConditionAdvancedModeRenderingIteration: "Action in advanced rendering mode",
-	graphql.ActionStatusConditionReadyToRun:                     "Action is ready to run",
-	graphql.ActionStatusConditionRunning:                        "Action is running",
-	graphql.ActionStatusConditionBeingCancelled:                 "Action is being canceled",
-	graphql.ActionStatusConditionCancelled:                      "Action canceled",
-	graphql.ActionStatusConditionSucceeded:                      "Action succeeded",
-	graphql.ActionStatusConditionFailed:                         "Action failed",
+var conditionMessages = map[graphql.ActionStatusPhase]string{
+	graphql.ActionStatusPhaseInitial:                        "Action initialized",
+	graphql.ActionStatusPhaseBeingRendered:                  "Action is being rendered",
+	graphql.ActionStatusPhaseAdvancedModeRenderingIteration: "Action in advanced rendering mode",
+	graphql.ActionStatusPhaseReadyToRun:                     "Action is ready to run",
+	graphql.ActionStatusPhaseRunning:                        "Action is running",
+	graphql.ActionStatusPhaseBeingCanceled:                  "Action is being canceled",
+	graphql.ActionStatusPhaseCanceled:                       "Action canceled",
+	graphql.ActionStatusPhaseSucceeded:                      "Action succeeded",
+	graphql.ActionStatusPhaseFailed:                         "Action failed",
 }
 
 // proceedAction simulates engine. It waits `stateChangeWaitTime`
@@ -75,27 +75,27 @@ func proceedAction(action *graphql.Action) {
 	for {
 		time.Sleep(stateChangeWaitTime)
 
-		nextConditions := conditionsGraph[action.Status.Condition]
-		if len(nextConditions) == 0 {
+		nextPhases := conditionsGraph[action.Status.Phase]
+		if len(nextPhases) == 0 {
 			break
 		}
 
-		possibleConditions := []graphql.ActionStatusCondition{}
-		for _, conditionNode := range nextConditions {
+		possiblePhases := []graphql.ActionStatusPhase{}
+		for _, conditionNode := range nextPhases {
 			if conditionNode.conditionValid != nil && !conditionNode.conditionValid(action) {
 				continue
 			}
-			possibleConditions = append(possibleConditions, conditionNode.condition)
+			possiblePhases = append(possiblePhases, conditionNode.condition)
 		}
-		if len(possibleConditions) == 0 {
+		if len(possiblePhases) == 0 {
 			continue
 		}
 
 		// #nosec G404
-		newCondition := possibleConditions[rand.Intn(len(possibleConditions))]
-		message := conditionMessages[newCondition]
+		newPhase := possiblePhases[rand.Intn(len(possiblePhases))]
+		message := conditionMessages[newPhase]
 
-		action.Status.Condition = newCondition
+		action.Status.Phase = newPhase
 		action.Status.Message = &message
 	}
 }
@@ -146,7 +146,7 @@ func (a *ActionResolver) Action(ctx context.Context, name string) (*graphql.Acti
 	return action, nil
 }
 
-func (a *ActionResolver) Actions(ctx context.Context, filter []*graphql.ActionFilter) ([]*graphql.Action, error) {
+func (a *ActionResolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
 	err := a.init()
 	if err != nil {
 		return []*graphql.Action{}, err
@@ -155,7 +155,7 @@ func (a *ActionResolver) Actions(ctx context.Context, filter []*graphql.ActionFi
 }
 
 func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsInput) (*graphql.Action, error) {
-	message := conditionMessages[graphql.ActionStatusConditionInitial]
+	message := conditionMessages[graphql.ActionStatusPhaseInitial]
 	var dryRun bool
 	if in.DryRun != nil {
 		dryRun = *in.DryRun
@@ -180,7 +180,7 @@ func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDet
 
 		Status: &graphql.ActionStatus{
 			CreatedBy: mockUser,
-			Condition: graphql.ActionStatusConditionInitial,
+			Phase:     graphql.ActionStatusPhaseInitial,
 			Message:   &message,
 			Timestamp: graphql.Timestamp(time.Now()),
 			Runner:    &graphql.RunnerStatus{},
@@ -207,11 +207,11 @@ func (a *ActionResolver) RunAction(ctx context.Context, name string) (*graphql.A
 		return nil, err
 	}
 
-	if action.Status.Condition != graphql.ActionStatusConditionReadyToRun &&
-		action.Status.Condition != graphql.ActionStatusConditionInitial &&
-		action.Status.Condition != graphql.ActionStatusConditionAdvancedModeRenderingIteration &&
-		action.Status.Condition != graphql.ActionStatusConditionBeingRendered {
-		return action, fmt.Errorf("action is not ready to be run, current condition: %s", action.Status.Condition)
+	if action.Status.Phase != graphql.ActionStatusPhaseReadyToRun &&
+		action.Status.Phase != graphql.ActionStatusPhaseInitial &&
+		action.Status.Phase != graphql.ActionStatusPhaseAdvancedModeRenderingIteration &&
+		action.Status.Phase != graphql.ActionStatusPhaseBeingRendered {
+		return action, fmt.Errorf("action is not ready to be run, current condition: %s", action.Status.Phase)
 	}
 	action.Run = true
 
@@ -227,15 +227,15 @@ func (a *ActionResolver) CancelAction(ctx context.Context, id string) (*graphql.
 		return nil, err
 	}
 
-	if action.Status.Condition != graphql.ActionStatusConditionRunning {
+	if action.Status.Phase != graphql.ActionStatusPhaseRunning {
 		return action, fmt.Errorf("Action which is not running cannot be canceled")
 	}
 	action.Cancel = true
 
-	message := conditionMessages[graphql.ActionStatusConditionBeingCancelled]
+	message := conditionMessages[graphql.ActionStatusPhaseBeingCanceled]
 
-	action.Status.CancelledBy = mockUser
-	action.Status.Condition = graphql.ActionStatusConditionBeingCancelled
+	action.Status.CanceledBy = mockUser
+	action.Status.Phase = graphql.ActionStatusPhaseBeingCanceled
 	action.Status.Message = &message
 	action.Status.Timestamp = graphql.Timestamp(time.Now())
 
@@ -259,17 +259,31 @@ func (a *ActionResolver) ContinueAdvancedRendering(ctx context.Context, id strin
 	if action.RenderingAdvancedMode == nil || !action.RenderingAdvancedMode.Enabled {
 		return action, errors.New("Rendering in advanced mode is disabled")
 	}
-	typeInstances := []*graphql.InputTypeInstanceDetails{}
+
+	if action.Input == nil {
+		action.Input = &graphql.ActionInput{}
+	}
+
+	var typeInstanceDetails []*graphql.InputTypeInstanceDetails
+	typeInstanceDetails = append(typeInstanceDetails, action.Input.TypeInstances...)
+
 	for _, typeInstance := range in.TypeInstances {
-		typeInstances = append(typeInstances,
+		typeInstanceDetails = append(typeInstanceDetails,
 			&graphql.InputTypeInstanceDetails{
-				ID: typeInstance.ID,
+				ID:   typeInstance.ID,
+				Name: typeInstance.Name,
+				TypeRef: &graphql.ManifestReference{
+					Path:     "cap.type.example",
+					Revision: "0.1.0",
+				},
+				Optional: true,
 			})
 	}
-	action.RenderingAdvancedMode.TypeInstancesForRenderingIteration = typeInstances
-	message := conditionMessages[graphql.ActionStatusConditionBeingRendered]
 
-	action.Status.Condition = graphql.ActionStatusConditionBeingRendered
+	action.Input.TypeInstances = typeInstanceDetails
+	message := conditionMessages[graphql.ActionStatusPhaseBeingRendered]
+
+	action.Status.Phase = graphql.ActionStatusPhaseBeingRendered
 	action.Status.Message = &message
 	action.Status.Timestamp = graphql.Timestamp(time.Now())
 

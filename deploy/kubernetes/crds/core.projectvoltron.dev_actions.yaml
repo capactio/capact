@@ -86,15 +86,16 @@ spec:
                     description: RenderingIteration holds properties for rendering
                       iteration in advanced rendering mode.
                     properties:
-                      continue:
-                        default: false
-                        description: Continue specifies the user intention to continue
-                          rendering using the provided ActionInput.typeInstances in
-                          the Action input. User may or may not add additional optional
-                          TypeInstances to the list and continue Action rendering.
-                        type: boolean
+                      approvedIterationName:
+                        description: ApprovedIterationName specifies the name of rendering
+                          iteration, which has been approved by user. Iteration approval
+                          is the user intention to continue rendering using the provided
+                          ActionInput.typeInstances in the Action input. User may
+                          or may not add additional optional TypeInstances to the
+                          list and continue Action rendering.
+                        type: string
                     required:
-                    - continue
+                    - approvedIterationName
                     type: object
                 required:
                 - enabled
@@ -102,7 +103,7 @@ spec:
               cancel:
                 default: false
                 description: Cancel specifies whether the Action execution should
-                  be cancelled.
+                  be canceled.
                 type: boolean
               dryRun:
                 default: false
@@ -166,8 +167,8 @@ spec:
           status:
             description: ActionStatus defines the observed state of Action.
             properties:
-              cancelledBy:
-                description: CancelledBy holds user data which cancelled a given Action.
+              canceledBy:
+                description: CanceledBy holds user data which canceled a given Action.
                 properties:
                   extra:
                     additionalProperties:
@@ -279,8 +280,8 @@ spec:
                 - AdvancedModeRenderingIteration
                 - ReadyToRun
                 - Running
-                - BeingCancelled
-                - Cancelled
+                - BeingCanceled
+                - Canceled
                 - Succeeded
                 - Failed
                 type: string
@@ -300,25 +301,21 @@ spec:
                         description: RenderingIteration describes status related to
                           current rendering iteration.
                         properties:
+                          currentIterationName:
+                            description: CurrentIterationName contains name of current
+                              iteration in advanced rendering.
+                            type: string
                           inputTypeInstancesToProvide:
                             description: InputTypeInstancesToProvide describes which
                               input TypeInstances might be provided in a given rendering
                               iteration.
                             items:
-                              description: InputTypeInstanceDetails describes input
-                                TypeInstance.
+                              description: InputTypeInstanceToProvide describes optional
+                                input TypeInstance for advanced rendering mode iteration.
                               properties:
-                                id:
-                                  description: ID is a unique identifier of the TypeInstance.
-                                  type: string
                                 name:
                                   description: Name refers to TypeInstance name.
                                   type: string
-                                optional:
-                                  default: false
-                                  description: Optional highlights that the input
-                                    TypeInstance is optional.
-                                  type: boolean
                                 typeReference:
                                   description: TypeRef contains data needed to resolve
                                     Type manifest.
@@ -336,11 +333,12 @@ spec:
                                   - path
                                   type: object
                               required:
-                              - id
                               - name
                               - typeReference
                               type: object
                             type: array
+                        required:
+                        - currentIterationName
                         type: object
                     type: object
                   input:

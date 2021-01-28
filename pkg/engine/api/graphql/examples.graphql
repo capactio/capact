@@ -1,0 +1,171 @@
+# This file contains example GraphQL operations for Engine.
+
+# How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+
+# Required variables:
+# actionName: String
+
+query Actions {
+    actions(filter: { phase: BEING_RENDERED }) {
+        ...ActionFields
+    }
+}
+
+query Action($actionName: String!) {
+    action(name: $actionName) {
+        ...ActionFields
+    }
+}
+
+mutation CreateAction($actionName: String!) {
+    createAction(
+        in: {
+            name: $actionName
+            actionRef: {
+                path: "cap.interface.database.postgresql.install"
+                revision: "0.1.0"
+            }
+            dryRun: true
+            advancedRendering: false
+            input: {
+                parameters: "{\"input1\": \"foo\", \"input2\": 2, \"input3\": { \"nested\": true }}"
+                typeInstances: [
+                    { name: "foo", id: "fee33a5e-d957-488a-86bd-5dacd4120312" }
+                    { name: "bar", id: "563a79eb-7417-4e11-aa4b-d93076c04e48" }
+                ]
+            }
+        }
+    ) {
+        ...ActionFields
+    }
+}
+
+mutation UpdateAction($actionName: String!) {
+    updateAction(
+        in: {
+            name: $actionName
+            actionRef: {
+                path: "cap.interface.database.mysql.install"
+                revision: "0.1.1"
+            }
+            dryRun: false
+            advancedRendering: true
+            input: {
+                parameters: "{\"updated-input1\": \"foo\", \"updated-input2\": 2, \"updated-input3\": { \"nested\": true }}"
+                typeInstances: [
+                    { name: "bar", id: "563a79eb-7417-4e11-aa4b-d93076c04e48" }
+                    { name: "baz", id: "fee33a5e-d957-488a-86bd-5dacd4120312" }
+                ]
+            }
+        }
+    ) {
+        ...ActionFields
+    }
+}
+
+mutation ContinueAdvancedRendering($actionName: String!) {
+    continueAdvancedRendering(
+        actionName: $actionName
+        in: {
+            typeInstances: [
+                {
+                    id: "edf854df-86cf-4855-9d38-8d88545fb9c9"
+                    name: "advanced-rendering-type-instance1"
+                }
+                {
+                    id: "96411e6c-2774-42e4-b9ec-283f44207b3f"
+                    name: "advanced-rendering-type-instance2"
+                }
+            ]
+        }
+    ) {
+        ...ActionFields
+    }
+}
+
+mutation DeleteAction($actionName: String!) {
+    deleteAction(name: $actionName) {
+        ...ActionFields
+    }
+}
+
+mutation Cancel($actionName: String!) {
+    cancelAction(name: $actionName) {
+        ...ActionFields
+    }
+}
+mutation Run($actionName: String!) {
+    runAction(name: $actionName) {
+        ...ActionFields
+    }
+}
+
+fragment ActionFields on Action {
+    name
+    createdAt
+    input {
+        parameters
+        typeInstances {
+            id
+            name
+            optional
+            typeRef {
+                path
+                revision
+            }
+        }
+    }
+    output {
+        typeInstances {
+            name
+            typeRef {
+                path
+                revision
+            }
+            id
+            name
+        }
+    }
+    actionRef {
+        path
+        revision
+    }
+    cancel
+    run
+    dryRun
+    renderedAction
+    renderingAdvancedMode {
+        enabled
+        typeInstancesForRenderingIteration {
+            name
+            typeRef {
+                path
+                revision
+            }
+        }
+    }
+    renderedActionOverride
+    status {
+        phase
+        timestamp
+        message
+        runner {
+            status
+        }
+        canceledBy {
+            username
+            groups
+            extra
+        }
+        runBy {
+            username
+            groups
+            extra
+        }
+        createdBy {
+            username
+            groups
+            extra
+        }
+    }
+}

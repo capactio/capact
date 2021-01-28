@@ -74,7 +74,7 @@ type ActionSpec struct {
 	// +kubebuilder:default=false
 	DryRun *bool `json:"dryRun,omitempty"`
 
-	// Cancel specifies whether the Action execution should be cancelled.
+	// Cancel specifies whether the Action execution should be canceled.
 	// +optional
 	// +kubebuilder:default=false
 	Cancel *bool `json:"cancel,omitempty"`
@@ -92,12 +92,16 @@ func (in *ActionSpec) IsRun() bool {
 	return isBoolSet(in.Run)
 }
 
-func (in *ActionSpec) IsCancelled() bool {
+func (in *ActionSpec) IsCanceled() bool {
 	return isBoolSet(in.Cancel)
 }
 
+func (in *ActionSpec) IsAdvancedRenderingEnabled() bool {
+	return in.AdvancedRendering != nil && in.AdvancedRendering.Enabled
+}
+
 func (in *Action) IsExecuted() bool {
-	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCancelledActionPhase
+	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCanceledActionPhase
 }
 
 // TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
@@ -153,10 +157,10 @@ type AdvancedRendering struct {
 // RenderingIteration holds properties for rendering iteration in advanced rendering mode.
 type RenderingIteration struct {
 
-	// Continue specifies the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input.
+	// ApprovedIterationName specifies the name of rendering iteration, which has been approved by user.
+	// Iteration approval is the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input.
 	// User may or may not add additional optional TypeInstances to the list and continue Action rendering.
-	// +kubebuilder:default=false
-	Continue bool `json:"continue"`
+	ApprovedIterationName string `json:"approvedIterationName"`
 }
 
 // InputTypeInstance holds input TypeInstance reference.
@@ -203,9 +207,9 @@ type ActionStatus struct {
 	// +optional
 	RunBy *authv1.UserInfo `json:"runBy,omitempty"`
 
-	// CancelledBy holds user data which cancelled a given Action.
+	// CanceledBy holds user data which canceled a given Action.
 	// +optional
-	CancelledBy *authv1.UserInfo `json:"cancelledBy,omitempty"`
+	CanceledBy *authv1.UserInfo `json:"canceledBy,omitempty"`
 
 	// ObservedGeneration reflects the generation of the most recently observed Action.
 	// +optional
@@ -288,6 +292,16 @@ type CommonTypeInstanceDetails struct {
 	TypeRef *ManifestReference `json:"typeReference"`
 }
 
+// InputTypeInstanceToProvide describes optional input TypeInstance for advanced rendering mode iteration.
+type InputTypeInstanceToProvide struct {
+
+	// Name refers to TypeInstance name.
+	Name string `json:"name"`
+
+	// TypeRef contains data needed to resolve Type manifest.
+	TypeRef *ManifestReference `json:"typeReference"`
+}
+
 // ManifestReference contains data needed to resolve a manifest.
 type ManifestReference struct {
 
@@ -310,9 +324,12 @@ type AdvancedRenderingStatus struct {
 // RenderingIterationStatus holds status for current rendering iteration in advanced rendering mode.
 type RenderingIterationStatus struct {
 
+	// CurrentIterationName contains name of current iteration in advanced rendering.
+	CurrentIterationName string `json:"currentIterationName"`
+
 	// InputTypeInstancesToProvide describes which input TypeInstances might be provided in a given rendering iteration.
 	// +optional
-	InputTypeInstancesToProvide *[]InputTypeInstanceDetails `json:"inputTypeInstancesToProvide,omitempty"`
+	InputTypeInstancesToProvide *[]InputTypeInstanceToProvide `json:"inputTypeInstancesToProvide,omitempty"`
 }
 
 // RunnerStatus holds data related to built-in Runner that runs the Action.
@@ -331,7 +348,7 @@ type RunnerStatus struct {
 type NodePath string
 
 // ActionPhase describes in which state is the Action to execute.
-// +kubebuilder:validation:Enum=Initial;BeingRendered;AdvancedModeRenderingIteration;ReadyToRun;Running;BeingCancelled;Cancelled;Succeeded;Failed
+// +kubebuilder:validation:Enum=Initial;BeingRendered;AdvancedModeRenderingIteration;ReadyToRun;Running;BeingCanceled;Canceled;Succeeded;Failed
 type ActionPhase string
 
 const (
@@ -340,8 +357,8 @@ const (
 	AdvancedModeRenderingIterationActionPhase ActionPhase = "AdvancedModeRenderingIteration"
 	ReadyToRunActionPhase                     ActionPhase = "ReadyToRun"
 	RunningActionPhase                        ActionPhase = "Running"
-	BeingCancelledActionPhase                 ActionPhase = "BeingCancelled"
-	CancelledActionPhase                      ActionPhase = "Cancelled"
+	BeingCanceledActionPhase                  ActionPhase = "BeingCanceled"
+	CanceledActionPhase                       ActionPhase = "Canceled"
 	SucceededActionPhase                      ActionPhase = "Succeeded"
 	FailedActionPhase                         ActionPhase = "Failed"
 )
