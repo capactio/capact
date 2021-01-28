@@ -7,12 +7,11 @@ import (
 
 	v1 "k8s.io/api/authentication/v1"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
@@ -357,6 +356,10 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 func fixModel(name string) model.ActionToCreateOrUpdate {
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       v1alpha1.ActionKind,
+				APIVersion: v1alpha1.GroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
 			},
@@ -390,6 +393,10 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 			},
 		},
 		InputParamsSecret: &corev1.Secret{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       "Secret",
+				APIVersion: corev1.SchemeGroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
 			},

@@ -14,6 +14,7 @@ import (
 
 const ParametersSecretDataKey = "parameters"
 const LatestRevision = "latest"
+const secretKind = "Secret"
 
 type Converter struct{}
 
@@ -52,6 +53,10 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       v1alpha1.ActionKind,
+				APIVersion: v1alpha1.GroupVersion.String(),
+			},
 			ObjectMeta: metav1.ObjectMeta{
 				Name: in.Name,
 			},
@@ -136,6 +141,10 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 	}
 
 	return &v1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       secretKind,
+			APIVersion: v1.SchemeGroupVersion.String(),
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},

@@ -39,12 +39,12 @@ func TestService_Create(t *testing.T) {
 	ctxWithNs := namespace.NewContext(context.Background(), ns)
 
 	// when
-	_, err := svc.Create(ctxWithNs, inputActionModel)
+	out, err := svc.Create(ctxWithNs, inputActionModel)
 
 	// then
 	require.NoError(t, err)
 
-	//assertActionEqual(t, *expected, out)
+	assertActionEqual(t, *expected, out)
 	findActionAndAssertEqual(t, k8sCli, *expected)
 	getSecretAndAssertEqual(t, k8sCli, *inputActionModel.InputParamsSecret)
 }
@@ -79,6 +79,7 @@ func TestService_Update(t *testing.T) {
 	require.NoError(t, err)
 
 	assertActionEqual(t, inputActionModel.Action, out)
+	findActionAndAssertEqual(t, k8sCli, inputActionModel.Action)
 	getSecretAndAssertEqual(t, k8sCli, *inputActionModel.InputParamsSecret)
 }
 
@@ -490,9 +491,6 @@ func findActionAndAssertEqual(t *testing.T, k8sCli client.Client, expected corev
 func assertActionEqual(t *testing.T, expected, actual corev1alpha1.Action) {
 	actual.ResourceVersion = ""
 	expected.ResourceVersion = ""
-
-	expected.Kind = corev1alpha1.ActionKind
-	expected.APIVersion = corev1alpha1.GroupVersion.String()
 	assert.Equal(t, expected, actual)
 }
 
@@ -508,8 +506,6 @@ func getSecretAndAssertEqual(t *testing.T, k8sCli client.Client, expected v1.Sec
 	actual.ResourceVersion = ""
 	expected.ResourceVersion = ""
 
-	expected.Kind = "Secret"
-	expected.APIVersion = v1.SchemeGroupVersion.String()
 	assert.Equal(t, expected, actual)
 }
 
