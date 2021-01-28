@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -34,6 +35,10 @@ type Config struct {
 	// converted YAML files. It can be k8s service or for example
 	// local IP address
 	JSONPublishAddr string `envconfig:""`
+
+	// JSONPublishPort is the port number on which populator will
+	// serve converted YAML files. Defaults to 8080
+	JSONPublishPort int `envconfig:"8080"`
 }
 
 func main() {
@@ -73,7 +78,7 @@ func main() {
 	files, err := dbpopulator.List(rootDir)
 	exitOnError(err, "when loading manifests")
 
-	go dbpopulator.ServeJson(ctx, files)
+	go dbpopulator.ServeJson(ctx, cfg.JSONPublishPort, files)
 
 	driver, err := neo4j.NewDriver(cfg.Neo4jAddr, neo4j.BasicAuth(cfg.Neo4jUser, cfg.Neo4jPassword, ""))
 	exitOnError(err, "when connecting to Neo4j db")
@@ -82,7 +87,7 @@ func main() {
 	session := driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
-	err = dbpopulator.Populate(ctx, session, files, rootDir, cfg.JSONPublishAddr)
+	err = dbpopulator.Populate(ctx, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
 	exitOnError(err, "when populating manifests")
 }
 

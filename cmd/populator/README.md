@@ -38,6 +38,18 @@ To run it locally and use manifests from Voltron repo:
 ./populator .
 ```
 
+## Configuration
+
+You can set the following environment variables to configure the Gateway:
+
+| Name                                | Required | Default   | Description                                                                                                                                                           |
+| ----------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| APP_NEO4JADDR                       | no       | `neo4j://localhost:7687` | Neo4j address                                                                                                                                          |
+| APP_NEO4JUSER                       | no       | `neo4j`   | Neo4j admin user                                                                                                                                                      |
+| APP_NEO4JPASSWORD                   | yes      |           | Neo4h admin password                                                                                                                                                  |
+| APP_JSONPUBLISHADDR                 | yes      |           | Address on which populator will serve JSON files                                                                                                                      |
+| APP_JSONPUBLISHPORT                 | no       | `8080`    | Port number on which populator will be listening                                                                                                                      |
+
 ## Development
 
 To read more about development, see the [`development.md`](../../docs/development.md) document.

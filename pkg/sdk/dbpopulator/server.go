@@ -2,6 +2,7 @@ package dbpopulator
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -11,9 +12,9 @@ import (
 
 // ServeJson serves OCH Manifests
 // manifests are converted from YAML to JSON when requested
-func ServeJson(ctx context.Context, validPaths []string) {
+func ServeJson(ctx context.Context, listenPort int, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))
-	srv := http.Server{Addr: "0.0.0.0:8080"}
+	srv := http.Server{Addr: fmt.Sprintf("0.0.0.0:%d", listenPort)}
 	go func() {
 		if err := srv.ListenAndServe(); err != http.ErrServerClosed {
 			log.Fatalf("ListenAndServe(): %v", err)
