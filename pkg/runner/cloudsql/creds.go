@@ -10,7 +10,7 @@ import (
 	"golang.org/x/oauth2/google"
 )
 
-type Config struct {
+type GCPConfig struct {
 	ServiceAccount struct {
 		Filepath   string            `envconfig:"default=/etc/gcp/sa.json"`
 		FileFormat CredentialsFormat `envconfig:"default=json"`
@@ -49,7 +49,7 @@ var scopes = []string{
 	"https://www.googleapis.com/auth/sqlservice.admin",
 }
 
-func LoadGCPCredentials(cfg Config) (*google.Credentials, error) {
+func LoadGCPCredentials(cfg GCPConfig) (*google.Credentials, error) {
 	rawInput, err := ioutil.ReadFile(cfg.ServiceAccount.Filepath)
 	if err != nil {
 		return nil, errors.Wrap(err, "while reading GCP credentials file")

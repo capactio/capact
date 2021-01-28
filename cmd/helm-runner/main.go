@@ -3,11 +3,11 @@ package main
 import (
 	"log"
 
-	status_reporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
-
-	"github.com/vrischmann/envconfig"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/runner/helm"
+	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
+
+	"github.com/vrischmann/envconfig"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
@@ -24,7 +24,7 @@ func main() {
 
 	helmRunner := helm.NewRunner(k8sCfg, cfg)
 
-	statusReporter := status_reporter.NewNoop()
+	statusReporter := statusreporter.NewNoop()
 
 	// create and run manager
 	mgr, err := runner.NewManager(helmRunner, statusReporter)

@@ -2,38 +2,14 @@ package cloudsql
 
 import (
 	"context"
-	"encoding/json"
+
+	"projectvoltron.dev/voltron/pkg/runner"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	sqladmin "google.golang.org/api/sqladmin/v1beta4"
-	"projectvoltron.dev/voltron/pkg/runner"
+	"sigs.k8s.io/yaml"
 )
-
-type Args struct {
-	Group        string                    `json:"group"`
-	Command      CommandType               `json:"command"`
-	GenerateName bool                      `json:"generateName"`
-	Instance     sqladmin.DatabaseInstance `json:"instance"`
-	Output       OutputArgs                `json:"output"`
-}
-
-type CommandType string
-
-const (
-	CreateCommandType = "create"
-)
-
-type OutputArgs struct {
-	Directory        string `json:"directory"`
-	CloudSQLInstance struct {
-		Filename string `json:"filename"`
-	} `json:"cloudSQLInstance"`
-	Additional *struct {
-		Path  string          `json:"filename"`
-		Value json.RawMessage `json:"value"`
-	}
-}
 
 type runnerAction interface {
 	Start(ctx context.Context, in *runner.StartInput) (*runner.StartOutput, error)
@@ -45,14 +21,12 @@ type Runner struct {
 	sqladminService *sqladmin.Service
 	gcpProjectName  string
 	action          runnerAction
+	outputCfg       OutputConfig
 }
 
-var (
-	ErrUnkownCommand = errors.New("unknown command")
-)
-
-func NewRunner(sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
+func NewRunner(cfg OutputConfig, sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
 	return &Runner{
+		outputCfg:       cfg,
 		logger:          &zap.Logger{},
 		sqladminService: sqladminService,
 		gcpProjectName:  gcpProjectName,
@@ -70,7 +44,7 @@ func (r *Runner) Name() string {
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	args := &Args{}
 
-	if err := json.Unmarshal(in.Args, args); err != nil {
+	if err := yaml.Unmarshal(in.Args, args); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling input parameters")
 	}
 
@@ -81,9 +55,10 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 			gcpProjectName:  r.gcpProjectName,
 			sqladminService: r.sqladminService,
 			args:            args,
+			outputCfg:       r.outputCfg,
 		}
 	default:
-		return nil, ErrUnkownCommand
+		return nil, ErrUnknownCommand
 	}
 
 	return r.action.Start(ctx, &in)

@@ -19,15 +19,10 @@ args:
           - name: internet
             value: "0.0.0.0/0"
   output:
-    directory: "/tmp"
-    cloudSQLInstance:
-      fileName: "cloudSQLInstance.yml"
-    additional:
-      fileName: "additional.yml"
-      value:
-        host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
-        port: "{{ .Port }}"
-        defaultDBName: "{{ .DefaultDBName }}"
-        superuser:
-          username: "{{ .Username }}"
-          password: "{{ .Password }}"
+    goTemplate:
+      host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+      port: "{{ .Port }}"
+      defaultDBName: "{{ .DefaultDBName }}"
+      superuser:
+        username: "{{ .Username }}"
+        password: "{{ .Password }}"

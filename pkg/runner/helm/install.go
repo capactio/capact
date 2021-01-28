@@ -139,7 +139,7 @@ func (i *installer) getValues(inlineValues map[string]interface{}, valuesFilePat
 	return values, nil
 }
 
-func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Release) (File, error) {
+func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Release) ([]byte, error) {
 	releaseData := ChartRelease{
 		Name:      helmRelease.Name,
 		Namespace: helmRelease.Namespace,
@@ -152,28 +152,29 @@ func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Relea
 
 	bytes, err := yaml.Marshal(&releaseData)
 	if err != nil {
-		return File{}, errors.Wrap(err, "while marshaling yaml")
+		return nil, errors.Wrap(err, "while marshaling yaml")
 	}
 
-	return File{
-		Path:  fmt.Sprintf("%s/%s", args.Output.Directory, args.Output.HelmRelease.FileName),
-		Value: bytes,
-	}, nil
+	return bytes, nil
 }
 
-func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) (*File, error) {
-	if args.Output.Additional.FileName == "" {
+func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
+	if args.Output.GoTemplate == nil {
 		i.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
 	}
 
-	bytes, err := i.renderer.Do(chrt, rel, []byte(args.Output.Additional.Value))
+	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
+	// but the GoTemplate is defined via YAML, so we need to revert that change
+	artifactTemplate, err := yaml.JSONToYAML(args.Output.GoTemplate)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
+	}
+
+	bytes, err := i.renderer.Do(chrt, rel, artifactTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering additional output")
 	}
 
-	return &File{
-		Path:  fmt.Sprintf("%s/%s", args.Output.Directory, args.Output.Additional.FileName),
-		Value: bytes,
-	}, nil
+	return bytes, nil
 }

@@ -15,7 +15,8 @@ import (
 )
 
 type Config struct {
-	GCP cloudsql.Config
+	GCP    cloudsql.GCPConfig
+	Output cloudsql.OutputConfig
 }
 
 func main() {
@@ -29,7 +30,7 @@ func main() {
 	service, err := sqladmin.NewService(context.Background(), option.WithCredentials(gcpCreds))
 	exitOnError(err, "failed to create GCP service client")
 
-	cloudsqlRunner := cloudsql.NewRunner(service, gcpCreds.ProjectID)
+	cloudsqlRunner := cloudsql.NewRunner(cfg.Output, service, gcpCreds.ProjectID)
 
 	statusReporter := statusreporter.NewNoop()
 

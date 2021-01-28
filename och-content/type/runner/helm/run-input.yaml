@@ -165,54 +165,13 @@ spec:
                 "type": "object",
                 "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": [
-                    "directory",
-                    "default"
-                ],
+                "required": ["goTemplate"],
                 "properties": {
-                  "helmRelease": {
-                    "$id": "#/properties/args/properties/output/properties/helmRelease",
+                  "goTemplate": {
+                    "$id": "#/properties/args/properties/output/properties/goTemplate",
                     "type": "object",
-                    "title": "The parameters for Helm release output file",
-                    "additionalProperties": false,
-                    "required": [
-                        "fileName"
-                    ],
-                    "properties": {
-                      "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/helmRelease/properties/fileName",
-                        "type": "string",
-                        "title": "The file name of the helm-release output file"
-                      }
-                    }
-                  },
-                  "additional": {
-                    "$id": "#/properties/args/properties/output/properties/additional",
-                    "type": "object",
-                    "title": "The parameters for additional output file",
-                    "additionalProperties": false,
-                    "required": [
-                        "value",
-                        "fileName"
-                    ],
-                    "properties": {
-                      "value": {
-                        "$id": "#/properties/args/properties/output/properties/additional/properties/value",
-                        "type": "object",
-                        "title": "The shape for additional output file",
-                        "additionalProperties": true
-                      },
-                      "fileName": {
-                        "$id": "#/properties/args/properties/output/properties/additional/properties/fileName",
-                        "type": "string",
-                        "title": "The file name of the output file"
-                      }
-                    }
-                  },
-                  "directory": {
-                    "$id": "#/properties/args/properties/output/properties/directory",
-                    "type": "string",
-                    "title": "The directory path for the output files"
+                    "title": "Defines additional data to extract from Helm release and save as additional output. Support Go template syntax.",
+                    "additionalProperties": true
                   }
                 }
               }

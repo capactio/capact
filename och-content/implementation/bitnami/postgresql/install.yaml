@@ -96,18 +96,13 @@ spec:
                                 postgresqlUsername: {{ superuser.username }}
                                 postgresqlPassword: {{ superuser.password }}
                               output:{% raw %}
-                                directory: "/"
-                                helmRelease:
-                                  fileName: "helm-release"
-                                additional:
-                                  fileName: "additional"
-                                  value: |-
-                                    host: "{{ template "common.names.fullname" . }}"
-                                    port: "{{ template "postgresql.port" . }}"
-                                    defaultDBName: "{{ template "postgresql.database" . }}"
-                                    superuser:
-                                      username: "{{ template "postgresql.username" . }}"
-                                      password: "{{ template "postgresql.password" . }}"{% endraw %}
+                                goTemplate:
+                                  host: '{{ template "common.names.fullname" . }}'
+                                  port: '{{ template "postgresql.port" . }}'
+                                  defaultDBName: '{{ template "postgresql.database" . }}'
+                                  superuser:
+                                    username: '{{ template "postgresql.username" . }}'
+                                    password: '{{ template "postgresql.password" . }}'{% endraw %}
 
               - - name: helm-run
                   voltron-action: helm.run

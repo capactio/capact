@@ -118,14 +118,9 @@ spec:
                                 name: "jira-software"
                                 repo: "https://helm.mox.sh"
                               output:{% raw %}
-                                directory: "/"
-                                helmRelease:
-                                  fileName: "helm-release"
-                                additional:
-                                  fileName: "additional"
-                                  value: |-
-                                    version: "{{ .Values.image.tag }}"
-                                    host: "{{ template "jira-software.fullname" . }}"{% endraw %}
+                                goTemplate:
+                                  version: "{{ .Values.image.tag }}"
+                                  host: '{{ template "jira-software.fullname" . }}'{% endraw %}
                               values:
                                 postgresql:
                                   enabled: false

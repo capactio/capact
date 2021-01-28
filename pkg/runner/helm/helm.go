@@ -116,8 +116,8 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 }
 
 func (r *helmRunner) saveOutput(out Output) error {
-	r.log.Debug("Saving Helm release output", zap.String("path", out.Release.Path))
-	err := r.saveToFile(out.Release.Path, out.Release.Value)
+	r.log.Debug("Saving Helm release output", zap.String("path", r.cfg.Output.HelmReleaseFilePath))
+	err := r.saveToFile(r.cfg.Output.HelmReleaseFilePath, out.Release)
 	if err != nil {
 		return errors.Wrap(err, "while saving Helm release output")
 	}
@@ -126,8 +126,8 @@ func (r *helmRunner) saveOutput(out Output) error {
 		return nil
 	}
 
-	r.log.Debug("Saving additional output", zap.String("path", out.Additional.Path))
-	err = r.saveToFile(out.Additional.Path, out.Additional.Value)
+	r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
+	err = r.saveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
 	if err != nil {
 		return errors.Wrap(err, "while saving default output")
 	}
