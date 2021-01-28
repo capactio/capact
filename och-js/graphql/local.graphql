@@ -128,7 +128,7 @@ input TypeRefFilterInput {
   path: NodePath!
 
   """
-  If not provided, latest revision for a given Type is used
+  If not provided, it returns TypeInstances for all revisions
   """
   revision: Version
 }
@@ -152,7 +152,6 @@ input UpdateTypeInstanceInput {
 }
 
 type Query {
-  # TODO implement revision checks in the attribute filters (excluded and included)
   typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
     @cypher(
       statement: """
