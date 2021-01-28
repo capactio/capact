@@ -98,6 +98,16 @@ query Interfaces {
     }
 }
 
+query InterfacesWithImplementations {
+    interfaces {
+        path
+        revisions {
+            ...InterfaceRevision
+            ...ImplementationsForInterface
+        }
+    }
+}
+
 # Example variables: {"interfacesPrefixPattern": "cap.interface.*"}
 query InterfacesWithPrefixFilter($interfacesPrefixPattern: NodePathPattern!) {
     interfaces(filter: { prefixPattern: $interfacesPrefixPattern }) {
@@ -258,7 +268,6 @@ query Attributes {
         }
     }
 }
-
 
 # Lists all Attributes with a given prefix.
 # Example variables: {"attributesPrefixPattern": "cap.core.attribute.workload.*"}
@@ -494,6 +503,7 @@ fragment ImplementationsForInterface on InterfaceRevision {
     implementationRevisions {
         ...ImplementationRevision
     }
+
     implementationRevisionsForRequirements(
         filter: {
             prefixPattern: "cap"
