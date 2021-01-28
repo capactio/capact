@@ -163,6 +163,7 @@ type Query {
         WITH excluded
         UNWIND excluded AS f
         MATCH (ex:AttributeReference {path: f.path})
+        WHERE (f.revision IS NULL) OR (ex.revision = f.revision)
         RETURN collect(ex) as excludedAttributes
       }
 
@@ -185,7 +186,11 @@ type Query {
         	$filter.attributes IS NULL
           OR
           (
-            all(inc IN included WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path}))
+            all(inc IN included WHERE
+              (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})
+              AND
+              (inc.revision IS NULL OR attr.revision = inc.revision)
+            )
             AND
             none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))
           )
