@@ -159,12 +159,12 @@ func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Relea
 }
 
 func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
-	if args.Output.GoTemplate == "" {
+	if args.Output.GoTemplate == nil {
 		i.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
 	}
 
-	bytes, err := i.renderer.Do(chrt, rel, []byte(args.Output.GoTemplate))
+	bytes, err := i.renderer.Do(chrt, rel, args.Output.GoTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering additional output")
 	}

@@ -16,13 +16,10 @@ args:
     postgresqlDatabase: postgres
     postgresqlPassword: s3cr3t
   output:
-    # maybe helmTemplate? but not sure if we need to be so descriptive
-    # with goTemplate we will unify this naming with cloudsql where goTemplate is also used
-    # currently we also have jinja2 templates (this is the reason why I changed the name so users won't be surprised)
-    goTemplate: |-
-      host: "{{ template "postgresql.primary.fullname" . }}"
-      port: "{{ template "postgresql.port" . }}"
-      defaultDBName: "{{ template "postgresql.database" . }}"
+    goTemplate:
+      host: '{{ template "postgresql.primary.fullname" . }}'
+      port: '{{ template "postgresql.port" . }}'
+      defaultDBName: '{{ template "postgresql.database" . }}'
       superuser:
-        username: "{{ template "postgresql.username" . }}"
-        password: "{{ template "postgresql.password" . }}"
+        username: '{{ template "postgresql.username" . }}'
+        password: '{{ template "postgresql.password" . }}'

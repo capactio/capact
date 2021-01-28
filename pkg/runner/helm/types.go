@@ -1,6 +1,10 @@
 package helm
 
-import "projectvoltron.dev/voltron/pkg/runner"
+import (
+	"encoding/json"
+
+	"projectvoltron.dev/voltron/pkg/runner"
+)
 
 // Config holds Runner related configuration.
 type Config struct {
@@ -32,11 +36,8 @@ type Arguments struct {
 	Output OutputArgs `json:"output"`
 }
 
-type OutputArtifacts struct {
-}
-
 type OutputArgs struct {
-	GoTemplate string `json:"goTemplate"`
+	GoTemplate json.RawMessage `json:"goTemplate"`
 }
 
 type Chart struct {
@@ -52,8 +53,8 @@ type ChartRelease struct {
 }
 
 type Input struct {
-	Args                Arguments
-	ExecCtx             runner.ExecutionContext
+	Args    Arguments
+	ExecCtx runner.ExecutionContext
 }
 
 type Status struct {

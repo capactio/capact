@@ -96,13 +96,13 @@ spec:
                                 postgresqlUsername: {{ superuser.username }}
                                 postgresqlPassword: {{ superuser.password }}
                               output:{% raw %}
-                                goTemplate: |-
-                                  host: "{{ template "common.names.fullname" . }}"
-                                  port: "{{ template "postgresql.port" . }}"
-                                  defaultDBName: "{{ template "postgresql.database" . }}"
+                                goTemplate:
+                                  host: '{{ template "common.names.fullname" . }}'
+                                  port: '{{ template "postgresql.port" . }}'
+                                  defaultDBName: '{{ template "postgresql.database" . }}'
                                   superuser:
-                                    username: "{{ template "postgresql.username" . }}"
-                                    password: "{{ template "postgresql.password" . }}"{% endraw %}
+                                    username: '{{ template "postgresql.username" . }}'
+                                    password: '{{ template "postgresql.password" . }}'{% endraw %}
 
               - - name: helm-run
                   voltron-action: helm.run
