@@ -109,13 +109,6 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 		return Input{}, errors.Wrap(err, "while unmarshaling runner arguments")
 	}
 
-	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
-	// but the GoTemplate is defined via YAML, so we need to revert that change
-	args.Output.GoTemplate, err = yaml.JSONToYAML(args.Output.GoTemplate)
-	if err != nil {
-		return Input{}, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
-	}
-
 	return Input{
 		Args:    args,
 		ExecCtx: in.ExecCtx,

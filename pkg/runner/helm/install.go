@@ -164,7 +164,14 @@ func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel 
 		return nil, nil
 	}
 
-	bytes, err := i.renderer.Do(chrt, rel, args.Output.GoTemplate)
+	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
+	// but the GoTemplate is defined via YAML, so we need to revert that change
+	artifactTemplate, err := yaml.JSONToYAML(args.Output.GoTemplate)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
+	}
+
+	bytes, err := i.renderer.Do(chrt, rel, artifactTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering additional output")
 	}

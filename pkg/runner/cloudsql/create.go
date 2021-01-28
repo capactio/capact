@@ -162,7 +162,14 @@ func (a *createAction) createCloudSQLInstanceOutputFile(path string, output *cre
 }
 
 func (a *createAction) createAdditionalOutputFile(path string, args *OutputArgs, values *createOutputValues) error {
-	tmpl, err := template.New("output").Parse(string(args.GoTemplate))
+	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
+	// but the GoTemplate is defined via YAML, so we need to revert that change
+	artifactTemplate, err := yaml.JSONToYAML(args.GoTemplate)
+	if err != nil {
+		return errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
+	}
+
+	tmpl, err := template.New("output").Parse(string(artifactTemplate))
 	if err != nil {
 		return errors.Wrap(err, "failed to load template")
 	}

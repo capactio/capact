@@ -44,16 +44,8 @@ func (r *Runner) Name() string {
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	args := &Args{}
 
-	err := yaml.Unmarshal(in.Args, args)
-	if err != nil {
+	if err := yaml.Unmarshal(in.Args, args); err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling input parameters")
-	}
-
-	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
-	// but the GoTemplate is defined via YAML, so we need to revert that change
-	args.Output.GoTemplate, err = yaml.JSONToYAML(args.Output.GoTemplate)
-	if err != nil {
-		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
 	}
 
 	switch args.Command {
