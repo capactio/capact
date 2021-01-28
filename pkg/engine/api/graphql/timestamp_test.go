@@ -14,8 +14,8 @@ import (
 func TestTimestampUnmarshalGQL(t *testing.T) {
 	//given
 	var timestamp graphql.Timestamp
-	fixTime := "2002-10-02T10:00:00Z"
-	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00Z")
+	fixTime := "2002-10-02T10:00:00-05:00"
+	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00-05:00")
 	assert.NoError(t, err)
 	expectedTimestamp := graphql.Timestamp{parsedTime}
 
