@@ -34,11 +34,11 @@ type Config struct {
 	// JSONPublishAddr is the address on which populator will serve
 	// converted YAML files. It can be k8s service or for example
 	// local IP address
-	JSONPublishAddr string `envconfig:""`
+	JSONPublishAddr string
 
 	// JSONPublishPort is the port number on which populator will
 	// serve converted YAML files. Defaults to 8080
-	JSONPublishPort int `envconfig:"8080"`
+	JSONPublishPort int `envconfig:"default=8080"`
 }
 
 func main() {
@@ -69,26 +69,26 @@ func main() {
 	parent, err := ioutil.TempDir("/tmp", "*-och-parent")
 	exitOnError(err, "while creating temporary directory")
 	dstDir := path.Join(parent, "och")
-	defer os.RemoveAll(dstDir)
+	defer os.RemoveAll(parent)
 
 	err = dbpopulator.Download(ctx, src, dstDir)
 	exitOnError(err, "while downloading och content")
 
 	rootDir := path.Join(dstDir, "och-content/")
 	files, err := dbpopulator.List(rootDir)
-	exitOnError(err, "when loading manifests")
+	exitOnError(err, "while loading manifests")
 
-	go dbpopulator.ServeJson(ctx, cfg.JSONPublishPort, files)
+	go dbpopulator.MustServeJson(ctx, cfg.JSONPublishPort, files)
 
 	driver, err := neo4j.NewDriver(cfg.Neo4jAddr, neo4j.BasicAuth(cfg.Neo4jUser, cfg.Neo4jPassword, ""))
-	exitOnError(err, "when connecting to Neo4j db")
+	exitOnError(err, "while connecting to Neo4j db")
 	defer driver.Close()
 
 	session := driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
 	err = dbpopulator.Populate(ctx, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
-	exitOnError(err, "when populating manifests")
+	exitOnError(err, "while populating manifests")
 }
 
 func exitOnError(err error, context string) {

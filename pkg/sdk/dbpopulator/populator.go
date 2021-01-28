@@ -401,7 +401,7 @@ func Populate(ctx context.Context, session neo4j.Session, paths []string, rootDi
 	}
 	grouped, err := Group(paths)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while grouping manifests")
 	}
 
 	_, err = session.WriteTransaction(func(transaction neo4j.Transaction) (interface{}, error) {
@@ -431,10 +431,7 @@ func Populate(ctx context.Context, session neo4j.Session, paths []string, rootDi
 		}
 		return nil, nil
 	})
-	if err != nil {
-		return err
-	}
-	return nil
+	return errors.Wrap(err, "while executing neo4j transaction")
 }
 
 func getPathPrefix(manifestPath string, rootDir string) (string, string) {

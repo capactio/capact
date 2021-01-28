@@ -25,10 +25,33 @@ It requires one argument, which is a path to directory with `och-content` direct
 [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations
 and in different formats.
 
-To run it locally and use manifests from Voltron repo:
+To build the binary run:
+
+```shell
+go build -ldflags "-s -w" -o populator ./cmd/populator/main.go
+```
+
+It will create a `populator` binary in a local dir.
+
+To run it and use local manifests from Voltron repo:
 
 ```shell
 ./populator .
+```
+
+To use manifests from private git repo, private key, encoded in base64 format, is needed.
+For example command to download manifests from Voltron repo would look like this:
+```shell
+expoort SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
+./populator git@github.com:Project-Voltron/go-voltron.git?sshkey=$SSHKEY
+```
+
+For better performance populator starts HTTP server to serve manifests converted to JSON files.
+Neo4j needs access to this JSON files. `APP_JSON_PUBLISH_ADDR` environment variable should be set
+so populator can send a correct link to a Neo4j:
+
+```shell
+APP_JSON_PUBLISH_ADDR=http://192.168.0.24 ./populator .
 ```
 
 ## Configuration
@@ -37,11 +60,11 @@ You can set the following environment variables to configure the Gateway:
 
 | Name                                | Required | Default   | Description                                                                                                                                                           |
 | ----------------------------------- | -------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| APP_NEO4JADDR                       | no       | `neo4j://localhost:7687` | Neo4j address                                                                                                                                          |
-| APP_NEO4JUSER                       | no       | `neo4j`   | Neo4j admin user                                                                                                                                                      |
-| APP_NEO4JPASSWORD                   | yes      |           | Neo4h admin password                                                                                                                                                  |
-| APP_JSONPUBLISHADDR                 | yes      |           | Address on which populator will serve JSON files                                                                                                                      |
-| APP_JSONPUBLISHPORT                 | no       | `8080`    | Port number on which populator will be listening                                                                                                                      |
+| APP_NEO4J_ADDR                       | no       | `neo4j://localhost:7687` | Neo4j address                                                                                                                                         |
+| APP_NEO4J_USER                       | no       | `neo4j`                  | Neo4j admin user                                                                                                                                      |
+| APP_NEO4J_PASSWORD                   | yes      |                          | Neo4h admin password                                                                                                                                  |
+| APP_JSON_PUBLISH_ADDR                | yes      |                          | Address on which populator will serve JSON files                                                                                                      |
+| APP_JSON_PUBLISH_PORT                | no       | `8080`                   | Port number on which populator will be listening                                                                                                      |
 
 ## Development
 

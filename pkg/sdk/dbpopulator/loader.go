@@ -29,10 +29,7 @@ type manifestMetadata struct {
 func getManifestMetadata(yamlBytes []byte) (manifestMetadata, error) {
 	mm := manifestMetadata{}
 	err := yaml.Unmarshal(yamlBytes, &mm)
-	if err != nil {
-		return mm, err
-	}
-	return mm, nil
+	return mm, err
 }
 
 func Group(paths []string) (map[string][]string, error) {
@@ -56,7 +53,6 @@ func Group(paths []string) (map[string][]string, error) {
 			return nil, fmt.Errorf("Unknow manifest kind: %s", metadata.Kind)
 		}
 		manifests[metadata.Kind] = append(list, path)
-
 	}
 	return manifests, nil
 }
@@ -67,14 +63,14 @@ func List(ochPath string) ([]string, error) {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() && strings.HasSuffix(info.Name(), ".yaml") {
+		if !info.IsDir() && isYaml(info.Name()) {
 			files = append(files, currentPath)
 		}
 		return nil
 	})
+	return files, err
+}
 
-	if err != nil {
-		return files, err
-	}
-	return files, nil
+func isYaml(path string) bool {
+	return strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")
 }

@@ -7,12 +7,13 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
 // ServeJson serves OCH Manifests
 // manifests are converted from YAML to JSON when requested
-func ServeJson(ctx context.Context, listenPort int, validPaths []string) {
+func MustServeJson(ctx context.Context, listenPort int, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))
 	srv := http.Server{Addr: fmt.Sprintf("0.0.0.0:%d", listenPort)}
 	go func() {
@@ -42,9 +43,14 @@ func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
 		}
 		content, err := ioutil.ReadFile(r.URL.Path)
 		if err != nil {
-			log.Fatal(err)
+			errMsg := errors.Wrapf(err, "cannot read %s", r.URL.Path).Error()
+			http.Error(w, errMsg, http.StatusInternalServerError)
 		}
 		converted, err := yaml.YAMLToJSON(content)
+		if err != nil {
+			errMsg := errors.Wrapf(err, "cannot convert %s to JSON", r.URL.Path).Error()
+			http.Error(w, errMsg, http.StatusInternalServerError)
+		}
 		w.Write(converted)
 	}
 }
