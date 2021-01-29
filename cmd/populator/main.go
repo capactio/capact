@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"os/signal"
 	"path"
 
@@ -89,7 +90,10 @@ func main() {
 	session := driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
-	err = dbpopulator.Populate(ctx, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort))
+	gitHash, err := getGitHash(rootDir)
+	exitOnError(err, "while getting `git rev-parse HEAD`")
+
+	err = dbpopulator.Populate(ctx, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), string(gitHash))
 	exitOnError(err, "while populating manifests")
 }
 
@@ -97,4 +101,10 @@ func exitOnError(err error, context string) {
 	if err != nil {
 		log.Fatalf("Error %s: %v", context, err)
 	}
+}
+
+func getGitHash(rootDir string) ([]byte, error) {
+	cmd := exec.Command("git", "rev-parse", "HEAD")
+	cmd.Dir = rootDir
+	return cmd.CombinedOutput()
 }

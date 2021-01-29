@@ -21,7 +21,7 @@ RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOARCH=amd64 $BUILD_CMD -ldflags "-s -w" -o /bin/$COMPONENT $SOURCE_PATH
 
-FROM scratch
+FROM scratch as components
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
@@ -29,6 +29,24 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
 COPY hack/mock/graphql /mock/
+
+LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL app=$COMPONENT
+
+CMD ["/app"]
+
+FROM alpine:3.12.3 as populator
+ARG COMPONENT
+
+# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY --from=builder /bin/$COMPONENT /app
+
+RUN apk add --no-cache git=2.26.2-r0 openssh=8.3_p1-r1
+RUN mkdir /root/.ssh
+RUN chmod 700 /root/.ssh
+RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
 LABEL source=git@github.com:Project-Voltron/go-voltron.git
 LABEL app=$COMPONENT

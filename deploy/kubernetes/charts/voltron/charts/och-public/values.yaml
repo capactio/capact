@@ -2,6 +2,7 @@
 image:
   name: och
   pullPolicy: IfNotPresent
+  populatorName: populator
 
 replicaCount: 1
 
@@ -32,6 +33,7 @@ securityContext: {}
 service:
   type: ClusterIP
   port: 80
+  populatorPort: 8081
 
 resources:
    limits:
@@ -56,3 +58,8 @@ affinity: {}
 
 probe:
   initialDelaySeconds: 60
+
+# deployKey base64 encoded private key used by populator to download manifests. It has read only access
+deployKey: "LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNDSTNEQmpXQjhTT1cvS3pjTWwyWm1ZTmtKRXZQcW5QRDY1RGVhQ0lrMDZjZ0FBQUpBVHIyOHJFNjl2Ckt3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDQ0kzREJqV0I4U09XL0t6Y01sMlptWU5rSkV2UHFuUEQ2NURlYUNJazA2Y2cKQUFBRURJTk51VHg3dG1oUVY1dFFxRFVpbDVxOTZwWFE2ak5TdnR2bEVBRmowWUNJamNNR05ZSHhJNWI4ck53eVhabVpnMgpRa1M4K3FjOFBya041b0lpVFRweUFBQUFESE5zYlVCemJHMHRaR1ZzYkFFPQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0K"
+
+populatorArgs: ["while true; do /app $(MANIFESTS_PATH); sleep 600;done"]

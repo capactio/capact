@@ -28,6 +28,33 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
+        - name: "{{ .Chart.Name }}-populator"
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.populatorName }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: APP_NEO4J_ADDR
+              value: "{{ .Values.global.database.endpoint }}"
+            - name: APP_NEO4J_USER
+              value: "{{ .Values.global.database.username }}"
+            - name: APP_NEO4J_PASSWORD
+              value: "{{ .Values.global.database.password }}"
+            - name: APP_JSON_PUBLISH_ADDR
+              value: {{ printf "http://%s.%s" (include "och.fullname" .) .Release.Namespace }}
+            - name: APP_JSON_PUBLISH_PORT
+              value: "{{ .Values.service.populatorPort }}"
+            - name: MANIFESTS_PATH
+              value: "git@github.com:Project-Voltron/go-voltron.git?sshkey={{ .Values.deployKey }}"
+
+          command: ["/bin/sh", "-c"]
+          args: {{ .Values.populatorArgs }}
+          ports:
+            - name: populator-port
+              containerPort: {{ .Values.service.populatorPort }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
