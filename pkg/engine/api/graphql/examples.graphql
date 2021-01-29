@@ -35,6 +35,23 @@ mutation CreateAction($actionName: String!) {
             }
             dryRun: true
             advancedRendering: false
+        }
+    ) {
+        ...ActionFields
+    }
+}
+
+# Example variables: {"actionName": "sample"}
+mutation CreateActionWithInput($actionName: String!) {
+    createAction(
+        in: {
+            name: $actionName
+            actionRef: {
+                path: "cap.interface.database.postgresql.install"
+                revision: "0.1.0"
+            }
+            dryRun: true
+            advancedRendering: false
             input: {
                 parameters: "{\"input1\": \"foo\", \"input2\": 2, \"input3\": { \"nested\": true }}"
                 typeInstances: [
@@ -50,6 +67,23 @@ mutation CreateAction($actionName: String!) {
 
 # Example variables: {"actionName": "sample"}
 mutation UpdateAction($actionName: String!) {
+    updateAction(
+        in: {
+            name: $actionName
+            actionRef: {
+                path: "cap.interface.database.mysql.install"
+                revision: "0.1.1"
+            }
+            dryRun: false
+            advancedRendering: true
+        }
+    ) {
+        ...ActionFields
+    }
+}
+
+# Example variables: {"actionName": "sample"}
+mutation UpdateActionWithInput($actionName: String!) {
     updateAction(
         in: {
             name: $actionName
