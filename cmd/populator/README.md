@@ -60,7 +60,7 @@ Neo4j needs access to this JSON files. `APP_JSON_PUBLISH_ADDR` environment varia
 so populator can send a correct link to a Neo4j:
 
 ```shell
-APP_JSON_PUBLISH_ADDR=http://{HOST_IP}} ./populator .
+APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator .
 ```
 Replace `HOST_IP` with your computer IP
 
