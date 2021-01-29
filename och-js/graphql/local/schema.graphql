@@ -7,7 +7,10 @@ directive @relation(
   from: String
   to: String
 ) on FIELD_DEFINITION | OBJECT
+
 directive @cypher(statement: String) on FIELD_DEFINITION
+
+directive @id on FIELD_DEFINITION
 
 """
 Arbitrary data

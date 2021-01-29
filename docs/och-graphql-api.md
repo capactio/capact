@@ -1,8 +1,8 @@
 # OCH GraphQL API
 
 Open Capability Hub can be run in two modes: public and local. In a result, GraphQL API for Open Capability Hub consists of two separate GraphQL schemas:
-- [Public OCH](../pkg/och/api/graphql/public/schema.graphql)
-- [Local OCH](../pkg/och/api/graphql/local/schema.graphql)
+- [Public OCH](../och-js/graphql/public/schema.graphql)
+- [Local OCH](../och-js/graphql/local/schema.graphql)
 
 ## Public API
 
@@ -16,24 +16,43 @@ Public OCH API contains GraphQL operations for the following entities:
 
 Currently, there are no GraphQL mutations or subscriptions available. Once populated with DB populator, all resources are read-only.
 
-To see full GraphQL schema, open the [`schema.graphql`](../pkg/och/api/graphql/public/schema.graphql) file.
+To see full GraphQL schema, open the [`schema.graphql`](../och-js/graphql/public/schema.graphql) file.
  
 ## Local API
 
 Local OCH API contains GraphQL operations for managing TypeInstances.
 
-To see full GraphQL schema, open the [`schema.graphql`](../pkg/och/api/graphql/local/schema.graphql) file.
+To see full GraphQL schema, open the [`schema.graphql`](../och-js/graphql/local/schema.graphql) file.
 
 ## Examples
 
-The following section showcases a few examples.
+To run sample GraphQL queries and mutations for Public or Local OCH, follow the steps:
+
+1. Open the Voltron Gateway GraphQL Playground.
+
+   To see how to access the Gateway on development cluster, read the [Access Gateway GraphQL Playground](./development.md#access-gateway-graphql-playground) section in development guide.
+
+1. Navigate to a proper directory with GraphQL schema and examples.
+   
+   For Public OCH examples, navigate to [`och-js/graphql/public`](../och-js/graphql/public) directory.
+   For Local OCH examples, navigate to [`och-js/graphql/local`](../och-js/graphql/local) directory.
+
+1. Copy and paste the `examples.graphql` file content to the GraphQL Playground IDE.
+1. Click on the "Query Variables" tab.
+1. Copy and paste the `examples.variables.json` file content to the Query Variables section of the GraphQL Playground IDE.
+1. Run any query or mutation from the list.
+
+## Common flows
+
+The following section showcases a few common usage flows for OCH GraphQL API.
 
 ### Querying different revisions
 
-For every entity which has revision support, three queries are available:
-- getting the latest revision content
-- getting a specific revision content
-- getting all revisions content
+For all entities which has revision support, a unified API is available.
+There are three nested resolvers:
+- accessing the latest revision
+- getting a specific revision
+- getting all revisions
 
 The following example shows the possibilities on Attribute entity:
 
@@ -52,9 +71,6 @@ query {
                 displayName
             }
             revision
-            spec {
-                additionalRefs
-            }
         }
 
         # given revision
@@ -64,9 +80,6 @@ query {
                 displayName
             }
             revision
-            spec {
-                additionalRefs
-            }
         }
         
         # all revisions
@@ -76,150 +89,33 @@ query {
                 displayName
             }
             revision
-            spec {
-                additionalRefs
-            }
         }
     }
 }
 ```
+
+The same unified API is available for all entities.
 
 ### List InterfaceGroups, that contains Interfaces, which contains Implementations for a given system 
 
-```graphql
-query {
-    interfaceGroups {
-        metadata {
-            name
-            description
-            iconURL
-        }
-        interfaces {
-            latestRevision {
-                metadata {
-                    name
-                    displayName
-                    description
-                }
-                spec {
-                    input {
-                        parameters {
-                            jsonSchema
-                        }
-                        typeInstances {
-                            name
-                            typeRef {
-                                path
-                                revision
-                            }
-                            verbs
-                        }
-                    }
-                    output {
-                        typeInstances {
-                            name
-                            typeRef {
-                                path
-                                revision
-                            }
-                        }
-                    }
-                }
-                implementations(filter: {
-                    attributes: [{path: "cap.attribute.foo.bar", rule: INCLUDE}],
-                    requirementsSatisfiedBy: [
-                        {
-                            typeRef: {
-                                path: "cap.core.type.platform.kubernetes", revision: "1.0.1",},
-                                value: "{\"version\": \"1.18.9\"}"
-                        },
-                        {
-                            typeRef: {
-                                path: "cap.type.database.mysql.config", revision: "1.0.1",},
-                                
-# if value is not provided, all value-related constraints are treated as satisfied.
-                        }
-                    ]
-                }) {
-                    name
-                    latestRevision {
-                        metadata {
-                            displayName
-                        }
-                        spec {
-                            action {
-                                runnerInterface
-                                args
-                            }
-                            appVersion
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-```
+To list all InterfaceGroups with nested Interfaces and Implementations for a given system that satisfy the Interfaces, you may use a single GraphQL query.
+
+See the [`InterfaceGroupsWithInterfacesAndImplementations` sample query](../och-js/graphql/public/examples.graphql).
 
 ### Get Type details along the corresponding TypeInstances
 
 Because of the OCH local and public API separation, currently a single GraphQL query for Types and corresponding TypeInstances is not possible.
 To achieve that, the following queries have to be executed: 
 
-1. Get Type details
+1. Get Type details with `type` query to public OCH
 
-    ```graphql
-    query {
-        type(path: "cap.core.type.platform.kubernetes") {
-            name 
-            path
-            prefix
-            latestRevision {
-                metadata {
-                    name
-                    displayName
-                    description
-                }
-                revision
-                spec {
-                    additionalRefs
-                    jsonSchema
-                }
-            }
-        }
-    }
-    ```
+   See the [`Type` sample query](../och-js/graphql/public/examples.graphql).
+   
+1. Get TypeInstances for a given Type with `typeInstances`
 
-1. Get TypeInstances for a given Type
-
-    ```graphql
-    query {
-        typeInstances(filter: {
-            typeRef: {path: "core.type.platform.kubernetes" } # no revision means that the latest revision is picked
-        }) {
-            metadata {
-                id
-            }
-            resourceVersion
-            spec {
-                value
-                instrumentation {
-                    health {
-                        status
-                    }
-                    metrics {
-                        dashboards {
-                            url
-                        }
-                        endpoint
-                        regex
-                    }
-                }}
-        }
-    }
-    ```
+   See the [`ListTypeInstancesWithTypeRefFilter` sample query](../och-js/graphql/local/examples.graphql).
 
 ## Limitations
 
-- For alpha release, to filter implementations with the ones that are supported on a given system, UI always send TypeInstances list. In future, there will be a dedicated query, where the available TypeInstances will be detected automatically and all Implementations will be filtered based on them.
+- For alpha release, to filter Implementations with the ones that are supported on a given system, UI always send TypeInstances list. In the future, there will be a dedicated query, where the available TypeInstances will be detected automatically and all Implementations will be filtered based on them.
 - For alpha and GA release we don't support revision ranges.

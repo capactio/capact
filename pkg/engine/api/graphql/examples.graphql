@@ -1,22 +1,30 @@
 # This file contains example GraphQL operations for Engine.
 
 # How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+# To learn more, read the document from `docs/engine-graphql-api.md` on repository root.
 
-# Required variables:
-# actionName: String
+# To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
 
-query Actions {
-    actions(filter: { phase: BEING_RENDERED }) {
-        ...ActionFields
-    }
-}
-
+# Example variables: {"actionName": "sample"}
 query Action($actionName: String!) {
     action(name: $actionName) {
         ...ActionFields
     }
 }
 
+query Actions {
+    actions {
+        ...ActionFields
+    }
+}
+
+query ActionsWithFilterByPhase {
+    actions(filter: { phase: BEING_RENDERED }) {
+        ...ActionFields
+    }
+}
+
+# Example variables: {"actionName": "sample"}
 mutation CreateAction($actionName: String!) {
     createAction(
         in: {
@@ -40,6 +48,7 @@ mutation CreateAction($actionName: String!) {
     }
 }
 
+# Example variables: {"actionName": "sample"}
 mutation UpdateAction($actionName: String!) {
     updateAction(
         in: {
@@ -63,6 +72,7 @@ mutation UpdateAction($actionName: String!) {
     }
 }
 
+# Example variables: {"actionName": "sample"}
 mutation ContinueAdvancedRendering($actionName: String!) {
     continueAdvancedRendering(
         actionName: $actionName
@@ -83,22 +93,30 @@ mutation ContinueAdvancedRendering($actionName: String!) {
     }
 }
 
+# Example variables: {"actionName": "sample"}
 mutation DeleteAction($actionName: String!) {
     deleteAction(name: $actionName) {
         ...ActionFields
     }
 }
 
+# Example variables: {"actionName": "sample"}
 mutation Cancel($actionName: String!) {
     cancelAction(name: $actionName) {
         ...ActionFields
     }
 }
+
+# Example variables: {"actionName": "sample"}
 mutation Run($actionName: String!) {
     runAction(name: $actionName) {
         ...ActionFields
     }
 }
+
+#
+# Fragments with all possible fields for Engine entities
+#
 
 fragment ActionFields on Action {
     name

@@ -1,0 +1,111 @@
+# This file contains example GraphQL operations for Local OCH.
+# How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+
+# To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
+
+mutation CreateTypeInstance {
+    createTypeInstance(
+        in: {
+            typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+            value: { hello: "world" }
+            attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+        }
+    ) {
+        ...TypeInstance
+    }
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+query GetTypeInstance($typeInstanceID: ID!) {
+    typeInstance(id: $typeInstanceID) {
+        ...TypeInstance
+    }
+}
+
+# Lists TypeInstances.
+query ListTypeInstances {
+    typeInstances {
+        ...TypeInstance
+    }
+}
+
+query ListTypeInstancesWithTypeRefFilter {
+    typeInstances(
+        filter: { typeRef: { path: "cap.type.sample", revision: "0.1.0" } }
+    ) {
+        ...TypeInstance
+    }
+}
+
+query ListTypeInstancesWithAttributesAndTypeRefFilter {
+    typeInstances(
+        filter: {
+            attributes: [
+                { path: "cap.attribute.sample", revision: "1.0.0", rule: INCLUDE }
+                { path: "cap.attribute.foo", revision: "1.0.0", rule: EXCLUDE }
+            ]
+            typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+        }
+    ) {
+        ...TypeInstance
+    }
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+mutation UpdateTypeInstance($typeInstanceID: ID!) {
+    updateTypeInstance(
+        id: $typeInstanceID
+        in: {
+            resourceVersion: 3
+            value: { foo: "bar" }
+            typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+            attributes: [
+                { path: "cap.attribute.foo", revision: "0.1.1" }
+                { path: "cap.attribute.bar", revision: "1.0.0" }
+            ]
+        }
+    ) {
+        ...TypeInstance
+    }
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+mutation DeleteTypeInstance($typeInstanceID: ID!) {
+    deleteTypeInstance(id: $typeInstanceID)
+}
+
+#
+# Fragments with all possible fields for Local OCH entities
+#
+
+fragment TypeInstance on TypeInstance {
+    resourceVersion
+    metadata {
+        id
+        attributes {
+            path
+            revision
+        }
+    }
+    spec {
+        typeRef {
+            path
+            revision
+        }
+        value
+        instrumentation {
+            metrics {
+                regex
+                endpoint
+                dashboards {
+                    url
+                }
+            }
+            health {
+                url
+                method
+                status
+            }
+        }
+    }
+}

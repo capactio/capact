@@ -129,6 +129,16 @@ You can export the following environment variables to configure the script:
 - To enable mocked version of GraphQL Local OCH API and Public OCH API use `MOCK_OCH_GRAPHQL=true`.
 - To enable mocked version of GraphQL Engine OCH API `MOCK_ENGINE_GRAPHQL=true`.
 
+### Access Gateway GraphQL Playground
+
+Voltron Gateway aggregates all GraphQL APIs from multiple components (Local OCH, Public OCH, Engine) into a single endpoint.
+
+To see the Gateway URL and authentication details, use the following command:
+
+```bash
+helm get notes -n voltron-system voltron
+```
+
 ### Rebuild Docker images and update cluster
 
 To rebuild all Docker images and upgrade Helm chart on dev cluster with new images, execute:
@@ -259,12 +269,12 @@ make gen-k8s-resources
 
 This project uses the [GQLGen](https://github.com/99designs/gqlgen) library, which generates the Go struct and server from GraphQL schema definition.
 
-In Voltron project we have three GraphQL schemas:
+In Voltron project we have three GraphQL schemas, from which the Go code is generated:
 - [Engine](../pkg/engine/api/graphql/schema.graphql)
-- [Local OCH](../pkg/och/api/graphql/local/schema.graphql)
-- [Public OCH](../pkg/och/api/graphql/public/schema.graphql)
+- [Local OCH Mock](../pkg/och/api/graphql/local/schema.graphql)
+- [Public OCH Mock](../pkg/och/api/graphql/public/schema.graphql)
 
-Each time the GraphQL schema is change, you need to update generated resources. To do this, execute:
+Each time the GraphQL schema changes, you need to update generated resources. To do this, execute:
 
 ```bash
 make gen-graphql-resources

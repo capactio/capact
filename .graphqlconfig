@@ -5,19 +5,14 @@
         "./pkg/engine/api/graphql/**"
       ]
     },
-    "och" : {
-      "includes": [
-        "./och-js/graphql/**"
-      ]
-    },
     "localOCH": {
       "includes": [
-        "./pkg/och/api/graphql/local/**"
+        "./och-js/graphql/local/**"
       ]
     },
     "publicOCH": {
       "includes": [
-        "./pkg/och/api/graphql/public/**"
+        "./och-js/graphql/public/**"
       ]
     },
     "och-neo4j-gogm-poc": {

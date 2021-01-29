@@ -64,21 +64,6 @@ The following environment variables can be set to configure OCH:
 
 ## Development
 
-### Accessing Neo4j Browser
-
-To access Neo4j Browser, follow the steps:
-
-1. Run the following commands:
-  
-  ```bash
-  kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
-  kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687                                             
-  ```
-
-1. Navigate to [http://localhost:7474](http://localhost:7474).
-1. Change the connection URL to `neo4j://localhost:7687`.
-1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../../deploy/kubernetes/charts/neo4j/values.yaml) file.
-
 #### Common development guides
 
 To read more about development, see the [`development.md`](../../docs/development.md) document.

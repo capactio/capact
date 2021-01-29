@@ -3,6 +3,19 @@
 The following document describes interaction between client and Engine using GraphQL API. 
 The Engine GraphQL API schema is located in [pkg/engine/api/graphql/schema.graphql](../pkg/engine/api/graphql/schema.graphql) file.
 
+## Examples
+
+To run sample GraphQL queries and mutations against Engine GraphQL API, follow the steps:
+
+1. Open the Voltron Gateway GraphQL Playground. 
+   
+   To see how to access the Gateway on development cluster, read the [Access Gateway GraphQL Playground](./development.md#access-gateway-graphql-playground) section in development guide. 
+
+1. Copy and paste the [pkg/engine/api/graphql/examples.graphql](../pkg/engine/api/graphql/examples.graphql) file content to the GraphQL Playground IDE.
+1. Click on the "Query Variables" tab.
+1. Copy and paste the [pkg/engine/api/graphql/examples.variables.json](../pkg/engine/api/graphql/examples.variables.json) file content to the Query Variables section of the GraphQL Playground IDE.
+1. Run any query or mutation from the list.
+
 ## Common flows
 
 ### Rendering Action in basic mode
@@ -32,7 +45,7 @@ The advanced mode of rendering Action is when user can provide optional TypeInst
 
 Once Action is in `READY_TO_RUN` mode, user can run the Action, or, in other words, approve the rendered Action to run.
 
-1. User (approver) runs the Action with `runAction` mutation.
+1. User (Action approver) runs the Action with `runAction` mutation.
 1. Engine changes the Action status to `RUNNING`.
 1. Depending on what happens, Engine changes the Action status:
     1. If user canceled the Action, it changes to `BEING_CANCELED` and after that to `CANCELED`. 
@@ -41,7 +54,7 @@ Once Action is in `READY_TO_RUN` mode, user can run the Action, or, in other wor
 ## Implementation Specific Behavior
 
 This section describes GraphQL API server behaviors which is a result of underlying implementation.
-API consumer should be aware of it, in order to use the API efficiently.
+The API consumer should be aware of it, in order to use the API efficiently.
 
 ### Kubernetes Engine
 

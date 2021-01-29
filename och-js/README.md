@@ -40,26 +40,22 @@ docker run -d \
 To run OCH in local mode, use the following command:
 
 ```bash
-APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
-  APP_NEO4J_PASSWORD=okon \
-  APP_OCH_MODE=local \
-  npm run dev
+APP_NEO4J_ENDPOINT=bolt://localhost:7687  APP_NEO4J_PASSWORD=okon APP_OCH_MODE=local npm run dev
 ```
 
 ### Public OCH
 
-To run OCH in local mode, use the following command:
+To run OCH in public mode, use the following command:
 
 ```bash
-APP_NEO4J_ENDPOINT=bolt://localhost:7687 \
-  APP_NEO4J_PASSWORD=okon \
-  APP_OCH_MODE=public \
-  npm run dev
+APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_OCH_MODE=public npm run dev
 ```
 
 ### GraphQL Playground
 
-You can now access the OCH's GraphQL Playground via http://localhost:3000/graphql. For example, to list all Interfaces on the public OCH make the following GraphQL query:
+Once you ran OCH locally, you can access the OCH GraphQL Playground under [http://localhost:3000/graphql](http://localhost:3000/graphql).
+
+For example, to list all Interfaces on the public OCH make the following GraphQL query:
 
 ```graphql
 query {
@@ -83,5 +79,20 @@ The following environment variables can be set to configure OCH:
 | APP_NEO4J_PASSWORD | yes      |                         | Neo4j database password                                |
 
 ## Development
+
+### Accessing Neo4j Browser
+
+To access Neo4j Browser, follow the steps:
+
+1. Run the following commands:
+
+  ```bash
+  kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
+  kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687                                             
+  ```
+
+1. Navigate to [http://localhost:7474](http://localhost:7474).
+1. Change the connection URL to `neo4j://localhost:7687`.
+1. Use `neo4j` user and password configured during Helm chart installation. See the default values in [`values.yaml`](../../deploy/kubernetes/charts/neo4j/values.yaml) file.
 
 To read more about development, see the [`development.md`](../../docs/development.md) document.
