@@ -197,6 +197,11 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 		return nil
 	}
 
+	if !item.IsWaitingToRun() {
+		log.Info("Action not ready to run")
+		return ErrActionNotReadyToRun
+	}
+
 	item.Spec.Run = ptr.Bool(true)
 
 	err = s.updateAction(ctx, item)

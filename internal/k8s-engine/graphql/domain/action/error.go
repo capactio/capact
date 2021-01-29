@@ -9,6 +9,8 @@ import (
 
 var ErrActionNotFound = errors.New("action not found")
 
+var ErrActionNotReadyToRun = errors.New("action is not runnable, as it is not yet ready to run")
+
 var ErrActionCanceledNotRunnable = errors.New("action is not runnable, as it has been already canceled")
 
 var ErrActionNotCancelable = errors.New("action cannot be canceled, as it is not run")

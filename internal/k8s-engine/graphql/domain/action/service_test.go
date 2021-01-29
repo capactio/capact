@@ -290,7 +290,7 @@ func TestService_RunByName(t *testing.T) {
 		assert.True(t, *actual.Spec.Run)
 	})
 
-	t.Run("Error", func(t *testing.T) {
+	t.Run("Error - Already Cancelled", func(t *testing.T) {
 		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
@@ -304,6 +304,22 @@ func TestService_RunByName(t *testing.T) {
 		// then
 		require.Error(t, err)
 		assert.True(t, errors.Is(err, action.ErrActionCanceledNotRunnable))
+	})
+
+	t.Run("Error - Not ready to run", func(t *testing.T) {
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction.Status.Phase = corev1alpha1.BeingRenderedActionPhase
+
+		svc, _ := newServiceWithFakeClient(t, &inputAction)
+
+		ctxWithNs := namespace.NewContext(context.Background(), ns)
+
+		// when
+		err := svc.RunByName(ctxWithNs, name)
+
+		// then
+		require.Error(t, err)
+		assert.True(t, errors.Is(err, action.ErrActionNotReadyToRun))
 	})
 
 	t.Run("Already Run", func(t *testing.T) {

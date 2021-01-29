@@ -13,6 +13,10 @@ type ActionToCreateOrUpdate struct {
 
 func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
 	m.Action.Namespace = namespace
+
+	if m.InputParamsSecret == nil {
+		return
+	}
 	m.InputParamsSecret.Namespace = namespace
 }
 

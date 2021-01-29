@@ -113,6 +113,11 @@ func (in *Action) IsBeingRendered() bool {
 	return in.Status.Phase == BeingRenderedActionPhase
 }
 
+// IsWaitingToRun returns true if Action is fully rendered and waiting for user approval.
+func (in *Action) IsWaitingToRun() bool {
+	return in.Status.Phase == ReadyToRunActionPhase && !in.Spec.IsRun()
+}
+
 // IsReadyToExecute returns true if Action is fully rendered and approved by user.
 func (in *Action) IsReadyToExecute() bool {
 	return in.Status.Phase == ReadyToRunActionPhase && in.Spec.IsRun()
