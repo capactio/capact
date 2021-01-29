@@ -43,16 +43,19 @@ func jsonHandler(validPaths []string) func(http.ResponseWriter, *http.Request) {
 		if err != nil {
 			errMsg := errors.Wrapf(err, "cannot read %s", r.URL.Path).Error()
 			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
 		}
 		converted, err := yaml.YAMLToJSON(content)
 		if err != nil {
 			errMsg := errors.Wrapf(err, "cannot convert %s to JSON", r.URL.Path).Error()
 			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
 		}
 		_, err = w.Write(converted)
 		if err != nil {
 			errMsg := errors.Wrapf(err, "cannot write response for %s", r.URL.Path).Error()
 			http.Error(w, errMsg, http.StatusInternalServerError)
+			return
 		}
 	}
 }

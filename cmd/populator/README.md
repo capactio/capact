@@ -31,6 +31,15 @@ To build the binary run:
 go build -ldflags "-s -w" -o populator ./cmd/populator/main.go
 ```
 
+To be able to use it locally when Voltron is running in a Kubernetes cluster, two ports need to
+be be forwarded:
+
+```shell
+kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
+kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
+```
+
+
 It will create a `populator` binary in a local dir.
 
 To run it and use local manifests from Voltron repo:
@@ -51,8 +60,9 @@ Neo4j needs access to this JSON files. `APP_JSON_PUBLISH_ADDR` environment varia
 so populator can send a correct link to a Neo4j:
 
 ```shell
-APP_JSON_PUBLISH_ADDR=http://192.168.0.24 ./populator .
+APP_JSON_PUBLISH_ADDR=http://{HOST_IP}} ./populator .
 ```
+Replace `HOST_IP` with your computer IP
 
 ## Configuration
 
