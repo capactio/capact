@@ -3,7 +3,7 @@
   "interfaceGroupPrefixPattern": "cap.interface.*",
   "interfacePath": "cap.interface.productivity.jira.install",
   "interfacesPrefixPattern": "cap.interface.*",
-  "implementationPath": "cap.implementation.database.postgresql.create-db",
+  "implementationPath": "cap.implementation.atlassian.jira.install",
   "implementationsPrefixPattern": "cap.implementation.gcp.*",
   "typePath": "cap.core.type.networking.hostname",
   "typesPrefixPattern": "cap.core.type.*",

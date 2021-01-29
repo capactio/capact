@@ -129,6 +129,16 @@ You can export the following environment variables to configure the script:
 - To enable mocked version of GraphQL Local OCH API and Public OCH API use `MOCK_OCH_GRAPHQL=true`.
 - To enable mocked version of GraphQL Engine OCH API `MOCK_ENGINE_GRAPHQL=true`.
 
+### Access Gateway GraphQL Playground
+
+Voltron Gateway aggregates all GraphQL APIs from multiple components (Local OCH, Public OCH, Engine) into a single endpoint.
+
+To see the Gateway URL and authentication details, use the following command:
+
+```bash
+helm get notes -n voltron-system voltron
+```
+
 ### Rebuild Docker images and update cluster
 
 To rebuild all Docker images and upgrade Helm chart on dev cluster with new images, execute:

@@ -9,7 +9,7 @@ To run sample GraphQL queries and mutations against Engine GraphQL API, follow t
 
 1. Open the Voltron Gateway GraphQL Playground. 
    
-   For local installation, it is available under [`https://gateway.voltron.local`](https://gateway.voltron.local) URL.
+   To see how to access the Gateway on development cluster, read the [Access Gateway GraphQL Playground](./development.md#access-gateway-graphql-playground) section in development guide. 
 
 1. Copy and paste the [pkg/engine/api/graphql/examples.graphql](../pkg/engine/api/graphql/examples.graphql) file content to the GraphQL Playground IDE.
 1. Click on the "Query Variables" tab.

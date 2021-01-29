@@ -30,7 +30,7 @@ To run sample GraphQL queries and mutations for Public or Local OCH, follow the 
 
 1. Open the Voltron Gateway GraphQL Playground.
 
-   For local installation, it is available under [`https://gateway.voltron.local`](https://gateway.voltron.local) URL.
+   To see how to access the Gateway on development cluster, read the [Access Gateway GraphQL Playground](./development.md#access-gateway-graphql-playground) section in development guide.
 
 1. Navigate to a proper directory with GraphQL schema and examples.
    
