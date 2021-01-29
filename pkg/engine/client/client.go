@@ -100,7 +100,7 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 			dryRun
 			renderedAction
 			status {
-				condition
+				phase	
 			}
 		}
 	}`)

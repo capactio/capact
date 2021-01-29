@@ -45,7 +45,7 @@ var _ = Describe("Action", func() {
 			Eventually(
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
 
 			err = engineClient.RunAction(ctx, actionName)
 
@@ -54,7 +54,7 @@ var _ = Describe("Action", func() {
 			Eventually(
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionSucceeded))
+			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -70,7 +70,7 @@ var _ = Describe("Action", func() {
 			Eventually(
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionReadyToRun))
+			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
 
 			err = engineClient.RunAction(ctx, actionName)
 
@@ -79,17 +79,17 @@ var _ = Describe("Action", func() {
 			Eventually(
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusConditionFailed))
+			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 	})
 })
 
-func getActionStatusFunc(ctx context.Context, cl *client.Client, name string) func() (enginegraphql.ActionStatusCondition, error) {
-	return func() (enginegraphql.ActionStatusCondition, error) {
+func getActionStatusFunc(ctx context.Context, cl *client.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
+	return func() (enginegraphql.ActionStatusPhase, error) {
 		action, err := cl.GetAction(ctx, name)
 		if err != nil {
 			return "", err
 		}
-		return action.Status.Condition, err
+		return action.Status.Phase, err
 	}
 }
