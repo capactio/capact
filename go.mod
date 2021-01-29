@@ -13,12 +13,14 @@ require (
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
+	github.com/hashicorp/go-getter v1.5.2
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
+	github.com/neo4j/neo4j-go-driver/v4 v4.2.1
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
