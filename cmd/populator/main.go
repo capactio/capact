@@ -39,6 +39,10 @@ type Config struct {
 	// JSONPublishPort is the port number on which populator will
 	// serve converted YAML files. Defaults to 8080
 	JSONPublishPort int `envconfig:"default=8080"`
+
+	// ManifestsPath is a path to a directory in a repository where
+	// manifests are stored
+	ManifestsPath string `envconfig:"default=och-content"`
 }
 
 func main() {
@@ -72,7 +76,7 @@ func main() {
 	err = dbpopulator.Download(ctx, src, dstDir)
 	exitOnError(err, "while downloading och content")
 
-	rootDir := path.Join(dstDir, "och-content/")
+	rootDir := path.Join(dstDir, cfg.ManifestsPath)
 	files, err := dbpopulator.List(rootDir)
 	exitOnError(err, "while loading manifests")
 

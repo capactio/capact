@@ -65,6 +65,7 @@ You can set the following environment variables to configure the Gateway:
 | APP_NEO4J_PASSWORD                   | yes      |                          | Neo4h admin password                                                                                                                                  |
 | APP_JSON_PUBLISH_ADDR                | yes      |                          | Address on which populator will serve JSON files                                                                                                      |
 | APP_JSON_PUBLISH_PORT                | no       | `8080`                   | Port number on which populator will be listening                                                                                                      |
+| APP_MANIFESTS_PATH                   | no       | `och-content`            | Path to a directory in a repository where manifests are stored                                                                                        |
 
 ## Development
 
