@@ -32,7 +32,7 @@ go build -ldflags "-s -w" -o populator ./cmd/populator/main.go
 ```
 
 To be able to use it locally when Voltron is running in a Kubernetes cluster, two ports need to
-be be forwarded:
+be forwarded:
 
 ```shell
 kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
