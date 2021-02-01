@@ -207,6 +207,7 @@ jobs:
         env:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
+          DISABLE_MONITORING_INSTALLATION: "true"
         run: |
           make test-integration
       - name: Upload artifacts

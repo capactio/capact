@@ -53,3 +53,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+
+probe:
+  initialDelaySeconds: 60

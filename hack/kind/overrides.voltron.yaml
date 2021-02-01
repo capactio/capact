@@ -2,4 +2,4 @@ global:
   domainName: "voltron.local"
 
 integrationTest:
-  expectedNumberOfRunningPods: 17
+  expectedNumberOfRunningPods: 11
