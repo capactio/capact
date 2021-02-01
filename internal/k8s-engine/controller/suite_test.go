@@ -72,7 +72,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(mgr.GetClient(), &implGetterFake{}, "not-needed", time.Second),
+		svc: NewActionService(mgr.GetClient(), &implGetterFake{}, nil, "not-needed", time.Second),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 

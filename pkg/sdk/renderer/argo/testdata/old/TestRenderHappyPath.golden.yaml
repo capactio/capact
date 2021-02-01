@@ -1,0 +1,342 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: jira-install
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: jira-install
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-gcp-step
+          template: inject-gcp
+      - - arguments:
+            artifacts:
+            - name: input-parameters
+              raw:
+                data: |
+                  superuser:
+                    username: jira
+                    password: okon
+                  defaultDBName: jira
+          name: install-db
+          template: jira-install-install-db-postgres-install
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  context:
+                    name: "jira-helm-release"
+                    dryRun: false
+                    timeout: "10m"
+                    platform:
+                      namespace: "default"
+                  args:
+                    command: "install"
+                    generateName: true
+                    chart:
+                      name: "jira-software"
+                      repo: "https://helm.mox.sh"
+                    output:{% raw %}
+                      goTemplate:
+                        version: "{{ .Values.image.tag }}"
+                        host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                    values:
+                      postgresql:
+                        enabled: false
+                      databaseConnection:
+                        host: "{{ host }}"
+                        user: "{{ superuser.username }}"
+                        password: "{{ superuser.password }}"
+                        database: "{{ defaultDBName }}"
+                      ingress:
+                        enabled: true
+                        hosts:
+                        - host: jira-cloud.voltron.local
+                          paths: ['/']
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
+              name: input-parameters
+          name: create-helm-args
+          template: jira-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+          name: helm-run
+          template: jira-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: jira-config
+          name: output-jira-config
+          template: output-jira-config
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: jira-helm-release
+          name: output-jira-helm-release
+          template: output-jira-helm-release
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: jira-install-install-db-postgres-install
+      outputs: {}
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  context:
+                    name: "cloudsql-runner-example"
+                    dryRun: false
+                    timeout: "10m"
+                  args:
+                    group: "sql"
+                    command: "create"
+                    generateName: true
+                    instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+                      databaseVersion: "POSTGRES_11"
+                      region: "us-central"
+                      defaultDBName: {{ defaultDBName }}
+                      rootPassword: {{ superuser.password }}
+                      settings:
+                        tier: "db-g1-small"
+                        ipConfiguration:
+                          authorizedNetworks:
+                            - name: internet
+                              value: "0.0.0.0/0"
+                    output:{% raw %}
+                      goTemplate:
+                        host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+                        port: "{{ .Port }}"
+                        defaultDBName: "{{ .DefaultDBName }}"
+                        superuser:
+                          username: "{{ .Username }}"
+                          password: "{{ .Password }}"{% endraw %}
+          name: create-cloudsql-args
+          template: jira-install-install-db-postgres-install-create-cloudsql-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-cloudsql-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.gcp-sa}}'
+              name: gcp-sa
+          name: cloudsql-run
+          template: jira-install-install-db-postgres-install-cloudsql-run-gcp
+      - - arguments:
+            artifacts:
+            - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
+              name: postgresql
+          name: output-postgresql
+          template: jira-install-install-db-output-postgresql
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-install-db-postgres-install-create-cloudsql-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_INPUT_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH
+          value: '{{inputs.artifacts.gcp-sa.path}}'
+        - name: RUNNER_GCP_SERVICE_ACCOUNT_FILE_FORMAT
+          value: YAML
+        - name: RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH
+          value: '{{outputs.artifacts.cloudsql-instance.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-102
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: gcp-sa
+          path: /gcp/sa.json
+        - name: input-parameters
+          path: /cloudsql-args
+      metadata: {}
+      name: jira-install-install-db-postgres-install-cloudsql-run-gcp
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
+          name: cloudsql-instance
+          path: /instance.yaml
+        - globalName: jira-install-install-db-postgres-install-cloudsql-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: jira-install-install-db-output-postgresql
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_INPUT_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-102
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /helm-args
+      metadata: {}
+      name: jira-install-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: jira-install-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: jira-install-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-config
+      outputs:
+        artifacts:
+        - globalName: jira-config
+          name: jira-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-helm-release
+      outputs:
+        artifacts:
+        - globalName: jira-helm-release
+          name: jira-helm-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - |-
+          sleep 2 && echo 'auth_provider_x509_cert_url: fake
+          auth_uri: fake
+          client_email: fake
+          client_id: fake
+          client_x509_cert_url: fake
+          private_key: fake
+          private_key_id: fake
+          project_id: projectvoltron
+          token_uri: fake
+          type: service_account
+          ' | tee /output
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-gcp
+      outputs:
+        artifacts:
+        - globalName: gcp
+          name: gcp
+          path: /output
+runnerinterface: argo.run

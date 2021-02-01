@@ -9,19 +9,18 @@ import (
 	"strings"
 	"time"
 
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-
-	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/runner"
-
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
+	"projectvoltron.dev/voltron/internal/ptr"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/runner"
+	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -40,21 +39,27 @@ type OCHImplementationGetter interface {
 	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
 }
 
+type ArgoRenderer interface {
+	Render(ref types.TypeRef, parameters map[string]interface{}, typeInstances []v1alpha1.InputTypeInstance) (*types.Action, error)
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli             client.Client
 	runnerTimeout      time.Duration
 	builtinRunnerImage string
 	implGetter         OCHImplementationGetter
+	argoRenderer       ArgoRenderer
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, implGetter OCHImplementationGetter, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
+func NewActionService(cli client.Client, implGetter OCHImplementationGetter, argoRenderer ArgoRenderer, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		runnerTimeout:      runnerTimeout,
 		builtinRunnerImage: builtinRunnerImage,
 		implGetter:         implGetter,
+		argoRenderer:       argoRenderer,
 	}
 }
 
@@ -236,22 +241,19 @@ func (a *ActionService) ensureLocalSuffix(path string) string {
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
-func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	path := string(action.Spec.ActionRef.Path)
-	if !a.isGCPSecretAvailable(ctx, action) {
-		path = a.ensureLocalSuffix(path)
+func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
+	ref := types.TypeRef{
+		Path:     string(action.Spec.ActionRef.Path),
+		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	latestRevision, err := a.implGetter.GetLatestRevisionOfImplementationForInterface(ctx, path)
+	// TODO(mszostok): Support timeout via context
+	renderedAction, err := a.argoRenderer.Render(ref, nil, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "while fetching implementation")
+		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if latestRevision == nil || latestRevision.Spec == nil || latestRevision.Spec.Action == nil {
-		return nil, errors.New("missing action in Implementation revision")
-	}
-
-	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
+	actionBytes, err := json.Marshal(renderedAction)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}

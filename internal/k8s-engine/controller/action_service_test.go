@@ -24,7 +24,7 @@ func Test(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
-			svc := NewActionService(nil, nil, "", time.Millisecond)
+			svc := NewActionService(nil, nil, nil, "", time.Millisecond)
 
 			// when
 			gotPath := svc.ensureLocalSuffix(tc.givenPath)

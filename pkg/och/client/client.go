@@ -82,6 +82,10 @@ func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Conte
 	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
 }
 
+func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
+	return c.GetLatestRevisionOfImplementationForInterface(ctx, ref.Path)
+}
+
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`mutation($in: CreateTypeInstanceInput!) {
 		createTypeInstance(

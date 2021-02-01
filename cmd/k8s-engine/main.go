@@ -4,9 +4,6 @@ import (
 	"log"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/pkg/httputil"
-
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
@@ -22,9 +19,12 @@ import (
 	"projectvoltron.dev/voltron/internal/graphqlutil"
 	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"projectvoltron.dev/voltron/pkg/httputil"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 )
 
 var (
@@ -96,7 +96,8 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
-	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
+	argoRenderer := argo.NewRenderer(ochclient)
+	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
