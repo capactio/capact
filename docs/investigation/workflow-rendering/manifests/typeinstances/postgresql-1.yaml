@@ -9,8 +9,8 @@ spec:
     revision: 0.1.0
   value:
     superuser:
-      username: "postgres"
-      password: "s3cr3t"
-    defaultDBName: "test"
-    host: "{ postgresql-service-name }"
+      username: "superuser"
+      password: "okon"
+    defaultDBName: "postgresql"
+    host: "postgresql-1612182585"
     port: 5432
