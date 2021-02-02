@@ -21,7 +21,7 @@ RUN --mount=target=. \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_ENABLED=0 GOARCH=amd64 $BUILD_CMD -ldflags "-s -w" -o /bin/$COMPONENT $SOURCE_PATH
 
-FROM scratch as components
+FROM scratch as generic
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
