@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.postgresql.create
+  prefix: cap.implementation.postgresql
   name: create-db
   displayName: Create Postgresql database
   description: Action which create a database on a Postgresql instance

@@ -31,7 +31,7 @@ spec:
           }
   output:
     typeInstances:
-      postgresql:
+      database:
         typeRef:
           path: cap.type.database.postgresql.database
           revision: 0.1.0
