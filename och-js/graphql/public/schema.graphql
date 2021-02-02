@@ -481,6 +481,11 @@ type ImplementationAction {
   """
   runnerInterface: String!
   args: Any
+    @cypher(
+      statement: """
+      MATCH (this) RETURN apoc.convert.fromJsonMap(this.args) as args
+      """
+    )
 }
 
 type Attribute {

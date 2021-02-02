@@ -45,45 +45,119 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql
 	return resp.Interfaces, nil
 }
 
-// TODO simple implementation for demo, does return only some fields
-// TODO: add support for not found errors
-func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicgraphql.ImplementationRevision, error) {
+// TODO(SV-206): handle that properly and take into account the ref.Revision - default to latest if not present.
+func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
-			  implementations {
-				latestRevision {
-				  spec {
-					action {
-					  runnerInterface
-					  args
+			  implementationRevisions {
+			  	metadata {
+					prefix
+					path
+					name
+					displayName
+					description
+					maintainers {
+						name
+						email
 					}
-				  }
+					iconURL
+					documentationURL
+					supportURL
+					iconURL
+				}
+				revision
+				spec {
+					appVersion
+					implements {
+						path
+						revision
+					}
+					requires {
+						prefix
+						oneOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+						anyOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+						allOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+					}
+					imports {
+						interfaceGroupPath
+						alias
+						appVersion
+						methods {
+							name
+							revision
+						}
+					}
+					additionalInput {
+						typeInstances {
+							name
+							typeRef {
+								path
+								revision
+							}
+							verbs
+						}
+					}
+					additionalOutput {
+						typeInstances {
+							name
+							typeRef {
+								path
+								revision
+							}
+						}
+						typeInstanceRelations {
+							typeInstanceName
+							uses
+						}
+					}
+					action {
+						runnerInterface
+						args
+					}
+				}
+				signature {
+					och
 				}
 			  }
 			}
 		  }
 		}`)
 
-	req.Var("interfacePath", path)
+	req.Var("interfacePath", ref.Path)
 	var resp struct {
-		Interface ochpublicgraphql.Interface `json:"interface"`
+		Interface struct {
+			LatestRevision struct {
+				ImplementationRevisions []ochpublicgraphql.ImplementationRevision `json:"implementationRevisions"`
+			} `json:"latestRevision"`
+		} `json:"interface"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
 	}
-	if resp.Interface.LatestRevision == nil {
-		return nil, errors.New("Interface.LatestRevision cannot be nil")
-	}
-	if len(resp.Interface.LatestRevision.Implementations) == 0 {
+	if len(resp.Interface.LatestRevision.ImplementationRevisions) == 0 {
 		return nil, errors.New("Interface.LatestRevision.Implementations cannot be nil")
 	}
 
-	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
-}
-
-func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
-	return c.GetLatestRevisionOfImplementationForInterface(ctx, ref.Path)
+	return &resp.Interface.LatestRevision.ImplementationRevisions[0], nil
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {

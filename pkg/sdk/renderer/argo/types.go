@@ -12,10 +12,6 @@ type Workflow struct {
 	Templates []*Template `json:"templates"`
 }
 
-//func (w *Workflow) AppendWorkflowTemplateAtRoot(template Template) {
-//	w.Templates = append(w.Templates, template)
-//}
-
 type Template struct {
 	*wfv1.Template
 	Steps []ParallelSteps `json:"steps,omitempty"`

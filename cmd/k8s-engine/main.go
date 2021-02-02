@@ -97,7 +97,7 @@ func main() {
 
 	ochClient := getOCHClient(&cfg)
 	argoRenderer := argo.NewRenderer(ochClient)
-	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
+	actionSvc := controller.NewActionService(mgr.GetClient(), argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)

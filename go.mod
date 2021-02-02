@@ -18,15 +18,13 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
-	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.1
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
-	github.com/sanity-io/litter v1.2.0
-	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
@@ -49,12 +47,10 @@ require (
 	k8s.io/cli-runtime v0.17.9
 	k8s.io/client-go v0.17.9
 	k8s.io/kubectl v0.17.2
-	k8s.io/kubernetes v1.13.0
 	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/yaml v1.2.0
-	sourcegraph.com/sourcegraph/appdash v0.0.0-20180110180208-2cc67fd64755
 )
 
 replace (

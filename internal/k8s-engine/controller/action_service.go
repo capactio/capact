@@ -5,8 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -51,17 +49,15 @@ type ActionService struct {
 	k8sCli             client.Client
 	runnerTimeout      time.Duration
 	builtinRunnerImage string
-	implGetter         OCHImplementationGetter
 	argoRenderer       ArgoRenderer
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, implGetter OCHImplementationGetter, argoRenderer ArgoRenderer, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
+func NewActionService(cli client.Client, argoRenderer ArgoRenderer, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		runnerTimeout:      runnerTimeout,
 		builtinRunnerImage: builtinRunnerImage,
-		implGetter:         implGetter,
 		argoRenderer:       argoRenderer,
 	}
 }
@@ -225,16 +221,6 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
-// ensureLocalSuffix adds the `-local` prefix if not already added
-func (a *ActionService) ensureLocalSuffix(path string) string {
-	name := filepath.Ext(path)
-	prefix := strings.TrimSuffix(path, name)
-	if !strings.HasSuffix(name, "-local") {
-		name = name + "-local"
-	}
-	return prefix + name
-}
-
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
@@ -243,24 +229,20 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	// TODO: workaround as Argo do not support k8s secret as input arguments
-	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
-	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
-		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
-	}
-
-	parameters := secret.Data[graphqldomain.ParametersSecretDataKey]
-
-	data := map[string]interface{}{}
-	if err := json.Unmarshal(parameters, &data); err != nil {
-		return nil, errors.Wrap(err, "while unmarshaling user input ")
-	}
-
 	ctx, cancel := context.WithTimeout(ctx, renderingTimeout)
 	defer cancel()
 
-	renderedAction, err := a.argoRenderer.Render(ctx, ref, argo.WithPlainTextUserInput(data))
+	var opts []argo.RendererOption
+	data, err := a.getUserInputData(ctx, action)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(data) > 0 {
+		opts = append(opts, argo.WithPlainTextUserInput(data))
+	}
+
+	renderedAction, err := a.argoRenderer.Render(ctx, ref, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
@@ -270,6 +252,29 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 	return actionBytes, nil
+}
+
+// TODO: workaround as Argo do not support k8s secret as input arguments artifacts
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (map[string]interface{}, error) {
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
+	err := a.k8sCli.Get(ctx, key, secret)
+	switch {
+	case err == nil:
+	case apierrors.IsNotFound(err):
+		return nil, nil
+	default:
+		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
+	}
+
+	parameters := secret.Data[graphqldomain.ParametersSecretDataKey]
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(parameters, &data); err != nil {
+		return nil, errors.Wrap(err, "while unmarshaling user input")
+	}
+
+	return data, nil
 }
 
 type GetReportedRunnerStatusOutput struct {
