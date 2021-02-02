@@ -96,7 +96,7 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
-	argoRenderer := argo.NewRenderer(ochclient)
+	argoRenderer := argo.NewRenderer(ochClient)
 	actionSvc := controller.NewActionService(mgr.GetClient(), ochClient, argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)

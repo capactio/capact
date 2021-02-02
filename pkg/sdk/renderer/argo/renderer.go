@@ -4,10 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"strings"
 
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 
@@ -18,55 +17,36 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
+const userInputName = "input-parameters"
+
 type OCHClient interface {
 	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error)
 	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
 }
 
 type Renderer struct {
-	ochCli        OCHClient
-	rootTemplates []*Template
+	ochCli              OCHClient
+	typeInstanceHandler TypeInstanceHandler
 }
 
 func NewRenderer(ochCli OCHClient) *Renderer {
-	return &Renderer{ochCli: ochCli}
-}
-
-// what about policies (should be passed here? if so, func opt?)
-// renderer + och + polices ... = facade ?
-// argoRenderer + ocfImplGetter + policiesFilters(knows engine + och filters)
-//func (r *Renderer) Render(ctx context.Context, ocfImpl types.Implementation) (rendered []byte) {
-//
-//}
-// I decided to do not overcomplicate and make it more Argo specific
-
-type RendererOption func(workflow *Workflow)
-
-const userInputName = "input-parameters"
-
-func (*Renderer) getEntrypointWorkflowIndex(w *Workflow) (int, bool) {
-	if w == nil {
-		return 0, false
-	}
-	for idx, tmpl := range w.Templates {
-		if tmpl.Name == w.Entrypoint {
-			return idx, true
-		}
+	r := &Renderer{
+		ochCli:              ochCli,
+		typeInstanceHandler: TypeInstanceHandler{ochCli: ochCli},
 	}
 
-	return 0, false
+	return r
 }
 
-func (r *Renderer) refToOCHRef(in types.TypeRef) ochpublicgraphql.TypeReference {
-	return ochpublicgraphql.TypeReference{
-		Path:     in.Path,
-		Revision: stringOrEmpty(in.Revision),
+func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
+	// 0. Populate render options
+	renderOpt := &renderOptions{}
+	for _, opt := range opts {
+		opt(renderOpt)
 	}
-}
 
-func (r *Renderer) Render(ref types.TypeRef, parameters map[string]interface{}, typeInstances []v1alpha1.InputTypeInstance) (*types.Action, error) {
 	// 1. Find the root implementation
-	implementation, err := r.ochCli.GetImplementationForInterface(context.TODO(), r.refToOCHRef(ref))
+	implementation, err := r.ochCli.GetImplementationForInterface(ctx, r.refToOCHRef(ref))
 	if err != nil {
 		return nil, err
 	}
@@ -78,101 +58,122 @@ func (r *Renderer) Render(ref types.TypeRef, parameters map[string]interface{}, 
 	}
 
 	// 3. Add user input if provided
-	if err := r.addUserInput(rootWorkflow, parameters); err != nil {
+	if err := r.addPlainTextUserInput(rootWorkflow, renderOpt.plainTextUserInput); err != nil {
 		return nil, err
 	}
 
 	// 4. Add steps to populate rootWorkflow with input TypeInstances
-	if err := r.addInputTypeInstance(rootWorkflow, typeInstances); err != nil {
+	if err := r.typeInstanceHandler.AddInputTypeInstance(rootWorkflow, renderOpt.inputTypeInstances); err != nil {
 		return nil, err
 	}
 
 	// 5. Render rootWorkflow templates
-	err = r.renderFullWorkflowTemplates(rootWorkflow, implementation.Spec.Imports, typeInstances)
+	rootWorkflow.Templates, err = r.renderTemplateSteps(ctx, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances)
 	if err != nil {
 		return nil, err
 	}
 
-	rootWorkflow.Templates = r.rootTemplates
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {
 		return nil, err
 	}
+
 	return &types.Action{
 		Args:            out,
 		RunnerInterface: implementation.Spec.Action.RunnerInterface,
 	}, nil
 }
 
-// TODO(SV-189): Handle that properly
-func (r *Renderer) addInputTypeInstance(rootWorkflow *Workflow, typeInstances []v1alpha1.InputTypeInstance) error {
-	idx, found := r.getEntrypointWorkflowIndex(rootWorkflow)
-	if !found {
-		return errors.Errorf("cannot find workflow index specified by entrypoint %q", rootWorkflow.Entrypoint)
+func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicgraphql.ImplementationImport, typeInstances []types.InputTypeInstanceRef) ([]*Template, error) {
+	if shouldExit(ctx) {
+		return nil, ctx.Err()
 	}
 
-	for _, tiInput := range typeInstances {
-		template, err := r.getInjectTypeInstanceTemplate(tiInput)
-		if err != nil {
-			return errors.Wrapf(err, "while getting inject TypeInstance template for %s", tiInput.ID)
+	var processedTemplates []*Template
+
+	for _, tpl := range workflow.Templates {
+		// 0. Aggregate processed templates
+		processedTemplates = append(processedTemplates, tpl)
+
+		artifactMappings := map[string]string{}
+		var newStepGroup []ParallelSteps
+
+		for _, parallelSteps := range tpl.Steps {
+			var newParallelSteps []*WorkflowStep
+
+			for _, step := range parallelSteps {
+				// 1. Skip steps with `voltron-when` statements which are already satisfied
+				satisfied, err := r.isStepSatisfiedByInputTypeInstances(step, typeInstances)
+				if err != nil {
+					return nil, err
+				}
+
+				if satisfied {
+					continue
+				}
+
+				// 2. Import and resolve Implementation for `volton-action`
+				if step.VoltronAction != nil {
+					// 2.1 Expand `voltron-action` alias based on imports section
+					actionRef := r.resolveActionPathFromImports(importsCollection, *step.VoltronAction)
+					if actionRef == nil {
+						return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
+					}
+
+					// 2.2 Get `voltron-action` specific implementation
+					// TODO(policies): take into account polcies
+					implementation, err := r.ochCli.GetImplementationForInterface(context.TODO(), *actionRef)
+					if err != nil {
+						return nil, errors.Wrapf(err, "while processing step: %s", step.Name)
+					}
+
+					// 2.3 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
+					importedWorkflow, newArtifactMappings, err := r.unmarshalWorkflowFromImplementation(workflowPrefix, implementation)
+					if err != nil {
+						return nil, errors.Wrap(err, "while creating workflow for action step")
+					}
+
+					for k, v := range newArtifactMappings {
+						artifactMappings[k] = v
+					}
+					step.Template = importedWorkflow.Entrypoint
+					step.VoltronAction = nil
+
+					// 2.4 Render imported Workflow templates and add them to root templates
+					// TODO(advanced-rendering): currently not supported.
+					processedImportedTemplates, err := r.renderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
+					processedTemplates = append(processedTemplates, processedImportedTemplates...)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				// 3. Replace global artifacts names in references, based on previous gathered mappings.
+				for artIdx := range step.Arguments.Artifacts {
+					art := &step.Arguments.Artifacts[artIdx]
+
+					match := workflowArtifactRefRegex.FindStringSubmatch(art.From)
+					if len(match) > 0 {
+						oldArtifactName := match[1]
+						if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
+							art.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
+						}
+					}
+				}
+				newParallelSteps = append(newParallelSteps, step)
+			}
+			if len(newParallelSteps) > 0 {
+				newStepGroup = append(newStepGroup, newParallelSteps)
+			}
 		}
 
-		rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
-			{
-				&WorkflowStep{
-					WorkflowStep: &wfv1.WorkflowStep{
-						Name:     fmt.Sprintf("%s-step", template.Name),
-						Template: template.Name,
-					},
-				},
-			},
-		}, rootWorkflow.Templates[idx].Steps...)
-
-		rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+		tpl.Steps = newStepGroup
 	}
-
-	return nil
+	return processedTemplates, nil
 }
 
-// TODO(mszostok): Change to k8s secret. This is not easy and probably we will need to use some workaround, or
-// change the contract.
-func (r *Renderer) addUserInput(rootWorkflow *Workflow, parameters map[string]interface{}) error {
-	if len(parameters) == 0 {
-		return nil
-	}
-
-	parameterRawData, err := yaml.Marshal(parameters)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal input parameters")
-	}
-
-	rootWorkflow.Arguments.Artifacts = append(rootWorkflow.Arguments.Artifacts, wfv1.Artifact{
-		Name: userInputName,
-		ArtifactLocation: wfv1.ArtifactLocation{
-			Raw: &wfv1.RawArtifact{
-				Data: string(parameterRawData),
-			},
-		},
-	})
-
-	return nil
-}
-
-func (r *Renderer) renderFullWorkflowTemplates(workflow *Workflow, importsCollection []*ochpublicgraphql.ImplementationImport, typeInstances []v1alpha1.InputTypeInstance) error {
-	for idx := range workflow.Templates {
-		tpl := workflow.Templates[idx]
-
-		r.rootTemplates = append(r.rootTemplates, tpl)
-		err := r.renderTemplateStepsInPlace(tpl, importsCollection, typeInstances)
-		if err != nil {
-			return err
-		}
-
-	}
-	return nil
-}
-
-func (r *Renderer) isStepSatisfiedByInputTypeInstances(step *WorkflowStep, typeInstances []v1alpha1.InputTypeInstance) (bool, error) {
+func (r *Renderer) isStepSatisfiedByInputTypeInstances(step *WorkflowStep, typeInstances []types.InputTypeInstanceRef) (bool, error) {
 	if step.VoltronWhen != nil {
 		result, err := r.evaluateWhenExpression(typeInstances, *step.VoltronWhen)
 		if err != nil {
@@ -189,81 +190,59 @@ func (r *Renderer) isStepSatisfiedByInputTypeInstances(step *WorkflowStep, typeI
 	return false, nil
 }
 
-func (r *Renderer) renderTemplateStepsInPlace(tmpl *Template, importsCollection []*ochpublicgraphql.ImplementationImport, typeInstances []v1alpha1.InputTypeInstance) error {
-	artifactMappings := map[string]string{}
-	var newSteps []ParallelSteps
+// TODO(mszostok): Copied from POC algorithm, replace lib for expression
+func (*Renderer) evaluateWhenExpression(typeInstances []types.InputTypeInstanceRef, exprString string) (interface{}, error) {
+	params := mapEvalParameters{}
 
-	for _, parallelSteps := range tmpl.Steps {
-		var newParallelSteps []*WorkflowStep
-		for i := range parallelSteps {
-			step := parallelSteps[i]
-
-			satisfied, err := r.isStepSatisfiedByInputTypeInstances(step, typeInstances)
-			if err != nil {
-				return err
-			}
-
-			if satisfied {
-				continue
-			}
-
-			if step.VoltronAction != nil {
-				// Get Implementation for action
-				actionRef := resolveActionPathFromImports(importsCollection, *step.VoltronAction)
-				if actionRef == nil {
-					return errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
-				}
-
-				implementation, err := r.ochCli.GetImplementationForInterface(context.TODO(), *actionRef)
-				if err != nil {
-					return errors.Wrapf(err, "while processing step: %s", step.Name)
-				}
-
-				// Render the referenced action.
-				workflowPrefix := fmt.Sprintf("%s-%s", tmpl.Name, step.Name)
-				importedWorkflow, newArtifactMappings, err := r.unmarshalWorkflowFromImplementation(workflowPrefix, implementation)
-				if err != nil {
-					return errors.Wrap(err, "while creating workflow for action step")
-				}
-
-				for k, v := range newArtifactMappings {
-					artifactMappings[k] = v
-				}
-				step.Template = importedWorkflow.Entrypoint
-				step.VoltronAction = nil
-
-				// TODO(mszostok): support advanced rendering? maybe instead of recursion we can create a bucket per layer
-				// save imported workflow and execute (renderFullWorkflowTemplates with user data)
-				err = r.renderFullWorkflowTemplates(importedWorkflow, implementation.Spec.Imports, nil)
-				if err != nil {
-					return err
-				}
-			}
-
-			// Replace global artifacts names in references, based on previous gathered mappings.
-			for artIdx := range step.Arguments.Artifacts {
-				art := &step.Arguments.Artifacts[artIdx]
-
-				match := workflowArtifactRefRegex.FindStringSubmatch(art.From)
-				if len(match) > 0 {
-					oldArtifactName := match[1]
-					if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
-						art.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
-					}
-				}
-			}
-			newParallelSteps = append(newParallelSteps, step)
-		}
-		if len(newParallelSteps) > 0 {
-			newSteps = append(newSteps, newParallelSteps)
-		}
+	for _, ti := range typeInstances {
+		params[ti.Name] = ti
 	}
 
-	tmpl.Steps = newSteps
+	expr, err := govaluate.NewEvaluableExpression(exprString)
+	if err != nil {
+		return nil, errors.Wrap(err, "while parsing expression")
+	}
+
+	result, err := expr.Eval(params)
+	if err != nil {
+		return nil, errors.Wrap(err, "while evaluating expression")
+	}
+
+	return result, nil
+}
+
+// TODO(mszostok): Change to k8s secret. This is not easy and probably we will need to use some workaround, or
+// change the contract.
+func (r *Renderer) addPlainTextUserInput(rootWorkflow *Workflow, input map[string]interface{}) error {
+	if len(input) == 0 {
+		return nil
+	}
+
+	parameterRawData, err := yaml.Marshal(input)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal input parameters")
+	}
+
+	rootWorkflow.Arguments.Artifacts = append(rootWorkflow.Arguments.Artifacts, wfv1.Artifact{
+		Name: userInputName,
+		ArtifactLocation: wfv1.ArtifactLocation{
+			Raw: &wfv1.RawArtifact{
+				Data: string(parameterRawData),
+			},
+		},
+	})
+
 	return nil
 }
 
-func resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) *ochpublicgraphql.TypeReference {
+func (*Renderer) refToOCHRef(in types.InterfaceRef) ochpublicgraphql.TypeReference {
+	return ochpublicgraphql.TypeReference{
+		Path:     in.Path,
+		Revision: stringOrEmpty(in.Revision),
+	}
+}
+
+func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) *ochpublicgraphql.TypeReference {
 	action := strings.SplitN(voltronAction, ".", 2)
 	alias, name := action[0], action[1]
 	for _, i := range imports {
@@ -360,6 +339,15 @@ func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, er
 	return out, nil
 }
 
+func shouldExit(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
+
 func (*Renderer) createWorkflow(implementation *ochpublicgraphql.ImplementationRevision) (*Workflow, error) {
 	var renderedWorkflow = struct {
 		Spec Workflow `json:"workflow"`
@@ -373,60 +361,6 @@ func (*Renderer) createWorkflow(implementation *ochpublicgraphql.ImplementationR
 		return nil, errors.Wrap(err, "while unmarshaling to spec")
 	}
 	return &renderedWorkflow.Spec, nil
-}
-
-// TODO(mszostok): Copied from POC algorithm, replace lib for expression
-func (r *Renderer) evaluateWhenExpression(typeInstances []v1alpha1.InputTypeInstance, exprString string) (interface{}, error) {
-	params := mapEvalParameters{}
-
-	for _, ti := range typeInstances {
-		params[ti.Name] = ti
-	}
-
-	expr, err := govaluate.NewEvaluableExpression(exprString)
-	if err != nil {
-		return nil, errors.Wrap(err, "while parsing expression")
-	}
-
-	result, err := expr.Eval(params)
-	if err != nil {
-		return nil, errors.Wrap(err, "while evaluating expression")
-	}
-
-	return result, nil
-}
-
-func (r *Renderer) getInjectTypeInstanceTemplate(input v1alpha1.InputTypeInstance) (*wfv1.Template, error) {
-	typeInstance, err := r.ochCli.GetTypeInstance(context.TODO(), input.ID)
-	if err != nil {
-		return nil, err
-	}
-	if typeInstance == nil {
-		return nil, fmt.Errorf("failed to find TypeInstance %s", input.ID)
-	}
-
-	data, err := yaml.Marshal(typeInstance.Spec.Value)
-	if err != nil {
-		return nil, errors.Wrap(err, "while to marshal TypeInstance to YAML")
-	}
-
-	return &wfv1.Template{
-		Name: fmt.Sprintf("inject-%s", input.Name),
-		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
-			Command: []string{"sh", "-c"},
-			Args:    []string{fmt.Sprintf("sleep 2 && echo '%s' | tee /output", string(data))},
-		},
-		Outputs: wfv1.Outputs{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name:       input.Name,
-					GlobalName: input.Name,
-					Path:       "/output",
-				},
-			},
-		},
-	}, nil
 }
 
 func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template, map[string]string) {

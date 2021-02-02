@@ -15,12 +15,14 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -33,6 +35,7 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
+	renderingTimeout               = 10 * time.Minute
 )
 
 type OCHImplementationGetter interface {
@@ -40,7 +43,7 @@ type OCHImplementationGetter interface {
 }
 
 type ArgoRenderer interface {
-	Render(ref types.TypeRef, parameters map[string]interface{}, typeInstances []v1alpha1.InputTypeInstance) (*types.Action, error)
+	Render(ctx context.Context, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -222,13 +225,6 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
-func (a *ActionService) isGCPSecretAvailable(ctx context.Context, action *v1alpha1.Action) bool {
-	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: "gcp-credentials", Namespace: action.Namespace}
-	err := a.k8sCli.Get(ctx, key, secret)
-	return err == nil
-}
-
 // ensureLocalSuffix adds the `-local` prefix if not already added
 func (a *ActionService) ensureLocalSuffix(path string) string {
 	name := filepath.Ext(path)
@@ -242,13 +238,29 @@ func (a *ActionService) ensureLocalSuffix(path string) string {
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 // TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	ref := types.TypeRef{
+	ref := types.InterfaceRef{
 		Path:     string(action.Spec.ActionRef.Path),
 		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	// TODO(mszostok): Support timeout via context
-	renderedAction, err := a.argoRenderer.Render(ref, nil, nil)
+	// TODO: workaround as Argo do not support k8s secret as input arguments
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
+	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
+		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
+	}
+
+	parameters := secret.Data[graphqldomain.ParametersSecretDataKey]
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(parameters, &data); err != nil {
+		return nil, errors.Wrap(err, "while unmarshaling user input ")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, renderingTimeout)
+	defer cancel()
+
+	renderedAction, err := a.argoRenderer.Render(ctx, ref, argo.WithPlainTextUserInput(data))
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
 	}

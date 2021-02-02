@@ -2,13 +2,14 @@
 package argo
 
 import (
-	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"regexp"
+
+	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 )
 
 type Workflow struct {
 	*wfv1.WorkflowSpec
-	Templates  []*Template     `json:"templates"`
+	Templates []*Template `json:"templates"`
 }
 
 //func (w *Workflow) AppendWorkflowTemplateAtRoot(template Template) {
@@ -17,7 +18,7 @@ type Workflow struct {
 
 type Template struct {
 	*wfv1.Template
-	Steps     []ParallelSteps  `json:"steps,omitempty"`
+	Steps []ParallelSteps `json:"steps,omitempty"`
 }
 
 type ParallelSteps []*WorkflowStep

@@ -1,15 +1,16 @@
 package argo
 
 import (
+	"context"
+	"log"
+	"testing"
+
 	"github.com/mitchellh/mapstructure"
 	"gopkg.in/yaml.v2"
 	"gotest.tools/golden"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"log"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/och/client/fake"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"testing"
 
 	"github.com/stretchr/testify/require"
 )
@@ -24,24 +25,26 @@ import (
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
 	// given
-	store, err := fake.NewFromLocal("testdata/och")
+	fakeCli, err := fake.NewFromLocal("testdata/och")
 	require.NoError(t, err)
+
+	renderer := NewRenderer(fakeCli)
 
 	tests := []struct {
 		name               string
-		ref                types.TypeRef
+		ref                types.InterfaceRef
 		userInput          map[string]interface{}
-		inputTypeInstances []v1alpha1.InputTypeInstance
+		inputTypeInstances []types.InputTypeInstanceRef
 	}{
 		{
 			name: "PostgreSQL workflow without user input and TypeInstances",
-			ref: types.TypeRef{
+			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
 		},
 		{
 			name: "PostgreSQL workflow with user input and without TypeInstances",
-			ref: types.TypeRef{
+			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
 			userInput: map[string]interface{}{
@@ -54,7 +57,7 @@ func TestRenderHappyPath(t *testing.T) {
 		},
 		{
 			name: "Jira workflow with user input and TypeInstances",
-			ref: types.TypeRef{
+			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.jira.install",
 			},
 			userInput: map[string]interface{}{
@@ -65,7 +68,7 @@ func TestRenderHappyPath(t *testing.T) {
 				"defaultDBName": "test",
 			},
 
-			inputTypeInstances: []v1alpha1.InputTypeInstance{
+			inputTypeInstances: []types.InputTypeInstanceRef{
 				{
 					Name: "gcp",
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
@@ -74,13 +77,12 @@ func TestRenderHappyPath(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			renderer := &Renderer{
-				ochCli: store,
-			}
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
 
 			// when
-			renderedArgs, err := renderer.Render(test.ref, test.userInput, test.inputTypeInstances)
+			renderedArgs, err := renderer.Render(context.Background(), tt.ref, WithPlainTextUserInput(tt.userInput), WithTypeInstances(tt.inputTypeInstances))
 			require.NoError(t, err)
 
 			// then
