@@ -4,8 +4,8 @@ kind: Interface
 metadata:
   prefix: cap.interface.database.postgresql
   name: create-db
-  displayName: "Create database"
-  description: "Create database action for PostgreSQL"
+  displayName: Create database
+  description: Create database action for PostgreSQL
   documentationURL: https://www.postgresql.org/docs/
   supportURL: https://www.postgresql.org/
   iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
@@ -16,6 +16,12 @@ metadata:
 
 spec:
   input:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
     parameters:
       jsonSchema:
         value: |-

@@ -1,0 +1,8 @@
+name: confluence-with-postgres
+
+manifestReference:
+  path: cap.interface.productivity.confluence.install
+
+parameters: {}
+
+typeInstances: []

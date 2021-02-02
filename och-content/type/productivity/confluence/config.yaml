@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: install-input
-  prefix: cap.type.productivity.jira  # Computed during fetching the manifest
-  displayName: Jira installation input
-  description: Defines installation parameters for Jira
-  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
-  supportURL: https://www.atlassian.com/software/jira
+  name: config
+  prefix: cap.type.productivity.confluence
+  displayName: Confluence instance config
+  description: Defines configuration for Confluence instance
+  documentationURL: https://support.atlassian.com/confluence-cloud/
+  supportURL: https://www.atlassian.com/software/confluence
   iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
   maintainers:
     - email: team-dev@projectvoltron.dev
@@ -22,15 +22,22 @@ spec:
         "type": "object",
         "title": "The schema for Jira configuration",
         "required": [
-            "host"
+            "version"
         ],
         "$ocfRefs": {
+          "semVer": {
+            "name": "cap.core.type.versioning.semver",
+            "revision": "0.1.0"
+          }
           "hostname": {
             "name": "cap.core.type.networking.hostname",
             "revision": "0.1.0"
           }
         },
         "properties": {
+          "version": {
+            "$ref": "#/$ocfRefs/semVer"
+          }
           "host": {
             "$ref": "#/$ocfRefs/hostname"
           }

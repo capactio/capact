@@ -2,11 +2,11 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.jira # Computed during fetching the manifest
+  prefix: cap.implementation.atlassian.confluence
   name: install
-  displayName: Install Jira
-  description: Action which installs Jira via Helm chart
-  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
+  displayName: Install Confluence
+  description: Action which installs Confluence via Helm chart
+  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/confluence-server
   supportURL: https://mox.sh/helm/
   license:
     name: "Apache 2.0"
@@ -16,7 +16,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "8.x.x"
+  appVersion: "2.x.x"
 
   additionalInput:
     typeInstances:
@@ -28,19 +28,19 @@ spec:
 
   additionalOutput:
     typeInstances:
-      jira-helm-release:
+      confluence-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
     typeInstanceRelations:
-      jira-config:
+      confluence-config:
         uses:
-          - jira-helm-release
+          - confluence-helm-release
           - postgresql
           - database
 
   implements:
-    - path: cap.interface.productivity.jira.install
+    - path: cap.interface.productivity.confluence.install
       revision: 0.1.0
 
   requires:
@@ -66,7 +66,9 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.templating.jinja2
+        - name: create-db
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.jinja2
       alias: jinja2
       methods:
         - name: template
@@ -76,16 +78,15 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: jira-install
+        entrypoint: main
         templates:
-          - name: jira-install
+          - name: main
             inputs:
               artifacts:
                 - name: input-parameters
             steps:
               - - name: install-db
                   voltron-when: postgresql == nil # conditional execution
-                  voltron-action: postgresql.install
                   arguments:
                     # TODO: password should be generated or populated by user
                     artifacts:
@@ -96,6 +97,7 @@ spec:
                               username: superuser
                               password: okon
                             defaultDBName: postgres
+                  voltron-action: postgresql.install
 
               - - name: create-db
                   voltron-action: postgresql.create-db
@@ -109,7 +111,7 @@ spec:
                       - name: database-input
                         raw:
                           data: |
-                            name: jiradb
+                            name: confluencedb 
                             owner: superuser
 
               - - name: render-helm-args
@@ -118,9 +120,11 @@ spec:
                     artifacts:
                       - name: template
                         raw:
+                          # TODO: context should be removed
+                          # TODO: `args.output` should be simplified.
                           data: |
                             context:
-                              name: "jira-helm-release"
+                              name: "confluence-helm-release"
                               dryRun: false
                               timeout: "10m"
                               platform:
@@ -129,12 +133,12 @@ spec:
                               command: "install"
                               generateName: true
                               chart:
-                                name: "jira-software"
+                                name: "confluence-server"
                                 repo: "https://helm.mox.sh"
                               output:{% raw %}
                                 goTemplate:
                                   version: {{ '"{{ .Values.image.tag }}"' }}
-                                  host: {{ "'{{ template \"jira-software.fullname\" . }}'" }}{% endraw %}
+                                  host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
                               values:
                                 postgresql:
                                   enabled: false
@@ -146,7 +150,7 @@ spec:
                                 ingress:
                                   enabled: true
                                   hosts:
-                                  - host: jira-cloud.voltron.local
+                                  - host: confluence.voltron.local
                                     paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
@@ -163,9 +167,9 @@ spec:
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:
-                    - name: jira-config
+                    - name: confluence-config
                       from: additional
-                    - name: jira-helm-release
+                    - name: confluence-helm-release
                       from: helm-release
                   arguments:
                     artifacts:

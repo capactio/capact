@@ -18,14 +18,6 @@ metadata:
 spec:
   appVersion: "8.x.x"
 
-  additionalInput:
-    typeInstances:
-      postgresql:
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-        verbs: [ "get" ]
-
   implements:
     - path: cap.interface.database.postgresql.create-db
       revision: 0.1.0
@@ -42,11 +34,6 @@ spec:
       methods:
         - name: run
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.database.postgresql
-      alias: postgresql
-      methods:
-        - name: install
-          revision: 0.1.0
     - interfaceGroupPath: cap.interface.jinja2
       alias: jinja2
       methods:
@@ -62,22 +49,13 @@ spec:
           - name: main
             inputs:
               artifacts:
-                - name: input-parameters
+                - name: postgresql
+                - name: database-input
+            outputs:
+              artifacts:
+                - name: database
+                  from: "{{steps.create-db.outputs.artifacts.database}}"
             steps:
-              - - name: install-db
-                  voltron-when: postgresql == nil # conditional execution
-                  arguments:
-                    # TODO: password should be generated or populated by user
-                    artifacts:
-                      - name: input-parameters
-                        raw:
-                          data: |
-                            superuser:
-                              username: superuser
-                              password: okon
-                            defaultDBName: postgresql
-                  voltron-action: postgresql.install
-
               - - name: render-create-db-script
                   voltron-action: jinja2.template
                   arguments:
@@ -91,25 +69,25 @@ spec:
                             ${PSQL_CMD} "CREATE DATABASE {{name}}"
                             ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE {{name}} TO {{owner}}"
 
-                            echo <<EOF > /database.yml
+                            cat <<EOF > /database.yml
                             name: {{name}}
                             owner: {{owner}}
                             tablespace: ""
                             EOF
                             {% endraw %}
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{inputs.artifacts.postgresql}}"
 
-              - - name: fill-params-in-script
+              - - name: fill-params-in-create-db-script
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         from: "{{steps.render-create-db-script.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{inputs.artifacts.database-input}}"
 
-              - - name: create-psql-db
+              - - name: create-db
                   template: create-psql-db
                   voltron-outputTypeInstances:
                     - name: database
@@ -117,21 +95,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: script
-                        from: "{{steps.fill-params-in-script.outputs.artifacts.render}}"
-
-          - name: create-psql-db
-            inputs:
-              artifacts:
-                - name: script
-                  path: /script.sh
-            container:
-              image: postgres:11
-              command: [bash]
-              args: ["/script.sh"]
-            outputs:
-              artifacts:
-                - name: database
-                  path: /database.yml
+                        from: "{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}"
 
 # CREATE USER 'user'@'%';
 # GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password';

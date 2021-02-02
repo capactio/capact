@@ -2,13 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.database.postgresql
-  name: create-role
-  displayName: "Create role"
-  description: "Create role action for PostgreSQL"
-  documentationURL: https://www.postgresql.org/docs/
-  supportURL: https://www.postgresql.org/
-  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
+  prefix: cap.interface.productivity.confluence
+  name: install
+  displayName: "Install Confluence"
+  description: "Confluence is a document collaboration tool"
+  documentationURL: https://support.atlassian.com/confluence/
+  supportURL: https://support.atlassian.com/confluence/
+  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png # TODO change this
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -23,7 +23,7 @@ spec:
             "$schema": "http://json-schema.org/draft-07/schema",
             "$ocfRefs": {
               "inputType": {
-                "name": "cap.type.database.postgresql.role-input",
+                "name": "cap.type.productivity.confluence.install-input",
                 "revision": "0.1.0"
               }
             },
@@ -31,9 +31,9 @@ spec:
           }
   output:
     typeInstances:
-      postgresql:
+      jira-config:
         typeRef:
-          path: cap.type.database.postgresql.role
+          path: cap.type.productivity.confluence.config
           revision: 0.1.0
 
 signature:
