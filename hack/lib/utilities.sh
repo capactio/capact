@@ -308,13 +308,19 @@ voltron::install_upgrade::kubed() {
 }
 
 voltron::install_upgrade::neo4j() {
-    # not waiting as Helm Charts installation takes additional ~5 minutes.
     shout "- Installing Neo4j Helm chart..."
 
     helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
         --install \
         --create-namespace \
-        --namespace="neo4j"
+        --namespace="neo4j" \
+        --wait
+
+    echo -e "\n- Waiting for Neo4j database to be ready...\n"
+    kubectl wait --namespace neo4j \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/component=core \
+      --timeout=300s
 }
 
 voltron::install_upgrade::ingress_controller() {
