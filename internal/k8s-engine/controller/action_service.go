@@ -174,10 +174,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			return err
 		}
 
-		if !metav1.IsControlledBy(oldSecret, action) {
-			return errors.Errorf("secret with the name %s already exists and it is not owned by Action with the same name", key.String())
-		}
-		oldSecret.Data = secret.Data
+		oldSecret.Data[secretInputDataEntryName] = marshaledInput
 		return a.k8sCli.Update(ctx, oldSecret)
 	default:
 		return err
@@ -256,14 +253,13 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 // TODO: workaround as Argo do not support k8s secret as input arguments artifacts
 func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (map[string]interface{}, error) {
-	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: action.Name, Namespace: action.Namespace}
-	err := a.k8sCli.Get(ctx, key, secret)
-	switch {
-	case err == nil:
-	case apierrors.IsNotFound(err):
+	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
 		return nil, nil
-	default:
+	}
+
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: action.Spec.Input.Parameters.SecretRef.Name, Namespace: action.Namespace}
+	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
 		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
