@@ -11,6 +11,11 @@ import (
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
+// current hack to do not take into account gcp solutions
+var ignoreImplementationsWithAttributes = map[string]struct{}{
+	"cap.attribute.cloud.provider.gcp": {},
+}
+
 // Client used to communicate with the Voltron OCH GraphQL APIs
 // TODO this should be split into public and local OCH clients and composed together here
 type Client struct {
@@ -65,6 +70,11 @@ func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpubli
 					documentationURL
 					supportURL
 					iconURL
+					attributes {
+					  metadata {
+						path
+					  }
+					}
 				}
 				revision
 				spec {
@@ -153,11 +163,33 @@ func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpubli
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
 	}
-	if len(resp.Interface.LatestRevision.ImplementationRevisions) == 0 {
+
+	impls := c.filterOutIgnoredImpl(resp.Interface.LatestRevision.ImplementationRevisions)
+
+	if len(impls) == 0 {
 		return nil, errors.Errorf("No implementation found for %q", ref.Path)
 	}
 
-	return &resp.Interface.LatestRevision.ImplementationRevisions[0], nil
+	return &impls[0], nil
+}
+
+func (c *Client) filterOutIgnoredImpl(revs []ochpublicgraphql.ImplementationRevision) []ochpublicgraphql.ImplementationRevision {
+	var out []ochpublicgraphql.ImplementationRevision
+
+revCheck:
+	for _, impl := range revs {
+		for _, atr := range impl.Metadata.Attributes {
+			if atr != nil && atr.Metadata != nil && atr.Metadata.Path != nil {
+				_, found := ignoreImplementationsWithAttributes[*atr.Metadata.Path]
+				if found {
+					continue revCheck
+				}
+			}
+		}
+		out = append(out, impl)
+	}
+
+	return out
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {

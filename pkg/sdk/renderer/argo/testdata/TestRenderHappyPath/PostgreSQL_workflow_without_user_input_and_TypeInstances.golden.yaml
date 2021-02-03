@@ -1,6 +1,11 @@
 args:
   workflow:
-    arguments: {}
+    arguments:
+      artifacts:
+      - name: input-parameters
+        raw:
+          data: |
+            {}
     entrypoint: postgres-install
     templates:
     - arguments: {}
@@ -157,4 +162,4 @@ args:
         - globalName: psql-helm-release
           name: psql-helm-release
           path: /typeinstance
-runnerinterface: argo.run
+runnerinterface: cap.interface.runner.argo.run

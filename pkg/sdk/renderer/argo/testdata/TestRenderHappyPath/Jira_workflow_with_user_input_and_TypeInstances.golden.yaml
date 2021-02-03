@@ -365,4 +365,4 @@ args:
         - globalName: gcp
           name: gcp
           path: /output
-runnerinterface: argo.run
+runnerinterface: cap.interface.runner.argo.run

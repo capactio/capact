@@ -78,9 +78,11 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 		return nil, err
 	}
 
+	runnerInterface := r.resolveRunnerInterface(implementation.Spec.Imports, implementation.Spec.Action.RunnerInterface)
+
 	return &types.Action{
 		Args:            out,
-		RunnerInterface: implementation.Spec.Action.RunnerInterface,
+		RunnerInterface: runnerInterface,
 	}, nil
 }
 
@@ -215,7 +217,7 @@ func (*Renderer) evaluateWhenExpression(typeInstances []types.InputTypeInstanceR
 // change the contract.
 func (r *Renderer) addPlainTextUserInput(rootWorkflow *Workflow, input map[string]interface{}) error {
 	if len(input) == 0 {
-		return nil
+		input = map[string]interface{}{}
 	}
 
 	parameterRawData, err := yaml.Marshal(input)
@@ -240,6 +242,13 @@ func (*Renderer) refToOCHRef(in types.InterfaceRef) ochpublicgraphql.TypeReferen
 		Path:     in.Path,
 		Revision: stringOrEmpty(in.Revision),
 	}
+}
+
+// TODO: take into account the runner revision. Respect that also in k8s engine when scheduling runner job
+func (r *Renderer) resolveRunnerInterface(imports []*ochpublicgraphql.ImplementationImport, rInterface string) string {
+	fullRef := r.resolveActionPathFromImports(imports, rInterface)
+
+	return fullRef.Path
 }
 
 func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) *ochpublicgraphql.TypeReference {
