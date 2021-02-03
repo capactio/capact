@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.jinja2
+  prefix: cap.implementation.templating.jinja2
   name: template
   license:
     name: "Apache 2.0"
@@ -18,7 +18,7 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.jinja2.template
+    - path: cap.interface.templating.jinja2.template
       revision: 0.1.0
 
   action:

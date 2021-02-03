@@ -50,7 +50,7 @@ spec:
       methods:
         - name: run
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.jinja2
+    - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
         - name: template

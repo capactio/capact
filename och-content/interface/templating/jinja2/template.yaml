@@ -2,11 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.jinja2 # Computed during fetching the manifest
+  prefix: cap.interface.templating.jinja2 # Computed during fetching the manifest
   name: template
   displayName: Jinja2 Template
   description: Generate output using Jinja2 template engine
   documentationURL: https://jinja.palletsprojects.com/en/2.11.x/
+  supportURL: https://jinja.palletsprojects.com/en/2.11.x/
   iconURL: https://raw.githubusercontent.com/pallets/jinja/5f79ba633db0e6f56fc2d13cfc78547495f3d395/artwork/jinjalogo.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
