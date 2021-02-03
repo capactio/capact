@@ -18,13 +18,13 @@ import (
 
 const manifestsExtension = ".yaml"
 
-type ManifestStore struct {
+type FileSystemClient struct {
 	OCHTypeInstances   map[string]ochlocalgraphql.TypeInstance
 	OCHImplementations []ochpublicgraphql.ImplementationRevision
 }
 
-func NewFromLocal(manifestDir string) (*ManifestStore, error) {
-	store := &ManifestStore{
+func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
+	store := &FileSystemClient{
 		OCHImplementations: []ochpublicgraphql.ImplementationRevision{},
 		OCHTypeInstances:   map[string]ochlocalgraphql.TypeInstance{},
 	}
@@ -36,7 +36,7 @@ func NewFromLocal(manifestDir string) (*ManifestStore, error) {
 	return store, nil
 }
 
-func (s *ManifestStore) GetImplementationForInterface(_ context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
+func (s *FileSystemClient) GetImplementationForInterface(_ context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
 	for _, impl := range s.OCHImplementations {
 		for _, implements := range impl.Spec.Implements {
 			if implements.Path == ref.Path {
@@ -48,7 +48,7 @@ func (s *ManifestStore) GetImplementationForInterface(_ context.Context, ref och
 	return nil, fmt.Errorf("implementation for %v not found", ref)
 }
 
-func (s *ManifestStore) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
+func (s *FileSystemClient) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	ti, found := s.OCHTypeInstances[id]
 	if !found {
 		return nil, fmt.Errorf("type instance with id %v not found", id)
@@ -57,7 +57,7 @@ func (s *ManifestStore) GetTypeInstance(_ context.Context, id string) (*ochlocal
 	return &ti, nil
 }
 
-func (s *ManifestStore) loadManifests(dir string) error {
+func (s *FileSystemClient) loadManifests(dir string) error {
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			return nil
@@ -81,7 +81,7 @@ func (s *ManifestStore) loadManifests(dir string) error {
 	return nil
 }
 
-func (s *ManifestStore) loadManifest(filepath string) error {
+func (s *FileSystemClient) loadManifest(filepath string) error {
 	data, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return errors.Wrap(err, "while reading file")

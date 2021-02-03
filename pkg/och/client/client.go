@@ -154,7 +154,7 @@ func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpubli
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
 	}
 	if len(resp.Interface.LatestRevision.ImplementationRevisions) == 0 {
-		return nil, errors.New("Interface.LatestRevision.Implementations cannot be nil")
+		return nil, errors.Errorf("No implementation found for %q", ref.Path)
 	}
 
 	return &resp.Interface.LatestRevision.ImplementationRevisions[0], nil
