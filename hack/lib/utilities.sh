@@ -234,6 +234,7 @@ docker::delete_images() {
 #  - CLUSTER_TYPE
 #  - MOCK_OCH_GRAPHQL - if set to true then predifined values are used in och graphql(local and public)
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
+#  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
@@ -285,6 +286,7 @@ voltron::install_upgrade::charts() {
         --set global.mockEngineGraphQL="${MOCK_ENGINE_GRAPHQL}" \
         --set och-local.image.name="${OCH_IMAGE}" \
         --set och-public.image.name="${OCH_IMAGE}" \
+        --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         -f "${VOLTRON_OVERRIDES}" \
         --wait
 }

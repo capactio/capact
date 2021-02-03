@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 )
 
 var attributeQuery = `
@@ -24,7 +26,7 @@ CREATE (metadata:GenericMetadata:unpublished {
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
   supportURL: value.metadata.supportURL,
-  iconURL: value.metadata.supportURL})
+  iconURL: value.metadata.iconURL})
 
 CREATE (attributeRevision: AttributeRevision:unpublished {revision: value.revision})
 
@@ -54,11 +56,13 @@ CREATE (metadata:TypeMetadata:unpublished {
   displayName: value.metadata.displayName,
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
-  supportURL: value.metadata.supportURL})
+  supportURL: value.metadata.supportURL,
+  iconURL: value.metadata.iconURL})
 
 CREATE (typeSpec:TypeSpec:unpublished {jsonSchema: value.spec.jsonSchema.value})
 CREATE (typeRevision:TypeRevision:unpublished {revision: value.revision})
 
+// VirtualType allows as to find types which define spec.additionalRefs
 CREATE (vType:VirtualType:unpublished {path: "<PREFIX>"})
 CREATE (vType)-[:CONTAINS]->(type)
 
@@ -94,7 +98,8 @@ CREATE (metadata:GenericMetadata:unpublished {
   displayName: value.metadata.displayName,
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
-  supportURL: value.metadata.supportURL})
+  supportURL: value.metadata.supportURL,
+  iconURL: value.metadata.iconURL})
 CREATE (interfaceGroup:InterfaceGroup:unpublished{
   path: "<PATH>",
   prefix: "<PREFIX>",
@@ -140,7 +145,8 @@ CREATE (metadata:GenericMetadata:unpublished {
   displayName: value.metadata.displayName,
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
-  supportURL: value.metadata.supportURL})
+  supportURL: value.metadata.supportURL,
+  iconURL: value.metadata.iconURL})
 CREATE (interfaceRevision:InterfaceRevision:unpublished {revision: value.revision})
 CREATE (interfaceRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (interfaceRevision)-[:SIGNED_WITH]->(signature)
@@ -219,7 +225,7 @@ CREATE (metadata:ImplementationMetadata:unpublished {
   description: value.metadata.description,
   documentationURL: value.metadata.documentationURL,
   supportURL: value.metadata.supportURL,
-  iconURL: value.metadata.supportURL})
+  iconURL: value.metadata.iconURL})
 CREATE (implementationRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (metadata)-[:LICENSED_WITH]->(license)
 
@@ -422,34 +428,38 @@ call apoc.periodic.iterate("MATCH (n:to_remove) return n", "DETACH DELETE n", {b
 yield batches, total return batches, total
 `
 
-func Populate(ctx context.Context, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
+func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) (bool, error) {
 	currentCommit, err := currentCommit(session)
 	if err != nil {
-		return errors.Wrap(err, "while adding new manifests")
+		return false, errors.Wrap(err, "while adding new manifests")
 	}
 
-	if currentCommit == commit {
-		return nil
+	if commit != "" {
+		if currentCommit == commit {
+			log.Info("git commit did not change. Finishing")
+			return false, nil
+		}
+		log.Info("git commit changed", zap.String("current hash", currentCommit), zap.String("new hash", commit))
 	}
 
-	err = populate(ctx, session, paths, rootDir, publishPath, commit)
+	err = populate(ctx, log, session, paths, rootDir, publishPath, commit)
 	if err != nil {
-		return errors.Wrap(err, "while adding new manifests")
+		return false, errors.Wrap(err, "while adding new manifests")
 	}
 
 	err = swap(session)
 	if err != nil {
-		return errors.Wrap(err, "while swapping manifests")
+		return false, errors.Wrap(err, "while swapping manifests")
 	}
 
 	err = cleanOld(session)
 	if err != nil {
-		return errors.Wrap(err, "while cleaning old manifests")
+		return true, errors.Wrap(err, "while cleaning old manifests")
 	}
-	return nil
+	return true, nil
 }
 
-func populate(ctx context.Context, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
+func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
 	var queries = map[string]string{
 		"RepoMetadata":   repoMetadataQuery,
 		"Attribute":      attributeQuery,
@@ -476,6 +486,8 @@ func populate(ctx context.Context, session neo4j.Session, paths []string, rootDi
 					// returning error to not commit transaction
 					return nil, errors.New("canceled")
 				default:
+					log.Info("Processing manifest", zap.String("manifest", manifestPath), zap.String("path", path))
+					log.Debug("Executing query", zap.String("query", q))
 					result, err := transaction.Run(q, nil)
 					if err != nil {
 						return nil, errors.Wrapf(err, "when adding manifest %s", manifestPath)
@@ -487,7 +499,8 @@ func populate(ctx context.Context, session neo4j.Session, paths []string, rootDi
 				}
 			}
 		}
-		q := fmt.Sprintf("CREATE (n:ContentMetadata:unpublished { commit: '%s' }) RETURN *", commit)
+		contentMetadata := "CREATE (n:ContentMetadata:unpublished { commit: '%s', timestamp: '%s'}) RETURN *"
+		q := fmt.Sprintf(contentMetadata, commit, time.Now())
 		result, err := transaction.Run(q, nil)
 		if err != nil {
 			return nil, errors.Wrapf(err, "when running query %s", q)

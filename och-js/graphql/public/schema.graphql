@@ -7,6 +7,7 @@ directive @relation(
   from: String
   to: String
 ) on FIELD_DEFINITION | OBJECT
+directive @additionalLabels(labels: [String]) on OBJECT
 directive @cypher(statement: String) on FIELD_DEFINITION
 
 """
@@ -105,7 +106,7 @@ input TypeFilter {
   prefixPattern: NodePathPattern
 }
 
-type RepoMetadata {
+type RepoMetadata @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -166,7 +167,7 @@ type RepoOCFVersion {
   default: Version!
 }
 
-type InterfaceGroup {
+type InterfaceGroup @additionalLabels(labels: ["published"]){
   path: NodePath!
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
@@ -174,7 +175,7 @@ type InterfaceGroup {
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type Interface {
+type Interface @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -212,7 +213,7 @@ type InterfaceRevision {
       CALL {
         WITH excluded
         UNWIND excluded AS f
-        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
         RETURN collect(ex) as excludedAttributes
       }
 
@@ -220,20 +221,20 @@ type InterfaceRevision {
       CALL {
         WITH included
         UNWIND included AS f
-        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
         RETURN collect(ex) as includedAttributes
       }
 
       // Get all ImplementationRequirementItem nodes, which are considered by the filter.
       CALL {
         UNWIND $filter.requirementsSatisfiedBy AS instance
-        MATCH (items:ImplementationRequirementItem)-[:REFERENCES_TYPE]->(:TypeReference {path: instance.typeRef.path, revision: instance.typeRef.revision})
+        MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference {path: instance.typeRef.path, revision: instance.typeRef.revision})
         RETURN collect(items) as matchedItems
       }
 
       // Flatten and group requirements for ImplementationRevision.
       MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision)-[:SPECIFIED_BY]->(spec:ImplementationSpec)
-      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement)
+      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)
 
       CALL {
       	WITH requirement
@@ -334,7 +335,7 @@ type OutputTypeInstance implements TypeInstanceFields {
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type Type {
+type Type @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -363,7 +364,7 @@ type TypeSpec {
   jsonSchema: Any
 }
 
-type Implementation {
+type Implementation @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -483,7 +484,7 @@ type ImplementationAction {
   args: Any
 }
 
-type Attribute {
+type Attribute @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -589,7 +590,7 @@ type Query {
   interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
     @cypher(
       statement: """
-      MATCH (this:InterfaceGroup)
+      MATCH (this:InterfaceGroup:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -598,7 +599,7 @@ type Query {
   interfaces(filter: InterfaceFilter = {}): [Interface!]!
     @cypher(
       statement: """
-      MATCH (this:Interface)
+      MATCH (this:Interface:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -607,7 +608,7 @@ type Query {
   types(filter: TypeFilter = {}): [Type!]!
     @cypher(
       statement: """
-      MATCH (this:Type)
+      MATCH (this:Type:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -616,7 +617,7 @@ type Query {
   implementations(filter: ImplementationFilter = {}): [Implementation!]!
     @cypher(
       statement: """
-      MATCH (this:Implementation)
+      MATCH (this:Implementation:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -626,7 +627,7 @@ type Query {
   attributes(filter: AttributeFilter = {}): [Attribute!]!
     @cypher(
       statement: """
-      MATCH (this:Attribute)
+      MATCH (this:Attribute:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )

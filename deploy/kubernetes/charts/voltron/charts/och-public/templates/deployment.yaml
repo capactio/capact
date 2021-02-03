@@ -28,11 +28,12 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
+      {{- if .Values.populator.enabled }}
         - name: "{{ .Chart.Name }}-populator"
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.populatorName }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.populator.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.populator.image.pullPolicy }}
           env:
             - name: APP_NEO4J_ADDR
               value: "{{ .Values.global.database.endpoint }}"
@@ -43,18 +44,21 @@ spec:
             - name: APP_JSON_PUBLISH_ADDR
               value: {{ printf "http://%s.%s" (include "och.fullname" .) .Release.Namespace }}
             - name: APP_JSON_PUBLISH_PORT
-              value: "{{ .Values.service.populatorPort }}"
+              value: "{{ .Values.populator.port }}"
             - name: MANIFESTS_PATH
-              value: "git@github.com:Project-Voltron/go-voltron.git?sshkey={{ .Values.deployKey }}"
+              value: "{{ .Values.populator.manifestsPath}}"
+            - name: APP_REFRESH_WHEN_HASH_CHANGES
+              value: "{{ .Values.populator.refreshWhenHashChanges}}"
 
           command: ["/bin/sh", "-c"]
-          args: {{ .Values.populatorArgs }}
+          args: {{ .Values.populator.args }}
           ports:
             - name: populator-port
-              containerPort: {{ .Values.service.populatorPort }}
+              containerPort: {{ .Values.populator.port }}
               protocol: TCP
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+     {{- end }}
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}

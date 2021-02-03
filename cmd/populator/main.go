@@ -9,9 +9,11 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
+	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/vrischmann/envconfig"
+	"go.uber.org/zap"
 	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 )
 
@@ -44,6 +46,14 @@ type Config struct {
 	// ManifestsPath is a path to a directory in a repository where
 	// manifests are stored
 	ManifestsPath string `envconfig:"default=och-content"`
+
+	// RefreshWhenHashChanges makes populator to populate a new data
+	// only when a git commit chaned in source repository
+	RefreshWhenHashChanges bool `envconfig:"default=false"`
+
+	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
+	// and logging information, etc).
+	LoggerDevMode bool `envconfig:"default=false"`
 }
 
 func main() {
@@ -69,6 +79,17 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
+	// setup logger
+	var logCfg zap.Config
+	if cfg.LoggerDevMode {
+		logCfg = zap.NewDevelopmentConfig()
+	} else {
+		logCfg = zap.NewProductionConfig()
+	}
+
+	logger, err := logCfg.Build()
+	exitOnError(err, "while creating zap logger")
+
 	parent, err := ioutil.TempDir("/tmp", "*-och-parent")
 	exitOnError(err, "while creating temporary directory")
 	dstDir := path.Join(parent, "och")
@@ -90,11 +111,23 @@ func main() {
 	session := driver.NewSession(neo4j.SessionConfig{})
 	defer session.Close()
 
-	gitHash, err := getGitHash(rootDir)
-	exitOnError(err, "while getting `git rev-parse HEAD`")
+	gitHash := []byte{}
+	if cfg.RefreshWhenHashChanges {
+		logger.Info("REFRESH_WHEN_HASH_CHANGES set. Updating manifests only if git commit changed.")
+		gitHash, err = getGitHash(rootDir)
+		exitOnError(err, "while getting `git rev-parse HEAD`")
+	} else {
+		logger.Info("REFRESH_WHEN_HASH_CHANGES not set. Ignoring git commit, always updating manifests.")
+	}
 
-	err = dbpopulator.Populate(ctx, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), string(gitHash))
+	start := time.Now()
+	populated, err := dbpopulator.Populate(
+		ctx, logger, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), string(gitHash))
 	exitOnError(err, "while populating manifests")
+	if populated {
+		end := time.Now()
+		logger.Info("Populated new data", zap.Duration("duration", end.Sub(start)))
+	}
 }
 
 func exitOnError(err error, context string) {
@@ -103,6 +136,8 @@ func exitOnError(err error, context string) {
 	}
 }
 
+// git is used directly because it's already required by go-getter
+// When go-getter starts using go-git we can also move to using a library instead of binary
 func getGitHash(rootDir string) ([]byte, error) {
 	cmd := exec.Command("git", "rev-parse", "HEAD")
 	cmd.Dir = rootDir
