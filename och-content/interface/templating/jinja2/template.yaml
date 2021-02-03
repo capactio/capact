@@ -16,6 +16,7 @@ metadata:
 
 spec:
   input:
+    # TODO this Interface consumes two parameters: input-parameters and template. How to describe it?
     parameters:
       jsonSchema:
         value: |-
