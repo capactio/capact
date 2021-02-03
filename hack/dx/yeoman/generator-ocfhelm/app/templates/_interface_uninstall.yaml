@@ -1,0 +1,29 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.<%=categoryName%>.<%=baseName%>
+  name: uninstall
+  displayName: "Uninstall"
+  description: "Uninstall action for <%=capBaseName%>"
+  documentationURL: <%=documentationURL%>
+  supportURL: <%=supportURL%>
+  iconURL: <%=iconURL%>
+  maintainers:
+    - email: "<%=maintainerEmail%>"
+      name: "<%=maintainerName%>"
+      url: "<%=maintainerURL%>"
+
+spec:
+  input:
+    typeInstances:
+      confluence-config:
+        typeRef:
+          path: cap.type.<%=categoryName%>.<%=baseName%>.config
+          revision: 0.1.0
+        verbs: ["delete"]
+
+  output: {}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

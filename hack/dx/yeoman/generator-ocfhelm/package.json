@@ -1,0 +1,14 @@
+{
+  "name": "generator-ocfhelm",
+  "version": "0.1.0",
+  "description": "Generator for OCF Helm Content",
+  "main": "app/index.js",
+  "keywords": [
+    "yeoman-generator",
+    "ocf"
+  ],
+  "dependencies": {
+    "mkdirp": "^1.0.4",
+    "yeoman-generator": "^4.12.0"
+  }
+}

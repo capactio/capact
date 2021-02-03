@@ -1,0 +1,153 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.<%=vendorName%>.<%=baseName%>
+  name: install
+  displayName: Install <%=capBaseName%>
+  description: Action which installs <%=capBaseName%> via Helm chart
+  documentationURL: <%=documentationURL%>
+  supportURL: <%=supportHelmURL%>
+  license:
+    name: "AGPL"
+  maintainers:
+    - email: <%=maintainerEmail%>
+      name: <%=maintainerName%>
+      url: <%=maintainerURL%>
+
+spec:
+  appVersion: "7.x.x"
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  additionalOutput:
+    typeInstances:
+      confluence-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+    typeInstanceRelations:
+      confluence-config:
+        uses:
+          - <%=baseName%>-helm-release
+          - postgresql
+
+  implements:
+    - path: cap.interface.<%=categoryName%>.<%=baseName%>.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      appVersion: 3.x.x
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: <%=baseName%>-install
+        templates:
+          - name: <%=baseName%>-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
+              - - name: install-db
+                  voltron-when: postgresql == nil # conditional execution
+                  arguments:
+                    # TODO: password should be generated or populated by user
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: <%=baseName%>
+                              password: okon
+                            defaultDBName: <%=baseName%>
+                  voltron-action: postgresql.install
+
+              - - name: create-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          # TODO: context should be removed
+                          # TODO: `args.output` should be simplified.
+                          data: |
+                            context:
+                              name: "<%=baseName%>-helm-release"
+                              dryRun: false
+                              timeout: "10m"
+                              platform:
+                                namespace: "default"
+                            args:
+                              command: "install"
+                              generateName: true
+                              chart:
+                                name: "<%=helmChartName%>"
+                                repo: "<%=helmRepoURL%>"
+                              output:{% raw %}
+                                goTemplate:
+                                  version: "{{ .Values.image.tag }}"
+                                  host: '{{ template "<%=helmChartName%>.fullname" . }}'{% endraw %}
+                              values:
+                                postgresql:
+                                  enabled: false
+                                databaseConnection:
+                                  host: "{{ host }}"
+                                  user: "{{ superuser.username }}"
+                                  password: "{{ superuser.password }}"
+                                  database: "{{ defaultDBName }}"
+                                ingress:
+                                  enabled: true
+                                  hosts:
+                                  - host: <%=baseName%>.voltron.local
+                                    paths: ['/']
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
+
+              - - name: helm-run
+                  voltron-action: helm.run
+                  voltron-outputTypeInstances:
+                    - name: <%=baseName%>-config
+                      from: additional
+                    - name: <%=baseName%>-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
