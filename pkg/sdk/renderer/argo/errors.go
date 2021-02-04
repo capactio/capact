@@ -1,29 +1,17 @@
 package argo
 
 import (
-	"fmt"
+	"github.com/pkg/errors"
 )
 
-type MaxDepthError struct {
-	limit int
+func NewActionReferencePatternError(actionRef string) error {
+	return errors.Errorf("Action reference %q doesn't follow pattern <import_alias>.<method_name>", actionRef)
 }
 
-func NewMaxDepthError(limit int) *MaxDepthError {
-	return &MaxDepthError{limit: limit}
+func NewMaxDepthError(limit int) error {
+	return errors.Errorf("Exceeded maximum render depth level [max depth %d]", limit)
 }
 
-func (e *MaxDepthError) Error() string {
-	return fmt.Sprintf("Exceeded maximum render depth level [max depth %d]", e.limit)
-}
-
-type ActionImportsError struct {
-	actionRef string
-}
-
-func NewActionImportsError(actionRef string) *ActionImportsError {
-	return &ActionImportsError{actionRef: actionRef}
-}
-
-func (e *ActionImportsError) Error() string {
-	return fmt.Sprintf("Full path not found in Implementation imports for action %q", e.actionRef)
+func NewActionImportsError(actionRef string) error {
+	return errors.Errorf("Full path not found in Implementation imports for action %q", actionRef)
 }

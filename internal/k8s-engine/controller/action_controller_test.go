@@ -5,15 +5,15 @@ package controller
 import (
 	"context"
 	"errors"
-	corev1 "k8s.io/api/core/v1"
-	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
@@ -41,17 +41,7 @@ var _ = Describe("Action Controller", func() {
 				Namespace: "default",
 			}
 
-			created := &corev1alpha1.Action{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      key.Name,
-					Namespace: key.Namespace,
-				},
-				Spec: corev1alpha1.ActionSpec{
-					ActionRef: corev1alpha1.ManifestReference{
-						Path: "bar",
-					},
-				},
-			}
+			created := fixActionCR(key, nil)
 
 			// Simulate that Action CR is created
 			Expect(k8sClient.Create(context.Background(), created)).Should(Succeed())
@@ -89,22 +79,7 @@ var _ = Describe("Action Controller", func() {
 				},
 			}
 
-			action := &corev1alpha1.Action{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      key.Name,
-					Namespace: key.Namespace,
-				},
-				Spec: corev1alpha1.ActionSpec{
-					ActionRef: corev1alpha1.ManifestReference{
-						Path: "bar",
-					},
-					Input: &corev1alpha1.ActionInput{
-						Parameters: &corev1alpha1.InputParameters{
-							SecretRef: corev1.LocalObjectReference{Name: secret.Name},
-						},
-					},
-				},
-			}
+			action := fixActionCR(key, secret)
 
 			// Simulate that Secret with user input is created
 			Expect(k8sClient.Create(context.Background(), secret)).Should(Succeed())
@@ -129,3 +104,27 @@ var _ = Describe("Action Controller", func() {
 		})
 	})
 })
+
+func fixActionCR(key types.NamespacedName, secret *corev1.Secret) *corev1alpha1.Action {
+	action := &corev1alpha1.Action{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      key.Name,
+			Namespace: key.Namespace,
+		},
+		Spec: corev1alpha1.ActionSpec{
+			ActionRef: corev1alpha1.ManifestReference{
+				Path: "cap.interface.anything",
+			},
+		},
+	}
+
+	if secret != nil {
+		action.Spec.Input = &corev1alpha1.ActionInput{
+			Parameters: &corev1alpha1.InputParameters{
+				SecretRef: corev1.LocalObjectReference{Name: secret.Name},
+			},
+		}
+	}
+
+	return action
+}

@@ -273,10 +273,10 @@ func (r *Renderer) resolveRunnerInterface(imports []*ochpublicgraphql.Implementa
 	return fullRef.Path, nil
 }
 
-func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) (*ochpublicgraphql.InterfaceReference, error) {
-	action := strings.SplitN(voltronAction, ".", 2)
+func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, actionRef string) (*ochpublicgraphql.InterfaceReference, error) {
+	action := strings.SplitN(actionRef, ".", 2)
 	if len(action) != 2 {
-		return nil, errors.Errorf("Provided action reference doesn't follow pattern <import_alias>.<method_name>")
+		return nil, NewActionReferencePatternError(actionRef)
 	}
 
 	alias, name := action[0], action[1]
@@ -295,7 +295,7 @@ func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.Implem
 
 	ref := selectFirstMatchedImport()
 	if ref == nil {
-		return nil, NewActionImportsError(voltronAction)
+		return nil, NewActionImportsError(actionRef)
 	}
 
 	return ref, nil
