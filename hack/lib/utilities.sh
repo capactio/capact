@@ -301,7 +301,7 @@ voltron::install_upgrade::charts() {
         --set och-local.image.name="${OCH_IMAGE}" \
         --set och-public.image.name="${OCH_IMAGE}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
-        "${VOLTRON_SET_FLAGS}" \
+        ${VOLTRON_SET_FLAGS} \
         -f "${VOLTRON_OVERRIDES}" \
         --wait
 }

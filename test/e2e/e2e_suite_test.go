@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/vrischmann/envconfig"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
+	"projectvoltron.dev/voltron/pkg/och/client"
 )
 
 type GatewayConfig struct {
@@ -37,6 +39,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	waitTillServiceEndpointsAreReady()
+	waitTillDataIsPopulated()
 })
 
 func TestE2E(t *testing.T) {
@@ -63,4 +66,26 @@ func waitTillServiceEndpointsAreReady() {
 			return err
 		}, cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
 	}
+}
+
+func waitTillDataIsPopulated() {
+	cli := getGraphQLClient()
+
+	Eventually(func() (int, error) {
+		interfaces, err := cli.ListInterfacesMetadata(context.Background())
+		if err != nil {
+			return 0, err
+		}
+
+		return len(interfaces), nil
+	}, cfg.PollingTimeout, cfg.PollingTimeout).Should(HaveLen(2))
+}
+
+func getGraphQLClient() *client.Client {
+	httpClient := httputil.NewClient(
+		30*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	return client.NewClient(cfg.Gateway.Endpoint, httpClient)
 }
