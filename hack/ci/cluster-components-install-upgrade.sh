@@ -20,8 +20,6 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
-    export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
-    export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     voltron::install_upgrade::charts
 }
 
