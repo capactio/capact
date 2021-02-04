@@ -20,7 +20,7 @@ import (
 const userInputName = "input-parameters"
 
 type OCHClient interface {
-	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error)
+	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error)
 	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
 }
 
@@ -51,23 +51,30 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 		return nil, err
 	}
 
-	// 2. Extract workflow from the root Implementation
+	// 2. Ensure that the runner was defined in imports section
+	// TODO: we should check whether imported revision is valid for this render algorithm
+	runnerInterface, err := r.resolveRunnerInterface(implementation.Spec.Imports, implementation.Spec.Action.RunnerInterface)
+	if err != nil {
+		return nil, errors.Wrap(err, "while resolving runner interface")
+	}
+
+	// 3. Extract workflow from the root Implementation
 	rootWorkflow, _, err := r.unmarshalWorkflowFromImplementation("", implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
-	// 3. Add user input if provided
+	// 4. Add user input if provided
 	if err := r.addPlainTextUserInput(rootWorkflow, renderOpt.plainTextUserInput); err != nil {
 		return nil, err
 	}
 
-	// 4. Add steps to populate rootWorkflow with input TypeInstances
+	// 5. Add steps to populate rootWorkflow with input TypeInstances
 	if err := r.typeInstanceHandler.AddInputTypeInstance(rootWorkflow, renderOpt.inputTypeInstances); err != nil {
 		return nil, err
 	}
 
-	// 5. Render rootWorkflow templates
+	// 6. Render rootWorkflow templates
 	rootWorkflow.Templates, err = r.renderTemplateSteps(ctx, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances)
 	if err != nil {
 		return nil, err
@@ -77,8 +84,6 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	if err != nil {
 		return nil, err
 	}
-
-	runnerInterface := r.resolveRunnerInterface(implementation.Spec.Imports, implementation.Spec.Action.RunnerInterface)
 
 	return &types.Action{
 		Args:            out,
@@ -117,13 +122,13 @@ func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, 
 				// 2. Import and resolve Implementation for `volton-action`
 				if step.VoltronAction != nil {
 					// 2.1 Expand `voltron-action` alias based on imports section
-					actionRef := r.resolveActionPathFromImports(importsCollection, *step.VoltronAction)
-					if actionRef == nil {
-						return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
+					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.VoltronAction)
+					if err != nil {
+						return nil, err
 					}
 
 					// 2.2 Get `voltron-action` specific implementation
-					// TODO(policies): take into account polcies
+					// TODO(policies): take into account policies
 					implementation, err := r.ochCli.GetImplementationForInterface(context.TODO(), *actionRef)
 					if err != nil {
 						return nil, errors.Wrapf(err, "while processing step: %s", step.Name)
@@ -156,11 +161,12 @@ func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, 
 					art := &step.Arguments.Artifacts[artIdx]
 
 					match := workflowArtifactRefRegex.FindStringSubmatch(art.From)
-					if len(match) > 0 {
-						oldArtifactName := match[1]
-						if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
-							art.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
-						}
+					if len(match) != 2 {
+						continue
+					}
+					oldArtifactName := match[1]
+					if newArtifactName, ok := artifactMappings[oldArtifactName]; ok {
+						art.From = fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", newArtifactName)
 					}
 				}
 				newParallelSteps = append(newParallelSteps, step)
@@ -176,20 +182,19 @@ func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, 
 }
 
 func (r *Renderer) isStepSatisfiedByInputTypeInstances(step *WorkflowStep, typeInstances []types.InputTypeInstanceRef) (bool, error) {
-	if step.VoltronWhen != nil {
-		result, err := r.evaluateWhenExpression(typeInstances, *step.VoltronWhen)
-		if err != nil {
-			return false, errors.Wrap(err, "while evaluating OCFWhen")
-		}
-
-		if result == false { // continue as already satisfied and now need to resolve it
-			return true, nil
-		}
-
-		// zero value to mark as handled
-		step.VoltronWhen = nil
+	if step.VoltronWhen == nil {
+		return false, nil
 	}
-	return false, nil
+
+	notSatisfied, err := r.evaluateWhenExpression(typeInstances, *step.VoltronWhen)
+	if err != nil {
+		return false, errors.Wrap(err, "while evaluating OCFWhen")
+	}
+
+	// zero value to mark as handled
+	step.VoltronWhen = nil
+
+	return notSatisfied == false, nil
 }
 
 // TODO(mszostok): Copied from POC algorithm, replace lib for expression
@@ -237,32 +242,49 @@ func (r *Renderer) addPlainTextUserInput(rootWorkflow *Workflow, input map[strin
 	return nil
 }
 
-func (*Renderer) refToOCHRef(in types.InterfaceRef) ochpublicgraphql.TypeReference {
-	return ochpublicgraphql.TypeReference{
+func (*Renderer) refToOCHRef(in types.InterfaceRef) ochpublicgraphql.InterfaceReference {
+	return ochpublicgraphql.InterfaceReference{
 		Path:     in.Path,
 		Revision: stringOrEmpty(in.Revision),
 	}
 }
 
 // TODO: take into account the runner revision. Respect that also in k8s engine when scheduling runner job
-func (r *Renderer) resolveRunnerInterface(imports []*ochpublicgraphql.ImplementationImport, rInterface string) string {
-	fullRef := r.resolveActionPathFromImports(imports, rInterface)
+func (r *Renderer) resolveRunnerInterface(imports []*ochpublicgraphql.ImplementationImport, rInterface string) (string, error) {
+	fullRef, err := r.resolveActionPathFromImports(imports, rInterface)
+	if err != nil {
+		return "", err
+	}
 
-	return fullRef.Path
+	return fullRef.Path, nil
 }
 
-func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) *ochpublicgraphql.TypeReference {
+func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) (*ochpublicgraphql.InterfaceReference, error) {
 	action := strings.SplitN(voltronAction, ".", 2)
+	if len(action) != 2 {
+		return nil, errors.Errorf("Provided action reference doesn't follow pattern <import_alias>.<method_name>")
+	}
+
 	alias, name := action[0], action[1]
-	for _, i := range imports {
-		if *i.Alias == alias {
-			return &ochpublicgraphql.TypeReference{
+	selectFirstMatchedImport := func() *ochpublicgraphql.InterfaceReference {
+		for _, i := range imports {
+			if i.Alias == nil || *i.Alias != alias {
+				continue
+			}
+			return &ochpublicgraphql.InterfaceReference{
 				Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
 				Revision: stringOrEmpty(i.AppVersion),
 			}
 		}
+		return nil
 	}
-	return nil
+
+	ref := selectFirstMatchedImport()
+	if ref == nil {
+		return nil, errors.Errorf("could not find full path in Implementation imports for action %q", voltronAction)
+	}
+
+	return ref, nil
 }
 
 func stringOrEmpty(in *string) string {

@@ -7,8 +7,8 @@ import (
 	"projectvoltron.dev/voltron/pkg/och/client/fake"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 
+	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 	"gotest.tools/golden"
 )
 

@@ -219,7 +219,6 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 }
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
-// TODO: This is a dummy implementation just for demo purpose.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
 	ref := types.InterfaceRef{
 		Path:     string(action.Spec.ActionRef.Path),

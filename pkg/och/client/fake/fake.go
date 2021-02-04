@@ -36,7 +36,7 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 	return store, nil
 }
 
-func (s *FileSystemClient) GetImplementationForInterface(_ context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
+func (s *FileSystemClient) GetImplementationForInterface(_ context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error) {
 	for _, impl := range s.OCHImplementations {
 		for _, implements := range impl.Spec.Implements {
 			if implements.Path == ref.Path {

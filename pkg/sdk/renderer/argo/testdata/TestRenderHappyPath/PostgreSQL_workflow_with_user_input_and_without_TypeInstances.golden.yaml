@@ -165,4 +165,4 @@ args:
         - globalName: psql-helm-release
           name: psql-helm-release
           path: /typeinstance
-runnerinterface: cap.interface.runner.argo.run
+runnerInterface: cap.interface.runner.argo.run

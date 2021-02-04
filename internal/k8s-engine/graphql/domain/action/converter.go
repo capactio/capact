@@ -12,7 +12,7 @@ import (
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
-const ParametersSecretDataKey = "parameters"
+const ParametersSecretDataKey = "parameters.json"
 const LatestRevision = "latest"
 const secretKind = "Secret"
 

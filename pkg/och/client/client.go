@@ -51,7 +51,7 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql
 }
 
 // TODO(SV-206): handle that properly and take into account the ref.Revision - default to latest if not present.
-func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.TypeReference) (*ochpublicgraphql.ImplementationRevision, error) {
+func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
