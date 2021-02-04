@@ -8,7 +8,7 @@ metadata:
   description: "Confluence is a document collaboration tool"
   documentationURL: https://support.atlassian.com/bitbucket-cloud/
   supportURL: https://support.atlassian.com/bitbucket-cloud/
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png # TODO change this
+  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team

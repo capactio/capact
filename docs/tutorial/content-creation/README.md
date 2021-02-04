@@ -363,7 +363,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}" # TODO can I use {{steps...}} instead?
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
                       - name: database-input
                         raw:
                           data: |
@@ -470,6 +470,13 @@ TODO: where to find documentation on specific runners, i.e. input parameters for
 The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
 
 ## Populate the manifests into OCH
+
+After we have the manifests ready, we can start our local Voltron environment. In the root of the cloned `go-voltron` repository run:
+```
+make dev-cluster
+```
+
+This can take a few minutes.
 
 TODO: add instructions to replace the argo-workflow-controller with our prebuild image and setup cluster policies
 
