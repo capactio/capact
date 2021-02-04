@@ -44,9 +44,14 @@ build-app-image-och-js:
 	cd och-js && $(MAKE) build-app-image
 .PHONY: build-app-image-och-js
 
+build-app-image-populator:
+	$(eval APP := populator)
+	docker build --build-arg COMPONENT=$(APP) --target generic-alpine -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-populator
+
 build-app-image-%:
 	$(eval APP := $*)
-	docker build --build-arg COMPONENT=$(APP) -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+	docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-%
 
 push-app-image-%:

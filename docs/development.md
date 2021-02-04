@@ -128,6 +128,7 @@ You can export the following environment variables to configure the script:
 - To disable setting self-signed TLS certificate for `*.voltron.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
 - To enable mocked version of GraphQL Local OCH API and Public OCH API use `MOCK_OCH_GRAPHQL=true`.
 - To enable mocked version of GraphQL Engine OCH API `MOCK_ENGINE_GRAPHQL=true`.
+- To disable Database Populator, use `ENABLE_POPULATOR=false`
 
 ### Access Gateway GraphQL Playground
 

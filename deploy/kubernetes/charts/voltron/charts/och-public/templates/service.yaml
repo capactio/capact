@@ -11,5 +11,9 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    - port: {{ .Values.populator.port}}
+      targetPort: populator-port
+      protocol: TCP
+      name: populator
   selector:
     {{- include "och.selectorLabels" . | nindent 4 }}

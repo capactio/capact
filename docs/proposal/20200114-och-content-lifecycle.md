@@ -88,8 +88,7 @@ The following section describes the DB Populator algorithm for populating the OC
 
 1. Populate initial content into database
     - Generate random Node IDs
-    - Set `published` label for every node, which has dedicated GraphQL query (Type, Attribute, InterfaceGroup,
-      Interface, Implementation, RepoMetadata), e.g.:
+    - Set `published` label for every node, e.g.:
 
       ```
       MATCH (n:InterfaceGroup)
@@ -112,8 +111,6 @@ The following section describes the DB Populator algorithm for populating the OC
       Return count(n)
       ```
 
-      > **NOTE:** Theoretically, we could match all nodes and set them a label, but query for all nodes without label are advised against [1](https://community.neo4j.com/t/efficiently-filter-nodes-which-have-multiple-relationships/4853/3) [2](https://stackoverflow.com/questions/20003769/neo4j-match-multiple-labels-2-or-more) because they are expensive.
-
     - Create node with populated content details:
 
        ```
@@ -129,8 +126,7 @@ The following section describes the DB Populator algorithm for populating the OC
 1. Populate full new content into database.
 
     - Generate random Node IDs
-    - Set `unpublished` label for every node, which has dedicated GraphQL query (Type, Attribute, InterfaceGroup,
-      Interface, Implementation, RepoMetadata)
+    - Set `unpublished` label for every node
     - Create node with populated content details:
 
        ```
@@ -159,12 +155,11 @@ The following section describes the DB Populator algorithm for populating the OC
 
     - Get nodes with "unpublished" label, add them label "published" and remove label "unpublished"
 
-1. Remove nodes with label `to_remove` recursively with all related nodes
+1. Remove nodes with label `to_remove` using `apoc.periodic.iterate`
 
     ```
-    MATCH (n:to_remove)-[r*]-(e)
-    FOREACH (rel IN r| DELETE rel)
-    DELETE e
+    call apoc.periodic.iterate("MATCH (n:to_remove) return n", "DETACH DELETE n", {batchSize:1000})
+    yield batches, total return batches, total
     ```
 
 #### Summary
@@ -174,8 +169,8 @@ The following section describes the DB Populator algorithm for populating the OC
   > **NOTE**: Any GraphQL mutation related to these types will also include the label. This shouldn't be a problem as the generated GraphQL mutations will be disabled.
 
 - If there are any custom Cypher query for GraphQL queries, it needs to be adjusted as well.
-- It is not optimal solution regarding performance, as we need to update many nodes in one transaction (add and delete
-  labels).
+- It could be not the most performant solution, as we need to update all nodes in one transaction (add and delete
+  labels). However, this operation is very fast (<100ms), especially when comparing to recursive graph query (~30s).
 - All `neo4j-graphql-js` features are still supported after these adjustments.
 - This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
 - In the future, we may expose `ContentMetadata` node details as a part of `repoMetadata` GraphQL query.

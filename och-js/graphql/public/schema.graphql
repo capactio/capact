@@ -7,6 +7,7 @@ directive @relation(
   from: String
   to: String
 ) on FIELD_DEFINITION | OBJECT
+directive @additionalLabels(labels: [String]) on OBJECT
 directive @cypher(statement: String) on FIELD_DEFINITION
 
 """
@@ -105,24 +106,24 @@ input TypeFilter {
   prefixPattern: NodePathPattern
 }
 
-type RepoMetadata {
+type RepoMetadata @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
 
   latestRevision: RepoMetadataRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision) RETURN r ORDER BY r.revision DESC LIMIT 1"
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 1"
     )
   revision(revision: Version!): RepoMetadataRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision {revision: $revision}) RETURN r"
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published {revision: $revision}) RETURN r"
     )
   revisions: [RepoMetadataRevision!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type RepoMetadataRevision {
+type RepoMetadataRevision @additionalLabels(labels: ["published"]){
   revision: Version!
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -130,29 +131,29 @@ type RepoMetadataRevision {
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
-type RepoMetadataSpec {
+type RepoMetadataSpec @additionalLabels(labels: ["published"]){
   ochVersion: Version!
   ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
   implementation: RepoImplementationConfig!
     @relation(name: "CONFIGURED", direction: "OUT")
 }
 
-type RepoImplementationConfig {
+type RepoImplementationConfig @additionalLabels(labels: ["published"]){
   appVersion: RepoImplementationAppVersionConfig!
     @relation(name: "APP_VERSION", direction: "OUT")
 }
 
-type RepoImplementationAppVersionConfig {
+type RepoImplementationAppVersionConfig @additionalLabels(labels: ["published"]){
   semVerTaggingStrategy: SemVerTaggingStrategy!
     @relation(name: "TAGGING_STRATEGY", direction: "OUT")
 }
 
-type SemVerTaggingStrategy {
+type SemVerTaggingStrategy @additionalLabels(labels: ["published"]){
   latest: LatestSemVerTaggingStrategy!
     @relation(name: "LATEST", direction: "OUT")
 }
 
-type LatestSemVerTaggingStrategy {
+type LatestSemVerTaggingStrategy @additionalLabels(labels: ["published"]){
   pointsTo: SemVerTaggingStrategyTags!
 }
 
@@ -161,12 +162,12 @@ enum SemVerTaggingStrategyTags {
   EDGE
 }
 
-type RepoOCFVersion {
+type RepoOCFVersion @additionalLabels(labels: ["published"]){
   supported: [Version!]!
   default: Version!
 }
 
-type InterfaceGroup {
+type InterfaceGroup @additionalLabels(labels: ["published"]){
   path: NodePath!
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
@@ -174,23 +175,23 @@ type InterfaceGroup {
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type Interface {
+type Interface @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
 
   latestRevision: InterfaceRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
     )
   revision(revision: Version!): InterfaceRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision {revision: $revision}) RETURN ir"
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published {revision: $revision}) RETURN ir"
     )
   revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type InterfaceRevision {
+type InterfaceRevision @additionalLabels(labels: ["published"]){
   revision: Version!
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -212,7 +213,7 @@ type InterfaceRevision {
       CALL {
         WITH excluded
         UNWIND excluded AS f
-        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
         RETURN collect(ex) as excludedAttributes
       }
 
@@ -220,44 +221,44 @@ type InterfaceRevision {
       CALL {
         WITH included
         UNWIND included AS f
-        MATCH (ex:AttributeRevision)-[:DESCRIBED_BY]->(meta:GenericMetadata {path: f.path})
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
         RETURN collect(ex) as includedAttributes
       }
 
       // Get all ImplementationRequirementItem nodes, which are considered by the filter.
       CALL {
         UNWIND $filter.requirementsSatisfiedBy AS instance
-        MATCH (items:ImplementationRequirementItem)-[:REFERENCES_TYPE]->(:TypeReference {path: instance.typeRef.path, revision: instance.typeRef.revision})
+        MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})
         RETURN collect(items) as matchedItems
       }
 
       // Flatten and group requirements for ImplementationRevision.
-      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision)-[:SPECIFIED_BY]->(spec:ImplementationSpec)
-      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement)
+      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)
+      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)
 
       CALL {
       	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem)
+        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)
         WITH collect(oneOfItem) as oneOfReq
         RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs
       }
 
       CALL {
       	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem)
+        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)
         WITH collect(anyOfItem) as anyOfReq
         RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs
       }
 
       CALL {
       	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem)
+        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)
         WITH collect(allOfItem) as allOfReq
         RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs
       }
 
-      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata)
-      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata)
+      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)
       MATCH (rev)
       WHERE
         ($filter.prefixPattern IS null OR meta.prefix =~ $filter.prefixPattern)
@@ -285,21 +286,21 @@ type InterfaceRevision {
     )
 }
 
-type InterfaceSpec {
+type InterfaceSpec @additionalLabels(labels: ["published"]){
   input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
   output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
-type InterfaceInput {
+type InterfaceInput @additionalLabels(labels: ["published"]){
   parameters: InputParameters @relation(name: "HAS", direction: "OUT")
   typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
-type InputParameters {
+type InputParameters @additionalLabels(labels: ["published"]){
   jsonSchema: Any
 }
 
-type InterfaceOutput {
+type InterfaceOutput @additionalLabels(labels: ["published"]){
   typeInstances: [OutputTypeInstance]!
     @relation(name: "OUTPUTS", direction: "OUT")
 }
@@ -309,7 +310,7 @@ interface TypeInstanceFields {
   typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstanceFields {
+type InputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   verbs: [TypeInstanceOperationVerb!]!
@@ -329,12 +330,12 @@ enum TypeInstanceOperationVerb {
   DELETE
 }
 
-type OutputTypeInstance implements TypeInstanceFields {
+type OutputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
   name: String!
   typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type Type {
+type Type @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
@@ -350,7 +351,7 @@ type Type {
   revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeRevision {
+type TypeRevision @additionalLabels(labels: ["published"]){
   revision: Version!
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -358,29 +359,29 @@ type TypeRevision {
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
-type TypeSpec {
+type TypeSpec @additionalLabels(labels: ["published"]){
   additionalRefs: [NodePath!]
   jsonSchema: Any
 }
 
-type Implementation {
+type Implementation @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
 
   latestRevision: ImplementationRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
     )
   revision(revision: Version!): ImplementationRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision {revision: $revision}) RETURN ir"
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published {revision: $revision}) RETURN ir"
     )
   revisions: [ImplementationRevision!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationRevision {
+type ImplementationRevision @additionalLabels(labels: ["published"]){
   revision: Version!
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
@@ -391,7 +392,7 @@ type ImplementationRevision {
     @relation(name: "IMPLEMENTS", direction: "OUT")
 }
 
-type ImplementationSpec {
+type ImplementationSpec @additionalLabels(labels: ["published"]){
   appVersion: VersionRange!
 
   implements: [InterfaceReference!]!
@@ -406,19 +407,19 @@ type ImplementationSpec {
     @relation(name: "OUTPUTS", direction: "OUT")
 }
 
-type ImplementationAdditionalInput {
+type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
   typeInstances: [InputTypeInstance!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationAdditionalOutput {
+type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
   typeInstances: [OutputTypeInstance!]!
     @relation(name: "CONTAINS", direction: "OUT")
   typeInstanceRelations: [TypeInstanceRelationItem!]!
     @relation(name: "RELATIONS", direction: "OUT")
 }
 
-type TypeInstanceRelationItem {
+type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
   typeInstanceName: String!
 
   """
@@ -427,12 +428,12 @@ type TypeInstanceRelationItem {
   uses: [String!]!
 }
 
-type InterfaceReference {
+type InterfaceReference @additionalLabels(labels: ["published"]){
   path: NodePath!
   revision: Version!
 }
 
-type ImplementationRequirement {
+type ImplementationRequirement @additionalLabels(labels: ["published"]){
   prefix: NodePrefix!
   oneOf: [ImplementationRequirementItem!]!
     @relation(name: "ONE_OF", direction: "OUT")
@@ -442,7 +443,7 @@ type ImplementationRequirement {
     @relation(name: "ALL_OF", direction: "OUT")
 }
 
-type ImplementationRequirementItem {
+type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
   typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
 
   """
@@ -452,12 +453,12 @@ type ImplementationRequirementItem {
   valueConstraints: Any
 }
 
-type TypeReference {
+type TypeReference @additionalLabels(labels: ["published"]){
   path: NodePath!
   revision: Version!
 }
 
-type ImplementationImport {
+type ImplementationImport @additionalLabels(labels: ["published"]){
   interfaceGroupPath: NodePath!
   alias: String
   appVersion: VersionRange
@@ -466,7 +467,7 @@ type ImplementationImport {
     @relation(name: "HAS", direction: "OUT")
 }
 
-type ImplementationImportMethod {
+type ImplementationImportMethod @additionalLabels(labels: ["published"]){
   name: NodeName!
 
   """
@@ -475,7 +476,7 @@ type ImplementationImportMethod {
   revision: Version
 }
 
-type ImplementationAction {
+type ImplementationAction @additionalLabels(labels: ["published"]){
   """
   The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
   """
@@ -483,23 +484,23 @@ type ImplementationAction {
   args: Any
 }
 
-type Attribute {
+type Attribute @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName!
   prefix: NodePrefix!
 
   latestRevision: AttributeRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision) RETURN r ORDER BY r.revision DESC LIMIT 2"
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 2"
     )
   revision(revision: Version!): AttributeRevision
     @cypher(
-      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision {revision: $revision}) RETURN r"
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published {revision: $revision}) RETURN r"
     )
   revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type AttributeRevision {
+type AttributeRevision @additionalLabels(labels: ["published"]){
   revision: Version!
 
   spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -522,7 +523,7 @@ interface MetadataBaseFields {
   iconURL: String
 }
 
-type GenericMetadata implements MetadataBaseFields {
+type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath
   name: NodeName
   prefix: NodePrefix
@@ -535,7 +536,7 @@ type GenericMetadata implements MetadataBaseFields {
   iconURL: String
 }
 
-type ImplementationMetadata implements MetadataBaseFields {
+type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName
   prefix: NodePrefix
@@ -551,7 +552,7 @@ type ImplementationMetadata implements MetadataBaseFields {
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type TypeMetadata implements MetadataBaseFields {
+type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath!
   name: NodeName
   prefix: NodePrefix
@@ -565,31 +566,31 @@ type TypeMetadata implements MetadataBaseFields {
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type License {
+type License @additionalLabels(labels: ["published"]){
   name: String!
 }
 
-type Signature {
+type Signature @additionalLabels(labels: ["published"]){
   och: String!
 }
 
-type Maintainer {
+type Maintainer @additionalLabels(labels: ["published"]){
   name: String
   email: String!
   url: String
 }
 
-type AttributeSpec {
+type AttributeSpec @additionalLabels(labels: ["published"]){
   additionalRefs: [NodePath!]!
 }
 
-type Query {
+type Query @additionalLabels(labels: ["published"]){
   repoMetadata: RepoMetadata
 
   interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
     @cypher(
       statement: """
-      MATCH (this:InterfaceGroup)
+      MATCH (this:InterfaceGroup:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -598,7 +599,7 @@ type Query {
   interfaces(filter: InterfaceFilter = {}): [Interface!]!
     @cypher(
       statement: """
-      MATCH (this:Interface)
+      MATCH (this:Interface:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -607,7 +608,7 @@ type Query {
   types(filter: TypeFilter = {}): [Type!]!
     @cypher(
       statement: """
-      MATCH (this:Type)
+      MATCH (this:Type:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -616,7 +617,7 @@ type Query {
   implementations(filter: ImplementationFilter = {}): [Implementation!]!
     @cypher(
       statement: """
-      MATCH (this:Implementation)
+      MATCH (this:Implementation:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
@@ -626,7 +627,7 @@ type Query {
   attributes(filter: AttributeFilter = {}): [Attribute!]!
     @cypher(
       statement: """
-      MATCH (this:Attribute)
+      MATCH (this:Attribute:published)
       WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
       """
     )
