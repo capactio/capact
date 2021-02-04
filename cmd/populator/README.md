@@ -21,7 +21,7 @@ converts them into JSON and uploads to database.
 
 ## Usage
 
-> **_NOTE:_**  In order to run DB populator manually, make sure the populator inside development cluster is disabled.
+> **CAUTION:**  In order to run DB populator manually, make sure the populator inside development cluster is disabled.
 > To disable it, run :`ENABLE_POPULATOR=false make dev-cluster-update`
 
 It requires one argument, which is a path to directory with `och-content` directory. Internally it uses
