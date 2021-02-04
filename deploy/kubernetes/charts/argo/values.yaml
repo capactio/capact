@@ -6,7 +6,7 @@ argo:
     # Overrides .images.tag if defined.
     tag: "rendering-poc"
     # Overrides .images.namespace if defined.
-    namespace: "gcr.io/projectvoltron/argo/"
+    namespace: "gcr.io/projectvoltron/argo"
 
   artifactRepository:
     s3:
