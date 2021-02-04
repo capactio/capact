@@ -533,7 +533,7 @@ func cleanOld(session neo4j.Session) error {
 func currentCommit(session neo4j.Session) (string, error) {
 	result, err := session.Run("MATCH (c:ContentMetadata:published) RETURN c.commit", map[string]interface{}{})
 	if err != nil {
-		return "", errors.Wrap(err, "while quering ContextMetadada")
+		return "", errors.Wrap(err, "while querying ContextMetadada")
 	}
 
 	var record *neo4j.Record
