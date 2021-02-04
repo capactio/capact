@@ -13,6 +13,7 @@ import (
 	"github.com/vrischmann/envconfig"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
+	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client"
 )
 
@@ -71,14 +72,9 @@ func waitTillServiceEndpointsAreReady() {
 func waitTillDataIsPopulated() {
 	cli := getGraphQLClient()
 
-	Eventually(func() (int, error) {
-		interfaces, err := cli.ListInterfacesMetadata(context.Background())
-		if err != nil {
-			return 0, err
-		}
-
-		return len(interfaces), nil
-	}, cfg.PollingTimeout, cfg.PollingTimeout).Should(HaveLen(2))
+	Eventually(func() ([]graphql.Interface, error) {
+		return cli.ListInterfacesMetadata(context.Background())
+	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(2))
 }
 
 func getGraphQLClient() *client.Client {
