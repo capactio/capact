@@ -169,8 +169,8 @@ The following section describes the DB Populator algorithm for populating the OC
   > **NOTE**: Any GraphQL mutation related to these types will also include the label. This shouldn't be a problem as the generated GraphQL mutations will be disabled.
 
 - If there are any custom Cypher query for GraphQL queries, it needs to be adjusted as well.
-- It is not optimal solution regarding performance, as we need to update all nodes in one transaction (add and delete
-  labels).
+- It could be not the most performant solution, as we need to update all nodes in one transaction (add and delete
+  labels). However, this operation is very fast (<100ms), especially when comparing to recursive graph query (~30s).
 - All `neo4j-graphql-js` features are still supported after these adjustments.
 - This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
 - In the future, we may expose `ContentMetadata` node details as a part of `repoMetadata` GraphQL query.
