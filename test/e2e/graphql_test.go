@@ -12,11 +12,12 @@ import (
 )
 
 var _ = Describe("GraphQL API", func() {
-	cli := getGraphQLClient()
 	ctx := context.Background()
 
 	Context("Public OCH", func() {
 		It("lists interfaces", func() {
+			cli := getGraphQLClient()
+
 			interfaces, err := cli.ListInterfacesMetadata(ctx)
 
 			Expect(err).ToNot(HaveOccurred())
@@ -26,6 +27,8 @@ var _ = Describe("GraphQL API", func() {
 
 	Context("Local OCH", func() {
 		It("creates and deletes TypeInstance", func() {
+			cli := getGraphQLClient()
+
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
 				TypeRef: &graphql.TypeReferenceInput{
 					Path:     "com.voltron.ti",
