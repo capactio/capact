@@ -79,12 +79,15 @@ func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate)
 	// update action with all fields filled from K8s API
 	item.Action = *newAction
 
-	err = s.updateAction(ctx, *newAction)
+	// first ensure that user input is deleted before the Action is updated,
+	// so when Engine takes the Action to process, secret exists with new data, or
+	// doesn't exist yet so engine will retry the reconcile process
+	err = s.deleteInputParamsSecretIfShould(ctx, oldAction)
 	if err != nil {
 		return v1alpha1.Action{}, err
 	}
 
-	err = s.deleteInputParamsSecretIfShould(ctx, oldAction)
+	err = s.updateAction(ctx, item.Action)
 	if err != nil {
 		return v1alpha1.Action{}, err
 	}
