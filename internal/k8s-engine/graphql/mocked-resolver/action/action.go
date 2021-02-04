@@ -174,7 +174,7 @@ func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDet
 			Path:     in.ActionRef.Path,
 			Revision: revision,
 		},
-		CreatedAt: graphql.Timestamp{time.Now()},
+		CreatedAt: graphql.Timestamp{Time: time.Now()},
 		Input:     &graphql.ActionInput{},
 		DryRun:    dryRun,
 
@@ -182,7 +182,7 @@ func (a *ActionResolver) CreateAction(ctx context.Context, in *graphql.ActionDet
 			CreatedBy: mockUser,
 			Phase:     graphql.ActionStatusPhaseInitial,
 			Message:   &message,
-			Timestamp: graphql.Timestamp{time.Now()},
+			Timestamp: graphql.Timestamp{Time: time.Now()},
 			Runner:    &graphql.RunnerStatus{},
 		},
 	}
@@ -216,7 +216,7 @@ func (a *ActionResolver) RunAction(ctx context.Context, name string) (*graphql.A
 	action.Run = true
 
 	action.Status.RunBy = mockUser
-	action.Status.Timestamp = graphql.Timestamp{time.Now()}
+	action.Status.Timestamp = graphql.Timestamp{Time: time.Now()}
 
 	return action, nil
 }
@@ -237,7 +237,7 @@ func (a *ActionResolver) CancelAction(ctx context.Context, id string) (*graphql.
 	action.Status.CanceledBy = mockUser
 	action.Status.Phase = graphql.ActionStatusPhaseBeingCanceled
 	action.Status.Message = &message
-	action.Status.Timestamp = graphql.Timestamp{time.Now()}
+	action.Status.Timestamp = graphql.Timestamp{Time: time.Now()}
 
 	return action, nil
 }
@@ -285,7 +285,7 @@ func (a *ActionResolver) ContinueAdvancedRendering(ctx context.Context, id strin
 
 	action.Status.Phase = graphql.ActionStatusPhaseBeingRendered
 	action.Status.Message = &message
-	action.Status.Timestamp = graphql.Timestamp{time.Now()}
+	action.Status.Timestamp = graphql.Timestamp{Time: time.Now()}
 
 	go proceedAction(action)
 
