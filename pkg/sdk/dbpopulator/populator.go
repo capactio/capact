@@ -62,7 +62,7 @@ CREATE (metadata:TypeMetadata:unpublished {
 CREATE (typeSpec:TypeSpec:unpublished {jsonSchema: value.spec.jsonSchema.value})
 CREATE (typeRevision:TypeRevision:unpublished {revision: value.revision})
 
-// VirtualType allows as to find types which define spec.additionalRefs
+// VirtualType allows us to find types which define spec.additionalRefs
 CREATE (vType:VirtualType:unpublished {path: "<PREFIX>"})
 CREATE (vType)-[:CONTAINS]->(type)
 
