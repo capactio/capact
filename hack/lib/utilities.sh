@@ -290,7 +290,8 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_SET_FLAGS=""
     fi
 
-    # shellcheck disable=SC2086  VOLTRON_SET_FLAGS cannot be quoted
+    # VOLTRON_SET_FLAGS cannot be quoted
+    # shellcheck disable=SC2086
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --install \
         --create-namespace \
