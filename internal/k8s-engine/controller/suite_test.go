@@ -21,7 +21,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -72,7 +73,7 @@ var _ = BeforeSuite(func(done Done) {
 
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(mgr.GetClient(), &implGetterFake{}, "not-needed", time.Second),
+		svc: NewActionService(mgr.GetClient(), &argoRendererFake{}, "not-needed", time.Second),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -93,17 +94,14 @@ var _ = AfterSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 })
 
-type implGetterFake struct{}
+type argoRendererFake struct{}
 
-func (c *implGetterFake) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error) {
-	return &ochgraphql.ImplementationRevision{
-		Spec: &ochgraphql.ImplementationSpec{
-			Action: &ochgraphql.ImplementationAction{
-				Args: map[string]interface{}{
-					"template": "main",
-				},
-			},
+func (c *argoRendererFake) Render(ctx context.Context, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error) {
+	return &types.Action{
+		Args: map[string]interface{}{
+			"workflow": "{}",
 		},
+		RunnerInterface: "argo.run",
 	}, nil
 }
 

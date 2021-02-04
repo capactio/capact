@@ -482,6 +482,11 @@ type ImplementationAction @additionalLabels(labels: ["published"]){
   """
   runnerInterface: String!
   args: Any
+    @cypher(
+      statement: """
+      MATCH (this) RETURN apoc.convert.fromJsonMap(this.args) as args
+      """
+    )
 }
 
 type Attribute @additionalLabels(labels: ["published"]){

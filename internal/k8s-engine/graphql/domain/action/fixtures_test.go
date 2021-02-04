@@ -401,7 +401,7 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				Name: name,
 			},
 			StringData: map[string]string{
-				"parameters": `{"param":"one"}`,
+				"parameters.json": `{"param":"one"}`,
 			},
 		},
 	}

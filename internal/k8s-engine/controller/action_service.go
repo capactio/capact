@@ -5,16 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"path/filepath"
-	"strings"
 	"time"
-
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-
-	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/runner"
 
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
@@ -22,6 +13,14 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
+	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
+	"projectvoltron.dev/voltron/internal/ptr"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/runner"
+	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -29,15 +28,20 @@ import (
 const (
 	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
 	// as built-in runner.
-	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo"
+	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo.run"
 	secretInputDataEntryName       = "input.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
+	renderingTimeout               = 10 * time.Minute
 )
 
 type OCHImplementationGetter interface {
 	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
+}
+
+type ArgoRenderer interface {
+	Render(ctx context.Context, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -45,16 +49,16 @@ type ActionService struct {
 	k8sCli             client.Client
 	runnerTimeout      time.Duration
 	builtinRunnerImage string
-	implGetter         OCHImplementationGetter
+	argoRenderer       ArgoRenderer
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, implGetter OCHImplementationGetter, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
+func NewActionService(cli client.Client, argoRenderer ArgoRenderer, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		runnerTimeout:      runnerTimeout,
 		builtinRunnerImage: builtinRunnerImage,
-		implGetter:         implGetter,
+		argoRenderer:       argoRenderer,
 	}
 }
 
@@ -170,10 +174,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			return err
 		}
 
-		if !metav1.IsControlledBy(oldSecret, action) {
-			return errors.Errorf("secret with the name %s already exists and it is not owned by Action with the same name", key.String())
-		}
-		oldSecret.Data = secret.Data
+		oldSecret.Data[secretInputDataEntryName] = marshaledInput
 		return a.k8sCli.Update(ctx, oldSecret)
 	default:
 		return err
@@ -217,45 +218,58 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
-func (a *ActionService) isGCPSecretAvailable(ctx context.Context, action *v1alpha1.Action) bool {
-	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: "gcp-credentials", Namespace: action.Namespace}
-	err := a.k8sCli.Get(ctx, key, secret)
-	return err == nil
-}
-
-// ensureLocalSuffix adds the `-local` prefix if not already added
-func (a *ActionService) ensureLocalSuffix(path string) string {
-	name := filepath.Ext(path)
-	prefix := strings.TrimSuffix(path, name)
-	if !strings.HasSuffix(name, "-local") {
-		name = name + "-local"
-	}
-	return prefix + name
-}
-
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
-// TODO: This is a dummy implementation just for demo purpose.
-func (a *ActionService) ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	path := string(action.Spec.ActionRef.Path)
-	if !a.isGCPSecretAvailable(ctx, action) {
-		path = a.ensureLocalSuffix(path)
+func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
+	ref := types.InterfaceRef{
+		Path:     string(action.Spec.ActionRef.Path),
+		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	latestRevision, err := a.implGetter.GetLatestRevisionOfImplementationForInterface(ctx, path)
+	ctx, cancel := context.WithTimeout(ctx, renderingTimeout)
+	defer cancel()
+
+	var opts []argo.RendererOption
+	data, err := a.getUserInputData(ctx, action)
 	if err != nil {
-		return nil, errors.Wrap(err, "while fetching implementation")
+		return nil, err
 	}
 
-	if latestRevision == nil || latestRevision.Spec == nil || latestRevision.Spec.Action == nil {
-		return nil, errors.New("missing action in Implementation revision")
+	if len(data) > 0 {
+		opts = append(opts, argo.WithPlainTextUserInput(data))
 	}
 
-	actionBytes, err := json.Marshal(latestRevision.Spec.Action)
+	renderedAction, err := a.argoRenderer.Render(ctx, ref, opts...)
+	if err != nil {
+		return nil, errors.Wrap(err, "while rendering Action")
+	}
+
+	actionBytes, err := json.Marshal(renderedAction)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 	return actionBytes, nil
+}
+
+// TODO: workaround as Argo do not support k8s secret as input arguments artifacts
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (map[string]interface{}, error) {
+	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
+		return nil, nil
+	}
+
+	secret := &corev1.Secret{}
+	key := client.ObjectKey{Name: action.Spec.Input.Parameters.SecretRef.Name, Namespace: action.Namespace}
+	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
+		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
+	}
+
+	parameters := secret.Data[graphqldomain.ParametersSecretDataKey]
+
+	data := map[string]interface{}{}
+	if err := json.Unmarshal(parameters, &data); err != nil {
+		return nil, errors.Wrap(err, "while unmarshaling user input")
+	}
+
+	return data, nil
 }
 
 type GetReportedRunnerStatusOutput struct {

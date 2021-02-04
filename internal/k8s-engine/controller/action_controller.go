@@ -34,7 +34,7 @@ type (
 		EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error
 	}
 	actionRenderer interface {
-		ResolveImplementationForAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error)
+		RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error)
 	}
 	actionStatusGetter interface {
 		GetReportedRunnerStatus(ctx context.Context, action *v1alpha1.Action) (*GetReportedRunnerStatusOutput, error)
@@ -90,11 +90,12 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if action.IsUninitialized() {
-		action.Status = r.successStatus(action, v1alpha1.BeingRenderedActionPhase, "Rendering runner action")
-		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
-			return reportOnError(err, "Init runner")
+		log.Info("Initializing runner action")
+		result, err := r.initAction(ctx, action)
+		if err != nil {
+			return reportOnError(err, "Init runner action")
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return result, nil
 	}
 
 	if action.IsBeingRendered() {
@@ -127,13 +128,22 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
+func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	action.Status = r.successStatus(action, v1alpha1.BeingRenderedActionPhase, "Rendering runner action")
+	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
+	}
+	// requeue to start the rendering process
+	return ctrl.Result{Requeue: true}, nil
+}
+
 // renderAction renders a given action.
 // Requeue for rendering nested levels (do not block to reconcile loop to render whole action at once).
 // If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
 //
 // TODO: add support for v1alpha1.AdvancedModeRenderingIterationActionPhase phase
 func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
-	impl, err := r.svc.ResolveImplementationForAction(ctx, action)
+	impl, err := r.svc.RenderAction(ctx, action)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while resolving Implementation for Action")
 	}

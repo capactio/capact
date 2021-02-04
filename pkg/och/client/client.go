@@ -11,6 +11,11 @@ import (
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
+// current hack to do not take into account gcp solutions
+var ignoreImplementationsWithAttributes = map[string]struct{}{
+	"cap.attribute.cloud.provider.gcp": {},
+}
+
 // Client used to communicate with the Voltron OCH GraphQL APIs
 // TODO this should be split into public and local OCH clients and composed together here
 type Client struct {
@@ -45,41 +50,146 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql
 	return resp.Interfaces, nil
 }
 
-// TODO simple implementation for demo, does return only some fields
-// TODO: add support for not found errors
-func (c *Client) GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicgraphql.ImplementationRevision, error) {
+// TODO(SV-206): handle that properly and take into account the ref.Revision - default to latest if not present.
+func (c *Client) GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error) {
 	req := graphql.NewRequest(`query($interfacePath: NodePath!) {
 		  interface(path: $interfacePath) {
 			latestRevision {
-			  implementations {
-				latestRevision {
-				  spec {
-					action {
-					  runnerInterface
-					  args
+			  implementationRevisions {
+			  	metadata {
+					prefix
+					path
+					name
+					displayName
+					description
+					maintainers {
+						name
+						email
 					}
-				  }
+					iconURL
+					documentationURL
+					supportURL
+					iconURL
+					attributes {
+					  metadata {
+						path
+					  }
+					}
+				}
+				revision
+				spec {
+					appVersion
+					implements {
+						path
+						revision
+					}
+					requires {
+						prefix
+						oneOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+						anyOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+						allOf {
+							typeRef {
+								path
+								revision
+							}
+							valueConstraints
+						}
+					}
+					imports {
+						interfaceGroupPath
+						alias
+						appVersion
+						methods {
+							name
+							revision
+						}
+					}
+					additionalInput {
+						typeInstances {
+							name
+							typeRef {
+								path
+								revision
+							}
+							verbs
+						}
+					}
+					additionalOutput {
+						typeInstances {
+							name
+							typeRef {
+								path
+								revision
+							}
+						}
+						typeInstanceRelations {
+							typeInstanceName
+							uses
+						}
+					}
+					action {
+						runnerInterface
+						args
+					}
+				}
+				signature {
+					och
 				}
 			  }
 			}
 		  }
 		}`)
 
-	req.Var("interfacePath", path)
+	req.Var("interfacePath", ref.Path)
 	var resp struct {
-		Interface ochpublicgraphql.Interface `json:"interface"`
+		Interface struct {
+			LatestRevision struct {
+				ImplementationRevisions []ochpublicgraphql.ImplementationRevision `json:"implementationRevisions"`
+			} `json:"latestRevision"`
+		} `json:"interface"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementation")
 	}
-	if resp.Interface.LatestRevision == nil {
-		return nil, errors.New("Interface.LatestRevision cannot be nil")
-	}
-	if len(resp.Interface.LatestRevision.Implementations) == 0 {
-		return nil, errors.New("Interface.LatestRevision.Implementations cannot be nil")
+
+	impls := c.filterOutIgnoredImpl(resp.Interface.LatestRevision.ImplementationRevisions)
+
+	if len(impls) == 0 {
+		return nil, errors.Errorf("No implementation found for %q", ref.Path)
 	}
 
-	return resp.Interface.LatestRevision.Implementations[0].LatestRevision, nil
+	return &impls[0], nil
+}
+
+func (c *Client) filterOutIgnoredImpl(revs []ochpublicgraphql.ImplementationRevision) []ochpublicgraphql.ImplementationRevision {
+	var out []ochpublicgraphql.ImplementationRevision
+
+revCheck:
+	for _, impl := range revs {
+		for _, atr := range impl.Metadata.Attributes {
+			if atr != nil && atr.Metadata != nil && atr.Metadata.Path != nil {
+				_, found := ignoreImplementationsWithAttributes[*atr.Metadata.Path]
+				if found {
+					continue revCheck
+				}
+			}
+		}
+		out = append(out, impl)
+	}
+
+	return out
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {

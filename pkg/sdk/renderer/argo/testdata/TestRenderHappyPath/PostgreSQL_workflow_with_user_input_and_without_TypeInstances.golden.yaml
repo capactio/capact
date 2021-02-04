@@ -1,0 +1,168 @@
+args:
+  workflow:
+    arguments:
+      artifacts:
+      - name: input-parameters
+        raw:
+          data: |
+            defaultDBName: test
+            superuser:
+              password: s3cr3t
+              username: postgres
+    entrypoint: postgres-install
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: postgres-install
+      outputs: {}
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  context:
+                    name: "helm-runner-example"
+                    dryRun: false
+                    timeout: "10m"
+                    platform:
+                      namespace: "default"
+                  args:
+                    command: "install"
+                    generateName: true
+                    chart:
+                      name: "postgresql"
+                      repo: "https://charts.bitnami.com/bitnami"
+                    values:
+                      image:
+                        pullPolicy: Always
+                      postgresqlDatabase: {{ defaultDBName }}
+                      postgresqlUsername: {{ superuser.username }}
+                      postgresqlPassword: {{ superuser.password }}
+                    output:{% raw %}
+                      goTemplate:
+                        host: '{{ template "common.names.fullname" . }}'
+                        port: '{{ template "postgresql.port" . }}'
+                        defaultDBName: '{{ template "postgresql.database" . }}'
+                        superuser:
+                          username: '{{ template "postgresql.username" . }}'
+                          password: '{{ template "postgresql.password" . }}'{% endraw %}
+          name: create-helm-args
+          template: postgres-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+          name: helm-run
+          template: postgres-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: psql-helm-release
+          name: output-psql-helm-release
+          template: output-psql-helm-release
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: postgres-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_INPUT_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-102
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /helm-args
+      metadata: {}
+      name: postgres-install-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: postgres-install-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: postgres-install-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: psql-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-psql-helm-release
+      outputs:
+        artifacts:
+        - globalName: psql-helm-release
+          name: psql-helm-release
+          path: /typeinstance
+runnerInterface: cap.interface.runner.argo.run
