@@ -47,8 +47,8 @@ spec:
               value: "{{ .Values.populator.port }}"
             - name: MANIFESTS_PATH
               value: "{{ .Values.populator.manifestsPath}}"
-            - name: APP_REFRESH_WHEN_HASH_CHANGES
-              value: "{{ .Values.populator.refreshWhenHashChanges}}"
+            - name: APP_UPDATE_ON_GIT_COMMIT
+              value: "{{ .Values.populator.updateOnGitCommit}}"
 
           command: ["/bin/sh", "-c"]
           args: {{ .Values.populator.args }}

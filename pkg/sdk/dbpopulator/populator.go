@@ -542,7 +542,12 @@ func currentCommit(session neo4j.Session) (string, error) {
 	if record == nil || len(record.Values) == 0 {
 		return "", nil
 	}
-	return record.Values[0].(string), errors.Wrap(result.Err(), "while executing neo4j transaction")
+	commit, ok := record.Values[0].(string)
+	if !ok {
+		return "", fmt.Errorf("Failed to convert database response: %v", record.Values[0])
+	}
+
+	return commit, errors.Wrap(result.Err(), "while executing neo4j transaction")
 }
 
 func getPathPrefix(manifestPath string, rootDir string) (string, string) {

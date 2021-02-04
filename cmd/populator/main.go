@@ -9,8 +9,10 @@ import (
 	"os/exec"
 	"os/signal"
 	"path"
+	"strings"
 	"time"
 
+	"github.com/avast/retry-go"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
@@ -47,9 +49,9 @@ type Config struct {
 	// manifests are stored
 	ManifestsPath string `envconfig:"default=och-content"`
 
-	// RefreshWhenHashChanges makes populator to populate a new data
+	// UpdateOnGitCommit makes populator to populate a new data
 	// only when a git commit chaned in source repository
-	RefreshWhenHashChanges bool `envconfig:"default=false"`
+	UpdateOnGitCommit bool `envconfig:"default=false"`
 
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
@@ -112,22 +114,29 @@ func main() {
 	defer session.Close()
 
 	gitHash := []byte{}
-	if cfg.RefreshWhenHashChanges {
-		logger.Info("REFRESH_WHEN_HASH_CHANGES set. Updating manifests only if git commit changed.")
+	if cfg.UpdateOnGitCommit {
+		logger.Info("APP_UPDATE_ON_GIT_COMMIT set. Updating manifests only if git commit changed.")
 		gitHash, err = getGitHash(rootDir)
 		exitOnError(err, "while getting `git rev-parse HEAD`")
 	} else {
-		logger.Info("REFRESH_WHEN_HASH_CHANGES not set. Ignoring git commit, always updating manifests.")
+		logger.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
 	}
 
 	start := time.Now()
-	populated, err := dbpopulator.Populate(
-		ctx, logger, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), string(gitHash))
+	err = retry.Do(func() error {
+		hash := strings.TrimSpace(string(gitHash))
+		populated, err := dbpopulator.Populate(
+			ctx, logger, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), hash)
+		if err != nil {
+			return err
+		}
+		if populated {
+			end := time.Now()
+			logger.Info("Populated new data", zap.Duration("duration (seconds)", end.Sub(start)))
+		}
+		return nil
+	}, retry.Attempts(3), retry.Delay(1*time.Minute))
 	exitOnError(err, "while populating manifests")
-	if populated {
-		end := time.Now()
-		logger.Info("Populated new data", zap.Duration("duration", end.Sub(start)))
-	}
 }
 
 func exitOnError(err error, context string) {
