@@ -1,9 +1,18 @@
-# OCF content creation guide
+# OCF Content Creation Guide
+
+- [OCF Content Creation Guide](#ocf-content-creation-guide)
+  - [Prerequisites](#prerequisites)
+  - [Types, Interfaces and Implementations](#types-interfaces-and-implementations)
+  - [Define your Types and Interfaces](#define-your-types-and-interfaces)
+  - [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
+  - [Populate the manifests into OCH](#populate-the-manifests-into-och)
+  - [Run your new action](#run-your-new-action)
 
 This guide shows first steps on how to develop OCF content for Voltron. We will show how to:
 - define new Types and Interfaces,
 - create Implementation for the Interfaces,
-- use other Interfaces in your Implementations.
+- use other Interfaces in your Implementations,
+- test the new manifests on a local development Voltron cluster
 
 As an example, we will create OCF manifests to deploy Confluence with a PostgreSQL database.
 
@@ -13,11 +22,10 @@ To develop and test the created content, you will need to have a Voltron environ
 
 * [Docker](https://docs.docker.com/engine/install/)
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
+* [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
 * [populator](TBD) TODO: release or give instruction on how to compile it from source
-* [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 
-TODO: add instructions to replace the argo-workflow-controller with our prebuild image and setup cluster policies
 
 Also, clone the Voltron repository with the current OCF content.
 ```bash
@@ -75,7 +83,7 @@ signature:
 
 > The `signature` field is required, but currently we don't have implemented yet a signing mechanism. You can put a dummy value there.
 
-After we have the InterfaceGroup, let's create the Interface, for installing BitBucket.
+After we have the InterfaceGroup, let's create the Interface, for installing Confluence.
 Create the directory `./och-content/interface/productivity/confluence`. Inside this directory, create a file `install.yaml` with the following content:
 ```yaml
 ocfVersion: 0.0.1
@@ -126,7 +134,7 @@ The `spec.input` key defines inputs, required by the Interfaces. There are two t
 
 Although Confluence needs an database, we don't specify is as an input argument here. That is because, we leave selecting a database to the Implementation.
 
-Now we need to define the two Types, which we use in your Interface: `cap.type.productivity.confluence.install-input` and `cap.type.productivity.confluence.config`.
+Now we need to define the two Types, which we use in our Interface: `cap.type.productivity.confluence.install-input` and `cap.type.productivity.confluence.config`.
 
 ```yaml
 ocfVersion: 0.0.1
@@ -460,3 +468,9 @@ TODO: where to find documentation on specific runners, i.e. input parameters for
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
 The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
+
+## Populate the manifests into OCH
+
+TODO: add instructions to replace the argo-workflow-controller with our prebuild image and setup cluster policies
+
+## Run your new action
