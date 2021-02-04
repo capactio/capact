@@ -5,6 +5,8 @@ package controller
 import (
 	"context"
 	"errors"
+	corev1 "k8s.io/api/core/v1"
+	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	"time"
 
 	. "github.com/onsi/ginkgo"
@@ -33,9 +35,9 @@ var _ = Describe("Action Controller", func() {
 	// Avoid adding tests for vanilla CRUD operations because they would
 	// test Kubernetes API server, which isn't the goal here.
 	Context("When Action CR is created", func() {
-		It("should render the action workflow", func() {
+		It("should render the action workflow without user input", func() {
 			key := types.NamespacedName{
-				Name:      "action-test-1",
+				Name:      "action-without-input",
 				Namespace: "default",
 			}
 
@@ -63,6 +65,64 @@ var _ = Describe("Action Controller", func() {
 
 				if action.Status.Rendering == nil || action.Status.Rendering.Action == nil {
 					return errors.New(".Status.Rendering.Action field is empty")
+				}
+				if action.Status.Rendering.Input != nil {
+					return errors.New(".Status.Rendering.Input field should be empty")
+				}
+				return nil
+			}, timeout, interval).Should(Succeed())
+		})
+
+		It("should render the action workflow with user input parameters", func() {
+			key := types.NamespacedName{
+				Name:      "action-with-input",
+				Namespace: "default",
+			}
+
+			secret := &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "user-input",
+					Namespace: key.Namespace,
+				},
+				StringData: map[string]string{
+					graphqldomain.ParametersSecretDataKey: `{ "message": { "pico": "bello"}}`,
+				},
+			}
+
+			action := &corev1alpha1.Action{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      key.Name,
+					Namespace: key.Namespace,
+				},
+				Spec: corev1alpha1.ActionSpec{
+					ActionRef: corev1alpha1.ManifestReference{
+						Path: "bar",
+					},
+					Input: &corev1alpha1.ActionInput{
+						Parameters: &corev1alpha1.InputParameters{
+							SecretRef: corev1.LocalObjectReference{Name: secret.Name},
+						},
+					},
+				},
+			}
+
+			// Simulate that Secret with user input is created
+			Expect(k8sClient.Create(context.Background(), secret)).Should(Succeed())
+			// Simulate that Action CR is created
+			Expect(k8sClient.Create(context.Background(), action)).Should(Succeed())
+
+			Eventually(func() error {
+				action := &corev1alpha1.Action{}
+
+				if err := k8sClient.Get(context.Background(), key, action); err != nil {
+					return err
+				}
+
+				if action.Status.Rendering == nil || action.Status.Rendering.Action == nil {
+					return errors.New(".Status.Rendering.Action field is empty")
+				}
+				if action.Status.Rendering.Input == nil || action.Status.Rendering.Input.Parameters == nil {
+					return errors.New(".Status.Rendering.Input.Parameters field is empty")
 				}
 				return nil
 			}, timeout, interval).Should(Succeed())

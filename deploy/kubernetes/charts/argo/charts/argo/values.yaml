@@ -36,6 +36,8 @@ controller:
   image:
     # Overrides .images.tag if defined.
     tag: ""
+    # Overrides .images.namespace if defined.
+    namespace: ""
   # podAnnotations is an optional map of annotations to be applied to the controller Pods
   podAnnotations: {}
   # Optional labels to add to the controller pods

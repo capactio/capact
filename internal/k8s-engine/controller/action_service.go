@@ -13,6 +13,7 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -33,7 +34,6 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
-	renderingTimeout               = 10 * time.Minute
 )
 
 type OCHImplementationGetter interface {
@@ -219,25 +219,34 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 }
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
-func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
-	ref := types.InterfaceRef{
-		Path:     string(action.Spec.ActionRef.Path),
-		Revision: action.Spec.ActionRef.Revision,
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, renderingTimeout)
-	defer cancel()
-
-	var opts []argo.RendererOption
-	data, err := a.getUserInputData(ctx, action)
+func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
+	userInput, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(data) > 0 {
+	var (
+		opts   []argo.RendererOption
+		status = &v1alpha1.RenderingStatus{}
+	)
+
+	if len(userInput) > 0 {
+		if status.Input == nil {
+			status.Input = &v1alpha1.ResolvedActionInput{}
+		}
+		status.Input.Parameters = &runtime.RawExtension{Raw: userInput}
+
+		data := map[string]interface{}{}
+		if err := json.Unmarshal(userInput, &data); err != nil {
+			return nil, errors.Wrap(err, "while unmarshaling user input")
+		}
 		opts = append(opts, argo.WithPlainTextUserInput(data))
 	}
 
+	ref := types.InterfaceRef{
+		Path:     string(action.Spec.ActionRef.Path),
+		Revision: action.Spec.ActionRef.Revision,
+	}
 	renderedAction, err := a.argoRenderer.Render(ctx, ref, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
@@ -247,11 +256,14 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
-	return actionBytes, nil
+
+	status.Action = &runtime.RawExtension{Raw: actionBytes}
+
+	return status, nil
 }
 
 // TODO: workaround as Argo do not support k8s secret as input arguments artifacts
-func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (map[string]interface{}, error) {
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
 	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
 		return nil, nil
 	}
@@ -262,14 +274,7 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
-	parameters := secret.Data[graphqldomain.ParametersSecretDataKey]
-
-	data := map[string]interface{}{}
-	if err := json.Unmarshal(parameters, &data); err != nil {
-		return nil, errors.Wrap(err, "while unmarshaling user input")
-	}
-
-	return data, nil
+	return secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
 type GetReportedRunnerStatusOutput struct {

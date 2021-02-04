@@ -2,7 +2,11 @@ argo:
   controller:
     containerRuntimeExecutor: pns
   images:
-    tag: v2.11.7
+    # We need to override it until this bug will be fixed: https://github.com/argoproj/argo/issues/4772
+    # Overrides .images.tag if defined.
+    tag: "rendering-poc"
+    # Overrides .images.namespace if defined.
+    namespace: "gcr.io/projectvoltron/argo/"
 
   artifactRepository:
     s3:

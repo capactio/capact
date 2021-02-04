@@ -3,6 +3,9 @@ package argo
 import (
 	"context"
 	"testing"
+	"time"
+
+	renderer "projectvoltron.dev/voltron/pkg/sdk/renderer"
 
 	"projectvoltron.dev/voltron/pkg/och/client/fake"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -25,7 +28,10 @@ func TestRenderHappyPath(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och")
 	require.NoError(t, err)
 
-	renderer := NewRenderer(fakeCli)
+	argoRenderer := NewRenderer(renderer.Config{
+		RenderTimeout: time.Second,
+		MaxDepth:      10,
+	}, fakeCli)
 
 	tests := []struct {
 		name               string
@@ -79,7 +85,7 @@ func TestRenderHappyPath(t *testing.T) {
 			t.Parallel()
 
 			// when
-			renderedArgs, err := renderer.Render(context.Background(), tt.ref, WithPlainTextUserInput(tt.userInput), WithTypeInstances(tt.inputTypeInstances))
+			renderedArgs, err := argoRenderer.Render(context.Background(), tt.ref, WithPlainTextUserInput(tt.userInput), WithTypeInstances(tt.inputTypeInstances))
 			require.NoError(t, err)
 
 			// then
