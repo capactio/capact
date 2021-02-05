@@ -43,7 +43,7 @@ query {
 
 | Name                          | Required | Default                          | Description                                                                                                  |
 |-------------------------------|----------|----------------------------------|--------------------------------------------------------------------------------------------------------------|
-| APP_ENABLE_LEADER_ELECTION    | no       | false                            | Enable leader election for Kubernetes controller. This ensures only 1 controller is active at any time point |
+| APP_ENABLE_LEADER_ELECTION    | no       | `false`                          | Enable leader election for Kubernetes controller. This ensures only 1 controller is active at any time point |
 | APP_LEADER_ELECTION_NAMESPACE | no       |                                  | Set the Kubernetes namespace, in which the leader election ConfigMap is created                              |
 | APP_GRAPHQL_ADDR              | no       | `:8080`                          | TCP address the metrics endpoint binds to                                                                    |
 | APP_GRAPHQL_ADDR              | no       | `8081`                           | TCP address the metrics endpoint binds to                                                                    |
@@ -56,8 +56,8 @@ query {
 | APP_GRAPHQLGATEWAY_PASSWORD   | yes      |                                  | Basic auth password used to authenticate at the Voltron Gateway                                              |
 | APP_BUILTIN_RUNNER_TIMEOUT    | no       | `30m`                            | Set the timeout for the workflow execution of the builtin runners                                            |
 | APP_BUILTIN_RUNNER_IMAGE      | yes      |                                  | Set the image of the builtin runner                                                                          |
-| APP_RENDERER_RENDER_TIMEOUT   | no       |                                  | Maximum time for rendering process. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".          |
-| APP_RENDERER_MAX_DEPTH        | no       |                                  | Maximum number of allowed nested workflows to be processed.                                                  |
+| APP_RENDERER_RENDER_TIMEOUT   | no       |  `10m`                           | Maximum time for rendering process. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".          |
+| APP_RENDERER_MAX_DEPTH        | no       |  `50`                            | Maximum number of allowed nested workflows to be processed.                                                  |
 | KUBECONFIG                    | no       | `~/.kube/config`                 | Path to kubeconfig file                                                                                      |
 
 ## Development

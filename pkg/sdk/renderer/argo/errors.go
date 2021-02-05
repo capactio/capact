@@ -4,6 +4,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+// NOTE: Change the error to Go struct if needed, e.g. someone needs to do such assertion `errors.Is(err, MaxDepthError)`
+
 func NewActionReferencePatternError(actionRef string) error {
 	return errors.Errorf("Action reference %q doesn't follow pattern <import_alias>.<method_name>", actionRef)
 }

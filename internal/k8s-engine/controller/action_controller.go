@@ -143,12 +143,12 @@ func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Acti
 //
 // TODO: add support for v1alpha1.AdvancedModeRenderingIterationActionPhase phase
 func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
-	renderData, err := r.svc.RenderAction(ctx, action)
+	renderingStatus, err := r.svc.RenderAction(ctx, action)
 	if err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while resolving Implementation for Action")
 	}
 
-	action.Status.Rendering = renderData
+	action.Status.Rendering = renderingStatus
 
 	action.Status = r.successStatus(action, v1alpha1.ReadyToRunActionPhase, "Runner action is rendered and ready to be executed")
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
