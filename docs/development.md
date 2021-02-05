@@ -129,6 +129,7 @@ You can export the following environment variables to configure the script:
 - To enable mocked version of GraphQL Local OCH API and Public OCH API use `MOCK_OCH_GRAPHQL=true`.
 - To enable mocked version of GraphQL Engine OCH API `MOCK_ENGINE_GRAPHQL=true`.
 - To disable Database Populator, use `ENABLE_POPULATOR=false`
+- To populate the tests manifests from `test/och-content`, use `USE_TEST_MANIFESTS=true`.
 
 ### Access Gateway GraphQL Playground
 
