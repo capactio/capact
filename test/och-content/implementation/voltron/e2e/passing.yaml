@@ -42,9 +42,9 @@ spec:
         templates:
           - name: main
             steps:
-              - - name: say-hello
-                  template: say-hello
-          - name: say-hello
+              - - name: pass
+                  template: pass
+          - name: pass
             container:
               image: docker/whalesay:latest
               command: ["sh", "-c"]
