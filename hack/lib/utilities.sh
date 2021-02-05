@@ -242,6 +242,7 @@ voltron::install_upgrade::charts() {
     export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
+    export USE_TEST_MANIFESTS=${USE_TEST_MANIFESTS:-${VOLTRON_USE_TEST_MANIFESTS}}
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
@@ -281,7 +282,7 @@ voltron::install_upgrade::charts() {
       readonly OCH_IMAGE="och"
     fi
 
-    if [ "${USE_TEST_MANIFESTS:-false}" == "true" ]; then
+    if [ "${USE_TEST_MANIFESTS}" == "true" ]; then
       readonly VOLTRON_SET_FLAGS="
         --set och-public.populator.manifestsPath=file:///test
         --set och-public.populator.updateOnGitCommit=false

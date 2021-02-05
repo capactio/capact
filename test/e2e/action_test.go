@@ -4,14 +4,12 @@ package e2e
 
 import (
 	"context"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	client "projectvoltron.dev/voltron/pkg/engine/client"
-	"projectvoltron.dev/voltron/pkg/httputil"
 )
 
 var _ = Describe("Action", func() {
@@ -21,9 +19,7 @@ var _ = Describe("Action", func() {
 	ctx := context.Background()
 
 	BeforeEach(func() {
-		httpClient := httputil.NewClient(30*time.Second, true,
-			httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password))
-		engineClient = client.New(cfg.Gateway.Endpoint, httpClient)
+		engineClient = getEngineGraphQLClient()
 	})
 
 	AfterEach(func() {

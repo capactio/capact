@@ -16,7 +16,7 @@ var _ = Describe("GraphQL API", func() {
 
 	Context("Public OCH", func() {
 		It("lists interfaces", func() {
-			cli := getGraphQLClient()
+			cli := getOCHGraphQLClient()
 
 			interfaces, err := cli.ListInterfacesMetadata(ctx)
 
@@ -27,7 +27,7 @@ var _ = Describe("GraphQL API", func() {
 
 	Context("Local OCH", func() {
 		It("creates and deletes TypeInstance", func() {
-			cli := getGraphQLClient()
+			cli := getOCHGraphQLClient()
 
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
 				TypeRef: &graphql.TypeReferenceInput{

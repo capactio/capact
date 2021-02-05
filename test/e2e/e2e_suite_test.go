@@ -11,10 +11,11 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
+	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
 	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client"
+	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 )
 
 type GatewayConfig struct {
@@ -70,18 +71,27 @@ func waitTillServiceEndpointsAreReady() {
 }
 
 func waitTillDataIsPopulated() {
-	cli := getGraphQLClient()
+	cli := getOCHGraphQLClient()
 
 	Eventually(func() ([]graphql.Interface, error) {
 		return cli.ListInterfacesMetadata(context.Background())
 	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(2))
 }
 
-func getGraphQLClient() *client.Client {
+func getOCHGraphQLClient() *ochclient.Client {
 	httpClient := httputil.NewClient(
 		30*time.Second,
 		true,
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
-	return client.NewClient(cfg.Gateway.Endpoint, httpClient)
+	return ochclient.NewClient(cfg.Gateway.Endpoint, httpClient)
+}
+
+func getEngineGraphQLClient() *engineclient.Client {
+	httpClient := httputil.NewClient(
+		30*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	return engineclient.New(cfg.Gateway.Endpoint, httpClient)
 }
