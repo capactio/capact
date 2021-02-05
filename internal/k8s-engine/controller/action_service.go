@@ -30,7 +30,8 @@ const (
 	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
 	// as built-in runner.
 	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo.run"
-	secretInputDataEntryName       = "input.yaml"
+	secretRunnerArgsEntryName       = "args.yaml"
+	secretRunnerContextEntryName   = "context.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
@@ -133,34 +134,36 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 
 // EnsureRunnerInputDataCreated ensures that Kubernetes Secret with input data for a runner is created and up to date.
 func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error {
+	runnerCtx := runner.ExecutionContext{
+		Name:    action.Name,
+		DryRun:  action.Spec.IsDryRun(),
+		Timeout: runner.Duration(a.runnerTimeout),
+		Platform: runner.KubernetesPlatformConfig{
+			Namespace:          action.Namespace,
+			ServiceAccountName: saName,
+			OwnerRef:           *metav1.NewControllerRef(action, v1alpha1.GroupVersion.WithKind(v1alpha1.ActionKind)),
+		},
+	}
+
+	marshaledRunnerCtx, err := yaml.Marshal(runnerCtx)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling runner context")
+	}
+
 	renderedAction, err := a.extractRunnerInterfaceAndArgs(action)
 	if err != nil {
 		return errors.Wrap(err, "while extracting rendered action from raw form")
 	}
-
-	runnerInput := runner.InputData{
-		Context: runner.ExecutionContext{
-			Name:    action.Name,
-			DryRun:  action.Spec.IsDryRun(),
-			Timeout: runner.Duration(a.runnerTimeout),
-			Platform: runner.KubernetesPlatformConfig{
-				Namespace:          action.Namespace,
-				ServiceAccountName: saName,
-				OwnerRef:           *metav1.NewControllerRef(action, v1alpha1.GroupVersion.WithKind(v1alpha1.ActionKind)),
-			},
-		},
-		Args: renderedAction.Args,
-	}
-
-	marshaledInput, err := yaml.Marshal(runnerInput)
+	marshaledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
 	if err != nil {
-		return errors.Wrap(err, "while marshaling runner input data")
+		return errors.Wrap(err, "while marshaling runner context")
 	}
 
 	secret := &corev1.Secret{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
-			secretInputDataEntryName: marshaledInput,
+			secretRunnerContextEntryName: marshaledRunnerCtx,
+			secretRunnerArgsEntryName: marshaledRunnerArgs,
 		},
 	}
 
@@ -174,7 +177,8 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			return err
 		}
 
-		oldSecret.Data[secretInputDataEntryName] = marshaledInput
+		oldSecret.Data[secretRunnerContextEntryName] = secret.Data[secretRunnerContextEntryName]
+		oldSecret.Data[secretRunnerArgsEntryName] = secret.Data[secretRunnerArgsEntryName]
 		return a.k8sCli.Update(ctx, oldSecret)
 	default:
 		return err
@@ -220,16 +224,16 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
+	opts := []argo.RendererOption{
+		argo.WithRunnerContextFromSecret(action.Name, secretRunnerContextEntryName),
+	}
+
 	userInput, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
 
-	var (
-		opts   []argo.RendererOption
-		status = &v1alpha1.RenderingStatus{}
-	)
-
+	var status = &v1alpha1.RenderingStatus{}
 	if len(userInput) > 0 {
 		if status.Input == nil {
 			status.Input = &v1alpha1.ResolvedActionInput{}
@@ -377,8 +381,12 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 							Image: a.builtinRunnerImage,
 							Env: []corev1.EnvVar{
 								{
-									Name:  "RUNNER_INPUT_PATH",
-									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretInputDataEntryName),
+									Name:  "RUNNER_ARGS_PATH",
+									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretRunnerArgsEntryName),
+								},
+								{
+									Name:  "RUNNER_CONTEXT_PATH",
+									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretRunnerContextEntryName),
 								},
 								{
 									Name:  "RUNNER_LOGGER_DEV_MODE",

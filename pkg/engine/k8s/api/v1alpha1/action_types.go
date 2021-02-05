@@ -342,7 +342,7 @@ type RunnerStatus struct {
 
 	// TODO: Once we will support nested runners statues, add Interface property which is a full path of Runner Interface manifest .
 
-	// StatusRef contains reference to resource with arbitrary Runner status data.
+	// Status contains reference to resource with arbitrary Runner status data.
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Status *runtime.RawExtension `json:"status,omitempty"`
