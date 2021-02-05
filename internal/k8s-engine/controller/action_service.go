@@ -30,7 +30,7 @@ const (
 	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
 	// as built-in runner.
 	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo.run"
-	secretRunnerArgsEntryName       = "args.yaml"
+	secretRunnerArgsEntryName      = "args.yaml"
 	secretRunnerContextEntryName   = "context.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
@@ -163,7 +163,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
 			secretRunnerContextEntryName: marshaledRunnerCtx,
-			secretRunnerArgsEntryName: marshaledRunnerArgs,
+			secretRunnerArgsEntryName:    marshaledRunnerArgs,
 		},
 	}
 

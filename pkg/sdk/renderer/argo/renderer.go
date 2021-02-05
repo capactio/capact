@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"projectvoltron.dev/voltron/internal/ptr"
+
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -20,6 +22,7 @@ import (
 )
 
 const userInputName = "input-parameters"
+const runnerContext = "runner-context"
 
 type OCHClient interface {
 	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error)
@@ -79,12 +82,17 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 		return nil, err
 	}
 
-	// 5. Add steps to populate rootWorkflow with input TypeInstances
+	// 5. Add runner context
+	if err := r.addRunnerContext(rootWorkflow, renderOpt.runnerContextFromSecret); err != nil {
+		return nil, err
+	}
+
+	// 6. Add steps to populate rootWorkflow with input TypeInstances
 	if err := r.typeInstanceHandler.AddInputTypeInstance(rootWorkflow, renderOpt.inputTypeInstances); err != nil {
 		return nil, err
 	}
 
-	// 6. Render rootWorkflow templates
+	// 7. Render rootWorkflow templates
 	rootWorkflow.Templates, err = r.renderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances, 1)
 	if err != nil {
 		return nil, err
@@ -230,6 +238,75 @@ func (*Renderer) evaluateWhenExpression(typeInstances []types.InputTypeInstanceR
 	}
 
 	return result, nil
+}
+
+func (r *Renderer) addRunnerContext(rootWorkflow *Workflow, secretRef runnerContextSecretRef) error {
+	//if secretRef.Name == "" || secretRef.Key == "" {
+	//	return NewRunnerContextRefEmptyError()
+	//}
+
+	idx, found := getEntrypointWorkflowIndex(rootWorkflow)
+	if !found {
+		return errors.Errorf("cannot find workflow index specified by entrypoint %q", rootWorkflow.Entrypoint)
+	}
+
+	template := &wfv1.Template{
+		Name: fmt.Sprintf("inject-%s", runnerContext),
+		Container: &apiv1.Container{
+			Image:   "alpine:3.7",
+			Command: []string{"sh", "-c"},
+			Args:    []string{"sleep 2 && cp /input/context.yaml /output.yaml"},
+			VolumeMounts: []apiv1.VolumeMount{
+				{
+					Name:      runnerContext,
+					ReadOnly:  true,
+					MountPath: "/input",
+				},
+			},
+		},
+		Outputs: wfv1.Outputs{
+			Artifacts: wfv1.Artifacts{
+				{
+					Name:       runnerContext,
+					GlobalName: runnerContext,
+					Path:       "/output.yaml",
+				},
+			},
+		},
+		Volumes: []apiv1.Volume{
+			{
+				Name: runnerContext,
+				VolumeSource: apiv1.VolumeSource{
+					Secret: &apiv1.SecretVolumeSource{
+						SecretName: secretRef.Name,
+						Items: []apiv1.KeyToPath{
+							{
+								Key:  secretRef.Key,
+								Path: "context.yaml",
+								Mode: nil,
+							},
+						},
+						Optional: ptr.Bool(false),
+					},
+				},
+			},
+		},
+	}
+
+	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: &wfv1.WorkflowStep{
+					Name:     fmt.Sprintf("%s-step", template.Name),
+					Template: template.Name,
+				},
+			},
+		},
+	}, rootWorkflow.Templates[idx].Steps...)
+
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+
+	return nil
 }
 
 // TODO(mszostok): Change to k8s secret. This is not easy and probably we will need to use some workaround, or
