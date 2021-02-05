@@ -32,6 +32,8 @@ Also, clone the Voltron repository with the current OCF content.
 git clone https://github.com/Project-Voltron/go-voltron.git
 ```
 
+It is also highly recommended to go through the [JIRA installation tutorial](../jira-installation.md), so you know how to execute Actions in Voltron.
+
 ## Types, Interfaces and Implementations
 
 If you have some software development experience, concepts like types and interfaces should be familliar to you. In Voltron, Types represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
@@ -444,9 +446,11 @@ Let's take a look on the Implementation YAML. Implementation has the following f
 - `additionalInput` - Additional input for the Implementation, compared to the Interface. In our case, here we define the `postgresql.config`, as our Implementation uses a PostgreSQL instance for Confluence.
 - `additionalOutput` - This section defines any additional TypeInstances, which are created in this Implementation, compared to the Interface. In example, in our Implementation, we create an database in the database instance with the `postgresql.create-db` Interface, which outputs an `postgresql.database` TypeInstance. We have to write this down in `additionalOutput`, so Voltron will upload this TypeInstance to OCH and save the dependency graph.
 - `implements` - Defines, which Interfaces are implemented by this Implementation.
-- `requires` - Defines additional constraints, which must be met by the Voltron environment, so this Implementation can be used. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means, we need an Kubernetes cluster.
+- `requires` - List of system prerequisites, that need to be present in the environment managed by Voltron, to use this Implementation. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means, we need an Kubernetes cluster.
 - `imports` - Here we define all other Interfaces, we use in our Implementation. We can then refer to them as `'<alias>.<method-name>'`.
-- `action` - In this section we define the workflow, which is executed in this Implementation.
+- `action` - Holds information about the actions that is execute. In case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this Implementation.
+
+The data in the `action` property is used by Voltron Runners to execute the action. You can read more about Voltron Runners in this [README](../../runner.md).
 
 The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with a few extensions introduced by Voltron. These extensions are:
 - `.templates.steps[][].voltron-when` - Allows for conditional execution of a step. You can make assertions on the input TypeInstances available in the Implementation. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md).
@@ -478,6 +482,8 @@ ENABLE_POPULATOR=false make dev-cluster
 
 This can take a few minutes. We disabled the populator sidecar in OCH public, as we will populate the data from our local repository using the populator.
 
+> You can read more about the populator, how to compile and use it, in this [README](../../../cmd/populator/README.md).
+
 To populate the data, you will need to first setup port-forwarding to the Neo4j database service:
 ```
 kubectl port-forward -n neo4j svc/neo4j-neo4j 7474 7687
@@ -489,6 +495,7 @@ APP_JSONPUBLISHADDR=<your-local-docker-ip-address> APP_MANIFESTS_PATH=och-conten
 
 APP_JSONPUBLISHADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator .
 ```
+
 
 ## Run your new action
 
@@ -555,4 +562,4 @@ mutation DeleteAction($actionName: String!) {
 
 Execute the `CreateAction` mutation. This will create the Action resource in Voltron. Wait till the Action is in the `READY_TO_RUN` phase. You can use the `GetAction` query to check the phase of your Action.
 
-After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be execute in the `renderedAction` field. To run the Action, execute the `RunAction` mutation.
+After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be execute in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.
