@@ -190,8 +190,7 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 		return errors.Wrap(err, "while extracting rendered action from raw form")
 	}
 
-	// TODO: Read the runner name from imports
-	// and change to generic option similar to k8s plugins which can be registered from separate pkg
+	// TODO: Change that to generic option similar to k8s plugins which can be registered from separate pkg
 	// example: https://github.com/kubernetes/kubernetes/blob/v1.19.4/pkg/kubeapiserver/options/plugins.go
 	if renderedAction.RunnerInterface != temporaryBuiltinArgoRunnerName {
 		return errors.Errorf("unsupported %q runner", renderedAction.RunnerInterface)
