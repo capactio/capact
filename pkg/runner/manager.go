@@ -2,7 +2,9 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"io/ioutil"
+	"log"
 
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
@@ -82,17 +84,37 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 }
 
 func (r *Manager) readRunnerInput() (InputData, error) {
-	rawInput, err := ioutil.ReadFile(r.cfg.InputPath)
+	var ctx ExecutionContext
+	err := r.unmarshalFromFile(r.cfg.ContextPath, &ctx)
 	if err != nil {
-		return InputData{}, errors.Wrap(err, "while reading input data from disk")
+		return InputData{}, err
 	}
 
-	var input InputData
-	if err := yaml.Unmarshal(rawInput, &input); err != nil {
-		return InputData{}, errors.Wrap(err, "while unmarshaling input data")
+	var args json.RawMessage
+	err = r.unmarshalFromFile(r.cfg.ArgsPath, &args)
+	if err != nil {
+		return InputData{}, err
 	}
 
-	return input, nil
+	log.Printf("%+v", string(args))
+
+	return InputData{
+		Context: ctx,
+		Args:    args,
+	}, nil
+}
+
+func (r *Manager) unmarshalFromFile(path string, out interface{}) error {
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return errors.Wrapf(err, "while reading file from path %q", path)
+	}
+
+	if err := yaml.Unmarshal(bytes, &out); err != nil {
+		return errors.Wrapf(err, "while unmarshalling data from file %q", path)
+	}
+
+	return nil
 }
 
 // cancelableContext returns context that is canceled when stop signal is received or configured timeout elapsed.

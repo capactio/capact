@@ -1,0 +1,8 @@
+workflow:
+  entrypoint: main
+  templates:
+    - name: main
+      container:
+        image: docker/whalesay
+        command: ["/bin/bash", "-c"]
+        args: ["sleep 2 && cowsay hello world"]

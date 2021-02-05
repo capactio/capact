@@ -48,6 +48,8 @@ spec:
                 # The input parameters that holds information what should be executed
                 - name: input-parameters
                   path: "/helm-args"
+                - name: runner-context
+                  path: "/runner-context"
             outputs:
               artifacts:
                 - name: helm-release
@@ -59,7 +61,9 @@ spec:
             container:
               image: gcr.io/projectvoltron/pr/helm-runner:PR-102
               env:
-                - name: RUNNER_INPUT_PATH
+                - name: RUNNER_CONTEXT_PATH
+                  value: "{{inputs.artifacts.runner-context.path}}"
+                - name: RUNNER_ARGS_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
                 - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
                   value: "{{outputs.artifacts.helm-release.path}}"

@@ -1,0 +1,18 @@
+command: "install"
+generateName: true
+chart:
+  name: "postgresql"
+  repo: "https://charts.bitnami.com/bitnami"
+  version: "10.2.0"
+values:
+  fullnameOverride: postgresql-server
+  postgresqlDatabase: postgres
+  postgresqlPassword: s3cr3t
+output:
+  goTemplate:
+    host: '{{ template "postgresql.primary.fullname" . }}'
+    port: '{{ template "postgresql.port" . }}'
+    defaultDBName: '{{ template "postgresql.database" . }}'
+    superuser:
+      username: '{{ template "postgresql.username" . }}'
+      password: '{{ template "postgresql.password" . }}'

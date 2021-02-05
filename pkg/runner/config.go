@@ -9,7 +9,8 @@ import (
 
 // Config holds whole configuration for Manager.
 type Config struct {
-	InputPath     string
+	ContextPath   string
+	ArgsPath      string
 	LoggerDevMode bool `envconfig:"default=false"`
 }
 
@@ -18,6 +19,7 @@ type InputData struct {
 	Args    json.RawMessage  `json:"args"`
 }
 
+// TODO: Rename to Context to unify our wording to "Runner Context"
 // ExecutionContext holds configuration directly connected with specific runner.
 type ExecutionContext struct {
 	Name     string                   `json:"name"`

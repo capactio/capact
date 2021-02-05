@@ -1,28 +1,22 @@
-context:
-  name: "cloudsql-example"
-  dryRun: false
-  timeout: "10m"
-  platform: {}
-args:
-  command: "create"
-  generateName: true
-  instance:
+command: "create"
+generateName: true
+instance:
+  tier: "db-g1-small"
+  databaseVersion: "POSTGRES_11"
+  region: "us-central"
+  defaultDBName: postgres
+  rootPassword: s3cr3t
+  settings:
     tier: "db-g1-small"
-    databaseVersion: "POSTGRES_11"
-    region: "us-central"
-    defaultDBName: postgres
-    rootPassword: s3cr3t
-    settings:
-      tier: "db-g1-small"
-      ipConfiguration:
-        authorizedNetworks:
-          - name: internet
-            value: "0.0.0.0/0"
-  output:
-    goTemplate:
-      host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
-      port: "{{ .Port }}"
-      defaultDBName: "{{ .DefaultDBName }}"
-      superuser:
-        username: "{{ .Username }}"
-        password: "{{ .Password }}"
+    ipConfiguration:
+      authorizedNetworks:
+        - name: internet
+          value: "0.0.0.0/0"
+output:
+  goTemplate:
+    host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+    port: "{{ .Port }}"
+    defaultDBName: "{{ .DefaultDBName }}"
+    superuser:
+      username: "{{ .Username }}"
+      password: "{{ .Password }}"
