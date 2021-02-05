@@ -77,32 +77,25 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            context:
-                              name: "helm-runner-example"
-                              dryRun: false
-                              timeout: "10m"
-                              platform:
-                                namespace: "default"
-                            args:
-                              command: "install"
-                              generateName: true
-                              chart:
-                                name: "postgresql"
-                                repo: "https://charts.bitnami.com/bitnami"
-                              values:
-                                image:
-                                  pullPolicy: Always
-                                postgresqlDatabase: {{ defaultDBName }}
-                                postgresqlUsername: {{ superuser.username }}
-                                postgresqlPassword: {{ superuser.password }}
-                              output:{% raw %}
-                                goTemplate:
-                                  host: '{{ template "common.names.fullname" . }}'
-                                  port: '{{ template "postgresql.port" . }}'
-                                  defaultDBName: '{{ template "postgresql.database" . }}'
-                                  superuser:
-                                    username: '{{ template "postgresql.username" . }}'
-                                    password: '{{ template "postgresql.password" . }}'{% endraw %}
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "postgresql"
+                              repo: "https://charts.bitnami.com/bitnami"
+                            values:
+                              image:
+                                pullPolicy: Always
+                              postgresqlDatabase: {{ defaultDBName }}
+                              postgresqlUsername: {{ superuser.username }}
+                              postgresqlPassword: {{ superuser.password }}
+                            output:{% raw %}
+                              goTemplate:
+                                host: '{{ template "common.names.fullname" . }}'
+                                port: '{{ template "postgresql.port" . }}'
+                                defaultDBName: '{{ template "postgresql.database" . }}'
+                                superuser:
+                                  username: '{{ template "postgresql.username" . }}'
+                                  password: '{{ template "postgresql.password" . }}'{% endraw %}
               - - voltron-outputTypeInstances:
                     - name: postgresql
                       from: additional
@@ -114,3 +107,5 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"

@@ -1,4 +1,3 @@
----
 metadata:
   attributes: []
   description: Running Helm operations
@@ -49,27 +48,31 @@ spec:
       workflow:
         entrypoint: helm
         templates:
-          - container:
-              image: gcr.io/projectvoltron/pr/helm-runner:PR-102
+          - name: helm
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: "/runner-args"
+                - name: runner-context
+                  path: "/runner-context"
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/helm-release.yaml"
+                - name: additional
+                  globalName: additional
+                  path: "/additional.yaml"
+            container:
+              image: gcr.io/projectvoltron/pr/helm-runner:PR-102 # TODO: Change image
               env:
-                - name: RUNNER_INPUT_PATH
+                - name: RUNNER_CONTEXT_PATH
+                  value: "{{inputs.artifacts.runner-context.path}}"
+                - name: RUNNER_ARGS_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
                 - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
                   value: "{{outputs.artifacts.helm-release.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
                   value: "{{outputs.artifacts.additional.path}}"
                 - name: RUNNER_LOGGER_DEV_MODE
-                  value: 'true'
-            outputs:
-              artifacts:
-                - path: "/helm-release.yaml"
-                  globalName: helm-release
-                  name: helm-release
-                - path: "/additional.yaml"
-                  globalName: additional
-                  name: additional
-            inputs:
-              artifacts:
-                - path: "/helm-args"
-                  name: input-parameters
-            name: helm
+                  value: "true"

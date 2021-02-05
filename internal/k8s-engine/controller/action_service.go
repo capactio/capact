@@ -30,8 +30,10 @@ const (
 	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
 	// as built-in runner.
 	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo.run"
-	secretRunnerArgsEntryName      = "args.yaml"
-	secretRunnerContextEntryName   = "context.yaml"
+
+	// #nosec G101
+	runnerArgsSecretKey            = "args.yaml"
+	runnerContextSecretKey         = "context.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
@@ -162,8 +164,8 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	secret := &corev1.Secret{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
-			secretRunnerContextEntryName: marshaledRunnerCtx,
-			secretRunnerArgsEntryName:    marshaledRunnerArgs,
+			runnerContextSecretKey: marshaledRunnerCtx,
+			runnerArgsSecretKey:    marshaledRunnerArgs,
 		},
 	}
 
@@ -177,8 +179,8 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 			return err
 		}
 
-		oldSecret.Data[secretRunnerContextEntryName] = secret.Data[secretRunnerContextEntryName]
-		oldSecret.Data[secretRunnerArgsEntryName] = secret.Data[secretRunnerArgsEntryName]
+		oldSecret.Data[runnerContextSecretKey] = secret.Data[runnerContextSecretKey]
+		oldSecret.Data[runnerArgsSecretKey] = secret.Data[runnerArgsSecretKey]
 		return a.k8sCli.Update(ctx, oldSecret)
 	default:
 		return err
@@ -225,7 +227,7 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
 	opts := []argo.RendererOption{
-		argo.WithRunnerContextFromSecret(action.Name, secretRunnerContextEntryName),
+		argo.WithRunnerContextFromSecret(action.Name, runnerContextSecretKey),
 	}
 
 	userInput, err := a.getUserInputData(ctx, action)
@@ -382,11 +384,11 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 							Env: []corev1.EnvVar{
 								{
 									Name:  "RUNNER_ARGS_PATH",
-									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretRunnerArgsEntryName),
+									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, runnerArgsSecretKey),
 								},
 								{
 									Name:  "RUNNER_CONTEXT_PATH",
-									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, secretRunnerContextEntryName),
+									Value: fmt.Sprintf("%s/%s", k8sJobRunnerInputDataMountPath, runnerContextSecretKey),
 								},
 								{
 									Name:  "RUNNER_LOGGER_DEV_MODE",

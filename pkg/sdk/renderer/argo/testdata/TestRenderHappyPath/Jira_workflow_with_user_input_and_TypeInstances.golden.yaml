@@ -22,6 +22,9 @@ args:
       - - arguments: {}
           name: inject-gcp-step
           template: inject-gcp
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
       - - arguments:
             artifacts:
             - name: input-parameters
@@ -38,35 +41,28 @@ args:
             - name: template
               raw:
                 data: |
-                  context:
-                    name: "jira-helm-release"
-                    dryRun: false
-                    timeout: "10m"
-                    platform:
-                      namespace: "default"
-                  args:
-                    command: "install"
-                    generateName: true
-                    chart:
-                      name: "jira-software"
-                      repo: "https://helm.mox.sh"
-                    output:{% raw %}
-                      goTemplate:
-                        version: "{{ .Values.image.tag }}"
-                        host: '{{ template "jira-software.fullname" . }}'{% endraw %}
-                    values:
-                      postgresql:
-                        enabled: false
-                      databaseConnection:
-                        host: "{{ host }}"
-                        user: "{{ superuser.username }}"
-                        password: "{{ superuser.password }}"
-                        database: "{{ defaultDBName }}"
-                      ingress:
-                        enabled: true
-                        hosts:
-                        - host: jira-cloud.voltron.local
-                          paths: ['/']
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "jira-software"
+                    repo: "https://helm.mox.sh"
+                  output:{% raw %}
+                    goTemplate:
+                      version: "{{ .Values.image.tag }}"
+                      host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                  values:
+                    postgresql:
+                      enabled: false
+                    databaseConnection:
+                      host: "{{ host }}"
+                      user: "{{ superuser.username }}"
+                      password: "{{ superuser.password }}"
+                      database: "{{ defaultDBName }}"
+                    ingress:
+                      enabled: true
+                      hosts:
+                      - host: jira-cloud.voltron.local
+                        paths: ['/']
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
               name: input-parameters
           name: create-helm-args
@@ -75,6 +71,8 @@ args:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
               name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
           name: helm-run
           template: jira-install-helm-run-helm
       - - arguments:
@@ -104,38 +102,33 @@ args:
             - name: template
               raw:
                 data: |
-                  context:
-                    name: "helm-runner-example"
-                    dryRun: false
-                    timeout: "10m"
-                    platform:
-                      namespace: "default"
-                  args:
-                    command: "install"
-                    generateName: true
-                    chart:
-                      name: "postgresql"
-                      repo: "https://charts.bitnami.com/bitnami"
-                    values:
-                      image:
-                        pullPolicy: Always
-                      postgresqlDatabase: {{ defaultDBName }}
-                      postgresqlUsername: {{ superuser.username }}
-                      postgresqlPassword: {{ superuser.password }}
-                    output:{% raw %}
-                      goTemplate:
-                        host: '{{ template "common.names.fullname" . }}'
-                        port: '{{ template "postgresql.port" . }}'
-                        defaultDBName: '{{ template "postgresql.database" . }}'
-                        superuser:
-                          username: '{{ template "postgresql.username" . }}'
-                          password: '{{ template "postgresql.password" . }}'{% endraw %}
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "postgresql"
+                    repo: "https://charts.bitnami.com/bitnami"
+                  values:
+                    image:
+                      pullPolicy: Always
+                    postgresqlDatabase: {{ defaultDBName }}
+                    postgresqlUsername: {{ superuser.username }}
+                    postgresqlPassword: {{ superuser.password }}
+                  output:{% raw %}
+                    goTemplate:
+                      host: '{{ template "common.names.fullname" . }}'
+                      port: '{{ template "postgresql.port" . }}'
+                      defaultDBName: '{{ template "postgresql.database" . }}'
+                      superuser:
+                        username: '{{ template "postgresql.username" . }}'
+                        password: '{{ template "postgresql.password" . }}'{% endraw %}
           name: create-helm-args
           template: jira-install-install-db-postgres-install-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
               name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
           name: helm-run
           template: jira-install-install-db-postgres-install-helm-run-helm
       - - arguments:
@@ -176,7 +169,9 @@ args:
     - arguments: {}
       container:
         env:
-        - name: RUNNER_INPUT_PATH
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
           value: '{{inputs.artifacts.input-parameters.path}}'
         - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
           value: '{{outputs.artifacts.helm-release.path}}'
@@ -190,7 +185,9 @@ args:
       inputs:
         artifacts:
         - name: input-parameters
-          path: /helm-args
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
       metadata: {}
       name: jira-install-install-db-postgres-install-helm-run-helm
       outputs:
@@ -269,7 +266,9 @@ args:
     - arguments: {}
       container:
         env:
-        - name: RUNNER_INPUT_PATH
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
           value: '{{inputs.artifacts.input-parameters.path}}'
         - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
           value: '{{outputs.artifacts.helm-release.path}}'
@@ -283,7 +282,9 @@ args:
       inputs:
         artifacts:
         - name: input-parameters
-          path: /helm-args
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
       metadata: {}
       name: jira-install-helm-run-helm
       outputs:
@@ -336,6 +337,36 @@ args:
         - globalName: jira-helm-release
           name: jira-helm-release
           path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 2 && cp /input/context.yaml /output.yaml
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /output.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
     - arguments: {}
       container:
         args:

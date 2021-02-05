@@ -112,7 +112,8 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-cloudsql-args.outputs.artifacts.render}}"
-                      # TODO: Add context
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: gcp-sa
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
