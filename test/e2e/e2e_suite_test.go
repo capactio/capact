@@ -65,7 +65,7 @@ func waitTillServiceEndpointsAreReady() {
 
 			err = resp.Body.Close()
 			return err
-		}, cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
+		}, 5*cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
 	}
 }
 
