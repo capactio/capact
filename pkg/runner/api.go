@@ -9,8 +9,8 @@ import (
 // API types used to ensure extendable function input/output.
 type (
 	StartInput struct {
-		// ExecCtx holds all information provided by Engine.
-		ExecCtx ExecutionContext
+		// Ctx contains Runner data provided by Engine.
+		Ctx Context
 		// Args that was provided by Engine.
 		Args json.RawMessage
 	}
@@ -21,8 +21,8 @@ type (
 	}
 
 	WaitForCompletionInput struct {
-		// ExecCtx holds all information provided by Engine.
-		ExecCtx ExecutionContext
+		// Ctx contains Runner data provided by Engine.
+		Ctx Context
 	}
 
 	WaitForCompletionOutput struct {
@@ -50,5 +50,5 @@ type Runner interface {
 
 // StatusReporter provide functionality to report status.
 type StatusReporter interface {
-	Report(ctx context.Context, execCtx ExecutionContext, status interface{}) error
+	Report(ctx context.Context, runnerCtx Context, status interface{}) error
 }

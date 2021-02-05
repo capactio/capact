@@ -28,11 +28,11 @@ func NewK8sSecret(cli client.Client) *K8sSecretReporter {
 }
 
 // Report a given status to K8s Secret, so K8s engine can consume it later.
-func (c *K8sSecretReporter) Report(ctx context.Context, execCtx runner.ExecutionContext, status interface{}) error {
+func (c *K8sSecretReporter) Report(ctx context.Context, runnerCtx runner.Context, status interface{}) error {
 	secret := &v1.Secret{}
 	key := client.ObjectKey{
-		Name:      execCtx.Name,
-		Namespace: execCtx.Platform.Namespace,
+		Name:      runnerCtx.Name,
+		Namespace: runnerCtx.Platform.Namespace,
 	}
 
 	if err := c.cli.Get(ctx, key, secret); err != nil {

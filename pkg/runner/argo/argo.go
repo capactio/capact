@@ -60,20 +60,20 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 	wf := wfv1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      in.ExecCtx.Name,
-			Namespace: in.ExecCtx.Platform.Namespace,
+			Name:      in.Ctx.Name,
+			Namespace: in.Ctx.Platform.Namespace,
 			Labels: map[string]string{
 				wfManagedByLabelKey: runnerName,
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				in.ExecCtx.Platform.OwnerRef,
+				in.Ctx.Platform.OwnerRef,
 			},
 		},
 		Spec: renderedWorkflow.Spec,
 	}
 
 	// We have agreement that we should return error also if workflow already exits.
-	if err := r.submitWorkflow(&wf, in.ExecCtx); err != nil {
+	if err := r.submitWorkflow(&wf, in.Ctx); err != nil {
 		return nil, errors.Wrap(err, "while creating Argo Workflow")
 	}
 
@@ -89,22 +89,22 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 // WaitForCompletion waits until Argo Workflow is finished.
 func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
-	if in.ExecCtx.DryRun {
+	if in.Ctx.DryRun {
 		return &runner.WaitForCompletionOutput{
 			Succeeded: true,
 			Message:   "In DryRun mode Argo Workflow is not created.",
 		}, nil
 	}
 
-	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.ExecCtx.Name).String()
+	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.Ctx.Name).String()
 	lw := &cache.ListWatch{
 		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.ExecCtx.Platform.Namespace).List(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.Ctx.Platform.Namespace).List(opts)
 		},
 		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.ExecCtx.Platform.Namespace).Watch(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.Ctx.Platform.Namespace).Watch(opts)
 		},
 	}
 
@@ -154,11 +154,11 @@ func statusFromEvent(event *watch.Event) (wfv1.WorkflowStatus, error) {
 	}
 }
 
-func (r *Runner) submitWorkflow(wf *wfv1.Workflow, execCtx runner.ExecutionContext) error {
-	wfNSCli := r.wfClientset.ArgoprojV1alpha1().Workflows(execCtx.Platform.Namespace)
-	_, err := SubmitWorkflow(wfNSCli, r.wfClientset, execCtx.Platform.Namespace, wf, &wfv1.SubmitOpts{
-		ServiceAccount: execCtx.Platform.ServiceAccountName,
-		ServerDryRun:   execCtx.DryRun,
+func (r *Runner) submitWorkflow(wf *wfv1.Workflow, runnerCtx runner.Context) error {
+	wfNSCli := r.wfClientset.ArgoprojV1alpha1().Workflows(runnerCtx.Platform.Namespace)
+	_, err := SubmitWorkflow(wfNSCli, r.wfClientset, runnerCtx.Platform.Namespace, wf, &wfv1.SubmitOpts{
+		ServiceAccount: runnerCtx.Platform.ServiceAccountName,
+		ServerDryRun:   runnerCtx.DryRun,
 	})
 	return err
 }

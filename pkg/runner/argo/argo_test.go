@@ -48,7 +48,7 @@ func TestRunnerStartHappyPath(t *testing.T) {
 		require.NotNil(t, gotOutStatus)
 		assert.Equal(t, expOutStatus, *gotOutStatus)
 
-		gotWf, err := fakeCli.ArgoprojV1alpha1().Workflows(input.ExecCtx.Platform.Namespace).Get(input.ExecCtx.Name, metav1.GetOptions{})
+		gotWf, err := fakeCli.ArgoprojV1alpha1().Workflows(input.Ctx.Platform.Namespace).Get(input.Ctx.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 		assert.EqualValues(t, expWf.Spec, gotWf.Spec)
 	})
@@ -84,7 +84,7 @@ func TestRunnerStartFailure(t *testing.T) {
 		// given
 		input, _ := fixStartInputAndOutput(t)
 
-		wf := fixFinishedArgoWorkflow(t, input.ExecCtx.Name, input.ExecCtx.Platform.Namespace)
+		wf := fixFinishedArgoWorkflow(t, input.Ctx.Name, input.Ctx.Platform.Namespace)
 		fakeCli := fake.NewSimpleClientset(&wf)
 
 		r := NewRunner(fakeCli)
@@ -118,7 +118,7 @@ func TestRunnerWaitForCompletion(t *testing.T) {
 	t.Run("Should return success for successfully finished workflow", func(t *testing.T) {
 		// given
 		input := runner.WaitForCompletionInput{
-			ExecCtx: runner.ExecutionContext{
+			Ctx: runner.Context{
 				Name: "Rocket",
 				Platform: runner.KubernetesPlatformConfig{
 					Namespace: "argo-ns",
@@ -126,7 +126,7 @@ func TestRunnerWaitForCompletion(t *testing.T) {
 			},
 		}
 
-		wf := fixFinishedArgoWorkflow(t, input.ExecCtx.Name, input.ExecCtx.Platform.Namespace)
+		wf := fixFinishedArgoWorkflow(t, input.Ctx.Name, input.Ctx.Platform.Namespace)
 
 		fakeCli := fake.NewSimpleClientset(&wf)
 		r := NewRunner(fakeCli)
@@ -145,7 +145,7 @@ func TestRunnerWaitForCompletion(t *testing.T) {
 	t.Run("Should skip watch action for dry-run mode", func(t *testing.T) {
 		// given
 		input := runner.WaitForCompletionInput{
-			ExecCtx: runner.ExecutionContext{
+			Ctx: runner.Context{
 				DryRun: true,
 			},
 		}
@@ -205,7 +205,7 @@ func fixStartInputAndOutput(t *testing.T) (runner.StartInput, runner.StartOutput
 	require.NoError(t, err)
 
 	input := runner.StartInput{
-		ExecCtx: runner.ExecutionContext{
+		Ctx: runner.Context{
 			Name: "Rocket",
 			Platform: runner.KubernetesPlatformConfig{
 				Namespace: "argo-ns",
@@ -217,8 +217,8 @@ func fixStartInputAndOutput(t *testing.T) (runner.StartInput, runner.StartOutput
 	expOutStatus := runner.StartOutput{
 		Status: Status{
 			ArgoWorkflowRef: WorkflowRef{
-				Name:      input.ExecCtx.Name,
-				Namespace: input.ExecCtx.Platform.Namespace,
+				Name:      input.Ctx.Name,
+				Namespace: input.Ctx.Platform.Namespace,
 			},
 		},
 	}

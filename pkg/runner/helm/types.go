@@ -53,8 +53,8 @@ type ChartRelease struct {
 }
 
 type Input struct {
-	Args    Arguments
-	ExecCtx runner.ExecutionContext
+	Args Arguments
+	Ctx  runner.Context
 }
 
 type Status struct {

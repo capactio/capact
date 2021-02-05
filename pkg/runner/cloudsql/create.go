@@ -30,7 +30,7 @@ type createAction struct {
 func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 
-	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.ExecCtx, a.args)
+	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.Ctx, a.args)
 	if err != nil {
 		return nil, errors.Wrap(err, "while preparing create database instance parameters")
 	}
@@ -76,13 +76,13 @@ func (a *createAction) WaitForCompletion(ctx context.Context, _ runner.WaitForCo
 	}, nil
 }
 
-func (a *createAction) prepareCreateDatabaseInstanceParameters(execCtx *runner.ExecutionContext, args *Args) (*sqladmin.DatabaseInstance, error) {
+func (a *createAction) prepareCreateDatabaseInstanceParameters(runnerCtx *runner.Context, args *Args) (*sqladmin.DatabaseInstance, error) {
 	instance := args.Instance
 	instance.Project = a.gcpProjectName
 
 	if args.GenerateName {
 		UUID := uuid.New()
-		instance.Name = fmt.Sprintf("%s-%s", execCtx.Name, UUID.String())
+		instance.Name = fmt.Sprintf("%s-%s", runnerCtx.Name, UUID.String())
 	}
 
 	if instance.RootPassword == "" {

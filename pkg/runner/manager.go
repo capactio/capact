@@ -57,8 +57,8 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 	log := r.log.With(zap.String("runner", r.runner.Name()), zap.Bool("dryRun", runnerInputData.Context.DryRun))
 	log.Debug("Starting runner")
 	sout, err := r.runner.Start(ctx, StartInput{
-		ExecCtx: runnerInputData.Context,
-		Args:    runnerInputData.Args,
+		Ctx:  runnerInputData.Context,
+		Args: runnerInputData.Args,
 	})
 	if err != nil {
 		return errors.Wrap(err, "while starting action")
@@ -70,7 +70,7 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 	}
 
 	log.Debug("Waiting for runner completion")
-	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{ExecCtx: runnerInputData.Context})
+	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{Ctx: runnerInputData.Context})
 	if err != nil {
 		log.Error("while waiting for runner completion", zap.Error(err))
 		return errors.Wrap(err, "while waiting for completion")
@@ -84,7 +84,7 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 }
 
 func (r *Manager) readRunnerInput() (InputData, error) {
-	var ctx ExecutionContext
+	var ctx Context
 	err := r.unmarshalFromFile(r.cfg.ContextPath, &ctx)
 	if err != nil {
 		return InputData{}, err

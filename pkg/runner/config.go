@@ -15,13 +15,12 @@ type Config struct {
 }
 
 type InputData struct {
-	Context ExecutionContext `json:"context"`
-	Args    json.RawMessage  `json:"args"`
+	Context Context         `json:"context"`
+	Args    json.RawMessage `json:"args"`
 }
 
-// TODO: Rename to Context to unify our wording to "Runner Context"
-// ExecutionContext holds configuration directly connected with specific runner.
-type ExecutionContext struct {
+// Context holds configuration directly connected with specific runner.
+type Context struct {
 	Name     string                   `json:"name"`
 	DryRun   bool                     `json:"dryRun"`
 	Timeout  Duration                 `json:"timeout"`

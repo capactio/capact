@@ -136,7 +136,7 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 
 // EnsureRunnerInputDataCreated ensures that Kubernetes Secret with input data for a runner is created and up to date.
 func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error {
-	runnerCtx := runner.ExecutionContext{
+	runnerCtx := runner.Context{
 		Name:    action.Name,
 		DryRun:  action.Spec.IsDryRun(),
 		Timeout: runner.Duration(a.runnerTimeout),
