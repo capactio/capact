@@ -34,7 +34,7 @@ git clone https://github.com/Project-Voltron/go-voltron.git
 
 ## Types, Interfaces and Implementations
 
-If you have some software development experiance, concepts like types and interfaces should be familliar to you. In Voltron, Types represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
+If you have some software development experience, concepts like types and interfaces should be familliar to you. In Voltron, Types represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
 An actual object of a Type is called a TypeInstance.
 
 > TODO: tutaj może obrazek z VMką na GCP i pokazanie czym jest type instancja a czym typ
@@ -473,11 +473,86 @@ The last step launches the Helm runner, deploys the Confluence server and create
 
 After we have the manifests ready, we can start our local Voltron environment. In the root of the cloned `go-voltron` repository run:
 ```
-make dev-cluster
+ENABLE_POPULATOR=false make dev-cluster
 ```
 
-This can take a few minutes.
+This can take a few minutes. We disabled the populator sidecar in OCH public, as we will populate the data from our local repository using the populator.
 
-TODO: add instructions to replace the argo-workflow-controller with our prebuild image and setup cluster policies
+To populate the data, you will need to first setup port-forwarding to the Neo4j database service:
+```
+kubectl port-forward -n neo4j svc/neo4j-neo4j 7474 7687
+```
+
+Then populate the data, with the populator:
+```
+APP_JSONPUBLISHADDR=<your-local-docker-ip-address> APP_MANIFESTS_PATH=och-content ./populator .
+
+APP_JSONPUBLISHADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator .
+```
 
 ## Run your new action
+
+Now we will create the action, to trigger the Confluence installation. Open `https://gateway.voltron.local/` in your browser.
+Then copy the following queries, variables and HTTP headers to the GraphQL playground:
+
+```graphql
+mutation CreateAction($in: ActionDetailsInput!) {
+  createAction(in: $in) {
+    name
+    status {
+      phase
+      message
+    }
+  }
+}
+
+query GetAction($actionName: String!) {
+  action(name: $actionName) {
+    name
+    status {
+      phase
+      message
+    }
+  }
+}
+
+mutation RunAction($actionName: String!) {
+  runAction(name: $actionName) {
+    name
+    status {
+      phase
+      message
+    }
+  }
+}
+
+mutation DeleteAction($actionName: String!) {
+  deleteAction(name: $actionName) {
+    name
+  }
+}
+```
+
+```json
+{
+  "actionName": "install-confluence",
+  "in": {
+    "name": "install-confluence",
+    "actionRef": {
+      "path": "cap.interface.productivity.confluence.install",
+      "revision": "0.1.0"
+    }
+  }
+}
+```
+
+```json
+{
+  "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"
+}
+```
+
+
+Execute the `CreateAction` mutation. This will create the Action resource in Voltron. Wait till the Action is in the `READY_TO_RUN` phase. You can use the `GetAction` query to check the phase of your Action.
+
+After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be execute in the `renderedAction` field. To run the Action, execute the `RunAction` mutation.
