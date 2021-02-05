@@ -47,7 +47,7 @@ spec:
 
 Next, you need to create at least one Implementation. To do so, you need to create an OCI image with a binary inside. The binary should read mounted data and execute a given functionality. For example, for Helm Runner it will be `helm install`, `helm delete`, etc.
 
-The custom runner Implementation manifest should be described using one of the built-in runners so Engine knows how to mount rendered input data and how to run the OCI image. For Argo Workflow built-in Runner, the Helm Runner manifest could look like this:
+The custom runner Implementation manifest should be described using one of the built-in runners, so Engine knows how to mount rendered input data and how to run the OCI image. For Argo Workflow built-in Runner, the Helm Runner manifest could look like this:
 
 ```yaml
 ocfVersion: 0.0.1
@@ -108,7 +108,6 @@ Each runner must consume the following environment variables:
 |---------------------------|----------------------------------------------------------------------------------------------------------------------|
 | **RUNNER_CONTEXT_PATH**   | Specifies the input path for the YAML file contains the runner context.                                              |
 | **RUNNER_ARGS_PATH**      | Specifies the input path for the YAML file stores rendered data from the Implementation `spec.action.args` property. |
-
 
 The file with runner context has the following structure: 
 

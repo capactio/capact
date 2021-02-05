@@ -61,7 +61,7 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-102 # TODO: Change image
+              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-113
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
