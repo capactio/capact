@@ -85,8 +85,8 @@ spec:
               protocol: TCP
           {{- if .Values.global.mockOCHGraphQL }}
           livenessProbe:
-            httpGet:
             initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
+            httpGet:
               path: /healthz
               port: 8082
           readinessProbe:
