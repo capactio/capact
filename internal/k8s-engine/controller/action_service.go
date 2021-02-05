@@ -29,11 +29,7 @@ import (
 const (
 	// temporaryBuiltinArgoRunnerName represent the Argo Workflow runner interface which is temporary treated
 	// as built-in runner.
-<<<<<<< HEAD
-	temporaryBuiltinArgoRunnerName = "cap.interface.runner.argo.run"
-=======
 	temporaryBuiltinArgoRunnerName = "argo.run"
->>>>>>> 6224332... working tests
 	secretInputDataEntryName       = "input.yaml"
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
