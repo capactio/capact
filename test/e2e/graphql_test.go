@@ -27,7 +27,7 @@ var _ = Describe("GraphQL API", func() {
 			interfaces, err := cli.ListInterfacesMetadata(context.Background())
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(interfaces).To(BeEmpty())
+			Expect(interfaces).NotTo(BeEmpty())
 		})
 	})
 
