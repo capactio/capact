@@ -13,12 +13,11 @@ import (
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	ochgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
@@ -40,7 +39,7 @@ const (
 )
 
 type OCHImplementationGetter interface {
-	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochgraphql.ImplementationRevision, error)
+	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicapi.ImplementationRevision, error)
 }
 
 type ArgoRenderer interface {
@@ -236,10 +235,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		status = &v1alpha1.RenderingStatus{}
 	)
 	if len(userInput) > 0 {
-		if status.Input == nil {
-			status.Input = &v1alpha1.ResolvedActionInput{}
-		}
-		status.Input.Parameters = &runtime.RawExtension{Raw: userInput}
+		status.SetInputParameters(userInput)
 
 		data := map[string]interface{}{}
 		if err := json.Unmarshal(userInput, &data); err != nil {
@@ -247,6 +243,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		}
 		opts = append(opts, argo.WithPlainTextUserInput(data))
 	}
+	opts = append(opts, argo.WithImplementationRevisionFilter(a.defaultOCHImplementationFilter()))
 
 	runnerCtxSecretRef := argo.RunnerContextSecretRef{
 		Name: action.Name,
@@ -266,9 +263,26 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
-	status.Action = &runtime.RawExtension{Raw: actionBytes}
+	status.SetAction(actionBytes)
 
 	return status, nil
+}
+
+func (*ActionService) defaultOCHImplementationFilter() ochpublicapi.ImplementationRevisionFilter {
+	exclude := ochpublicapi.FilterRuleExclude
+
+	return ochpublicapi.ImplementationRevisionFilter{
+		RequirementsSatisfiedBy: []*ochpublicapi.TypeInstanceValue{
+			{TypeRef: &ochpublicapi.TypeReferenceInput{Path: "cap.core.type.platform.kubernetes"}},
+		},
+		// currently we do not have any policies, so GCP solutions are not supported
+		Attributes: []*ochpublicapi.AttributeFilterInput{
+			{
+				Path: "cap.attribute.cloud.provider.gcp",
+				Rule: &exclude,
+			},
+		},
+	}
 }
 
 // TODO: workaround as Argo do not support k8s secret as input arguments artifacts
