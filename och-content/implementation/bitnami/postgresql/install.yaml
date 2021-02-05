@@ -75,36 +75,27 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
-                          # TODO: remove the context data. Should be injected by engine
                           data: |
-                            context:
-                              name: "helm-runner-example"
-                              dryRun: false
-                              timeout: "10m"
-                              platform:
-                                namespace: "default"
-                            args:
-                              command: "install"
-                              generateName: true
-                              chart:
-                                name: "postgresql"
-                                repo: "https://charts.bitnami.com/bitnami"
-                                version: "10.2.6"
-                              values:
-                                image:
-                                  pullPolicy: Always
-                                postgresqlDatabase: {{ defaultDBName }}
-                                postgresqlUsername: {{ superuser.username }}
-                                postgresqlPassword: {{ superuser.password }}
-                              output:{% raw %}
-                                goTemplate:
-                                  host: '{{ template "common.names.fullname" . }}'
-                                  port: '{{ template "postgresql.port" . }}'
-                                  defaultDBName: '{{ template "postgresql.database" . }}'
-                                  superuser:
-                                    username: '{{ template "postgresql.username" . }}'
-                                    password: '{{ template "postgresql.password" . }}'{% endraw %}
-
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "postgresql"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "10.2.6"
+                            values:
+                              image:
+                                pullPolicy: Always
+                              postgresqlDatabase: {{ defaultDBName }}
+                              postgresqlUsername: {{ superuser.username }}
+                              postgresqlPassword: {{ superuser.password }}
+                            output:{% raw %}
+                              goTemplate:
+                                host: '{{ template "common.names.fullname" . }}'
+                                port: '{{ template "postgresql.port" . }}'
+                                defaultDBName: '{{ template "postgresql.database" . }}'
+                                superuser:
+                                  username: '{{ template "postgresql.username" . }}'
+                                  password: '{{ template "postgresql.password" . }}'{% endraw %}
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
@@ -116,6 +107,7 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      # TODO: Add context
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

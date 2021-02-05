@@ -3,7 +3,7 @@ generateName: true
 chart:
   name: "postgresql"
   repo: "https://charts.bitnami.com/bitnami"
-  version: "10.2.0"
+  version: "10.2.6"
 values:
   fullnameOverride: postgresql-server
   postgresqlDatabase: postgres
