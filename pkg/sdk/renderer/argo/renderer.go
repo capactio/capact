@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
@@ -25,14 +27,19 @@ type OCHClient interface {
 }
 
 type Renderer struct {
-	ochCli              OCHClient
+	ochCli        OCHClient
+	maxDepth      int
+	renderTimeout time.Duration
+
 	typeInstanceHandler TypeInstanceHandler
 }
 
-func NewRenderer(ochCli OCHClient) *Renderer {
+func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
 	r := &Renderer{
 		ochCli:              ochCli,
 		typeInstanceHandler: TypeInstanceHandler{ochCli: ochCli},
+		maxDepth:            cfg.MaxDepth,
+		renderTimeout:       cfg.RenderTimeout,
 	}
 
 	return r
@@ -45,8 +52,11 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 		opt(renderOpt)
 	}
 
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
+	defer cancel()
+
 	// 1. Find the root implementation
-	implementation, err := r.ochCli.GetImplementationForInterface(ctx, r.refToOCHRef(ref))
+	implementation, err := r.ochCli.GetImplementationForInterface(ctxWithTimeout, r.refToOCHRef(ref))
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +85,7 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	}
 
 	// 6. Render rootWorkflow templates
-	rootWorkflow.Templates, err = r.renderTemplateSteps(ctx, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances)
+	rootWorkflow.Templates, err = r.renderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances, 1)
 	if err != nil {
 		return nil, err
 	}
@@ -91,9 +101,13 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	}, nil
 }
 
-func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicgraphql.ImplementationImport, typeInstances []types.InputTypeInstanceRef) ([]*Template, error) {
+func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicgraphql.ImplementationImport, typeInstances []types.InputTypeInstanceRef, currentIteration int) ([]*Template, error) {
 	if shouldExit(ctx) {
 		return nil, ctx.Err()
+	}
+
+	if currentIteration > r.maxDepth {
+		return nil, NewMaxDepthError(r.maxDepth)
 	}
 
 	var processedTemplates []*Template
@@ -129,7 +143,7 @@ func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, 
 
 					// 2.2 Get `voltron-action` specific implementation
 					// TODO(policies): take into account policies
-					implementation, err := r.ochCli.GetImplementationForInterface(context.TODO(), *actionRef)
+					implementation, err := r.ochCli.GetImplementationForInterface(ctx, *actionRef)
 					if err != nil {
 						return nil, errors.Wrapf(err, "while processing step: %s", step.Name)
 					}
@@ -149,7 +163,7 @@ func (r *Renderer) renderTemplateSteps(ctx context.Context, workflow *Workflow, 
 
 					// 2.4 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
-					processedImportedTemplates, err := r.renderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
+					processedImportedTemplates, err := r.renderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil, currentIteration+1)
 					processedTemplates = append(processedTemplates, processedImportedTemplates...)
 					if err != nil {
 						return nil, err
@@ -259,10 +273,10 @@ func (r *Renderer) resolveRunnerInterface(imports []*ochpublicgraphql.Implementa
 	return fullRef.Path, nil
 }
 
-func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, voltronAction string) (*ochpublicgraphql.InterfaceReference, error) {
-	action := strings.SplitN(voltronAction, ".", 2)
+func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.ImplementationImport, actionRef string) (*ochpublicgraphql.InterfaceReference, error) {
+	action := strings.SplitN(actionRef, ".", 2)
 	if len(action) != 2 {
-		return nil, errors.Errorf("Provided action reference doesn't follow pattern <import_alias>.<method_name>")
+		return nil, NewActionReferencePatternError(actionRef)
 	}
 
 	alias, name := action[0], action[1]
@@ -281,7 +295,7 @@ func (*Renderer) resolveActionPathFromImports(imports []*ochpublicgraphql.Implem
 
 	ref := selectFirstMatchedImport()
 	if ref == nil {
-		return nil, errors.Errorf("could not find full path in Implementation imports for action %q", voltronAction)
+		return nil, NewActionImportsError(actionRef)
 	}
 
 	return ref, nil

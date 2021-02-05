@@ -24,6 +24,7 @@ import (
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 )
 
@@ -66,6 +67,8 @@ type Config struct {
 		Timeout time.Duration `envconfig:"default=30m"`
 		Image   string
 	}
+
+	Renderer renderer.Config
 }
 
 func main() {
@@ -96,7 +99,7 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
-	argoRenderer := argo.NewRenderer(ochClient)
+	argoRenderer := argo.NewRenderer(cfg.Renderer, ochClient)
 	actionSvc := controller.NewActionService(mgr.GetClient(), argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)

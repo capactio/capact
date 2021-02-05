@@ -3,11 +3,14 @@ package argo
 import (
 	"context"
 	"testing"
+	"time"
 
 	"projectvoltron.dev/voltron/pkg/och/client/fake"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 
 	"github.com/ghodss/yaml"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/golden"
 )
@@ -25,7 +28,10 @@ func TestRenderHappyPath(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och")
 	require.NoError(t, err)
 
-	renderer := NewRenderer(fakeCli)
+	argoRenderer := NewRenderer(renderer.Config{
+		RenderTimeout: time.Second,
+		MaxDepth:      10,
+	}, fakeCli)
 
 	tests := []struct {
 		name               string
@@ -79,13 +85,35 @@ func TestRenderHappyPath(t *testing.T) {
 			t.Parallel()
 
 			// when
-			renderedArgs, err := renderer.Render(context.Background(), tt.ref, WithPlainTextUserInput(tt.userInput), WithTypeInstances(tt.inputTypeInstances))
-			require.NoError(t, err)
+			renderedArgs, err := argoRenderer.Render(context.Background(), tt.ref, WithPlainTextUserInput(tt.userInput), WithTypeInstances(tt.inputTypeInstances))
 
 			// then
+			require.NoError(t, err)
 			assertYAMLGoldenFile(t, renderedArgs, t.Name())
 		})
 	}
+}
+
+func TestRendererMaxDepth(t *testing.T) {
+	// given
+	fakeCli, err := fake.NewFromLocal("testdata/och")
+	require.NoError(t, err)
+
+	argoRenderer := NewRenderer(renderer.Config{
+		RenderTimeout: time.Second,
+		MaxDepth:      3,
+	}, fakeCli)
+
+	ref := types.InterfaceRef{
+		Path: "cap.interface.infinite.render.loop",
+	}
+
+	// when
+	renderedArgs, err := argoRenderer.Render(context.Background(), ref)
+
+	// then
+	assert.EqualError(t, err, "Exceeded maximum render depth level [max depth 3]")
+	assert.Nil(t, renderedArgs)
 }
 
 func assertYAMLGoldenFile(t *testing.T, actualYAMLData interface{}, filename string, msgAndArgs ...interface{}) {
