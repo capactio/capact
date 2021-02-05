@@ -19,5 +19,5 @@ func NewActionImportsError(actionRef string) error {
 }
 
 func NewRunnerContextRefEmptyError() error {
-	return errors.Errorf("Empty Runner Context reference")
+	return errors.Errorf("Empty Runner Context Secret reference")
 }

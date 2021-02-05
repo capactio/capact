@@ -87,10 +87,10 @@ func TestRenderHappyPath(t *testing.T) {
 			// when
 			renderedArgs, err := argoRenderer.Render(
 				context.Background(),
+				RunnerContextSecretRef{Name: "secret", Key: "key"},
 				tt.ref,
 				WithPlainTextUserInput(tt.userInput),
 				WithTypeInstances(tt.inputTypeInstances),
-				WithRunnerContextFromSecret("secret", "key"),
 			)
 
 			// then
@@ -110,12 +110,12 @@ func TestRendererMaxDepth(t *testing.T) {
 		MaxDepth:      3,
 	}, fakeCli)
 
-	ref := types.InterfaceRef{
+	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",
 	}
 
 	// when
-	renderedArgs, err := argoRenderer.Render(context.Background(), ref)
+	renderedArgs, err := argoRenderer.Render(context.Background(), RunnerContextSecretRef{Name: "secret", Key: "key"}, interfaceRef)
 
 	// then
 	assert.EqualError(t, err, "Exceeded maximum render depth level [max depth 3]")

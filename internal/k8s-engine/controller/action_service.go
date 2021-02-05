@@ -44,7 +44,7 @@ type OCHImplementationGetter interface {
 }
 
 type ArgoRenderer interface {
-	Render(ctx context.Context, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
+	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -226,16 +226,15 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
-	opts := []argo.RendererOption{
-		argo.WithRunnerContextFromSecret(action.Name, runnerContextSecretKey),
-	}
-
 	userInput, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
 
-	var status = &v1alpha1.RenderingStatus{}
+	var (
+		opts   []argo.RendererOption
+		status = &v1alpha1.RenderingStatus{}
+	)
 	if len(userInput) > 0 {
 		if status.Input == nil {
 			status.Input = &v1alpha1.ResolvedActionInput{}
@@ -249,11 +248,15 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		opts = append(opts, argo.WithPlainTextUserInput(data))
 	}
 
-	ref := types.InterfaceRef{
+	runnerCtxSecretRef := argo.RunnerContextSecretRef{
+		Name: action.Name,
+		Key:  runnerContextSecretKey,
+	}
+	interfaceRef := types.InterfaceRef{
 		Path:     string(action.Spec.ActionRef.Path),
 		Revision: action.Spec.ActionRef.Revision,
 	}
-	renderedAction, err := a.argoRenderer.Render(ctx, ref, opts...)
+	renderedAction, err := a.argoRenderer.Render(ctx, runnerCtxSecretRef, interfaceRef, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
 	}

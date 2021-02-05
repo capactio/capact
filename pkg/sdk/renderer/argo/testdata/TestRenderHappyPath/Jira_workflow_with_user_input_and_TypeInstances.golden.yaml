@@ -179,7 +179,7 @@ args:
           value: '{{outputs.artifacts.additional.path}}'
         - name: RUNNER_LOGGER_DEV_MODE
           value: "true"
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-102
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
         name: ""
         resources: {}
       inputs:
@@ -276,7 +276,7 @@ args:
           value: '{{outputs.artifacts.additional.path}}'
         - name: RUNNER_LOGGER_DEV_MODE
           value: "true"
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-102
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
         name: ""
         resources: {}
       inputs:

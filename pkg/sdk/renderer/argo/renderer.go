@@ -29,6 +29,11 @@ type OCHClient interface {
 	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
 }
 
+type RunnerContextSecretRef struct {
+	Name string
+	Key  string
+}
+
 type Renderer struct {
 	ochCli        OCHClient
 	maxDepth      int
@@ -48,7 +53,7 @@ func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
 	return r
 }
 
-func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
+func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
 	// 0. Populate render options
 	renderOpt := &renderOptions{}
 	for _, opt := range opts {
@@ -59,7 +64,7 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	defer cancel()
 
 	// 1. Find the root implementation
-	implementation, err := r.ochCli.GetImplementationForInterface(ctxWithTimeout, r.refToOCHRef(ref))
+	implementation, err := r.ochCli.GetImplementationForInterface(ctxWithTimeout, r.refToOCHRef(interfaceRef))
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +88,7 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	}
 
 	// 5. Add runner context
-	if err := r.addRunnerContext(rootWorkflow, renderOpt.runnerContextFromSecret); err != nil {
+	if err := r.addRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
 
@@ -240,10 +245,10 @@ func (*Renderer) evaluateWhenExpression(typeInstances []types.InputTypeInstanceR
 	return result, nil
 }
 
-func (r *Renderer) addRunnerContext(rootWorkflow *Workflow, secretRef runnerContextSecretRef) error {
-	//if secretRef.Name == "" || secretRef.Key == "" {
-	//	return NewRunnerContextRefEmptyError()
-	//}
+func (r *Renderer) addRunnerContext(rootWorkflow *Workflow, secretRef RunnerContextSecretRef) error {
+	if secretRef.Name == "" || secretRef.Key == "" {
+		return NewRunnerContextRefEmptyError()
+	}
 
 	idx, found := getEntrypointWorkflowIndex(rootWorkflow)
 	if !found {

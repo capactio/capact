@@ -5,14 +5,8 @@ import (
 )
 
 type renderOptions struct {
-	plainTextUserInput      map[string]interface{}
-	runnerContextFromSecret runnerContextSecretRef
-	inputTypeInstances      []types.InputTypeInstanceRef
-}
-
-type runnerContextSecretRef struct {
-	Name string
-	Key  string
+	plainTextUserInput map[string]interface{}
+	inputTypeInstances []types.InputTypeInstanceRef
 }
 
 type RendererOption func(*renderOptions)
@@ -20,15 +14,6 @@ type RendererOption func(*renderOptions)
 func WithPlainTextUserInput(data map[string]interface{}) RendererOption {
 	return func(r *renderOptions) {
 		r.plainTextUserInput = data
-	}
-}
-
-func WithRunnerContextFromSecret(secretName, keyName string) RendererOption {
-	return func(r *renderOptions) {
-		r.runnerContextFromSecret = runnerContextSecretRef{
-			Name: secretName,
-			Key:  keyName,
-		}
 	}
 }
 
