@@ -102,7 +102,6 @@ spec:
                     artifacts:
                       - name: template
                         raw:
-                          # TODO: `args.output` should be simplified.
                           data: |
                             command: "install"
                             generateName: true

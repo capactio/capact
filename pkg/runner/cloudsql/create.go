@@ -30,7 +30,7 @@ type createAction struct {
 func (a *createAction) Start(_ context.Context, in *runner.StartInput) (*runner.StartOutput, error) {
 	var err error
 
-	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.Ctx, a.args)
+	a.dbInstance, err = a.prepareCreateDatabaseInstanceParameters(&in.RunnerCtx, a.args)
 	if err != nil {
 		return nil, errors.Wrap(err, "while preparing create database instance parameters")
 	}

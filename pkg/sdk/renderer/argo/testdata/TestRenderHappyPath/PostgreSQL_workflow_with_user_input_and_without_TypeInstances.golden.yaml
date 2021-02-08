@@ -170,7 +170,7 @@ args:
     - arguments: {}
       container:
         args:
-        - sleep 2 && cp /input/context.yaml /output.yaml
+        - sleep 1
         command:
         - sh
         - -c
@@ -188,7 +188,7 @@ args:
         artifacts:
         - globalName: runner-context
           name: runner-context
-          path: /output.yaml
+          path: /input/context.yaml
       volumes:
       - name: runner-context
         secret:

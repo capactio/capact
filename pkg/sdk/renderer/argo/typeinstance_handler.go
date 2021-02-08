@@ -19,9 +19,9 @@ type TypeInstanceHandler struct {
 
 // TODO(SV-189): Handle that properly
 func (r *TypeInstanceHandler) AddInputTypeInstance(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
-	idx, found := getEntrypointWorkflowIndex(rootWorkflow)
-	if !found {
-		return errors.Errorf("cannot find workflow index specified by entrypoint %q", rootWorkflow.Entrypoint)
+	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	if err != nil {
+		return err
 	}
 
 	for _, tiInput := range instances {

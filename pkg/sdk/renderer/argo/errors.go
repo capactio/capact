@@ -21,3 +21,11 @@ func NewActionImportsError(actionRef string) error {
 func NewRunnerContextRefEmptyError() error {
 	return errors.Errorf("Empty Runner Context Secret reference")
 }
+
+func NewWorkflowNilError() error {
+	return errors.New("workflow cannot be nil")
+}
+
+func NewEntrypointWorkflowIndexNotFoundError(entrypoint string) error {
+	return errors.Errorf("cannot find workflow index specified by entrypoint %q", entrypoint)
+}

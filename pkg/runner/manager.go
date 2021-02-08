@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"log"
 
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
@@ -57,8 +56,8 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 	log := r.log.With(zap.String("runner", r.runner.Name()), zap.Bool("dryRun", runnerInputData.Context.DryRun))
 	log.Debug("Starting runner")
 	sout, err := r.runner.Start(ctx, StartInput{
-		Ctx:  runnerInputData.Context,
-		Args: runnerInputData.Args,
+		RunnerCtx: runnerInputData.Context,
+		Args:      runnerInputData.Args,
 	})
 	if err != nil {
 		return errors.Wrap(err, "while starting action")
@@ -70,7 +69,7 @@ func (r *Manager) Execute(stop <-chan struct{}) error {
 	}
 
 	log.Debug("Waiting for runner completion")
-	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{Ctx: runnerInputData.Context})
+	wout, err := r.runner.WaitForCompletion(ctx, WaitForCompletionInput{RunnerCtx: runnerInputData.Context})
 	if err != nil {
 		log.Error("while waiting for runner completion", zap.Error(err))
 		return errors.Wrap(err, "while waiting for completion")
@@ -95,8 +94,6 @@ func (r *Manager) readRunnerInput() (InputData, error) {
 	if err != nil {
 		return InputData{}, err
 	}
-
-	log.Printf("%+v", string(args))
 
 	return InputData{
 		Context: ctx,

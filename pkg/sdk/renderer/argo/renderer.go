@@ -7,31 +7,26 @@ import (
 	"strings"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/ptr"
-
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
-
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
+	"projectvoltron.dev/voltron/internal/ptr"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 )
 
-const userInputName = "input-parameters"
-const runnerContext = "runner-context"
+const (
+	userInputName = "input-parameters"
+	runnerContext = "runner-context"
+)
 
 type OCHClient interface {
 	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error)
 	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
-}
-
-type RunnerContextSecretRef struct {
-	Name string
-	Key  string
 }
 
 type Renderer struct {
@@ -250,31 +245,29 @@ func (r *Renderer) addRunnerContext(rootWorkflow *Workflow, secretRef RunnerCont
 		return NewRunnerContextRefEmptyError()
 	}
 
-	idx, found := getEntrypointWorkflowIndex(rootWorkflow)
-	if !found {
-		return errors.Errorf("cannot find workflow index specified by entrypoint %q", rootWorkflow.Entrypoint)
+	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	if err != nil {
+		return err
+	}
+
+	container := r.sleepContainer()
+	container.VolumeMounts = []apiv1.VolumeMount{
+		{
+			Name:      runnerContext,
+			ReadOnly:  true,
+			MountPath: "/input",
+		},
 	}
 
 	template := &wfv1.Template{
-		Name: fmt.Sprintf("inject-%s", runnerContext),
-		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
-			Command: []string{"sh", "-c"},
-			Args:    []string{"sleep 2 && cp /input/context.yaml /output.yaml"},
-			VolumeMounts: []apiv1.VolumeMount{
-				{
-					Name:      runnerContext,
-					ReadOnly:  true,
-					MountPath: "/input",
-				},
-			},
-		},
+		Name:      fmt.Sprintf("inject-%s", runnerContext),
+		Container: container,
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
 				{
 					Name:       runnerContext,
 					GlobalName: runnerContext,
-					Path:       "/output.yaml",
+					Path:       "/input/context.yaml",
 				},
 			},
 		},
@@ -518,12 +511,8 @@ func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output Type
 		}},
 	}
 	argoWfTemplate := &wfv1.Template{
-		Name: templateName,
-		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
-			Command: []string{"sh", "-c"},
-			Args:    []string{"sleep 1"},
-		},
+		Name:      templateName,
+		Container: r.sleepContainer(),
 		Inputs: wfv1.Inputs{
 			Artifacts: wfv1.Artifacts{
 				{
@@ -544,5 +533,13 @@ func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output Type
 	}
 	return WorkflowStep{WorkflowStep: argoWfStep}, Template{Template: argoWfTemplate}, map[string]string{
 		output.Name: artifactGlobalName,
+	}
+}
+
+func (r *Renderer) sleepContainer() *apiv1.Container {
+	return &apiv1.Container{
+		Image:   "alpine:3.7",
+		Command: []string{"sh", "-c"},
+		Args:    []string{"sleep 1"},
 	}
 }

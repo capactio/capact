@@ -25,6 +25,14 @@ import (
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
 	// given
+	fakeCli, err := fake.NewFromLocal("testdata/och")
+	require.NoError(t, err)
+
+	argoRenderer := NewRenderer(renderer.Config{
+		RenderTimeout: time.Second,
+		MaxDepth:      10,
+	}, fakeCli)
+
 	tests := []struct {
 		name               string
 		ref                types.InterfaceRef
@@ -75,14 +83,6 @@ func TestRenderHappyPath(t *testing.T) {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			fakeCli, err := fake.NewFromLocal("testdata/och")
-			require.NoError(t, err)
-
-			argoRenderer := NewRenderer(renderer.Config{
-				RenderTimeout: time.Second,
-				MaxDepth:      10,
-			}, fakeCli)
 
 			// when
 			renderedArgs, err := argoRenderer.Render(

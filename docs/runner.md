@@ -106,8 +106,8 @@ Each runner must consume the following environment variables:
 
 | Environment Variable Name | Description                                                                                                          |
 |---------------------------|----------------------------------------------------------------------------------------------------------------------|
-| **RUNNER_CONTEXT_PATH**   | Specifies the input path for the YAML file contains the runner context.                                              |
-| **RUNNER_ARGS_PATH**      | Specifies the input path for the YAML file stores rendered data from the Implementation `spec.action.args` property. |
+| **RUNNER_CONTEXT_PATH**   | Specifies the input path for the YAML file that contains the runner context.                                              |
+| **RUNNER_ARGS_PATH**      | Specifies the input path for the YAML file that stores rendered data from the Implementation `spec.action.args` property. |
 
 The file with runner context has the following structure: 
 

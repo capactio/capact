@@ -60,20 +60,20 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 	wf := wfv1.Workflow{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      in.Ctx.Name,
-			Namespace: in.Ctx.Platform.Namespace,
+			Name:      in.RunnerCtx.Name,
+			Namespace: in.RunnerCtx.Platform.Namespace,
 			Labels: map[string]string{
 				wfManagedByLabelKey: runnerName,
 			},
 			OwnerReferences: []metav1.OwnerReference{
-				in.Ctx.Platform.OwnerRef,
+				in.RunnerCtx.Platform.OwnerRef,
 			},
 		},
 		Spec: renderedWorkflow.Spec,
 	}
 
 	// We have agreement that we should return error also if workflow already exits.
-	if err := r.submitWorkflow(&wf, in.Ctx); err != nil {
+	if err := r.submitWorkflow(&wf, in.RunnerCtx); err != nil {
 		return nil, errors.Wrap(err, "while creating Argo Workflow")
 	}
 
@@ -89,22 +89,22 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 
 // WaitForCompletion waits until Argo Workflow is finished.
 func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
-	if in.Ctx.DryRun {
+	if in.RunnerCtx.DryRun {
 		return &runner.WaitForCompletionOutput{
 			Succeeded: true,
 			Message:   "In DryRun mode Argo Workflow is not created.",
 		}, nil
 	}
 
-	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.Ctx.Name).String()
+	fieldSelector := fields.OneTermEqualSelector("metadata.name", in.RunnerCtx.Name).String()
 	lw := &cache.ListWatch{
 		ListFunc: func(opts metav1.ListOptions) (runtime.Object, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.Ctx.Platform.Namespace).List(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.RunnerCtx.Platform.Namespace).List(opts)
 		},
 		WatchFunc: func(opts metav1.ListOptions) (watch.Interface, error) {
 			opts.FieldSelector = fieldSelector
-			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.Ctx.Platform.Namespace).Watch(opts)
+			return r.wfClientset.ArgoprojV1alpha1().Workflows(in.RunnerCtx.Platform.Namespace).Watch(opts)
 		},
 	}
 

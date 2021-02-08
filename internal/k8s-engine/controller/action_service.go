@@ -158,7 +158,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	}
 	marshaledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
 	if err != nil {
-		return errors.Wrap(err, "while marshaling runner context")
+		return errors.Wrap(err, "while marshaling runner args")
 	}
 
 	secret := &corev1.Secret{
