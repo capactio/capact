@@ -79,7 +79,7 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
-			name: "Two_level_nested_workflow",
+			name: "Two level nested workflow",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.nested.root",
 			},
