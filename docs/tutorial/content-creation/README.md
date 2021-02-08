@@ -39,15 +39,9 @@ It is also highly recommended to go through the [JIRA installation tutorial](../
 If you have some software development experience, concepts like types and interfaces should be familliar to you. In Voltron, Types represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
 An actual object of a Type is called a TypeInstance.
 
-> TODO: tutaj może obrazek z VMką na GCP i pokazanie czym jest type instancja a czym typ
-
 Operations, which can be executed on some Types are defined by Interfaces. Let's say we have an Type called `postgresql.config`, which represents a PostgreSQL database instance. We could have an Interface `postgresql.install`, which will provision PostgreSQL instances and create TypeInstances of `postgresql.config`.
 
-> TODO: tutaj obrazek z tym co robią interfejsy
-
 Of course, there could be multiple ways, how to create an PostgreSQL instance. You could create it on some public cloud or on-premise. You could deploy it as a virtual machine or as a Kubernetes StatefulSet. To cover these scenarios, Voltron allows to define multiple Implementations of some Interfaces. So we could have a `aws.postgresql.install` Implementation of the `postgresql.install` Interface, which deploys AWS RDS instances or `bitnami.postgresql.install`, which deploys a PostgreSQL Helm chart on Kubernetes.
-
-> TODO: obrazek z roznymi implementacjami dla postgresql.install
 
 ## Define your Types and Interfaces
 
@@ -109,9 +103,9 @@ metadata:
   supportURL: https://support.atlassian.com/confluence/
   iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: your.email@example.com
+      name: your-name
+      url: your-website
 
 spec:
   input:
@@ -164,9 +158,9 @@ metadata:
   supportURL: https://www.atlassian.com/software/confluence
   iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: your.email@example.com
+      name: your-name
+      url: your-website
 
 spec:
   jsonSchema:
@@ -213,9 +207,9 @@ metadata:
   supportURL: https://www.atlassian.com/software/confluence
   iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: your.email@example.com
+      name: your-name
+      url: your-website
 
 spec:
   jsonSchema:
@@ -279,9 +273,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: your.email@example.com
+      name: your-name
+      url: your-website
 
 spec:
   appVersion: "2.x.x"
