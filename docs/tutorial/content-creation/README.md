@@ -252,6 +252,18 @@ The Types are described using [JSON Schema](https://json-schema.org/).
 > Currently the Type manifests are not used in Voltron to validate the data of the inputs and outputs. Validation of the data will be added later on, although
 > it is still useful to define the Types to document the schema of the data.
 
+## Runners
+
+The Action execution is handled by runners. For now we provide the following runners:
+- [Argo Workflow Runner](../../../cmd/argo-runner/README.md)
+- [Helm Runner](../../../cmd/helm-runner/README.md)
+- [CloudSQL Runner](../../../cmd/cloudsql-runner/README.md)
+- [Terraform Runner](../../../cmd/terraform-runner/README.md)
+
+To check the schema of the runner input you have to look in the [`och-content/type/runner`](../../../och-content/type/runner) directory. You can find there the JSON schema and an example input for the runner.
+
+You can read more about runners in [this document](../../runner.md).
+
 ## Write the Implementation for the Interface
 
 After we defined the Interfaces and the Types, we can write a Implementation of `confluence.install`. Our Implementation will use a PostgreSQL database, which will be provided by an another Interface, which is already available in Voltron. We will also allow the user to provide his own PostgreSQL instance TypeInstance. Create a file `och-content/implementation/atlassian/confluence/install.yaml` with the following content:
