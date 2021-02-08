@@ -1,0 +1,93 @@
+args:
+  workflow:
+    arguments:
+      artifacts:
+      - name: input-parameters
+        raw:
+          data: |
+            {}
+    entrypoint: main
+    templates:
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: main
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: second-level
+          template: second-level
+      - - arguments: {}
+          name: imported
+          template: main-imported-main
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: main-imported-main
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: second-level
+          template: main-imported-second-level
+    - arguments: {}
+      container:
+        args:
+        - cowsay hello && sleep 2
+        command:
+        - sh
+        - -c
+        image: docker/whalesay:latest
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: main-imported-second-level
+      outputs: {}
+    - arguments: {}
+      container:
+        args:
+        - cowsay hello && sleep 2
+        command:
+        - sh
+        - -c
+        image: docker/whalesay:latest
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: second-level
+      outputs: {}
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+runnerInterface: cap.interface.runner.argo.run
