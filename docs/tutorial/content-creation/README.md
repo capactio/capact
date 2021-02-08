@@ -32,7 +32,7 @@ Also, clone the Voltron repository with the current OCF content.
 git clone https://github.com/Project-Voltron/go-voltron.git
 ```
 
-It is also highly recommended to go through the [JIRA installation tutorial](../jira-installation.md), so you know how to execute Actions in Voltron.
+It is also highly recommended to go through the [JIRA installation tutorial](../jira-installation/README.md), so you know how to execute Actions in Voltron.
 
 ## Types, Interfaces and Implementations
 
@@ -462,6 +462,7 @@ spec:
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
+</details>
 
 Let's take a look on the Implementation YAML. Implementation has the following fields in the `spec` field:
 - `appVersion` - Application versions, which this Implementation supports.
@@ -605,4 +606,4 @@ kubectl port-forward -n argo svc/argo-server 2746
 
 Now you can access the Argo UI with your browser by opening http://127.0.0.1:2746.
 
-TODO: tutaj obrazek z argo UI
+![argo-ui](./assets/argo-ui.png)
