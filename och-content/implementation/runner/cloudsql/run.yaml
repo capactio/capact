@@ -49,7 +49,9 @@ spec:
                   path: /gcp/sa.json
                 # The input parameters that holds information what should be executed
                 - name: input-parameters
-                  path: "/cloudsql-args"
+                  path: "/runner-args"
+                - name: runner-context
+                  path: "/runner-context"
             outputs:
               artifacts:
                 - name: cloudsql-instance
@@ -59,9 +61,11 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-102
+              image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-113
               env:
-                - name: RUNNER_INPUT_PATH
+                - name: RUNNER_CONTEXT_PATH
+                  value: "{{inputs.artifacts.runner-context.path}}"
+                - name: RUNNER_ARGS_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
                 - name: RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH
                   value: "{{inputs.artifacts.gcp-sa.path}}"

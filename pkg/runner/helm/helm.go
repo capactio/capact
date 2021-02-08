@@ -35,7 +35,7 @@ func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
 }
 
 func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
-	namespace := in.ExecCtx.Platform.Namespace
+	namespace := in.RunnerCtx.Platform.Namespace
 
 	actionConfig, err := r.initActionConfig(namespace)
 	if err != nil {
@@ -110,8 +110,8 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 	}
 
 	return Input{
-		Args:    args,
-		ExecCtx: in.ExecCtx,
+		Args: args,
+		Ctx:  in.RunnerCtx,
 	}, nil
 }
 

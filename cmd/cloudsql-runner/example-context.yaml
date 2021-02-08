@@ -1,0 +1,4 @@
+name: "cloudsql-example"
+dryRun: false
+timeout: "10m"
+platform: {}

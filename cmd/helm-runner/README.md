@@ -20,7 +20,7 @@ Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm 
 
 To start the runner execute:
 ```bash
-RUNNER_INPUT_PATH=cmd/helm-runner/example-input.yml RUNNER_LOGGER_DEV_MODE=true go run cmd/helm-runner/main.go
+RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml RUNNER_ARGS_PATH=cmd/helm-runner/example-args.yaml RUNNER_LOGGER_DEV_MODE=true go run cmd/helm-runner/main.go
 ```
 
 You can check, if the PostgreSQL Helm release was created:
@@ -36,7 +36,8 @@ The following environment variables can be set:
 
 | Name                                 | Required | Default                  | Description                                                  |
 |--------------------------------------|----------|--------------------------|--------------------------------------------------------------|
-| RUNNER_INPUT_PATH                    | yes      |                          | Path to the runner YAML input file                           |
+| RUNNER_CONTEXT_PATH                  | yes      |                          | Path to the YAML file with runner context                    |
+| RUNNER_ARGS_PATH                     | yes      |                          | Path to the YAML file with input arguments                   |
 | RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                               |
 | RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                              |
 | RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory               |

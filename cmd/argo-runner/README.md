@@ -29,32 +29,22 @@ kubectl apply -f cmd/argo-runner/setup.yml
 
 1. Create the runner input YAML file:
 ```bash
-cat <<EOF > /tmp/argo-runner-args.yml
-context:
-  name: argo-runner-job
-  dryRun: false
-  platform:
-    namespace: default
-    ownerRef:
-      apiVersion: batch/v1
-      kind: Job
-      name: argo-runner-owner
-      uid: $(kubectl get jobs argo-runner-owner -ojsonpath='{.metadata.uid}')
-args:
-  workflow:
-    entrypoint: main
-    templates:
-      - name: main
-        container:
-          image: docker/whalesay
-          command: ["/bin/bash", "-c"]
-          args: ["sleep 2 && cowsay hello world"]
+cat <<EOF > /tmp/argo-runner-context.yaml
+name: argo-runner-job
+dryRun: false
+platform:
+  namespace: default
+  ownerRef:
+    apiVersion: batch/v1
+    kind: Job
+    name: argo-runner-owner
+    uid: $(kubectl get jobs argo-runner-owner -ojsonpath='{.metadata.uid}')
 EOF
 ```
 
 2. Start the runner type:
 ```bash
-RUNNER_INPUT_PATH=/tmp/argo-runner-args.yml RUNNER_LOGGER_DEV_MODE=true go run cmd/argo-runner/main.go
+RUNNER_CONTEXT_PATH=/tmp/argo-runner-context.yaml RUNNER_ARGS_PATH=cmd/argo-runner/example-args.yaml RUNNER_LOGGER_DEV_MODE=true go run cmd/argo-runner/main.go
 ```
 
 You can check the workflow status in Argo UI on http://localhost:2746 after setting port-forwarding:
@@ -66,11 +56,12 @@ kubectl port-forward -n argo svc/argo-server 2746
 
 The following environment variables can be set:
 
-| Name                   | Required | Default          | Description                        |
-| ---------------------- | -------- | ---------------- | ---------------------------------- |
-| RUNNER_INPUT_PATH      | yes      |                  | Path to the runner YAML input file |
-| RUNNER_LOGGER_DEV_MODE | no       | `false`          | Enable additional log messages     |
-| KUBECONFIG             | no       | `~/.kube/config` | Path to kubeconfig file            |
+| Name                   | Required | Default          | Description                                |
+| ---------------------- | -------- | ---------------- | ------------------------------------------ |
+| RUNNER_CONTEXT_PATH    | yes      |                  | Path to the YAML file with runner context  |
+| RUNNER_ARGS_PATH       | yes      |                  | Path to the YAML file with input arguments |
+| RUNNER_LOGGER_DEV_MODE | no       | `false`          | Enable additional log messages             |
+| KUBECONFIG             | no       | `~/.kube/config` | Path to kubeconfig file                    |
 
 ## Development
 

@@ -420,7 +420,7 @@ spec:
                 description: Runner holds data related to Runner that runs the Action.
                 properties:
                   status:
-                    description: StatusRef contains reference to resource with arbitrary
+                    description: Status contains reference to resource with arbitrary
                       Runner status data.
                     type: object
                     x-kubernetes-preserve-unknown-fields: true

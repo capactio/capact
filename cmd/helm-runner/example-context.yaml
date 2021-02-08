@@ -1,0 +1,5 @@
+name: "helm-example"
+dryRun: false
+timeout: "10m"
+platform:
+  namespace: "default"

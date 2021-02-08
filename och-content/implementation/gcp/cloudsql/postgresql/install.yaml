@@ -79,36 +79,30 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
-                          # TODO: remove the context data. Should be injected by engine
                           # TODO: currently `{{ superuser.username }}` is not supported
                           data: |
-                            context:
-                              name: "cloudsql-runner-example"
-                              dryRun: false
-                              timeout: "10m"
-                            args:
-                              group: "sql"
-                              command: "create"
-                              generateName: true
-                              instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
-                                databaseVersion: "POSTGRES_11"
-                                region: "us-central"
-                                defaultDBName: {{ defaultDBName }}
-                                rootPassword: {{ superuser.password }}
-                                settings:
-                                  tier: "db-g1-small"
-                                  ipConfiguration:
-                                    authorizedNetworks:
-                                      - name: internet
-                                        value: "0.0.0.0/0"
-                              output:{% raw %}
-                                goTemplate:
-                                  host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
-                                  port: "{{ .Port }}"
-                                  defaultDBName: "{{ .DefaultDBName }}"
-                                  superuser:
-                                    username: "{{ .Username }}"
-                                    password: "{{ .Password }}"{% endraw %}
+                            group: "sql"
+                            command: "create"
+                            generateName: true
+                            instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+                              databaseVersion: "POSTGRES_11"
+                              region: "us-central"
+                              defaultDBName: {{ defaultDBName }}
+                              rootPassword: {{ superuser.password }}
+                              settings:
+                                tier: "db-g1-small"
+                                ipConfiguration:
+                                  authorizedNetworks:
+                                    - name: internet
+                                      value: "0.0.0.0/0"
+                            output:{% raw %}
+                              goTemplate:
+                                host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+                                port: "{{ .Port }}"
+                                defaultDBName: "{{ .DefaultDBName }}"
+                                superuser:
+                                  username: "{{ .Username }}"
+                                  password: "{{ .Password }}"{% endraw %}
               - - name: cloudsql-run
                   voltron-action: cloudsql.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
@@ -118,6 +112,8 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-cloudsql-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: gcp-sa
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 

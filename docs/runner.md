@@ -47,7 +47,7 @@ spec:
 
 Next, you need to create at least one Implementation. To do so, you need to create an OCI image with a binary inside. The binary should read mounted data and execute a given functionality. For example, for Helm Runner it will be `helm install`, `helm delete`, etc.
 
-The custom runner Implementation manifest should be described using one of the built-in runners so Engine knows how to mount rendered input data and how to run the OCI image. For Argo Workflow Runner, it could look like this:
+The custom runner Implementation manifest should be described using one of the built-in runners, so Engine knows how to mount rendered input data and how to run the OCI image. For Argo Workflow built-in Runner, the Helm Runner manifest could look like this:
 
 ```yaml
 ocfVersion: 0.0.1
@@ -65,8 +65,10 @@ action:
         - name: helm
           inputs:
             artifacts:
-              - name: helm-values
-                path: "/out/helm-values"
+              - name: input-parameters # The input parameters that holds information what should be executed
+                path: "/runner-args"
+              - name: runner-context
+                path: "/runner-context"
           outputs:
             artifacts:
               - name: helm-release
@@ -74,10 +76,10 @@ action:
           container:
             image: gcr.io/projectvoltron/helm-runner:0.1.0
             env:
-              - name: PARAMETERS_PATH
-                value: "{{inputs.artifacts.helm-values.path}}"
-              - name: RELEASE_OUTPUT_PATH
-                value: "{{outputs.artifacts.helm-release.path}}"
+              - name: RUNNER_CONTEXT_PATH
+                value: "{{inputs.artifacts.runner-context.path}}"
+              - name: RUNNER_ARGS_PATH
+                value: "{{inputs.artifacts.input-parameters.path}}"
 ```
 
 As you see, for this definition, as a part of Argo workflow, Kubernetes Engine runs the `gcr.io/projectvoltron/helm-runner:0.1.0` OCI image on Kubernetes and handles dedicated input and output data for this runner. The `helm-values` and `helm-release` arguments need to be described under dedicated Interface for Helm Runner.
@@ -102,33 +104,31 @@ The following diagram visualizes how Engine runs an Action using built-in Argo W
 
 Each runner must consume the following environment variables:
 
-| Environment Variable Name | Description                                                                                                                          |
-|---------------------------|--------------------------------------------------------------------------------------------------------------------------------------|
-| **RUNNER_INPUT_PATH**     | Specifies the input path for the file which holds the context and rendered data from the Implementation `spec.action.args` property. |
+| Environment Variable Name | Description                                                                                                          |
+|---------------------------|----------------------------------------------------------------------------------------------------------------------|
+| **RUNNER_CONTEXT_PATH**   | Specifies the input path for the YAML file that contains the runner context.                                              |
+| **RUNNER_ARGS_PATH**      | Specifies the input path for the YAML file that stores rendered data from the Implementation `spec.action.args` property. |
 
-Input file syntax:
+The file with runner context has the following structure: 
 
 ```yaml
-context:
-    name: "action-name"          # Specifies Action name. The runner should use this name to correlate the resource it creates.
-    dryRun: true                 # Specifies whether Action Runner should perform only dry-run action without persisting the resource.
-    timeout: "10m"               # Specifies the runner timeout when waiting for competition. The zero value means no timeout.
-    platform:                    # Specifies platform-specific values. Currently, only the Kubernetes platform is supported.
-      # Kubernetes platform context properties:
-      namespace: "k8s-ns-name"      # Specifies the Kubernetes Namespace where Action is executed. The runner must create all Kubernetes resources in this Namespace.
-      serviceAccountName: "sa-name" # Specifies the Kubernetes ServiceAccount. The runner must use it to create all Kubernetes resources.        
-      ownerRef: # Specifies owner reference details (Action Custom Resource controller)
-        apiVersion: core.projectvoltron.dev/v1alpha1 # Specifies the owner resource apiVersion
-        kind: Action # Specifies the owner resource kind
-        blockOwnerDeletion: true # The owner cannot be deleted before the referenced object
-        controller: true # Specifies whether the reference points to the managing controller
-        name: action-name # Specifies the name of the Action Custom Resource
-        uid: 3826a747-cfac-49c7-a81e-1d48cc23096f # Specifies the UID of the Action Custom Resource
-args:
-    # Rendered data data from the Implementation `spec.action.args` property.
+name: "action-name"          # Specifies Action name. The runner should use this name to correlate the resource it creates.
+dryRun: true                 # Specifies whether Action Runner should perform only dry-run action without persisting the resource.
+timeout: "10m"               # Specifies the runner timeout when waiting for competition. The zero value means no timeout.
+platform:                    # Specifies platform-specific values. Currently, only the Kubernetes platform is supported.
+  # Kubernetes platform context properties:
+  namespace: "k8s-ns-name"      # Specifies the Kubernetes Namespace where Action is executed. The runner must create all Kubernetes resources in this Namespace.
+  serviceAccountName: "sa-name" # Specifies the Kubernetes ServiceAccount. The runner must use it to create all Kubernetes resources.        
+  ownerRef: # Specifies owner reference details (Action Custom Resource controller)
+    apiVersion: core.projectvoltron.dev/v1alpha1 # Specifies the owner resource apiVersion
+    kind: Action # Specifies the owner resource kind
+    blockOwnerDeletion: true # The owner cannot be deleted before the referenced object
+    controller: true # Specifies whether the reference points to the managing controller
+    name: action-name # Specifies the name of the Action Custom Resource
+    uid: 3826a747-cfac-49c7-a81e-1d48cc23096f # Specifies the UID of the Action Custom Resource
 ```
 
-The runner must read input file from the `RUNNER_INPUT_PATH` location.
+The runner must read input files from the `RUNNER_CONTEXT_PATH` and `RUNNER_ARGS_PATH` location.
 
 To simplify the development process, we provide Manager, which handles reading the data from disk. All available data is passed for each method execution.
 

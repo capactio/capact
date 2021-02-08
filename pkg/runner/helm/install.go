@@ -94,10 +94,10 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 
 func (i *installer) initActionInstallFromInput(in Input) *action.Install {
 	installCli := action.NewInstall(i.actionCfg)
-	installCli.DryRun = in.ExecCtx.DryRun
-	installCli.Namespace = in.ExecCtx.Platform.Namespace
+	installCli.DryRun = in.Ctx.DryRun
+	installCli.Namespace = in.Ctx.Platform.Namespace
 	installCli.Wait = true
-	installCli.Timeout = in.ExecCtx.Timeout.Duration()
+	installCli.Timeout = in.Ctx.Timeout.Duration()
 	installCli.GenerateName = in.Args.GenerateName
 	installCli.Replace = in.Args.Replace
 	installCli.DisableHooks = in.Args.NoHooks

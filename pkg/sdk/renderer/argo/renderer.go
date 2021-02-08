@@ -7,19 +7,22 @@ import (
 	"strings"
 	"time"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
-
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
+	"projectvoltron.dev/voltron/internal/ptr"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 )
 
-const userInputName = "input-parameters"
+const (
+	userInputName = "input-parameters"
+	runnerContext = "runner-context"
+)
 
 type OCHClient interface {
 	GetImplementationForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error)
@@ -45,7 +48,7 @@ func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
 	return r
 }
 
-func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
+func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
 	// 0. Populate render options
 	renderOpt := &renderOptions{}
 	for _, opt := range opts {
@@ -56,7 +59,7 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 	defer cancel()
 
 	// 1. Find the root implementation
-	implementation, err := r.ochCli.GetImplementationForInterface(ctxWithTimeout, r.refToOCHRef(ref))
+	implementation, err := r.ochCli.GetImplementationForInterface(ctxWithTimeout, r.refToOCHRef(interfaceRef))
 	if err != nil {
 		return nil, err
 	}
@@ -79,12 +82,17 @@ func (r *Renderer) Render(ctx context.Context, ref types.InterfaceRef, opts ...R
 		return nil, err
 	}
 
-	// 5. Add steps to populate rootWorkflow with input TypeInstances
+	// 5. Add runner context
+	if err := r.addRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
+		return nil, err
+	}
+
+	// 6. Add steps to populate rootWorkflow with input TypeInstances
 	if err := r.typeInstanceHandler.AddInputTypeInstance(rootWorkflow, renderOpt.inputTypeInstances); err != nil {
 		return nil, err
 	}
 
-	// 6. Render rootWorkflow templates
+	// 7. Render rootWorkflow templates
 	rootWorkflow.Templates, err = r.renderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, renderOpt.inputTypeInstances, 1)
 	if err != nil {
 		return nil, err
@@ -230,6 +238,73 @@ func (*Renderer) evaluateWhenExpression(typeInstances []types.InputTypeInstanceR
 	}
 
 	return result, nil
+}
+
+func (r *Renderer) addRunnerContext(rootWorkflow *Workflow, secretRef RunnerContextSecretRef) error {
+	if secretRef.Name == "" || secretRef.Key == "" {
+		return NewRunnerContextRefEmptyError()
+	}
+
+	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	if err != nil {
+		return err
+	}
+
+	container := r.sleepContainer()
+	container.VolumeMounts = []apiv1.VolumeMount{
+		{
+			Name:      runnerContext,
+			ReadOnly:  true,
+			MountPath: "/input",
+		},
+	}
+
+	template := &wfv1.Template{
+		Name:      fmt.Sprintf("inject-%s", runnerContext),
+		Container: container,
+		Outputs: wfv1.Outputs{
+			Artifacts: wfv1.Artifacts{
+				{
+					Name:       runnerContext,
+					GlobalName: runnerContext,
+					Path:       "/input/context.yaml",
+				},
+			},
+		},
+		Volumes: []apiv1.Volume{
+			{
+				Name: runnerContext,
+				VolumeSource: apiv1.VolumeSource{
+					Secret: &apiv1.SecretVolumeSource{
+						SecretName: secretRef.Name,
+						Items: []apiv1.KeyToPath{
+							{
+								Key:  secretRef.Key,
+								Path: "context.yaml",
+								Mode: nil,
+							},
+						},
+						Optional: ptr.Bool(false),
+					},
+				},
+			},
+		},
+	}
+
+	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: &wfv1.WorkflowStep{
+					Name:     fmt.Sprintf("%s-step", template.Name),
+					Template: template.Name,
+				},
+			},
+		},
+	}, rootWorkflow.Templates[idx].Steps...)
+
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+
+	return nil
 }
 
 // TODO(mszostok): Change to k8s secret. This is not easy and probably we will need to use some workaround, or
@@ -436,12 +511,8 @@ func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output Type
 		}},
 	}
 	argoWfTemplate := &wfv1.Template{
-		Name: templateName,
-		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
-			Command: []string{"sh", "-c"},
-			Args:    []string{"sleep 1"},
-		},
+		Name:      templateName,
+		Container: r.sleepContainer(),
 		Inputs: wfv1.Inputs{
 			Artifacts: wfv1.Artifacts{
 				{
@@ -462,5 +533,13 @@ func (r *Renderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output Type
 	}
 	return WorkflowStep{WorkflowStep: argoWfStep}, Template{Template: argoWfTemplate}, map[string]string{
 		output.Name: artifactGlobalName,
+	}
+}
+
+func (r *Renderer) sleepContainer() *apiv1.Container {
+	return &apiv1.Container{
+		Image:   "alpine:3.7",
+		Command: []string{"sh", "-c"},
+		Args:    []string{"sleep 1"},
 	}
 }

@@ -17,3 +17,15 @@ func NewMaxDepthError(limit int) error {
 func NewActionImportsError(actionRef string) error {
 	return errors.Errorf("Full path not found in Implementation imports for action %q", actionRef)
 }
+
+func NewRunnerContextRefEmptyError() error {
+	return errors.Errorf("Empty Runner Context Secret reference")
+}
+
+func NewWorkflowNilError() error {
+	return errors.New("workflow cannot be nil")
+}
+
+func NewEntrypointWorkflowIndexNotFoundError(entrypoint string) error {
+	return errors.Errorf("cannot find workflow index specified by entrypoint %q", entrypoint)
+}

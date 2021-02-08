@@ -431,7 +431,7 @@ yield batches, total return batches, total
 func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) (bool, error) {
 	currentCommit, err := currentCommit(session)
 	if err != nil {
-		return false, errors.Wrap(err, "while adding new manifests")
+		return false, errors.Wrap(err, "while getting commit hash of populated data")
 	}
 
 	if commit != "" {

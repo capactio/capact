@@ -18,6 +18,6 @@ func NewNoop() *NoopReporter {
 	return &NoopReporter{}
 }
 
-func (n NoopReporter) Report(ctx context.Context, execCtx runner.ExecutionContext, status interface{}) error {
+func (n NoopReporter) Report(ctx context.Context, runnerCtx runner.Context, status interface{}) error {
 	return nil
 }
