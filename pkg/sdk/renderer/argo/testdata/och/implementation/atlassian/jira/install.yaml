@@ -114,8 +114,6 @@ spec:
                     artifacts:
                       - name: template
                         raw:
-                          # TODO: context should be removed
-                          # TODO: `args.output` should be simplified.
                           data: |
                             command: "install"
                             generateName: true
