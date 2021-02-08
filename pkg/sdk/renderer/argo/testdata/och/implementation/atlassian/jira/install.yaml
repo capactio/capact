@@ -88,28 +88,12 @@ spec:
                         raw:
                           data: |
                             superuser:
-                              username: superuser
+                              username: jira
                               password: okon
-                            defaultDBName: postgres
+                            defaultDBName: jira
                   voltron-when: postgresql == nil
-
-              - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
-                    - name: database
-                      from: database
-                  arguments:
-                    artifacts:
-                      - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
-                      - name: database-input
-                        raw:
-                          data: |
-                            name: jiradb
-                            owner: superuser
-
-              - - name: render-helm-args
-                  voltron-action: jinja2.template
+              - - voltron-action: jinja2.template
+                  name: create-helm-args
                   arguments:
                     artifacts:
                       - name: template
@@ -139,16 +123,6 @@ spec:
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
-
-              - - name: fill-params-in-helm-args
-                  voltron-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.create-db.outputs.artifacts.database}}"
-
               - - voltron-outputTypeInstances:
                     - name: jira-config
                       from: additional
@@ -160,5 +134,8 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+<<<<<<< HEAD
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
+=======
+>>>>>>> a6ea0a1... remove complex test
