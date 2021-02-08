@@ -134,8 +134,5 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
-<<<<<<< HEAD
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
-=======
->>>>>>> a6ea0a1... remove complex test

@@ -199,6 +199,10 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 			for sIdx := range parallelSteps {
 				step := parallelSteps[sIdx]
 
+				if prefix != "" && step.Template != "" {
+					step.Template = fmt.Sprintf("%s-%s", prefix, step.Template)
+				}
+
 				for _, ti := range step.VoltronTypeInstanceOutputs {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, &template)
