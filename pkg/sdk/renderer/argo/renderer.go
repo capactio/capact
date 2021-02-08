@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/och/client/public"
-
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/och/client/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 
