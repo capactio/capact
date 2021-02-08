@@ -596,3 +596,13 @@ mutation DeleteAction($actionName: String!) {
 Execute the `CreateAction` mutation. This will create the Action resource in Voltron. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
 
 After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be execute in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.
+
+You can also check the status of the Action by monitoring workflow for the Action on the Argo UI. This can give you useful information, when debugging your Action.
+To get access to the Argo UI, execute the following command to setup port-forwarding to Argo:
+```
+kubectl port-forward -n argo svc/argo-server 2746
+```
+
+Now you can access the Argo UI with your browser by opening http://127.0.0.1:2746.
+
+TODO: tutaj obrazek z argo UI

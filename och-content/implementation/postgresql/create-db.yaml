@@ -97,8 +97,19 @@ spec:
                       - name: script
                         from: "{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}"
 
-# CREATE USER 'user'@'%';
-# GRANT ALL PRIVILEGES ON dbTest.* To 'user'@'hostname' IDENTIFIED BY 'password';
+          - name: create-psql-db
+            inputs:
+              artifacts:
+                - name: script
+                  path: /script.sh
+            container:
+              image: postgres:11
+              command: [bash]
+              args: ["/script.sh"]
+            outputs:
+              artifacts:
+                - name: database
+                  path: /database.yml
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

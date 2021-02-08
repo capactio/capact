@@ -172,19 +172,5 @@ spec:
                       - name: input-parameters
                         from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
 
-          - name: create-psql-db
-            inputs:
-              artifacts:
-                - name: script
-                  path: /script.sh
-            container:
-              image: postgres:11
-              command: [bash]
-              args: ["/script.sh"]
-            outputs:
-              artifacts:
-                - name: database
-                  path: /database.yml
-
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
