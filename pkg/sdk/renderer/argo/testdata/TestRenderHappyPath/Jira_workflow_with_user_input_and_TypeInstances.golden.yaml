@@ -31,11 +31,22 @@ args:
               raw:
                 data: |
                   superuser:
-                    username: jira
+                    username: superuser
                     password: okon
-                  defaultDBName: jira
+                  defaultDBName: postgres
           name: install-db
           template: jira-install-install-db-postgres-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: |
+                  name: jiradb
+                  owner: superuser
+          name: create-db
+          template: jira-install-create-db-main
       - - arguments:
             artifacts:
             - name: template
@@ -65,16 +76,30 @@ args:
                         paths: ['/']
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
               name: input-parameters
-          name: create-helm-args
-          template: jira-install-create-helm-args-template
+          name: render-helm-args
+          template: jira-install-render-helm-args-template
       - - arguments:
             artifacts:
-            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+            - from: '{{steps.render-helm-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: input-parameters
+          name: fill-params-in-helm-args
+          template: jira-install-fill-params-in-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-helm-args.outputs.artifacts.render}}'
               name: input-parameters
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-run
           template: jira-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-database
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
@@ -241,6 +266,59 @@ args:
           name: psql-helm-release
           path: /typeinstance
     - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: jira-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD={{superuser.password}}
+                  PSQL_CMD="psql -h {{host}} -U {{superuser.username}} {{defaultDBName}} -c"
+                  {% raw %}
+                  ${PSQL_CMD} "CREATE DATABASE {{name}}"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE {{name}} TO {{owner}}"
+
+                  cat <<EOF > /database.yml
+                  name: {{name}}
+                  owner: {{owner}}
+                  tablespace: ""
+                  EOF
+                  {% endraw %}
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: jira-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: jira-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: jira-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: jira-install-create-db-output-database
+    - arguments: {}
       container:
         args:
         - /template.yml
@@ -258,7 +336,116 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-create-helm-args-template
+      name: jira-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /script.sh
+        command:
+        - bash
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: jira-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: jira-install-create-db-output-database
+      outputs:
+        artifacts:
+        - globalName: jira-install-create-db-database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-render-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-fill-params-in-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -295,6 +482,27 @@ args:
         - globalName: jira-install-helm-run-additional
           name: additional
           path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-database
+      outputs:
+        artifacts:
+        - globalName: database
+          name: database
+          path: /typeinstance
     - arguments: {}
       container:
         args:
