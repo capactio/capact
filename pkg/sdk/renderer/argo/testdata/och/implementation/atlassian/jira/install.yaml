@@ -88,16 +88,34 @@ spec:
                         raw:
                           data: |
                             superuser:
-                              username: jira
+                              username: superuser
                               password: okon
-                            defaultDBName: jira
+                            defaultDBName: postgres
                   voltron-when: postgresql == nil
-              - - voltron-action: jinja2.template
-                  name: create-helm-args
+
+              - - name: create-db
+                  voltron-action: postgresql.create-db
+                  voltron-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        raw:
+                          data: |
+                            name: jiradb
+                            owner: superuser
+
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         raw:
+                          # TODO: context should be removed
+                          # TODO: `args.output` should be simplified.
                           data: |
                             command: "install"
                             generateName: true
@@ -123,6 +141,16 @@ spec:
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
+
+              - - name: fill-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+
               - - voltron-outputTypeInstances:
                     - name: jira-config
                       from: additional
