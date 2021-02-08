@@ -2,9 +2,9 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: cap.interface.productivity # Computed during fetching the manifest
+  prefix: cap.interface.productivity
   name: Confluence
-  displayName: "Confluence"
+  displayName: "Confluence Server"
   description: "Confluence is a document collaboration tool"
   documentationURL: https://support.atlassian.com/bitbucket-cloud/
   supportURL: https://support.atlassian.com/bitbucket-cloud/

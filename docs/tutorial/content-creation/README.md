@@ -62,6 +62,10 @@ confluence.install(confluence.install-input) -> confluence.config
 
 As first, you need to create an **InterfaceGroup** manifest, which groups Interfaces coresponding to some application.
 Let's create a InterfaceGroup called `cap.interface.productivity.confluence`, which will group Interfaces operating on Confluence instances. In `och-content/interface/productivity/`, create a file called `confluence.yaml`, with the following content:
+
+<details>
+  <summary>och-content/interface/productivity/confluence.yaml</summary>
+
 ```yaml
 ocfVersion: 0.0.1
 revision: 0.1.0
@@ -73,7 +77,7 @@ metadata:
   description: "Confluence is a document collaboration tool"
   documentationURL: https://support.atlassian.com/bitbucket-cloud/
   supportURL: https://support.atlassian.com/bitbucket-cloud/
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: your.email@example.com
       name: your-name
@@ -82,11 +86,16 @@ metadata:
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
+</details>
 
 > The `signature` field is required, but currently we don't have implemented yet a signing mechanism. You can put a dummy value there.
 
 After we have the InterfaceGroup, let's create the Interface, for installing Confluence.
-Create the directory `./och-content/interface/productivity/confluence`. Inside this directory, create a file `install.yaml` with the following content:
+Create the directory `och-content/interface/productivity/confluence`. Inside this directory, create a file `install.yaml` with the following content:
+
+<details>
+  <summary>och-content/interface/productivity/confluence/install.yaml</summary>
+
 ```yaml
 ocfVersion: 0.0.1
 revision: 0.1.0
@@ -98,7 +107,7 @@ metadata:
   description: "Confluence is a document collaboration tool"
   documentationURL: https://support.atlassian.com/confluence/
   supportURL: https://support.atlassian.com/confluence/
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png # TODO change this
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -129,6 +138,7 @@ spec:
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
+</details>
 
 The `spec.input` key defines inputs, required by the Interfaces. There are two types of inputs:
 - `spec.input.parameters` - User provided input parameters, i.e. these could be configuration parameters required by the operation,
@@ -137,6 +147,9 @@ The `spec.input` key defines inputs, required by the Interfaces. There are two t
 Although Confluence needs an database, we don't specify is as an input argument here. That is because, we leave selecting a database to the Implementation.
 
 Now we need to define the two Types, which we use in our Interface: `cap.type.productivity.confluence.install-input` and `cap.type.productivity.confluence.config`.
+
+<details>
+  <summary>och-content/type/productivity/confluence/install-input.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
@@ -149,7 +162,7 @@ metadata:
   description: Defines installation parameters for Confluence
   documentationURL: https://support.atlassian.com/confluence-cloud/
   supportURL: https://www.atlassian.com/software/confluence
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -182,6 +195,10 @@ spec:
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
+</details>
+
+<details>
+  <summary>och-content/type/productivity/confluence/config.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
@@ -194,7 +211,7 @@ metadata:
   description: Defines configuration for Confluence instance
   documentationURL: https://support.atlassian.com/confluence-cloud/
   supportURL: https://www.atlassian.com/software/confluence
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -234,6 +251,7 @@ spec:
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
+</details>
 
 The Types are described using [JSON Schema](https://json-schema.org/).
 
@@ -243,6 +261,10 @@ The Types are described using [JSON Schema](https://json-schema.org/).
 ## Write the Implementation for the Interface
 
 After we defined the Interfaces and the Types, we can write a Implementation of `confluence.install`. Our Implementation will use a PostgreSQL database, which will be provided by an another Interface, which is already available in Voltron. We will also allow the user to provide his own PostgreSQL instance TypeInstance. Create a file `och-content/implementation/atlassian/confluence/install.yaml` with the following content:
+
+<details>
+  <summary>och-content/implementation/atlassian/confluence/install.yaml</summary>
+
 ```yaml
 ocfVersion: 0.0.1
 revision: 0.1.0
@@ -272,7 +294,7 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
-  additionalOutpu t:
+  additionalOutput:
     typeInstances:
       confluence-helm-release:
         typeRef:
@@ -464,8 +486,7 @@ Our Confluence installation uses a PostgreSQL database. We defined an additional
 In the next step we are creating an database for the Confluence server. If you look at the Interface definition of [`cap.interface.database.postgresql.create-db`](och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` TypeInstance of Type [`cap.type.database.postgresql.config`](och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](och-content/type/database/postgresql/database-input.yaml), and outputs a `database` TypeInstance of Type [`cap.type.database.postgresql.database`](och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the Interface via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented Interface in the `voltron-outputTypeInstances` field.
 
 The `render-helm-args` and `fill-params-in-helm-args` steps are used to prepare the input parameters for the `helm.run` Interface. Jinja templating is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` TypeInstances. Those steps don't create any TypeInstances are serve only the purpose of creating the input parameters for the Helm runner.
-
-TODO: where to find documentation on specific runners, i.e. input parameters for them?
+You can check the schema of the Helm runner args in the [Type manifest](../../../och-content/type/runner/helm/run-input.yaml).
 
 > To create the input parameters for `helm.run` we have to use data in two artifacts. As the current `jinja.run` Interface consumes only a template and a single variables input, we have to perform this operation twice. To seperate the variables substituted in the first and second operation, we escape some parts using `{% raw %} ... {% endraw %}`, which is removed in the first templating operation and will be processed in the second operation.
 >
@@ -501,6 +522,9 @@ APP_JSONPUBLISHADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator .
 
 Now we will create the action, to trigger the Confluence installation. Open `https://gateway.voltron.local/` in your browser.
 Then copy the following queries, variables and HTTP headers to the GraphQL playground:
+
+<details>
+  <summary>GraphQL queries</summary>
 
 ```graphql
 mutation CreateAction($in: ActionDetailsInput!) {
@@ -539,6 +563,10 @@ mutation DeleteAction($actionName: String!) {
   }
 }
 ```
+</details>
+
+<details>
+  <summary>Query variables</summary>
 
 ```json
 {
@@ -552,14 +580,19 @@ mutation DeleteAction($actionName: String!) {
   }
 }
 ```
+</details>
+
+<details>
+  <summary>HTTP headers</summary>
 
 ```json
 {
   "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"
 }
 ```
+</details>
 
 
-Execute the `CreateAction` mutation. This will create the Action resource in Voltron. Wait till the Action is in the `READY_TO_RUN` phase. You can use the `GetAction` query to check the phase of your Action.
+Execute the `CreateAction` mutation. This will create the Action resource in Voltron. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
 
 After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be execute in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.

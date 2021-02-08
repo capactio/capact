@@ -8,7 +8,7 @@ metadata:
   description: Defines configuration for Confluence instance
   documentationURL: https://support.atlassian.com/confluence-cloud/
   supportURL: https://www.atlassian.com/software/confluence
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
