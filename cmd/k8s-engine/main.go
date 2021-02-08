@@ -49,8 +49,10 @@ type Config struct {
 	HealthzAddr string `envconfig:"default=:8082"`
 	// EnableLeaderElection for controller manager. Enabling this will ensure there is only one active controller manager.
 	EnableLeaderElection bool `envconfig:"default=false"`
-	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run. Defaults to 1.
+	// MaxConcurrentReconciles is the maximum number of concurrent Reconciles which can be run.
 	MaxConcurrentReconciles int `envconfig:"default=1"`
+	// MaxRetryForFailedAction is the maximum number of concurrent Reconciles which can be run.
+	MaxRetryForFailedAction int `envconfig:"default=15"`
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
@@ -99,10 +101,11 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
+
 	argoRenderer := argo.NewRenderer(cfg.Renderer, ochClient)
 	actionSvc := controller.NewActionService(mgr.GetClient(), argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
 
-	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc)
+	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc, cfg.MaxRetryForFailedAction)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
 	exitOnError(err, "while creating controller")
 

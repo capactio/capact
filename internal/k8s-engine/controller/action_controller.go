@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	"projectvoltron.dev/voltron/internal/ptr"
 	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
@@ -13,7 +14,9 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/workqueue"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
@@ -21,10 +24,12 @@ import (
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
-	k8sCli   client.Client
-	log      logr.Logger
-	svc      actionService
-	recorder record.EventRecorder
+	k8sCli      client.Client
+	log         logr.Logger
+	svc         actionService
+	recorder    record.EventRecorder
+	rateLimiter workqueue.RateLimiter
+	maxRetries  int
 }
 
 type (
@@ -48,10 +53,11 @@ type (
 )
 
 // NewActionReconciler returns the ActionReconciler instance.
-func NewActionReconciler(log logr.Logger, svc actionService) *ActionReconciler {
+func NewActionReconciler(log logr.Logger, svc actionService, maxRetriesForAction int) *ActionReconciler {
 	return &ActionReconciler{
-		log: log.WithName("controllers").WithName("Action"),
-		svc: svc,
+		log:        log.WithName("controllers").WithName("Action"),
+		svc:        svc,
+		maxRetries: maxRetriesForAction,
 	}
 }
 
@@ -137,15 +143,14 @@ func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Acti
 	return ctrl.Result{Requeue: true}, nil
 }
 
-// renderAction renders a given action.
-// Requeue for rendering nested levels (do not block to reconcile loop to render whole action at once).
-// If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
+// renderAction renders a given action. If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
 //
 // TODO: add support for v1alpha1.AdvancedModeRenderingIterationActionPhase phase
 func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
 	renderingStatus, err := r.svc.RenderAction(ctx, action)
 	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "while resolving Implementation for Action")
+		msg := fmt.Sprintf("Cannot render given action: %s", err)
+		return r.handleRetry(ctx, action, v1alpha1.BeingRenderedActionPhase, msg)
 	}
 
 	action.Status.Rendering = renderingStatus
@@ -165,15 +170,18 @@ func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Ac
 func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "while creating runner service account")
+		msg := fmt.Sprintf("Cannot create runner ServiceAccount: %s", err)
+		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerInputDataCreated(ctx, sa.Name, action); err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "while creating runner input")
+		msg := fmt.Sprintf("Cannot create runner input: %s", err)
+		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerExecuted(ctx, sa.Name, action); err != nil {
-		return ctrl.Result{}, errors.Wrap(err, "while executing runner")
+		msg := fmt.Sprintf("Cannot execute runner: %s", err)
+		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
 	}
 
 	action.Status = r.successStatus(action, v1alpha1.RunningActionPhase, "Kubernetes runner executed. Waiting for finish phase.")
@@ -199,7 +207,8 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 	for _, step := range steps {
 		newStatus, err := step(ctx, action)
 		if err != nil {
-			return ctrl.Result{}, err
+			msg := fmt.Sprintf("Unable to check runner status: %s", err)
+			return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
 		}
 		if newStatus == nil {
 			continue
@@ -260,6 +269,34 @@ func (r *ActionReconciler) runnerJobStatus(ctx context.Context, action *v1alpha1
 	return &outStatus, nil
 }
 
+func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Action, currentPhase v1alpha1.ActionPhase, errMsg string) (ctrl.Result, error) {
+	key := ctrl.Request{
+		NamespacedName: types.NamespacedName{
+			Name:      action.Name,
+			Namespace: action.Namespace,
+		},
+	}
+	retry := r.rateLimiter.NumRequeues(key)
+
+	var result ctrl.Result
+	switch {
+	case retry < r.maxRetries:
+		errMsg = fmt.Sprintf("%s (will retry - %d/%d)", errMsg, retry, r.maxRetries)
+		action.Status = r.failStatus(action, currentPhase, errMsg)
+		result = ctrl.Result{Requeue: true} // AddRateLimited
+	default:
+		errMsg = fmt.Sprintf("%s (giving up - exceeded %d retries)", errMsg, r.maxRetries)
+		action.Status = r.failStatus(action, v1alpha1.FailedActionPhase, errMsg)
+		result = ctrl.Result{} // no retry
+	}
+
+	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
+	}
+
+	return result, nil
+}
+
 // failStatus sets generic status fields to indicated action failed state. Emits proper K8s Event.
 func (r *ActionReconciler) failStatus(action *v1alpha1.Action, phase v1alpha1.ActionPhase, msg string) v1alpha1.ActionStatus {
 	return r.newStatusForAction(action, corev1.EventTypeWarning, phase, msg)
@@ -289,11 +326,13 @@ func (r *ActionReconciler) newStatusForAction(action *v1alpha1.Action, eventType
 func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentReconciles int) error {
 	r.k8sCli = mgr.GetClient()
 	r.recorder = mgr.GetEventRecorderFor("action-controller")
+	r.rateLimiter = workqueue.DefaultControllerRateLimiter()
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Action{}).
 		WithOptions(controller.Options{
 			MaxConcurrentReconciles: maxConcurrentReconciles,
+			RateLimiter:             r.rateLimiter,
 		}).
 		Owns(&batchv1.Job{}).
 		Owns(&corev1.Secret{}).

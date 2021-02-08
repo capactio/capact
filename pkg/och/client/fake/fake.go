@@ -11,6 +11,7 @@ import (
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/och/client/public"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -36,16 +37,20 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 	return store, nil
 }
 
-func (s *FileSystemClient) GetImplementationForInterface(_ context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.ImplementationRevision, error) {
+func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
+	var out []ochpublicgraphql.ImplementationRevision
 	for _, impl := range s.OCHImplementations {
 		for _, implements := range impl.Spec.Implements {
 			if implements.Path == ref.Path {
-				return &impl, nil
+				out = append(out, impl)
 			}
 		}
 	}
 
-	return nil, fmt.Errorf("implementation for %v not found", ref)
+	if len(out) == 0 {
+		return nil, fmt.Errorf("no ImplementationRevisions for Interface %v", ref)
+	}
+	return out, nil
 }
 
 func (s *FileSystemClient) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {

@@ -250,6 +250,17 @@ type RenderingStatus struct {
 	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
 }
 
+func (r *RenderingStatus) SetAction(action []byte) {
+	r.Action = &runtime.RawExtension{Raw: action}
+}
+
+func (r *RenderingStatus) SetInputParameters(params []byte) {
+	if r.Input == nil {
+		r.Input = &ResolvedActionInput{}
+	}
+	r.Input.SetParameters(params)
+}
+
 // ResolvedActionInput contains resolved details of Action input.
 type ResolvedActionInput struct {
 	// TypeInstances contains input TypeInstances passed for Action rendering.
@@ -261,6 +272,10 @@ type ResolvedActionInput struct {
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Parameters *runtime.RawExtension `json:"parameters,omitempty"`
+}
+
+func (r *ResolvedActionInput) SetParameters(params []byte) {
+	r.Parameters = &runtime.RawExtension{Raw: params}
 }
 
 // InputTypeInstanceDetails describes input TypeInstance.
