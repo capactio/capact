@@ -8,6 +8,9 @@
   - [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
   - [Populate the manifests into OCH](#populate-the-manifests-into-och)
   - [Run your new action](#run-your-new-action)
+    - [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
+    - [View the Action Custom Resource](#view-the-action-custom-resource)
+  - [Summary](#summary)
 
 This guide shows the first steps on how to develop OCF content for Voltron. We will show how to:
 - define new Types and Interfaces,
@@ -49,11 +52,11 @@ Of course, there could be multiple ways, how to create an PostgreSQL instance. Y
 Let's try to create manifests required to define a capability to install Confluence servers. We will need to create the following entities:
 - `confluence.config` Type - Represents a Confluence server.
 - `confluence.install-input` Type - Represents input parameters needed to install a Confluence server.
+- `confluence` InterfaceGroup - Groups Interfaces from the `confluence` group, e.g. if you have `confluence.install` and `confluence.uninstall` Interfaces.
 - `confluence.install` Interface - An operation, which installs Confluence servers. You can think of it as a function:
 ```
 confluence.install(confluence.install-input) -> confluence.config
 ```
-- `confluence` InterfaceGroup - Groups Interfaces from the `confluence` group, e.g. if you have `confluence.install` and `confluence.uninstall` Interfaces.
 
 At first, you need to create an **InterfaceGroup** manifest, which groups Interfaces coresponding to some application.
 Let's create a InterfaceGroup called `cap.interface.productivity.confluence`, which will group Interfaces operating on Confluence instances. In `och-content/interface/productivity/`, create a file called `confluence.yaml`, with the following content:
@@ -111,21 +114,22 @@ metadata:
 spec:
   input:
     parameters:
-      jsonSchema:
-        value: |-
-          {
-            "$schema": "http://json-schema.org/draft-07/schema",
-            "$ocfRefs": {
-              "inputType": {
-                "name": "cap.type.productivity.confluence.install-input",
-                "revision": "0.1.0"
-              }
-            },
-            "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
-          }
+      input-parameters:   # the Interface requires an input-parameter of Type "cap.type.productivity.confluence.install-input"
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.productivity.confluence.install-input",
+                  "revision": "0.1.0"
+                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+            }
   output:
     typeInstances:
-      jira-config:
+      jira-config:    # the Interface outputs TypeInstances of Type "cap.type.productivity.confluence.config"
         typeRef:
           path: cap.type.productivity.confluence.config
           revision: 0.1.0
@@ -267,6 +271,9 @@ You can read more about runners in [this document](../../runner.md).
 
 ## Write the Implementation for the Interface
 
+> The syntax used to describe the workflows in Implementations is based on [Argo](https://argoproj.github.io/argo/).
+> It's highly recommended you read their documentation and understand what is Argo and how to create Argo workflows, before writing OCF Implementations.
+
 After we defined the Interfaces and the Types, we can write a Implementation of `confluence.install`. Our Implementation will use a PostgreSQL database, which will be provided by another Interface, which is already available in Voltron. We will also allow the user to provide his own PostgreSQL instance TypeInstance. Create a file `och-content/implementation/atlassian/confluence/install.yaml` with the following content:
 
 <details>
@@ -293,6 +300,7 @@ metadata:
 spec:
   appVersion: "2.x.x"
 
+  # Here we define an additional, optional input TypeInstance of Type "cap.type.database.postgresql.config".
   additionalInput:
     typeInstances:
       postgresql:
@@ -301,6 +309,9 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
+  # We can also define additional output TypeInstances, which our Implementation creates.
+  # This is needed to build the dependency graph, so Voltron can properly handle updates and rollbacks
+  # of these TypeInstances.
   additionalOutput:
     typeInstances:
       confluence-helm-release:
@@ -318,6 +329,7 @@ spec:
           - postgresql
           - database
 
+  # Here we say, we implement the Interface, we defined before.
   implements:
     - path: cap.interface.productivity.confluence.install
       revision: 0.1.0
@@ -328,6 +340,8 @@ spec:
         - name: kubernetes
           revision: 0.1.0
 
+  # In this section we need to import all Interfaces, we will use in our Implementation.
+  # These can be Voltron runner or other actions.
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -372,7 +386,7 @@ spec:
                   voltron-action: postgresql.install
                   voltron-when: postgresql == nil
                   voltron-outputTypeInstances:
-                    - name: postgresql                # Defining the output TypeInstance 'postgresql'
+                    - name: postgresql                # We have to define the output TypeInstance 'postgresql' from this step
                       from: postgresql
                   arguments:
                     artifacts:
@@ -471,21 +485,24 @@ signature:
 ```
 </details>
 
-Let's take a look on the Implementation YAML. Implementation has the following fields in the `spec` field:
-- `appVersion` - Application versions, which this Implementation supports.
-- `additionalInput` - Additional input for the Implementation, compared to the Interface. In our case, here we define the `postgresql.config`, as our Implementation uses a PostgreSQL instance for Confluence.
-- `additionalOutput` - This section defines any additional TypeInstances, which are created in this Implementation, compared to the Interface. In example, in our Implementation, we create a database in the database instance with the `postgresql.create-db` Interface, which outputs an `postgresql.database` TypeInstance. We have to write this down in `additionalOutput`, so Voltron will upload this TypeInstance to OCH and save the dependency graph.
-- `implements` - Defines, which Interfaces are implemented by this Implementation.
-- `requires` - List of system prerequisites, that need to be present in the environment managed by Voltron, to use this Implementation. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means, we need a Kubernetes cluster.
-- `imports` - Here we define all other Interfaces, we use in our Implementation. We can then refer to them as `'<alias>.<method-name>'`.
-- `action` - Holds information about the actions that is executed. In the case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this Implementation.
+Let's take a look on the Implementation YAML. Implementation has the following properties in the `spec` property:
 
-The data in the `action` property is used by Voltron Runners to execute the action. You can read more about Voltron Runners in this [README](../../runner.md).
-
+| Propert            | Description                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `appVersion`       | Application versions, which this Implementation supports.                                                                                                                                                                                                                                                                                                                                                                                 |
+| `additionalInput`  | Additional input for the Implementation, compared to the Interface. In our case, here we define the `postgresql.config`, as our Implementation uses a PostgreSQL instance for Confluence.                                                                                                                                                                                                                                                 |
+| `additionalOutput` | This section defines any additional TypeInstances, which are created in this Implementation, compared to the Interface. In example, in our Implementation, we create a database in the database instance with the `postgresql.create-db` Interface, which outputs an `postgresql.database` TypeInstance. We have to write this down in `additionalOutput`, so Voltron will upload this TypeInstance to OCH and save the dependency graph. |
+| `implements`       | Defines, which Interfaces are implemented by this Implementation.                                                                                                                                                                                                                                                                                                                                                                         |
+| `requires`         | List of system prerequisites, that need to be present in the environment managed by Voltron, to use this Implementation. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means, we need a Kubernetes cluster.                                                                                                                                                                                              |
+| `imports`          | Here we define all other Interfaces, we use in our Implementation. We can then refer to them as `'<alias>.<method-name>'`.                                                                                                                                                                                                                                                                                                                |
+| `action`           | Holds information about the actions that is executed. In the case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this Implementation.                                                                                                                                                                                                                                                     |
 The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with a few extensions introduced by Voltron. These extensions are:
-- `.templates.steps[][].voltron-when` - Allows for conditional execution of a step. You can make assertions on the input TypeInstances available in the Implementation. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md).
-- `.templates.steps[][].voltron-action` - Allows to import another Interface. In our example, we use this to provision on PostgreSQL with `postgresql.install` Interface, if it not was provided as a TypeInstance or deploy Helm charts using `helm.run` Interface.
-- `.templates.steps[][].voltron-outputTypeInstance` - A list of TypeInstances, from the Implementations outputs, which are created in this step. The `name` must match with the output name defined in the implemented Interface or Implementations `additionalOutput` and `from` is the name of the Argo output artifacts from this step.
+
+| Property                                          | Description                                                                                                                                                                                                                                                                          |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.templates.steps[][].voltron-when`               | Allows for conditional execution of a step. You can make assertions on the input TypeInstances available in the Implementation. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md).                    |
+| `.templates.steps[][].voltron-action`             | Allows to import another Interface. In our example, we use this to provision PostgreSQL with `postgresql.install` Interface.                                                                                                                                                         |
+| `.templates.steps[][].voltron-outputTypeInstance` | A list of TypeInstances, from the Implementations outputs, which are created in this step. The `name` must match with the output name defined in the implemented Interface or Implementations `additionalOutput` and `from` is the name of the Argo output artifacts from this step. |
 
 Our Confluence installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no TypeInstance for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` Interface to create an PostgreSQL instance.
 
@@ -493,10 +510,10 @@ Our Confluence installation uses a PostgreSQL database. We defined an additional
 
 In the next step we are creating a database for the Confluence server. If you look at the Interface definition of [`cap.interface.database.postgresql.create-db`](och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` TypeInstance of Type [`cap.type.database.postgresql.config`](och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](och-content/type/database/postgresql/database-input.yaml), and outputs a `database` TypeInstance of Type [`cap.type.database.postgresql.database`](och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the Interface via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented Interface in the `voltron-outputTypeInstances` field.
 
-The `render-helm-args` and `fill-params-in-helm-args` steps are used to prepare the input parameters for the `helm.run` Interface. Jinja templating is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` TypeInstances. Those steps don't create any TypeInstances are serve only the purpose of creating the input parameters for the Helm runner.
+The `render-helm-args` and `fill-params-in-helm-args` steps are used to prepare the input parameters for the `helm.run` Interface. Jinja templating is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` TypeInstances. Those steps don't create any TypeInstances and serve only the purpose of creating the input parameters for the Helm runner.
 You can check the schema of the Helm runner args in the [Type manifest](../../../och-content/type/runner/helm/run-input.yaml).
 
-> To create the input parameters for `helm.run` we have to use data in two artifacts. As the current `jinja.run` Interface consumes only a template and a single variables input, we have to perform this operation twice. To seperate the variables substituted in the first and second operation, we escape some parts using `{% raw %} ... {% endraw %}`, which is removed in the first templating operation and will be processed in the second operation.
+> To create the input parameters for `helm.run` we have to use data from two artifacts. As the current `jinja.run` Interface consumes only a template and a single variables input, we have to perform this operation twice. To seperate the variables substituted in the first and second operation, we escape some parts using `{% raw %} ... {% endraw %}`, which is removed in the first templating operation and will be processed in the second operation.
 >
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
@@ -599,11 +616,15 @@ mutation DeleteAction($actionName: String!) {
 ```
 </details>
 
+![graphql-playground](./assets/graphql-playground.png)
+
 Execute the `CreateAction` mutation. This will create the Action resource in Voltron. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
 
 After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be executed in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.
 
-You can also check the status of the Action by monitoring workflow for the Action on the Argo UI. This can give you useful information, when debugging your Action.
+### View the Action workflow in Argo UI
+
+You can also check the status of the Action by monitoring the workflow for the Action on the Argo UI. This can give you useful information, when debugging your Action.
 To get access to the Argo UI, execute the following command to set up port-forwarding to Argo:
 ```
 kubectl port-forward -n argo svc/argo-server 2746
@@ -612,3 +633,32 @@ kubectl port-forward -n argo svc/argo-server 2746
 Now you can access the Argo UI with your browser by opening http://127.0.0.1:2746.
 
 ![argo-ui](./assets/argo-ui.png)
+
+### View the Action Custom Resource
+
+You can get useful information about your action using `kubectl`. You can check the `actions.core.projectvoltron.dev` custom resource to get information about your action:
+```bash
+$ kubectl describe actions.core.projectvoltron.dev install-confluence
+Name:         install-confluence
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+API Version:  core.projectvoltron.dev/v1alpha1
+[...]
+Status:
+  Last Transition Time:  2021-02-08T17:17:27Z
+  Message:               Rendering runner action
+  Observed Generation:   1
+  Phase:                 BeingRendered
+Events:
+  Type     Reason                Age                  From               Message
+  ----     ------                ----                 ----               -------
+  Normal   BeingRendered         3m2s                 action-controller  Rendering runner action
+  Warning  Render runner action  2s (x15 over 2m58s)  action-controller  while resolving Implementation for Action: while rendering Action: No implementation found for "cap.interface.productivity.confluence.install"
+```
+
+In the case above, we can see that the action rendering is failing, because the Voltron Engine is not able to find the `cap.interface.productivity.confluence.install` implementation in OCH.
+
+## Summary
+
+In this guide we went through different OCF manifests and their syntax. We created manifests, which added a capability to install Confluence server instances. We also showed, how you can test the manifests you are creating and where to check for useful information, when debugging your action.
