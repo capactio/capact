@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/ghodss/yaml"
+	"github.com/pkg/errors"
 )
 
 // Order in which manifests will be loaded into DB
@@ -41,16 +42,16 @@ func Group(paths []string) (map[string][]string, error) {
 		// may just read first 3 lines if there are performance issues
 		content, err := ioutil.ReadFile(path)
 		if err != nil {
-			return manifests, err
+			return manifests, errors.Wrapf(err, "while reading file from path %s", path)
 		}
 		metadata, err := getManifestMetadata(content)
 		if err != nil {
-			return manifests, err
+			return manifests, errors.Wrapf(err, "while unmarshaling manifest content from path %s", path)
 		}
 
 		list, ok := manifests[metadata.Kind]
 		if !ok {
-			return nil, fmt.Errorf("Unknow manifest kind: %s", metadata.Kind)
+			return nil, fmt.Errorf("Unknown manifest kind: %s", metadata.Kind)
 		}
 		manifests[metadata.Kind] = append(list, path)
 	}
