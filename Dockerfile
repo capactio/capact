@@ -42,6 +42,7 @@ ARG COMPONENT
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
+COPY test/och-content /test/och-content
 
 RUN apk add --no-cache git=2.26.2-r0 openssh=8.3_p1-r1
 RUN mkdir /root/.ssh

@@ -31,7 +31,7 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 
 	return graphql.Action{
 		Name:      name,
-		CreatedAt: graphql.Timestamp(timestamp),
+		CreatedAt: graphql.Timestamp{Time: timestamp},
 		Input: &graphql.ActionInput{
 			Parameters: ptrToJSONRawMessage(`{"param":"one"}`),
 			TypeInstances: []*graphql.InputTypeInstanceDetails{
@@ -105,7 +105,7 @@ func fixGQLAction(t *testing.T, name string) graphql.Action {
 		RenderedActionOverride: ptrToJSONRawMessage(`{"override":true}`),
 		Status: &graphql.ActionStatus{
 			Phase:     graphql.ActionStatusPhaseSucceeded,
-			Timestamp: graphql.Timestamp(timestamp),
+			Timestamp: graphql.Timestamp{Time: timestamp},
 			Message:   ptr.String("message"),
 			Runner: &graphql.RunnerStatus{
 				Status: ptrToJSONRawMessage(`{"runner":true}`),

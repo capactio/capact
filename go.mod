@@ -21,7 +21,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
-	github.com/neo4j/neo4j-go-driver/v4 v4.2.1
+	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1

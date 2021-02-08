@@ -79,6 +79,7 @@ main() {
     fi
 
     export CLUSTER_TYPE="KIND"
+    export USE_TEST_MANIFESTS=true
     voltron::install_upgrade::charts
 
     voltron::test::execute

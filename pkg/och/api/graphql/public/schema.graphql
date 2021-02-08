@@ -38,14 +38,18 @@ input InterfaceFilter {
 }
 
 input ImplementationFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
+}
 
-    """
-    If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
-    For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-    """
-    requirementsSatisfiedBy: [TypeInstanceValue!]
-    attributes: [AttributeFilterInput!]
+input ImplementationRevisionFilter {
+  prefixPattern: NodePathPattern
+
+  """
+  If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+  For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+  """
+  requirementsSatisfiedBy: [TypeInstanceValue!]
+  attributes: [AttributeFilterInput!]
 }
 
 input TypeInstanceValue {
@@ -166,7 +170,7 @@ type InterfaceRevision {
     """
     List Implementations for a given Interface
     """
-    implementations(filter: ImplementationFilter): [Implementation!]!
+    implementationRevisions(filter: ImplementationRevisionFilter = {}): [ImplementationRevision!]!
     signature: Signature!
 }
 

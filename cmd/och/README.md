@@ -60,7 +60,7 @@ The following environment variables can be set to configure OCH:
 | APP_GRAPHQL_ADDR    | no       | `:8080` | TCP address the GraphQL endpoint binds to              |
 | APP_HEALTHZ_ADDR    | no       | `:8082` | TCP address the health probes endpoint binds to        |
 | APP_LOGGER_DEV_MODE | no       | `false` | Enable development mode logging                        |
-| APP_MOCK_GRAPHQL    | no       | `false` | Use mocked data in GraphQL server                      |
+| APP_MOCK_GRAPH_QL   | no       | `false` | Use mocked data in GraphQL server                      |
 
 ## Development
 

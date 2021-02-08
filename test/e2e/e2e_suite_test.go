@@ -3,6 +3,7 @@
 package e2e
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -10,8 +11,11 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
+	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
+	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 )
 
 type GatewayConfig struct {
@@ -37,6 +41,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	waitTillServiceEndpointsAreReady()
+	waitTillDataIsPopulated()
 })
 
 func TestE2E(t *testing.T) {
@@ -61,6 +66,32 @@ func waitTillServiceEndpointsAreReady() {
 
 			err = resp.Body.Close()
 			return err
-		}, cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
+		}, 5*cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
 	}
+}
+
+func waitTillDataIsPopulated() {
+	cli := getOCHGraphQLClient()
+
+	Eventually(func() ([]graphql.Interface, error) {
+		return cli.ListInterfacesMetadata(context.Background())
+	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(2))
+}
+
+func getOCHGraphQLClient() *ochclient.Client {
+	httpClient := httputil.NewClient(
+		30*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	return ochclient.NewClient(cfg.Gateway.Endpoint, httpClient)
+}
+
+func getEngineGraphQLClient() *engineclient.Client {
+	httpClient := httputil.NewClient(
+		30*time.Second,
+		true,
+		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
+	)
+	return engineclient.New(cfg.Gateway.Endpoint, httpClient)
 }

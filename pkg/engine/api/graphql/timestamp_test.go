@@ -17,7 +17,7 @@ func TestTimestampUnmarshalGQL(t *testing.T) {
 	fixTime := "2002-10-02T10:00:00-05:00"
 	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00-05:00")
 	assert.NoError(t, err)
-	expectedTimestamp := graphql.Timestamp(parsedTime)
+	expectedTimestamp := graphql.Timestamp{parsedTime}
 
 	//when
 	err = timestamp.UnmarshalGQL(fixTime)
@@ -59,7 +59,7 @@ func TestTimestampMarshalGQL(t *testing.T) {
 	//given
 	parsedTime, err := time.Parse(time.RFC3339, "2002-10-02T10:00:00-05:00")
 	assert.NoError(t, err)
-	fixTimestamp := graphql.Timestamp(parsedTime)
+	fixTimestamp := graphql.Timestamp{parsedTime}
 	expectedTimestamp := `"2002-10-02T10:00:00-05:00"`
 	buf := bytes.Buffer{}
 
@@ -79,6 +79,5 @@ func TestTimestampUmarshalJSON(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	tm := time.Time(*ts)
-	assert.Equal(t, 2002, tm.Year())
+	assert.Equal(t, 2002, ts.Year())
 }

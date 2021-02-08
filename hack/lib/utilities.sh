@@ -235,12 +235,14 @@ docker::delete_images() {
 #  - MOCK_OCH_GRAPHQL - if set to true then predifined values are used in och graphql(local and public)
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
+#  - USE_TEST_MANIFESTS - if set to true, then manifests from 'test/och-content' will be populated instead
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
     export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
+    export USE_TEST_MANIFESTS=${USE_TEST_MANIFESTS:-${VOLTRON_USE_TEST_MANIFESTS}}
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
@@ -280,6 +282,17 @@ voltron::install_upgrade::charts() {
       readonly OCH_IMAGE="och"
     fi
 
+    if [ "${USE_TEST_MANIFESTS}" == "true" ]; then
+      readonly VOLTRON_SET_FLAGS="
+        --set och-public.populator.manifestsPath=file:///test
+        --set och-public.populator.updateOnGitCommit=false
+      "
+    else
+      readonly VOLTRON_SET_FLAGS=""
+    fi
+
+    # VOLTRON_SET_FLAGS cannot be quoted
+    # shellcheck disable=SC2086
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --install \
         --create-namespace \
@@ -291,6 +304,7 @@ voltron::install_upgrade::charts() {
         --set och-local.image.name="${OCH_IMAGE}" \
         --set och-public.image.name="${OCH_IMAGE}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
+        ${VOLTRON_SET_FLAGS} \
         -f "${VOLTRON_OVERRIDES}" \
         --wait
 }

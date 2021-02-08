@@ -4,42 +4,30 @@ package e2e
 
 import (
 	"context"
-	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/httputil"
 	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client"
 )
 
 var _ = Describe("GraphQL API", func() {
+	ctx := context.Background()
+
 	Context("Public OCH", func() {
 		It("lists interfaces", func() {
-			httpClient := httputil.NewClient(
-				20*time.Second,
-				true,
-				httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-			)
-			cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
+			cli := getOCHGraphQLClient()
 
-			interfaces, err := cli.ListInterfacesMetadata(context.Background())
+			interfaces, err := cli.ListInterfacesMetadata(ctx)
 
 			Expect(err).ToNot(HaveOccurred())
-			Expect(interfaces).To(BeEmpty())
+			Expect(interfaces).To(HaveLen(2))
 		})
 	})
 
 	Context("Local OCH", func() {
 		It("creates and deletes TypeInstance", func() {
-			httpClient := httputil.NewClient(
-				20*time.Second,
-				true,
-				httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
-			)
-			cli := client.NewClient(cfg.Gateway.Endpoint, httpClient)
-			ctx := context.Background()
+			cli := getOCHGraphQLClient()
 
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
 				TypeRef: &graphql.TypeReferenceInput{
