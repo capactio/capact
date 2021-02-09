@@ -1,69 +1,79 @@
-import { ApolloServer } from "apollo-server-express";
+import {ApolloServer} from "apollo-server-express";
 import * as express from "express";
-import neo4j, { Driver } from "neo4j-driver";
+import neo4j, {Driver} from "neo4j-driver";
 import {
-  createTerminus,
-  HealthCheck,
-  HealthCheckError,
+    createTerminus,
+    HealthCheck,
+    HealthCheckError,
 } from "@godaddy/terminus";
 import * as http from "http";
-import { GraphQLSchema } from "graphql";
+import {GraphQLSchema} from "graphql";
 
-import { assertSchemaOnDatabase, getSchemaForMode, OCHMode } from "./schema";
-import { config } from "./config";
-import { logger } from "./logger";
+import {assertSchemaOnDatabase, getSchemaForMode} from "./schema";
+import {config} from "./config";
+import {logger} from "./logger";
 
-function main() {
-  logger.info("Using Neo4j database", { endpoint: config.neo4j.endpoint });
+async function main() {
+    logger.info("Using Neo4j database", {endpoint: config.neo4j.endpoint});
 
-  const driver = neo4j.driver(
-    config.neo4j.endpoint,
-    neo4j.auth.basic(config.neo4j.username, config.neo4j.password)
-  );
+    const driver = neo4j.driver(
+        config.neo4j.endpoint,
+        neo4j.auth.basic(config.neo4j.username, config.neo4j.password),
+        {
+            encrypted: false,
+            maxConnectionLifetime: 3 * 60 * 60 * 1000, // 3 hours
+            maxConnectionPoolSize: 100,
+            connectionAcquisitionTimeout: 2 * 60 * 1000, // 120 seconds
+            connectionTimeout: 20 * 1000 // 20 seconds
+        }
+    );
+    await driver.verifyConnectivity()
 
-  const schema = getSchemaForMode(config.ochMode);
+    const schema = getSchemaForMode(config.ochMode);
 
-  assertSchemaOnDatabase(schema, driver);
+    assertSchemaOnDatabase(schema, driver);
 
-  const healthCheck = async () => {
-    try {
-      return {
-        db: await driver.verifyConnectivity(),
-      };
-    } catch (error) {
-      throw new HealthCheckError("healthcheck failed", error);
-    }
-  };
+    const healthCheck = async () => {
+        try {
+            return {
+                db: await driver.verifyConnectivity(),
+            };
+        } catch (error) {
+            throw new HealthCheckError("healthcheck failed", error);
+        }
+    };
 
-  const server = setupHttpServer(schema, driver, healthCheck);
-  const { bindPort, bindAddress } = config.graphql;
+    const server = setupHttpServer(schema, driver, healthCheck);
+    const {bindPort, bindAddress} = config.graphql;
 
-  logger.info("Starting OCH", { mode: config.ochMode });
+    logger.info("Starting OCH", {mode: config.ochMode});
 
-  server.listen(bindPort, bindAddress, () => {
-    logger.info("GraphQL API is listening", {
-      endpoint: `http://${bindAddress}:${bindPort}`,
+    server.listen(bindPort, bindAddress, () => {
+        logger.info("GraphQL API is listening", {
+            endpoint: `http://${bindAddress}:${bindPort}`,
+        });
     });
-  });
 }
 
 function setupHttpServer(
-  schema: GraphQLSchema,
-  driver: Driver,
-  healthCheck: HealthCheck
+    schema: GraphQLSchema,
+    driver: Driver,
+    healthCheck: HealthCheck
 ): http.Server {
-  const app = express();
+    const app = express();
 
-  const apolloServer = new ApolloServer({ schema, context: { driver } });
-  apolloServer.applyMiddleware({ app });
+    const apolloServer = new ApolloServer({schema, context: {driver}});
+    apolloServer.applyMiddleware({app});
 
-  const server = http.createServer(app);
+    const server = http.createServer(app);
 
-  createTerminus(server, {
-    healthChecks: { "/healthz": healthCheck },
-  });
+    createTerminus(server, {
+        healthChecks: {"/healthz": healthCheck},
+    });
 
-  return server;
+    return server;
 }
 
-main();
+(async () => {
+    await main();
+})()

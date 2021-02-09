@@ -1,0 +1,471 @@
+# This file contains example GraphQL operations for Public OCH.
+# How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
+
+# To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
+
+
+query SingleQuery($interfaceGroupPath: NodePath!, $interfaceGroupPrefixPattern: NodePathPattern!, $interfacePath: NodePath!, $interfacesPrefixPattern: NodePathPattern!, $implementationPath: NodePath!, $implementationsPrefixPattern: NodePathPattern!, $typePath: NodePath!, $attributesPrefixPattern: NodePathPattern!, $attributePath: NodePath!, $typesPrefixPattern: NodePathPattern!) {
+    repoMetadata: repoMetadata {
+        path
+        name
+        prefix
+        revision(revision: "0.1.0") {
+            ...RepoMetadataRevision
+        }
+        latestRevision {
+            ...RepoMetadataRevision
+        }
+        revisions {
+            ...RepoMetadataRevision
+        }
+    }
+    interfaceGroup: interfaceGroup(path: $interfaceGroupPath) {
+        ...InterfaceGroup
+    }
+    interfaceGroups: interfaceGroups {
+        ...InterfaceGroup
+    }
+    interfaceGroupsWithPrefixFilter: interfaceGroups(filter: { prefixPattern: $interfaceGroupPrefixPattern }) {
+        ...InterfaceGroup
+    }
+    interfaceGroupsWithInterfacesAndImplementations: interfaceGroups {
+        ...InterfaceGroup
+        interfaces {
+            name
+            prefix
+            path
+            revision(revision: "0.1.0") {
+                ...InterfaceRevision
+            }
+            latestRevision {
+                ...InterfaceRevision
+            }
+            revisions {
+                ...InterfaceRevision
+                ...ImplementationsForInterface
+            }
+        }
+    }
+    interface: interface(path: $interfacePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+    interfaces: interfaces {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+    InterfacesWithImplementations: interfaces {
+        path
+        revisions {
+            ...InterfaceRevision
+            ...ImplementationsForInterface
+        }
+    }
+    InterfacesWithPrefixFilter: interfaces(filter: { prefixPattern: $interfacesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+    implementation: implementation(path: $implementationPath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+    implementations: implementations {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+    implementationsFilter: implementations(filter: { prefixPattern: $implementationsPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...ImplementationRevision
+        }
+        latestRevision {
+            ...ImplementationRevision
+        }
+        revisions {
+            ...ImplementationRevision
+        }
+    }
+    typeByPath: type(path: $typePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+    types: types {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+    typesWithFilter: types(filter: { prefixPattern: $typesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...TypeRevision
+        }
+        latestRevision {
+            ...TypeRevision
+        }
+        revisions {
+            ...TypeRevision
+        }
+    }
+    attribute: attribute(path: $attributePath) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+    attributes: attributes {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+    attributesWithFilter: attributes(filter: { prefixPattern: $attributesPrefixPattern }) {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...AttributeRevision
+        }
+        latestRevision {
+            ...AttributeRevision
+        }
+        revisions {
+            ...AttributeRevision
+        }
+    }
+}
+
+
+#
+# Fragments with all possible fields for Public OCH entities
+#
+
+fragment InterfaceGroup on InterfaceGroup {
+    metadata {
+        ...GenericMetadata
+    }
+    interfaces {
+        name
+        prefix
+        path
+        revision(revision: "0.1.0") {
+            ...InterfaceRevision
+        }
+        latestRevision {
+            ...InterfaceRevision
+        }
+        revisions {
+            ...InterfaceRevision
+        }
+    }
+}
+
+fragment GenericMetadata on MetadataBaseFields {
+    prefix
+    path
+    name
+    displayName
+    description
+    maintainers {
+        name
+        email
+    }
+    iconURL
+    documentationURL
+    supportURL
+    iconURL
+}
+
+fragment InterfaceRevision on InterfaceRevision {
+    metadata {
+        prefix
+        path
+        name
+        displayName
+        description
+        maintainers {
+            name
+            email
+        }
+        iconURL
+    }
+    revision
+    spec {
+        input {
+            parameters {
+                jsonSchema
+            }
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+                verbs
+            }
+        }
+        output {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+            }
+        }
+    }
+    signature {
+        och
+    }
+}
+
+fragment ImplementationRevision on ImplementationRevision {
+    metadata {
+        ...GenericMetadata
+        attributes {
+            ...AttributeRevision
+        }
+    }
+    revision
+    spec {
+        appVersion
+        implements {
+            path
+            revision
+        }
+        requires {
+            prefix
+            oneOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+            anyOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+            allOf {
+                typeRef {
+                    path
+                    revision
+                }
+                valueConstraints
+            }
+        }
+        imports {
+            interfaceGroupPath
+            alias
+            appVersion
+            methods {
+                name
+                revision
+            }
+        }
+        additionalInput {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+                verbs
+            }
+        }
+        additionalOutput {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+            }
+            typeInstanceRelations {
+                typeInstanceName
+                uses
+            }
+        }
+        action {
+            runnerInterface
+            args
+        }
+    }
+    signature {
+        och
+    }
+}
+
+fragment AttributeRevision on AttributeRevision {
+    metadata {
+        ...GenericMetadata
+    }
+    revision
+    spec {
+        additionalRefs
+    }
+    signature {
+        och
+    }
+}
+
+fragment TypeRevision on TypeRevision {
+    revision
+    metadata {
+        ...GenericMetadata
+        attributes {
+            ...AttributeRevision
+        }
+    }
+    spec {
+        additionalRefs
+        jsonSchema
+    }
+    signature {
+        och
+    }
+}
+
+fragment RepoMetadataRevision on RepoMetadataRevision {
+    revision
+    metadata {
+        ...GenericMetadata
+    }
+    spec {
+        ochVersion
+        ocfVersion {
+            supported
+            default
+        }
+        implementation {
+            appVersion {
+                semVerTaggingStrategy {
+                    latest {
+                        pointsTo
+                    }
+                }
+            }
+        }
+    }
+    signature {
+        och
+    }
+}
+
+# Additional resolvers for Interface
+fragment ImplementationsForInterface on InterfaceRevision {
+    implementationRevisions {
+        ...ImplementationRevision
+    }
+
+    implementationRevisionsForRequirements(
+        filter: {
+            prefixPattern: "cap"
+            attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+            requirementsSatisfiedBy: [
+                {
+                    typeRef: {
+                        path: "cap.core.type.platform.kubernetes"
+                        revision: "0.1.0"
+                    }
+                }
+                {
+                    typeRef: { path: "cap.type.platform.cloudFoundry", revision: "0.1.0" }
+                }
+            ]
+        }
+    ) {
+        ...ImplementationRevision
+    }
+}

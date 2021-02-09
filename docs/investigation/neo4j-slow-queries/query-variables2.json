@@ -1,0 +1,12 @@
+{
+  "interfaceGroupPath": "cap.interface.productivity.jira",
+  "interfaceGroupPrefixPattern": "cap.interface.productivity.*",
+  "interfacePath": "cap.interface.productivity.jira.install",
+  "interfacesPrefixPattern": "cap.interface.productivity.*",
+  "implementationPath": "cap.implementation.bitnami.postgresql.install",
+  "implementationsPrefixPattern": "cap.implementation.*",
+  "typePath": "cap.core.type.platform.kubernetes",
+  "typesPrefixPattern": "cap.core.type.platform.*",
+  "attributePath": "cap.core.attribute.workload.stateful",
+  "attributesPrefixPattern": "cap.core.attribute.capability.*"
+}
