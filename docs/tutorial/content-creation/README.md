@@ -479,6 +479,8 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
@@ -518,7 +520,7 @@ You can check the schema of the Helm runner args in the [Type manifest](../../..
 >
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
-The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
+The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created. Note the `runner-context` argument, which injects the global artifact `workflow.outputs.artifacts.runner-context` into the runner.
 
 ## Populate the manifests into OCH
 
@@ -545,7 +547,7 @@ APP_JSONPUBLISHADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator .
 
 ## Run your new action
 
-Now we will create the action, to trigger the Confluence installation. Open `https://gateway.voltron.local/` in your browser.
+Now we will create the action, to trigger the Confluence installation. Open https://gateway.voltron.local/ in your browser.
 Then copy the following queries, variables and HTTP headers to the GraphQL playground:
 
 <details>

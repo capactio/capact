@@ -5,7 +5,7 @@ metadata:
   prefix: cap.implementation.postgresql
   name: create-db
   displayName: Create Postgresql database
-  description: Action which create a database on a Postgresql instance
+  description: Action which creates a database on a Postgresql instance
   documentationURL: https://www.postgresql.org/docs/
   supportURL: https://www.postgresql.org/
   license:

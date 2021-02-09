@@ -57,7 +57,6 @@ spec:
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
-      appVersion: 3.x.x
       methods:
         - name: run
           revision: 0.1.0
@@ -119,35 +118,28 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            context:
-                              name: "jira-helm-release"
-                              dryRun: false
-                              timeout: "10m"
-                              platform:
-                                namespace: "default"
-                            args:
-                              command: "install"
-                              generateName: true
-                              chart:
-                                name: "jira-software"
-                                repo: "https://helm.mox.sh"
-                              output:{% raw %}
-                                goTemplate:
-                                  version: {{ '"{{ .Values.image.tag }}"' }}
-                                  host: {{ "'{{ template \"jira-software.fullname\" . }}'" }}{% endraw %}
-                              values:
-                                postgresql:
-                                  enabled: false
-                                databaseConnection:
-                                  host: "{{ host }}"
-                                  user: "{{ superuser.username }}"
-                                  password: "{{ superuser.password }}"
-                                  {% raw %}database: "{{ name }}"{% endraw %}
-                                ingress:
-                                  enabled: true
-                                  hosts:
-                                  - host: jira-cloud.voltron.local
-                                    paths: ['/']
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "jira-software"
+                              repo: "https://helm.mox.sh"
+                            output:{% raw %}
+                              goTemplate:
+                                version: {{ '"{{ .Values.image.tag }}"' }}
+                                host: {{ "'{{ template \"jira-software.fullname\" . }}'" }}{% endraw %}
+                            values:
+                              postgresql:
+                                enabled: false
+                              databaseConnection:
+                                host: "{{ host }}"
+                                user: "{{ superuser.username }}"
+                                password: "{{ superuser.password }}"
+                                {% raw %}database: "{{ name }}"{% endraw %}
+                              ingress:
+                                enabled: true
+                                hosts:
+                                - host: jira-cloud.voltron.local
+                                  paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
@@ -171,6 +163,8 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

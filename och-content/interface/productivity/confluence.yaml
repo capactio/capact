@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: InterfaceGroup
 metadata:
   prefix: cap.interface.productivity
-  name: Confluence
+  name: confluence
   displayName: "Confluence Server"
   description: "Confluence is a document collaboration tool"
   documentationURL: https://support.atlassian.com/bitbucket-cloud/

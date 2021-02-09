@@ -12,5 +12,5 @@ spec:
       username: "postgres"
       password: "s3cr3t"
     defaultDBName: "test"
-    host: "postgresql-1612280316"
+    host: "{ postgresql-service-name }"
     port: 5432
