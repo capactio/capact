@@ -1,7 +1,7 @@
 # Slow Neo4j queries - notes
 
 ### What I did
-- Prepared one GraphQL query that consists of multiple ones and run it with hey (https://github.com/rakyll/hey):
+- Prepared one GraphQL query that consists of multiple ones and run it with [hey](https://github.com/rakyll/hey):
   
     ```bash
     hey -c 10 -z 30s -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
@@ -23,15 +23,27 @@
 - Observed Grafana dashboard for Neo4j, Public OCH and Gateway Kubernetes Pods before and after changes to resource limits
 - Went through our custom Cypher queries to see possible performance issues according to [the article](https://medium.com/neo4j/cypher-query-optimisations-fe0539ce2e5c)
 - Set up indexes for most common fields used in Cypher queries (e.g. filters) on the investigation branch:
-    As described in https://github.com/neo4j-graphql/neo4j-graphql-js/pull/499, we don't need to use @id directive.
-
-### To do
-
-- Ask on https://community.neo4j.com/
-- Investigate very slow first queries to public OCH after its start 
-
+    As described [here](https://github.com/neo4j-graphql/neo4j-graphql-js/pull/499), we don't need to use `@id` directive.
+- Tried to tune configuration for JavaScript Neo4j Driver connection pool, as well as turn off encryption
+    ```javascript
+    const driver = neo4j.driver(
+        config.neo4j.endpoint,
+        neo4j.auth.basic(config.neo4j.username, config.neo4j.password),
+        {
+            encrypted: false,
+            maxConnectionLifetime: 3 * 60 * 60 * 1000, // 3 hours
+            maxConnectionPoolSize: 100,
+            connectionAcquisitionTimeout: 2 * 60 * 1000, // 120 seconds
+            connectionTimeout: 20 * 1000 // 20 seconds
+        }
+    );  
+  ```
+- Tried to use HTTP (`neo4j://`) instead of `bolt://` binary protocol, as HTTP is reported by a part of community as faster from `bolt` [#1](https://github.com/neo4j/neo4j-javascript-driver/issues/374) [#2](https://community.neo4j.com/t/barebones-http-requests-much-faster-than-python-neo4j-driver-and-py2neo/3932) [#3](https://github.com/neo4j/neo4j-java-driver/issues/459)  [#4](https://github.com/neo4jrb/activegraph/issues/1381)
 
 ### Summary
+
+Unfortunately I ran out of time dedicated for this investigation (8 hours) and I didn't find the root cause. Here are my observations and remarks:
+
 - From Grafana dashboard it is clear, that both Neo4j and Public OCH charts have too little CPU and memory limits set. I adjusted them on the investigation branch.
   As we cannot have more than 2 CPUs on CI, we need to introduce separate overrides for local development.
 - A few very first queries to public OCH are very slow (more than 20s). After about 3-4 slow queries, queries are much faster (up to 2s). 
@@ -50,7 +62,48 @@
     100 1193k  100 1183k  100 11039  4971k  46382 --:--:-- --:--:-- --:--:-- 5016k
     0.001427:0.001781:0.238692 # <--- 23 ms
     ```
-      
+    
+    Apparently the neo4j JS driver doesn't initiate connections in the connection pool before any query to DB (see [`_acquire` method for connection pool implementation](https://github.com/neo4j/neo4j-javascript-driver/blob/ab2f6798928e41c4d3c79bc186c351012b81ad5f/src/internal/pool.js#L169) - it is run only on running DB queries. See also the [Driver constructor](https://github.com/neo4j/neo4j-javascript-driver/blob/ab2f6798928e41c4d3c79bc186c351012b81ad5f/src/driver.js#L70), which doesn't initiate any connections). 
+  
+    I tried to prepare a few sessions to create and keep connections to use for later actual queries, but it didn't help:
+    ```javascript
+    const driver = neo4j.driver(
+       // (...)
+    );
+
+    await driver.verifyConnectivity() // it also creates a new connection
+
+    let sessions:Session[] = []
+    for (let i=0; i<10;i++) {
+        sessions.push(driver.session())
+    }
+    try {
+        const results:Promise<QueryResult>[] = sessions.map(s => {
+            return s.run(
+                'MATCH (c:ContentMetadata) return c'
+            )
+        })
+        await Promise.all(results)
+
+        for (let s of sessions) {
+            await s.close();
+        }
+
+        for (let r of results.values()) {
+            const res = await r;
+            console.log(res.records)
+        }
+    }
+    catch(err) {
+        console.log("err", err);
+    } finally {
+        for (const s of sessions) {
+            await s.close()
+        }
+    }  
+    ```
+  
+    Looks like it's more related to the queries which are executed.
     
 - I observed an issue when executing the test query: 
     
@@ -94,11 +147,22 @@
       }]
     }   
     ```
-    While calling Public OCH via Gateway with the test query, I get this issue 100% of the time. It harder to reproduce the issue with direct call to Public OCH. No error on OCH or in DB logs. This should be investigated further.
+    While calling Public OCH via Gateway with the test query, I get this issue 100% of the time. It is harder to reproduce the issue with direct call to Public OCH. No error on OCH or in DB logs. This should be investigated further e.g. by checking out the DB queries from `neo4j-graphql-js`.
     Interestingly, I didn't see the same issue for other resolvers than for `InterfaceRevision.implementationRevisions`. The `InterfaceRevision.implementationRevisions` resolver is a basic generated resolver by `graphql-neo4j-js` with `@relation` directive.
 
+### Follow-ups
 
-  
+- See actual DB queries which are made from `neo4j-graphql-js` and execute them manually against DB
+- Run Public OCH on local machine against Neo4j Desktop (Enterprise DB) for comparison
+- Ask on https://community.neo4j.com/
+- We can follow this guide: https://neo4j.com/developer/guide-performance-tuning/
+
+    I didn't do that, because I suspected to have an issue with connecting to DB from our components.  
+
+- Create a task to adjust the requests and limits for Public OCH and Neo4j for local development
+- Create an issue for the `Resolve function for \"InterfaceRevision.implementationRevisions\" returned undefined` bug
+
+
 
 
 

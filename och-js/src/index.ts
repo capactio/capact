@@ -1,6 +1,6 @@
 import {ApolloServer} from "apollo-server-express";
 import * as express from "express";
-import neo4j, {Driver} from "neo4j-driver";
+import neo4j, {Driver, QueryResult, Result, Session} from "neo4j-driver";
 import {
     createTerminus,
     HealthCheck,
@@ -27,7 +27,38 @@ async function main() {
             connectionTimeout: 20 * 1000 // 20 seconds
         }
     );
+
     await driver.verifyConnectivity()
+
+    let sessions:Session[] = []
+    for (let i=0; i<10;i++) {
+        sessions.push(driver.session())
+    }
+    try {
+        const results:Promise<QueryResult>[] = sessions.map(s => {
+            return s.run(
+                'MATCH (c:ContentMetadata) return c'
+            )
+        })
+        await Promise.all(results)
+
+        for (let s of sessions) {
+            await s.close();
+        }
+
+        for (let r of results.values()) {
+            const res = await r;
+            console.log(res.records)
+        }
+    }
+    catch(err) {
+        console.log("err", err);
+    } finally {
+        for (const s of sessions) {
+            await s.close()
+        }
+    }
+
 
     const schema = getSchemaForMode(config.ochMode);
 

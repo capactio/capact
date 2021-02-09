@@ -448,24 +448,24 @@ fragment ImplementationsForInterface on InterfaceRevision {
     implementationRevisions {
         ...ImplementationRevision
     }
-
-    implementationRevisionsForRequirements(
-        filter: {
-            prefixPattern: "cap"
-            attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
-            requirementsSatisfiedBy: [
-                {
-                    typeRef: {
-                        path: "cap.core.type.platform.kubernetes"
-                        revision: "0.1.0"
-                    }
-                }
-                {
-                    typeRef: { path: "cap.type.platform.cloudFoundry", revision: "0.1.0" }
-                }
-            ]
-        }
-    ) {
-        ...ImplementationRevision
-    }
+#
+#    implementationRevisionsForRequirements(
+#        filter: {
+#            prefixPattern: "cap"
+#            attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+#            requirementsSatisfiedBy: [
+#                {
+#                    typeRef: {
+#                        path: "cap.core.type.platform.kubernetes"
+#                        revision: "0.1.0"
+#                    }
+#                }
+#                {
+#                    typeRef: { path: "cap.type.platform.cloudFoundry", revision: "0.1.0" }
+#                }
+#            ]
+#        }
+#    ) {
+#        ...ImplementationRevision
+#    }
 }
