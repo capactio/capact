@@ -23,9 +23,7 @@ function main() {
 
   const schema = getSchemaForMode(config.ochMode);
 
-  if (config.ochMode === OCHMode.Local) {
-    assertSchemaOnDatabase(schema, driver);
-  }
+  assertSchemaOnDatabase(schema, driver);
 
   const healthCheck = async () => {
     try {
