@@ -30,7 +30,6 @@ To develop and test the created content, you will need to have a Voltron environ
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
 * [populator](TBD) TODO: release or give instruction on how to compile it from source
 
-
 Also, clone the Voltron repository with the current OCF content.
 ```bash
 git clone https://github.com/Project-Voltron/go-voltron.git
@@ -139,9 +138,11 @@ signature:
 ```
 </details>
 
-The `spec.input` key defines inputs, required by the Interface. There are two types of inputs:
+The `spec.input` property defines inputs, required by the Interface. There are two types of inputs:
 - `spec.input.parameters` - User provided input parameters, i.e. these could be configuration parameters required by the operation,
 - `spec.input.typeInstances` - input TypeInstances, i.e. a PostgreSQL database, which is needed for an application.
+
+The `spec.output` property defines the TypeInstance, which this Interface returns.
 
 Although Confluence needs a database, we don't specify it as an input argument here. That is because, we leave selecting a database to the Implementation.
 
@@ -513,6 +514,19 @@ You can check the schema of the Helm runner args in the [Type manifest](../../..
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
 The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created. Note the `runner-context` argument, which injects the global artifact `workflow.outputs.artifacts.runner-context` into the runner.
+
+### Validate the manifests using ocftool
+
+You can use the `ocftool` to validate the manifests you created. The `ocftool validate` command checks the manifests against JSON schemas and can tell you, if your manifests are correct.
+
+> For now the `ocftool` does not verify the content of the `action` property in Implementations. It will not verify, that your workflow is correct and will execute properly.
+
+To verify all your manifests in `och-content` directory, execute:
+```
+ocftool validate och-content/**/*.yaml
+```
+
+You can read more about the `ocftool` [here](../../../cmd/ocftool/README.md).
 
 ## Populate the manifests into OCH
 
