@@ -30,8 +30,13 @@ spec:
               },
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
             }
+    typeInstances:
+      runner-context:
+        typeRef:
+          path: cap.core.type.runner.generic.context
+          revision: 0.1.0
+        verbs: [ "get" ]
   output: {}
-
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

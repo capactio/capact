@@ -350,7 +350,6 @@ spec:
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
-      appVersion: 3.x.x
       methods:
         - name: run
           revision: 0.1.0
@@ -425,35 +424,28 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            context:
-                              name: "confluence-helm-release"
-                              dryRun: false
-                              timeout: "10m"
-                              platform:
-                                namespace: "default"
-                            args:
-                              command: "install"
-                              generateName: true
-                              chart:
-                                name: "confluence-server"
-                                repo: "https://helm.mox.sh"
-                              output:{% raw %}
-                                goTemplate:
-                                  version: {{ '"{{ .Values.image.tag }}"' }}
-                                  host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
-                              values:
-                                postgresql:
-                                  enabled: false
-                                databaseConnection:
-                                  host: "{{ host }}"
-                                  user: "{{ superuser.username }}"
-                                  password: "{{ superuser.password }}"
-                                  {% raw %}database: "{{ name }}"{% endraw %}
-                                ingress:
-                                  enabled: true
-                                  hosts:
-                                  - host: confluence.voltron.local
-                                    paths: ['/']
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "confluence-server"
+                              repo: "https://helm.mox.sh"
+                            output:{% raw %}
+                              goTemplate:
+                                version: {{ '"{{ .Values.image.tag }}"' }}
+                                host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
+                            values:
+                              postgresql:
+                                enabled: false
+                              databaseConnection:
+                                host: "{{ host }}"
+                                user: "{{ superuser.username }}"
+                                password: "{{ superuser.password }}"
+                                {% raw %}database: "{{ name }}"{% endraw %}
+                              ingress:
+                                enabled: true
+                                hosts:
+                                - host: confluence.voltron.local
+                                  paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
 
