@@ -3,10 +3,10 @@ neo4j:
     standalone: true
     resources:
       requests:
-        cpu: 150m
-        memory: 1024Mi
+        cpu: 500m
+        memory: 1768Mi
       limits:
-        cpu: 400m
-        memory: 2048Mi
-  imageTag: 4.2.1
+        cpu: 1
+        memory: 3072Mi
+  imageTag: 4.2.3
   neo4jPassword: okon
