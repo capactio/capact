@@ -1,0 +1,134 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.terraform.gcp.cloudsql.postgresql # Computed during fetching the manifest
+  name: install
+  displayName: Install Cloudsql PostgreSQL database using terraform
+  description: Action which provisions CloudSQL for PostgreSQL database using terraform
+  documentationURL: https://cloud.google.com/cloudsql
+  supportURL: https://cloud.google.com/cloudsql
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  attributes:
+  # TODO: uncomment when policies are implemented
+    #   cap.attribute.cloud.provider.gcp:
+    #  revision: 0.1.0
+    cap.attribute.runner.terraform:
+      revision: 0.1.0
+
+spec:
+  appVersion: "10, 11, 12, 13"
+
+  additionalOutput:
+    typeInstances:
+      cloudsql-instance:
+        typeRef:
+          path: cap.type.gcp.cloudsql.instance
+          revision: 0.1.0
+    typeInstanceRelations:
+      cloudsql-instance:
+        uses:
+          - postgresql
+
+  implements:
+    # TODO: revert it when policies are implemented
+    #- path: cap.interface.database.postgresql.install
+    #  revision: 0.1.0
+    - path: cap.interface.terraform.database.postgresql.install
+      revision: 0.1.0
+
+  requires:
+    # TODO uncomment it when downloading type instances is implemented
+    #    cap.type.gcp.auth:
+    #      allOf:
+    #        - name: service-account
+    #          # alias: gcp-sa
+    #          revision: 0.1.0
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
+      methods:
+        - name: apply
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: postgres-install
+        templates:
+          - name: postgres-install
+            inputs:
+              artifacts:
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            steps:
+              - - name: create-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            variables: |+
+                              user_name = "{{ superuser.username }}"
+                              user_password = "{{ superuser.password }}"
+                            command: "apply"
+                            module:
+                              name: cloudsql
+                              source: "s3::http://argo-minio.argo:9000/terraform/cloudsql?aws_access_key_id=RIunIckoQqgSZFJ1jvfy&aws_access_key_secret=u4UDXa38Ic6ExBTMwRL2UVIuqh7eLUnyjWs1eXX2"
+                            env:
+                            # TODO this looks like a bug. google_sql_database_instance.settings.provider is optional and when missing
+                            # it should be taken from credentials. In credentials there is no `project` though but only `project_id`
+                            # so setting it directly
+                            - GOOGLE_PROJECT=<PROJECT_NAME>
+                            # TODO uncomment it when passing service account works
+                            #- GOOGLE_APPLICATION_CREDENTIALS={% raw %}{{workflow.outputs.artifacts.gcp-sa.path}}{% endraw %}
+                            # and remove this:                   
+                            - GOOGLE_OAUTH_ACCESS_TOKEN=<ACCESS_TOKEN>
+                            output: 
+                              goTemplate:
+                                host: {% raw %} "{{ .instance_ip_addr }}" {% endraw %}
+                                port: 5432
+                                defaultDBName: postgres
+                                superuser:
+                                  username: {{ superuser.username }}
+                                  password: {{ superuser.password }}
+
+              - - name: terraform-apply
+                  voltron-action: terraform.apply
+                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                    - name: postgresql
+                      from: additional
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                     # - name: gcp-sa
+                     #   from: "{{workflow.outputs.artifacts.gcp-sa}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

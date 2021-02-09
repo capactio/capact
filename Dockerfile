@@ -53,3 +53,29 @@ LABEL source=git@github.com:Project-Voltron/go-voltron.git
 LABEL app=$COMPONENT
 
 CMD ["/app"]
+
+FROM alpine:3.12.3  as terraform-runner
+ARG COMPONENT
+
+# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY --from=builder /bin/$COMPONENT /app
+
+ENV TERRAFORM_VERSION 0.14.6
+
+WORKDIR /bin
+RUN \
+    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
+    unzip terraform.zip && rm terraform.zip
+
+COPY hack/runners/terraform /workspace
+
+WORKDIR /workspace
+RUN /bin/terraform init
+RUN rm /workspace/providers.tf
+
+LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL app=$COMPONENT
+
+CMD ["/app"]
