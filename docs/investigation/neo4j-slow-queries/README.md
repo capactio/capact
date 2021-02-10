@@ -1,6 +1,6 @@
 # Slow Neo4j queries - notes
 
-### What I did
+## What I did
 - Prepared one GraphQL query that consists of multiple ones and run it with [hey](https://github.com/rakyll/hey):
   
     ```bash
@@ -40,7 +40,7 @@
   ```
 - Tried to use HTTP (`neo4j://`) instead of `bolt://` binary protocol, as HTTP is reported by a part of community as faster from `bolt` [#1](https://github.com/neo4j/neo4j-javascript-driver/issues/374) [#2](https://community.neo4j.com/t/barebones-http-requests-much-faster-than-python-neo4j-driver-and-py2neo/3932) [#3](https://github.com/neo4j/neo4j-java-driver/issues/459)  [#4](https://github.com/neo4jrb/activegraph/issues/1381)
 
-### Summary
+## Summary
 
 Unfortunately I ran out of time dedicated for this investigation (8 hours) and I didn't find the root cause. Here are my observations and remarks:
 
@@ -150,7 +150,191 @@ Unfortunately I ran out of time dedicated for this investigation (8 hours) and I
     While calling Public OCH via Gateway with the test query, I get this issue 100% of the time. It is harder to reproduce the issue with direct call to Public OCH. No error on OCH or in DB logs. This should be investigated further e.g. by checking out the DB queries from `neo4j-graphql-js`.
     Interestingly, I didn't see the same issue for other resolvers than for `InterfaceRevision.implementationRevisions`. The `InterfaceRevision.implementationRevisions` resolver is a basic generated resolver by `graphql-neo4j-js` with `@relation` directive.
 
-### Follow-ups
+## Performance comparison
+
+Before and after changes (resource requests and limits + indexes)
+
+Machine: Macbook Pro 16 2019 i7, 16GB RAM - Docker: CPU: 5, Memory: 8GB, Swap: 3GB
+
+1. Run new kind cluster from a scratch (`make dev-cluster`)
+1. Expose Grafana:
+   ```bash
+   kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80
+   ```
+1. Expose OCH public port:
+   ```bash
+   kubectl port-forward -n voltron-system svc/voltron-och-public 3001:80
+   ```
+1. Run load generator with 1 concurrent client, for 3 minutes, without any timeout of queries
+   ```bash
+   hey -c 1 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json http://localhost:3001/graphql 
+   ```
+1. Run load generator with 2 concurrent clients:
+   ```bash
+   hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev2.json http://localhost:3001/graphql 
+   ```   
+1. Run the same load generator against Gateway
+    ```bash
+    hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql 
+    ```
+
+### Before
+
+```bash
+hey -c 1 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json http://localhost:3001/graphql
+
+Summary:
+  Total:        183.2208 secs
+  Slowest:      72.7208 secs
+  Fastest:      2.8103 secs
+  Average:      6.5435 secs
+  Requests/sec: 0.1528
+  
+  Total data:   32560640 bytes
+  Size/request: 1162880 bytes
+
+Response time histogram:
+  2.810 [1]     |■■
+  9.801 [26]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  16.792 [0]    |
+  23.783 [0]    |
+  30.775 [0]    |
+  37.766 [0]    |
+  44.757 [0]    |
+  51.748 [0]    |
+  58.739 [0]    |
+  65.730 [0]    |
+  72.721 [1]    |■■
+
+
+Latency distribution:
+  10% in 3.5967 secs
+  25% in 3.6964 secs
+  50% in 3.9934 secs
+  75% in 4.1964 secs
+  90% in 9.3995 secs
+  95% in 72.7208 secs
+  0% in 0.0000 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:   0.0001 secs, 2.8103 secs, 72.7208 secs
+  DNS-lookup:   0.0001 secs, 0.0000 secs, 0.0028 secs
+  req write:    0.0001 secs, 0.0000 secs, 0.0006 secs
+  resp wait:    6.5077 secs, 2.7864 secs, 72.6013 secs
+  resp read:    0.0356 secs, 0.0170 secs, 0.2002 secs
+
+Status code distribution:
+  [200] 28 responses  
+```
+
+```bash
+❯ hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev2.json http://localhost:3001/graphql
+
+Summary:
+  Total:        207.5575 secs
+  Slowest:      15.5272 secs
+  Fastest:      3.1060 secs
+  Average:      4.9153 secs
+  Requests/sec: 0.2216
+  
+  Total data:   38979708 bytes
+  Size/request: 1146462 bytes
+
+Response time histogram:
+  3.106 [1]     |■■
+  4.348 [25]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  5.590 [1]     |■■
+  6.832 [1]     |■■
+  8.075 [2]     |■■■
+  9.317 [1]     |■■
+  10.559 [0]    |
+  11.801 [2]    |■■■
+  13.043 [0]    |
+  14.285 [0]    |
+  15.527 [1]    |■■
+
+
+Latency distribution:
+  10% in 3.2982 secs
+  25% in 3.4984 secs
+  50% in 3.8049 secs
+  75% in 4.3949 secs
+  90% in 11.2413 secs
+  95% in 15.5272 secs
+  0% in 0.0000 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:   0.0003 secs, 3.1060 secs, 15.5272 secs
+  DNS-lookup:   0.0001 secs, 0.0000 secs, 0.0023 secs
+  req write:    0.0001 secs, 0.0000 secs, 0.0002 secs
+  resp wait:    4.8873 secs, 3.0809 secs, 15.4933 secs
+  resp read:    0.0276 secs, 0.0157 secs, 0.1089 secs
+
+Status code distribution:
+  [200] 34 responses
+
+Error distribution:
+  [5]   Post "http://localhost:3001/graphql": EOF
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63705->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63706->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63734->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63750->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63771->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63790->[::1]:3001: read: connection reset by peer
+  [1]   Post "http://localhost:3001/graphql": read tcp [::1]:63808->[::1]:3001: read: connection reset by peer
+```
+
+```bash
+❯ hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql
+
+Summary:
+  Total:        181.7945 secs
+  Slowest:      31.7929 secs
+  Fastest:      1.6009 secs
+  Average:      4.6457 secs
+  Requests/sec: 0.4291
+  
+  Total data:   17386 bytes
+  Size/request: 222 bytes
+
+Response time histogram:
+  1.601 [1]     |■
+  4.620 [64]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  7.639 [2]     |■
+  10.658 [3]    |■■
+  13.678 [0]    |
+  16.697 [3]    |■■
+  19.716 [0]    |
+  22.735 [0]    |
+  25.755 [2]    |■
+  28.774 [1]    |■
+  31.793 [2]    |■
+
+
+Latency distribution:
+  10% in 1.7912 secs
+  25% in 1.7925 secs
+  50% in 1.9209 secs
+  75% in 2.8065 secs
+  90% in 16.2969 secs
+  95% in 28.6699 secs
+  0% in 0.0000 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:   0.1481 secs, 1.6009 secs, 31.7929 secs
+  DNS-lookup:   0.1284 secs, 0.0000 secs, 5.0073 secs
+  req write:    0.0001 secs, 0.0000 secs, 0.0001 secs
+  resp wait:    4.4829 secs, 1.6008 secs, 31.7928 secs
+  resp read:    0.0145 secs, 0.0000 secs, 0.2990 secs
+
+Status code distribution:
+  [200] 78 responses
+
+```
+
+### After
+
+## Follow-ups
 
 - See actual DB queries which are made from `neo4j-graphql-js` and execute them manually against DB
 - Run Public OCH on local machine against Neo4j Desktop (Enterprise DB) for comparison
@@ -161,7 +345,6 @@ Unfortunately I ran out of time dedicated for this investigation (8 hours) and I
 
 - Create a task to adjust the requests and limits for Public OCH and Neo4j for local development
 - Create an issue for the `Resolve function for \"InterfaceRevision.implementationRevisions\" returned undefined` bug
-
 
 
 
