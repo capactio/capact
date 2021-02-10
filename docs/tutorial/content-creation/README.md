@@ -513,7 +513,16 @@ You can check the schema of the Helm runner args in the [Type manifest](../../..
 >
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
-The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created. Note the `runner-context` argument, which injects the global artifact `workflow.outputs.artifacts.runner-context` into the runner.
+The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` TypeInstances. The `confluence-config` TypeInstance data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
+
+Note the `runner-context` argument, which provided the context for the runner. Voltron Engine injects a global artifact `workflow.outputs.artifacts.runner-context` into the workflow, so if you use a runner, which needs the runner context, you can to do it using:
+```yaml
+arguments:
+  artifacts:
+    - name: runner-context
+      from: "{{workflow.outputs.artifacts.runner-context}
+```
+To verify, if a runner needs the context, check the Interface of the runner (eg. [Interface for Helm runner](../../../och-content/interface/runner/helm/run.yaml)).
 
 ### Validate the manifests using ocftool
 
