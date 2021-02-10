@@ -20,7 +20,7 @@
     - Neo4j deployed on kind cluster, Public OCH ran on local machine
     - Neo4j ran with Docker image on local machine, Public OCH ran on local machine
     
-- Observed Grafana dashboard for Neo4j, Public OCH and Gateway Kubernetes Pods before and after changes to resource limits
+- Observed Grafana dashboard for Neo4j, Public OCH and Gateway Pods before and after changes to resource limits
 - Went through our custom Cypher queries to see possible performance issues according to [the article](https://medium.com/neo4j/cypher-query-optimisations-fe0539ce2e5c)
 - Set up indexes for most common fields used in Cypher queries (e.g. filters) on the investigation branch:
     As described [here](https://github.com/neo4j-graphql/neo4j-graphql-js/pull/499), we don't need to use `@id` directive.
@@ -44,7 +44,7 @@
 
 Unfortunately I ran out of time dedicated for this investigation (8 hours) and I didn't find the root cause. Here are my observations and remarks:
 
-- From Grafana dashboard it is clear, that both Neo4j and Public OCH charts have too little CPU and memory limits set. I adjusted them on the investigation branch.
+- From Grafana dashboard it is clear, that the requests and limits for Neo4j, Public OCH and Gateway charts can be increased for better performance. I adjusted them on the investigation branch, however, they might be too high.
   As we cannot have more than 2 CPUs on CI, we need to introduce separate overrides for local development.
 - A few very first queries to public OCH are very slow (more than 20s). After about 3-4 slow queries, queries are much faster (up to 2s). 
   
@@ -104,7 +104,106 @@ Unfortunately I ran out of time dedicated for this investigation (8 hours) and I
     ```
   
     Looks like it's more related to the queries which are executed.
+
+- Even on local machine (Neo4j on Docker image + Public OCH) the query execution times varies. They seem to be quite similar to the execution times on Kind cluster.
+  
+    20 queries executed with 2 clients:
+    ```bash
+    hey -c 2 -n 20 -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
     
+    Summary:
+    Total:        28.1253 secs
+    Slowest:      23.4186 secs
+    Fastest:      0.2733 secs
+    Average:      2.7809 secs
+    Requests/sec: 0.7111
+    
+    Total data:   23206077 bytes
+    Size/request: 1160303 bytes
+    
+    Response time histogram:
+    0.273 [1]     |■■■
+    2.588 [16]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+    4.902 [0]     |
+    7.217 [1]     |■■■
+    9.531 [0]     |
+    11.846 [0]    |
+    14.160 [0]    |
+    16.475 [0]    |
+    18.790 [0]    |
+    21.104 [1]    |■■■
+    23.419 [1]    |■■■
+    
+    
+    Latency distribution:
+    10% in 0.3189 secs
+    25% in 0.4095 secs
+    50% in 0.4812 secs
+    75% in 0.5223 secs
+    90% in 18.8233 secs
+    95% in 23.4186 secs
+    0% in 0.0000 secs
+    
+    Details (average, fastest, slowest):
+    DNS+dialup:   0.0004 secs, 0.2733 secs, 23.4186 secs
+    DNS-lookup:   0.0002 secs, 0.0000 secs, 0.0023 secs
+    req write:    0.0001 secs, 0.0000 secs, 0.0005 secs
+    resp wait:    2.7792 secs, 0.2727 secs, 23.4132 secs
+    resp read:    0.0012 secs, 0.0005 secs, 0.0092 secs
+    
+    Status code distribution:
+    [200] 20 responses
+    
+    ```
+  
+    Queries in 30 seconds with 10 clients
+    ```bash
+    ❯ hey -c 10 -z 30s -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
+    
+    Summary:
+      Total:        31.0410 secs
+      Slowest:      3.5632 secs
+      Fastest:      0.7850 secs
+      Average:      1.6953 secs
+      Requests/sec: 5.8632
+      
+      Total data:   222273142 bytes
+      Size/request: 1221281 bytes
+    
+    Response time histogram:
+      0.785 [1]     |■
+      1.063 [2]     |■
+      1.341 [11]    |■■■■■■
+      1.618 [67]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+      1.896 [79]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+      2.174 [9]     |■■■■■
+      2.452 [5]     |■■■
+      2.730 [1]     |■
+      3.008 [1]     |■
+      3.285 [4]     |■■
+      3.563 [2]     |■
+    
+    
+    Latency distribution:
+      10% in 1.3785 secs
+      25% in 1.5187 secs
+      50% in 1.6426 secs
+      75% in 1.7874 secs
+      90% in 1.9924 secs
+      95% in 2.4495 secs
+      99% in 3.5632 secs
+    
+    Details (average, fastest, slowest):
+      DNS+dialup:   0.0002 secs, 0.7850 secs, 3.5632 secs
+      DNS-lookup:   0.0001 secs, 0.0000 secs, 0.0023 secs
+      req write:    0.0001 secs, 0.0000 secs, 0.0004 secs
+      resp wait:    1.6759 secs, 0.7841 secs, 3.0227 secs
+      resp read:    0.0191 secs, 0.0003 secs, 0.9202 secs
+    
+    Status code distribution:
+      [200] 182 responses
+    ```
+
 - I observed an issue when executing the test query: 
     
     ```json
@@ -152,7 +251,9 @@ Unfortunately I ran out of time dedicated for this investigation (8 hours) and I
 
 ## Performance comparison
 
-Before and after changes (resource requests and limits + indexes)
+Before and after changes (resource requests and limits + indexes). I observed a slight increase in performance, however we can't say the issue is solved.
+
+### Process
 
 Machine: Macbook Pro 16 2019 i7, 16GB RAM - Docker: CPU: 5, Memory: 8GB, Swap: 3GB
 
@@ -173,9 +274,9 @@ Machine: Macbook Pro 16 2019 i7, 16GB RAM - Docker: CPU: 5, Memory: 8GB, Swap: 3
    ```bash
    hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev2.json http://localhost:3001/graphql 
    ```   
-1. Run the same load generator against Gateway
+1. Run the load generator against Gateway
     ```bash
-    hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql 
+    hey -c 1 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql 
     ```
 
 ### Before
@@ -285,54 +386,199 @@ Error distribution:
 ```
 
 ```bash
-❯ hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql
+❯ hey -c 1 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json https://gateway.voltron.local/graphql
 
 Summary:
-  Total:        181.7945 secs
-  Slowest:      31.7929 secs
-  Fastest:      1.6009 secs
-  Average:      4.6457 secs
-  Requests/sec: 0.4291
-  
-  Total data:   17386 bytes
-  Size/request: 222 bytes
+  Total:	184.5540 secs
+  Slowest:	16.5373 secs
+  Fastest:	7.8061 secs
+  Average:	12.3033 secs
+  Requests/sec:	0.0813
+
 
 Response time histogram:
-  1.601 [1]     |■
-  4.620 [64]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  7.639 [2]     |■
-  10.658 [3]    |■■
-  13.678 [0]    |
-  16.697 [3]    |■■
-  19.716 [0]    |
-  22.735 [0]    |
-  25.755 [2]    |■
-  28.774 [1]    |■
-  31.793 [2]    |■
+  7.806 [1]	|■■■■■■■■■■■■■
+  8.679 [1]	|■■■■■■■■■■■■■
+  9.552 [0]	|
+  10.425 [1]	|■■■■■■■■■■■■■
+  11.299 [3]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  12.172 [1]	|■■■■■■■■■■■■■
+  13.045 [2]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  13.918 [1]	|■■■■■■■■■■■■■
+  14.791 [2]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  15.664 [1]	|■■■■■■■■■■■■■
+  16.537 [2]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■
 
 
 Latency distribution:
-  10% in 1.7912 secs
-  25% in 1.7925 secs
-  50% in 1.9209 secs
-  75% in 2.8065 secs
-  90% in 16.2969 secs
-  95% in 28.6699 secs
+  10% in 9.9743 secs
+  25% in 11.1239 secs
+  50% in 12.9130 secs
+  75% in 14.9700 secs
+  90% in 16.5373 secs
+  0% in 0.0000 secs
   0% in 0.0000 secs
 
 Details (average, fastest, slowest):
-  DNS+dialup:   0.1481 secs, 1.6009 secs, 31.7929 secs
-  DNS-lookup:   0.1284 secs, 0.0000 secs, 5.0073 secs
-  req write:    0.0001 secs, 0.0000 secs, 0.0001 secs
-  resp wait:    4.4829 secs, 1.6008 secs, 31.7928 secs
-  resp read:    0.0145 secs, 0.0000 secs, 0.2990 secs
+  DNS+dialup:	0.3346 secs, 7.8061 secs, 16.5373 secs
+  DNS-lookup:	0.3338 secs, 0.0000 secs, 5.0063 secs
+  req write:	0.0001 secs, 0.0001 secs, 0.0004 secs
+  resp wait:	11.5706 secs, 7.5882 secs, 15.2406 secs
+  resp read:	0.3979 secs, 0.2178 secs, 0.6265 secs
 
 Status code distribution:
-  [200] 78 responses
-
+  [200]	15 responses
 ```
 
 ### After
+
+```bash
+ hey -c 1 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev.json http://localhost:3001/graphql
+
+Summary:
+  Total:	180.9098 secs
+  Slowest:	38.0758 secs
+  Fastest:	0.8932 secs
+  Average:	1.3302 secs
+  Requests/sec:	0.7518
+
+  Total data:	158151680 bytes
+  Size/request:	1162880 bytes
+
+Response time histogram:
+  0.893 [1]	|
+  4.611 [134]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  8.330 [0]	|
+  12.048 [0]	|
+  15.766 [0]	|
+  19.484 [0]	|
+  23.203 [0]	|
+  26.921 [0]	|
+  30.639 [0]	|
+  34.358 [0]	|
+  38.076 [1]	|
+
+
+Latency distribution:
+  10% in 0.9118 secs
+  25% in 0.9854 secs
+  50% in 1.0055 secs
+  75% in 1.0968 secs
+  90% in 1.2171 secs
+  95% in 1.3982 secs
+  99% in 38.0758 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0000 secs, 0.8932 secs, 38.0758 secs
+  DNS-lookup:	0.0000 secs, 0.0000 secs, 0.0024 secs
+  req write:	0.0001 secs, 0.0000 secs, 0.0034 secs
+  resp wait:	1.3075 secs, 0.8734 secs, 38.0409 secs
+  resp read:	0.0226 secs, 0.0164 secs, 0.0538 secs
+
+Status code distribution:
+  [200]	136 responses
+```
+```bash
+hey -c 2 -z 3m -t 0 -m "POST" -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body-without-implrev2.json http://localhost:3001/graphql
+
+Summary:
+  Total:	190.5885 secs
+  Slowest:	4.2461 secs
+  Fastest:	1.5986 secs
+  Average:	2.5216 secs
+  Requests/sec:	0.2361
+
+  Total data:	34393860 bytes
+  Size/request:	1146462 bytes
+
+Response time histogram:
+  1.599 [1]	|■■■■
+  1.863 [0]	|
+  2.128 [0]	|
+  2.393 [11]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  2.658 [9]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  2.922 [7]	|■■■■■■■■■■■■■■■■■■■■■■■■■
+  3.187 [0]	|
+  3.452 [1]	|■■■■
+  3.717 [0]	|
+  3.981 [0]	|
+  4.246 [1]	|■■■■
+
+
+Latency distribution:
+  10% in 2.1846 secs
+  25% in 2.3108 secs
+  50% in 2.4724 secs
+  75% in 2.6965 secs
+  90% in 2.8839 secs
+  95% in 4.2461 secs
+  0% in 0.0000 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0002 secs, 1.5986 secs, 4.2461 secs
+  DNS-lookup:	0.0001 secs, 0.0000 secs, 0.0020 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0002 secs
+  resp wait:	2.4974 secs, 1.5824 secs, 4.2055 secs
+  resp read:	0.0239 secs, 0.0161 secs, 0.0412 secs
+
+Status code distribution:
+  [200]	30 responses
+
+Error distribution:
+  [5]	Post "http://localhost:3001/graphql": EOF
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55475->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55476->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55487->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55488->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55503->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55504->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55551->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55553->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55602->[::1]:3001: read: connection reset by peer
+  [1]	Post "http://localhost:3001/graphql": read tcp [::1]:55603->[::1]:3001: read: connection reset by peer
+```
+```bash
+Summary:
+  Total:	180.7304 secs
+  Slowest:	7.7099 secs
+  Fastest:	1.0205 secs
+  Average:	1.5316 secs
+  Requests/sec:	0.6529
+
+
+Response time histogram:
+  1.020 [1]	|
+  1.689 [89]	|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  2.358 [26]	|■■■■■■■■■■■■
+  3.027 [0]	|
+  3.696 [0]	|
+  4.365 [0]	|
+  5.034 [0]	|
+  5.703 [0]	|
+  6.372 [0]	|
+  7.041 [1]	|
+  7.710 [1]	|
+
+
+Latency distribution:
+  10% in 1.1295 secs
+  25% in 1.2006 secs
+  50% in 1.3090 secs
+  75% in 1.6861 secs
+  90% in 1.9968 secs
+  95% in 2.1903 secs
+  99% in 7.7099 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:	0.0850 secs, 1.0205 secs, 7.7099 secs
+  DNS-lookup:	0.0849 secs, 0.0000 secs, 5.0090 secs
+  req write:	0.0000 secs, 0.0000 secs, 0.0001 secs
+  resp wait:	1.3312 secs, 0.9841 secs, 2.4008 secs
+  resp read:	0.1153 secs, 0.0192 secs, 0.2902 secs
+
+Status code distribution:
+  [200]	118 responses
+```
 
 ## Follow-ups
 
@@ -345,163 +591,4 @@ Status code distribution:
 
 - Create a task to adjust the requests and limits for Public OCH and Neo4j for local development
 - Create an issue for the `Resolve function for \"InterfaceRevision.implementationRevisions\" returned undefined` bug
-
-
-
-
-
-
-
-
-
-
-
----
-
-
-
-
-
-http://localhost:3000/
-
-
-- Running Neo4j without limits on dev cluster
-- Experimenting with calls without Gateway
-  ```bash
-  kubectl port-forward -n voltron-system svc/voltron-och-public 3001:80
-  ```
-  
-  Faster
-- Observing Grafana dashboard
-    Memory: 1.4GB
-    CPU: 0.4m
-  
-
-
-## Benchmark
-
-1. Run DB with Public OCH
-1. Populate DB
-1. Without doing any manual queries, run benchmark
-
-    ```bash
-    hey -c 2 -n 10 -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
-    ```
-    
-    To make sure the response is correct, see:
-    ```bash
-    curl 'http://localhost:8080/graphql' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' --data-binary '@body.json' --compressed -w %{time_connect}:%{time_starttransfer}:%{time_total} -o ./output.json
-    ```
-
-### Local Public OCH with local Neo4j on Docker
-
-```bash
-hey -c 2 -n 20 -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
-
-Summary:
-  Total:        28.1253 secs
-  Slowest:      23.4186 secs
-  Fastest:      0.2733 secs
-  Average:      2.7809 secs
-  Requests/sec: 0.7111
-  
-  Total data:   23206077 bytes
-  Size/request: 1160303 bytes
-
-Response time histogram:
-  0.273 [1]     |■■■
-  2.588 [16]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  4.902 [0]     |
-  7.217 [1]     |■■■
-  9.531 [0]     |
-  11.846 [0]    |
-  14.160 [0]    |
-  16.475 [0]    |
-  18.790 [0]    |
-  21.104 [1]    |■■■
-  23.419 [1]    |■■■
-
-
-Latency distribution:
-  10% in 0.3189 secs
-  25% in 0.4095 secs
-  50% in 0.4812 secs
-  75% in 0.5223 secs
-  90% in 18.8233 secs
-  95% in 23.4186 secs
-  0% in 0.0000 secs
-
-Details (average, fastest, slowest):
-  DNS+dialup:   0.0004 secs, 0.2733 secs, 23.4186 secs
-  DNS-lookup:   0.0002 secs, 0.0000 secs, 0.0023 secs
-  req write:    0.0001 secs, 0.0000 secs, 0.0005 secs
-  resp wait:    2.7792 secs, 0.2727 secs, 23.4132 secs
-  resp read:    0.0012 secs, 0.0005 secs, 0.0092 secs
-
-Status code distribution:
-  [200] 20 responses
-
-```
-
-```bash
-❯ hey -c 10 -z 30s -t 0 -m "POST" -H 'Accept-Encoding: gzip, deflate, br' -T "application/json" -A 'application/json' -H 'Authorization: Basic Z3JhcGhxbDp0MHBfczNjcjN0' -H 'NAMESPACE: default' -D ./body.json http://localhost:8080/graphql
-
-Summary:
-  Total:        31.0410 secs
-  Slowest:      3.5632 secs
-  Fastest:      0.7850 secs
-  Average:      1.6953 secs
-  Requests/sec: 5.8632
-  
-  Total data:   222273142 bytes
-  Size/request: 1221281 bytes
-
-Response time histogram:
-  0.785 [1]     |■
-  1.063 [2]     |■
-  1.341 [11]    |■■■■■■
-  1.618 [67]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  1.896 [79]    |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
-  2.174 [9]     |■■■■■
-  2.452 [5]     |■■■
-  2.730 [1]     |■
-  3.008 [1]     |■
-  3.285 [4]     |■■
-  3.563 [2]     |■
-
-
-Latency distribution:
-  10% in 1.3785 secs
-  25% in 1.5187 secs
-  50% in 1.6426 secs
-  75% in 1.7874 secs
-  90% in 1.9924 secs
-  95% in 2.4495 secs
-  99% in 3.5632 secs
-
-Details (average, fastest, slowest):
-  DNS+dialup:   0.0002 secs, 0.7850 secs, 3.5632 secs
-  DNS-lookup:   0.0001 secs, 0.0000 secs, 0.0023 secs
-  req write:    0.0001 secs, 0.0000 secs, 0.0004 secs
-  resp wait:    1.6759 secs, 0.7841 secs, 3.0227 secs
-  resp read:    0.0191 secs, 0.0003 secs, 0.9202 secs
-
-Status code distribution:
-  [200] 182 responses
-```
-
-## Public OCH on Kind
-
-
-4.7s - 10s
-After bumping values for OCH public - 1,5-2,5s
-
-curl 'http://localhost:3001/graphql' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'AuthorizaticzNjcjN0' -H 'NAMESPACE: default' --data-binary '@body.json' --compressed -w %{time_connect}:%{time_starttransfer}:%{time_total} -o ./output.json
-curl 'http://localhost:3001/graphql' -H 'Content-Type: application/json' -H 'Accept: application/json' -H 'Connection: keep-alive' -H 'AuthorizaticzNjcjN0' -H 'NAMESPACE: default' --data-binary '@body2.json' --compressed -w %{time_connect}:%{time_starttransfer}:%{time_total} -o ./output.json
-
-
-Slow on start - Slow connection from OCH to DB?
-First 3 queries ~30s
-
-
-
+- To improve performance of GraphQL queries from Engine to OCH, communicate with OCH directly.
