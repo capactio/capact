@@ -37,14 +37,14 @@ GOOGLE_APPLICATION_CREDENTIALS={full-path-to-gcp-service-account-credentials-jso
 
 The following environment variables can be set:
 
-| Name                                       | Required | Default                      | Description                                                        |
-|--------------------------------------------|----------|------------------------------|--------------------------------------------------------------------|
-| RUNNER_CONTEXT_PATH                        | yes      |                              | Path to the YAML file with runner context                          |
-| RUNNER_ARGS_PATH                           | yes      |                              | Path to the YAML file with input arguments                         |
-| RUNNER_LOGGER_DEV_MODE                     | no       | `false`                      | Enable additional log messages                                     |
-| RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH  | no       | `/tmp/cloudSQLInstance.yaml` | Defines path under which the Terraform artifacts is saved          |
-| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH         | no       | `/tmp/additional.yaml`       | Defines path under which the additional output is saved            |
-| RUNNER_OUTPUT_TFSTATE_FILE_PATH            | no       | `/tmp/terraform.tfstate`     | Defines path under which the terraform.tfstate output is saved     |
+| Name                                       | Required | Default                       | Description                                                        |
+|--------------------------------------------|----------|-------------------------------|--------------------------------------------------------------------|
+| RUNNER_CONTEXT_PATH                        | yes      |                               | Path to the YAML file with runner context                          |
+| RUNNER_ARGS_PATH                           | yes      |                               | Path to the YAML file with input arguments                         |
+| RUNNER_LOGGER_DEV_MODE                     | no       | `false`                       | Enable additional log messages                                     |
+| RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH  | no       | `/tmp/terraform-release.yaml` | Defines path under which the Terraform artifacts is saved          |
+| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH         | no       | `/tmp/additional.yaml`        | Defines path under which the additional output is saved            |
+| RUNNER_OUTPUT_TFSTATE_FILE_PATH            | no       | `/tmp/terraform.tfstate`      | Defines path under which the terraform.tfstate output is saved     |
 
 ## Development
 
