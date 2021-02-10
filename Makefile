@@ -17,7 +17,7 @@ all: generate build-all-images test-ocf-manifests test-unit test-lint
 # Building #
 ############
 
-APPS = gateway k8s-engine och och-js argo-runner helm-runner cloudsql-runner populator
+APPS = gateway k8s-engine och och-js argo-runner helm-runner cloudsql-runner populator terraform-runner
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter
 
@@ -48,6 +48,12 @@ build-app-image-populator:
 	$(eval APP := populator)
 	docker build --build-arg COMPONENT=$(APP) --target generic-alpine -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-populator
+
+
+build-app-image-terraform-runner:
+	$(eval APP := terraform-runner)
+	docker build --build-arg COMPONENT=$(APP) --target terraform-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
+.PHONY: build-app-image-terraform-runner
 
 build-app-image-%:
 	$(eval APP := $*)

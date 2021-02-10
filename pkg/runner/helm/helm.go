@@ -3,7 +3,6 @@ package helm
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 
 	"go.uber.org/zap"
 
@@ -117,7 +116,7 @@ func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {
 
 func (r *helmRunner) saveOutput(out Output) error {
 	r.log.Debug("Saving Helm release output", zap.String("path", r.cfg.Output.HelmReleaseFilePath))
-	err := r.saveToFile(r.cfg.Output.HelmReleaseFilePath, out.Release)
+	err := runner.SaveToFile(r.cfg.Output.HelmReleaseFilePath, out.Release)
 	if err != nil {
 		return errors.Wrap(err, "while saving Helm release output")
 	}
@@ -127,20 +126,9 @@ func (r *helmRunner) saveOutput(out Output) error {
 	}
 
 	r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
-	err = r.saveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
+	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
 	if err != nil {
 		return errors.Wrap(err, "while saving default output")
-	}
-
-	return nil
-}
-
-const defaultFilePermissions = 0644
-
-func (r *helmRunner) saveToFile(path string, bytes []byte) error {
-	err := ioutil.WriteFile(path, bytes, defaultFilePermissions)
-	if err != nil {
-		return errors.Wrapf(err, "while writing file to %q", path)
 	}
 
 	return nil

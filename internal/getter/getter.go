@@ -1,4 +1,4 @@
-package dbpopulator
+package getter
 
 import (
 	"context"

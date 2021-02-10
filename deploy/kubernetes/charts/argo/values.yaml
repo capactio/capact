@@ -18,8 +18,12 @@ argo:
       port: 9000
     install: true
     defaultBucket:
-      enabled: true
-      name: argo-artifacts
+      enabled: false
+    buckets:
+      - name: argo-artifacts
+        policy: public
+      - name: terraform
+        policy: public
     resources:
       requests:
         memory: 256Mi
