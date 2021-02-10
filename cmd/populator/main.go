@@ -16,6 +16,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
+	"projectvoltron.dev/voltron/internal/getter"
 	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 )
 
@@ -97,7 +98,7 @@ func main() {
 	dstDir := path.Join(parent, "och")
 	defer os.RemoveAll(parent)
 
-	err = dbpopulator.Download(ctx, src, dstDir)
+	err = getter.Download(ctx, src, dstDir)
 	exitOnError(err, "while downloading och content")
 
 	rootDir := path.Join(dstDir, cfg.ManifestsPath)

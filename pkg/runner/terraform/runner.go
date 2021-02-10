@@ -118,30 +118,28 @@ func (r *terraformRunner) setEnvVars(env []string) error {
 }
 
 func (r *terraformRunner) saveOutput(out Output) error {
-	r.log.Debug("Saving terraform release output", zap.String("path", r.cfg.Output.TerraformReleaseFilePath))
-	err := runner.SaveToFile(r.cfg.Output.TerraformReleaseFilePath, out.Release)
-	if err != nil {
-		return errors.Wrap(err, "while saving terraform release output")
+	if out.Release != nil {
+		r.log.Debug("Saving terraform release output", zap.String("path", r.cfg.Output.TerraformReleaseFilePath))
+		err := runner.SaveToFile(r.cfg.Output.TerraformReleaseFilePath, out.Release)
+		if err != nil {
+			return errors.Wrap(err, "while saving terraform release output")
+		}
 	}
 
-	if out.Additional == nil {
-		return nil
+	if out.Additional != nil {
+		r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
+		err := runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
+		if err != nil {
+			return errors.Wrap(err, "while saving default output")
+		}
 	}
 
-	r.log.Debug("Saving additional output", zap.String("path", r.cfg.Output.AdditionalFilePath))
-	err = runner.SaveToFile(r.cfg.Output.AdditionalFilePath, out.Additional)
-	if err != nil {
-		return errors.Wrap(err, "while saving default output")
-	}
-
-	if out.Tfstate == nil {
-		return nil
-	}
-
-	r.log.Debug("Saving tfstate output", zap.String("path", r.cfg.Output.TfstateFilePath))
-	err = runner.SaveToFile(r.cfg.Output.TfstateFilePath, out.Additional)
-	if err != nil {
-		return errors.Wrap(err, "while saving tfstate  output")
+	if out.Tfstate != nil {
+		r.log.Debug("Saving tfstate output", zap.String("path", r.cfg.Output.TfstateFilePath))
+		err := runner.SaveToFile(r.cfg.Output.TfstateFilePath, out.Additional)
+		if err != nil {
+			return errors.Wrap(err, "while saving tfstate  output")
+		}
 	}
 
 	return nil

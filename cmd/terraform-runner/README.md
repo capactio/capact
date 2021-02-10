@@ -15,6 +15,7 @@ After run, it collects the output and converts it into Voltron required format.
 ## Prerequisites
 
 - [Go](https://golang.org)
+- [Terraform](https://www.terraform.io/downloads.html)
 
 - Google Cloud Platform credentials JSON for Service Account with `Cloud SQL Admin` role
   This is not the Terraform Runner requirement but in example CloudSQL instance is created.

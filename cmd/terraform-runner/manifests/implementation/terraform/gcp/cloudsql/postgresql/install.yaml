@@ -97,7 +97,7 @@ spec:
                             command: "apply"
                             module:
                               name: cloudsql
-                              source: "s3::http://argo-minio.argo:9000/terraform/cloudsql?aws_access_key_id=RIunIckoQqgSZFJ1jvfy&aws_access_key_secret=u4UDXa38Ic6ExBTMwRL2UVIuqh7eLUnyjWs1eXX2"
+                              source: "s3::http://argo-minio.argo:9000/terraform/cloudsql?aws_access_key_id=<ACCESSKEY>&aws_access_key_secret=<SECRETKEY>"
                             env:
                             # TODO this looks like a bug. google_sql_database_instance.settings.provider is optional and when missing
                             # it should be taken from credentials. In credentials there is no `project` though but only `project_id`

@@ -33,10 +33,10 @@ kubectl -n argo port-forward svc/argo-minio --address 0.0.0.0 9000:9000
 Next, if missing, download Minio client from https://min.io/download#/linux  and configure the access:
 
 ```shell
-secretkey=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.secretkey}' | base64 --decode)
-accesskey=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.accesskey}' | base64 --decode)
+SECRETKEY=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.secretkey}' | base64 --decode)
+ACCESSKEY=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.accesskey}' | base64 --decode)
 
-mc alias set minio http://localhost:9000 ${accesskey} ${secretkey}
+mc alias set minio http://localhost:9000 ${ACCESSKEY} ${SECRETKEY}
 ```
 
 Verify that you can access Minio:
@@ -70,7 +70,12 @@ gcloud auth print-access-token
 ```
 
 Copy output of this command and replace string <ACCESS_TOKEN> in `manifests/implementation/terraform/gcp/cloudsql/postgresql/install.yaml` file.
-Remember that this token is valid only for an hour, so you would need to replace it later. In the same file replace <PROJECT_NAME> with your projetct name,
+Remember that this token is valid only for an hour, so you would need to replace it later.
+In the same file replace:
+
+* <PROJECT_NAME> with your projetct name
+* <ACCESSKEY> with access key for Minio
+* <SECRETKEY> with secret key for Minio
 
 `manifests/implementation/terraform/gcp/cloudsql/postgresql/install.yaml` is a main file where you can configure your Terraform module. You can:
 
@@ -79,4 +84,29 @@ Remember that this token is valid only for an hour, so you would need to replace
 - Set path to your module.
 
 Now just copy content of `manifests` directory to `och-content` in main directory. Populate new manifests using populator and create an action for path `cap.interface.terraform.database.postgresql.install`. When action is rendered, run it.
+
+You can create an action using for example the GraphQL API:
+
+```graphql
+mutation createAction(
+        in: {
+            name: postgresql-install
+            actionRef: {
+                path: "cap.interface.terraform.database.postgresql.install"
+                revision: "0.1.0"
+            }
+            dryRun: false
+            advancedRendering: false
+            input: {
+                parameters: "{\r\n  \"superuser\": {\r\n    \"username\": \"postgres\",\r\n    \"password\": \"s3cr3t\"\r\n  },\r\n  \"defaultDBName\": \"postgres\"\r\n}"
+            }
+        }
+    ) {
+        name
+    		input {
+          parameters
+        }
+    }
+```
+
 After around 10 minutes new CloudSQL instance should be running.

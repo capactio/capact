@@ -15,8 +15,8 @@ import (
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
 
+	"projectvoltron.dev/voltron/internal/getter"
 	"projectvoltron.dev/voltron/pkg/runner"
-	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 )
 
 const (
@@ -43,7 +43,7 @@ func (t *terraform) Start(dryRun bool) error {
 
 	go func() {
 		// TODO move Download to a better place
-		err := dbpopulator.Download(context.Background(), t.args.Module.Source, t.workdir)
+		err := getter.Download(context.Background(), t.args.Module.Source, t.workdir)
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while downloading module")
 			return
