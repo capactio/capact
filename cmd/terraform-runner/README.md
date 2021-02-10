@@ -20,7 +20,7 @@ After run, it collects the output and converts it into Voltron required format.
 - Google Cloud Platform credentials JSON for Service Account with `Cloud SQL Admin` role
   This is not the Terraform Runner requirement but in example CloudSQL instance is created.
 
-To get the GCP Service Account you can follow the documentation [here](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Then generate the JSON key and download it, to get the credentials JSON.
+To get the GCP Service Account you can follow the documentation [here](https://cloud.google.com/iam/docs/creating-managing-service-accounts#creating). Then generate the JSON key and download it to get the credentials JSON.
 
 ## Usage
 

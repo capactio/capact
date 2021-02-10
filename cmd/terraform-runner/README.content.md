@@ -61,7 +61,7 @@ mc cp testdata/main.tf minio/terraform/cloudsql/main.tf
 To use the module in Voltron you need to prepare Implementation manifest. In Voltron there is
 already available Interface(cap.interface.database.postgresql.install) for Postgresql installation.
 There are no policies implemented yet, so we can not use it. For now, you will create a new InterfaceGroup, Interface,
-Implementation, Type and Attribute.
+and Implementation.
 
 To create CloudSQL instance you need to be authorized. For now, you will use OAuth2 access token. To get it run:
 
