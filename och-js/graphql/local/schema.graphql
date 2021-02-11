@@ -152,7 +152,14 @@ input CreateTypeInstanceInput {
 }
 
 input TypeInstanceUsesRelationInput {
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
   from: String!
+
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
   to: String!
 }
 
@@ -183,7 +190,8 @@ type Query {
         RETURN collect(ex) as excludedAttributes
       }
 
-      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
+      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
       MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
       WHERE
       $filter = {} OR
