@@ -10,6 +10,7 @@ import (
 
 	"projectvoltron.dev/voltron/internal/ptr"
 	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
@@ -275,15 +276,11 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).NotTo(HaveOccurred())
 			typeInstancesToCleanup = append(typeInstancesToCleanup, createdTypeInstanceIDs...)
 
-			typeInstances, err := cli.ListTypeInstances(ctx, gqllocalapi.TypeInstanceFilter{
-				TypeRef: &gqllocalapi.TypeRefFilterInput{
-					Path: "com.child",
-				},
-			})
+			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstanceIDs[1])
 
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(typeInstances[0]).To(Equal(gqllocalapi.TypeInstance{
+			Expect(typeInstance).To(Equal(&graphql.TypeInstance{
 				ResourceVersion: 1,
 				Metadata: &gqllocalapi.TypeInstanceMetadata{
 					ID: createdTypeInstanceIDs[1],
