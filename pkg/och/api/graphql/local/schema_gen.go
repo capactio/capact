@@ -586,7 +586,14 @@ input CreateTypeInstanceInput {
 }
 
 input TypeInstanceUsesRelationInput {
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
   from: String!
+
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
   to: String!
 }
 
@@ -617,7 +624,8 @@ type Query {
         RETURN collect(ex) as excludedAttributes
       }
 
-      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
+      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
       MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
       WHERE
       $filter = {} OR
@@ -1298,7 +1306,7 @@ func (ec *executionContext) _Query_typeInstances(ctx context.Context, field grap
 			return ec.resolvers.Query().TypeInstances(rctx, args["filter"].(*TypeInstanceFilter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nRETURN DISTINCT ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nRETURN DISTINCT ti")
 			if err != nil {
 				return nil, err
 			}

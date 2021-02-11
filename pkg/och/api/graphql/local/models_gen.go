@@ -83,8 +83,10 @@ type TypeInstanceSpec struct {
 }
 
 type TypeInstanceUsesRelationInput struct {
+	// Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
 	From string `json:"from"`
-	To   string `json:"to"`
+	// Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+	To string `json:"to"`
 }
 
 type TypeRefFilterInput struct {
