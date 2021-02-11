@@ -46,9 +46,9 @@ spec:
                   template: fail
           - name: fail
             container:
-              image: docker/whalesay:latest
+              image: alpine:latest
               command: ["sh", "-c"]
-              args: ["cowsay goodbye && sleep 2 && exit 1"]
+              args: ["echo 'always exit 1' && sleep 2 && exit 1"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

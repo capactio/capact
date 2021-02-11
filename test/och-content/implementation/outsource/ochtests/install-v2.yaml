@@ -2,30 +2,36 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.e2e
-  name: passing
+  prefix: cap.implementation.outsource.ochtests
+  name: install
   license:
     name: "Apache 2.0"
-  displayName: Passing Voltron test action
-  description: ""
+  displayName: "Simulates implementation done by external vendor"
+  description: |-
+    Simulates the `cap.interface.voltron.ochtests.install` interface implementation by external vendor.
+    This implementation requires the GCP SA and has also the GCP Attribute.
   documentationURL: ""
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-
-spec:
-  appVersion: "1.x.x"
-
-  implements:
-    - path: cap.interface.voltron.e2e.passing
+  attributes:
+    cap.attribute.cloud.provider.gcp:
       revision: 0.1.0
 
+spec:
+  appVersion: "2.x.x"
+
+  implements:
+    - path: cap.interface.voltron.ochtests.install
+      revision: 2.0.0
+
   requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
+    cap.type.gcp.auth:
+      allOf:
+        - name: service-account
           revision: 0.1.0
+
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -41,9 +47,7 @@ spec:
         entrypoint: main
         templates:
           - name: main
-            steps:
-              - - name: pass
-                  template: pass
+            template: pass
           - name: pass
             container:
               image: alpine:latest

@@ -191,6 +191,38 @@ func TestImplementationRequirementFilters(t *testing.T) {
 		})
 	}
 }
+
+func TestImplementationRequirementPrefixPattern(t *testing.T) {
+	// given
+	expRevision := []gqlpublicapi.ImplementationRevision{
+		fixImplementationRevision("cap.implementation.db.postgres.install", "0.0.1"),
+		fixImplementationRevision("cap.implementation.db.postgres.uninstall", "0.0.1"),
+	}
+
+	revisionToFilterOut := []gqlpublicapi.ImplementationRevision{
+		fixImplementationRevision("cap.implementation.db.rds.install", "0.0.1"),
+		fixImplementationRevision("cap.implementation.db.rds.uninstall", "0.0.1"),
+	}
+
+	filter := gqlpublicapi.ImplementationRevisionFilter{
+		PrefixPattern: ptr.String("cap.implementation.db.postgres.*"),
+	}
+
+	getOpts := &getImplementationOptions{}
+	getOpts.Apply(WithImplementationFilter(filter))
+
+	allRevs := append(expRevision, revisionToFilterOut...)
+
+	// when
+	gotRevs := filterImplementationRevisions(allRevs, getOpts)
+
+	// then
+	assert.Len(t, gotRevs, len(expRevision))
+	for idx := range expRevision {
+		assert.Contains(t, gotRevs, expRevision[idx])
+	}
+}
+
 func fixImplementationRevisionWithRequire(implPath, implRev string, req gqlpublicapi.ImplementationRequirement) gqlpublicapi.ImplementationRevision {
 	impl := fixImplementationRevision(implPath, implRev)
 	impl.Spec.Requires = []*gqlpublicapi.ImplementationRequirement{
@@ -217,7 +249,8 @@ func fixImplementationRevisionWithAttr(implPath, implRev, attrPath, attrRev stri
 func fixImplementationRevision(path, rev string) gqlpublicapi.ImplementationRevision {
 	return gqlpublicapi.ImplementationRevision{
 		Metadata: &gqlpublicapi.ImplementationMetadata{
-			Path: ptr.String(path),
+			Path:   ptr.String(path),
+			Prefix: ptr.String(path),
 		},
 		Spec:     &gqlpublicapi.ImplementationSpec{},
 		Revision: rev,
