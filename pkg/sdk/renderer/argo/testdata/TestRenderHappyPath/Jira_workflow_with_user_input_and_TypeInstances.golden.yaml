@@ -1,15 +1,7 @@
 args:
   workflow:
-    arguments:
-      artifacts:
-      - name: input-parameters
-        raw:
-          data: |
-            defaultDBName: test
-            superuser:
-              password: s3cr3t
-              username: postgres
-    entrypoint: jira-install
+    arguments: {}
+    entrypoint: voltron-root
     templates:
     - arguments: {}
       inputs:
@@ -19,12 +11,6 @@ args:
       name: jira-install
       outputs: {}
       steps:
-      - - arguments: {}
-          name: inject-gcp-step
-          template: inject-gcp
-      - - arguments: {}
-          name: inject-runner-context-step
-          template: inject-runner-context
       - - arguments:
             artifacts:
             - name: input-parameters
@@ -107,6 +93,7 @@ args:
                   chart:
                     name: "postgresql"
                     repo: "https://charts.bitnami.com/bitnami"
+                    version: "10.2.6"
                   values:
                     image:
                       pullPolicy: Always
@@ -337,6 +324,52 @@ args:
         - globalName: jira-helm-release
           name: jira-helm-release
           path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-gcp-step
+          template: inject-gcp
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: populate-user-input-step
+          template: populate-user-input
+      - - arguments:
+            artifacts:
+            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
+              name: input-parameters
+          name: start-entrypoint
+          template: jira-install
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /output
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-user-input
+      outputs:
+        artifacts:
+        - name: input-parameters
+          path: /output/parameters.json
+      volumes:
+      - name: user-secret-volume
+        secret:
+          optional: false
+          secretName: user-input
     - arguments: {}
       container:
         args:

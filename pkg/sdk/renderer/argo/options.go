@@ -8,12 +8,6 @@ import (
 
 type RendererOption func(*dedicatedRenderer)
 
-func WithPlainTextUserInput(data map[string]interface{}) RendererOption {
-	return func(r *dedicatedRenderer) {
-		r.plainTextUserInput = data
-	}
-}
-
 func WithTypeInstances(typeInstances []types.InputTypeInstanceRef) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.inputTypeInstances = typeInstances
@@ -23,5 +17,11 @@ func WithTypeInstances(typeInstances []types.InputTypeInstanceRef) RendererOptio
 func WithImplementationRevisionFilter(filter gqlpublicapi.ImplementationRevisionFilter) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.ochImplementationFilters = append(r.ochImplementationFilters, public.WithImplementationFilter(filter))
+	}
+}
+
+func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.userInputSecretRef = ref
 	}
 }

@@ -144,6 +144,8 @@ type ActionInput struct {
 type InputParameters struct {
 
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
+	// TODO: this should be changed to an object which contains both the Secret name and key
+	// name under which the input is stored.
 	SecretRef v1.LocalObjectReference `json:"secretRef"`
 }
 
@@ -255,6 +257,10 @@ func (r *RenderingStatus) SetAction(action []byte) {
 }
 
 func (r *RenderingStatus) SetInputParameters(params []byte) {
+	if params == nil {
+		return
+	}
+
 	if r.Input == nil {
 		r.Input = &ResolvedActionInput{}
 	}
