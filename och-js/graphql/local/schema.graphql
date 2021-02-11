@@ -152,8 +152,8 @@ input CreateTypeInstanceInput {
 }
 
 input TypeInstanceUsesRelationInput {
-  from: String
-  to: String
+  from: String!
+  to: String!
 }
 
 input CreateTypeInstancesInput {

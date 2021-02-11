@@ -16,4 +16,9 @@ const typeInstanceFields = `
 	  }
 	  value
 	}
+	uses {
+		metadata {
+			id
+		}
+	}
 `

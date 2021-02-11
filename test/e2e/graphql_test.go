@@ -5,14 +5,14 @@ package e2e
 import (
 	"context"
 
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+
 	"projectvoltron.dev/voltron/internal/ptr"
-	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("GraphQL API", func() {
@@ -167,18 +167,27 @@ var _ = Describe("GraphQL API", func() {
 	})
 
 	Context("Local OCH", func() {
+		typeInstancesToCleanup := []string{}
+
+		AfterEach(func() {
+			cli := getOCHGraphQLClient()
+			for _, ID := range typeInstancesToCleanup {
+				deleteTypeInstance(ctx, cli, ID)
+			}
+		})
+
 		It("creates and deletes TypeInstance", func() {
 			cli := getOCHGraphQLClient()
 
-			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &graphql.CreateTypeInstanceInput{
-				TypeRef: &graphql.TypeReferenceInput{
+			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
+				TypeRef: &gqllocalapi.TypeReferenceInput{
 					Path:     "com.voltron.ti",
-					Revision: ptr.String("0.1.0"),
+					Revision: "0.1.0",
 				},
-				Attributes: []*graphql.AttributeReferenceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
 					{
 						Path:     "com.voltron.attribute1",
-						Revision: ptr.String("0.1.0"),
+						Revision: "0.1.0",
 					},
 				},
 				Value: map[string]interface{}{
@@ -189,20 +198,21 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
+
 			Expect(err).ToNot(HaveOccurred())
-			Expect(typeInstance).To(Equal(&graphql.TypeInstance{
+			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
 				ResourceVersion: 1,
-				Metadata: &graphql.TypeInstanceMetadata{
+				Metadata: &gqllocalapi.TypeInstanceMetadata{
 					ID: createdTypeInstance.Metadata.ID,
-					Attributes: []*graphql.AttributeReference{
+					Attributes: []*gqllocalapi.AttributeReference{
 						{
 							Path:     "com.voltron.attribute1",
 							Revision: "0.1.0",
 						},
 					},
 				},
-				Spec: &graphql.TypeInstanceSpec{
-					TypeRef: &graphql.TypeReference{
+				Spec: &gqllocalapi.TypeInstanceSpec{
+					TypeRef: &gqllocalapi.TypeReference{
 						Path:     "com.voltron.ti",
 						Revision: "0.1.0",
 					},
@@ -210,10 +220,97 @@ var _ = Describe("GraphQL API", func() {
 						"foo": "bar",
 					},
 				},
+				Uses: []*gqllocalapi.TypeInstance{},
 			}))
 
-			err = cli.DeleteTypeInstance(ctx, typeInstance.Metadata.ID)
-			Expect(err).ToNot(HaveOccurred())
+			deleteTypeInstance(ctx, cli, typeInstance.Metadata.ID)
+		})
+
+		It("creates multiple TypeInstances with uses relations", func() {
+			cli := getOCHGraphQLClient()
+
+			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
+				TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
+					{
+						Alias: "parent",
+						TypeRef: &gqllocalapi.TypeReferenceInput{
+							Path:     "com.parent",
+							Revision: "0.1.0",
+						},
+						Attributes: []*gqllocalapi.AttributeReferenceInput{
+							{
+								Path:     "com.attr",
+								Revision: "0.1.0",
+							},
+						},
+						Value: map[string]interface{}{
+							"foo": "bar",
+						},
+					},
+					{
+						Alias: "child",
+						TypeRef: &gqllocalapi.TypeReferenceInput{
+							Path:     "com.child",
+							Revision: "0.1.0",
+						},
+						Attributes: []*gqllocalapi.AttributeReferenceInput{
+							{
+								Path:     "com.attr",
+								Revision: "0.1.0",
+							},
+						},
+						Value: map[string]interface{}{
+							"foo": "bar",
+						},
+					},
+				},
+				UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
+					{
+						From: "child",
+						To:   "parent",
+					},
+				},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+			typeInstancesToCleanup = append(typeInstancesToCleanup, createdTypeInstanceIDs...)
+
+			typeInstances, err := cli.ListTypeInstances(ctx, gqllocalapi.TypeInstanceFilter{
+				TypeRef: &gqllocalapi.TypeRefFilterInput{
+					Path: "com.child",
+				},
+			})
+
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(typeInstances[0]).To(Equal(gqllocalapi.TypeInstance{
+				ResourceVersion: 1,
+				Metadata: &gqllocalapi.TypeInstanceMetadata{
+					ID: createdTypeInstanceIDs[1],
+					Attributes: []*gqllocalapi.AttributeReference{
+						{
+							Path:     "com.attr",
+							Revision: "0.1.0",
+						},
+					},
+				},
+				Spec: &gqllocalapi.TypeInstanceSpec{
+					TypeRef: &gqllocalapi.TypeReference{
+						Path:     "com.child",
+						Revision: "0.1.0",
+					},
+					Value: map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+				Uses: []*gqllocalapi.TypeInstance{
+					{
+						Metadata: &gqllocalapi.TypeInstanceMetadata{
+							ID: createdTypeInstanceIDs[0],
+						},
+					},
+				},
+			}))
 		})
 	})
 })
@@ -224,4 +321,9 @@ func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpub
 		Rule:     &rule,
 		Revision: ptr.String(rev),
 	}
+}
+
+func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
+	err := cli.DeleteTypeInstance(ctx, ID)
+	Expect(err).ToNot(HaveOccurred())
 }

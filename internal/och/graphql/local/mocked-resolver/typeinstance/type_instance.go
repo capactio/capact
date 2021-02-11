@@ -53,30 +53,18 @@ func (r *TypeInstanceResolver) TypeInstance(ctx context.Context, id string) (*gq
 	return nil, nil
 }
 
-func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in *gqllocalapi.CreateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
+func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in gqllocalapi.CreateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
 	err := r.init()
 	if err != nil {
 		return nil, err
 	}
-	var revision string
-	if in.TypeRef.Revision != nil {
-		revision = *in.TypeRef.Revision
-	} else {
-		revision = ""
-	}
+	revision := in.TypeRef.Revision
 
 	attributes := []*gqllocalapi.AttributeReference{}
 	for _, attribute := range in.Attributes {
-		var revision string
-		if attribute.Revision != nil {
-			revision = *attribute.Revision
-		} else {
-			revision = ""
-		}
-
 		attributes = append(attributes, &gqllocalapi.AttributeReference{
 			Path:     attribute.Path,
-			Revision: revision,
+			Revision: attribute.Revision,
 		})
 	}
 
@@ -99,7 +87,11 @@ func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in *gqllo
 	return newTypeInstance, nil
 }
 
-func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in *gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
+func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]string, error) {
+	return []string{}, nil
+}
+
+func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
 	err := r.init()
 	if err != nil {
 		return nil, err
@@ -119,9 +111,7 @@ func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string
 	typeInstance.ResourceVersion++
 	if in.TypeRef != nil {
 		typeInstance.Spec.TypeRef.Path = in.TypeRef.Path
-		if in.TypeRef.Revision != nil {
-			typeInstance.Spec.TypeRef.Revision = *in.TypeRef.Revision
-		}
+		typeInstance.Spec.TypeRef.Revision = in.TypeRef.Revision
 	}
 	typeInstance.Spec.Value = in.Value
 	return typeInstance, nil
