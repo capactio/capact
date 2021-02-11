@@ -145,16 +145,20 @@ input TypeReferenceInput {
 }
 
 input CreateTypeInstanceInput {
+  alias: String!
   typeRef: TypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
 }
 
-input CreateTypeInstancesTreeInput {
-  typeRef: TypeReferenceInput!
-  attributes: [AttributeReferenceInput!]
-  value: Any
-  uses: [CreateTypeInstancesTreeInput!]
+input TypeInstanceUsesRelationInput {
+  from: String
+  to: String
+}
+
+input CreateTypeInstancesInput {
+  typeInstances: [CreateTypeInstanceInput!]!
+  usesRelations: [TypeInstanceUsesRelationInput!]!
 }
 
 input UpdateTypeInstanceInput {
@@ -222,44 +226,8 @@ type Query {
     )
 }
 
-# CALL apoc.custom.asProcedure(
-#   'createTypeInstance',
-#   '      WITH apoc.convert.toJson($in.value) as value
-#       CREATE (ti: TypeInstance {resourceVersion: 1})
-#       CREATE (ti)-[:DESCRIBED_BY]->(metadata: TypeInstanceMetadata {id: apoc.create.uuid()})
-#       CREATE (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec {value: value})
-#       CREATE (spec)-[:OF_TYPE]->(typeRef: TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
-#
-#       FOREACH (attr in $in.attributes |
-#         CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
-#       )
-#
-#    WITH $in as in, metadata, ti
-#
-#    CALL {
-#      WITH in, ti
-#      UNWIND in.uses as uses
-#      CALL custom.createTypeInstance(uses) YIELD out
-#      MATCH (used:TypeInstance)-[:DESCRIBED_BY]->(:TypeInstanceMetadata {id: out})
-#      CREATE (ti)-[:USES]->(used)
-#      RETURN collect(out) as out
-#    }
-#
-#    RETURN metadata.id AS out',
-#   'write',
-#   [['out', 'map']],
-#   [['in','map']]
-# );
-
 type Mutation {
-  createTypeInstancesTree(in: CreateTypeInstancesTreeInput!): TypeInstance!
-    @cypher(
-      statement: """
-      CALL custom.createTypeInstance($in) YIELD out as tiID
-      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(metadata:TypeInstanceMetadata {id: tiID})
-      RETURN ti
-      """
-    )
+  createTypeInstances(in: CreateTypeInstancesInput!): [ID!]!
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
