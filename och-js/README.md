@@ -35,12 +35,17 @@ docker run -d \
 
 ## Usage
 
+Download the NPM dependencies using:
+```
+npm install
+```
+
 ### Local OCH
 
 To run OCH in local mode, use the following command:
 
 ```bash
-APP_NEO4J_ENDPOINT=bolt://localhost:7687  APP_NEO4J_PASSWORD=okon APP_OCH_MODE=local npm run dev
+APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_OCH_MODE=local npm run dev
 ```
 
 ### Public OCH

@@ -71,7 +71,7 @@ dockerfile::run_checks() {
 
 shellcheck::files_to_check() {
   pushd "$ROOT_PATH" > /dev/null
-  paths=$(find . -name '*.sh')
+  paths=$(find . -path ./och-js/node_modules -prune -false -o -name '*.sh')
   popd > /dev/null
 
   echo "$paths"
