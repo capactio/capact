@@ -388,6 +388,7 @@ fragment ImplementationRevision on ImplementationRevision {
         requires {
             prefix
             oneOf {
+                alias
                 typeRef {
                     path
                     revision
@@ -395,6 +396,7 @@ fragment ImplementationRevision on ImplementationRevision {
                 valueConstraints
             }
             anyOf {
+                alias
                 typeRef {
                     path
                     revision
@@ -402,6 +404,7 @@ fragment ImplementationRevision on ImplementationRevision {
                 valueConstraints
             }
             allOf {
+                alias
                 typeRef {
                     path
                     revision

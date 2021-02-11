@@ -41,6 +41,7 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 							revision
 						}
 						valueConstraints
+						alias
 					}
 					anyOf {
 						typeRef {
@@ -48,6 +49,7 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 							revision
 						}
 						valueConstraints
+						alias
 					}
 					allOf {
 						typeRef {
@@ -55,6 +57,7 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 							revision
 						}
 						valueConstraints
+						alias
 					}
 				}
 				imports {
