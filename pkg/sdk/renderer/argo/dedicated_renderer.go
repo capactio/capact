@@ -331,9 +331,14 @@ func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.I
 			if i.Alias == nil || *i.Alias != alias {
 				continue
 			}
-			return &ochpublicapi.InterfaceReference{
-				Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
-				Revision: stringOrEmpty(i.AppVersion),
+			for _, method := range i.Methods {
+				if name != method.Name {
+					continue
+				}
+				return &ochpublicapi.InterfaceReference{
+					Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
+					Revision: stringOrEmpty(method.Revision),
+				}
 			}
 		}
 		return nil
