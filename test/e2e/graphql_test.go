@@ -26,9 +26,9 @@ var _ = Describe("GraphQL API", func() {
 		})
 		Describe("should return ImplementationRevision", func() {
 			const (
-				interfacePath = "cap.interface.voltron.ochtests.install"
+				interfacePath  = "cap.interface.voltron.ochtests.install"
 				latestRevision = "2.0.0"
-				revision = "1.0.0"
+				revision       = "1.0.0"
 			)
 
 			It("for latest Interface when revision is not specified", func() {
@@ -39,6 +39,7 @@ var _ = Describe("GraphQL API", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(2))
 				for _, rev := range revisionsForInterface {
+					Expect(rev.Spec.Implements).To(HaveLen(1))
 					Expect(rev.Spec.Implements[0].Path).To(Equal(interfacePath))
 					Expect(rev.Spec.Implements[0].Revision).To(Equal(latestRevision))
 				}
@@ -53,6 +54,7 @@ var _ = Describe("GraphQL API", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(2))
 				for _, rev := range revisionsForInterface {
+					Expect(rev.Spec.Implements).To(HaveLen(1))
 					Expect(rev.Spec.Implements[0].Path).To(Equal(interfacePath))
 					Expect(rev.Spec.Implements[0].Revision).To(Equal(revision))
 				}
@@ -73,6 +75,8 @@ var _ = Describe("GraphQL API", func() {
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
+
+				Expect(revisionsForInterface[0].Spec.Implements).To(HaveLen(1))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Path).To(Equal(ref.Path))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
@@ -95,9 +99,12 @@ var _ = Describe("GraphQL API", func() {
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
+
+				Expect(revisionsForInterface[0].Spec.Implements).To(HaveLen(1))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Path).To(Equal(ref.Path))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
+				Expect(revisionsForInterface[0].Metadata.Attributes).To(HaveLen(1))
 				Expect(*revisionsForInterface[0].Metadata.Attributes[0].Metadata.Path).To(Equal(attr.Path))
 				Expect(revisionsForInterface[0].Metadata.Attributes[0].Revision).To(Equal(*attr.Revision))
 
@@ -117,6 +124,8 @@ var _ = Describe("GraphQL API", func() {
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
+
+				Expect(revisionsForInterface[0].Spec.Implements).To(HaveLen(1))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Path).To(Equal(ref.Path))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
@@ -145,6 +154,8 @@ var _ = Describe("GraphQL API", func() {
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
+
+				Expect(revisionsForInterface[0].Spec.Implements).To(HaveLen(1))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Path).To(Equal(ref.Path))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
