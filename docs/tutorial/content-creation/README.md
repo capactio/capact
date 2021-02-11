@@ -4,8 +4,12 @@
   - [Prerequisites](#prerequisites)
   - [Types, Interfaces and Implementations](#types-interfaces-and-implementations)
   - [Define your Types and Interfaces](#define-your-types-and-interfaces)
+    - [Create the Interface Group manifest](#create-the-interface-group-manifest)
+    - [Create the Interface manifest](#create-the-interface-manifest)
+    - [Create the Type manifests](#create-the-type-manifests)
   - [Runners](#runners)
   - [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
+  - [Validate the manifests using ocftool](#validate-the-manifests-using-ocftool)
   - [Populate the manifests into OCH](#populate-the-manifests-into-och)
   - [Run your new action](#run-your-new-action)
     - [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
@@ -28,14 +32,18 @@ To develop and test the created content, you will need to have a Voltron environ
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
-* [populator](TBD) TODO: release or give instruction on how to compile it from source
+* [populator](../../../cmd/populator/README.md) - For now, you need to compile it from source
 
 Also, clone the Voltron repository with the current OCF content.
 ```bash
 git clone https://github.com/Project-Voltron/go-voltron.git
 ```
 
-It is also highly recommended going through the [JIRA installation tutorial](../jira-installation/README.md), so you know how to execute Actions in Voltron.
+Some other materials worth reading before are:
+- [JIRA installation tutorial](../jira-installation/README.md) - Learn how to execute actions in Voltron.
+- [Argo Workflows documentation](https://argoproj.github.io/argo-workflows/) - Voltron action syntax is based on Argo workflows, so it's highly recommended you understand what is Argo and how to create Argo workflows.
+- [Voltron runners](../../runner.md) - Understand, what are Voltron runners.
+- [ocftool](../../../cmd/ocftool/docs/ocftool.md) - Learn how to validate your manifests syntax.
 
 ## Types, Interfaces and Implementations
 
@@ -57,7 +65,9 @@ Let's try to create manifests required to define a capability to install Conflue
 confluence.install(confluence.install-input) -> confluence.config
 ```
 
-At first, you need to create an **InterfaceGroup** manifest, which groups Interfaces coresponding to some application.
+### Create the Interface Group manifest
+
+First, we need to create an **InterfaceGroup** manifest, which groups Interfaces coresponding to some application.
 Let's create a InterfaceGroup called `cap.interface.productivity.confluence`, which will group Interfaces operating on Confluence instances. In `och-content/interface/productivity/`, create a file called `confluence.yaml`, with the following content:
 
 <details>
@@ -86,6 +96,8 @@ signature:
 </details>
 
 > The `signature` field is required, but currently we don't have implemented yet a signing mechanism. You can put a dummy value there.
+
+### Create the Interface manifest
 
 After we have the InterfaceGroup, let's create the Interface for installing Confluence.
 Create the directory `och-content/interface/productivity/confluence`. Inside this directory, create a file `install.yaml` with the following content:
@@ -145,6 +157,8 @@ The `spec.input` property defines inputs, required by the Interface. There are t
 The `spec.output` property defines the TypeInstance, which this Interface returns.
 
 Although Confluence needs a database, we don't specify it as an input argument here. That is because, we leave selecting a database to the Implementation.
+
+### Create the Type manifests
 
 Now we need to define the two Types, which we use in our Interface: `cap.type.productivity.confluence.install-input` and `cap.type.productivity.confluence.config`.
 
@@ -524,7 +538,7 @@ arguments:
 ```
 To verify, if a runner needs the context, check the Interface of the runner (eg. [Interface for Helm runner](../../../och-content/interface/runner/helm/run.yaml)).
 
-### Validate the manifests using ocftool
+## Validate the manifests using ocftool
 
 You can use the `ocftool` to validate the manifests you created. The `ocftool validate` command checks the manifests against JSON schemas and can tell you, if your manifests are correct.
 
