@@ -137,6 +137,7 @@ type ComplexityRoot struct {
 	}
 
 	ImplementationRequirementItem struct {
+		Alias            func(childComplexity int) int
 		TypeRef          func(childComplexity int) int
 		ValueConstraints func(childComplexity int) int
 	}
@@ -744,6 +745,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImplementationRequirement.Prefix(childComplexity), true
+
+	case "ImplementationRequirementItem.alias":
+		if e.complexity.ImplementationRequirementItem.Alias == nil {
+			break
+		}
+
+		return e.complexity.ImplementationRequirementItem.Alias(childComplexity), true
 
 	case "ImplementationRequirementItem.typeRef":
 		if e.complexity.ImplementationRequirementItem.TypeRef == nil {
@@ -1881,6 +1889,11 @@ type ImplementationRequirementItem {
     Currently not supported.
     """
     valueConstraints: Any
+
+    """
+    If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
+    """
+    alias: String
 }
 
 type TypeReference {
@@ -4138,6 +4151,38 @@ func (ec *executionContext) _ImplementationRequirementItem_valueConstraints(ctx 
 	res := resTmp.(interface{})
 	fc.Result = res
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImplementationRequirementItem_alias(ctx context.Context, field graphql.CollectedField, obj *ImplementationRequirementItem) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationRequirementItem",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Alias, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
@@ -9575,6 +9620,8 @@ func (ec *executionContext) _ImplementationRequirementItem(ctx context.Context, 
 			}
 		case "valueConstraints":
 			out.Values[i] = ec._ImplementationRequirementItem_valueConstraints(ctx, field, obj)
+		case "alias":
+			out.Values[i] = ec._ImplementationRequirementItem_alias(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
