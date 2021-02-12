@@ -136,7 +136,7 @@ func (r *terraformRunner) saveOutput(out Output) error {
 
 	if out.Tfstate != nil {
 		r.log.Debug("Saving tfstate output", zap.String("path", r.cfg.Output.TfstateFilePath))
-		err := runner.SaveToFile(r.cfg.Output.TfstateFilePath, out.Additional)
+		err := runner.SaveToFile(r.cfg.Output.TfstateFilePath, out.Tfstate)
 		if err != nil {
 			return errors.Wrap(err, "while saving tfstate  output")
 		}
