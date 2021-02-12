@@ -17,9 +17,9 @@
   - [Summary](#summary)
 
 This guide shows the first steps on how to develop OCF content for Voltron. We will show how to:
-- define new Types and Interfaces,
-- create Implementation** for the Interfaces,
-- use other Interfaces in your Implementations,
+- define new **Types** and **Interfaces**,
+- create **Implementation** for the **Interfaces**,
+- use other **Interfaces** in your **Implementations**,
 - test the new manifests on a local development Voltron cluster
 
 As an example, we will create OCF manifests to deploy Confluence with a PostgreSQL database.
