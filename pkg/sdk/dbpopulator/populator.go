@@ -15,11 +15,11 @@ var attributeQuery = `
 MERGE (signature:Signature:unpublished{och: value.signature.och})
 
 MERGE (attribute:Attribute:unpublished{
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name})
 CREATE (metadata:GenericMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -46,11 +46,11 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 var typeQuery = `
 MERGE (signature:Signature:unpublished{och: value.signature.och})
 MERGE (type:Type:unpublished{
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name})
 CREATE (metadata:TypeMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -92,7 +92,7 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 var interfaceGroupQuery = `
 MERGE (signature:Signature:unpublished{och: value.signature.och})
 CREATE (metadata:GenericMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -101,7 +101,7 @@ CREATE (metadata:GenericMetadata:unpublished {
   supportURL: value.metadata.supportURL,
   iconURL: value.metadata.iconURL})
 CREATE (interfaceGroup:InterfaceGroup:unpublished{
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name})
 
@@ -120,8 +120,8 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 var interfaceQuery = `
 MATCH (interfaceGroup:InterfaceGroup:unpublished{path: "<PREFIX>"})
 
-CREATE (interface:Interface:unpublished{
-  path: "<PATH>",
+MERGE (interface:Interface:unpublished{
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name})
 
@@ -139,7 +139,7 @@ CREATE (spec)-[:OUTPUTS]->(output)
 MERGE (signature:Signature:unpublished{och: value.signature.och})
 
 CREATE (metadata:GenericMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -153,8 +153,8 @@ CREATE (interfaceRevision)-[:SIGNED_WITH]->(signature)
 CREATE (interfaceRevision)-[:SPECIFIED_BY]->(spec)
 CREATE (interface)-[:CONTAINS]->(interfaceRevision)
 
-CREATE (interfaceGroup)-[:CONTAINS]->(interface)
-CREATE (interface)-[:CONTAINED_BY]->(interfaceGroup)
+MERGE (interfaceGroup)-[:CONTAINS]->(interface)
+MERGE (interface)-[:CONTAINED_BY]->(interfaceGroup)
 
 WITH *, value.spec.input.typeInstances as typeInstances
 CALL {
@@ -205,7 +205,7 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 
 var implementationQuery = `
 MERGE (implementation:Implementation:unpublished{
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name})
 CREATE (implementationRevision:ImplementationRevision:unpublished {revision: value.revision})
@@ -218,7 +218,7 @@ CREATE (implementationRevision)-[:SIGNED_WITH]->(signature)
 MERGE (license: License:unpublished{name: value.metadata.license.name})
 
 CREATE (metadata:ImplementationMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -361,12 +361,12 @@ RETURN []
 `
 
 var repoMetadataQuery = `
-MERGE (repo:RepoMetadata:unpublished{path: "<PATH>", prefix: "<PREFIX>", name: value.metadata.name})
+MERGE (repo:RepoMetadata:unpublished{path: apoc.text.join(["<PREFIX", value.metadata.name], "."), prefix: "<PREFIX>", name: value.metadata.name})
 CREATE (repoRevision:RepoMetadataRevision:unpublished {revision: value.revision})
 CREATE (repo)-[:CONTAINS]->(repoRevision)
 
 CREATE (metadata:GenericMetadata:unpublished {
-  path: "<PATH>",
+  path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
   name: value.metadata.name,
   displayName: value.metadata.displayName,
@@ -478,15 +478,15 @@ func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 			paths = grouped[kind]
 			query := queries[kind]
 			for _, manifestPath := range paths {
-				path, prefix := getPathPrefix(manifestPath, rootDir)
-				q := renderQuery(query, publishPath, manifestPath, path, prefix)
+				prefix := getPrefix(manifestPath, rootDir)
+				q := renderQuery(query, publishPath, manifestPath, prefix)
 
 				select {
 				case <-ctx.Done():
 					// returning error to not commit transaction
 					return nil, errors.New("canceled")
 				default:
-					log.Info("Processing manifest", zap.String("manifest", manifestPath), zap.String("path", path))
+					log.Info("Processing manifest", zap.String("manifest", manifestPath))
 					log.Debug("Executing query", zap.String("query", q))
 					result, err := transaction.Run(q, nil)
 					if err != nil {
@@ -550,19 +550,18 @@ func currentCommit(session neo4j.Session) (string, error) {
 	return commit, errors.Wrap(result.Err(), "while executing neo4j transaction")
 }
 
-func getPathPrefix(manifestPath string, rootDir string) (string, string) {
+func getPrefix(manifestPath string, rootDir string) string {
 	path := strings.TrimPrefix(manifestPath, rootDir)
 	path = strings.TrimSuffix(path, ".yaml")
 	path = strings.ReplaceAll(path, "/", ".")
 	path = "cap" + path
 	parts := strings.Split(path, ".")
 	prefix := strings.Join(parts[:len(parts)-1], ".")
-	return path, prefix
+	return prefix
 }
 
-func renderQuery(query, publishPath, manifestPath, path, prefix string) string {
+func renderQuery(query, publishPath, manifestPath, prefix string) string {
 	json := fmt.Sprintf("call apoc.load.json(\"%s/%s\") yield value", publishPath, manifestPath)
-	renderedQuery := strings.ReplaceAll(query, "<PATH>", path)
-	renderedQuery = strings.ReplaceAll(renderedQuery, "<PREFIX>", prefix)
+	renderedQuery := strings.ReplaceAll(query, "<PREFIX>", prefix)
 	return fmt.Sprintf("%s\n%s", json, renderedQuery)
 }

@@ -2,7 +2,7 @@ package public
 
 import "fmt"
 
-var MetadataFields = `
+var GenericMetadataFields = `
 			prefix
 			path
 			name
@@ -16,15 +16,27 @@ var MetadataFields = `
 			documentationURL
 			supportURL
 			iconURL
-			attributes {
-			  metadata {
-				path
-			  }
-			}`
+			`
+
+var AttributeFields = fmt.Sprintf(`
+			metadata {
+				%s
+			}
+			revision
+			spec {
+				additionalRefs
+			}
+			signature {
+				och
+			}
+			`, GenericMetadataFields)
 
 var ImplementationRevisionFields = fmt.Sprintf(`
 			metadata {
 					%s
+					attributes {
+						%s
+					}
 			}
 			revision
 			spec {
@@ -97,4 +109,4 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 			signature {
 				och
 			}
-			`, MetadataFields)
+			`, GenericMetadataFields, AttributeFields)

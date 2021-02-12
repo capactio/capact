@@ -30,7 +30,7 @@ type Config struct {
 	ExpectedNumberOfRunningPods int `envconfig:"default=25"`
 	IgnoredPodsNames            []string
 	PollingInterval             time.Duration `envconfig:"default=2s"`
-	PollingTimeout              time.Duration `envconfig:"default=2m"`
+	PollingTimeout              time.Duration `envconfig:"default=5m"`
 	Gateway                     GatewayConfig
 }
 
@@ -75,7 +75,7 @@ func waitTillDataIsPopulated() {
 
 	Eventually(func() ([]graphql.Interface, error) {
 		return cli.ListInterfacesMetadata(context.Background())
-	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(2))
+	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(3))
 }
 
 func getOCHGraphQLClient() *ochclient.Client {

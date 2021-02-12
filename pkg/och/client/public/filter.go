@@ -1,6 +1,8 @@
 package public
 
 import (
+	"regexp"
+
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
@@ -9,10 +11,31 @@ func filterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, f
 		return revs
 	}
 
+	revs = filterImplementationRevisionsByPattern(revs, filter.implPrefixPattern)
 	revs = filterImplementationRevisionsByAttr(revs, filter.attrFilter)
 	revs = filterImplementationRevisionsByRequirements(revs, filter.requirementsSatisfiedBy)
 
 	return revs
+}
+
+func filterImplementationRevisionsByPattern(revs []gqlpublicapi.ImplementationRevision, pattern *string) []gqlpublicapi.ImplementationRevision {
+	if pattern == nil {
+		return revs
+	}
+
+	var out []gqlpublicapi.ImplementationRevision
+
+	for _, impl := range revs {
+		if impl.Metadata.Prefix == nil {
+			continue
+		}
+		matched, err := regexp.Match(*pattern, []byte(*impl.Metadata.Prefix))
+		if err != nil || !matched {
+			continue
+		}
+		out = append(out, impl)
+	}
+	return out
 }
 
 func filterImplementationRevisionsByRequirements(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]*string) []gqlpublicapi.ImplementationRevision {

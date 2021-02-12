@@ -2,12 +2,14 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.e2e
-  name: passing
+  prefix: cap.implementation.voltron.ochtests
+  name: install
   license:
     name: "Apache 2.0"
-  displayName: Passing Voltron test action
-  description: ""
+  displayName: "Simulates implementation of own Interface"
+  description: |-
+    Simulates the `cap.interface.voltron.ochtests.install` interface implementation done by the same vendor.
+    This implementation requires only the K8s platform.
   documentationURL: ""
   maintainers:
     - email: team-dev@projectvoltron.dev
@@ -18,8 +20,8 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.e2e.passing
-      revision: 0.1.0
+    - path: cap.interface.voltron.ochtests.install
+      revision: 1.0.0
 
   requires:
     cap.core.type.platform:
@@ -41,9 +43,7 @@ spec:
         entrypoint: main
         templates:
           - name: main
-            steps:
-              - - name: pass
-                  template: pass
+            template: pass
           - name: pass
             container:
               image: alpine:latest
