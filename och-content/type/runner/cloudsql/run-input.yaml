@@ -70,6 +70,11 @@ spec:
                   "additionalProperties": true,
                   "default": {},
                   "title": "Describes platform-specific values"
+              },
+              "timeout": {
+                 "$id": "#/properties/context/properties/timeout",
+                 "type": "string",
+                 "title": "Time, after which the runner execution will be cancelled"
               }
             },
             "additionalProperties": false

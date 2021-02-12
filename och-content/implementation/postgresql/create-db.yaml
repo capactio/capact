@@ -1,0 +1,115 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.postgresql
+  name: create-db
+  displayName: Create Postgresql database
+  description: Action which creates a database on a Postgresql instance
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "8.x.x"
+
+  implements:
+    - path: cap.interface.database.postgresql.create-db
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: main
+        templates:
+          - name: main
+            inputs:
+              artifacts:
+                - name: postgresql
+                - name: database-input
+            outputs:
+              artifacts:
+                - name: database
+                  from: "{{steps.create-db.outputs.artifacts.database}}"
+            steps:
+              - - name: render-create-db-script
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            export PGPASSWORD={{superuser.password}}
+                            PSQL_CMD="psql -h {{host}} -U {{superuser.username}} {{defaultDBName}} -c"
+                            {% raw %}
+                            ${PSQL_CMD} "CREATE DATABASE {{name}}"
+                            ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE {{name}} TO {{owner}}"
+
+                            cat <<EOF > /database.yml
+                            name: {{name}}
+                            owner: {{owner}}
+                            tablespace: ""
+                            EOF
+                            {% endraw %}
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.postgresql}}"
+
+              - - name: fill-params-in-create-db-script
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-create-db-script.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.database-input}}"
+
+              - - name: create-db
+                  template: create-psql-db
+                  voltron-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: script
+                        from: "{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}"
+
+          - name: create-psql-db
+            inputs:
+              artifacts:
+                - name: script
+                  path: /script.sh
+            container:
+              image: postgres:11
+              command: [bash]
+              args: ["/script.sh"]
+            outputs:
+              artifacts:
+                - name: database
+                  path: /database.yml
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -2,13 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.jira # Computed during fetching the manifest
+  prefix: cap.interface.productivity.confluence
   name: install
-  displayName: "Install"
-  description: "Install action for Jira"
-  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
-  supportURL: https://www.atlassian.com/software/jira
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  displayName: "Install Confluence"
+  description: "Confluence is a document collaboration tool"
+  documentationURL: https://support.atlassian.com/confluence/
+  supportURL: https://support.atlassian.com/confluence/
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -24,7 +24,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.productivity.jira.install-input",
+                  "name": "cap.type.productivity.confluence.install-input",
                   "revision": "0.1.0"
                 }
               },
@@ -34,7 +34,7 @@ spec:
     typeInstances:
       jira-config:
         typeRef:
-          path: cap.type.productivity.jira.config
+          path: cap.type.productivity.confluence.config
           revision: 0.1.0
 
 signature:

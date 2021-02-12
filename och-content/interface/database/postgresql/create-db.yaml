@@ -2,13 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.jira # Computed during fetching the manifest
-  name: install
-  displayName: "Install"
-  description: "Install action for Jira"
-  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
-  supportURL: https://www.atlassian.com/software/jira
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  prefix: cap.interface.database.postgresql
+  name: create-db
+  displayName: Create database
+  description: Create database action for PostgreSQL
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
@@ -16,6 +16,12 @@ metadata:
 
 spec:
   input:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
     parameters:
       input-parameters:
         jsonSchema:
@@ -24,7 +30,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.productivity.jira.install-input",
+                  "name": "cap.type.database.postgresql.database-input",
                   "revision": "0.1.0"
                 }
               },
@@ -32,9 +38,9 @@ spec:
             }
   output:
     typeInstances:
-      jira-config:
+      database:
         typeRef:
-          path: cap.type.productivity.jira.config
+          path: cap.type.database.postgresql.database
           revision: 0.1.0
 
 signature:

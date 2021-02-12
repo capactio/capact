@@ -2,11 +2,11 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.jira # Computed during fetching the manifest
+  prefix: cap.implementation.atlassian.confluence
   name: install
-  displayName: Install Jira
-  description: Action which installs Jira via Helm chart
-  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
+  displayName: Install Confluence
+  description: Action which installs Confluence via Helm chart
+  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/confluence-server
   supportURL: https://mox.sh/helm/
   license:
     name: "Apache 2.0"
@@ -16,7 +16,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "8.x.x"
+  appVersion: "2.x.x"
 
   additionalInput:
     typeInstances:
@@ -28,19 +28,23 @@ spec:
 
   additionalOutput:
     typeInstances:
-      jira-helm-release:
+      confluence-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
+      database:
+        typeRef:
+          path: cap.type.postgresql.database
+          revision: 0.1.0
     typeInstanceRelations:
-      jira-config:
+      confluence-config:
         uses:
-          - jira-helm-release
+          - confluence-helm-release
           - postgresql
           - database
 
   implements:
-    - path: cap.interface.productivity.jira.install
+    - path: cap.interface.productivity.confluence.install
       revision: 0.1.0
 
   requires:
@@ -65,6 +69,8 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
@@ -75,18 +81,21 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: jira-install
+        entrypoint: main
         templates:
-          - name: jira-install
+          - name: main
+            # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+            # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
                 - name: input-parameters
             steps:
+              # If the postgresql TypeInstance was not provided, then create it
+              # using the imported 'postgresql.install' Interface.
               - - name: install-db
-                  voltron-when: postgresql == nil # conditional execution
                   voltron-action: postgresql.install
+                  voltron-when: postgresql == nil
                   arguments:
-                    # TODO: password should be generated or populated by user
                     artifacts:
                       - name: input-parameters
                         raw:
@@ -96,10 +105,12 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              # Create the database for Confluence in our PostgreSQL instance
+              # using the imported 'postgresql.create-db' Interface
               - - name: create-db
                   voltron-action: postgresql.create-db
                   voltron-outputTypeInstances:
-                    - name: database
+                    - name: database                  # Defining the output TypeInstance 'database'
                       from: database
                   arguments:
                     artifacts:
@@ -108,9 +119,12 @@ spec:
                       - name: database-input
                         raw:
                           data: |
-                            name: jiradb
+                            name: confluencedb 
                             owner: superuser
 
+              # Here we prepare the input for the Helm runner. In the next two steps,
+              # we use Jinja2 to render the input and fill the required parameters.
+              # In the future there might be better way to do this.
               - - name: render-helm-args
                   voltron-action: jinja2.template
                   arguments:
@@ -121,12 +135,12 @@ spec:
                             command: "install"
                             generateName: true
                             chart:
-                              name: "jira-software"
+                              name: "confluence-server"
                               repo: "https://helm.mox.sh"
                             output:{% raw %}
                               goTemplate:
                                 version: {{ '"{{ .Values.image.tag }}"' }}
-                                host: {{ "'{{ template \"jira-software.fullname\" . }}'" }}{% endraw %}
+                                host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
                             values:
                               postgresql:
                                 enabled: false
@@ -138,7 +152,7 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: jira-cloud.voltron.local
+                                - host: confluence.voltron.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.postgresql}}"
@@ -152,12 +166,14 @@ spec:
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
 
+              # Execute the Helm runner, with the input parameters created in the previous step.
+              # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:
-                    - name: jira-config
+                    - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
                       from: additional
-                    - name: jira-helm-release
+                    - name: confluence-helm-release   # Defining the output TypeInstance 'confluence-helm-release'
                       from: helm-release
                   arguments:
                     artifacts:

@@ -23,29 +23,43 @@ spec:
         "examples": [
           {
             "context": {
+              "name": "helm-example",
+              "dryRun": false,
+              "timeout": "10m",
               "platform": {
-                "foo": "bar"
-              },
-              "name": "foo",
-              "dryRun": false
+                "namespace": "default"
+              }
             },
             "args": {
               "command": "install",
-              "name": "foo",
+              "generateName": true,
               "chart": {
                 "name": "postgresql",
-                "repo": "https://charts.bitnami.com/bitnami"
+                "repo": "https://charts.bitnami.com/bitnami",
+                "version": "10.2.0"
+              },
+              "values": {
+                "fullnameOverride": "postgresql-server",
+                "postgresqlDatabase": "postgres",
+                "postgresqlPassword": "s3cr3t"
               },
               "output": {
-                "directory": "./",
-                "helmRelease": { "fileName": "release.yaml" }
+                "goTemplate": {
+                  "host": "{{ template \"postgresql.primary.fullname\" . }}",
+                  "port": "{{ template \"postgresql.port\" . }}",
+                  "defaultDBName": "{{ template \"postgresql.database\" . }}",
+                  "superuser": {
+                    "username": "{{ template \"postgresql.username\" . }}",
+                    "password": "{{ template \"postgresql.password\" . }}"
+                  }
+                }
               }
             }
           }
         ],
         "required": [
-            "context",
-            "args"
+          "context",
+          "args"
         ],
         "properties": {
           "context": {
@@ -53,8 +67,8 @@ spec:
             "type": "object",
             "title": "Runner context",
             "required": [
-                "dryRun",
-                "name"
+              "dryRun",
+              "name"
             ],
             "properties": {
               "dryRun": {
@@ -74,6 +88,11 @@ spec:
                 "additionalProperties": true,
                 "default": {},
                 "title": "Describes platform-specific values"
+              },
+              "timeout": {
+                "$id": "#/properties/context/properties/timeout",
+                "type": "string",
+                "title": "Time, after which the runner execution will be cancelled"
               }
             },
             "additionalProperties": false
@@ -84,17 +103,17 @@ spec:
             "title": "Arguments for Helm Runner",
             "additionalProperties": false,
             "required": [
-                "command",
-                "chart"
+              "command",
+              "chart"
             ],
             "properties": {
               "command": {
                 "$id": "#/properties/args/properties/command",
                 "type": "string",
                 "enum": [
-                    "install",
-                    "upgrade",
-                    "delete"
+                  "install",
+                  "upgrade",
+                  "delete"
                 ],
                 "title": "The command to run for Helm"
               },
@@ -108,7 +127,7 @@ spec:
                 "type": "object",
                 "title": "The chart data",
                 "required": [
-                    "name"
+                  "name"
                 ],
                 "properties": {
                   "name": {
@@ -165,7 +184,9 @@ spec:
                 "type": "object",
                 "title": "The parameters for output files",
                 "additionalProperties": false,
-                "required": ["goTemplate"],
+                "required": [
+                  "goTemplate"
+                ],
                 "properties": {
                   "goTemplate": {
                     "$id": "#/properties/args/properties/output/properties/goTemplate",

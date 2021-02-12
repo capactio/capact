@@ -67,12 +67,15 @@
               "$id": "#/properties/spec/properties/input/properties/parameters",
               "type": "object",
               "description": "The input parameters passed from User",
-              "properties": {
-                "jsonSchema": {
-                  "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
-                }
-              },
-              "additionalProperties": false
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "jsonSchema": {
+                    "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+                  }
+                },
+                "additionalProperties": false
+              }
             },
             "typeInstances": {
               "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
