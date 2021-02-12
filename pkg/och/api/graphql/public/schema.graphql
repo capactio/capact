@@ -302,6 +302,11 @@ type ImplementationRequirementItem {
     Currently not supported.
     """
     valueConstraints: Any
+
+    """
+    If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
+    """
+    alias: String
 }
 
 type TypeReference {

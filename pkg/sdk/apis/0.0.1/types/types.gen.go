@@ -279,6 +279,7 @@ type Require struct {
 }
 
 type RequireEntity struct {
+	Alias            *string                `json:"alias,omitempty"`           // If provided, the TypeInstance of the Type, configured in policy, is injected to the; workflow under the alias.
 	Name             string                 `json:"name"`                      // The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom; Type then it MUST be defined as full path to that Type. Custom Type MUST extend the; abstract node which is defined as a root prefix for that entry.
 	Revision         string                 `json:"revision"`                  // The exact revision of the given Type.
 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema.

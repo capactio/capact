@@ -40,7 +40,7 @@ spec:
     cap.type.gcp.auth:
       allOf:
         - name: service-account
-          # alias: gcp-sa
+          alias: gcp-sa
           revision: 0.1.0
 
   imports:

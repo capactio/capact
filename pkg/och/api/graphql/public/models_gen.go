@@ -129,6 +129,8 @@ type ImplementationRequirementItem struct {
 	// Holds the configuration constraints for the given entry based on Type value.
 	// Currently not supported.
 	ValueConstraints interface{} `json:"valueConstraints"`
+	// If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
+	Alias *string `json:"alias"`
 }
 
 type ImplementationRevision struct {

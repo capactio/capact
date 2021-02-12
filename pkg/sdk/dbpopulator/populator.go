@@ -262,7 +262,7 @@ CALL {
     CREATE (typeReference:TypeReference:unpublished{
       path: apoc.text.join([r, listItem.name], "."),
       revision: listItem.revision})
-    CREATE (item:ImplementationRequirementItem:unpublished {valueConstraints: listItem.valueConstraints})
+    CREATE (item:ImplementationRequirementItem:unpublished {valueConstraints: listItem.valueConstraints, alias: listItem.alias})
     CREATE (item)-[:REFERENCES_TYPE]->(typeReference)
     WITH *, {oneOf: "ONE_OF", anyOf: "ANY_OF", allOf: "ALL_OF"} as requirementTypes
     CALL apoc.create.relationship(implementationRequirement, requirementTypes[of], {}, item) YIELD rel as t1
