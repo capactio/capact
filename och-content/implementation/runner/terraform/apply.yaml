@@ -59,7 +59,7 @@ spec:
                   globalName: tfstate
                   path: "/terraform.tfstate"
             container:
-              image: gcr.io/projectvoltron/pr/terraform-runner:PR-117
+              image: gcr.io/projectvoltron/terraform-runner:a6e2ac4
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
