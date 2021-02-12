@@ -90,20 +90,20 @@ You can create an action using for example the GraphQL API:
 ```graphql
 mutation createAction(
         in: {
-            name: postgresql-install
+            name: "postgresql-install",
             actionRef: {
                 path: "cap.interface.terraform.database.postgresql.install"
                 revision: "0.1.0"
-            }
-            dryRun: false
-            advancedRendering: false
+            },
+            dryRun: false,
+            advancedRendering: false,
             input: {
                 parameters: "{\r\n  \"superuser\": {\r\n    \"username\": \"postgres\",\r\n    \"password\": \"s3cr3t\"\r\n  },\r\n  \"defaultDBName\": \"postgres\"\r\n}"
             }
         }
     ) {
         name
-    		input {
+        input {
           parameters
         }
     }

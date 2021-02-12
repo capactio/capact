@@ -24,10 +24,11 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-    typeInstanceRelations:
-      postgresql:
-        uses:
-          - psql-helm-release
+
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - psql-helm-release
 
   implements:
     - path: cap.interface.database.postgresql.install

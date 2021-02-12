@@ -38,10 +38,11 @@ spec:
         typeRef:
           path: cap.type.db.mysql.config
           revision: 0.1.0
-    typeInstanceRelations:
-      wpConfig:
-        uses:
-          - mysqlConfig
+
+  outputTypeInstanceRelations:
+    wpConfig:
+      uses:
+        - mysqlConfig
 
   implements:
     - path: cap.interface.cms.wordpress

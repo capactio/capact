@@ -21,6 +21,10 @@ spec:
     - path: cap.interface.templating.jinja2.template
       revision: 0.1.0
 
+  # Do not upload `render` TypeInstance by default.
+  # Upper-level workflows may define it in the outputTypeInstanceRelations.
+  outputTypeInstanceRelations: {}
+
   action:
     runnerInterface: argo.run
     args:

@@ -208,7 +208,7 @@ spec:
 Specifies, whether a given TypeInstance was created with a separate Action.
 
 - Engine sets the value of the `standalone` property automatically during TypeInstance creation based on
-  the `spec.typeInstanceRelations` field from Implementation.
+  the `spec.outputTypeInstanceRelations` field from Implementation.
 
   If a given TypeInstance doesn't have an ancestors in the TypeInstance relations tree, the value is set
   to `standalone: true`. In other cases, it is set to `false`.
@@ -410,10 +410,11 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-    typeInstanceRelations:
-      postgresql:
-        uses:
-          - helm-release
+  
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - helm-release
 
   # (...)
 
@@ -720,7 +721,7 @@ This section covers a few different example scenarios to present how the rollbac
         - The `standalone` field is set to `true`.
         - The `rollback` field is set to `cap.implementation.k8s.ingress.create`.
     1. The relation between `jira.config` and `ingress.config` is created automatically, according
-       to `typeInstanceRelations` from the `cap.implementation.k8s.ingress.create` Implementation. In this
+       to `outputTypeInstanceRelations` from the `cap.implementation.k8s.ingress.create` Implementation. In this
        case, `ingress.config` uses `jira.config`, as it is an additional functionality built on top of Jira
        installation.
 
@@ -797,7 +798,7 @@ This section covers a few different example scenarios to present how the rollbac
         - The `host` property of the `jira.config` TypeInstance is updated.
         - The `rollback` field is set to `cap.implementation.atlassian.k8s.jira.expose`.
     1. The relation between `jira.config` and `ingress.config` is created automatically, according
-       to `typeInstanceRelations` from the `cap.implementation.atlassian.k8s.jira.expose` Implementation. In this
+       to `outputTypeInstanceRelations` from the `cap.implementation.atlassian.k8s.jira.expose` Implementation. In this
        case, `ingress.config` uses `jira.config`, as it is an additional functionality built on top of Jira
        installation.
 
@@ -859,10 +860,11 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-    typeInstanceRelations:
-      postgresql:
-        uses:
-          - helm-release
+
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - helm-release
 
   # (...)
 
@@ -1126,8 +1128,8 @@ Because of the first summary point, this solution cannot be accepted.
 - Introduce new properties in OCF schema and OCH GraphQL API:
     - new Implementation `rollback` property,
     - new TypeInstance properties: `standalone` and `rollbackActionRef`,
-- Move the `Implementation.spec.additionalInput.typeInstanceRelations` field
-  to `Implementation.spec.typeInstanceRelations`.
+- Move the `Implementation.spec.additionalOutput.typeInstanceRelations` field
+  to `Implementation.spec.outputTypeInstanceRelations`.
 - Expose TypeInstance relations in Local OCH GraphQL API:
     - Add `uses` (or `descendants`) field,
     - Add `usedBy` (or `ancestors`) field.

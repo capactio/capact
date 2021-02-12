@@ -99,10 +99,10 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 							revision
 						}
 					}
-					typeInstanceRelations {
-						typeInstanceName
-						uses
-					}
+				}
+				outputTypeInstanceRelations {
+					typeInstanceName
+					uses
 				}
 				action {
 					runnerInterface

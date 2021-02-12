@@ -245,7 +245,7 @@ spec:
 
 We need a way for the Content Creator to say, that an artifact created in the Argo workflow is a TypeInstance and is supposed to be uploaded to OCH. The workflow could use some intermediate artifacts just for handling the data flow between workflow steps. Currently, there is no way to identify the TypeInstance artifacts in the workflow.
 
-We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.additionalOutput.typeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `voltron-outputTypeInstances`.
+We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.outputTypeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `voltron-outputTypeInstances`.
 
 The `voltron-outputTypeInstances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood, it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to OCH. This also allows us to track the TypeInstances produced in a workflow.
 
@@ -258,11 +258,10 @@ from: {argo-global-artifact-reference}
 ```yaml
 kind: Implementation
 spec:
-  additionalOutput:
-    typeInstanceRelations:
-      postgresql:
-        uses:
-          - helm-release
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - helm-release
 
   action:
     runnerInterface: argo.run
@@ -275,8 +274,8 @@ spec:
                   # This step produces Argo artifacts 'additional' and 'helm-release'.
               - - name: helm-run
                   voltron-action: cap.interface.runner.helm.run
-                  voltron-output-type-instances:
-                    # Artifacts mappings to the TypeInstances in .spec.additionalOutput.typeInstanceRelations
+                  voltron-outputTypeInstances:
+                    # Artifacts mappings to the TypeInstances in .spec.outputTypeInstanceRelations
                     - name: jira-config
                       from: additional
                     - name: helm-release

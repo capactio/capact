@@ -30,10 +30,11 @@ spec:
         typeRef:
           path: cap.type.gcp.cloudsql.instance
           revision: 0.1.0
-    typeInstanceRelations:
-      cloudsql-instance:
-        uses:
-          - postgresql
+
+  outputTypeInstanceRelations:
+    cloudsql-instance:
+      uses:
+        - postgresql
 
   implements:
     # TODO: revert it when policies are implemented

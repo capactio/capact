@@ -224,13 +224,14 @@ type ImplementationSignature struct {
 
 // A container for the Implementation specification definition.
 type ImplementationSpec struct {
-	Action           Action             `json:"action"`                    // An explanation about the purpose of this instance.
-	AdditionalInput  *AdditionalInput   `json:"additionalInput,omitempty"` // Specifies additional input for a given Implementation
-	AdditionalOutput *AdditionalOutput  `json:"additionalOutput,omitempty"`// Specifies additional output for a given Implementation
-	AppVersion       string             `json:"appVersion"`                // The supported application versions in SemVer2 format.
-	Implements       []Implement        `json:"implements"`                // Defines what kind of interfaces this implementation fulfills.
-	Imports          []Import           `json:"imports,omitempty"`         // List of external Interfaces that this Implementation requires to be able to execute the; action.
-	Requires         map[string]Require `json:"requires,omitempty"`        // List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
+	Action                      Action                                `json:"action"`                     // An explanation about the purpose of this instance.
+	AdditionalInput             *AdditionalInput                      `json:"additionalInput,omitempty"`  // Specifies additional input for a given Implementation
+	AdditionalOutput            *AdditionalOutput                     `json:"additionalOutput,omitempty"` // Specifies additional output for a given Implementation
+	AppVersion                  string                                `json:"appVersion"`                 // The supported application versions in SemVer2 format.
+	Implements                  []Implement                           `json:"implements"`                 // Defines what kind of interfaces this implementation fulfills.
+	Imports                     []Import                              `json:"imports,omitempty"`          // List of external Interfaces that this Implementation requires to be able to execute the; action.
+	OutputTypeInstanceRelations map[string]OutputTypeInstanceRelation `json:"outputTypeInstanceRelations"`// Defines all output TypeInstances to upload with relations between them. It relates to; both optional and required TypeInstances. No TypeInstance name specified here means it; won't be uploaded to OCH after workflow run
+	Requires                    map[string]Require                    `json:"requires,omitempty"`         // List of the system prerequisites that need to be present on the cluster. There has to be; an Instance for every concrete type.
 }
 
 // An explanation about the purpose of this instance.
@@ -246,13 +247,7 @@ type AdditionalInput struct {
 
 // Specifies additional output for a given Implementation
 type AdditionalOutput struct {
-	TypeInstanceRelations map[string]TypeInstanceRelation `json:"typeInstanceRelations"`  // Defines the relations between all output TypeInstances
-	TypeInstances         map[string]OutputTypeInstance   `json:"typeInstances,omitempty"`
-}
-
-// Prefix is an alias of the TypeInstance, used in the Implementation
-type TypeInstanceRelation struct {
-	Uses []string `json:"uses,omitempty"`// Uses contains all dependant TypeInstances
+	TypeInstances map[string]OutputTypeInstance `json:"typeInstances,omitempty"`
 }
 
 type Implement struct {
@@ -270,6 +265,11 @@ type Import struct {
 type MethodElement struct {
 	Name     string  `json:"name"`              // The name of the action for a given Interface group, e.g. install
 	Revision *string `json:"revision,omitempty"`// Revision of the Interface for a given action. If not specified, the latest revision is; used.
+}
+
+// Object key is an alias of the TypeInstance, used in the Implementation
+type OutputTypeInstanceRelation struct {
+	Uses []string `json:"uses,omitempty"`// Uses contains all dependant TypeInstances
 }
 
 // Prefix MUST be an abstract node and represents a core abstract Type e.g.

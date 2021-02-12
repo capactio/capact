@@ -261,6 +261,7 @@ type ImplementationSpec {
     action: ImplementationAction!
     additionalInput: ImplementationAdditionalInput
     additionalOutput: ImplementationAdditionalOutput
+    outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type ImplementationAdditionalInput {
@@ -269,7 +270,6 @@ type ImplementationAdditionalInput {
 
 type ImplementationAdditionalOutput {
     typeInstances: [OutputTypeInstance!]!
-    typeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type TypeInstanceRelationItem {
