@@ -86,14 +86,12 @@ spec:
                   voltron-when: postgresql == nil # conditional execution
                   voltron-action: postgresql.install
                   arguments:
-                    # TODO: password should be generated or populated by user
                     artifacts:
                       - name: input-parameters
                         raw:
                           data: |
                             superuser:
                               username: superuser
-                              password: okon
                             defaultDBName: postgres
 
               - - name: create-db

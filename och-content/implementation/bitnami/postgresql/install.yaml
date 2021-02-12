@@ -87,7 +87,9 @@ spec:
                                 pullPolicy: Always
                               postgresqlDatabase: {{ defaultDBName }}
                               postgresqlUsername: {{ superuser.username }}
+                              {% if superuser.password is defined %}
                               postgresqlPassword: {{ superuser.password }}
+                              {% endif %}
                             output:{% raw %}
                               goTemplate:
                                 host: '{{ template "common.names.fullname" . }}'

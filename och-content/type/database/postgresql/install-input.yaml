@@ -36,9 +36,6 @@ spec:
            "$id": "#/properties/superuser",
            "type": "object",
            "title": "Defines superuser details",
-           "required": [
-               "password"
-           ],
            "properties": {
              "username": {
                "$id": "#/properties/superuser/properties/username",
@@ -49,8 +46,9 @@ spec:
              "password": {
                "$id": "#/properties/superuser/properties/password",
                "type": "string",
-               "title": "Sets the superuser password for PostgreSQL"
-             }
+               "title": "Sets the superuser password for PostgreSQL",
+               "default": "random 10 character alphanumeric string"
+               }
            },
            "additionalProperties": false
          },
