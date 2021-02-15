@@ -80,10 +80,10 @@ spec:
         entrypoint: jira-install
         templates:
           - name: jira-install
-#            Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
-#            inputs:
-#              artifacts:
-#                - name: input-parameters
+            # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
+            # inputs:
+            #  artifacts:
+            #    - name: input-parameters
             steps:
               - - name: install-db
                   voltron-when: postgresql == nil # conditional execution

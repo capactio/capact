@@ -144,6 +144,15 @@ type ActionInput struct {
 type InputParameters struct {
 
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
+	//
+	// Required field:
+	// - Secret.Data["parameters.json"] - input parameters data in JSON format
+	//
+	// Restricted field:
+	// - Secret.Data["args.yaml"] - used by Engine, stores runner rendered arguments
+	// - Secret.Data["context.yaml"] - used by Engine, stores runner context
+	// - Secret.Data["status"] - stores the runner status
+	//
 	// TODO: this should be changed to an object which contains both the Secret name and key
 	// name under which the input is stored.
 	SecretRef v1.LocalObjectReference `json:"secretRef"`

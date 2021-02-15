@@ -368,6 +368,9 @@ args:
       volumes:
       - name: user-secret-volume
         secret:
+          items:
+          - key: parameters.json
+            path: parameters.json
           optional: false
           secretName: user-input
     - arguments: {}

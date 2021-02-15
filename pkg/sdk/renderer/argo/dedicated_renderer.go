@@ -288,7 +288,13 @@ func (r *dedicatedRenderer) AddUserInputSecretRef(rootWorkflow *Workflow) {
 				VolumeSource: apiv1.VolumeSource{
 					Secret: &apiv1.SecretVolumeSource{
 						SecretName: r.userInputSecretRef.Name,
-						Optional:   ptr.Bool(false),
+						Items: []apiv1.KeyToPath{
+							{
+								Key:  r.userInputSecretRef.Key,
+								Path: r.userInputSecretRef.Key,
+							},
+						},
+						Optional: ptr.Bool(false),
 					},
 				},
 			},
