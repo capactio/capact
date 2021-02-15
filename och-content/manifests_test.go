@@ -122,7 +122,7 @@ func TestManifestsValid(t *testing.T) {
 					// then
 
 					require.Nil(t, err, "returned error: %v", err)
-					require.True(t, result.Valid(), "is not valid, errors: %v", result.Errors)
+					require.True(t, result.Valid(), "%s is not valid, errors: %v", path, result.Errors)
 					return nil
 				})
 				require.NoError(t, err)

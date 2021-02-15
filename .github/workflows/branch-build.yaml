@@ -12,6 +12,7 @@ on:
       - "Makefile"
       - "deploy/**"
       - "!**.md"
+      - "och-content/**"
     branches:
       - "master"
 
