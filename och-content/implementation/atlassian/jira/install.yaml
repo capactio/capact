@@ -65,6 +65,8 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
@@ -93,6 +95,7 @@ spec:
                           data: |
                             superuser:
                               username: superuser
+                              password: okon
                             defaultDBName: postgres
 
               - - name: create-db
