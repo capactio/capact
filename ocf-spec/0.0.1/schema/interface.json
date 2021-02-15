@@ -64,11 +64,10 @@
           "required": [],
           "properties": {
             "parameters": {
-              "$id": "#/properties/spec/properties/input/properties/parameters",
-              "type": "object",
-              "description": "The input parameters passed from User",
               "additionalProperties": {
+                "$id": "#/additionalParameters",
                 "type": "object",
+                "description": "The input parameters for a given Action.",
                 "properties": {
                   "jsonSchema": {
                     "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
@@ -80,8 +79,7 @@
             "typeInstances": {
               "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
             }
-          },
-          "additionalProperties": false
+          }
         },
         "output": {
           "$id": "#/properties/spec/properties/output",
