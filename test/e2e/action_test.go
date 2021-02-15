@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
+	"projectvoltron.dev/voltron/internal/ptr"
 	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	client "projectvoltron.dev/voltron/pkg/engine/client"
 )
@@ -32,7 +33,8 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.passing",
+					Path:     "cap.interface.voltron.e2e.passing",
+					Revision: ptr.String("0.1.0"),
 				},
 			})
 
@@ -57,7 +59,8 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path: "cap.interface.voltron.e2e.failing",
+					Path:     "cap.interface.voltron.e2e.failing",
+					Revision: ptr.String("0.1.0"),
 				},
 			})
 

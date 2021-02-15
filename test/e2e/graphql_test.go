@@ -145,7 +145,7 @@ var _ = Describe("GraphQL API", func() {
 						{
 							TypeRef: &gqlpublicapi.TypeReferenceInput{
 								Path:     "cap.core.type.platform.kubernetes",
-								Revision: "0.1.0",
+								Revision: ptr.String("0.1.0"),
 							},
 						},
 					},

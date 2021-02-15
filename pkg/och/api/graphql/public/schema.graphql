@@ -261,7 +261,10 @@ type ImplementationSpec {
     action: ImplementationAction!
     additionalInput: ImplementationAdditionalInput
     additionalOutput: ImplementationAdditionalOutput
+<<<<<<< HEAD
     outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
+=======
+>>>>>>> ea83233... revert public schema
 }
 
 type ImplementationAdditionalInput {
@@ -270,16 +273,26 @@ type ImplementationAdditionalInput {
 
 type ImplementationAdditionalOutput {
     typeInstances: [OutputTypeInstance!]!
+<<<<<<< HEAD
+=======
+    typeInstanceRelations: [TypeInstanceRelationItem!]!
+>>>>>>> ea83233... revert public schema
 }
 
 type TypeInstanceRelationItem {
     typeInstanceName: String!
 
     """
+<<<<<<< HEAD
     Contains list of Type Instance names, which a given TypeInstance uses (depends on).
     If empty, a given TypeInstance doesn't have any dependencies.
     """
     uses: [String!]
+=======
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    """
+    uses: [String!]!
+>>>>>>> ea83233... revert public schema
 }
 
 

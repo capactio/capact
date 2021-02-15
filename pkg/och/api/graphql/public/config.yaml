@@ -1,4 +1,4 @@
-schema: ../../../../../och-js/graphql/public/schema.graphql
+schema: schema.graphql
 
 # Let gqlgen know where to put the generated server
 exec:

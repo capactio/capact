@@ -32,7 +32,7 @@ func (r *InterfaceGroupResolver) InterfaceGroup(ctx context.Context, path string
 func dummyInterfaceGroup() *gqlpublicapi.InterfaceGroup {
 	return &gqlpublicapi.InterfaceGroup{
 		Metadata: &gqlpublicapi.GenericMetadata{
-			Name:        ptr.String("wordpress"),
+			Name:        "wordpress",
 			Prefix:      ptr.String("cap.interface.cms"),
 			Path:        ptr.String("cap.interface.cms.wordpress"),
 			DisplayName: ptr.String("Wordpress"),
