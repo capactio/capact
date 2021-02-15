@@ -32,12 +32,13 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-    typeInstanceRelations:
-      jira-config:
-        uses:
-          - jira-helm-release
-          - postgresql
-          - database
+
+  outputTypeInstanceRelations:
+    jira-config:
+      uses:
+        - jira-helm-release
+        - postgresql
+        - database
 
   implements:
     - path: cap.interface.productivity.jira.install

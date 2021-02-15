@@ -261,6 +261,7 @@ type ImplementationSpec {
     action: ImplementationAction!
     additionalInput: ImplementationAdditionalInput
     additionalOutput: ImplementationAdditionalOutput
+    outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type ImplementationAdditionalInput {
@@ -269,16 +270,16 @@ type ImplementationAdditionalInput {
 
 type ImplementationAdditionalOutput {
     typeInstances: [OutputTypeInstance!]!
-    typeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type TypeInstanceRelationItem {
     typeInstanceName: String!
 
     """
-    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on).
+    If empty, a given TypeInstance doesn't have any dependencies.
     """
-    uses: [String!]!
+    uses: [String!]
 }
 
 

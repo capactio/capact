@@ -87,7 +87,7 @@ We have the Interface entity which defines the input and output parameters. To f
 
 The **required** input and output TypeInstances should be defined on Interface. By doing so, we can ensure that Implementations are exchangeable and do not introduce new requirements.
 
-For the Beta and GA only one TypeInstance can be declared as the output. As a result we can simplify implementation for defining [relations between generated artifacts](#specify-relations-between-generated-artifacts).
+In Interfaces, Multiple TypeInstances can be declared as the output. The relations between them can be defined in Implementation manifest. 
 
 <details> <summary>Example</summary>
 
@@ -488,7 +488,7 @@ Use the information from the `input`/`output` property defined in Interface. For
 	      permissions: ["read"] 
 	```
 
-	With the `permissions` name, it's not so easy to explain that it affects the rendered workflow, and e.g. based on that Engine is injecting some steps automatically as describe [here](#populate-an-action-with-the-input-typeinstances).
+	With the `permissions` name, it's not so easy to explain that it affects the rendered workflow, and e.g. based on that Engine is injecting some steps automatically as described [here](#populate-an-action-with-the-input-typeinstances).
 
 	</details>
 
@@ -502,9 +502,13 @@ If we know the relations between the TypeInstance e.g. that Jira instance uses a
 
 ####  Suggested solution
 
-Specify the relations between the TypeInstances in the Implementation. As describe in [upload artifacts](#upload-action-artifacts-to-local-och) section, in the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. For now, the Interface can define only one TypeInstance in the output section, so the relations property is not necessary on the Interface type. As a result, it simplifies the solution for Beta and GA as we don't need to take care of proper merging those relations defined on Interface and Implementation.
+Specify the relations between the TypeInstances in the Implementation. As described in [upload artifacts](#upload-action-artifacts-to-local-och) section, in the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. The Interface can define multiple TypeInstances in the output section. To simplify the solution for Beta and GA, the TypeInstance relations are defined on Implementation as we don't need to take care of proper merging those relations defined on Interface and Implementation.
 
-This property is required if the Implementation wants to upload more than one artifact. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed.
+The `outputTypeInstanceRelations` property is required, and it contains two pieces of information:
+  - TypeInstances to upload
+  - the relationships between the TypeInstances to be uploaded.
+    
+The property contains both required and optional TypeInstances. By doing so, in the future we can implement a more sophisticated mechanism for deleting the TypeInstances as we will know relations between them, e.g. when someone will schedule removing the WordPress Config TypeInstance we will know that the correlated Ingress TypeInstance also should be removed. It will also make it easier to build TypeInstance tree to upload.
 
 <details> <summary>Example</summary>
 
@@ -527,14 +531,15 @@ spec:
         typeRef:
           path: cap.type.gcp.cloudsql.config
           revision: 0.1.0   
-    typeInstanceRelations:
-      wordpress_config: # artifact name
-        uses: # names of all artifacts that WP config depends on
-          - cloudsql_config
-          - ingress_config
-      cloudsql_config: # artifact name
-        uses:
-          - mysql_config
+
+  outputTypeInstanceRelations:
+    wordpress_config: # artifact name
+      uses: # names of all artifacts that WP config depends on
+        - cloudsql_config
+        - ingress_config
+    cloudsql_config: # artifact name
+      uses:
+        - mysql_config
 ```
 
 </details>
@@ -625,7 +630,7 @@ Actors
 
 ####  Suggested solution
 
-The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Action developer wants to upload additional TypeInstances. To solve that problem, the Action developer needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section. In that way, the Voltron Engine can add a step that can upload artifacts automatically.
+The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Interface contains multiple output TypeInstances, or the Action developer wants to upload additional TypeInstances. To solve that problem, the Action developer needs to describe the relations between output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section. In that way, the Voltron Engine can add a step that can upload artifacts automatically.
 
 To update TypeInstance in a workflow, the workflow output artifact name should match the workflow input artifact. The upload step overwrites TypeInstance using PUT-like operation with a proper `resourceVersion`. If there is a conflict, the workflow fails and can be retried.
 
@@ -633,9 +638,7 @@ To update TypeInstance in a workflow, the workflow output artifact name should m
 
 Restrictions:
 
--	Implementation MUST upload all TypeInstances which are defined under the `spec.output` property in Interface. Uploaded TypeInstances MUST be exactly the same as those defined in Interface or being an extension thereof.
-
--	Implementation is allowed to upload more TypeInstances than those listed in the Interface. To do so, Action developer needs to describe the relations between additional output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section.
+- Engine MUST upload all TypeInstances mentioned in `outputTypeInstanceRelations`, with proper relations defined there for every Implementation. If the property is empty, no TypeInstances will be uploaded from a given Implementation. To read more, see [this](#additional-output-typeinstances-and-relations-between-them) section.
 
 > **NOTE:** For the Beta and GA Engine doesn't validate above restrictions.
 
@@ -673,11 +676,11 @@ spec:
         typeRef:
           path: cap.type.networking.ingress.config
           revision: 0.1.0  
-    typeInstanceRelations:
-      jira_config:
-        uses:
-          - mysql_config
-          - ingress_config
+  outputTypeInstanceRelations:
+    jira_config:
+      uses:
+        - mysql_config
+        - ingress_config
   action:
     type: argo.run
     args:

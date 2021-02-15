@@ -81,8 +81,7 @@ type ImplementationAdditionalInput struct {
 }
 
 type ImplementationAdditionalOutput struct {
-	TypeInstances         []*OutputTypeInstance       `json:"typeInstances"`
-	TypeInstanceRelations []*TypeInstanceRelationItem `json:"typeInstanceRelations"`
+	TypeInstances []*OutputTypeInstance `json:"typeInstances"`
 }
 
 type ImplementationFilter struct {
@@ -150,13 +149,14 @@ type ImplementationRevisionFilter struct {
 }
 
 type ImplementationSpec struct {
-	AppVersion       string                          `json:"appVersion"`
-	Implements       []*InterfaceReference           `json:"implements"`
-	Requires         []*ImplementationRequirement    `json:"requires"`
-	Imports          []*ImplementationImport         `json:"imports"`
-	Action           *ImplementationAction           `json:"action"`
-	AdditionalInput  *ImplementationAdditionalInput  `json:"additionalInput"`
-	AdditionalOutput *ImplementationAdditionalOutput `json:"additionalOutput"`
+	AppVersion                  string                          `json:"appVersion"`
+	Implements                  []*InterfaceReference           `json:"implements"`
+	Requires                    []*ImplementationRequirement    `json:"requires"`
+	Imports                     []*ImplementationImport         `json:"imports"`
+	Action                      *ImplementationAction           `json:"action"`
+	AdditionalInput             *ImplementationAdditionalInput  `json:"additionalInput"`
+	AdditionalOutput            *ImplementationAdditionalOutput `json:"additionalOutput"`
+	OutputTypeInstanceRelations []*TypeInstanceRelationItem     `json:"outputTypeInstanceRelations"`
 }
 
 type InputParameters struct {
@@ -297,7 +297,8 @@ type TypeFilter struct {
 
 type TypeInstanceRelationItem struct {
 	TypeInstanceName string `json:"typeInstanceName"`
-	// Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+	// Contains list of Type Instance names, which a given TypeInstance uses (depends on).
+	// If empty, a given TypeInstance doesn't have any dependencies.
 	Uses []string `json:"uses"`
 }
 

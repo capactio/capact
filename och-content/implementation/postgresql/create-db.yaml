@@ -28,6 +28,9 @@ spec:
         - name: kubernetes
           revision: 0.1.0
 
+  outputTypeInstanceRelations:
+    database: {} # no dependencies
+
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo

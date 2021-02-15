@@ -36,7 +36,8 @@ spec:
         typeRef:
           path: cap.type.postgresql.database
           revision: 0.1.0
-    typeInstanceRelations:
+
+  outputTypeInstanceRelations:
       confluence-config:
         uses:
           - confluence-helm-release

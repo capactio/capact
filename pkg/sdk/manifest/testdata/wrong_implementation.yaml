@@ -21,6 +21,8 @@ spec:
   #  - path: cap.interface.cms.wordpress
   #    revision: "1.0.0"
 
+  outputTypeInstanceRelations: {}
+
   action:
     runnerInterface: argo.run
     args:

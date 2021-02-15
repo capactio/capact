@@ -100,8 +100,7 @@ type ComplexityRoot struct {
 	}
 
 	ImplementationAdditionalOutput struct {
-		TypeInstanceRelations func(childComplexity int) int
-		TypeInstances         func(childComplexity int) int
+		TypeInstances func(childComplexity int) int
 	}
 
 	ImplementationImport struct {
@@ -151,13 +150,14 @@ type ComplexityRoot struct {
 	}
 
 	ImplementationSpec struct {
-		Action           func(childComplexity int) int
-		AdditionalInput  func(childComplexity int) int
-		AdditionalOutput func(childComplexity int) int
-		AppVersion       func(childComplexity int) int
-		Implements       func(childComplexity int) int
-		Imports          func(childComplexity int) int
-		Requires         func(childComplexity int) int
+		Action                      func(childComplexity int) int
+		AdditionalInput             func(childComplexity int) int
+		AdditionalOutput            func(childComplexity int) int
+		AppVersion                  func(childComplexity int) int
+		Implements                  func(childComplexity int) int
+		Imports                     func(childComplexity int) int
+		OutputTypeInstanceRelations func(childComplexity int) int
+		Requires                    func(childComplexity int) int
 	}
 
 	InputParameters struct {
@@ -592,13 +592,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationAdditionalInput.TypeInstances(childComplexity), true
 
-	case "ImplementationAdditionalOutput.typeInstanceRelations":
-		if e.complexity.ImplementationAdditionalOutput.TypeInstanceRelations == nil {
-			break
-		}
-
-		return e.complexity.ImplementationAdditionalOutput.TypeInstanceRelations(childComplexity), true
-
 	case "ImplementationAdditionalOutput.typeInstances":
 		if e.complexity.ImplementationAdditionalOutput.TypeInstances == nil {
 			break
@@ -843,6 +836,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImplementationSpec.Imports(childComplexity), true
+
+	case "ImplementationSpec.outputTypeInstanceRelations":
+		if e.complexity.ImplementationSpec.OutputTypeInstanceRelations == nil {
+			break
+		}
+
+		return e.complexity.ImplementationSpec.OutputTypeInstanceRelations(childComplexity), true
 
 	case "ImplementationSpec.requires":
 		if e.complexity.ImplementationSpec.Requires == nil {
@@ -1848,6 +1848,7 @@ type ImplementationSpec {
     action: ImplementationAction!
     additionalInput: ImplementationAdditionalInput
     additionalOutput: ImplementationAdditionalOutput
+    outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type ImplementationAdditionalInput {
@@ -1856,16 +1857,16 @@ type ImplementationAdditionalInput {
 
 type ImplementationAdditionalOutput {
     typeInstances: [OutputTypeInstance!]!
-    typeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type TypeInstanceRelationItem {
     typeInstanceName: String!
 
     """
-    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on).
+    If empty, a given TypeInstance doesn't have any dependencies.
     """
-    uses: [String!]!
+    uses: [String!]
 }
 
 
@@ -3378,41 +3379,6 @@ func (ec *executionContext) _ImplementationAdditionalOutput_typeInstances(ctx co
 	return ec.marshalNOutputTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐOutputTypeInstanceᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImplementationAdditionalOutput_typeInstanceRelations(ctx context.Context, field graphql.CollectedField, obj *ImplementationAdditionalOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationAdditionalOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstanceRelations, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*TypeInstanceRelationItem)
-	fc.Result = res
-	return ec.marshalNTypeInstanceRelationItem2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeInstanceRelationItemᚄ(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _ImplementationImport_interfaceGroupPath(ctx context.Context, field graphql.CollectedField, obj *ImplementationImport) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4594,6 +4560,41 @@ func (ec *executionContext) _ImplementationSpec_additionalOutput(ctx context.Con
 	res := resTmp.(*ImplementationAdditionalOutput)
 	fc.Result = res
 	return ec.marshalOImplementationAdditionalOutput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalOutput(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImplementationSpec_outputTypeInstanceRelations(ctx context.Context, field graphql.CollectedField, obj *ImplementationSpec) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationSpec",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.OutputTypeInstanceRelations, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*TypeInstanceRelationItem)
+	fc.Result = res
+	return ec.marshalNTypeInstanceRelationItem2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeInstanceRelationItemᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputParameters_jsonSchema(ctx context.Context, field graphql.CollectedField, obj *InputParameters) (ret graphql.Marshaler) {
@@ -7129,14 +7130,11 @@ func (ec *executionContext) _TypeInstanceRelationItem_uses(ctx context.Context, 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeMetadata_name(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
@@ -9425,11 +9423,6 @@ func (ec *executionContext) _ImplementationAdditionalOutput(ctx context.Context,
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "typeInstanceRelations":
-			out.Values[i] = ec._ImplementationAdditionalOutput_typeInstanceRelations(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9726,6 +9719,11 @@ func (ec *executionContext) _ImplementationSpec(ctx context.Context, sel ast.Sel
 			out.Values[i] = ec._ImplementationSpec_additionalInput(ctx, field, obj)
 		case "additionalOutput":
 			out.Values[i] = ec._ImplementationSpec_additionalOutput(ctx, field, obj)
+		case "outputTypeInstanceRelations":
+			out.Values[i] = ec._ImplementationSpec_outputTypeInstanceRelations(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10669,9 +10667,6 @@ func (ec *executionContext) _TypeInstanceRelationItem(ctx context.Context, sel a
 			}
 		case "uses":
 			out.Values[i] = ec._TypeInstanceRelationItem_uses(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -12141,36 +12136,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
 func (ec *executionContext) marshalNType2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeᚄ(ctx context.Context, sel ast.SelectionSet, v []*Type) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -13049,6 +13014,42 @@ func (ec *executionContext) unmarshalOString2string(ctx context.Context, v inter
 
 func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
 	return graphql.MarshalString(v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

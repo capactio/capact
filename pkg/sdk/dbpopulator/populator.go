@@ -324,13 +324,13 @@ CALL {
  RETURN count([]) as _tmp5
 }
 
-WITH *, value.spec.additionalOutput.typeInstanceRelations as typeInstanceRelations
+WITH *, value.spec.outputTypeInstanceRelations as outputTypeInstanceRelations
 CALL {
- WITH typeInstanceRelations, spec
- UNWIND keys(typeInstanceRelations) as name
+ WITH outputTypeInstanceRelations, spec
+ UNWIND keys(outputTypeInstanceRelations) as name
   CREATE (typeInstanceRelationItem:TypeInstanceRelationItem:unpublished{
     typeInstanceName: name,
-    uses: typeInstanceRelations[name].uses})
+    uses: outputTypeInstanceRelations[name].uses})
   CREATE (spec)-[:RELATIONS]->(typeInstanceRelationItem)
  RETURN count([]) as _tmp6
 }

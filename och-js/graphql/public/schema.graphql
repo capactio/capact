@@ -405,6 +405,8 @@ type ImplementationSpec @additionalLabels(labels: ["published"]){
     @relation(name: "USES", direction: "OUT")
   additionalOutput: ImplementationAdditionalOutput
     @relation(name: "OUTPUTS", direction: "OUT")
+  outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
+  @relation(name: "RELATIONS", direction: "OUT")
 }
 
 type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
@@ -415,8 +417,6 @@ type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
 type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
   typeInstances: [OutputTypeInstance!]!
     @relation(name: "CONTAINS", direction: "OUT")
-  typeInstanceRelations: [TypeInstanceRelationItem!]!
-    @relation(name: "RELATIONS", direction: "OUT")
 }
 
 type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
@@ -425,7 +425,7 @@ type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
   """
   Contains list of Type Instance names, which a given TypeInstance uses (depends on)
   """
-  uses: [String!]!
+  uses: [String!]
 }
 
 type InterfaceReference @additionalLabels(labels: ["published"]){

@@ -134,6 +134,7 @@
       "required": [
         "appVersion",
         "implements",
+        "outputTypeInstanceRelations",
         "action"
       ],
       "properties": {
@@ -158,37 +159,35 @@
           "$id": "#/properties/spec/properties/additionalOutput",
           "type": "object",
           "description": "Specifies additional output for a given Implementation",
-          "required": [
-            "typeInstanceRelations"
-          ],
+          "required": [],
           "properties": {
             "typeInstances": {
               "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
-            },
-            "typeInstanceRelations": {
-              "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations",
-              "type": "object",
-              "description": "Defines the relations between all output TypeInstances",
-              "additionalProperties": {
-                "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters",
-                "type": "object",
-                "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
-                "properties": {
-                  "uses": {
-                    "$id": "#/properties/spec/properties/additionalOutput/properties/typeInstanceRelations/additionalParameters/properties/uses",
-                    "description": "Uses contains all dependant TypeInstances",
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "description": "Alias of the dependant TypeInstance"
-                    },
-                    "additionalItems": false
-                  }
-                }
-              }
             }
           },
           "additionalProperties": false
+        },
+        "outputTypeInstanceRelations": {
+          "$id": "#/properties/spec/properties/outputTypeInstanceRelations",
+          "type": "object",
+          "description": "Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to OCH after workflow run",
+          "additionalProperties": {
+            "$id": "#/properties/spec/properties/outputTypeInstanceRelations/additionalParameters",
+            "type": "object",
+            "description": "Object key is an alias of the TypeInstance, used in the Implementation",
+            "properties": {
+              "uses": {
+                "$id": "#/properties/spec/properties/outputTypeInstanceRelations/additionalParameters/properties/uses",
+                "description": "Contains all dependant TypeInstances",
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "Alias of the dependant TypeInstance"
+                },
+                "additionalItems": false
+              }
+            }
+          }
         },
         "implements": {
           "$id": "#/properties/spec/properties/implements",

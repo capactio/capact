@@ -88,25 +88,27 @@ Now just copy content of `manifests` directory to `och-content` in main director
 You can create an action using for example the GraphQL API:
 
 ```graphql
-mutation createAction(
+mutation {
+    createAction(
         in: {
-            name: postgresql-install
+            name: "postgresql-install",
             actionRef: {
-                path: "cap.interface.terraform.database.postgresql.install"
-                revision: "0.1.0"
-            }
-            dryRun: false
-            advancedRendering: false
+                path: "cap.interface.terraform.database.postgresql.install",
+                revision: "0.1.0",
+            },
+            dryRun: false,
+            advancedRendering: false,
             input: {
                 parameters: "{\r\n  \"superuser\": {\r\n    \"username\": \"postgres\",\r\n    \"password\": \"s3cr3t\"\r\n  },\r\n  \"defaultDBName\": \"postgres\"\r\n}"
             }
         }
     ) {
         name
-    		input {
-          parameters
+        input {
+            parameters
         }
     }
+}
 ```
 
 After around 10 minutes new CloudSQL instance should be running.
