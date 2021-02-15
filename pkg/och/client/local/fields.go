@@ -20,5 +20,22 @@ const typeInstanceFields = `
 		metadata {
 			id
 		}
+		spec {
+			typeRef {
+				path
+				revision
+			}
+		}
+	}
+	usedBy {
+		metadata {
+			id
+		}
+		spec {
+			typeRef {
+				path
+				revision
+			}
+		}
 	}
 `

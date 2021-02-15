@@ -17,9 +17,9 @@ type TypeInstanceFields interface {
 }
 
 type Attribute struct {
+	Path           string               `json:"path"`
 	Name           string               `json:"name"`
 	Prefix         string               `json:"prefix"`
-	Path           string               `json:"path"`
 	LatestRevision *AttributeRevision   `json:"latestRevision"`
 	Revision       *AttributeRevision   `json:"revision"`
 	Revisions      []*AttributeRevision `json:"revisions"`
@@ -32,15 +32,15 @@ type AttributeFilter struct {
 type AttributeFilterInput struct {
 	Path string      `json:"path"`
 	Rule *FilterRule `json:"rule"`
-	// If not provided, latest revision for a given Attribute is used
+	// If not provided, any revision of the Attribute applies to this filter
 	Revision *string `json:"revision"`
 }
 
 type AttributeRevision struct {
-	Metadata  *GenericMetadata `json:"metadata"`
 	Revision  string           `json:"revision"`
 	Spec      *AttributeSpec   `json:"spec"`
 	Signature *Signature       `json:"signature"`
+	Metadata  *GenericMetadata `json:"metadata"`
 }
 
 type AttributeSpec struct {
@@ -48,9 +48,9 @@ type AttributeSpec struct {
 }
 
 type GenericMetadata struct {
-	Name             string        `json:"name"`
-	Prefix           *string       `json:"prefix"`
 	Path             *string       `json:"path"`
+	Name             *string       `json:"name"`
+	Prefix           *string       `json:"prefix"`
 	DisplayName      *string       `json:"displayName"`
 	Description      string        `json:"description"`
 	Maintainers      []*Maintainer `json:"maintainers"`
@@ -62,9 +62,9 @@ type GenericMetadata struct {
 func (GenericMetadata) IsMetadataBaseFields() {}
 
 type Implementation struct {
+	Path           string                    `json:"path"`
 	Name           string                    `json:"name"`
 	Prefix         string                    `json:"prefix"`
-	Path           string                    `json:"path"`
 	LatestRevision *ImplementationRevision   `json:"latestRevision"`
 	Revision       *ImplementationRevision   `json:"revision"`
 	Revisions      []*ImplementationRevision `json:"revisions"`
@@ -102,15 +102,16 @@ type ImplementationImportMethod struct {
 }
 
 type ImplementationMetadata struct {
-	Name             string               `json:"name"`
+	Path             string               `json:"path"`
+	Name             *string              `json:"name"`
 	Prefix           *string              `json:"prefix"`
-	Path             *string              `json:"path"`
 	DisplayName      *string              `json:"displayName"`
 	Description      string               `json:"description"`
 	Maintainers      []*Maintainer        `json:"maintainers"`
 	DocumentationURL *string              `json:"documentationURL"`
 	SupportURL       *string              `json:"supportURL"`
 	IconURL          *string              `json:"iconURL"`
+	License          *License             `json:"license"`
 	Attributes       []*AttributeRevision `json:"attributes"`
 }
 
@@ -133,11 +134,11 @@ type ImplementationRequirementItem struct {
 }
 
 type ImplementationRevision struct {
-	Metadata   *ImplementationMetadata `json:"metadata"`
 	Revision   string                  `json:"revision"`
-	Spec       *ImplementationSpec     `json:"spec"`
-	Interfaces []*Interface            `json:"interfaces"`
 	Signature  *Signature              `json:"signature"`
+	Metadata   *ImplementationMetadata `json:"metadata"`
+	Spec       *ImplementationSpec     `json:"spec"`
+	Interfaces []*InterfaceRevision    `json:"interfaces"`
 }
 
 type ImplementationRevisionFilter struct {
@@ -172,9 +173,9 @@ type InputTypeInstance struct {
 func (InputTypeInstance) IsTypeInstanceFields() {}
 
 type Interface struct {
+	Path           string               `json:"path"`
 	Name           string               `json:"name"`
 	Prefix         string               `json:"prefix"`
-	Path           string               `json:"path"`
 	LatestRevision *InterfaceRevision   `json:"latestRevision"`
 	Revision       *InterfaceRevision   `json:"revision"`
 	Revisions      []*InterfaceRevision `json:"revisions"`
@@ -185,6 +186,7 @@ type InterfaceFilter struct {
 }
 
 type InterfaceGroup struct {
+	Path       string           `json:"path"`
 	Metadata   *GenericMetadata `json:"metadata"`
 	Signature  *Signature       `json:"signature"`
 	Interfaces []*Interface     `json:"interfaces"`
@@ -209,12 +211,12 @@ type InterfaceReference struct {
 }
 
 type InterfaceRevision struct {
-	Metadata *GenericMetadata `json:"metadata"`
-	Revision string           `json:"revision"`
-	Spec     *InterfaceSpec   `json:"spec"`
-	// List Implementations for a given Interface
-	ImplementationRevisions []*ImplementationRevision `json:"implementationRevisions"`
-	Signature               *Signature                `json:"signature"`
+	Revision                               string                    `json:"revision"`
+	Metadata                               *GenericMetadata          `json:"metadata"`
+	Spec                                   *InterfaceSpec            `json:"spec"`
+	Signature                              *Signature                `json:"signature"`
+	ImplementationRevisions                []*ImplementationRevision `json:"implementationRevisions"`
+	ImplementationRevisionsForRequirements []*ImplementationRevision `json:"implementationRevisionsForRequirements"`
 }
 
 type InterfaceSpec struct {
@@ -224,6 +226,10 @@ type InterfaceSpec struct {
 
 type LatestSemVerTaggingStrategy struct {
 	PointsTo SemVerTaggingStrategyTags `json:"pointsTo"`
+}
+
+type License struct {
+	Name string `json:"name"`
 }
 
 type Maintainer struct {
@@ -248,17 +254,17 @@ type RepoImplementationConfig struct {
 }
 
 type RepoMetadata struct {
+	Path           string                  `json:"path"`
 	Name           string                  `json:"name"`
 	Prefix         string                  `json:"prefix"`
-	Path           string                  `json:"path"`
 	LatestRevision *RepoMetadataRevision   `json:"latestRevision"`
 	Revision       *RepoMetadataRevision   `json:"revision"`
 	Revisions      []*RepoMetadataRevision `json:"revisions"`
 }
 
 type RepoMetadataRevision struct {
-	Metadata  *GenericMetadata  `json:"metadata"`
 	Revision  string            `json:"revision"`
+	Metadata  *GenericMetadata  `json:"metadata"`
 	Spec      *RepoMetadataSpec `json:"spec"`
 	Signature *Signature        `json:"signature"`
 }
@@ -270,8 +276,8 @@ type RepoMetadataSpec struct {
 }
 
 type RepoOCFVersion struct {
-	Default   string   `json:"default"`
 	Supported []string `json:"supported"`
+	Default   string   `json:"default"`
 }
 
 type SemVerTaggingStrategy struct {
@@ -283,9 +289,9 @@ type Signature struct {
 }
 
 type Type struct {
+	Path           string          `json:"path"`
 	Name           string          `json:"name"`
 	Prefix         string          `json:"prefix"`
-	Path           string          `json:"path"`
 	LatestRevision *TypeRevision   `json:"latestRevision"`
 	Revision       *TypeRevision   `json:"revision"`
 	Revisions      []*TypeRevision `json:"revisions"`
@@ -304,15 +310,15 @@ type TypeInstanceRelationItem struct {
 
 type TypeInstanceValue struct {
 	TypeRef *TypeReferenceInput `json:"typeRef"`
-	// Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
 	// Currently not supported.
+	// Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
 	Value interface{} `json:"value"`
 }
 
 type TypeMetadata struct {
-	Name             string               `json:"name"`
+	Path             string               `json:"path"`
+	Name             *string              `json:"name"`
 	Prefix           *string              `json:"prefix"`
-	Path             *string              `json:"path"`
 	DisplayName      *string              `json:"displayName"`
 	Description      string               `json:"description"`
 	Maintainers      []*Maintainer        `json:"maintainers"`
@@ -330,14 +336,13 @@ type TypeReference struct {
 }
 
 type TypeReferenceInput struct {
-	Path string `json:"path"`
-	// If not provided, latest revision for a given Type is used
-	Revision *string `json:"revision"`
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
 
 type TypeRevision struct {
-	Metadata  *TypeMetadata `json:"metadata"`
 	Revision  string        `json:"revision"`
+	Metadata  *TypeMetadata `json:"metadata"`
 	Spec      *TypeSpec     `json:"spec"`
 	Signature *Signature    `json:"signature"`
 }

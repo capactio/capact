@@ -145,7 +145,7 @@ var _ = Describe("GraphQL API", func() {
 						{
 							TypeRef: &gqlpublicapi.TypeReferenceInput{
 								Path:     "cap.core.type.platform.kubernetes",
-								Revision: ptr.String("0.1.0"),
+								Revision: "0.1.0",
 							},
 						},
 					},
@@ -221,7 +221,8 @@ var _ = Describe("GraphQL API", func() {
 						"foo": "bar",
 					},
 				},
-				Uses: []*gqllocalapi.TypeInstance{},
+				Uses:   []*graphql.TypeInstance{},
+				UsedBy: []*graphql.TypeInstance{},
 			}))
 
 			deleteTypeInstance(ctx, cli, typeInstance.Metadata.ID)
@@ -267,24 +268,30 @@ var _ = Describe("GraphQL API", func() {
 				},
 				UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
 					{
-						From: "child",
-						To:   "parent",
+						From: "parent",
+						To:   "child",
 					},
 				},
 			})
 
 			Expect(err).NotTo(HaveOccurred())
-			typeInstancesToCleanup = append(typeInstancesToCleanup, createdTypeInstanceIDs...)
+			for _, ti := range createdTypeInstanceIDs {
+				typeInstancesToCleanup = append(typeInstancesToCleanup, ti.ID)
+			}
 
-			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstanceIDs[1])
+			parentTiID := findCreatedTypeInstanceID("parent", createdTypeInstanceIDs)
+			Expect(parentTiID).ToNot(BeNil())
 
+			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
+			Expect(childTiID).ToNot(BeNil())
+
+			childTI, err := cli.GetTypeInstance(ctx, *childTiID)
 			Expect(err).NotTo(HaveOccurred())
-
-			Expect(typeInstance).To(Equal(&graphql.TypeInstance{
+			Expect(childTI).To(Equal(&graphql.TypeInstance{
 				ResourceVersion: 1,
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: createdTypeInstanceIDs[1],
-					Attributes: []*gqllocalapi.AttributeReference{
+				Metadata: &graphql.TypeInstanceMetadata{
+					ID: *childTiID,
+					Attributes: []*graphql.AttributeReference{
 						{
 							Path:     "com.attr",
 							Revision: "0.1.0",
@@ -300,13 +307,58 @@ var _ = Describe("GraphQL API", func() {
 						"foo": "bar",
 					},
 				},
-				Uses: []*gqllocalapi.TypeInstance{
+				Uses: []*graphql.TypeInstance{},
+				UsedBy: []*graphql.TypeInstance{
 					{
-						Metadata: &gqllocalapi.TypeInstanceMetadata{
-							ID: createdTypeInstanceIDs[0],
+						Metadata: &graphql.TypeInstanceMetadata{
+							ID: *parentTiID,
+						},
+						Spec: &graphql.TypeInstanceSpec{
+							TypeRef: &graphql.TypeReference{
+								Path:     "com.parent",
+								Revision: "0.1.0",
+							},
 						},
 					},
 				},
+			}))
+
+			parentTI, err := cli.GetTypeInstance(ctx, *parentTiID)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(parentTI).To(Equal(&graphql.TypeInstance{
+				ResourceVersion: 1,
+				Metadata: &graphql.TypeInstanceMetadata{
+					ID: *parentTiID,
+					Attributes: []*graphql.AttributeReference{
+						{
+							Path:     "com.attr",
+							Revision: "0.1.0",
+						},
+					},
+				},
+				Spec: &graphql.TypeInstanceSpec{
+					TypeRef: &graphql.TypeReference{
+						Path:     "com.parent",
+						Revision: "0.1.0",
+					},
+					Value: map[string]interface{}{
+						"foo": "bar",
+					},
+				},
+				Uses: []*graphql.TypeInstance{
+					{
+						Metadata: &graphql.TypeInstanceMetadata{
+							ID: *childTiID,
+						},
+						Spec: &graphql.TypeInstanceSpec{
+							TypeRef: &graphql.TypeReference{
+								Path:     "com.child",
+								Revision: "0.1.0",
+							},
+						},
+					},
+				},
+				UsedBy: []*graphql.TypeInstance{},
 			}))
 		})
 	})
@@ -318,6 +370,16 @@ func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpub
 		Rule:     &rule,
 		Revision: ptr.String(rev),
 	}
+}
+
+func findCreatedTypeInstanceID(alias string, instances []graphql.CreatedTypeInstanceID) *string {
+	for _, el := range instances {
+		if el.Alias == alias {
+			return &el.ID
+		}
+	}
+
+	return nil
 }
 
 func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {

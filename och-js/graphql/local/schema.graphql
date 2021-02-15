@@ -145,6 +145,9 @@ input TypeReferenceInput {
 }
 
 input CreateTypeInstanceInput {
+  """
+  Used to define the relationships, between the create TypeInstances
+  """
   alias: String!
   typeRef: TypeReferenceInput!
   attributes: [AttributeReferenceInput!]
@@ -166,6 +169,11 @@ input TypeInstanceUsesRelationInput {
 input CreateTypeInstancesInput {
   typeInstances: [CreateTypeInstanceInput!]!
   usesRelations: [TypeInstanceUsesRelationInput!]!
+}
+
+type CreatedTypeInstanceID {
+  id: ID!
+  alias: String!
 }
 
 input UpdateTypeInstanceInput {
@@ -235,7 +243,7 @@ type Query {
 }
 
 type Mutation {
-  createTypeInstances(in: CreateTypeInstancesInput!): [ID!]!
+  createTypeInstances(in: CreateTypeInstancesInput!): [CreatedTypeInstanceID!]!
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!

@@ -124,7 +124,7 @@ func TestImplementationRequirementFilters(t *testing.T) {
 				{
 					TypeRef: &gqlpublicapi.TypeReferenceInput{
 						Path:     "cap.type.gcp.sa",
-						Revision: ptr.String("0.1.1"),
+						Revision: "0.1.1",
 					},
 				},
 			},
@@ -161,7 +161,7 @@ func TestImplementationRequirementFilters(t *testing.T) {
 				{
 					TypeRef: &gqlpublicapi.TypeReferenceInput{
 						Path:     "cap.type.gcp.sa",
-						Revision: ptr.String("0.1.1"),
+						Revision: "0.1.1",
 					},
 				},
 			},
@@ -249,7 +249,7 @@ func fixImplementationRevisionWithAttr(implPath, implRev, attrPath, attrRev stri
 func fixImplementationRevision(path, rev string) gqlpublicapi.ImplementationRevision {
 	return gqlpublicapi.ImplementationRevision{
 		Metadata: &gqlpublicapi.ImplementationMetadata{
-			Path:   ptr.String(path),
+			Path:   path,
 			Prefix: ptr.String(path),
 		},
 		Spec:     &gqlpublicapi.ImplementationSpec{},

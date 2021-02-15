@@ -87,8 +87,8 @@ func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in gqlloc
 	return newTypeInstance, nil
 }
 
-func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]string, error) {
-	return []string{}, nil
+func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]*gqllocalapi.CreatedTypeInstanceID, error) {
+	return []*gqllocalapi.CreatedTypeInstanceID{}, nil
 }
 
 func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {

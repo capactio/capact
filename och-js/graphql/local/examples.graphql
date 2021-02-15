@@ -131,3 +131,13 @@ fragment TypeInstance on TypeInstance {
     }
   }
 }
+
+fragment TypeInstanceWithUses on TypeInstance {
+  ...TypeInstance
+  uses {
+    ...TypeInstance
+  }
+  usedBy {
+    ...TypeInstance
+  }
+}

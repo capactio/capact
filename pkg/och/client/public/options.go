@@ -44,7 +44,7 @@ func WithImplementationFilter(filter gqlpublicapi.ImplementationRevisionFilter) 
 				if req.TypeRef == nil {
 					continue
 				}
-				opt.requirementsSatisfiedBy[req.TypeRef.Path] = req.TypeRef.Revision
+				opt.requirementsSatisfiedBy[req.TypeRef.Path] = &req.TypeRef.Revision
 			}
 		}
 	}

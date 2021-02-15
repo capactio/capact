@@ -10,12 +10,10 @@ export const schema = makeAugmentedSchema({
       createTypeInstances: async (_obj, args, context) => {
         const { typeInstances, usesRelations } = args.in;
 
-        let result: any;
-
         const neo4jSession = context.driver.session();
 
         try {
-          result = await neo4jSession.writeTransaction(async (tx: any) => {
+          return await neo4jSession.writeTransaction(async (tx: any) => {
             const createTypeInstanceResult = await tx.run(
               `UNWIND $typeInstances AS typeInstance
                CREATE (ti: TypeInstance {resourceVersion: 1})
@@ -32,13 +30,17 @@ export const schema = makeAugmentedSchema({
               { typeInstances }
             );
 
-            const aliasMappings = createTypeInstanceResult.records
-              .map((record: any) =>
-                Object({
-                  [record.get("alias")]: record.get("uuid"),
-                })
-              )
-              .reduce((a: object, b: object) => Object.assign(a, b));
+            if (
+              createTypeInstanceResult.records.length !== typeInstances.length
+            ) {
+              throw new Error("failed to create some TypeInstances");
+            }
+
+            const aliasMappings = createTypeInstanceResult.records.reduce(
+              (acc: object, cur: any) =>
+                Object({ ...acc, [cur.get("alias")]: cur.get("uuid") }),
+              {}
+            );
 
             const usesRelationsParams = usesRelations.map(({ from, to }: any) =>
               Object({
@@ -47,7 +49,7 @@ export const schema = makeAugmentedSchema({
               })
             );
 
-            await tx.run(
+            const createRelationsResult = await tx.run(
               `UNWIND $usesRelations as usesRelation
                MATCH (fromTi:TypeInstance)-[:DESCRIBED_BY]->(:TypeInstanceMetadata {id: usesRelation.from})
                MATCH (toTi:TypeInstance)-[:DESCRIBED_BY]->(:TypeInstanceMetadata {id: usesRelation.to})
@@ -59,13 +61,25 @@ export const schema = makeAugmentedSchema({
               }
             );
 
-            return Object.values(aliasMappings);
+            if (
+              createRelationsResult.records.length !==
+              usesRelationsParams.length
+            ) {
+              throw new Error("failed to create some relations");
+            }
+
+            return Object.entries(aliasMappings).map((entry) =>
+              Object({
+                alias: entry[0],
+                id: entry[1],
+              })
+            );
           });
+        } catch (e) {
+          throw new Error(`failed to create the TypeInstances: ${e.message}`);
         } finally {
           neo4jSession.close();
         }
-
-        return result;
       },
     },
   },

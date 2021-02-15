@@ -25,8 +25,13 @@ func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in gqlloc
 	return dummyTypeInstance("5cc47865-3339-4f6d-902e-fc59f2c61943"), nil
 }
 
-func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]string, error) {
-	return []string{dummyTypeInstance("5cc47865-3339-4f6d-902e-fc59f2c61943").Metadata.ID}, nil
+func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]*gqllocalapi.CreatedTypeInstanceID, error) {
+	return []*gqllocalapi.CreatedTypeInstanceID{
+		{
+			Alias: "node",
+			ID:    dummyTypeInstance("5cc47865-3339-4f6d-902e-fc59f2c61943").Metadata.ID,
+		},
+	}, nil
 }
 
 func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {

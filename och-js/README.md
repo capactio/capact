@@ -25,7 +25,7 @@ The OCHs are accessed via a GraphQL API.
 
 For the Neo4j database, you can run it locally using Docker:
 
-```
+```bash
 docker run -d \
   -p 7687:7687 -p 7474:7474 \
   -e "NEO4J_AUTH=neo4j/okon" \
@@ -36,7 +36,7 @@ docker run -d \
 ## Usage
 
 Download the NPM dependencies using:
-```
+```bash
 npm install
 ```
 

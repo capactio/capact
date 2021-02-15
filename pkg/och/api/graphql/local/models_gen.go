@@ -26,6 +26,7 @@ type AttributeReferenceInput struct {
 }
 
 type CreateTypeInstanceInput struct {
+	// Used to define the relationships, between the create TypeInstances
 	Alias      string                     `json:"alias"`
 	TypeRef    *TypeReferenceInput        `json:"typeRef"`
 	Attributes []*AttributeReferenceInput `json:"attributes"`
@@ -35,6 +36,11 @@ type CreateTypeInstanceInput struct {
 type CreateTypeInstancesInput struct {
 	TypeInstances []*CreateTypeInstanceInput       `json:"typeInstances"`
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
+}
+
+type CreatedTypeInstanceID struct {
+	ID    string `json:"id"`
+	Alias string `json:"alias"`
 }
 
 type TypeInstance struct {

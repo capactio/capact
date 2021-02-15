@@ -46,6 +46,9 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	AdditionalLabels func(ctx context.Context, obj interface{}, next graphql.Resolver, labels []*string) (res interface{}, err error)
+	Cypher           func(ctx context.Context, obj interface{}, next graphql.Resolver, statement *string) (res interface{}, err error)
+	Relation         func(ctx context.Context, obj interface{}, next graphql.Resolver, name *string, direction *string, from *string, to *string) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -121,6 +124,7 @@ type ComplexityRoot struct {
 		DisplayName      func(childComplexity int) int
 		DocumentationURL func(childComplexity int) int
 		IconURL          func(childComplexity int) int
+		License          func(childComplexity int) int
 		Maintainers      func(childComplexity int) int
 		Name             func(childComplexity int) int
 		Path             func(childComplexity int) int
@@ -182,6 +186,7 @@ type ComplexityRoot struct {
 	InterfaceGroup struct {
 		Interfaces func(childComplexity int, filter *InterfaceFilter) int
 		Metadata   func(childComplexity int) int
+		Path       func(childComplexity int) int
 		Signature  func(childComplexity int) int
 	}
 
@@ -200,11 +205,12 @@ type ComplexityRoot struct {
 	}
 
 	InterfaceRevision struct {
-		ImplementationRevisions func(childComplexity int, filter *ImplementationRevisionFilter) int
-		Metadata                func(childComplexity int) int
-		Revision                func(childComplexity int) int
-		Signature               func(childComplexity int) int
-		Spec                    func(childComplexity int) int
+		ImplementationRevisions                func(childComplexity int) int
+		ImplementationRevisionsForRequirements func(childComplexity int, filter *ImplementationRevisionFilter) int
+		Metadata                               func(childComplexity int) int
+		Revision                               func(childComplexity int) int
+		Signature                              func(childComplexity int) int
+		Spec                                   func(childComplexity int) int
 	}
 
 	InterfaceSpec struct {
@@ -214,6 +220,10 @@ type ComplexityRoot struct {
 
 	LatestSemVerTaggingStrategy struct {
 		PointsTo func(childComplexity int) int
+	}
+
+	License struct {
+		Name func(childComplexity int) int
 	}
 
 	Maintainer struct {
@@ -336,7 +346,7 @@ type ImplementationResolver interface {
 	Revision(ctx context.Context, obj *Implementation, revision string) (*ImplementationRevision, error)
 }
 type ImplementationRevisionResolver interface {
-	Interfaces(ctx context.Context, obj *ImplementationRevision) ([]*Interface, error)
+	Interfaces(ctx context.Context, obj *ImplementationRevision) ([]*InterfaceRevision, error)
 }
 type InterfaceResolver interface {
 	Revision(ctx context.Context, obj *Interface, revision string) (*InterfaceRevision, error)
@@ -676,6 +686,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationMetadata.IconURL(childComplexity), true
 
+	case "ImplementationMetadata.license":
+		if e.complexity.ImplementationMetadata.License == nil {
+			break
+		}
+
+		return e.complexity.ImplementationMetadata.License(childComplexity), true
+
 	case "ImplementationMetadata.maintainers":
 		if e.complexity.ImplementationMetadata.Maintainers == nil {
 			break
@@ -945,6 +962,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InterfaceGroup.Metadata(childComplexity), true
 
+	case "InterfaceGroup.path":
+		if e.complexity.InterfaceGroup.Path == nil {
+			break
+		}
+
+		return e.complexity.InterfaceGroup.Path(childComplexity), true
+
 	case "InterfaceGroup.signature":
 		if e.complexity.InterfaceGroup.Signature == nil {
 			break
@@ -992,12 +1016,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_InterfaceRevision_implementationRevisions_args(context.TODO(), rawArgs)
+		return e.complexity.InterfaceRevision.ImplementationRevisions(childComplexity), true
+
+	case "InterfaceRevision.implementationRevisionsForRequirements":
+		if e.complexity.InterfaceRevision.ImplementationRevisionsForRequirements == nil {
+			break
+		}
+
+		args, err := ec.field_InterfaceRevision_implementationRevisionsForRequirements_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.InterfaceRevision.ImplementationRevisions(childComplexity, args["filter"].(*ImplementationRevisionFilter)), true
+		return e.complexity.InterfaceRevision.ImplementationRevisionsForRequirements(childComplexity, args["filter"].(*ImplementationRevisionFilter)), true
 
 	case "InterfaceRevision.metadata":
 		if e.complexity.InterfaceRevision.Metadata == nil {
@@ -1047,6 +1078,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.LatestSemVerTaggingStrategy.PointsTo(childComplexity), true
+
+	case "License.name":
+		if e.complexity.License.Name == nil {
+			break
+		}
+
+		return e.complexity.License.Name(childComplexity), true
 
 	case "Maintainer.email":
 		if e.complexity.Maintainer.Email == nil {
@@ -1585,7 +1623,19 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "schema.graphql", Input: `"""
+	{Name: "../../../../../och-js/graphql/public/schema.graphql", Input: `# Neo4j-graphql-js adds some directives during parsing of the schema.
+# To make it work for other GraphQL clients, we need to add them to the schema manually, based on:
+# https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
+directive @relation(
+  name: String
+  direction: String
+  from: String
+  to: String
+) on FIELD_DEFINITION | OBJECT
+directive @additionalLabels(labels: [String]) on OBJECT
+directive @cypher(statement: String) on FIELD_DEFINITION
+
+"""
 Arbitrary data
 """
 scalar Any
@@ -1621,7 +1671,7 @@ Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
 scalar VersionRange
 
 input InterfaceFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input ImplementationFilter {
@@ -1640,396 +1690,584 @@ input ImplementationRevisionFilter {
 }
 
 input TypeInstanceValue {
-    typeRef: TypeReferenceInput
+  typeRef: TypeReferenceInput
 
-    """
-    Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
-    Currently not supported.
-    """
-    value: Any
+  """
+  Currently not supported.
+  Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
+  """
+  value: Any
 }
 
 input TypeReferenceInput {
-    path: NodePath!
-
-    """
-    If not provided, latest revision for a given Type is used
-    """
-    revision: Version
+  path: NodePath!
+  revision: Version!
 }
 
 input AttributeFilterInput {
-    path: NodePath!
-    rule: FilterRule = INCLUDE
+  path: NodePath!
+  rule: FilterRule = INCLUDE
 
-    """
-    If not provided, latest revision for a given Attribute is used
-    """
-    revision: Version
+  """
+  If not provided, any revision of the Attribute applies to this filter
+  """
+  revision: Version
 }
 
 enum FilterRule {
-    INCLUDE
-    EXCLUDE
+  INCLUDE
+  EXCLUDE
 }
 
 input InterfaceGroupFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input AttributeFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
 input TypeFilter {
-    prefixPattern: NodePathPattern
+  prefixPattern: NodePathPattern
 }
 
-type RepoMetadata {
-    name: NodeName!
-    prefix: NodePrefix!
-    path: NodePath!
+type RepoMetadata @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName!
+  prefix: NodePrefix!
 
-    latestRevision: RepoMetadataRevision
-    revision(revision: Version!): RepoMetadataRevision
-    revisions: [RepoMetadataRevision!]!
+  latestRevision: RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published {revision: $revision}) RETURN r"
+    )
+  revisions: [RepoMetadataRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type RepoMetadataRevision {
-    metadata: GenericMetadata!
-    revision: Version!
-    spec: RepoMetadataSpec!
-    signature: Signature!
+type RepoMetadataRevision @additionalLabels(labels: ["published"]){
+  revision: Version!
+
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
-type RepoMetadataSpec {
-    ochVersion: Version!
-    ocfVersion: RepoOCFVersion!
-    implementation: RepoImplementationConfig!
+type RepoMetadataSpec @additionalLabels(labels: ["published"]){
+  ochVersion: Version!
+  ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
+  implementation: RepoImplementationConfig!
+    @relation(name: "CONFIGURED", direction: "OUT")
 }
 
-type RepoImplementationConfig {
-    appVersion: RepoImplementationAppVersionConfig!
+type RepoImplementationConfig @additionalLabels(labels: ["published"]){
+  appVersion: RepoImplementationAppVersionConfig!
+    @relation(name: "APP_VERSION", direction: "OUT")
 }
 
-type RepoImplementationAppVersionConfig {
-    semVerTaggingStrategy: SemVerTaggingStrategy!
+type RepoImplementationAppVersionConfig @additionalLabels(labels: ["published"]){
+  semVerTaggingStrategy: SemVerTaggingStrategy!
+    @relation(name: "TAGGING_STRATEGY", direction: "OUT")
 }
 
-type SemVerTaggingStrategy {
-    latest: LatestSemVerTaggingStrategy!
+type SemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+  latest: LatestSemVerTaggingStrategy!
+    @relation(name: "LATEST", direction: "OUT")
 }
 
-type LatestSemVerTaggingStrategy {
-    pointsTo: SemVerTaggingStrategyTags!
+type LatestSemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+  pointsTo: SemVerTaggingStrategyTags!
 }
 
 enum SemVerTaggingStrategyTags {
-    STABLE, EDGE
+  STABLE
+  EDGE
 }
 
-type RepoOCFVersion {
-    default: Version!
-    supported: [Version!]!
+type RepoOCFVersion @additionalLabels(labels: ["published"]){
+  supported: [Version!]!
+  default: Version!
 }
 
-type InterfaceGroup {
-    metadata: GenericMetadata!
-    signature: Signature!
-    interfaces(filter: InterfaceFilter): [Interface!]!
+type InterfaceGroup @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+  interfaces(filter: InterfaceFilter): [Interface!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type Interface {
-    name: NodeName!
-    prefix: NodePrefix!
-    path: NodePath!
+type Interface @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName!
+  prefix: NodePrefix!
 
-    latestRevision: InterfaceRevision
-    revision(revision: Version!): InterfaceRevision
-    revisions: [InterfaceRevision!]!
+  latestRevision: InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published {revision: $revision}) RETURN ir"
+    )
+  revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type InterfaceRevision {
-    metadata: GenericMetadata!
-    revision: Version!
-    spec: InterfaceSpec!
+type InterfaceRevision @additionalLabels(labels: ["published"]){
+  revision: Version!
 
-    """
-    List Implementations for a given Interface
-    """
-    implementationRevisions(filter: ImplementationRevisionFilter = {}): [ImplementationRevision!]!
-    signature: Signature!
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+
+  implementationRevisions: [ImplementationRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "IN")
+
+  implementationRevisionsForRequirements(
+    filter: ImplementationRevisionFilter = {}
+  ): [ImplementationRevision!]!
+    @cypher(
+      statement: """
+      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
+        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
+
+      // Get all Attribute nodes, which cannot be in the Implementation graph.
+      CALL {
+        WITH excluded
+        UNWIND excluded AS f
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
+        RETURN collect(ex) as excludedAttributes
+      }
+
+      // Get all Attribute nodes, which must be in the Implementation graph.
+      CALL {
+        WITH included
+        UNWIND included AS f
+        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
+        RETURN collect(ex) as includedAttributes
+      }
+
+      // Get all ImplementationRequirementItem nodes, which are considered by the filter.
+      CALL {
+        UNWIND $filter.requirementsSatisfiedBy AS instance
+        MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})
+        RETURN collect(items) as matchedItems
+      }
+
+      // Flatten and group requirements for ImplementationRevision.
+      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)
+      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)
+        WITH collect(oneOfItem) as oneOfReq
+        RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs
+      }
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)
+        WITH collect(anyOfItem) as anyOfReq
+        RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs
+      }
+
+      CALL {
+      	WITH requirement
+        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)
+        WITH collect(allOfItem) as allOfReq
+        RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs
+      }
+
+      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)
+      MATCH (rev)
+      WHERE
+        ($filter.prefixPattern IS null OR meta.prefix =~ $filter.prefixPattern)
+        AND
+        (
+          all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))
+          AND
+          all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))
+          AND
+          all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))
+        )
+        AND
+        (
+          $filter.attributes IS NULL
+          OR
+          (
+            all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))
+            AND
+            none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))
+          )
+        )
+
+      RETURN rev
+      """
+    )
 }
 
-type InterfaceSpec {
-    input: InterfaceInput!
-    output: InterfaceOutput!
+type InterfaceSpec @additionalLabels(labels: ["published"]){
+  input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
+  output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
 }
 
-type InterfaceInput {
-    parameters: InputParameters
-    typeInstances: [InputTypeInstance]!
+type InterfaceInput @additionalLabels(labels: ["published"]){
+  parameters: InputParameters @relation(name: "HAS", direction: "OUT")
+  typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
-type InputParameters {
-    jsonSchema: Any
+type InputParameters @additionalLabels(labels: ["published"]){
+  jsonSchema: Any
 }
 
-type InterfaceOutput {
-    typeInstances: [OutputTypeInstance]!
+type InterfaceOutput @additionalLabels(labels: ["published"]){
+  typeInstances: [OutputTypeInstance]!
+    @relation(name: "OUTPUTS", direction: "OUT")
 }
 
 interface TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference!
+  name: String!
+  typeRef: TypeReference!
 }
 
-type InputTypeInstance implements TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference!
-    verbs: [TypeInstanceOperationVerb!]!
+type InputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  verbs: [TypeInstanceOperationVerb!]!
+    @cypher(
+      statement: """
+      MATCH (this)
+      RETURN [verb IN this.verbs | toUpper(verb)] as verbs
+      """
+    )
 }
 
 enum TypeInstanceOperationVerb {
-    CREATE, GET, LIST, UPDATE, DELETE
+  CREATE
+  GET
+  LIST
+  UPDATE
+  DELETE
 }
 
-type OutputTypeInstance implements TypeInstanceFields {
-    name: String!
-    typeRef: TypeReference!
+type OutputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
-type Type {
-    name: NodeName!
-    prefix: NodePrefix!
-    path: NodePath!
+type Type @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName!
+  prefix: NodePrefix!
 
-    latestRevision: TypeRevision
-    revision(revision: Version!): TypeRevision
-    revisions: [TypeRevision!]!
+  latestRevision: TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r"
+    )
+  revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeRevision {
-    metadata: TypeMetadata!
-    revision: Version!
-    spec: TypeSpec!
-    signature: Signature!
+type TypeRevision @additionalLabels(labels: ["published"]){
+  revision: Version!
+
+  metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
-type TypeSpec {
-    additionalRefs: [NodePath!]
-    jsonSchema: Any
+type TypeSpec @additionalLabels(labels: ["published"]){
+  additionalRefs: [NodePath!]
+  jsonSchema: Any
 }
 
-type Implementation {
-    name: NodeName!
-    prefix: NodePrefix!
-    path: NodePath!
+type Implementation @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName!
+  prefix: NodePrefix!
 
-    latestRevision: ImplementationRevision
-    revision(revision: Version!): ImplementationRevision
-    revisions: [ImplementationRevision!]!
+  latestRevision: ImplementationRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): ImplementationRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published {revision: $revision}) RETURN ir"
+    )
+  revisions: [ImplementationRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationRevision {
-    metadata: ImplementationMetadata!
-    revision: Version!
-    spec: ImplementationSpec!
+type ImplementationRevision @additionalLabels(labels: ["published"]){
+  revision: Version!
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
-    interfaces: [Interface!]! # resolver based on "implements" section
-    signature: Signature!
+  metadata: ImplementationMetadata!
+    @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  interfaces: [InterfaceRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
 }
 
-type ImplementationSpec {
-    appVersion: VersionRange!
-    implements: [InterfaceReference!]!
-    requires: [ImplementationRequirement!]!
-    imports: [ImplementationImport!]
-    action: ImplementationAction!
-    additionalInput: ImplementationAdditionalInput
-    additionalOutput: ImplementationAdditionalOutput
-    outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
+type ImplementationSpec @additionalLabels(labels: ["published"]){
+  appVersion: VersionRange!
+
+  implements: [InterfaceReference!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
+  requires: [ImplementationRequirement!]!
+    @relation(name: "REQUIRES", direction: "OUT")
+  imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
+  action: ImplementationAction! @relation(name: "DOES", direction: "OUT")
+  additionalInput: ImplementationAdditionalInput
+    @relation(name: "USES", direction: "OUT")
+  additionalOutput: ImplementationAdditionalOutput
+    @relation(name: "OUTPUTS", direction: "OUT")
+  outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
+  @relation(name: "RELATIONS", direction: "OUT")
 }
 
-type ImplementationAdditionalInput {
-    typeInstances: [InputTypeInstance!]!
+type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
+  typeInstances: [InputTypeInstance!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationAdditionalOutput {
-    typeInstances: [OutputTypeInstance!]!
+type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
+  typeInstances: [OutputTypeInstance!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeInstanceRelationItem {
-    typeInstanceName: String!
+type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
+  typeInstanceName: String!
 
-    """
-    Contains list of Type Instance names, which a given TypeInstance uses (depends on).
-    If empty, a given TypeInstance doesn't have any dependencies.
-    """
-    uses: [String!]
+  """
+  Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+  """
+  uses: [String!]
 }
 
-
-type InterfaceReference {
-    path: NodePath!
-    revision: Version!
+type InterfaceReference @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  revision: Version!
 }
 
-type ImplementationRequirement {
-    prefix: NodePrefix!
-    oneOf: [ImplementationRequirementItem!]!
-    anyOf: [ImplementationRequirementItem!]!
-    allOf: [ImplementationRequirementItem!]!
+type ImplementationRequirement @additionalLabels(labels: ["published"]){
+  prefix: NodePrefix!
+  oneOf: [ImplementationRequirementItem!]!
+    @relation(name: "ONE_OF", direction: "OUT")
+  anyOf: [ImplementationRequirementItem!]!
+    @relation(name: "ANY_OF", direction: "OUT")
+  allOf: [ImplementationRequirementItem!]!
+    @relation(name: "ALL_OF", direction: "OUT")
 }
 
-type ImplementationRequirementItem {
-    typeRef: TypeReference!
+type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
+  typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
 
-    """
-    Holds the configuration constraints for the given entry based on Type value.
-    Currently not supported.
-    """
-    valueConstraints: Any
+  """
+  Holds the configuration constraints for the given entry based on Type value.
+  Currently not supported.
+  """
+  valueConstraints: Any
 
-    """
-    If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
-    """
-    alias: String
+  """
+  If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
+  """
+  alias: String
 }
 
-type TypeReference {
-    path: NodePath!
-    revision: Version!
+type TypeReference @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  revision: Version!
 }
 
-type ImplementationImport {
-    interfaceGroupPath: NodePath!
-    alias: String
-    appVersion: VersionRange
-    methods: [ImplementationImportMethod!]!
+type ImplementationImport @additionalLabels(labels: ["published"]){
+  interfaceGroupPath: NodePath!
+  alias: String
+  appVersion: VersionRange
+
+  methods: [ImplementationImportMethod!]!
+    @relation(name: "HAS", direction: "OUT")
 }
 
-type ImplementationImportMethod {
-    name: NodeName!
+type ImplementationImportMethod @additionalLabels(labels: ["published"]){
+  name: NodeName!
 
-    """
-    If not provided, latest revision for a given Interface is used
-    """
-    revision: Version
+  """
+  If not provided, latest revision for a given Interface is used
+  """
+  revision: Version
 }
 
-type ImplementationAction {
-    """
-    The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
-    """
-    runnerInterface: String!
-    args: Any
+type ImplementationAction @additionalLabels(labels: ["published"]){
+  """
+  The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
+  """
+  runnerInterface: String!
+  args: Any
+    @cypher(
+      statement: """
+      MATCH (this) RETURN apoc.convert.fromJsonMap(this.args) as args
+      """
+    )
 }
 
-type Attribute {
-    name: NodeName!
-    prefix: NodePrefix!
-    path: NodePath!
+type Attribute @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName!
+  prefix: NodePrefix!
 
-    latestRevision: AttributeRevision
-    revision(revision: Version!): AttributeRevision
-    revisions: [AttributeRevision!]!
+  latestRevision: AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 2"
+    )
+  revision(revision: Version!): AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published {revision: $revision}) RETURN r"
+    )
+  revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type AttributeRevision {
-    metadata: GenericMetadata!
-    revision: Version!
-    spec: AttributeSpec!
-    signature: Signature!
+type AttributeRevision @additionalLabels(labels: ["published"]){
+  revision: Version!
+
+  spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
 # It is defined to make sure that all metadata types have the same base fields.
 # Unfortunately all Types that implement an Interface have to repeat the same fields,
 # however it's the only way to do so.
 interface MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix # resolver
-    path: NodePath
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]!
-    documentationURL: String
-    supportURL: String
-    iconURL: String
+  name: NodeName
+  prefix: NodePrefix
+  path: NodePath
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
 }
 
-type GenericMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix # resolver
-    path: NodePath
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]!
-    documentationURL: String
-    supportURL: String
-    iconURL: String
+type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath
+  name: NodeName
+  prefix: NodePrefix
+
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
 }
 
-type ImplementationMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix # resolver
-    path: NodePath
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]!
-    documentationURL: String
-    supportURL: String
-    iconURL: String
-    attributes: [AttributeRevision!]!
+type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName
+  prefix: NodePrefix
+
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  license: License! @relation(name: "LICENSED_WITH", direction: "OUT")
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type TypeMetadata implements MetadataBaseFields {
-    name: NodeName!
-    prefix: NodePrefix # resolver
-    path: NodePath
-    displayName: String
-    description: String!
-    maintainers: [Maintainer!]!
-    documentationURL: String
-    supportURL: String
-    iconURL: String
-    attributes: [AttributeRevision!]!
+type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath!
+  name: NodeName
+  prefix: NodePrefix
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type Signature {
-    och: String!
+type License @additionalLabels(labels: ["published"]){
+  name: String!
 }
 
-type Maintainer {
-    name: String
-    email: String!
-    url: String
+type Signature @additionalLabels(labels: ["published"]){
+  och: String!
 }
 
-type AttributeSpec {
-    additionalRefs: [NodePath!]!
+type Maintainer @additionalLabels(labels: ["published"]){
+  name: String
+  email: String!
+  url: String
 }
 
-type Query {
-    repoMetadata: RepoMetadata
-
-    interfaceGroups(filter: InterfaceGroupFilter): [InterfaceGroup!]!
-    interfaceGroup(path: NodePath!): InterfaceGroup
-
-    interfaces(filter: InterfaceFilter): [Interface!]!
-    interface(path: NodePath!): Interface
-
-    types(filter: TypeFilter): [Type!]!
-    type(path: NodePath!): Type
-
-    implementations(filter: ImplementationFilter): [Implementation!]!
-    implementation(path: NodePath!): Implementation
-
-    attributes(filter: AttributeFilter): [Attribute!]!
-    attribute(path: NodePath!): Attribute
+type AttributeSpec @additionalLabels(labels: ["published"]){
+  additionalRefs: [NodePath!]!
 }
 
-# No mutations for now, as all resources are populated with DB populator
+type Query @additionalLabels(labels: ["published"]){
+  repoMetadata: RepoMetadata
+
+  interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
+    @cypher(
+      statement: """
+      MATCH (this:InterfaceGroup:published)
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      """
+    )
+  interfaceGroup(path: NodePath!): InterfaceGroup
+
+  interfaces(filter: InterfaceFilter = {}): [Interface!]!
+    @cypher(
+      statement: """
+      MATCH (this:Interface:published)
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      """
+    )
+  interface(path: NodePath!): Interface
+
+  types(filter: TypeFilter = {}): [Type!]!
+    @cypher(
+      statement: """
+      MATCH (this:Type:published)
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      """
+    )
+  type(path: NodePath!): Type
+
+  implementations(filter: ImplementationFilter = {}): [Implementation!]!
+    @cypher(
+      statement: """
+      MATCH (this:Implementation:published)
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      """
+    )
+
+  implementation(path: NodePath!): Implementation
+
+  attributes(filter: AttributeFilter = {}): [Attribute!]!
+    @cypher(
+      statement: """
+      MATCH (this:Attribute:published)
+      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      """
+    )
+  attribute(path: NodePath!): Attribute
+}
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
 `, BuiltIn: false},
@@ -2039,6 +2277,78 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_additionalLabels_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 []*string
+	if tmp, ok := rawArgs["labels"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("labels"))
+		arg0, err = ec.unmarshalOString2ᚕᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["labels"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) dir_cypher_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["statement"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("statement"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["statement"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) dir_relation_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *string
+	if tmp, ok := rawArgs["name"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+		arg0, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["name"] = arg0
+	var arg1 *string
+	if tmp, ok := rawArgs["direction"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("direction"))
+		arg1, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["direction"] = arg1
+	var arg2 *string
+	if tmp, ok := rawArgs["from"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("from"))
+		arg2, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["from"] = arg2
+	var arg3 *string
+	if tmp, ok := rawArgs["to"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("to"))
+		arg3, err = ec.unmarshalOString2ᚖstring(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["to"] = arg3
+	return args, nil
+}
 
 func (ec *executionContext) field_Attribute_revision_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -2085,7 +2395,7 @@ func (ec *executionContext) field_InterfaceGroup_interfaces_args(ctx context.Con
 	return args, nil
 }
 
-func (ec *executionContext) field_InterfaceRevision_implementationRevisions_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_InterfaceRevision_implementationRevisionsForRequirements_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 *ImplementationRevisionFilter
@@ -2348,6 +2658,41 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _Attribute_path(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Attribute",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Attribute_name(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2418,41 +2763,6 @@ func (ec *executionContext) _Attribute_prefix(ctx context.Context, field graphql
 	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Attribute_path(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Attribute",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Attribute_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Attribute) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2470,8 +2780,42 @@ func (ec *executionContext) _Attribute_latestRevision(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.LatestRevision, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 2")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*AttributeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2509,8 +2853,42 @@ func (ec *executionContext) _Attribute_revision(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Attribute().Revision(rctx, obj, args["revision"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Attribute().Revision(rctx, obj, args["revision"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published {revision: $revision}) RETURN r")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*AttributeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2541,8 +2919,46 @@ func (ec *executionContext) _Attribute_revisions(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Revisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*AttributeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2557,41 +2973,6 @@ func (ec *executionContext) _Attribute_revisions(ctx context.Context, field grap
 	res := resTmp.([]*AttributeRevision)
 	fc.Result = res
 	return ec.marshalNAttributeRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeRevisionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _AttributeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "AttributeRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*GenericMetadata)
-	fc.Result = res
-	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AttributeRevision_revision(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
@@ -2646,22 +3027,57 @@ func (ec *executionContext) _AttributeRevision_spec(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Spec, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SPECIFIED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*AttributeSpec); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeSpec`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*AttributeSpec)
 	fc.Result = res
-	return ec.marshalNAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx, field.Selections, res)
+	return ec.marshalOAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AttributeRevision_signature(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
@@ -2681,8 +3097,46 @@ func (ec *executionContext) _AttributeRevision_signature(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2697,6 +3151,79 @@ func (ec *executionContext) _AttributeRevision_signature(ctx context.Context, fi
 	res := resTmp.(*Signature)
 	fc.Result = res
 	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AttributeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AttributeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*GenericMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.GenericMetadata`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GenericMetadata)
+	fc.Result = res
+	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AttributeSpec_additionalRefs(ctx context.Context, field graphql.CollectedField, obj *AttributeSpec) (ret graphql.Marshaler) {
@@ -2734,6 +3261,38 @@ func (ec *executionContext) _AttributeSpec_additionalRefs(ctx context.Context, f
 	return ec.marshalNNodePath2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _GenericMetadata_path(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "GenericMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalONodePath2ᚖstring(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _GenericMetadata_name(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -2759,14 +3318,11 @@ func (ec *executionContext) _GenericMetadata_name(ctx context.Context, field gra
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNNodeName2string(ctx, field.Selections, res)
+	return ec.marshalONodeName2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GenericMetadata_prefix(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
@@ -2799,38 +3355,6 @@ func (ec *executionContext) _GenericMetadata_prefix(ctx context.Context, field g
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalONodePrefix2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _GenericMetadata_path(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "GenericMetadata",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalONodePath2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _GenericMetadata_displayName(ctx context.Context, field graphql.CollectedField, obj *GenericMetadata) (ret graphql.Marshaler) {
@@ -2917,8 +3441,46 @@ func (ec *executionContext) _GenericMetadata_maintainers(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Maintainers, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Maintainers, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "MAINTAINED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Maintainer); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Maintainer`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3031,6 +3593,41 @@ func (ec *executionContext) _GenericMetadata_iconURL(ctx context.Context, field 
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Implementation_path(ctx context.Context, field graphql.CollectedField, obj *Implementation) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Implementation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Implementation_name(ctx context.Context, field graphql.CollectedField, obj *Implementation) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3101,41 +3698,6 @@ func (ec *executionContext) _Implementation_prefix(ctx context.Context, field gr
 	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Implementation_path(ctx context.Context, field graphql.CollectedField, obj *Implementation) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Implementation",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Implementation_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Implementation) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3153,8 +3715,42 @@ func (ec *executionContext) _Implementation_latestRevision(ctx context.Context, 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.LatestRevision, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3192,8 +3788,42 @@ func (ec *executionContext) _Implementation_revision(ctx context.Context, field 
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Implementation().Revision(rctx, obj, args["revision"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Implementation().Revision(rctx, obj, args["revision"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published {revision: $revision}) RETURN ir")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3224,8 +3854,46 @@ func (ec *executionContext) _Implementation_revisions(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Revisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3294,8 +3962,32 @@ func (ec *executionContext) _ImplementationAction_args(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Args, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Args, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this) RETURN apoc.convert.fromJsonMap(this.args) as args")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive0, statement)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(interface{}); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be interface{}`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3326,8 +4018,46 @@ func (ec *executionContext) _ImplementationAdditionalInput_typeInstances(ctx con
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstances, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeInstances, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InputTypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InputTypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3361,8 +4091,46 @@ func (ec *executionContext) _ImplementationAdditionalOutput_typeInstances(ctx co
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstances, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeInstances, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*OutputTypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.OutputTypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3495,8 +4263,46 @@ func (ec *executionContext) _ImplementationImport_methods(ctx context.Context, f
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Methods, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Methods, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "HAS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationImportMethod); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationImportMethod`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3580,6 +4386,41 @@ func (ec *executionContext) _ImplementationImportMethod_revision(ctx context.Con
 	return ec.marshalOVersion2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ImplementationMetadata_path(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ImplementationMetadata_name(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3605,14 +4446,11 @@ func (ec *executionContext) _ImplementationMetadata_name(ctx context.Context, fi
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNNodeName2string(ctx, field.Selections, res)
+	return ec.marshalONodeName2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationMetadata_prefix(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
@@ -3645,38 +4483,6 @@ func (ec *executionContext) _ImplementationMetadata_prefix(ctx context.Context, 
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalONodePrefix2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ImplementationMetadata_path(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationMetadata",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalONodePath2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationMetadata_displayName(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
@@ -3763,8 +4569,46 @@ func (ec *executionContext) _ImplementationMetadata_maintainers(ctx context.Cont
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Maintainers, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Maintainers, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "MAINTAINED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Maintainer); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Maintainer`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3877,6 +4721,79 @@ func (ec *executionContext) _ImplementationMetadata_iconURL(ctx context.Context,
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ImplementationMetadata_license(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.License, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "LICENSED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*License); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.License`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*License)
+	fc.Result = res
+	return ec.marshalNLicense2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐLicense(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ImplementationMetadata_attributes(ctx context.Context, field graphql.CollectedField, obj *ImplementationMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3894,8 +4811,46 @@ func (ec *executionContext) _ImplementationMetadata_attributes(ctx context.Conte
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Attributes, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Attributes, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CHARACTERIZED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*AttributeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3964,8 +4919,46 @@ func (ec *executionContext) _ImplementationRequirement_oneOf(ctx context.Context
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OneOf, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.OneOf, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "ONE_OF")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRequirementItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRequirementItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3999,8 +4992,46 @@ func (ec *executionContext) _ImplementationRequirement_anyOf(ctx context.Context
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AnyOf, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.AnyOf, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "ANY_OF")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRequirementItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRequirementItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4034,8 +5065,46 @@ func (ec *executionContext) _ImplementationRequirement_allOf(ctx context.Context
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AllOf, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.AllOf, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "ALL_OF")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRequirementItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRequirementItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4069,8 +5138,46 @@ func (ec *executionContext) _ImplementationRequirementItem_typeRef(ctx context.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeRef, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeRef, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "REFERENCES_TYPE")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeReference`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4151,41 +5258,6 @@ func (ec *executionContext) _ImplementationRequirementItem_alias(ctx context.Con
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImplementationRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*ImplementationMetadata)
-	fc.Result = res
-	return ec.marshalNImplementationMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationMetadata(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _ImplementationRevision_revision(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4221,6 +5293,152 @@ func (ec *executionContext) _ImplementationRevision_revision(ctx context.Context
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _ImplementationRevision_signature(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*Signature)
+	fc.Result = res
+	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImplementationRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ImplementationRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationMetadata`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*ImplementationMetadata)
+	fc.Result = res
+	return ec.marshalNImplementationMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationMetadata(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ImplementationRevision_spec(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4238,8 +5456,46 @@ func (ec *executionContext) _ImplementationRevision_spec(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Spec, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SPECIFIED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationSpec); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationSpec`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4273,8 +5529,46 @@ func (ec *executionContext) _ImplementationRevision_interfaces(ctx context.Conte
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.ImplementationRevision().Interfaces(rctx, obj)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.ImplementationRevision().Interfaces(rctx, obj)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "IMPLEMENTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InterfaceRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4286,44 +5580,9 @@ func (ec *executionContext) _ImplementationRevision_interfaces(ctx context.Conte
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*Interface)
+	res := resTmp.([]*InterfaceRevision)
 	fc.Result = res
-	return ec.marshalNInterface2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInterfaceᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _ImplementationRevision_signature(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
+	return ec.marshalNInterfaceRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInterfaceRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationSpec_appVersion(ctx context.Context, field graphql.CollectedField, obj *ImplementationSpec) (ret graphql.Marshaler) {
@@ -4378,8 +5637,46 @@ func (ec *executionContext) _ImplementationSpec_implements(ctx context.Context, 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Implements, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Implements, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "IMPLEMENTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InterfaceReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceReference`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4413,8 +5710,46 @@ func (ec *executionContext) _ImplementationSpec_requires(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Requires, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Requires, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "REQUIRES")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRequirement); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRequirement`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4448,8 +5783,46 @@ func (ec *executionContext) _ImplementationSpec_imports(ctx context.Context, fie
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Imports, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Imports, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "IMPORTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationImport); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationImport`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4480,8 +5853,46 @@ func (ec *executionContext) _ImplementationSpec_action(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Action, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Action, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DOES")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationAction); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationAction`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4515,8 +5926,46 @@ func (ec *executionContext) _ImplementationSpec_additionalInput(ctx context.Cont
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AdditionalInput, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.AdditionalInput, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "USES")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationAdditionalInput); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationAdditionalInput`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4547,8 +5996,46 @@ func (ec *executionContext) _ImplementationSpec_additionalOutput(ctx context.Con
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AdditionalOutput, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.AdditionalOutput, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OUTPUTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*ImplementationAdditionalOutput); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationAdditionalOutput`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4579,8 +6066,46 @@ func (ec *executionContext) _ImplementationSpec_outputTypeInstanceRelations(ctx 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OutputTypeInstanceRelations, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.OutputTypeInstanceRelations, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "RELATIONS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*TypeInstanceRelationItem); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeInstanceRelationItem`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4681,8 +6206,46 @@ func (ec *executionContext) _InputTypeInstance_typeRef(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeRef, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeRef, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OF_TYPE")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeReference`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4716,8 +6279,32 @@ func (ec *executionContext) _InputTypeInstance_verbs(ctx context.Context, field 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Verbs, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Verbs, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)\nRETURN [verb IN this.verbs | toUpper(verb)] as verbs")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive0, statement)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]TypeInstanceOperationVerb); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeInstanceOperationVerb`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4732,6 +6319,41 @@ func (ec *executionContext) _InputTypeInstance_verbs(ctx context.Context, field 
 	res := resTmp.([]TypeInstanceOperationVerb)
 	fc.Result = res
 	return ec.marshalNTypeInstanceOperationVerb2ᚕprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeInstanceOperationVerbᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Interface_path(ctx context.Context, field graphql.CollectedField, obj *Interface) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Interface",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Interface_name(ctx context.Context, field graphql.CollectedField, obj *Interface) (ret graphql.Marshaler) {
@@ -4804,41 +6426,6 @@ func (ec *executionContext) _Interface_prefix(ctx context.Context, field graphql
 	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Interface_path(ctx context.Context, field graphql.CollectedField, obj *Interface) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Interface",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Interface_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Interface) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4856,8 +6443,42 @@ func (ec *executionContext) _Interface_latestRevision(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.LatestRevision, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4895,8 +6516,42 @@ func (ec *executionContext) _Interface_revision(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Interface().Revision(rctx, obj, args["revision"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Interface().Revision(rctx, obj, args["revision"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published {revision: $revision}) RETURN ir")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4927,8 +6582,46 @@ func (ec *executionContext) _Interface_revisions(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Revisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InterfaceRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4943,6 +6636,41 @@ func (ec *executionContext) _Interface_revisions(ctx context.Context, field grap
 	res := resTmp.([]*InterfaceRevision)
 	fc.Result = res
 	return ec.marshalNInterfaceRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInterfaceRevisionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InterfaceGroup_path(ctx context.Context, field graphql.CollectedField, obj *InterfaceGroup) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfaceGroup",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfaceGroup_metadata(ctx context.Context, field graphql.CollectedField, obj *InterfaceGroup) (ret graphql.Marshaler) {
@@ -4962,8 +6690,46 @@ func (ec *executionContext) _InterfaceGroup_metadata(ctx context.Context, field 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*GenericMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.GenericMetadata`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4997,8 +6763,46 @@ func (ec *executionContext) _InterfaceGroup_signature(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5039,8 +6843,46 @@ func (ec *executionContext) _InterfaceGroup_interfaces(ctx context.Context, fiel
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.InterfaceGroup().Interfaces(rctx, obj, args["filter"].(*InterfaceFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.InterfaceGroup().Interfaces(rctx, obj, args["filter"].(*InterfaceFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Interface); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Interface`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5074,8 +6916,46 @@ func (ec *executionContext) _InterfaceInput_parameters(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Parameters, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Parameters, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "HAS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InputParameters); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InputParameters`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5106,8 +6986,46 @@ func (ec *executionContext) _InterfaceInput_typeInstances(ctx context.Context, f
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstances, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeInstances, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "HAS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InputTypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InputTypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5141,8 +7059,46 @@ func (ec *executionContext) _InterfaceOutput_typeInstances(ctx context.Context, 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstances, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeInstances, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OUTPUTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*OutputTypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.OutputTypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5229,41 +7185,6 @@ func (ec *executionContext) _InterfaceReference_revision(ctx context.Context, fi
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InterfaceRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InterfaceRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*GenericMetadata)
-	fc.Result = res
-	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _InterfaceRevision_revision(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5299,6 +7220,79 @@ func (ec *executionContext) _InterfaceRevision_revision(ctx context.Context, fie
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _InterfaceRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfaceRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*GenericMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.GenericMetadata`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GenericMetadata)
+	fc.Result = res
+	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _InterfaceRevision_spec(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -5316,8 +7310,46 @@ func (ec *executionContext) _InterfaceRevision_spec(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Spec, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SPECIFIED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceSpec); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceSpec`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5332,48 +7364,6 @@ func (ec *executionContext) _InterfaceRevision_spec(ctx context.Context, field g
 	res := resTmp.(*InterfaceSpec)
 	fc.Result = res
 	return ec.marshalNInterfaceSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInterfaceSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _InterfaceRevision_implementationRevisions(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InterfaceRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_InterfaceRevision_implementationRevisions_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ImplementationRevisions, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*ImplementationRevision)
-	fc.Result = res
-	return ec.marshalNImplementationRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfaceRevision_signature(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
@@ -5393,8 +7383,46 @@ func (ec *executionContext) _InterfaceRevision_signature(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5409,6 +7437,155 @@ func (ec *executionContext) _InterfaceRevision_signature(ctx context.Context, fi
 	res := resTmp.(*Signature)
 	fc.Result = res
 	return ec.marshalNSignature2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InterfaceRevision_implementationRevisions(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfaceRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ImplementationRevisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "IMPLEMENTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "IN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ImplementationRevision)
+	fc.Result = res
+	return ec.marshalNImplementationRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InterfaceRevision_implementationRevisionsForRequirements(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InterfaceRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_InterfaceRevision_implementationRevisionsForRequirements_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.ImplementationRevisionsForRequirements, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\n// Get all Attribute nodes, which cannot be in the Implementation graph.\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})\n  RETURN collect(ex) as excludedAttributes\n}\n\n// Get all Attribute nodes, which must be in the Implementation graph.\nCALL {\n  WITH included\n  UNWIND included AS f\n  MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})\n  RETURN collect(ex) as includedAttributes\n}\n\n// Get all ImplementationRequirementItem nodes, which are considered by the filter.\nCALL {\n  UNWIND $filter.requirementsSatisfiedBy AS instance\n  MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})\n  RETURN collect(items) as matchedItems\n}\n\n// Flatten and group requirements for ImplementationRevision.\nMATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)\nOPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)\n  WITH collect(oneOfItem) as oneOfReq\n  RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs\n}\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)\n  WITH collect(anyOfItem) as anyOfReq\n  RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs\n}\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)\n  WITH collect(allOfItem) as allOfReq\n  RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs\n}\n\nMATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)\nMATCH (rev)\nWHERE\n  ($filter.prefixPattern IS null OR meta.prefix =~ $filter.prefixPattern)\n  AND\n  (\n    all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))\n    AND\n    all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))\n    AND\n    all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))\n  )\n  AND\n  (\n    $filter.attributes IS NULL\n    OR\n    (\n      all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))\n      AND\n      none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n\nRETURN rev")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*ImplementationRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*ImplementationRevision)
+	fc.Result = res
+	return ec.marshalNImplementationRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfaceSpec_input(ctx context.Context, field graphql.CollectedField, obj *InterfaceSpec) (ret graphql.Marshaler) {
@@ -5428,8 +7605,46 @@ func (ec *executionContext) _InterfaceSpec_input(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Input, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Input, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "HAS_INPUT")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceInput); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceInput`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5463,8 +7678,46 @@ func (ec *executionContext) _InterfaceSpec_output(ctx context.Context, field gra
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Output, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Output, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OUTPUTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceOutput); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceOutput`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5514,6 +7767,41 @@ func (ec *executionContext) _LatestSemVerTaggingStrategy_pointsTo(ctx context.Co
 	res := resTmp.(SemVerTaggingStrategyTags)
 	fc.Result = res
 	return ec.marshalNSemVerTaggingStrategyTags2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐSemVerTaggingStrategyTags(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _License_name(ctx context.Context, field graphql.CollectedField, obj *License) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "License",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Maintainer_name(ctx context.Context, field graphql.CollectedField, obj *Maintainer) (ret graphql.Marshaler) {
@@ -5667,8 +7955,46 @@ func (ec *executionContext) _OutputTypeInstance_typeRef(ctx context.Context, fie
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeRef, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeRef, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OF_TYPE")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeReference`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5702,8 +8028,32 @@ func (ec *executionContext) _Query_repoMetadata(ctx context.Context, field graph
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().RepoMetadata(rctx)
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().RepoMetadata(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoMetadata`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5741,8 +8091,42 @@ func (ec *executionContext) _Query_interfaceGroups(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().InterfaceGroups(rctx, args["filter"].(*InterfaceGroupFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().InterfaceGroups(rctx, args["filter"].(*InterfaceGroupFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:InterfaceGroup:published)\nWHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*InterfaceGroup); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5783,8 +8167,32 @@ func (ec *executionContext) _Query_interfaceGroup(ctx context.Context, field gra
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().InterfaceGroup(rctx, args["path"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().InterfaceGroup(rctx, args["path"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*InterfaceGroup); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InterfaceGroup`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5822,8 +8230,42 @@ func (ec *executionContext) _Query_interfaces(ctx context.Context, field graphql
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Interfaces(rctx, args["filter"].(*InterfaceFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Interfaces(rctx, args["filter"].(*InterfaceFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:Interface:published)\nWHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Interface); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Interface`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5864,8 +8306,32 @@ func (ec *executionContext) _Query_interface(ctx context.Context, field graphql.
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Interface(rctx, args["path"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Interface(rctx, args["path"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Interface); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Interface`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5903,8 +8369,42 @@ func (ec *executionContext) _Query_types(ctx context.Context, field graphql.Coll
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Types(rctx, args["filter"].(*TypeFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Types(rctx, args["filter"].(*TypeFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:Type:published)\nWHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Type); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Type`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5945,8 +8445,32 @@ func (ec *executionContext) _Query_type(ctx context.Context, field graphql.Colle
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Type(rctx, args["path"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Type(rctx, args["path"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Type); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Type`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -5984,8 +8508,42 @@ func (ec *executionContext) _Query_implementations(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Implementations(rctx, args["filter"].(*ImplementationFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Implementations(rctx, args["filter"].(*ImplementationFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:Implementation:published)\nWHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Implementation); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Implementation`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6026,8 +8584,32 @@ func (ec *executionContext) _Query_implementation(ctx context.Context, field gra
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Implementation(rctx, args["path"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Implementation(rctx, args["path"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Implementation); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Implementation`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6065,8 +8647,42 @@ func (ec *executionContext) _Query_attributes(ctx context.Context, field graphql
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Attributes(rctx, args["filter"].(*AttributeFilter))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Attributes(rctx, args["filter"].(*AttributeFilter))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this:Attribute:published)\nWHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Attribute); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Attribute`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6107,8 +8723,32 @@ func (ec *executionContext) _Query_attribute(ctx context.Context, field graphql.
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Attribute(rctx, args["path"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Attribute(rctx, args["path"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, nil, directive0, labels)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Attribute); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Attribute`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6210,8 +8850,46 @@ func (ec *executionContext) _RepoImplementationAppVersionConfig_semVerTaggingStr
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.SemVerTaggingStrategy, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.SemVerTaggingStrategy, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "TAGGING_STRATEGY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*SemVerTaggingStrategy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.SemVerTaggingStrategy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6245,8 +8923,46 @@ func (ec *executionContext) _RepoImplementationConfig_appVersion(ctx context.Con
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AppVersion, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.AppVersion, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "APP_VERSION")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoImplementationAppVersionConfig); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoImplementationAppVersionConfig`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6261,6 +8977,41 @@ func (ec *executionContext) _RepoImplementationConfig_appVersion(ctx context.Con
 	res := resTmp.(*RepoImplementationAppVersionConfig)
 	fc.Result = res
 	return ec.marshalNRepoImplementationAppVersionConfig2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐRepoImplementationAppVersionConfig(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _RepoMetadata_path(ctx context.Context, field graphql.CollectedField, obj *RepoMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RepoMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RepoMetadata_name(ctx context.Context, field graphql.CollectedField, obj *RepoMetadata) (ret graphql.Marshaler) {
@@ -6333,41 +9084,6 @@ func (ec *executionContext) _RepoMetadata_prefix(ctx context.Context, field grap
 	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RepoMetadata_path(ctx context.Context, field graphql.CollectedField, obj *RepoMetadata) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RepoMetadata",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _RepoMetadata_latestRevision(ctx context.Context, field graphql.CollectedField, obj *RepoMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6385,8 +9101,42 @@ func (ec *executionContext) _RepoMetadata_latestRevision(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.LatestRevision, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 1")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoMetadataRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoMetadataRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6424,8 +9174,42 @@ func (ec *executionContext) _RepoMetadata_revision(ctx context.Context, field gr
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.RepoMetadata().Revision(rctx, obj, args["revision"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.RepoMetadata().Revision(rctx, obj, args["revision"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published {revision: $revision}) RETURN r")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoMetadataRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoMetadataRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6456,8 +9240,46 @@ func (ec *executionContext) _RepoMetadata_revisions(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Revisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*RepoMetadataRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoMetadataRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6472,41 +9294,6 @@ func (ec *executionContext) _RepoMetadata_revisions(ctx context.Context, field g
 	res := resTmp.([]*RepoMetadataRevision)
 	fc.Result = res
 	return ec.marshalNRepoMetadataRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐRepoMetadataRevisionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RepoMetadataRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RepoMetadataRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*GenericMetadata)
-	fc.Result = res
-	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RepoMetadataRevision_revision(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataRevision) (ret graphql.Marshaler) {
@@ -6544,6 +9331,79 @@ func (ec *executionContext) _RepoMetadataRevision_revision(ctx context.Context, 
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RepoMetadataRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RepoMetadataRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*GenericMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.GenericMetadata`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*GenericMetadata)
+	fc.Result = res
+	return ec.marshalNGenericMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _RepoMetadataRevision_spec(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6561,8 +9421,46 @@ func (ec *executionContext) _RepoMetadataRevision_spec(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Spec, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SPECIFIED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoMetadataSpec); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoMetadataSpec`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6596,8 +9494,46 @@ func (ec *executionContext) _RepoMetadataRevision_signature(ctx context.Context,
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6666,8 +9602,46 @@ func (ec *executionContext) _RepoMetadataSpec_ocfVersion(ctx context.Context, fi
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.OcfVersion, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.OcfVersion, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SUPPORTS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoOCFVersion); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoOCFVersion`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6701,8 +9675,46 @@ func (ec *executionContext) _RepoMetadataSpec_implementation(ctx context.Context
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Implementation, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Implementation, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONFIGURED")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*RepoImplementationConfig); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.RepoImplementationConfig`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6717,41 +9729,6 @@ func (ec *executionContext) _RepoMetadataSpec_implementation(ctx context.Context
 	res := resTmp.(*RepoImplementationConfig)
 	fc.Result = res
 	return ec.marshalNRepoImplementationConfig2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐRepoImplementationConfig(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _RepoOCFVersion_default(ctx context.Context, field graphql.CollectedField, obj *RepoOCFVersion) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RepoOCFVersion",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Default, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _RepoOCFVersion_supported(ctx context.Context, field graphql.CollectedField, obj *RepoOCFVersion) (ret graphql.Marshaler) {
@@ -6789,6 +9766,41 @@ func (ec *executionContext) _RepoOCFVersion_supported(ctx context.Context, field
 	return ec.marshalNVersion2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _RepoOCFVersion_default(ctx context.Context, field graphql.CollectedField, obj *RepoOCFVersion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "RepoOCFVersion",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Default, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNVersion2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _SemVerTaggingStrategy_latest(ctx context.Context, field graphql.CollectedField, obj *SemVerTaggingStrategy) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6806,8 +9818,46 @@ func (ec *executionContext) _SemVerTaggingStrategy_latest(ctx context.Context, f
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Latest, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Latest, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "LATEST")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*LatestSemVerTaggingStrategy); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.LatestSemVerTaggingStrategy`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -6857,6 +9907,41 @@ func (ec *executionContext) _Signature_och(ctx context.Context, field graphql.Co
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Type_path(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Type",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Type_name(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
@@ -6929,41 +10014,6 @@ func (ec *executionContext) _Type_prefix(ctx context.Context, field graphql.Coll
 	return ec.marshalNNodePrefix2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Type_path(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Type",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNNodePath2string(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _Type_latestRevision(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6981,8 +10031,42 @@ func (ec *executionContext) _Type_latestRevision(ctx context.Context, field grap
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LatestRevision, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.LatestRevision, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7020,8 +10104,42 @@ func (ec *executionContext) _Type_revision(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Type().Revision(rctx, obj, args["revision"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Type().Revision(rctx, obj, args["revision"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, obj, directive1, statement)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7052,8 +10170,46 @@ func (ec *executionContext) _Type_revisions(ctx context.Context, field graphql.C
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Revisions, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Revisions, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CONTAINS")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*TypeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7137,6 +10293,41 @@ func (ec *executionContext) _TypeInstanceRelationItem_uses(ctx context.Context, 
 	return ec.marshalOString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _TypeMetadata_path(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeMetadata",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Path, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNNodePath2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TypeMetadata_name(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7162,14 +10353,11 @@ func (ec *executionContext) _TypeMetadata_name(ctx context.Context, field graphq
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(*string)
 	fc.Result = res
-	return ec.marshalNNodeName2string(ctx, field.Selections, res)
+	return ec.marshalONodeName2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeMetadata_prefix(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
@@ -7202,38 +10390,6 @@ func (ec *executionContext) _TypeMetadata_prefix(ctx context.Context, field grap
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalONodePrefix2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TypeMetadata_path(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TypeMetadata",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Path, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalONodePath2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeMetadata_displayName(ctx context.Context, field graphql.CollectedField, obj *TypeMetadata) (ret graphql.Marshaler) {
@@ -7320,8 +10476,46 @@ func (ec *executionContext) _TypeMetadata_maintainers(ctx context.Context, field
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Maintainers, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Maintainers, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "MAINTAINED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*Maintainer); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.Maintainer`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7451,8 +10645,46 @@ func (ec *executionContext) _TypeMetadata_attributes(ctx context.Context, field 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Attributes, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Attributes, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "CHARACTERIZED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*AttributeRevision); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.AttributeRevision`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7539,41 +10771,6 @@ func (ec *executionContext) _TypeReference_revision(ctx context.Context, field g
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TypeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *TypeRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TypeRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Metadata, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*TypeMetadata)
-	fc.Result = res
-	return ec.marshalNTypeMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeMetadata(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _TypeRevision_revision(ctx context.Context, field graphql.CollectedField, obj *TypeRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7609,6 +10806,79 @@ func (ec *executionContext) _TypeRevision_revision(ctx context.Context, field gr
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _TypeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *TypeRevision) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeRevision",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Metadata, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "DESCRIBED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeMetadata); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeMetadata`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*TypeMetadata)
+	fc.Result = res
+	return ec.marshalNTypeMetadata2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeMetadata(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TypeRevision_spec(ctx context.Context, field graphql.CollectedField, obj *TypeRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7626,8 +10896,46 @@ func (ec *executionContext) _TypeRevision_spec(ctx context.Context, field graphq
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Spec, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Spec, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SPECIFIED_BY")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeSpec); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeSpec`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -7661,8 +10969,46 @@ func (ec *executionContext) _TypeRevision_signature(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Signature, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.Signature, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*Signature); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.Signature`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -9052,7 +12398,7 @@ func (ec *executionContext) unmarshalInputTypeReferenceInput(ctx context.Context
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
-			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
+			it.Revision, err = ec.unmarshalNVersion2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -9134,6 +12480,11 @@ func (ec *executionContext) _Attribute(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Attribute")
+		case "path":
+			out.Values[i] = ec._Attribute_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Attribute_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9141,11 +12492,6 @@ func (ec *executionContext) _Attribute(ctx context.Context, sel ast.SelectionSet
 			}
 		case "prefix":
 			out.Values[i] = ec._Attribute_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Attribute_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -9189,11 +12535,6 @@ func (ec *executionContext) _AttributeRevision(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("AttributeRevision")
-		case "metadata":
-			out.Values[i] = ec._AttributeRevision_metadata(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "revision":
 			out.Values[i] = ec._AttributeRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9201,11 +12542,13 @@ func (ec *executionContext) _AttributeRevision(ctx context.Context, sel ast.Sele
 			}
 		case "spec":
 			out.Values[i] = ec._AttributeRevision_spec(ctx, field, obj)
+		case "signature":
+			out.Values[i] = ec._AttributeRevision_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "signature":
-			out.Values[i] = ec._AttributeRevision_signature(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._AttributeRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -9258,15 +12601,12 @@ func (ec *executionContext) _GenericMetadata(ctx context.Context, sel ast.Select
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("GenericMetadata")
-		case "name":
-			out.Values[i] = ec._GenericMetadata_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "prefix":
-			out.Values[i] = ec._GenericMetadata_prefix(ctx, field, obj)
 		case "path":
 			out.Values[i] = ec._GenericMetadata_path(ctx, field, obj)
+		case "name":
+			out.Values[i] = ec._GenericMetadata_name(ctx, field, obj)
+		case "prefix":
+			out.Values[i] = ec._GenericMetadata_prefix(ctx, field, obj)
 		case "displayName":
 			out.Values[i] = ec._GenericMetadata_displayName(ctx, field, obj)
 		case "description":
@@ -9307,6 +12647,11 @@ func (ec *executionContext) _Implementation(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Implementation")
+		case "path":
+			out.Values[i] = ec._Implementation_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Implementation_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9314,11 +12659,6 @@ func (ec *executionContext) _Implementation(ctx context.Context, sel ast.Selecti
 			}
 		case "prefix":
 			out.Values[i] = ec._Implementation_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Implementation_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -9510,15 +12850,15 @@ func (ec *executionContext) _ImplementationMetadata(ctx context.Context, sel ast
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ImplementationMetadata")
-		case "name":
-			out.Values[i] = ec._ImplementationMetadata_name(ctx, field, obj)
+		case "path":
+			out.Values[i] = ec._ImplementationMetadata_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "name":
+			out.Values[i] = ec._ImplementationMetadata_name(ctx, field, obj)
 		case "prefix":
 			out.Values[i] = ec._ImplementationMetadata_prefix(ctx, field, obj)
-		case "path":
-			out.Values[i] = ec._ImplementationMetadata_path(ctx, field, obj)
 		case "displayName":
 			out.Values[i] = ec._ImplementationMetadata_displayName(ctx, field, obj)
 		case "description":
@@ -9537,6 +12877,11 @@ func (ec *executionContext) _ImplementationMetadata(ctx context.Context, sel ast
 			out.Values[i] = ec._ImplementationMetadata_supportURL(ctx, field, obj)
 		case "iconURL":
 			out.Values[i] = ec._ImplementationMetadata_iconURL(ctx, field, obj)
+		case "license":
+			out.Values[i] = ec._ImplementationMetadata_license(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "attributes":
 			out.Values[i] = ec._ImplementationMetadata_attributes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9637,13 +12982,18 @@ func (ec *executionContext) _ImplementationRevision(ctx context.Context, sel ast
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ImplementationRevision")
-		case "metadata":
-			out.Values[i] = ec._ImplementationRevision_metadata(ctx, field, obj)
+		case "revision":
+			out.Values[i] = ec._ImplementationRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "revision":
-			out.Values[i] = ec._ImplementationRevision_revision(ctx, field, obj)
+		case "signature":
+			out.Values[i] = ec._ImplementationRevision_signature(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
+		case "metadata":
+			out.Values[i] = ec._ImplementationRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -9666,11 +13016,6 @@ func (ec *executionContext) _ImplementationRevision(ctx context.Context, sel ast
 				}
 				return res
 			})
-		case "signature":
-			out.Values[i] = ec._ImplementationRevision_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -9807,6 +13152,11 @@ func (ec *executionContext) _Interface(ctx context.Context, sel ast.SelectionSet
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Interface")
+		case "path":
+			out.Values[i] = ec._Interface_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Interface_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9814,11 +13164,6 @@ func (ec *executionContext) _Interface(ctx context.Context, sel ast.SelectionSet
 			}
 		case "prefix":
 			out.Values[i] = ec._Interface_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Interface_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -9862,6 +13207,11 @@ func (ec *executionContext) _InterfaceGroup(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("InterfaceGroup")
+		case "path":
+			out.Values[i] = ec._InterfaceGroup_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "metadata":
 			out.Values[i] = ec._InterfaceGroup_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -9996,13 +13346,13 @@ func (ec *executionContext) _InterfaceRevision(ctx context.Context, sel ast.Sele
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("InterfaceRevision")
-		case "metadata":
-			out.Values[i] = ec._InterfaceRevision_metadata(ctx, field, obj)
+		case "revision":
+			out.Values[i] = ec._InterfaceRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "revision":
-			out.Values[i] = ec._InterfaceRevision_revision(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._InterfaceRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10011,13 +13361,18 @@ func (ec *executionContext) _InterfaceRevision(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "signature":
+			out.Values[i] = ec._InterfaceRevision_signature(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "implementationRevisions":
 			out.Values[i] = ec._InterfaceRevision_implementationRevisions(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "signature":
-			out.Values[i] = ec._InterfaceRevision_signature(ctx, field, obj)
+		case "implementationRevisionsForRequirements":
+			out.Values[i] = ec._InterfaceRevision_implementationRevisionsForRequirements(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10077,6 +13432,33 @@ func (ec *executionContext) _LatestSemVerTaggingStrategy(ctx context.Context, se
 			out.Values[i] = graphql.MarshalString("LatestSemVerTaggingStrategy")
 		case "pointsTo":
 			out.Values[i] = ec._LatestSemVerTaggingStrategy_pointsTo(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var licenseImplementors = []string{"License"}
+
+func (ec *executionContext) _License(ctx context.Context, sel ast.SelectionSet, obj *License) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, licenseImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("License")
+		case "name":
+			out.Values[i] = ec._License_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10385,6 +13767,11 @@ func (ec *executionContext) _RepoMetadata(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RepoMetadata")
+		case "path":
+			out.Values[i] = ec._RepoMetadata_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._RepoMetadata_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10392,11 +13779,6 @@ func (ec *executionContext) _RepoMetadata(ctx context.Context, sel ast.Selection
 			}
 		case "prefix":
 			out.Values[i] = ec._RepoMetadata_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._RepoMetadata_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10440,13 +13822,13 @@ func (ec *executionContext) _RepoMetadataRevision(ctx context.Context, sel ast.S
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RepoMetadataRevision")
-		case "metadata":
-			out.Values[i] = ec._RepoMetadataRevision_metadata(ctx, field, obj)
+		case "revision":
+			out.Values[i] = ec._RepoMetadataRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "revision":
-			out.Values[i] = ec._RepoMetadataRevision_revision(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._RepoMetadataRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10519,13 +13901,13 @@ func (ec *executionContext) _RepoOCFVersion(ctx context.Context, sel ast.Selecti
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("RepoOCFVersion")
-		case "default":
-			out.Values[i] = ec._RepoOCFVersion_default(ctx, field, obj)
+		case "supported":
+			out.Values[i] = ec._RepoOCFVersion_supported(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "supported":
-			out.Values[i] = ec._RepoOCFVersion_supported(ctx, field, obj)
+		case "default":
+			out.Values[i] = ec._RepoOCFVersion_default(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -10605,6 +13987,11 @@ func (ec *executionContext) _Type(ctx context.Context, sel ast.SelectionSet, obj
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Type")
+		case "path":
+			out.Values[i] = ec._Type_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&invalids, 1)
+			}
 		case "name":
 			out.Values[i] = ec._Type_name(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -10612,11 +13999,6 @@ func (ec *executionContext) _Type(ctx context.Context, sel ast.SelectionSet, obj
 			}
 		case "prefix":
 			out.Values[i] = ec._Type_prefix(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
-		case "path":
-			out.Values[i] = ec._Type_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
@@ -10689,15 +14071,15 @@ func (ec *executionContext) _TypeMetadata(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TypeMetadata")
-		case "name":
-			out.Values[i] = ec._TypeMetadata_name(ctx, field, obj)
+		case "path":
+			out.Values[i] = ec._TypeMetadata_path(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "name":
+			out.Values[i] = ec._TypeMetadata_name(ctx, field, obj)
 		case "prefix":
 			out.Values[i] = ec._TypeMetadata_prefix(ctx, field, obj)
-		case "path":
-			out.Values[i] = ec._TypeMetadata_path(ctx, field, obj)
 		case "displayName":
 			out.Values[i] = ec._TypeMetadata_displayName(ctx, field, obj)
 		case "description":
@@ -10775,13 +14157,13 @@ func (ec *executionContext) _TypeRevision(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TypeRevision")
-		case "metadata":
-			out.Values[i] = ec._TypeRevision_metadata(ctx, field, obj)
+		case "revision":
+			out.Values[i] = ec._TypeRevision_revision(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "revision":
-			out.Values[i] = ec._TypeRevision_revision(ctx, field, obj)
+		case "metadata":
+			out.Values[i] = ec._TypeRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -11174,16 +14556,6 @@ func (ec *executionContext) marshalNAttributeRevision2ᚖprojectvoltronᚗdevᚋ
 		return graphql.Null
 	}
 	return ec._AttributeRevision(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx context.Context, sel ast.SelectionSet, v *AttributeSpec) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._AttributeSpec(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -11796,6 +15168,16 @@ func (ec *executionContext) marshalNLatestSemVerTaggingStrategy2ᚖprojectvoltro
 		return graphql.Null
 	}
 	return ec._LatestSemVerTaggingStrategy(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNLicense2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐLicense(ctx context.Context, sel ast.SelectionSet, v *License) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._License(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMaintainer2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐMaintainerᚄ(ctx context.Context, sel ast.SelectionSet, v []*Maintainer) graphql.Marshaler {
@@ -12730,6 +16112,13 @@ func (ec *executionContext) marshalOAttributeRevision2ᚖprojectvoltronᚗdevᚋ
 	return ec._AttributeRevision(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOAttributeSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx context.Context, sel ast.SelectionSet, v *AttributeSpec) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._AttributeSpec(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -12905,6 +16294,21 @@ func (ec *executionContext) marshalOInterfaceRevision2ᚖprojectvoltronᚗdevᚋ
 	return ec._InterfaceRevision(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalONodeName2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalONodeName2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*v)
+}
+
 func (ec *executionContext) unmarshalONodePath2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -13047,6 +16451,42 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 	ret := make(graphql.Array, len(v))
 	for i := range v {
 		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
+func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
 	}
 
 	return ret
