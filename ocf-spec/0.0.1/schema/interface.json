@@ -65,7 +65,7 @@
           "properties": {
             "parameters": {
               "additionalProperties": {
-                "$id": "#/additionalParameters",
+                "$id": "#/properties/spec/properties/input/properties/parameters/additionalParameters",
                 "type": "object",
                 "description": "The input parameters for a given Action.",
                 "properties": {
