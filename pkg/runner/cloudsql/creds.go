@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	"golang.org/x/oauth2/google"
+	"sigs.k8s.io/yaml"
 )
 
 type GCPConfig struct {

@@ -9,10 +9,10 @@ import (
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 
-	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/golden"
+	"sigs.k8s.io/yaml"
 )
 
 // TestRenderHappyPath tests that renderer generates valid Argo Workflows.

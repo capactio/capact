@@ -7,9 +7,9 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/ghodss/yaml"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"sigs.k8s.io/yaml"
 
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
