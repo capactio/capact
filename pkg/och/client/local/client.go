@@ -46,7 +46,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 	return &resp.TypeInstance, nil
 }
 
-func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreatedTypeInstanceID, error) {
+func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreatedTypeInstanceOutput, error) {
 	query := `mutation($in: CreateTypeInstancesInput!) {
 		createTypeInstances(
 			in: $in
@@ -60,7 +60,7 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.Cr
 	req.Var("in", in)
 
 	var resp struct {
-		CreatedTypeInstances []ochlocalgraphql.CreatedTypeInstanceID `json:"createTypeInstances"`
+		CreatedTypeInstances []ochlocalgraphql.CreatedTypeInstanceOutput `json:"createTypeInstances"`
 	}
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)

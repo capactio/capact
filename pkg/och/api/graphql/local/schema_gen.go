@@ -51,7 +51,7 @@ type ComplexityRoot struct {
 		Revision func(childComplexity int) int
 	}
 
-	CreatedTypeInstanceID struct {
+	CreatedTypeInstanceOutput struct {
 		Alias func(childComplexity int) int
 		ID    func(childComplexity int) int
 	}
@@ -115,7 +115,7 @@ type ComplexityRoot struct {
 }
 
 type MutationResolver interface {
-	CreateTypeInstances(ctx context.Context, in CreateTypeInstancesInput) ([]*CreatedTypeInstanceID, error)
+	CreateTypeInstances(ctx context.Context, in CreateTypeInstancesInput) ([]*CreatedTypeInstanceOutput, error)
 	CreateTypeInstance(ctx context.Context, in CreateTypeInstanceInput) (*TypeInstance, error)
 	UpdateTypeInstance(ctx context.Context, id string, in UpdateTypeInstanceInput) (*TypeInstance, error)
 	DeleteTypeInstance(ctx context.Context, id string) (string, error)
@@ -154,19 +154,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.AttributeReference.Revision(childComplexity), true
 
-	case "CreatedTypeInstanceID.alias":
-		if e.complexity.CreatedTypeInstanceID.Alias == nil {
+	case "CreatedTypeInstanceOutput.alias":
+		if e.complexity.CreatedTypeInstanceOutput.Alias == nil {
 			break
 		}
 
-		return e.complexity.CreatedTypeInstanceID.Alias(childComplexity), true
+		return e.complexity.CreatedTypeInstanceOutput.Alias(childComplexity), true
 
-	case "CreatedTypeInstanceID.id":
-		if e.complexity.CreatedTypeInstanceID.ID == nil {
+	case "CreatedTypeInstanceOutput.id":
+		if e.complexity.CreatedTypeInstanceOutput.ID == nil {
 			break
 		}
 
-		return e.complexity.CreatedTypeInstanceID.ID(childComplexity), true
+		return e.complexity.CreatedTypeInstanceOutput.ID(childComplexity), true
 
 	case "Mutation.createTypeInstance":
 		if e.complexity.Mutation.CreateTypeInstance == nil {
@@ -624,7 +624,7 @@ input CreateTypeInstancesInput {
   usesRelations: [TypeInstanceUsesRelationInput!]!
 }
 
-type CreatedTypeInstanceID {
+type CreatedTypeInstanceOutput {
   id: ID!
   alias: String!
 }
@@ -696,7 +696,9 @@ type Query {
 }
 
 type Mutation {
-  createTypeInstances(in: CreateTypeInstancesInput!): [CreatedTypeInstanceID!]!
+  createTypeInstances(
+    in: CreateTypeInstancesInput!
+  ): [CreatedTypeInstanceOutput!]!
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
@@ -1064,7 +1066,7 @@ func (ec *executionContext) _AttributeReference_revision(ctx context.Context, fi
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CreatedTypeInstanceID_id(ctx context.Context, field graphql.CollectedField, obj *CreatedTypeInstanceID) (ret graphql.Marshaler) {
+func (ec *executionContext) _CreatedTypeInstanceOutput_id(ctx context.Context, field graphql.CollectedField, obj *CreatedTypeInstanceOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1072,7 +1074,7 @@ func (ec *executionContext) _CreatedTypeInstanceID_id(ctx context.Context, field
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "CreatedTypeInstanceID",
+		Object:     "CreatedTypeInstanceOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1099,7 +1101,7 @@ func (ec *executionContext) _CreatedTypeInstanceID_id(ctx context.Context, field
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _CreatedTypeInstanceID_alias(ctx context.Context, field graphql.CollectedField, obj *CreatedTypeInstanceID) (ret graphql.Marshaler) {
+func (ec *executionContext) _CreatedTypeInstanceOutput_alias(ctx context.Context, field graphql.CollectedField, obj *CreatedTypeInstanceOutput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1107,7 +1109,7 @@ func (ec *executionContext) _CreatedTypeInstanceID_alias(ctx context.Context, fi
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "CreatedTypeInstanceID",
+		Object:     "CreatedTypeInstanceOutput",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -1171,9 +1173,9 @@ func (ec *executionContext) _Mutation_createTypeInstances(ctx context.Context, f
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]*CreatedTypeInstanceID)
+	res := resTmp.([]*CreatedTypeInstanceOutput)
 	fc.Result = res
-	return ec.marshalNCreatedTypeInstanceID2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceIDᚄ(ctx, field.Selections, res)
+	return ec.marshalNCreatedTypeInstanceOutput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceOutputᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4032,24 +4034,24 @@ func (ec *executionContext) _AttributeReference(ctx context.Context, sel ast.Sel
 	return out
 }
 
-var createdTypeInstanceIDImplementors = []string{"CreatedTypeInstanceID"}
+var createdTypeInstanceOutputImplementors = []string{"CreatedTypeInstanceOutput"}
 
-func (ec *executionContext) _CreatedTypeInstanceID(ctx context.Context, sel ast.SelectionSet, obj *CreatedTypeInstanceID) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, createdTypeInstanceIDImplementors)
+func (ec *executionContext) _CreatedTypeInstanceOutput(ctx context.Context, sel ast.SelectionSet, obj *CreatedTypeInstanceOutput) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, createdTypeInstanceOutputImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("CreatedTypeInstanceID")
+			out.Values[i] = graphql.MarshalString("CreatedTypeInstanceOutput")
 		case "id":
-			out.Values[i] = ec._CreatedTypeInstanceID_id(ctx, field, obj)
+			out.Values[i] = ec._CreatedTypeInstanceOutput_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "alias":
-			out.Values[i] = ec._CreatedTypeInstanceID_alias(ctx, field, obj)
+			out.Values[i] = ec._CreatedTypeInstanceOutput_alias(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -4791,7 +4793,7 @@ func (ec *executionContext) unmarshalNCreateTypeInstancesInput2projectvoltronᚗ
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNCreatedTypeInstanceID2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceIDᚄ(ctx context.Context, sel ast.SelectionSet, v []*CreatedTypeInstanceID) graphql.Marshaler {
+func (ec *executionContext) marshalNCreatedTypeInstanceOutput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceOutputᚄ(ctx context.Context, sel ast.SelectionSet, v []*CreatedTypeInstanceOutput) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -4815,7 +4817,7 @@ func (ec *executionContext) marshalNCreatedTypeInstanceID2ᚕᚖprojectvoltron�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNCreatedTypeInstanceID2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceID(ctx, sel, v[i])
+			ret[i] = ec.marshalNCreatedTypeInstanceOutput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceOutput(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -4828,14 +4830,14 @@ func (ec *executionContext) marshalNCreatedTypeInstanceID2ᚕᚖprojectvoltron�
 	return ret
 }
 
-func (ec *executionContext) marshalNCreatedTypeInstanceID2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceID(ctx context.Context, sel ast.SelectionSet, v *CreatedTypeInstanceID) graphql.Marshaler {
+func (ec *executionContext) marshalNCreatedTypeInstanceOutput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐCreatedTypeInstanceOutput(ctx context.Context, sel ast.SelectionSet, v *CreatedTypeInstanceOutput) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
 		}
 		return graphql.Null
 	}
-	return ec._CreatedTypeInstanceID(ctx, sel, v)
+	return ec._CreatedTypeInstanceOutput(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {

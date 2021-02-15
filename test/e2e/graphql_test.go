@@ -372,7 +372,7 @@ func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpub
 	}
 }
 
-func findCreatedTypeInstanceID(alias string, instances []graphql.CreatedTypeInstanceID) *string {
+func findCreatedTypeInstanceID(alias string, instances []graphql.CreatedTypeInstanceOutput) *string {
 	for _, el := range instances {
 		if el.Alias == alias {
 			return &el.ID

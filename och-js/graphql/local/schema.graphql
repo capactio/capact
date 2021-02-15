@@ -171,7 +171,7 @@ input CreateTypeInstancesInput {
   usesRelations: [TypeInstanceUsesRelationInput!]!
 }
 
-type CreatedTypeInstanceID {
+type CreatedTypeInstanceOutput {
   id: ID!
   alias: String!
 }
@@ -243,7 +243,9 @@ type Query {
 }
 
 type Mutation {
-  createTypeInstances(in: CreateTypeInstancesInput!): [CreatedTypeInstanceID!]!
+  createTypeInstances(
+    in: CreateTypeInstancesInput!
+  ): [CreatedTypeInstanceOutput!]!
 
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
