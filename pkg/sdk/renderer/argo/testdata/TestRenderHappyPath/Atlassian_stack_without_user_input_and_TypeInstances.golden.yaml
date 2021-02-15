@@ -16,26 +16,26 @@ args:
                 data: |
                   superuser:
                     username: jira
-                    password: okon
+                    password: okon3
                   defaultDBName: jira
-          name: install-db-v2
-          template: stack-install-install-db-v2-postgres-install
+          name: install-shared-db
+          template: stack-install-install-shared-db-postgres-install
       - - arguments:
             artifacts:
-            - from: '{{steps.install-db-v2.outputs.artifacts.postgresql}}'
+            - from: '{{steps.install-shared-db.outputs.artifacts.postgresql}}'
               name: postgresql
             - name: input-parameters
               raw:
                 data: |
                   host: jira-cloud.voltron.local
-          name: install-jira-v2
-          template: stack-install-install-jira-v2-jira-install
+          name: install-jira
+          template: stack-install-install-jira-jira-install
     - arguments: {}
       inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
-      name: stack-install-install-db-v2-postgres-install
+      name: stack-install-install-shared-db-postgres-install
       outputs:
         artifacts:
         - from: '{{steps.helm-run.outputs.artifacts.additional}}'
@@ -69,7 +69,7 @@ args:
                         username: '{{ template "postgresql.username" . }}'
                         password: '{{ template "postgresql.password" . }}'{% endraw %}
           name: create-helm-args
-          template: stack-install-install-db-v2-postgres-install-create-helm-args-template
+          template: stack-install-install-shared-db-postgres-install-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
@@ -77,19 +77,19 @@ args:
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-run
-          template: stack-install-install-db-v2-postgres-install-helm-run-helm
+          template: stack-install-install-shared-db-postgres-install-helm-run-helm
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: postgresql
           name: output-postgresql
-          template: stack-install-install-db-v2-output-postgresql
+          template: stack-install-install-shared-db-output-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
               name: psql-helm-release
           name: output-psql-helm-release
-          template: stack-install-install-db-v2-output-psql-helm-release
+          template: stack-install-install-shared-db-output-psql-helm-release
     - arguments: {}
       container:
         args:
@@ -108,7 +108,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: stack-install-install-db-v2-postgres-install-create-helm-args-template
+      name: stack-install-install-shared-db-postgres-install-create-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -136,13 +136,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: stack-install-install-db-v2-postgres-install-helm-run-helm
+      name: stack-install-install-shared-db-postgres-install-helm-run-helm
       outputs:
         artifacts:
-        - globalName: stack-install-install-db-v2-postgres-install-helm-run-helm-release
+        - globalName: stack-install-install-shared-db-postgres-install-helm-run-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: stack-install-install-db-v2-postgres-install-helm-run-additional
+        - globalName: stack-install-install-shared-db-postgres-install-helm-run-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -160,10 +160,10 @@ args:
         - name: postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-db-v2-output-postgresql
+      name: stack-install-install-shared-db-output-postgresql
       outputs:
         artifacts:
-        - globalName: stack-install-install-db-v2-postgresql
+        - globalName: stack-install-install-shared-db-postgresql
           name: postgresql
           path: /typeinstance
     - arguments: {}
@@ -181,10 +181,10 @@ args:
         - name: psql-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-db-v2-output-psql-helm-release
+      name: stack-install-install-shared-db-output-psql-helm-release
       outputs:
         artifacts:
-        - globalName: stack-install-install-db-v2-psql-helm-release
+        - globalName: stack-install-install-shared-db-psql-helm-release
           name: psql-helm-release
           path: /typeinstance
     - arguments: {}
@@ -194,7 +194,7 @@ args:
         - name: postgresql
           optional: true
       metadata: {}
-      name: stack-install-install-jira-v2-jira-install
+      name: stack-install-install-jira-jira-install
       outputs: {}
       steps:
       - - arguments:
@@ -233,7 +233,7 @@ args:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
           name: create-helm-args
-          template: stack-install-install-jira-v2-jira-install-create-helm-args-template
+          template: stack-install-install-jira-jira-install-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
@@ -241,19 +241,19 @@ args:
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-run
-          template: stack-install-install-jira-v2-jira-install-helm-run-helm
+          template: stack-install-install-jira-jira-install-helm-run-helm
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: jira-config
           name: output-jira-config
-          template: stack-install-install-jira-v2-output-jira-config
+          template: stack-install-install-jira-output-jira-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
               name: jira-helm-release
           name: output-jira-helm-release
-          template: stack-install-install-jira-v2-output-jira-helm-release
+          template: stack-install-install-jira-output-jira-helm-release
     - arguments: {}
       container:
         args:
@@ -292,7 +292,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: stack-install-install-jira-v2-jira-install-create-helm-args-template
+      name: stack-install-install-jira-jira-install-create-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -320,13 +320,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: stack-install-install-jira-v2-jira-install-helm-run-helm
+      name: stack-install-install-jira-jira-install-helm-run-helm
       outputs:
         artifacts:
-        - globalName: stack-install-install-jira-v2-jira-install-helm-run-helm-release
+        - globalName: stack-install-install-jira-jira-install-helm-run-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: stack-install-install-jira-v2-jira-install-helm-run-additional
+        - globalName: stack-install-install-jira-jira-install-helm-run-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -344,10 +344,10 @@ args:
         - name: jira-config
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-jira-v2-output-jira-config
+      name: stack-install-install-jira-output-jira-config
       outputs:
         artifacts:
-        - globalName: stack-install-install-jira-v2-jira-config
+        - globalName: stack-install-install-jira-jira-config
           name: jira-config
           path: /typeinstance
     - arguments: {}
@@ -365,10 +365,10 @@ args:
         - name: jira-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-jira-v2-output-jira-helm-release
+      name: stack-install-install-jira-output-jira-helm-release
       outputs:
         artifacts:
-        - globalName: stack-install-install-jira-v2-jira-helm-release
+        - globalName: stack-install-install-jira-jira-helm-release
           name: jira-helm-release
           path: /typeinstance
     - arguments: {}

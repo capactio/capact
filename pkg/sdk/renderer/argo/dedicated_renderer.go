@@ -108,32 +108,32 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 			var newParallelSteps []*WorkflowStep
 
 			for _, step := range parallelSteps {
-				// 0. Register step arguments, so we can process them in referenced template and check
+				// 1. Register step arguments, so we can process them in referenced template and check
 				// whether steps in referenced template are satisfied
 				r.registerTemplateInputArguments(step)
 
-				// 1. Check step with `voltron-when` statements if it can be satisfied by input arguments
-				satisfied, err := r.isStepSatisfiedByInputTypeInstances(tpl.Name, step)
+				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
+				satisfied, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
 				if err != nil {
 					return err
 				}
 
-				switch {
-				// 2.1 Replace step and emit typeinstance as the output
-				case satisfied != "":
-					fmt.Printf("Step %s is satisfied by %s\n", step.Name, satisfied)
+				// 2.1 Replace step and emit input arguments as step output
+				if satisfied != "" {
 					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(step, satisfied)
 					step = emitStep
 					r.addToRootTemplates(wfTpl)
-				// 2.2 Import and resolve Implementation for `volton-action`
-				case step.VoltronAction != nil:
-					// 2.2.1 Expand `voltron-action` alias based on imports section
+				}
+
+				// 3. Import and resolve Implementation for `volton-action`
+				if step.VoltronAction != nil {
+					// 3.1 Expand `voltron-action` alias based on imports section
 					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.VoltronAction)
 					if err != nil {
 						return err
 					}
 
-					// 2.2.2 Get `voltron-action` specific implementation
+					// 3.2 Get `voltron-action` specific implementation
 					implementations, err := r.ochCli.GetImplementationRevisionsForInterface(ctx, *actionRef, r.ochImplementationFilters...)
 					if err != nil {
 						return errors.Wrapf(err, "while processing step: %s", step.Name)
@@ -142,7 +142,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					// business decision select the first one
 					implementation := implementations[0]
 
-					// 2.2.3 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					// 3.3 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
@@ -154,8 +154,11 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
+
+					// 3.4 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step)
-					// 2.2.4 Render imported Workflow templates and add them to root templates
+
+					// 3.5 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
 					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
 					if err != nil {
@@ -163,7 +166,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 				}
 
-				// 3. Replace global artifacts names in references, based on previous gathered mappings.
+				// 4. Replace global artifacts names in references, based on previous gathered mappings.
 				for artIdx := range step.Arguments.Artifacts {
 					art := &step.Arguments.Artifacts[artIdx]
 
@@ -496,7 +499,29 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 	}
 }
 
-func (r *dedicatedRenderer) isStepSatisfiedByInputTypeInstances(tplOwnerName string, step *WorkflowStep) (string, error) {
+//  This function checks if a given step is satisfied by input arguments
+//
+//  Example:
+//
+//   - name: stack-install
+//     steps:
+//     - - name: entrypoint                                          # <-- Step which execute template with arguments
+//         template: jira-install
+//         arguments:
+//           artifacts:
+//             - name: postgresql
+//               from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+//   - name: jira-install
+//     inputs:
+//      artifacts:
+//        - name: input-parameters
+//        - name: postgresql
+//          optional: true
+//    steps:
+//      - - voltron-when: postgresql == nil 						# Check whether this step is satisfied by input arguments.
+//          name: install-db										# For that we need to have option to check which arguments were passed
+//																	# to this step.
+func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, step *WorkflowStep) (string, error) {
 	if step.VoltronWhen == nil {
 		return "", nil
 	}
@@ -514,6 +539,7 @@ func (r *dedicatedRenderer) isStepSatisfiedByInputTypeInstances(tplOwnerName str
 	for _, a := range args {
 		params.items[a.Name] = a.Name
 	}
+
 	notSatisfied, err := r.evaluateWhenExpression(params, *step.VoltronWhen)
 	if err != nil {
 		return "", errors.Wrap(err, "while evaluating OCFWhen")
@@ -560,11 +586,6 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 }
 
 // TODO: current limitation: we handle properly only one artifacts `voltron-when: postgres == nil` but not `voltron-when: postgres == nil && jira-config == nil`
-// draf idea handle multiple artifacts check:
-// - isDefined(foo,bar,baz)
-// - isNotDefined(foo,bar,baz)
-// - isDefined(foo,bar,baz) && isNotDefined(foo,bar,baz)
-// - isDefined(foo,bar,baz) || isNotDefined(foo,bar,baz)
 func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
 	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
 
