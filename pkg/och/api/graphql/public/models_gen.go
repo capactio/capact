@@ -297,7 +297,8 @@ type TypeFilter struct {
 
 type TypeInstanceRelationItem struct {
 	TypeInstanceName string `json:"typeInstanceName"`
-	// Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+	// Contains list of Type Instance names, which a given TypeInstance uses (depends on).
+	// If empty, a given TypeInstance doesn't have any dependencies.
 	Uses []string `json:"uses"`
 }
 

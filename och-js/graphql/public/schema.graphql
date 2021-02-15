@@ -425,7 +425,7 @@ type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
   """
   Contains list of Type Instance names, which a given TypeInstance uses (depends on)
   """
-  uses: [String!]!
+  uses: [String!]
 }
 
 type InterfaceReference @additionalLabels(labels: ["published"]){
