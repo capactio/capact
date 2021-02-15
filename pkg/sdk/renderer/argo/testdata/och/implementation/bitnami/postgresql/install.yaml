@@ -66,6 +66,10 @@ spec:
           - inputs:
               artifacts:
                 - name: input-parameters
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
             name: postgres-install
             steps:
               - - voltron-action: jinja2.template
