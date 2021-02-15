@@ -269,7 +269,7 @@ type MethodElement struct {
 
 // Object key is an alias of the TypeInstance, used in the Implementation
 type OutputTypeInstanceRelation struct {
-	Uses []string `json:"uses,omitempty"`// Uses contains all dependant TypeInstances
+	Uses []string `json:"uses,omitempty"`// Contains all dependant TypeInstances
 }
 
 // Prefix MUST be an abstract node and represents a core abstract Type e.g.

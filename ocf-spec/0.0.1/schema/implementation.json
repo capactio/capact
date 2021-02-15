@@ -178,7 +178,7 @@
             "properties": {
               "uses": {
                 "$id": "#/properties/spec/properties/outputTypeInstanceRelations/additionalParameters/properties/uses",
-                "description": "Uses contains all dependant TypeInstances",
+                "description": "Contains all dependant TypeInstances",
                 "type": "array",
                 "items": {
                   "type": "string",
