@@ -33,14 +33,14 @@ type CreateTypeInstanceInput struct {
 	Value      interface{}                `json:"value"`
 }
 
+type CreateTypeInstanceOutput struct {
+	ID    string `json:"id"`
+	Alias string `json:"alias"`
+}
+
 type CreateTypeInstancesInput struct {
 	TypeInstances []*CreateTypeInstanceInput       `json:"typeInstances"`
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
-}
-
-type CreatedTypeInstanceOutput struct {
-	ID    string `json:"id"`
-	Alias string `json:"alias"`
 }
 
 type TypeInstance struct {
