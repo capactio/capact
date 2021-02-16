@@ -1816,24 +1816,9 @@ type TypeRevision {
     signature: Signature!
 }
 
-<<<<<<< HEAD
-  implements: [InterfaceReference!]!
-    @relation(name: "IMPLEMENTS", direction: "OUT")
-  requires: [ImplementationRequirement!]!
-    @relation(name: "REQUIRES", direction: "OUT")
-  imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
-  action: ImplementationAction! @relation(name: "DOES", direction: "OUT")
-  additionalInput: ImplementationAdditionalInput
-    @relation(name: "USES", direction: "OUT")
-  additionalOutput: ImplementationAdditionalOutput
-    @relation(name: "OUTPUTS", direction: "OUT")
-  outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
-  @relation(name: "RELATIONS", direction: "OUT")
-=======
 type TypeSpec {
     additionalRefs: [NodePath!]
     jsonSchema: Any
->>>>>>> ea83233... revert public schema
 }
 
 type Implementation {
@@ -1846,11 +1831,6 @@ type Implementation {
     revisions: [ImplementationRevision!]!
 }
 
-<<<<<<< HEAD
-type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
-  typeInstances: [OutputTypeInstance!]!
-    @relation(name: "CONTAINS", direction: "OUT")
-=======
 type ImplementationRevision {
     metadata: ImplementationMetadata!
     revision: Version!
@@ -1858,7 +1838,6 @@ type ImplementationRevision {
 
     interfaces: [Interface!]! # resolver based on "implements" section
     signature: Signature!
->>>>>>> ea83233... revert public schema
 }
 
 type ImplementationSpec {
@@ -1869,31 +1848,25 @@ type ImplementationSpec {
     action: ImplementationAction!
     additionalInput: ImplementationAdditionalInput
     additionalOutput: ImplementationAdditionalOutput
+    outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
-<<<<<<< HEAD
-  """
-  Contains list of Type Instance names, which a given TypeInstance uses (depends on)
-  """
-  uses: [String!]
-=======
 type ImplementationAdditionalInput {
     typeInstances: [InputTypeInstance!]!
->>>>>>> ea83233... revert public schema
 }
 
 type ImplementationAdditionalOutput {
     typeInstances: [OutputTypeInstance!]!
-    typeInstanceRelations: [TypeInstanceRelationItem!]!
 }
 
 type TypeInstanceRelationItem {
     typeInstanceName: String!
 
     """
-    Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+    Contains list of Type Instance names, which a given TypeInstance uses (depends on).
+    If empty, a given TypeInstance doesn't have any dependencies.
     """
-    uses: [String!]!
+    uses: [String!]
 }
 
 
@@ -3406,44 +3379,6 @@ func (ec *executionContext) _ImplementationAdditionalOutput_typeInstances(ctx co
 	return ec.marshalNOutputTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐOutputTypeInstanceᚄ(ctx, field.Selections, res)
 }
 
-<<<<<<< HEAD
-=======
-func (ec *executionContext) _ImplementationAdditionalOutput_typeInstanceRelations(ctx context.Context, field graphql.CollectedField, obj *ImplementationAdditionalOutput) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationAdditionalOutput",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.TypeInstanceRelations, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*TypeInstanceRelationItem)
-	fc.Result = res
-	return ec.marshalNTypeInstanceRelationItem2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeInstanceRelationItemᚄ(ctx, field.Selections, res)
-}
-
->>>>>>> ea83233... revert public schema
 func (ec *executionContext) _ImplementationImport_interfaceGroupPath(ctx context.Context, field graphql.CollectedField, obj *ImplementationImport) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -4644,46 +4579,8 @@ func (ec *executionContext) _ImplementationSpec_outputTypeInstanceRelations(ctx 
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.OutputTypeInstanceRelations, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "RELATIONS")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*TypeInstanceRelationItem); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.TypeInstanceRelationItem`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return obj.OutputTypeInstanceRelations, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -13119,7 +13016,6 @@ func (ec *executionContext) marshalOString2string(ctx context.Context, sel ast.S
 	return graphql.MarshalString(v)
 }
 
-<<<<<<< HEAD
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
 	if v == nil {
 		return nil, nil
@@ -13156,44 +13052,6 @@ func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel
 	return ret
 }
 
-func (ec *executionContext) unmarshalOString2ᚕᚖstring(ctx context.Context, v interface{}) ([]*string, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*string, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalOString2ᚖstring(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOString2ᚕᚖstring(ctx context.Context, sel ast.SelectionSet, v []*string) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	ret := make(graphql.Array, len(v))
-	for i := range v {
-		ret[i] = ec.marshalOString2ᚖstring(ctx, sel, v[i])
-	}
-
-	return ret
-}
-
-=======
->>>>>>> ea83233... revert public schema
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
 	if v == nil {
 		return nil, nil
