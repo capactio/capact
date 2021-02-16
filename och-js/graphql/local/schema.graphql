@@ -146,7 +146,7 @@ input TypeReferenceInput {
 
 input CreateTypeInstanceInput {
   """
-  Used to define the relationships, between the create TypeInstances
+  Used to define the relationships, between the created TypeInstances
   """
   alias: String!
   typeRef: TypeReferenceInput!
