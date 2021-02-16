@@ -22,7 +22,9 @@ export const schema = makeAugmentedSchema({
       ) => {
         const { typeInstances, usesRelations } = args.in;
 
-        const aliases = typeInstances.map((x) => x.alias);
+        const aliases = typeInstances
+          .filter((x) => x.alias !== undefined)
+          .map((x) => x.alias);
         if (new Set(aliases).size !== aliases.length) {
           throw new Error(
             "Failed to create TypeInstances, due to duplicated TypeInstance aliases. Please ensure that each TypeInstance alias is unique."
