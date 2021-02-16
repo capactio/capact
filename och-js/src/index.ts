@@ -23,9 +23,8 @@ function main() {
 
   const schema = getSchemaForMode(config.ochMode);
 
-  if (config.ochMode === OCHMode.Local) {
-    assertSchemaOnDatabase(schema, driver);
-  }
+  // TODO: Create indexes in Public OCH on DB Populator
+  assertSchemaOnDatabase(schema, driver);
 
   const healthCheck = async () => {
     try {
