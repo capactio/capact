@@ -148,7 +148,7 @@ input CreateTypeInstanceInput {
   """
   Used to define the relationships, between the created TypeInstances
   """
-  alias: String!
+  alias: String
   typeRef: TypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any

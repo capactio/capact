@@ -599,9 +599,9 @@ input TypeReferenceInput {
 
 input CreateTypeInstanceInput {
   """
-  Used to define the relationships, between the create TypeInstances
+  Used to define the relationships, between the created TypeInstances
   """
-  alias: String!
+  alias: String
   typeRef: TypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
@@ -3776,7 +3776,7 @@ func (ec *executionContext) unmarshalInputCreateTypeInstanceInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("alias"))
-			it.Alias, err = ec.unmarshalNString2string(ctx, v)
+			it.Alias, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

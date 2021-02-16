@@ -25,6 +25,7 @@ var _ = Describe("GraphQL API", func() {
 		BeforeEach(func() {
 			cli = getOCHGraphQLClient()
 		})
+
 		Describe("should return ImplementationRevision", func() {
 			const (
 				interfacePath  = "cap.interface.voltron.ochtests.install"
@@ -168,15 +169,6 @@ var _ = Describe("GraphQL API", func() {
 	})
 
 	Context("Local OCH", func() {
-		typeInstancesToCleanup := []string{}
-
-		AfterEach(func() {
-			cli := getOCHGraphQLClient()
-			for _, ID := range typeInstancesToCleanup {
-				deleteTypeInstance(ctx, cli, ID)
-			}
-		})
-
 		It("creates and deletes TypeInstance", func() {
 			cli := getOCHGraphQLClient()
 
@@ -197,6 +189,7 @@ var _ = Describe("GraphQL API", func() {
 			})
 
 			Expect(err).ToNot(HaveOccurred())
+			defer deleteTypeInstance(ctx, cli, createdTypeInstance.Metadata.ID)
 
 			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
 
@@ -224,8 +217,6 @@ var _ = Describe("GraphQL API", func() {
 				Uses:   []*graphql.TypeInstance{},
 				UsedBy: []*graphql.TypeInstance{},
 			}))
-
-			deleteTypeInstance(ctx, cli, typeInstance.Metadata.ID)
 		})
 
 		It("creates multiple TypeInstances with uses relations", func() {
@@ -234,7 +225,7 @@ var _ = Describe("GraphQL API", func() {
 			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
 				TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
 					{
-						Alias: "parent",
+						Alias: ptr.String("parent"),
 						TypeRef: &gqllocalapi.TypeReferenceInput{
 							Path:     "com.parent",
 							Revision: "0.1.0",
@@ -250,7 +241,7 @@ var _ = Describe("GraphQL API", func() {
 						},
 					},
 					{
-						Alias: "child",
+						Alias: ptr.String("child"),
 						TypeRef: &gqllocalapi.TypeReferenceInput{
 							Path:     "com.child",
 							Revision: "0.1.0",
@@ -276,7 +267,7 @@ var _ = Describe("GraphQL API", func() {
 
 			Expect(err).NotTo(HaveOccurred())
 			for _, ti := range createdTypeInstanceIDs {
-				typeInstancesToCleanup = append(typeInstancesToCleanup, ti.ID)
+				defer deleteTypeInstance(ctx, cli, ti.ID)
 			}
 
 			parentTiID := findCreatedTypeInstanceID("parent", createdTypeInstanceIDs)
@@ -285,9 +276,7 @@ var _ = Describe("GraphQL API", func() {
 			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
 			Expect(childTiID).ToNot(BeNil())
 
-			childTI, err := cli.GetTypeInstance(ctx, *childTiID)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(childTI).To(Equal(&graphql.TypeInstance{
+			assertTypeInstance(ctx, cli, *childTiID, &graphql.TypeInstance{
 				ResourceVersion: 1,
 				Metadata: &graphql.TypeInstanceMetadata{
 					ID: *childTiID,
@@ -321,11 +310,9 @@ var _ = Describe("GraphQL API", func() {
 						},
 					},
 				},
-			}))
+			})
 
-			parentTI, err := cli.GetTypeInstance(ctx, *parentTiID)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(parentTI).To(Equal(&graphql.TypeInstance{
+			assertTypeInstance(ctx, cli, *parentTiID, &graphql.TypeInstance{
 				ResourceVersion: 1,
 				Metadata: &graphql.TypeInstanceMetadata{
 					ID: *parentTiID,
@@ -359,10 +346,16 @@ var _ = Describe("GraphQL API", func() {
 					},
 				},
 				UsedBy: []*graphql.TypeInstance{},
-			}))
+			})
 		})
 	})
 })
+
+func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *graphql.TypeInstance) {
+	childTI, err := cli.GetTypeInstance(ctx, ID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(childTI).To(Equal(expected))
+}
 
 func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpublicapi.AttributeFilterInput {
 	return gqlpublicapi.AttributeFilterInput{
