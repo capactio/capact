@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-   prefix: cap.implementation.atlassian.confluence
+  prefix: cap.implementation.atlassian.confluence
   name: install
   displayName: Install Confluence
   description: Action which installs Confluence via Helm chart

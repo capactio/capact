@@ -80,6 +80,21 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+            dag:
+              tasks:
+                - name: install-shared-db
+                  template: install-shared-db
+                - name: install-jira
+                  dependencies: [ install-shared-db ]
+                  template: install-jira
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                - name: install-confluence
+                  dependencies: [ install-shared-db ]
+                  template: install-confluence
+          - name: install-shared-db
             steps:
               - - name: install-shared-db
                   voltron-action: postgresql.install
@@ -92,7 +107,11 @@ spec:
                               username: superuser
                               password: okon
                             defaultDBName: postgres
-
+          - name: install-jira
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
               - - name: extract-jira-host
                   voltron-action: jinja2.template
                   arguments:
@@ -103,7 +122,7 @@ spec:
                             host: {{ jiraHost }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-                - name: jira-install
+              - - name: jira-install
                   voltron-action: jira.install
                   arguments:
                     artifacts:
@@ -112,6 +131,11 @@ spec:
                       - name: input-parameters
                         from: "{{steps.extract-jira-host.outputs.artifacts.render}}"
 
+          - name: install-confluence
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
               - - name: extract-confluence-host
                   voltron-action: jinja2.template
                   arguments:

@@ -407,23 +407,24 @@ spec:
           - name: main
             inputs:
               artifacts:
-                # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+                # Voltron Engine injects the 'input-parameters' artifacts into the workflow entrypoint.
                 # It contains the Interface parameters, in our case it is `confluence.install-input`.
                 - name: input-parameters
-                # You need to specify all optional TypeInstance that can be consumed by workflow.
-                # Later you can use them in the `voltron-when` statements. 
-                - name: postgresql
+                # You need to specify all optional TypeInstances that can be consumed by the workflow.
+                # Later, the user or other workflow can inject own TypeInstance which fulfils schema for this TypeInstance.
+                # You as a Workflow developer, can refer to them in the `voltron-when` statements.
+                - name: postgresql # Same name as defined under the `additionalInput.typeInstances` property.
                   optional: true
-            # Under outputs you need to specify all outputs that is defined under Interface that this workflow implements.
-            # As a result, others can refer to workflow output via "{{ steps.<step_name>.outputs.artifacts.<artifact_name> }}".
-            # Same as we do with postgres step in this workflow.
+            # Under `outputs`, you need to specify all outputs defined under Interface that this workflow implements.
+            # As a result, others can refer to the Action output via "{{ steps.<step_name>.outputs.artifacts.<artifact_name> }}".
+            # Same as we do with the postgres step in this workflow.
             outputs:
                 - name: confluence-config # Same name as defined in Interface
                   from: "{{steps.helm-run.outputs.artifacts.additional}}" # Instructs Argo which artifacts holds the Confluence config
             steps:
               # If the postgresql input argument was not provided, then create it
               # using the imported 'postgresql.install' Interface.
-              # Otherwise, it is replaced with a "mock" step which emits input argument which satisfied this step as a step output.
+              # Otherwise, it is replaced with the "mock" step emitting the input argument which satisfied this step as a step output.
               - - name: install-db
                   voltron-action: postgresql.install
                   voltron-when: postgresql == nil
