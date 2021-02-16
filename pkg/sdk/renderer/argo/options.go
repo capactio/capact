@@ -25,3 +25,9 @@ func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
 		r.userInputSecretRef = ref
 	}
 }
+
+func WithClusterPolicy(policy ClusterPolicy) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.clusterPolicy = policy
+	}
+}

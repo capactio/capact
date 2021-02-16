@@ -62,7 +62,7 @@ clusterPolicyRules:
   #
   #  cap.interface.database.postgresql.install:
   #    oneOf:
-  #      - implementationConstrains:
+  #      - implementationConstraints:
   #          requires:
   #            - path: "cap.type.gcp.auth.service-account"
   #          attribute:
@@ -72,14 +72,17 @@ clusterPolicyRules:
   #            typeRef:
   #              path: "cap.type.gcp.auth.service-account"
   #              revision: "0.1.0"
-  #      - implementationConstrains:
-  #          attribute: cap.attribute.cloud.provider.aws
-  #      - implementationConstrains:
-  #          path: cap.implementation.bitnami.postgresql.install
+  #      - implementationConstraints:
+  #          attribute:
+  #           - path: cap.attribute.cloud.provider.aws
+  #      - implementationConstraints:
+  #          exact:
+  #            path: cap.implementation.bitnami.postgresql.install
+  #            revision: 0.1.0
 
   cap.*: # any other Interface
     oneOf:
-      - implementationConstrains:
+      - implementationConstraints:
           requires:
             - path: "cap.core.type.platform.kubernetes"
               # any revision

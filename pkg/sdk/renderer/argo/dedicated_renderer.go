@@ -30,6 +30,7 @@ type dedicatedRenderer struct {
 	userInputSecretRef       *UserInputSecretRef
 	inputTypeInstances       []types.InputTypeInstanceRef
 	ochImplementationFilters []public.GetImplementationOption
+	clusterPolicy            ClusterPolicy
 
 	// internal vars
 	currentIteration   int
