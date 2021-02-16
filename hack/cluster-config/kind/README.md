@@ -9,7 +9,7 @@ For development and integration tests kind cluster, a self-signed wildcard SSL c
 To regenerate it, run the following command:
 
 ```bash
-cd ./hack/kind
+cd ./hack/cluster-config/kind
 openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
     -keyout voltron.local.key -out voltron.local.crt \
     -subj "/CN=*.voltron.local/O=Voltron" -reqexts SAN \

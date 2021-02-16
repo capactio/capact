@@ -44,3 +44,9 @@ readonly VOLTRON_MOCK_OCH_GRAPHQL="false"
 readonly VOLTRON_MOCK_ENGINE_GRAPHQL="false"
 readonly VOLTRON_ENABLE_POPULATOR="true"
 readonly VOLTRON_USE_TEST_MANIFESTS="false"
+
+#
+# Cluster Configuration
+#
+
+readonly VOLTRON_INCREASE_RESOURCE_LIMITS="true"

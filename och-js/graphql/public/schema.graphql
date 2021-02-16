@@ -9,6 +9,7 @@ directive @relation(
 ) on FIELD_DEFINITION | OBJECT
 directive @additionalLabels(labels: [String]) on OBJECT
 directive @cypher(statement: String) on FIELD_DEFINITION
+directive @index on FIELD_DEFINITION
 
 """
 Arbitrary data
@@ -107,9 +108,9 @@ input TypeFilter {
 }
 
 type RepoMetadata @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName!
-  prefix: NodePrefix!
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
 
   latestRevision: RepoMetadataRevision
     @cypher(
@@ -124,7 +125,7 @@ type RepoMetadata @additionalLabels(labels: ["published"]){
 }
 
 type RepoMetadataRevision @additionalLabels(labels: ["published"]){
-  revision: Version!
+  revision: Version! @index
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -168,7 +169,7 @@ type RepoOCFVersion @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceGroup @additionalLabels(labels: ["published"]){
-  path: NodePath!
+  path: NodePath! @index
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   interfaces(filter: InterfaceFilter): [Interface!]!
@@ -176,9 +177,9 @@ type InterfaceGroup @additionalLabels(labels: ["published"]){
 }
 
 type Interface @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName!
-  prefix: NodePrefix!
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
 
   latestRevision: InterfaceRevision
     @cypher(
@@ -192,7 +193,7 @@ type Interface @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceRevision @additionalLabels(labels: ["published"]){
-  revision: Version!
+  revision: Version! @index
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -336,9 +337,9 @@ type OutputTypeInstance implements TypeInstanceFields @additionalLabels(labels: 
 }
 
 type Type @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName!
-  prefix: NodePrefix!
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
 
   latestRevision: TypeRevision
     @cypher(
@@ -352,7 +353,7 @@ type Type @additionalLabels(labels: ["published"]){
 }
 
 type TypeRevision @additionalLabels(labels: ["published"]){
-  revision: Version!
+  revision: Version! @index
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
@@ -365,9 +366,9 @@ type TypeSpec @additionalLabels(labels: ["published"]){
 }
 
 type Implementation @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName!
-  prefix: NodePrefix!
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
 
   latestRevision: ImplementationRevision
     @cypher(
@@ -382,7 +383,7 @@ type Implementation @additionalLabels(labels: ["published"]){
 }
 
 type ImplementationRevision @additionalLabels(labels: ["published"]){
-  revision: Version!
+  revision: Version! @index
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   metadata: ImplementationMetadata!
@@ -393,7 +394,7 @@ type ImplementationRevision @additionalLabels(labels: ["published"]){
 }
 
 type ImplementationSpec @additionalLabels(labels: ["published"]){
-  appVersion: VersionRange!
+  appVersion: VersionRange! @index
 
   implements: [InterfaceReference!]!
     @relation(name: "IMPLEMENTS", direction: "OUT")
@@ -429,8 +430,8 @@ type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceReference @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  revision: Version!
+  path: NodePath! @index
+  revision: Version! @index
 }
 
 type ImplementationRequirement @additionalLabels(labels: ["published"]){
@@ -459,8 +460,8 @@ type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
 }
 
 type TypeReference @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  revision: Version!
+  path: NodePath! @index
+  revision: Version! @index
 }
 
 type ImplementationImport @additionalLabels(labels: ["published"]){
@@ -495,9 +496,9 @@ type ImplementationAction @additionalLabels(labels: ["published"]){
 }
 
 type Attribute @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName!
-  prefix: NodePrefix!
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
 
   latestRevision: AttributeRevision
     @cypher(
@@ -511,7 +512,7 @@ type Attribute @additionalLabels(labels: ["published"]){
 }
 
 type AttributeRevision @additionalLabels(labels: ["published"]){
-  revision: Version!
+  revision: Version! @index
 
   spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
   signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
@@ -534,9 +535,9 @@ interface MetadataBaseFields {
 }
 
 type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
-  path: NodePath
-  name: NodeName
-  prefix: NodePrefix
+  path: NodePath! @index
+  name: NodeName @index
+  prefix: NodePrefix @index
 
   displayName: String
   description: String!
@@ -547,9 +548,9 @@ type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["p
 }
 
 type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName
-  prefix: NodePrefix
+  path: NodePath! @index
+  name: NodeName @index
+  prefix: NodePrefix @index
 
   displayName: String
   description: String!
@@ -563,9 +564,9 @@ type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labe
 }
 
 type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
-  path: NodePath!
-  name: NodeName
-  prefix: NodePrefix
+  path: NodePath! @index
+  name: NodeName @index
+  prefix: NodePrefix @index
   displayName: String
   description: String!
   maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
@@ -577,7 +578,7 @@ type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["publ
 }
 
 type License @additionalLabels(labels: ["published"]){
-  name: String!
+  name: String! @index
 }
 
 type Signature @additionalLabels(labels: ["published"]){
@@ -585,8 +586,8 @@ type Signature @additionalLabels(labels: ["published"]){
 }
 
 type Maintainer @additionalLabels(labels: ["published"]){
-  name: String
-  email: String!
+  name: String @index
+  email: String! @index
   url: String
 }
 

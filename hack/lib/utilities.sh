@@ -169,7 +169,7 @@ kind::create_cluster() {
     kind create cluster \
       --name="${KIND_CLUSTER_NAME}" \
       --image="kindest/node:${KUBERNETES_VERSION}" \
-      --config "${REPO_DIR}/hack/kind/config.yaml" \
+      --config="${REPO_DIR}/hack/cluster-config/kind/config.yaml" \
       --wait=5m
 }
 
@@ -236,13 +236,22 @@ docker::delete_images() {
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_MANIFESTS - if set to true, then manifests from 'test/och-content' will be populated instead
+#  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
+    readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
+    readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
 
     export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
     export USE_TEST_MANIFESTS=${USE_TEST_MANIFESTS:-${VOLTRON_USE_TEST_MANIFESTS}}
+    export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${VOLTRON_INCREASE_RESOURCE_LIMITS}}
+
+    # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      shout "Using higher resource requests and limits from ${CLUSTER_CONFIG_DIR}"
+    fi
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
@@ -270,10 +279,17 @@ voltron::install_upgrade::charts() {
     echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
 
     if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly VOLTRON_OVERRIDES="${REPO_DIR}/hack/kind/overrides.voltron.yaml"
+      readonly VOLTRON_OVERRIDES="${KIND_CONFIG_DIR}/overrides.voltron.yaml"
       echo -e "- Applying overrides from ${VOLTRON_OVERRIDES}\n"
     else # currently, only KIND needs custom settings
       readonly VOLTRON_OVERRIDES=""
+    fi
+
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      readonly VOLTRON_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.voltron.higher-res-limits.yaml"
+      echo -e "- Applying overrides from ${VOLTRON_RESOURCE_OVERRIDES}\n"
+    else
+      readonly VOLTRON_RESOURCE_OVERRIDES=""
     fi
 
     if [ "${MOCK_OCH_GRAPHQL}" == "false" ]; then
@@ -306,6 +322,7 @@ voltron::install_upgrade::charts() {
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         ${VOLTRON_SET_FLAGS} \
         -f "${VOLTRON_OVERRIDES}" \
+        -f "${VOLTRON_RESOURCE_OVERRIDES}" \
         --wait
 }
 
@@ -330,10 +347,18 @@ voltron::install_upgrade::kubed() {
 voltron::install_upgrade::neo4j() {
     shout "- Installing Neo4j Helm chart..."
 
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      readonly NEO4J_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.neo4j.higher-res-limits.yaml"
+      echo -e "- Applying overrides from ${NEO4J_RESOURCE_OVERRIDES}\n"
+    else
+      readonly NEO4J_RESOURCE_OVERRIDES=""
+    fi
+
     helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
         --install \
         --create-namespace \
         --namespace="neo4j" \
+        -f "${NEO4J_RESOURCE_OVERRIDES}" \
         --wait
 
     echo -e "\n- Waiting for Neo4j database to be ready...\n"
@@ -348,7 +373,7 @@ voltron::install_upgrade::ingress_controller() {
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
 
     if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly INGRESS_CTRL_OVERRIDES="${REPO_DIR}/hack/kind/overrides.ingress-nginx.yaml"
+      readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
       echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
     else # currently, only KIND needs custom settings
       readonly INGRESS_CTRL_OVERRIDES=""
@@ -402,7 +427,7 @@ host::update::voltron_hosts() {
 host::install:trust_self_signed_cert() {
   shout "- Trusting self-signed TLS certificate if not already trusted..."
   CERT_FILE="voltron.local.crt"
-  CERT_PATH="${REPO_DIR}/hack/kind/${CERT_FILE}"
+  CERT_PATH="${REPO_DIR}/hack/cluster-config/kind/${CERT_FILE}"
   OS="$(host::os)"
 
   echo "Certificate path: ${CERT_PATH}"
