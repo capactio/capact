@@ -533,11 +533,9 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 		return "", nil
 	}
 
-	params := &mapEvalParameters{
-		items: map[string]interface{}{},
-	}
+	params := &mapEvalParameters{}
 	for _, a := range args {
-		params.items[a.Name] = a.Name
+		params.Set(a.Name)
 	}
 
 	notSatisfied, err := r.evaluateWhenExpression(params, *step.VoltronWhen)
@@ -556,6 +554,12 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 }
 
 // TODO(mszostok): Copied from POC algorithm, replace lib for expression
+//
+// We can change lib to `github.com/antonmedv/expr` and create our own functions which will allow us to introspect which artifact satisfied a given step:
+//  - isDefined(foo,bar,baz)
+//  - isNotDefined(foo,bar,baz)
+//  - isDefined(foo,bar,baz) && isNotDefined(foo,bar,baz)
+//  - isDefined(foo,bar,baz) || isNotDefined(foo,bar,baz)
 func (*dedicatedRenderer) evaluateWhenExpression(params *mapEvalParameters, exprString string) (interface{}, error) {
 	expr, err := govaluate.NewEvaluableExpression(exprString)
 	if err != nil {

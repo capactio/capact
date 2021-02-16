@@ -48,6 +48,14 @@ type mapEvalParameters struct {
 	lastVisited string
 }
 
+func (p *mapEvalParameters) Set(name string) {
+	if p.items == nil {
+		p.items = map[string]interface{}{}
+	}
+
+	p.items[name] = name
+}
+
 func (p *mapEvalParameters) Get(name string) (interface{}, error) {
 	value, found := p.items[name]
 	if !found {

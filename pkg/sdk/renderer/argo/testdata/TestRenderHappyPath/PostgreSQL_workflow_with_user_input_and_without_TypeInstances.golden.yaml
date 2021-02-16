@@ -9,7 +9,10 @@ args:
         - name: input-parameters
       metadata: {}
       name: postgres-install
-      outputs: {}
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+          name: postgresql
       steps:
       - - arguments:
             artifacts:

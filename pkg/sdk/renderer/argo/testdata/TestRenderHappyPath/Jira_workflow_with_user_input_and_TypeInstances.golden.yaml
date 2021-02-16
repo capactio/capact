@@ -7,6 +7,8 @@ args:
       inputs:
         artifacts:
         - name: input-parameters
+        - name: postgresql
+          optional: true
       metadata: {}
       name: jira-install
       outputs: {}
@@ -49,7 +51,7 @@ args:
                       hosts:
                       - host: jira-cloud.voltron.local
                         paths: ['/']
-            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
           name: create-helm-args
           template: jira-install-create-helm-args-template
@@ -79,7 +81,10 @@ args:
         - name: input-parameters
       metadata: {}
       name: jira-install-install-db-postgres-install
-      outputs: {}
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+          name: postgresql
       steps:
       - - arguments:
             artifacts:
