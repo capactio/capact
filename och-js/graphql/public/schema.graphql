@@ -9,6 +9,7 @@ directive @relation(
 ) on FIELD_DEFINITION | OBJECT
 directive @additionalLabels(labels: [String]) on OBJECT
 directive @cypher(statement: String) on FIELD_DEFINITION
+directive @index on FIELD_DEFINITION
 
 """
 Arbitrary data
@@ -586,7 +587,7 @@ type Signature @additionalLabels(labels: ["published"]){
 
 type Maintainer @additionalLabels(labels: ["published"]){
   name: String @index
-  email: String! @id
+  email: String! @index
   url: String
 }
 

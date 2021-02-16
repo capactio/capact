@@ -236,6 +236,7 @@ docker::delete_images() {
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_MANIFESTS - if set to true, then manifests from 'test/och-content' will be populated instead
+#  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
 
@@ -243,6 +244,15 @@ voltron::install_upgrade::charts() {
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
     export USE_TEST_MANIFESTS=${USE_TEST_MANIFESTS:-${VOLTRON_USE_TEST_MANIFESTS}}
+    export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-"true"}
+
+    # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      readonly INCREASE_RESOURCE_LIMITS_OVERRIDES_DIR="${REPO_DIR}/hack"
+      shout "Using higher resource requests and limits from ${INCREASE_RESOURCE_LIMITS_OVERRIDES_DIR}"
+    else
+      readonly INCREASE_RESOURCE_LIMITS_OVERRIDES_DIR=""
+    fi
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
@@ -276,6 +286,13 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_OVERRIDES=""
     fi
 
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      readonly VOLTRON_RESOURCE_OVERRIDES="${INCREASE_RESOURCE_LIMITS_OVERRIDES_DIR}/overrides.voltron.higher-res-limits.yaml"
+      echo -e "- Applying overrides from ${VOLTRON_RESOURCE_OVERRIDES}\n"
+    else
+      readonly VOLTRON_RESOURCE_OVERRIDES=""
+    fi
+
     if [ "${MOCK_OCH_GRAPHQL}" == "false" ]; then
       readonly OCH_IMAGE="och-js"
     else
@@ -306,6 +323,7 @@ voltron::install_upgrade::charts() {
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         ${VOLTRON_SET_FLAGS} \
         -f "${VOLTRON_OVERRIDES}" \
+        -f "${VOLTRON_RESOURCE_OVERRIDES}" \
         --wait
 }
 
@@ -330,10 +348,18 @@ voltron::install_upgrade::kubed() {
 voltron::install_upgrade::neo4j() {
     shout "- Installing Neo4j Helm chart..."
 
+    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
+      readonly NEO4J_RESOURCE_OVERRIDES="${INCREASE_RESOURCE_LIMITS_OVERRIDES_DIR}/overrides.neo4j.higher-res-limits.yaml"
+      echo -e "- Applying overrides from ${NEO4J_RESOURCE_OVERRIDES}\n"
+    else
+      readonly NEO4J_RESOURCE_OVERRIDES=""
+    fi
+
     helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
         --install \
         --create-namespace \
         --namespace="neo4j" \
+        -f "${NEO4J_RESOURCE_OVERRIDES}" \
         --wait
 
     echo -e "\n- Waiting for Neo4j database to be ready...\n"

@@ -1,0 +1,13 @@
+# Voltron overrides, which are used on local machine and GKE cluster when INCREASE_RESOURCE_LIMITS=true.
+
+neo4j:
+  core:
+    standalone: true
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1768Mi
+      limits:
+        cpu: 1
+        memory: 3072Mi
+
