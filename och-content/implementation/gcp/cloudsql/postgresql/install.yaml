@@ -71,6 +71,10 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.cloudsql-run.outputs.artifacts.additional}}"
             steps:
               - - name: create-cloudsql-args
                   voltron-action: jinja2.template

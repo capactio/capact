@@ -505,8 +505,8 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 //
 //   - name: stack-install
 //     steps:
-//     - - name: entrypoint                                          # <-- Step which execute template with arguments
-//         template: jira-install
+//     - - name: entrypoint										# Step which execute template with arguments.
+//         template: jira-install								# We record input arguments under template name.
 //         arguments:
 //           artifacts:
 //             - name: postgresql
@@ -518,9 +518,9 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 //        - name: postgresql
 //          optional: true
 //    steps:
-//      - - voltron-when: postgresql == nil 						# Check whether this step is satisfied by input arguments.
-//          name: install-db										# For that we need to have option to check which arguments were passed
-//																	# to this step.
+//      - - voltron-when: postgresql == nil						# Check whether this step is satisfied by input arguments.
+//          name: install-db									# For that we need to have option to check which arguments were passed
+//																# to this step.
 func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, step *WorkflowStep) (string, error) {
 	if step.VoltronWhen == nil {
 		return "", nil
@@ -553,13 +553,12 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 	return params.lastVisited, nil
 }
 
-// TODO(mszostok): Copied from POC algorithm, replace lib for expression
-//
-// We can change lib to `github.com/antonmedv/expr` and create our own functions which will allow us to introspect which artifact satisfied a given step:
-//  - isDefined(foo,bar,baz)
-//  - isNotDefined(foo,bar,baz)
-//  - isDefined(foo,bar,baz) && isNotDefined(foo,bar,baz)
-//  - isDefined(foo,bar,baz) || isNotDefined(foo,bar,baz)
+// TODO:
+//   We can change lib to `github.com/antonmedv/expr` and create our own functions which will allow us to introspect which artifact satisfied a given step:
+//    - isDefined(foo,bar,baz)
+//    - isNotDefined(foo,bar,baz)
+//    - isDefined(foo,bar,baz) && isNotDefined(foo,bar,baz)
+//    - isDefined(foo,bar,baz) || isNotDefined(foo,bar,baz)
 func (*dedicatedRenderer) evaluateWhenExpression(params *mapEvalParameters, exprString string) (interface{}, error) {
 	expr, err := govaluate.NewEvaluableExpression(exprString)
 	if err != nil {

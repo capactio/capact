@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.confluence
+   prefix: cap.implementation.atlassian.confluence
   name: install
   displayName: Install Confluence
   description: Action which installs Confluence via Helm chart
@@ -90,6 +90,8 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+                - name: postgresql
+                  optional: true
             steps:
               # If the postgresql TypeInstance was not provided, then create it
               # using the imported 'postgresql.install' Interface.
@@ -116,7 +118,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: database-input
                         raw:
                           data: |
@@ -156,7 +158,7 @@ spec:
                                 - host: confluence.voltron.local
                                   paths: ['/']
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
               - - name: fill-params-in-helm-args
                   voltron-action: jinja2.template
