@@ -3,8 +3,8 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.stack.install # Computed during fetching the manifest
-  name: install
-  displayName: Example how to install Jira and Confluence with shared database sequentially.
+  name: install-parallel
+  displayName: Example how to install Jira and Confluence with shared database parallel.
   description: Action which installs Jira via Helm chart
   documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
   supportURL: https://mox.sh/helm/
@@ -76,7 +76,7 @@ spec:
       workflow:
         entrypoint: stack-install
         templates:
-          - name: stack-install-sequentialy
+          - name: stack-install
             inputs:
               artifacts:
                 - name: input-parameters
@@ -93,6 +93,30 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              - - name: jira-install
+                  template: jira-install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+
+                - name: confluence-install
+                  template: confluence-install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+
+          - name: jira-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+            steps:
               - - name: extract-jira-host
                   voltron-action: jinja2.template
                   arguments:
@@ -108,10 +132,16 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                        from: "{{inputs.artifacts.postgresql}}"
                       - name: input-parameters
                         from: "{{steps.extract-jira-host.outputs.artifacts.render}}"
 
+          - name: confluence-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+            steps:
               - - name: extract-confluence-host
                   voltron-action: jinja2.template
                   arguments:
@@ -122,12 +152,12 @@ spec:
                             host: {{ confluenceHost }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-                - name: confluence-install
+              - - name: confluence-install
                   voltron-action: confluence.install
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                        from: "{{inputs.artifacts.postgresql}}"
                       - name: input-parameters
                         from: "{{steps.extract-confluence-host.outputs.artifacts.render}}"
 signature:

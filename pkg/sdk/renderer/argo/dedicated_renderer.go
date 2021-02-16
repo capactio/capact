@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/util/rand"
 	"strings"
 
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -113,14 +114,14 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 				r.registerTemplateInputArguments(step)
 
 				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
-				satisfied, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
+				satisfiedArg, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
 				if err != nil {
 					return err
 				}
 
 				// 2.1 Replace step and emit input arguments as step output
-				if satisfied != "" {
-					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(step, satisfied)
+				if satisfiedArg != "" {
+					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(step, satisfiedArg)
 					step = emitStep
 					r.addToRootTemplates(wfTpl)
 				}
@@ -594,7 +595,7 @@ func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(step *WorkflowStep, in
 
 	// 1. Create step which outputs workflow input argument as step artifact
 	userInputWfTpl := &wfv1.Template{
-		Name:      fmt.Sprintf("mock-%s", step.Name),
+		Name:      fmt.Sprintf("mock-%s-%s", step.Name, rand.String(5)),
 		Container: r.sleepContainer(),
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
