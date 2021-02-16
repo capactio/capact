@@ -6,7 +6,7 @@ const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
 interface CreateTypeInstancesArgs {
   in: {
-    typeInstances: Array<object>;
+    typeInstances: Array<{ alias: string }>;
     usesRelations: Array<{ from: string; to: string }>;
   };
 }
@@ -21,6 +21,13 @@ export const schema = makeAugmentedSchema({
         context
       ) => {
         const { typeInstances, usesRelations } = args.in;
+
+        const aliases = typeInstances.map((x) => x.alias);
+        if (new Set(aliases).size !== aliases.length) {
+          throw new Error(
+            "Failed to create TypeInstances, due to duplicated TypeInstance aliases. Please ensure that each TypeInstance alias is unique."
+          );
+        }
 
         const neo4jSession = context.driver.session();
 
@@ -46,7 +53,9 @@ export const schema = makeAugmentedSchema({
               if (
                 createTypeInstanceResult.records.length !== typeInstances.length
               ) {
-                throw new Error("Failed to create some TypeInstances. Please verify, if you provided all the required fields and the alias for TypeInstances.");
+                throw new Error(
+                  "Failed to create some TypeInstances. Please verify, if you provided all the required fields for TypeInstances."
+                );
               }
 
               const aliasMappings: {
@@ -54,7 +63,7 @@ export const schema = makeAugmentedSchema({
               } = createTypeInstanceResult.records.reduce(
                 (acc: { [key: string]: string }, cur) => ({
                   ...acc,
-                  [cur.get("alias")]: cur.get("uuid"),
+                  [cur.get("alias") || cur.get("uuid")]: cur.get("uuid"),
                 }),
                 {}
               );
@@ -83,7 +92,9 @@ export const schema = makeAugmentedSchema({
                 createRelationsResult.records.length !==
                 usesRelationsParams.length
               ) {
-                throw new Error("Failed to create some relations. Please verify, if you use proper aliases or IDs in relations definition.");
+                throw new Error(
+                  "Failed to create some relations. Please verify, if you use proper aliases or IDs in relations definition."
+                );
               }
 
               return Object.entries(aliasMappings).map((entry) =>
