@@ -56,3 +56,30 @@ affinity: {}
 gateway:
   username: graphql
   password: t0p_s3cr3t
+
+clusterPolicyRules:
+  # Insert Interface paths with Implementations. For example:
+  #
+  #  cap.interface.database.postgresql.install:
+  #    oneOf:
+  #      - implementationConstrains:
+  #          requires:
+  #            - path: "cap.type.gcp.auth.service-account"
+  #          attribute:
+  #            - path: "cap.attribute.cloud.provider.gcp"
+  #        injectTypeInstances:
+  #          - id: {uuid}
+  #            typeRef:
+  #              path: "cap.type.gcp.auth.service-account"
+  #              revision: "0.1.0"
+  #      - implementationConstrains:
+  #          attribute: cap.attribute.cloud.provider.aws
+  #      - implementationConstrains:
+  #          path: cap.implementation.bitnami.postgresql.install
+
+  cap.*: # any other Interface
+    oneOf:
+      - implementationConstrains:
+          requires:
+            - path: "cap.core.type.platform.kubernetes"
+              # any revision
