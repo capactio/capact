@@ -36,7 +36,7 @@ type dedicatedRenderer struct {
 	entrypointStep     *wfv1.WorkflowStep
 	tplInputArguments  map[string]wfv1.Artifacts
 
-	outputTypeInstances OutputTypeInstances
+	outputTypeInstances *OutputTypeInstances
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -45,6 +45,10 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 		policyEnforcedCli:   policyEnforcedCli,
 		typeInstanceHandler: typeInstanceHandler,
 		tplInputArguments:   map[string]wfv1.Artifacts{},
+		outputTypeInstances: &OutputTypeInstances{
+			typeInstances: []OutputTypeInstance{},
+			relations:     []OutputTypeInstanceRelation{},
+		},
 	}
 
 	for _, opt := range opts {
@@ -83,7 +87,7 @@ func (r *dedicatedRenderer) AddInputTypeInstance(workflow *Workflow) error {
 }
 
 func (r *dedicatedRenderer) AddOutputTypeInstances(workflow *Workflow) error {
-	return r.typeInstanceHandler.AddUploadTypeInstancesTemplate(workflow, &r.outputTypeInstances)
+	return r.typeInstanceHandler.AddUploadTypeInstancesTemplate(workflow, r.outputTypeInstances)
 }
 
 func (r *dedicatedRenderer) GetRootTemplates() []*Template {

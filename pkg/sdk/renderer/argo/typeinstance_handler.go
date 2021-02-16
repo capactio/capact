@@ -11,7 +11,7 @@ import (
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
-	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
+	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )
@@ -81,15 +81,15 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
-	payload := &argoactions.CreateTypeInstancesInput{
-		TypeInstances: []*argoactions.CreateTypeInstanceInput{},
-		UsesRelations: []*argoactions.TypeInstanceUsesRelationInput{},
+	payload := &graphqllocal.CreateTypeInstancesInput{
+		TypeInstances: []*graphqllocal.CreateTypeInstanceInput{},
+		UsesRelations: []*graphqllocal.TypeInstanceUsesRelationInput{},
 	}
 
 	for _, ti := range output.typeInstances {
-		payload.TypeInstances = append(payload.TypeInstances, &argoactions.CreateTypeInstanceInput{
+		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
 			Alias: &ti.ArtifactName,
-			TypeRef: &argoactions.TypeReferenceInput{
+			TypeRef: &graphqllocal.TypeReferenceInput{
 				Path:     ti.TypeInstance.TypeRef.Path,
 				Revision: *ti.TypeInstance.TypeRef.Revision,
 			},
@@ -107,7 +107,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 	}
 
 	for _, relation := range output.relations {
-		payload.UsesRelations = append(payload.UsesRelations, &argoactions.TypeInstanceUsesRelationInput{
+		payload.UsesRelations = append(payload.UsesRelations, &graphqllocal.TypeInstanceUsesRelationInput{
 			From: relation.From,
 			To:   relation.To,
 		})
