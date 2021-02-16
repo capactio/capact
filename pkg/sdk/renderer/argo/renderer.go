@@ -110,6 +110,10 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 
 	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
 
+	if err := dedicateRenderer.AddOutputTypeInstances(rootWorkflow); err != nil {
+		return nil, err
+	}
+
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {
 		return nil, err

@@ -11,6 +11,7 @@ import (
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
+	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )
@@ -56,6 +57,102 @@ func (r *TypeInstanceHandler) AddInputTypeInstance(rootWorkflow *Workflow, insta
 
 		rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 	}
+
+	return nil
+}
+
+type OutputTypeInstanceRelation struct {
+	From string
+	To   string
+}
+
+type OutputTypeInstance struct {
+	ArtifactName string
+	TypeInstance types.OutputTypeInstance
+}
+
+type OutputTypeInstances struct {
+	typeInstances []OutputTypeInstance
+	relations     []OutputTypeInstanceRelation
+}
+
+func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workflow, output *OutputTypeInstances) error {
+	// TODO create proper payload
+	artifacts := wfv1.Artifacts{}
+	arguments := wfv1.Artifacts{}
+
+	payload := &argoactions.CreateTypeInstancesInput{
+		TypeInstances: []*argoactions.CreateTypeInstanceInput{},
+		UsesRelations: []*argoactions.TypeInstanceUsesRelationInput{},
+	}
+
+	for _, ti := range output.typeInstances {
+		payload.TypeInstances = append(payload.TypeInstances, &argoactions.CreateTypeInstanceInput{
+			Alias: &ti.ArtifactName,
+			TypeRef: &argoactions.TypeReferenceInput{
+				Path:     ti.TypeInstance.TypeRef.Path,
+				Revision: *ti.TypeInstance.TypeRef.Revision,
+			},
+		})
+
+		artifacts = append(artifacts, wfv1.Artifact{
+			Name: ti.ArtifactName,
+			Path: fmt.Sprintf("/upload/typeInstances/%s", ti.ArtifactName),
+		})
+
+		arguments = append(arguments, wfv1.Artifact{
+			Name: ti.ArtifactName,
+			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", ti.ArtifactName),
+		})
+	}
+
+	for _, relation := range output.relations {
+		payload.UsesRelations = append(payload.UsesRelations, &argoactions.TypeInstanceUsesRelationInput{
+			From: relation.From,
+			To:   relation.To,
+		})
+	}
+
+	payloadBytes, _ := yaml.Marshal(payload)
+
+	artifacts = append(artifacts, wfv1.Artifact{
+		Name: "payload",
+		Path: "/upload/payload",
+		ArtifactLocation: wfv1.ArtifactLocation{
+			Raw: &wfv1.RawArtifact{
+				Data: string(payloadBytes),
+			},
+		},
+	})
+
+	template := &wfv1.Template{
+		Name:      "upload-output-type-instances",
+		Container: &apiv1.Container{},
+		Inputs: wfv1.Inputs{
+			Artifacts: artifacts,
+		},
+	}
+
+	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	if err != nil {
+		return err
+	}
+
+	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: &wfv1.WorkflowStep{
+					Name:     fmt.Sprintf("%s-step", template.Name),
+					Template: template.Name,
+					Arguments: wfv1.Arguments{
+						Artifacts: arguments,
+					},
+				},
+			},
+		},
+	}, rootWorkflow.Templates[idx].Steps...)
+
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 
 	return nil
 }

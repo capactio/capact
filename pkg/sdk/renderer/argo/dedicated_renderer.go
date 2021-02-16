@@ -35,6 +35,8 @@ type dedicatedRenderer struct {
 	rootTemplate       *Template
 	entrypointStep     *wfv1.WorkflowStep
 	tplInputArguments  map[string]wfv1.Artifacts
+
+	outputTypeInstances OutputTypeInstances
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -78,6 +80,10 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Work
 
 func (r *dedicatedRenderer) AddInputTypeInstance(workflow *Workflow) error {
 	return r.typeInstanceHandler.AddInputTypeInstance(workflow, r.inputTypeInstances)
+}
+
+func (r *dedicatedRenderer) AddOutputTypeInstances(workflow *Workflow) error {
+	return r.typeInstanceHandler.AddUploadTypeInstancesTemplate(workflow, &r.outputTypeInstances)
 }
 
 func (r *dedicatedRenderer) GetRootTemplates() []*Template {
