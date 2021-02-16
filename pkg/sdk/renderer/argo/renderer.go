@@ -3,7 +3,6 @@ package argo
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"time"
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
@@ -76,14 +75,16 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// 3.1 Add our own root step and replace entrypoint
 	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
-	// 4. Add user input if provided
-	dedicatedRenderer.AddUserInputSecretRef(rootWorkflow)
+	// 4. Add user input
+	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
 	// 5. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
+
 	// 6. Add steps to populate rootWorkflow with input TypeInstances
+	// TODO: should be handled properly in https://cshark.atlassian.net/browse/SV-189
 	if err := dedicatedRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
 		return nil, err
 	}
@@ -96,14 +97,6 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 
 	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
 
-	fmt.Println(len(dedicatedRenderer.tplInputArguments))
-	for k, v := range dedicatedRenderer.tplInputArguments {
-		fmt.Println(k)
-		for _, art := range v {
-			fmt.Println("==", art.Name)
-		}
-		fmt.Println()
-	}
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {
 		return nil, err

@@ -264,7 +264,7 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 	return workflow, artifactsNameMapping, nil
 }
 
-func (r *dedicatedRenderer) AddUserInputSecretRef(rootWorkflow *Workflow) {
+func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workflow) {
 	if r.userInputSecretRef == nil {
 		return
 	}
