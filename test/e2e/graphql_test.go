@@ -222,48 +222,7 @@ var _ = Describe("GraphQL API", func() {
 		It("creates multiple TypeInstances with uses relations", func() {
 			cli := getOCHGraphQLClient()
 
-			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, &gqllocalapi.CreateTypeInstancesInput{
-				TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-					{
-						Alias: ptr.String("parent"),
-						TypeRef: &gqllocalapi.TypeReferenceInput{
-							Path:     "com.parent",
-							Revision: "0.1.0",
-						},
-						Attributes: []*gqllocalapi.AttributeReferenceInput{
-							{
-								Path:     "com.attr",
-								Revision: "0.1.0",
-							},
-						},
-						Value: map[string]interface{}{
-							"foo": "bar",
-						},
-					},
-					{
-						Alias: ptr.String("child"),
-						TypeRef: &gqllocalapi.TypeReferenceInput{
-							Path:     "com.child",
-							Revision: "0.1.0",
-						},
-						Attributes: []*gqllocalapi.AttributeReferenceInput{
-							{
-								Path:     "com.attr",
-								Revision: "0.1.0",
-							},
-						},
-						Value: map[string]interface{}{
-							"foo": "bar",
-						},
-					},
-				},
-				UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
-					{
-						From: "parent",
-						To:   "child",
-					},
-				},
-			})
+			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
 
 			Expect(err).NotTo(HaveOccurred())
 			for _, ti := range createdTypeInstanceIDs {
@@ -276,77 +235,8 @@ var _ = Describe("GraphQL API", func() {
 			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
 			Expect(childTiID).ToNot(BeNil())
 
-			assertTypeInstance(ctx, cli, *childTiID, &graphql.TypeInstance{
-				ResourceVersion: 1,
-				Metadata: &graphql.TypeInstanceMetadata{
-					ID: *childTiID,
-					Attributes: []*graphql.AttributeReference{
-						{
-							Path:     "com.attr",
-							Revision: "0.1.0",
-						},
-					},
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.child",
-						Revision: "0.1.0",
-					},
-					Value: map[string]interface{}{
-						"foo": "bar",
-					},
-				},
-				Uses: []*graphql.TypeInstance{},
-				UsedBy: []*graphql.TypeInstance{
-					{
-						Metadata: &graphql.TypeInstanceMetadata{
-							ID: *parentTiID,
-						},
-						Spec: &graphql.TypeInstanceSpec{
-							TypeRef: &graphql.TypeReference{
-								Path:     "com.parent",
-								Revision: "0.1.0",
-							},
-						},
-					},
-				},
-			})
-
-			assertTypeInstance(ctx, cli, *parentTiID, &graphql.TypeInstance{
-				ResourceVersion: 1,
-				Metadata: &graphql.TypeInstanceMetadata{
-					ID: *parentTiID,
-					Attributes: []*graphql.AttributeReference{
-						{
-							Path:     "com.attr",
-							Revision: "0.1.0",
-						},
-					},
-				},
-				Spec: &graphql.TypeInstanceSpec{
-					TypeRef: &graphql.TypeReference{
-						Path:     "com.parent",
-						Revision: "0.1.0",
-					},
-					Value: map[string]interface{}{
-						"foo": "bar",
-					},
-				},
-				Uses: []*graphql.TypeInstance{
-					{
-						Metadata: &graphql.TypeInstanceMetadata{
-							ID: *childTiID,
-						},
-						Spec: &graphql.TypeInstanceSpec{
-							TypeRef: &graphql.TypeReference{
-								Path:     "com.child",
-								Revision: "0.1.0",
-							},
-						},
-					},
-				},
-				UsedBy: []*graphql.TypeInstance{},
-			})
+			assertTypeInstance(ctx, cli, *childTiID, expectedChildTypeInstance(*childTiID, *parentTiID))
+			assertTypeInstance(ctx, cli, *parentTiID, expectedParentTypeInstance(*parentTiID, *childTiID))
 		})
 	})
 })
@@ -378,4 +268,125 @@ func findCreatedTypeInstanceID(alias string, instances []graphql.CreateTypeInsta
 func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
 	err := cli.DeleteTypeInstance(ctx, ID)
 	Expect(err).ToNot(HaveOccurred())
+}
+
+func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
+	return &gqllocalapi.CreateTypeInstancesInput{
+		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
+			{
+				Alias: ptr.String("parent"),
+				TypeRef: &gqllocalapi.TypeReferenceInput{
+					Path:     "com.parent",
+					Revision: "0.1.0",
+				},
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
+					{
+						Path:     "com.attr",
+						Revision: "0.1.0",
+					},
+				},
+				Value: map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+			{
+				Alias: ptr.String("child"),
+				TypeRef: &gqllocalapi.TypeReferenceInput{
+					Path:     "com.child",
+					Revision: "0.1.0",
+				},
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
+					{
+						Path:     "com.attr",
+						Revision: "0.1.0",
+					},
+				},
+				Value: map[string]interface{}{
+					"foo": "bar",
+				},
+			},
+		},
+		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
+			{
+				From: "parent",
+				To:   "child",
+			},
+		},
+	}
+}
+
+func expectedChildTypeInstance(ID string, parentID string) *graphql.TypeInstance {
+	return &graphql.TypeInstance{
+		ResourceVersion: 1,
+		Metadata: &graphql.TypeInstanceMetadata{
+			ID: ID,
+			Attributes: []*graphql.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &gqllocalapi.TypeInstanceSpec{
+			TypeRef: &gqllocalapi.TypeReference{
+				Path:     "com.child",
+				Revision: "0.1.0",
+			},
+			Value: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+		Uses: []*graphql.TypeInstance{},
+		UsedBy: []*graphql.TypeInstance{
+			{
+				Metadata: &graphql.TypeInstanceMetadata{
+					ID: parentID,
+				},
+				Spec: &graphql.TypeInstanceSpec{
+					TypeRef: &graphql.TypeReference{
+						Path:     "com.parent",
+						Revision: "0.1.0",
+					},
+				},
+			},
+		},
+	}
+}
+
+func expectedParentTypeInstance(ID string, childID string) *graphql.TypeInstance {
+	return &graphql.TypeInstance{
+		ResourceVersion: 1,
+		Metadata: &graphql.TypeInstanceMetadata{
+			ID: ID,
+			Attributes: []*graphql.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &graphql.TypeInstanceSpec{
+			TypeRef: &graphql.TypeReference{
+				Path:     "com.parent",
+				Revision: "0.1.0",
+			},
+			Value: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+		Uses: []*graphql.TypeInstance{
+			{
+				Metadata: &graphql.TypeInstanceMetadata{
+					ID: childID,
+				},
+				Spec: &graphql.TypeInstanceSpec{
+					TypeRef: &graphql.TypeReference{
+						Path:     "com.child",
+						Revision: "0.1.0",
+					},
+				},
+			},
+		},
+		UsedBy: []*graphql.TypeInstance{},
+	}
 }
