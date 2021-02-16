@@ -40,10 +40,36 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return nil, errors.Wrap(err, "while executing query to create TypeInstance")
+		return nil, errors.Wrap(err, "while executing mutation to create TypeInstance")
 	}
 
 	return &resp.TypeInstance, nil
+}
+
+func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreateTypeInstanceOutput, error) {
+	query := `mutation($in: CreateTypeInstancesInput!) {
+		createTypeInstances(
+			in: $in
+		) {
+			alias
+			id
+		}
+	}`
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	var resp struct {
+		CreatedTypeInstances []ochlocalgraphql.CreateTypeInstanceOutput `json:"createTypeInstances"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing mutation to create TypeInstances")
+	}
+
+	return resp.CreatedTypeInstances, nil
 }
 
 func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {

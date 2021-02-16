@@ -11,7 +11,7 @@ import (
 type AttributeFilterInput struct {
 	Path string      `json:"path"`
 	Rule *FilterRule `json:"rule"`
-	// If not provided, latest revision for a given Attribute is used
+	// If not provided, any revision of the Attribute applies to this filter
 	Revision *string `json:"revision"`
 }
 
@@ -21,26 +21,39 @@ type AttributeReference struct {
 }
 
 type AttributeReferenceInput struct {
-	Path string `json:"path"`
-	// If not provided, latest revision for a given Attribute is used
-	Revision *string `json:"revision"`
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
 
 type CreateTypeInstanceInput struct {
+	// Used to define the relationships, between the created TypeInstances
+	Alias      *string                    `json:"alias"`
 	TypeRef    *TypeReferenceInput        `json:"typeRef"`
 	Attributes []*AttributeReferenceInput `json:"attributes"`
 	Value      interface{}                `json:"value"`
 }
 
+type CreateTypeInstanceOutput struct {
+	ID    string `json:"id"`
+	Alias string `json:"alias"`
+}
+
+type CreateTypeInstancesInput struct {
+	TypeInstances []*CreateTypeInstanceInput       `json:"typeInstances"`
+	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
+}
+
 type TypeInstance struct {
-	Metadata        *TypeInstanceMetadata `json:"metadata"`
 	ResourceVersion int                   `json:"resourceVersion"`
+	Metadata        *TypeInstanceMetadata `json:"metadata"`
 	Spec            *TypeInstanceSpec     `json:"spec"`
+	Uses            []*TypeInstance       `json:"uses"`
+	UsedBy          []*TypeInstance       `json:"usedBy"`
 }
 
 type TypeInstanceFilter struct {
-	Attribute []*AttributeFilterInput `json:"attribute"`
-	TypeRef   *TypeRefFilterInput     `json:"typeRef"`
+	Attributes []*AttributeFilterInput `json:"attributes"`
+	TypeRef    *TypeRefFilterInput     `json:"typeRef"`
 }
 
 type TypeInstanceInstrumentation struct {
@@ -75,9 +88,16 @@ type TypeInstanceSpec struct {
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
 }
 
+type TypeInstanceUsesRelationInput struct {
+	// Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+	From string `json:"from"`
+	// Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+	To string `json:"to"`
+}
+
 type TypeRefFilterInput struct {
 	Path string `json:"path"`
-	// If not provided, latest revision for a given Type is used
+	// If not provided, it returns TypeInstances for all revisions of given Type
 	Revision *string `json:"revision"`
 }
 
@@ -87,9 +107,8 @@ type TypeReference struct {
 }
 
 type TypeReferenceInput struct {
-	Path string `json:"path"`
-	// If not provided, latest revision for a given Type is used
-	Revision *string `json:"revision"`
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
 
 type UpdateTypeInstanceInput struct {

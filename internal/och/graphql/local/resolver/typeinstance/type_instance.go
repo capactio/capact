@@ -21,11 +21,20 @@ func (r *TypeInstanceResolver) TypeInstance(ctx context.Context, id string) (*gq
 	return dummyTypeInstance(id), nil
 }
 
-func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in *gqllocalapi.CreateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
+func (r *TypeInstanceResolver) CreateTypeInstance(ctx context.Context, in gqllocalapi.CreateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
 	return dummyTypeInstance("5cc47865-3339-4f6d-902e-fc59f2c61943"), nil
 }
 
-func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in *gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
+func (r *TypeInstanceResolver) CreateTypeInstances(ctx context.Context, in gqllocalapi.CreateTypeInstancesInput) ([]*gqllocalapi.CreateTypeInstanceOutput, error) {
+	return []*gqllocalapi.CreateTypeInstanceOutput{
+		{
+			Alias: "node",
+			ID:    dummyTypeInstance("5cc47865-3339-4f6d-902e-fc59f2c61943").Metadata.ID,
+		},
+	}, nil
+}
+
+func (r *TypeInstanceResolver) UpdateTypeInstance(ctx context.Context, id string, in gqllocalapi.UpdateTypeInstanceInput) (*gqllocalapi.TypeInstance, error) {
 	return dummyTypeInstance(id), nil
 }
 

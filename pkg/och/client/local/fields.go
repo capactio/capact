@@ -16,4 +16,26 @@ const typeInstanceFields = `
 	  }
 	  value
 	}
+	uses {
+		metadata {
+			id
+		}
+		spec {
+			typeRef {
+				path
+				revision
+			}
+		}
+	}
+	usedBy {
+		metadata {
+			id
+		}
+		spec {
+			typeRef {
+				path
+				revision
+			}
+		}
+	}
 `

@@ -32,6 +32,9 @@ type TypeInstance {
   metadata: TypeInstanceMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeInstanceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+
+  uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
+  usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
 }
 
 type TypeInstanceMetadata {
@@ -142,9 +145,35 @@ input TypeReferenceInput {
 }
 
 input CreateTypeInstanceInput {
+  """
+  Used to define the relationships, between the created TypeInstances
+  """
+  alias: String
   typeRef: TypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
+}
+
+input TypeInstanceUsesRelationInput {
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
+  from: String!
+
+  """
+  Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
+  """
+  to: String!
+}
+
+input CreateTypeInstancesInput {
+  typeInstances: [CreateTypeInstanceInput!]!
+  usesRelations: [TypeInstanceUsesRelationInput!]!
+}
+
+type CreateTypeInstanceOutput {
+  id: ID!
+  alias: String!
 }
 
 input UpdateTypeInstanceInput {
@@ -169,7 +198,8 @@ type Query {
         RETURN collect(ex) as excludedAttributes
       }
 
-      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
+      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)
+      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
       MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
       WHERE
       $filter = {} OR
@@ -213,6 +243,10 @@ type Query {
 }
 
 type Mutation {
+  createTypeInstances(
+    in: CreateTypeInstancesInput!
+  ): [CreateTypeInstanceOutput!]!
+
   # TODO extend input with TypeInstanceInstrumentation
   createTypeInstance(in: CreateTypeInstanceInput!): TypeInstance!
     @cypher(

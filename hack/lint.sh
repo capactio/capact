@@ -71,7 +71,7 @@ dockerfile::run_checks() {
 
 shellcheck::files_to_check() {
   pushd "$ROOT_PATH" > /dev/null
-  paths=$(find . -name '*.sh')
+  paths=$(find . -path ./och-js/node_modules -prune -false -o -name '*.sh')
   popd > /dev/null
 
   echo "$paths"
@@ -92,7 +92,6 @@ graphql::run_checks() {
   docker run --rm -v "$ROOT_PATH":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
     --src ./pkg/engine/api/graphql/schema.graphql \
     --src ./pkg/och/api/graphql/public/schema.graphql \
-    --src ./pkg/och/api/graphql/local/schema.graphql \
     --src ./och-js/graphql/public/schema.graphql \
     --src ./och-js/graphql/local/schema.graphql \
     --linter-args "-c ./ --format compact"
