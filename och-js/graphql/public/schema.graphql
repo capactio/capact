@@ -430,7 +430,7 @@ type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceReference @additionalLabels(labels: ["published"]){
-  path: NodePath @index
+  path: NodePath! @index
   revision: Version! @index
 }
 
@@ -535,7 +535,7 @@ interface MetadataBaseFields {
 }
 
 type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
-  path: NodePath @index
+  path: NodePath! @index
   name: NodeName @index
   prefix: NodePrefix @index
 
