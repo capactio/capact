@@ -20,14 +20,17 @@ spec:
 
   additionalOutput:
     typeInstances:
-      jira-helm-release:
+      postgresql:
         typeRef:
-          path: cap.type.helm.chart.release
+          path: cap.type.database.postgresql.config
           revision: 0.1.0
-    typeInstanceRelations:
+
+  outputTypeInstanceRelations:
       jira-config:
         uses:
-          - jira-helm-release
+          - postgresql
+      confluence-config:
+        uses:
           - postgresql
 
   implements:
@@ -51,6 +54,11 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.productivity.jira
+      alias: jira
+      methods:
+        - name: install
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
@@ -59,12 +67,21 @@ spec:
         entrypoint: stack-install
         templates:
           - name: stack-install
-            inputs:
-              artifacts:
-                - name: input-parameters
+#            inputs:
+#              artifacts:
+#                - name: input-parameters
             steps:
               - - name: install-shared-db
-                  voltron-action: postgres-install
+                  voltron-action: postgresql.install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                              password: okon
+                            defaultDBName: postgres
 
               - - name: jira-install
                   voltron-action: jira.install

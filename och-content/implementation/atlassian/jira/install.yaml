@@ -109,7 +109,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: database-input
                         raw:
                           data: |
@@ -146,7 +146,7 @@ spec:
                                 - host: jira-cloud.voltron.local
                                   paths: ['/']
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
               - - name: fill-params-in-helm-args
                   voltron-action: jinja2.template
