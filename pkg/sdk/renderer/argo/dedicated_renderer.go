@@ -16,7 +16,6 @@ import (
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
-	"sigs.k8s.io/yaml"
 )
 
 // dedicatedRenderer is dedicated for rendering a given workflow and it is not thread safe as it stores the
