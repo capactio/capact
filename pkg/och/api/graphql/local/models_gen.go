@@ -38,7 +38,7 @@ type CreateTypeInstancesInput struct {
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
 }
 
-type CreatedTypeInstanceOutput struct {
+type CreateTypeInstanceOutput struct {
 	ID    string `json:"id"`
 	Alias string `json:"alias"`
 }
