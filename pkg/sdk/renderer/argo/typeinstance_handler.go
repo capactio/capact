@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"sigs.k8s.io/yaml"
 )
 
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as

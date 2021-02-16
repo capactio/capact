@@ -8,7 +8,6 @@ require (
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/fatih/color v1.10.0
-	github.com/ghodss/yaml v1.0.0
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/google/go-cmp v0.5.1 // indirect

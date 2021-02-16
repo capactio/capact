@@ -7,10 +7,10 @@ import (
 	"os"
 	"sort"
 
-	"github.com/ghodss/yaml"
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"github.com/xeipuuv/gojsonschema"
+	"sigs.k8s.io/yaml"
 )
 
 type Validator interface {
