@@ -1,12 +1,7 @@
 args:
   workflow:
-    arguments:
-      artifacts:
-      - name: input-parameters
-        raw:
-          data: |
-            {}
-    entrypoint: main
+    arguments: {}
+    entrypoint: voltron-root
     templates:
     - arguments: {}
       inputs: {}
@@ -14,9 +9,6 @@ args:
       name: main
       outputs: {}
       steps:
-      - - arguments: {}
-          name: inject-runner-context-step
-          template: inject-runner-context
       - - arguments: {}
           name: second-level
           template: second-level
@@ -60,6 +52,18 @@ args:
       metadata: {}
       name: second-level
       outputs: {}
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: start-entrypoint
+          template: main
     - arguments: {}
       container:
         args:

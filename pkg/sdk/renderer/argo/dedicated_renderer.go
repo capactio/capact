@@ -14,7 +14,6 @@ import (
 
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
 )
@@ -28,13 +27,15 @@ type dedicatedRenderer struct {
 	typeInstanceHandler *TypeInstanceHandler
 
 	// set with options
-	plainTextUserInput       map[string]interface{}
+	userInputSecretRef       *UserInputSecretRef
 	inputTypeInstances       []types.InputTypeInstanceRef
 	ochImplementationFilters []public.GetImplementationOption
 
 	// internal vars
 	currentIteration   int
 	processedTemplates []*Template
+	rootTemplate       *Template
+	entrypointStep     *wfv1.WorkflowStep
 }
 
 func newDedicatedRenderer(maxDepth int, ochCli OCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -48,6 +49,31 @@ func newDedicatedRenderer(maxDepth int, ochCli OCHClient, typeInstanceHandler *T
 		opt(r)
 	}
 	return r
+}
+
+func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Workflow {
+	r.entrypointStep = &wfv1.WorkflowStep{
+		Name:     "start-entrypoint",
+		Template: workflow.Entrypoint, // previous entry point
+	}
+
+	r.rootTemplate = &Template{
+		Template: &wfv1.Template{
+			Name: "voltron-root",
+		},
+		Steps: []ParallelSteps{
+			{
+				{
+					WorkflowStep: r.entrypointStep,
+				},
+			},
+		},
+	}
+
+	workflow.Entrypoint = r.rootTemplate.Name
+	workflow.Templates = append(workflow.Templates, r.rootTemplate)
+
+	return workflow
 }
 
 func (r *dedicatedRenderer) AddInputTypeInstance(workflow *Workflow) error {
@@ -225,39 +251,79 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 	return workflow, artifactsNameMapping, nil
 }
 
-// TODO(mszostok): Change to k8s secret. This is not easy and probably we will need to use some workaround, or
-// change the contract.
-func (r *dedicatedRenderer) AddPlainTextUserInput(rootWorkflow *Workflow) error {
-	input := r.plainTextUserInput
-	if len(input) == 0 {
-		input = map[string]interface{}{}
+func (r *dedicatedRenderer) AddUserInputSecretRef(rootWorkflow *Workflow) {
+	if r.userInputSecretRef == nil {
+		return
 	}
 
-	parameterRawData, err := yaml.Marshal(input)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal input parameters")
+	var (
+		volumeName   = "user-secret-volume"
+		mountPath    = "/output"
+		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.userInputSecretRef.Key)
+	)
+
+	// 1. Create step which consumes user data from Secret and outputs it as artifact
+	container := r.sleepContainer()
+	container.VolumeMounts = []apiv1.VolumeMount{
+		{
+			Name:      volumeName,
+			MountPath: mountPath,
+		},
 	}
 
-	rootWorkflow.Arguments.Artifacts = append(rootWorkflow.Arguments.Artifacts, wfv1.Artifact{
-		Name: userInputName,
-		ArtifactLocation: wfv1.ArtifactLocation{
-			Raw: &wfv1.RawArtifact{
-				Data: string(parameterRawData),
+	userInputWfTpl := &wfv1.Template{
+		Name:      "populate-user-input",
+		Container: container,
+		Outputs: wfv1.Outputs{
+			Artifacts: wfv1.Artifacts{
+				{
+					Name: userInputName,
+					Path: artifactPath,
+				},
 			},
 		},
-	})
+		Volumes: []apiv1.Volume{
+			{
+				Name: volumeName,
+				VolumeSource: apiv1.VolumeSource{
+					Secret: &apiv1.SecretVolumeSource{
+						SecretName: r.userInputSecretRef.Name,
+						Items: []apiv1.KeyToPath{
+							{
+								Key:  r.userInputSecretRef.Key,
+								Path: r.userInputSecretRef.Key,
+							},
+						},
+						Optional: ptr.Bool(false),
+					},
+				},
+			},
+		},
+	}
+	userInputWfStep := &wfv1.WorkflowStep{
+		Name:     fmt.Sprintf("%s-step", userInputWfTpl.Name),
+		Template: userInputWfTpl.Name,
+	}
+	r.rootTemplate.Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: userInputWfStep,
+			},
+		},
+	}, r.rootTemplate.Steps...)
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: userInputWfTpl})
 
-	return nil
+	// 2. Add input arguments artifacts with user data. Thanks to that Content Developer can
+	// refer to it via "{{inputs.artifacts.input-parameters}}"
+	r.entrypointStep.Arguments.Artifacts = append(r.entrypointStep.Arguments.Artifacts, wfv1.Artifact{
+		Name: userInputName,
+		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, userInputName),
+	})
 }
 
 func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef RunnerContextSecretRef) error {
 	if secretRef.Name == "" || secretRef.Key == "" {
 		return NewRunnerContextRefEmptyError()
-	}
-
-	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
-	if err != nil {
-		return err
 	}
 
 	container := r.sleepContainer()
@@ -301,7 +367,7 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 		},
 	}
 
-	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+	r.rootTemplate.Steps = append([]ParallelSteps{
 		{
 			&WorkflowStep{
 				WorkflowStep: &wfv1.WorkflowStep{
@@ -310,7 +376,7 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 				},
 			},
 		},
-	}, rootWorkflow.Templates[idx].Steps...)
+	}, r.rootTemplate.Steps...)
 
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 

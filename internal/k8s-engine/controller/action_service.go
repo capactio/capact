@@ -225,25 +225,10 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
-	userInput, err := a.getUserInputData(ctx, action)
+	ref, userInput, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
-
-	var (
-		opts   []argo.RendererOption
-		status = &v1alpha1.RenderingStatus{}
-	)
-	if len(userInput) > 0 {
-		status.SetInputParameters(userInput)
-
-		data := map[string]interface{}{}
-		if err := json.Unmarshal(userInput, &data); err != nil {
-			return nil, errors.Wrap(err, "while unmarshaling user input")
-		}
-		opts = append(opts, argo.WithPlainTextUserInput(data))
-	}
-	opts = append(opts, argo.WithImplementationRevisionFilter(a.defaultOCHImplementationFilter()))
 
 	runnerCtxSecretRef := argo.RunnerContextSecretRef{
 		Name: action.Name,
@@ -253,7 +238,13 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		Path:     string(action.Spec.ActionRef.Path),
 		Revision: action.Spec.ActionRef.Revision,
 	}
-	renderedAction, err := a.argoRenderer.Render(ctx, runnerCtxSecretRef, interfaceRef, opts...)
+	renderedAction, err := a.argoRenderer.Render(
+		ctx,
+		runnerCtxSecretRef,
+		interfaceRef,
+		argo.WithSecretUserInput(ref),
+		argo.WithImplementationRevisionFilter(a.defaultOCHImplementationFilter()),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
@@ -263,7 +254,9 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
+	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
+	status.SetInputParameters(userInput)
 
 	return status, nil
 }
@@ -285,19 +278,21 @@ func (*ActionService) defaultOCHImplementationFilter() ochpublicapi.Implementati
 	}
 }
 
-// TODO: workaround as Argo do not support k8s secret as input arguments artifacts
-func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) ([]byte, error) {
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {
 	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	secret := &corev1.Secret{}
 	key := client.ObjectKey{Name: action.Spec.Input.Parameters.SecretRef.Name, Namespace: action.Namespace}
 	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
-		return nil, errors.Wrap(err, "while getting K8s Secret with user input data")
+		return nil, nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
-	return secret.Data[graphqldomain.ParametersSecretDataKey], nil
+	return &argo.UserInputSecretRef{
+		Name: action.Spec.Input.Parameters.SecretRef.Name,
+		Key:  graphqldomain.ParametersSecretDataKey,
+	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
 type GetReportedRunnerStatusOutput struct {

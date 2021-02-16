@@ -1,12 +1,7 @@
 args:
   workflow:
-    arguments:
-      artifacts:
-      - name: input-parameters
-        raw:
-          data: |
-            {}
-    entrypoint: postgres-install
+    arguments: {}
+    entrypoint: voltron-root
     templates:
     - arguments: {}
       inputs:
@@ -16,9 +11,6 @@ args:
       name: postgres-install
       outputs: {}
       steps:
-      - - arguments: {}
-          name: inject-runner-context-step
-          template: inject-runner-context
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -31,6 +23,7 @@ args:
                   chart:
                     name: "postgresql"
                     repo: "https://charts.bitnami.com/bitnami"
+                    version: "10.2.6"
                   values:
                     image:
                       pullPolicy: Always
@@ -164,6 +157,18 @@ args:
         - globalName: psql-helm-release
           name: psql-helm-release
           path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: start-entrypoint
+          template: postgres-install
     - arguments: {}
       container:
         args:

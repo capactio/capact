@@ -72,16 +72,16 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
+	// 3.1 Add our own root step and replace entrypoint
+	rootWorkflow = dedicateRenderer.WrapEntrypointWithRootStep(rootWorkflow)
+
 	// 4. Add user input if provided
-	if err := dedicateRenderer.AddPlainTextUserInput(rootWorkflow); err != nil {
-		return nil, err
-	}
+	dedicateRenderer.AddUserInputSecretRef(rootWorkflow)
 
 	// 5. Add runner context
 	if err := dedicateRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
-
 	// 6. Add steps to populate rootWorkflow with input TypeInstances
 	if err := dedicateRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
 		return nil, err

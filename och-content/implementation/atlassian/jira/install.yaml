@@ -66,6 +66,8 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
@@ -79,15 +81,15 @@ spec:
         entrypoint: jira-install
         templates:
           - name: jira-install
-            inputs:
-              artifacts:
-                - name: input-parameters
+            # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
+            # inputs:
+            #  artifacts:
+            #    - name: input-parameters
             steps:
               - - name: install-db
                   voltron-when: postgresql == nil # conditional execution
                   voltron-action: postgresql.install
                   arguments:
-                    # TODO: password should be generated or populated by user
                     artifacts:
                       - name: input-parameters
                         raw:

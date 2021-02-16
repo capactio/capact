@@ -36,8 +36,8 @@ func TestRenderHappyPath(t *testing.T) {
 	tests := []struct {
 		name               string
 		ref                types.InterfaceRef
-		userInput          map[string]interface{}
 		inputTypeInstances []types.InputTypeInstanceRef
+		userInput          *UserInputSecretRef
 	}{
 		{
 			name: "PostgreSQL workflow without user input and TypeInstances",
@@ -50,12 +50,9 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			userInput: map[string]interface{}{
-				"superuser": map[string]interface{}{
-					"username": "postgres",
-					"password": "s3cr3t",
-				},
-				"defaultDBName": "test",
+			userInput: &UserInputSecretRef{
+				Name: "user-input",
+				Key:  "parameters.json",
 			},
 		},
 		{
@@ -63,14 +60,10 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.jira.install",
 			},
-			userInput: map[string]interface{}{
-				"superuser": map[string]interface{}{
-					"username": "postgres",
-					"password": "s3cr3t",
-				},
-				"defaultDBName": "test",
+			userInput: &UserInputSecretRef{
+				Name: "user-input",
+				Key:  "parameters.json",
 			},
-
 			inputTypeInstances: []types.InputTypeInstanceRef{
 				{
 					Name: "gcp",
@@ -95,7 +88,7 @@ func TestRenderHappyPath(t *testing.T) {
 				context.Background(),
 				RunnerContextSecretRef{Name: "secret", Key: "key"},
 				tt.ref,
-				WithPlainTextUserInput(tt.userInput),
+				WithSecretUserInput(tt.userInput),
 				WithTypeInstances(tt.inputTypeInstances),
 			)
 

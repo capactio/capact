@@ -36,6 +36,11 @@ type RunnerContextSecretRef struct {
 	Key  string
 }
 
+type UserInputSecretRef struct {
+	Name string
+	Key  string
+}
+
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
 type mapEvalParameters map[string]interface{}
