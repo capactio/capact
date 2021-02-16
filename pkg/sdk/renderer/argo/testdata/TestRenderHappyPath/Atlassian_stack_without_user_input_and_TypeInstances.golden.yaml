@@ -198,7 +198,7 @@ args:
             - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
           name: install-db
-          template: mock-install-db
+          template: mock-stack-install-install-jira-jira-install-install-db
       - - arguments:
             artifacts:
             - name: template
@@ -265,7 +265,7 @@ args:
         - name: postgresql
           path: output/postgresql
       metadata: {}
-      name: mock-install-db
+      name: mock-stack-install-install-jira-jira-install-install-db
       outputs:
         artifacts:
         - name: postgresql

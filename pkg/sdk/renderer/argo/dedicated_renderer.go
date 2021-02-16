@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/apimachinery/pkg/util/rand"
 	"strings"
 
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -121,7 +120,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 				// 2.1 Replace step and emit input arguments as step output
 				if satisfiedArg != "" {
-					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(step, satisfiedArg)
+					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(tpl.Name, step, satisfiedArg)
 					step = emitStep
 					r.addToRootTemplates(wfTpl)
 				}
@@ -590,12 +589,12 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 }
 
 // TODO: current limitation: we handle properly only one artifacts `voltron-when: postgres == nil` but not `voltron-when: postgres == nil && jira-config == nil`
-func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
+func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
 	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
 
 	// 1. Create step which outputs workflow input argument as step artifact
 	userInputWfTpl := &wfv1.Template{
-		Name:      fmt.Sprintf("mock-%s-%s", step.Name, rand.String(5)),
+		Name:      fmt.Sprintf("mock-%s-%s", tplName, step.Name),
 		Container: r.sleepContainer(),
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
