@@ -148,7 +148,7 @@ spec:
             }
   output:
     typeInstances:
-      jira-config:    # the Interface outputs TypeInstances of Type "cap.type.productivity.confluence.config"
+      confluence-config:    # the Interface outputs TypeInstances of Type "cap.type.productivity.confluence.config"
         typeRef:
           path: cap.type.productivity.confluence.config
           revision: 0.1.0
@@ -405,14 +405,26 @@ spec:
         entrypoint: main
         templates:
           - name: main
-            # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
-            # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
+                # Voltron Engine injects the 'input-parameters' artifacts into the workflow entrypoint.
+                # It contains the Interface parameters, in our case it is `confluence.install-input`.
                 - name: input-parameters
+                # You need to specify all optional TypeInstances that can be consumed by the workflow.
+                # Later, the user or other workflow can inject own TypeInstance which fulfills schema for this TypeInstance.
+                # You as a Workflow developer, can refer to them in the `voltron-when` statements.
+                - name: postgresql # Same name as defined under the `additionalInput.typeInstances` property.
+                  optional: true
+            # Under `outputs`, you need to specify all outputs defined under Interface that this workflow implements.
+            # As a result, others can refer to the Action output via "{{ steps.<step_name>.outputs.artifacts.<artifact_name> }}".
+            # Same as we do with the postgres step in this workflow.
+            outputs:
+                - name: confluence-config # Same name as defined in Interface
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}" # Instructs Argo which artifact holds the Confluence config
             steps:
-              # If the postgresql TypeInstance was not provided, then create it
+              # If the postgresql input argument was not provided, then create it
               # using the imported 'postgresql.install' Interface.
+              # Otherwise, it is replaced with the "mock" step emitting the input argument which satisfied this step as a step output.
               - - name: install-db
                   voltron-action: postgresql.install
                   voltron-when: postgresql == nil
@@ -439,7 +451,9 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" # Refer to output from `install-db` step. 
+                                                                                  # Accessing the `install-db` output is possible even if the step was 
+                                                                                  # satisfied by the input argument and replaced with the "mock" step.
                       - name: database-input
                         raw:
                           data: |
@@ -479,7 +493,7 @@ spec:
                                 - host: confluence.voltron.local
                                   paths: ['/']
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
               - - name: fill-params-in-helm-args
                   voltron-action: jinja2.template
@@ -528,7 +542,7 @@ The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with
 
 | Property                                          | Description                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.templates.steps[][].voltron-when`               | Allows for conditional execution of a step, based on an expression with a TypeInstance. You can make assertions on the input **TypeInstances** available in the **Implementation**. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md). |
+| `.templates.steps[][].voltron-when`               | Allows for conditional execution of a step, based on an expression with an input workflow artifacts arguments. You can make assertions on artifacts defined under `inputs.arguments.artifacts` for a given template. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md). |
 | `.templates.steps[][].voltron-action`             | Allows to import another **Interface**. In our example, we use this to provision PostgreSQL with `postgresql.install` **Interface**.                                                                                                                                                                                  |
 | `.templates.steps[][].voltron-outputTypeInstance` | A list of **TypeInstances**, from the **Implementations** outputs, which are created in this step. The `name` must match with the output name defined in the implemented **Interface** or **Implementations** `additionalOutput` and `from` is the name of the Argo output artifacts from this step.                  |
 

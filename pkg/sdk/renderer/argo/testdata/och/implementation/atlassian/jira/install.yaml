@@ -78,6 +78,8 @@ spec:
           - inputs:
               artifacts:
                 - name: input-parameters
+                - name: postgresql
+                  optional: true
             name: jira-install
             steps:
               - - voltron-action: postgresql.install
@@ -122,7 +124,7 @@ spec:
                                 - host: jira-cloud.voltron.local
                                   paths: ['/']
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
               - - voltron-outputTypeInstances:
                     - name: jira-config
                       from: additional

@@ -1,0 +1,674 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: voltron-root
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: stack-install-sequentialy
+      outputs: {}
+      steps:
+      - - arguments:
+            artifacts:
+            - name: input-parameters
+              raw:
+                data: |
+                  superuser:
+                    username: superuser
+                    password: okon
+                  defaultDBName: postgres
+          name: install-shared-db
+          template: stack-install-sequentialy-install-shared-db-postgres-install
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  host: {{ jiraHost }}
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+          name: extract-jira-host
+          template: stack-install-sequentialy-extract-jira-host-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-shared-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{steps.extract-jira-host.outputs.artifacts.render}}'
+              name: input-parameters
+          name: jira-install
+          template: stack-install-sequentialy-jira-install-jira-install
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  host: {{ confluenceHost }}
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+          name: extract-confluence-host
+          template: stack-install-sequentialy-extract-confluence-host-template
+        - arguments:
+            artifacts:
+            - from: '{{steps.install-shared-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{steps.extract-confluence-host.outputs.artifacts.render}}'
+              name: input-parameters
+          name: confluence-install
+          template: stack-install-sequentialy-confluence-install-main
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: stack-install-sequentialy-install-shared-db-postgres-install
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+          name: postgresql
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "postgresql"
+                    repo: "https://charts.bitnami.com/bitnami"
+                    version: "10.2.6"
+                  values:
+                    image:
+                      pullPolicy: Always
+                    postgresqlDatabase: {{ defaultDBName }}
+                    postgresqlUsername: {{ superuser.username }}
+                    postgresqlPassword: {{ superuser.password }}
+                  output:{% raw %}
+                    goTemplate:
+                      host: '{{ template "common.names.fullname" . }}'
+                      port: '{{ template "postgresql.port" . }}'
+                      defaultDBName: '{{ template "postgresql.database" . }}'
+                      superuser:
+                        username: '{{ template "postgresql.username" . }}'
+                        password: '{{ template "postgresql.password" . }}'{% endraw %}
+          name: create-helm-args
+          template: stack-install-sequentialy-install-shared-db-postgres-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-run
+          template: stack-install-sequentialy-install-shared-db-postgres-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: postgresql
+          name: output-postgresql
+          template: stack-install-sequentialy-install-shared-db-output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: psql-helm-release
+          name: output-psql-helm-release
+          template: stack-install-sequentialy-install-shared-db-output-psql-helm-release
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: stack-install-sequentialy-install-shared-db-postgres-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: stack-install-sequentialy-install-shared-db-postgres-install-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-install-shared-db-postgres-install-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: stack-install-sequentialy-install-shared-db-postgres-install-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-install-shared-db-output-postgresql
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-install-shared-db-postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: psql-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-install-shared-db-output-psql-helm-release
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-install-shared-db-psql-helm-release
+          name: psql-helm-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: stack-install-sequentialy-extract-jira-host-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+        - name: postgresql
+          optional: true
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-jira-install
+      outputs: {}
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: postgresql
+          name: install-db
+          template: mock-stack-install-sequentialy-jira-install-jira-install-install-db
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "jira-software"
+                    repo: "https://helm.mox.sh"
+                  output:{% raw %}
+                    goTemplate:
+                      version: "{{ .Values.image.tag }}"
+                      host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                  values:
+                    postgresql:
+                      enabled: false
+                    databaseConnection:
+                      host: "{{ host }}"
+                      user: "{{ superuser.username }}"
+                      password: "{{ superuser.password }}"
+                      database: "{{ defaultDBName }}"
+                    ingress:
+                      enabled: true
+                      hosts:
+                      - host: jira-cloud.voltron.local
+                        paths: ['/']
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: create-helm-args
+          template: stack-install-sequentialy-jira-install-jira-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-run
+          template: stack-install-sequentialy-jira-install-jira-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: jira-config
+          name: output-jira-config
+          template: stack-install-sequentialy-jira-install-output-jira-config
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: jira-helm-release
+          name: output-jira-helm-release
+          template: stack-install-sequentialy-jira-install-output-jira-helm-release
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: output/postgresql
+      metadata: {}
+      name: mock-stack-install-sequentialy-jira-install-jira-install-install-db
+      outputs:
+        artifacts:
+        - name: postgresql
+          path: output/postgresql
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-jira-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-jira-install-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-jira-install-jira-install-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: stack-install-sequentialy-jira-install-jira-install-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-output-jira-config
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-jira-install-jira-config
+          name: jira-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-output-jira-helm-release
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-jira-install-jira-helm-release
+          name: jira-helm-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: stack-install-sequentialy-extract-confluence-host-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+        - name: postgresql
+          optional: true
+      metadata: {}
+      name: stack-install-sequentialy-confluence-install-main
+      outputs: {}
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: postgresql
+          name: install-db
+          template: mock-stack-install-sequentialy-confluence-install-main-install-db
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "confluence-server"
+                    repo: "https://helm.mox.sh"
+                  output:{% raw %}
+                    goTemplate:
+                      version: {{ '"{{ .Values.image.tag }}"' }}
+                      host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
+                  values:
+                    postgresql:
+                      enabled: false
+                    databaseConnection:
+                      host: "{{ host }}"
+                      user: "{{ superuser.username }}"
+                      password: "{{ superuser.password }}"
+                      database: "{{ defaultDBName }}"
+                    ingress:
+                      enabled: true
+                      hosts:
+                      - host: confluence.voltron.local
+                        paths: ['/']
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-helm-args
+          template: stack-install-sequentialy-confluence-install-main-render-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-run
+          template: stack-install-sequentialy-confluence-install-main-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: confluence-config
+          name: output-confluence-config
+          template: stack-install-sequentialy-confluence-install-output-confluence-config
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: confluence-helm-release
+          name: output-confluence-helm-release
+          template: stack-install-sequentialy-confluence-install-output-confluence-helm-release
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: output/postgresql
+      metadata: {}
+      name: mock-stack-install-sequentialy-confluence-install-main-install-db
+      outputs:
+        artifacts:
+        - name: postgresql
+          path: output/postgresql
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: stack-install-sequentialy-confluence-install-main-render-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: stack-install-sequentialy-confluence-install-main-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-confluence-install-main-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: stack-install-sequentialy-confluence-install-main-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: confluence-config
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-confluence-install-output-confluence-config
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-confluence-install-confluence-config
+          name: confluence-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: confluence-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-confluence-install-output-confluence-helm-release
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-confluence-install-confluence-helm-release
+          name: confluence-helm-release
+          path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: start-entrypoint
+          template: stack-install
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+runnerInterface: cap.interface.runner.argo.run

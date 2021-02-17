@@ -1,83 +1,73 @@
-ocfVersion: 0.0.1
-revision: 0.1.0
-kind: Implementation
+---
 metadata:
-  prefix: cap.implementation.atlassian.confluence
-  name: install
+  attributes: []
   displayName: Install Confluence
   description: Action which installs Confluence via Helm chart
   documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/confluence-server
-  supportURL: https://mox.sh/helm/
-  license:
-    name: "Apache 2.0"
+  iconURL: https://mox.sh/helm/
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
-      url: https://projectvoltron.dev
-
+  prefix: cap.implementation.atlassian.confluence
+  name: install
+  supportURL: https://mox.sh/helm/
+revision: 0.1.0
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
-  appVersion: "2.x.x"
-
   additionalInput:
     typeInstances:
-      postgresql:
+      - name: postgresql
         typeRef:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
-        verbs: [ "get" ]
-
+        verbs:
+          - GET
   additionalOutput:
     typeInstances:
-      confluence-helm-release:
+      - name: confluence-helm-release
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-      database:
-        typeRef:
-          path: cap.type.postgresql.database
-          revision: 0.1.0
 
-  outputTypeInstanceRelations:
-      confluence-config:
-        uses:
-          - confluence-helm-release
-          - postgresql
-          - database
-
+  appVersion: 8.x.x
   implements:
     - path: cap.interface.productivity.confluence.install
       revision: 0.1.0
-
-  requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
-          revision: 0.1.0
-
   imports:
-    - interfaceGroupPath: cap.interface.runner.argo
-      alias: argo
+    - alias: helm
+      appVersion: 3.x.x
+      interfaceGroupPath: cap.interface.runner.helm
       methods:
         - name: run
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.runner.helm
-      alias: helm
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
       methods:
         - name: run
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.database.postgresql
-      alias: postgresql
-      methods:
-        - name: install
-          revision: 0.1.0
-        - name: create-db
-          revision: 0.1.0
-    - interfaceGroupPath: cap.interface.templating.jinja2
-      alias: jinja2
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.jinja2
       methods:
         - name: template
           revision: 0.1.0
-
+    - alias: postgresql
+      appVersion:
+      interfaceGroupPath: cap.interface.database.postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
   action:
     runnerInterface: argo.run
     args:
@@ -108,23 +98,6 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
-              # Create the database for Confluence in our PostgreSQL instance
-              # using the imported 'postgresql.create-db' Interface
-              - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
-                    - name: database                  # Defining the output TypeInstance 'database'
-                      from: database
-                  arguments:
-                    artifacts:
-                      - name: postgresql
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-                      - name: database-input
-                        raw:
-                          data: |
-                            name: confluencedb 
-                            owner: superuser
-
               # Here we prepare the input for the Helm runner. In the next two steps,
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be better way to do this.
@@ -151,7 +124,7 @@ spec:
                                 host: "{{ host }}"
                                 user: "{{ superuser.username }}"
                                 password: "{{ superuser.password }}"
-                                {% raw %}database: "{{ name }}"{% endraw %}
+                                database: "{{ defaultDBName }}"
                               ingress:
                                 enabled: true
                                 hosts:
@@ -160,14 +133,6 @@ spec:
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
-              - - name: fill-params-in-helm-args
-                  voltron-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.create-db.outputs.artifacts.database}}"
 
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
@@ -184,6 +149,3 @@ spec:
                         from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
-
-signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

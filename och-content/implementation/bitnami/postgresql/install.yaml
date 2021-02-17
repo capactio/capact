@@ -67,6 +67,10 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
               - - name: create-helm-args
                   voltron-action: jinja2.template

@@ -30,7 +30,7 @@ func TestRenderHappyPath(t *testing.T) {
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
-		MaxDepth:      10,
+		MaxDepth:      20,
 	}, fakeCli)
 
 	tests := []struct {
@@ -69,6 +69,12 @@ func TestRenderHappyPath(t *testing.T) {
 					Name: "gcp",
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
 				},
+			},
+		},
+		{
+			name: "Atlassian stack without user input and TypeInstances",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.atlassian.stack.install",
 			},
 		},
 		{

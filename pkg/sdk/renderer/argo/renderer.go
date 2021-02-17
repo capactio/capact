@@ -45,13 +45,13 @@ func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
 
 func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
 	// 0. Populate render options
-	dedicateRenderer := newDedicatedRenderer(r.maxDepth, r.ochCli, &r.typeInstanceHandler, opts...)
+	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.ochCli, &r.typeInstanceHandler, opts...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
 	// 1. Find the root implementation
-	implementations, err := r.ochCli.GetImplementationRevisionsForInterface(ctxWithTimeout, interfaceRefToOCH(ref), dedicateRenderer.ochImplementationFilters...)
+	implementations, err := r.ochCli.GetImplementationRevisionsForInterface(ctxWithTimeout, interfaceRefToOCH(ref), dedicatedRenderer.ochImplementationFilters...)
 	if err != nil {
 		return nil, err
 	}
@@ -61,39 +61,41 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 
 	// 2. Ensure that the runner was defined in imports section
 	// TODO: we should check whether imported revision is valid for this render algorithm
-	runnerInterface, err := dedicateRenderer.ResolveRunnerInterface(implementation)
+	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while resolving runner interface")
 	}
 
 	// 3. Extract workflow from the root Implementation
-	rootWorkflow, _, err := dedicateRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
+	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
 	// 3.1 Add our own root step and replace entrypoint
-	rootWorkflow = dedicateRenderer.WrapEntrypointWithRootStep(rootWorkflow)
+	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
-	// 4. Add user input if provided
-	dedicateRenderer.AddUserInputSecretRef(rootWorkflow)
+	// 4. Add user input
+	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
 	// 5. Add runner context
-	if err := dedicateRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
+	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
+
 	// 6. Add steps to populate rootWorkflow with input TypeInstances
-	if err := dedicateRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
+	// TODO: should be handled properly in https://cshark.atlassian.net/browse/SV-189
+	if err := dedicatedRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
 		return nil, err
 	}
 
 	// 7. Render rootWorkflow templates
-	err = dedicateRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicateRenderer.inputTypeInstances)
+	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances)
 	if err != nil {
 		return nil, err
 	}
 
-	rootWorkflow.Templates = dedicateRenderer.GetRootTemplates()
+	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
 
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {

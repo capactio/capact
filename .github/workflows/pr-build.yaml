@@ -21,6 +21,7 @@ jobs:
   entry-tests:
     name: Lint and test code
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
 
     steps:
       - name: Checkout code
@@ -44,6 +45,8 @@ jobs:
   documentation-sanity:
     name: Check documentation
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
     steps:
       - uses: actions/checkout@v2
       - name: Run LanguageTool
@@ -74,6 +77,7 @@ jobs:
   prepare-matrix:
     name: Prepare components build matrix
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     outputs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
       matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
@@ -97,6 +101,7 @@ jobs:
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
@@ -122,6 +127,7 @@ jobs:
   build-tests:
     name: Build ${{ matrix.TEST }}
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
@@ -147,6 +153,7 @@ jobs:
   build-infra:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
@@ -175,6 +182,7 @@ jobs:
     needs: prepare-matrix
     name: Build ${{ matrix.TOOL }}
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -190,6 +198,7 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
     needs: [ build-app, build-infra, build-tests ]
     steps:
       - name: Checkout code

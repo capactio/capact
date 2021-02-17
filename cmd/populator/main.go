@@ -129,6 +129,7 @@ func main() {
 		populated, err := dbpopulator.Populate(
 			ctx, logger, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), hash)
 		if err != nil {
+			logger.Error("Cannot populate a new data", zap.String("error", err.Error()))
 			return err
 		}
 		if populated {
