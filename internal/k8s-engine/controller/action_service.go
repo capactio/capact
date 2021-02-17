@@ -5,8 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 	"time"
+
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
@@ -335,7 +336,7 @@ func (a *ActionService) getClusterPolicy(ctx context.Context) (clusterpolicy.Clu
 	policy, err := clusterpolicy.FromYAMLBytes(clusterPolicyBytes)
 	if err != nil {
 		return clusterpolicy.ClusterPolicy{},
-		errors.Wrapf(err, "while unmarshaling policy from ConfigMap '%s/%s' from %q key", key.Namespace, key.Name, clusterPolicyConfigMapKey)
+			errors.Wrapf(err, "while unmarshaling policy from ConfigMap '%s/%s' from %q key", key.Namespace, key.Name, clusterPolicyConfigMapKey)
 	}
 
 	return policy, nil

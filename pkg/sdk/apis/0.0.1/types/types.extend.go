@@ -2,8 +2,17 @@
 package types
 
 // InterfaceRef holds the full path and revision to the Interface
-type InterfaceRef struct {
-	Path     string  `json:"path"`               // Path of a given Interface
+type InterfaceRef ManifestRef
+
+// ImplementationRef holds the full path and revision to the Implementation
+type ImplementationRef ManifestRef
+
+// AttributeRef holds the full path and revision to the Attribute
+type AttributeRef ManifestRef
+
+// ManifestRef holds the full path and the revision to the Implementation.
+type ManifestRef struct {
+	Path     string  `json:"path"`               // Path of a given manifest
 	Revision *string `json:"revision,omitempty"` // Version of the manifest content in the SemVer format.
 }
 

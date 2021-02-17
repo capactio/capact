@@ -4,8 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
+	"log"
 	"strings"
+
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
 	"projectvoltron.dev/voltron/internal/ptr"
 
@@ -394,6 +396,13 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 	}, r.rootTemplate.Steps...)
 
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+
+	return nil
+}
+
+func (r *dedicatedRenderer) InjectTypeInstancesBasedOnPolicy(rootWorkflow *Workflow) error {
+	// TODO: Implement in SV-226 - probably as a part of TypeInstance handler
+	log.Printf("Cluster policy: %+v", r.clusterPolicy)
 
 	return nil
 }

@@ -83,13 +83,18 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, err
 	}
 
-	// 6. Add steps to populate rootWorkflow with input TypeInstances
+	// 6. Inject TypeInstances based on policy
+	if err := dedicatedRenderer.InjectTypeInstancesBasedOnPolicy(rootWorkflow); err != nil {
+		return nil, err
+	}
+
+	// 7. Add steps to populate rootWorkflow with input TypeInstances
 	// TODO: should be handled properly in https://cshark.atlassian.net/browse/SV-189
 	if err := dedicatedRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
 		return nil, err
 	}
 
-	// 7. Render rootWorkflow templates
+	// 8. Render rootWorkflow templates
 	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances)
 	if err != nil {
 		return nil, err
