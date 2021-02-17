@@ -1,4 +1,0 @@
-apiVersion: 0.1.0
-
-rules:
-  {{- toYaml .Values.clusterPolicyRules | nindent 4 }}

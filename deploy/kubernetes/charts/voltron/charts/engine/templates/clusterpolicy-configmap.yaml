@@ -5,4 +5,9 @@ metadata:
   labels:
   {{- include "engine.labels" . | nindent 4 }}
 data:
-  {{- tpl ((.Files.Glob "cluster-policy.yaml").AsConfig) . | nindent 4 }}
+  cluster-policy.yaml: |
+    apiVersion: 0.1.0
+
+    rules:
+      {{- toYaml .Values.clusterPolicyRules | nindent 8 }}
+
