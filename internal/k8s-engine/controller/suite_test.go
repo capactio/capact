@@ -6,6 +6,7 @@ import (
 	"context"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"io/ioutil"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"path/filepath"
@@ -79,7 +80,7 @@ var _ = BeforeSuite(func(done Done) {
 	}
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(mgr.GetClient(), &argoRendererFake{}, cfg),
+		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 

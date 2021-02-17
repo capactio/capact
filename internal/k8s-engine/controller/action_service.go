@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
+
 	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
 	"github.com/pkg/errors"
@@ -71,15 +73,17 @@ type ActionService struct {
 	builtinRunner BuiltinRunnerConfig
 	clusterPolicy ClusterPolicyConfig
 	argoRenderer  ArgoRenderer
+	log           *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:        cli,
 		builtinRunner: cfg.BuiltinRunner,
 		clusterPolicy: cfg.ClusterPolicy,
 		argoRenderer:  argoRenderer,
+		log:           log,
 	}
 }
 
@@ -258,7 +262,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	policy, err := a.getClusterPolicy(ctx)
+	policy, err := a.getClusterPolicyWithFallbackToEmpty(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -321,7 +325,7 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getClusterPolicy(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
+func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
 	key := client.ObjectKey{
 		Namespace: a.clusterPolicy.Namespace,
 		Name:      a.clusterPolicy.Name,
@@ -329,6 +333,11 @@ func (a *ActionService) getClusterPolicy(ctx context.Context) (clusterpolicy.Clu
 
 	policyCfgMap := &corev1.ConfigMap{}
 	if err := a.k8sCli.Get(ctx, key, policyCfgMap); err != nil {
+		if apierrors.IsNotFound(err) {
+			a.log.Info("ConfigMap with cluster policy not found. Fallback to empty Cluster Policy", zap.Any("key", key))
+			return clusterpolicy.ClusterPolicy{}, nil
+		}
+
 		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
 	}
 
