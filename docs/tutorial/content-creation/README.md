@@ -452,7 +452,8 @@ spec:
                     artifacts:
                       - name: postgresql
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}" # Refer to output from `install-db` step. 
-                                                                                  # This is always available even if the step was satisfied by the input argument.
+                                                                                  # Accessing the `install-db` output is possible even if the step was 
+                                                                                  # satisfied by the input argument and replaced with the "mock" step.
                       - name: database-input
                         raw:
                           data: |

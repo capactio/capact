@@ -47,6 +47,18 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - alias: confluence
+      appVersion:
+      interfaceGroupPath: cap.interface.productivity.confluence
+      methods:
+        - name: install
+          revision: 0.1.0
   requires:
     - oneOf:
         - typeRef:
@@ -60,27 +72,57 @@ spec:
       workflow:
         entrypoint: stack-install
         templates:
-          - name: stack-install
+          - name: stack-install-sequentialy
+            inputs:
+              artifacts:
+                - name: input-parameters
             steps:
-              - - voltron-action: postgresql.install
-                  name: install-shared-db
+              - - name: install-shared-db
+                  voltron-action: postgresql.install
                   arguments:
                     artifacts:
                       - name: input-parameters
                         raw:
                           data: |
                             superuser:
-                              username: jira
-                              password: okon3
-                            defaultDBName: jira
+                              username: superuser
+                              password: okon
+                            defaultDBName: postgres
 
-              - - name: install-jira
+              - - name: extract-jira-host
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            host: {{ jiraHost }}
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+              - - name: jira-install
                   voltron-action: jira.install
                   arguments:
                     artifacts:
                       - name: postgresql
                         from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
                       - name: input-parameters
+                        from: "{{steps.extract-jira-host.outputs.artifacts.render}}"
+
+              - - name: extract-confluence-host
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
                         raw:
                           data: |
-                            host: jira-cloud.voltron.local
+                            host: {{ confluenceHost }}
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                - name: confluence-install
+                  voltron-action: confluence.install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{steps.extract-confluence-host.outputs.artifacts.render}}"

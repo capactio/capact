@@ -30,7 +30,7 @@ func TestRenderHappyPath(t *testing.T) {
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
-		MaxDepth:      10,
+		MaxDepth:      20,
 	}, fakeCli)
 
 	tests := []struct {

@@ -550,7 +550,7 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 		return "", nil
 	}
 
-	return params.lastVisited, nil
+	return params.lastAccessed, nil
 }
 
 // TODO:

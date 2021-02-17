@@ -44,8 +44,8 @@ type UserInputSecretRef struct {
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)
 
 type mapEvalParameters struct {
-	items       map[string]interface{}
-	lastVisited string
+	items        map[string]interface{}
+	lastAccessed string
 }
 
 func (p *mapEvalParameters) Set(name string) {
@@ -62,6 +62,6 @@ func (p *mapEvalParameters) Get(name string) (interface{}, error) {
 		return nil, nil
 	}
 
-	p.lastVisited = name
+	p.lastAccessed = name
 	return value, nil
 }

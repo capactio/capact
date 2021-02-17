@@ -4,7 +4,7 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.stack.install # Computed during fetching the manifest
   name: install-parallel
-  displayName: Example how to install Jira and Confluence with shared database parallel.
+  displayName: Example how to install Jira and Confluence with shared database in parallel.
   description: Action which installs Jira via Helm chart
   documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
   supportURL: https://mox.sh/helm/
