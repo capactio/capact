@@ -93,8 +93,8 @@ spec:
                         raw:
                           data: |
                             variables: |+
-                              user_name = "{{ superuser.username }}"
-                              user_password = "{{ superuser.password }}"
+                              user_name = "<@ superuser.username @>"
+                              user_password = "<@ superuser.password @>"
                             command: "apply"
                             module:
                               name: cloudsql
@@ -110,12 +110,12 @@ spec:
                             - GOOGLE_OAUTH_ACCESS_TOKEN=<ACCESS_TOKEN>
                             output: 
                               goTemplate:
-                                host: {% raw %} "{{ .instance_ip_addr }}" {% endraw %}
+                                host: "{{ .instance_ip_addr }}"
                                 port: 5432
                                 defaultDBName: postgres
                                 superuser:
-                                  username: {{ superuser.username }}
-                                  password: {{ superuser.password }}
+                                  username: <@ superuser.username @>
+                                  password: <@ superuser.password @>
 
               - - name: terraform-apply
                   voltron-action: terraform.apply

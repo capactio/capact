@@ -92,22 +92,21 @@ spec:
                             instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
                               databaseVersion: "POSTGRES_11"
                               region: "us-central"
-                              defaultDBName: {{ defaultDBName }}
-                              rootPassword: {{ superuser.password }}
+                              defaultDBName: <@ defaultDBName @>
+                              rootPassword: <@ superuser.password | default(random_string()) @>
                               settings:
                                 tier: "db-g1-small"
                                 ipConfiguration:
                                   authorizedNetworks:
                                     - name: internet
                                       value: "0.0.0.0/0"
-                            output:{% raw %}
                               goTemplate:
                                 host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
                                 port: "{{ .Port }}"
                                 defaultDBName: "{{ .DefaultDBName }}"
                                 superuser:
                                   username: "{{ .Username }}"
-                                  password: "{{ .Password }}"{% endraw %}
+                                  password: "{{ .Password }}"
               - - name: cloudsql-run
                   voltron-action: cloudsql.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances

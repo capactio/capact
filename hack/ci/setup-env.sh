@@ -36,6 +36,6 @@ fi
 cat <<EOT >> "$GITHUB_ENV"
 APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och"},{"APP":"och-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
-INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"}]}
+INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"},{"INFRA":"jinja2"}]}
 TOOLS=name=matrix::{"include":[{"TOOL":"ocftool"}]}
 EOT

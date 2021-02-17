@@ -64,3 +64,6 @@ telepresence.log
 
 # vscode
 .vscode
+
+# Python
+__pycache__

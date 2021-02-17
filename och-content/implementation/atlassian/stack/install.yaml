@@ -90,7 +90,6 @@ spec:
                           data: |
                             superuser:
                               username: superuser
-                              password: okon
                             defaultDBName: postgres
 
               - - name: extract-jira-host
