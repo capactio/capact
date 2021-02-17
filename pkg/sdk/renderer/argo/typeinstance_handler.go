@@ -132,7 +132,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 	template := &wfv1.Template{
 		Name: "upload-output-type-instances",
 		Container: &apiv1.Container{
-			Image:           "local/argo-actions:dev-9704",
+			Image:           "local/argo-actions:dev-16938",
 			ImagePullPolicy: apiv1.PullIfNotPresent,
 			Env: []apiv1.EnvVar{
 				{
