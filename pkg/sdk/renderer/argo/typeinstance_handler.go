@@ -77,7 +77,6 @@ type OutputTypeInstances struct {
 }
 
 func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workflow, output *OutputTypeInstances) error {
-	// TODO create proper payload
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
@@ -93,6 +92,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 				Path:     ti.TypeInstance.TypeRef.Path,
 				Revision: *ti.TypeInstance.TypeRef.Revision,
 			},
+			Attributes: []*graphqllocal.AttributeReferenceInput{},
 		})
 
 		artifacts = append(artifacts, wfv1.Artifact{
@@ -115,14 +115,18 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 
 	payloadBytes, _ := yaml.Marshal(payload)
 
-	artifacts = append(artifacts, wfv1.Artifact{
+	arguments = append(arguments, wfv1.Artifact{
 		Name: "payload",
-		Path: "/upload/payload",
 		ArtifactLocation: wfv1.ArtifactLocation{
 			Raw: &wfv1.RawArtifact{
 				Data: string(payloadBytes),
 			},
 		},
+	})
+
+	artifacts = append(artifacts, wfv1.Artifact{
+		Name: "payload",
+		Path: "/upload/payload",
 	})
 
 	template := &wfv1.Template{
@@ -138,19 +142,17 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 		return err
 	}
 
-	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+	rootWorkflow.Templates[idx].Steps = append(rootWorkflow.Templates[idx].Steps, ParallelSteps{
 		{
-			&WorkflowStep{
-				WorkflowStep: &wfv1.WorkflowStep{
-					Name:     fmt.Sprintf("%s-step", template.Name),
-					Template: template.Name,
-					Arguments: wfv1.Arguments{
-						Artifacts: arguments,
-					},
+			WorkflowStep: &wfv1.WorkflowStep{
+				Name:     fmt.Sprintf("%s-step", template.Name),
+				Template: template.Name,
+				Arguments: wfv1.Arguments{
+					Artifacts: arguments,
 				},
 			},
 		},
-	}, rootWorkflow.Templates[idx].Steps...)
+	})
 
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 

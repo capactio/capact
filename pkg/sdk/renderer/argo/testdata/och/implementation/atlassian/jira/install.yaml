@@ -25,12 +25,14 @@ spec:
         verbs:
           - GET
   additionalOutput:
-    typeInstanceRelations: []
     typeInstances:
       - name: jira-helm-release
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
+  outputTypeInstanceRelations:
+    - typeInstanceName: jira-config
+      uses: [jira-helm-release, postgresql]
   appVersion: 8.x.x
   implements:
     - path: cap.interface.productivity.jira.install
@@ -50,7 +52,7 @@ spec:
           revision: 0.1.0
     - alias: jinja2
       appVersion:
-      interfaceGroupPath: cap.interface.jinja2
+      interfaceGroupPath: cap.interface.templating.jinja2
       methods:
         - name: template
           revision: 0.1.0
@@ -94,6 +96,9 @@ spec:
                               password: okon
                             defaultDBName: jira
                   voltron-when: postgresql == nil
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
               - - voltron-action: jinja2.template
                   name: create-helm-args
                   arguments:

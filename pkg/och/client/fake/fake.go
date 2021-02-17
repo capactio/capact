@@ -22,11 +22,13 @@ const manifestsExtension = ".yaml"
 type FileSystemClient struct {
 	OCHTypeInstances   map[string]ochlocalgraphql.TypeInstance
 	OCHImplementations []ochpublicgraphql.ImplementationRevision
+	OCHInterfaces      []ochpublicgraphql.InterfaceRevision
 }
 
 func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 	store := &FileSystemClient{
 		OCHImplementations: []ochpublicgraphql.ImplementationRevision{},
+		OCHInterfaces:      []ochpublicgraphql.InterfaceRevision{},
 		OCHTypeInstances:   map[string]ochlocalgraphql.TypeInstance{},
 	}
 
@@ -51,6 +53,17 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 		return nil, fmt.Errorf("no ImplementationRevisions for Interface %v", ref)
 	}
 	return out, nil
+}
+
+func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
+	for i := range s.OCHInterfaces {
+		iface := s.OCHInterfaces[i]
+		if *iface.Metadata.Path == ref.Path {
+			return &iface, nil
+		}
+	}
+
+	return nil, fmt.Errorf("cannot find Interface for %v", ref)
 }
 
 func (s *FileSystemClient) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
@@ -103,6 +116,14 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 			return err
 		}
 		s.OCHImplementations = append(s.OCHImplementations, impl)
+	}
+
+	if strings.Contains(filepath, "interface") {
+		iface := ochpublicgraphql.InterfaceRevision{}
+		if err := json.Unmarshal(jsonData, &iface); err != nil {
+			return err
+		}
+		s.OCHInterfaces = append(s.OCHInterfaces, iface)
 	}
 
 	if strings.Contains(filepath, "typeinstance") {

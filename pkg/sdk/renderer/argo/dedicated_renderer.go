@@ -37,6 +37,7 @@ type dedicatedRenderer struct {
 	tplInputArguments  map[string]wfv1.Artifacts
 
 	outputTypeInstances *OutputTypeInstances
+	toUpload            map[string]bool
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -49,6 +50,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
+		toUpload: map[string]bool{},
 	}
 
 	for _, opt := range opts {
@@ -663,4 +665,55 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep) {
 		return
 	}
 	r.tplInputArguments[step.Template] = step.Arguments.Artifacts
+}
+
+func (r *dedicatedRenderer) noteOutputArtifacts(iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision,
+	artifactMappings map[string]string) error {
+
+	for _, item := range impl.Spec.OutputTypeInstanceRelations {
+		fmt.Println(*impl.Metadata.Path, impl.Spec.AdditionalOutput.TypeInstances[0].Name)
+		typeRef := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
+		if typeRef == nil {
+			// TODO refactor to error func
+			return errors.Errorf("cannot find typeRef for TypeInstance %s", item.TypeInstanceName)
+		}
+
+		artifactName := artifactMappings[item.TypeInstanceName]
+
+		r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+			ArtifactName: artifactName,
+			TypeInstance: types.OutputTypeInstance{
+				TypeRef: &types.TypeRef{
+					Path:     typeRef.Path,
+					Revision: &typeRef.Revision,
+				},
+			},
+		})
+
+		for _, uses := range item.Uses {
+			usesArtifactName := artifactMappings[uses]
+
+			r.outputTypeInstances.relations = append(r.outputTypeInstances.relations, OutputTypeInstanceRelation{
+				From: artifactName,
+				To:   usesArtifactName,
+			})
+
+			//typeRef := findTypeInstanceTypeRef(uses, impl, iface)
+			//if typeRef == nil {
+			//	return errors.Errorf("cannot find typeRef for TypeInstance %s", uses)
+			//}
+
+			//r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+			//	ArtifactName: uses,
+			//	TypeInstance: types.OutputTypeInstance{
+			//		TypeRef: &types.TypeRef{
+			//			Path:     typeRef.Path,
+			//			Revision: &typeRef.Revision,
+			//		},
+			//	},
+			//})
+		}
+	}
+
+	return nil
 }

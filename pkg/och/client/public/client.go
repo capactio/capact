@@ -47,6 +47,11 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 	return resp.Interfaces, nil
 }
 
+func (c *Client) GetInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
+	// TODO implement this
+	return nil, nil
+}
+
 func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
 	getOpts := &getImplementationOptions{}
 	getOpts.Apply(opts...)
