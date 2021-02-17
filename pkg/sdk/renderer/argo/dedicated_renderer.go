@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 	"strings"
 
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -30,7 +31,7 @@ type dedicatedRenderer struct {
 	userInputSecretRef       *UserInputSecretRef
 	inputTypeInstances       []types.InputTypeInstanceRef
 	ochImplementationFilters []public.GetImplementationOption
-	clusterPolicy            ClusterPolicy
+	clusterPolicy            clusterpolicy.ClusterPolicy
 
 	// internal vars
 	currentIteration   int

@@ -52,6 +52,10 @@ spec:
               value: "{{ .Values.global.mockEngineGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+            - name: APP_CLUSTER_POLICY_NAME
+              value: {{ include "engine.fullname" . }}-cluster-policy
+            - name: APP_CLUSTER_POLICY_NAMESPACE
+              value: {{.Release.Namespace}}
           ports:
             - name: http
               containerPort: 8080

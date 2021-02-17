@@ -4,8 +4,6 @@ package argo
 import (
 	"regexp"
 
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 )
 
@@ -66,42 +64,4 @@ func (p *mapEvalParameters) Get(name string) (interface{}, error) {
 
 	p.lastAccessed = name
 	return value, nil
-}
-
-// TODO: Move it to engine/apis?
-type ClusterPolicy struct {
-	APIVersion string             `json:"apiVersion"`
-	Rules      ClusterPolicyRules `json:"rules"`
-}
-
-type ClusterPolicyRules struct {
-	OneOf map[InterfacePath]ClusterPolicyRule `json:"oneOf"`
-}
-
-type InterfacePath string
-
-type ClusterPolicyRule struct {
-	ImplementationConstraints ImplementationConstraints `json:"implementationConstraints"`
-	InjectTypeInstances       []TypeInstanceToInject    `json:"injectTypeInstances"`
-}
-
-type ImplementationConstraints struct {
-	// Requires refers a specific requirement by path and optional revision.
-	Requires *[]ImplementationManifestRefConstraint `json:"requires,omitempty"`
-
-	// Attributes refers a specific Attribute by path and optional revision.
-	Attributes *[]ImplementationManifestRefConstraint `json:"attributes,omitempty"`
-
-	// Exact refers a specific Implementation by path and optional revision.
-	Exact *ImplementationManifestRefConstraint `json:"path,omitempty"`
-}
-
-type TypeInstanceToInject struct {
-	ID      string        `json:"id"`
-	TypeRef types.TypeRef `json:"typeRef"`
-}
-
-type ImplementationManifestRefConstraint struct {
-	Path     string  `json:"path"`
-	Revision *string `json:"revision,omitempty"`
 }
