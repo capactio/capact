@@ -21,7 +21,8 @@ spec:
         "type": "object",
         "title": "The schema for Jira configuration",
         "required": [
-            "host"
+            "jiraHost",
+            "confluenceHost"
         ],
         "$ocfRefs": {
           "hostname": {
