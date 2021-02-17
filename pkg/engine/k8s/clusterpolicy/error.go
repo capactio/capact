@@ -6,16 +6,17 @@ import (
 )
 
 type UnsupportedAPIVersionError struct {
-	supported []string
+	constraintErrors []error
 }
 
 func (e UnsupportedAPIVersionError) Error() string {
-	return fmt.Sprintf(
-		"unsupported API version; supported: [%s]",
-		strings.Join(e.supported, ", "),
-	)
+	var errMsgs []string
+	for _, err := range e.constraintErrors {
+		errMsgs = append(errMsgs, err.Error())
+	}
+	return fmt.Sprintf("unsupported API version: %s", strings.Join(errMsgs, ", "))
 }
 
-func NewUnsupportedAPIVersionError(supported []string) *UnsupportedAPIVersionError {
-	return &UnsupportedAPIVersionError{supported: supported}
+func NewUnsupportedAPIVersionError(constraintErrors []error) *UnsupportedAPIVersionError {
+	return &UnsupportedAPIVersionError{constraintErrors: constraintErrors}
 }

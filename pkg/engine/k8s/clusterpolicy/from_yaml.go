@@ -3,13 +3,13 @@ package clusterpolicy
 import (
 	"sort"
 
+	"github.com/Masterminds/semver/v3"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
-var SupportedAPIVersions = SupportedAPIVersionMap{
-	"0.1.0": {},
-}
+const supportedAPIVersionConstraintString = "^0.1"
 
 type SupportedAPIVersionMap map[string]struct{}
 
@@ -23,32 +23,38 @@ func (m SupportedAPIVersionMap) ToStringSlice() []string {
 	return strSlice
 }
 
-func FromYAMLBytes(in []byte) (ClusterPolicy, error) {
-	err := Validate(in)
+func FromYAMLString(in string) (ClusterPolicy, error) {
+	bytes := []byte(in)
+	err := Validate(bytes)
 	if err != nil {
 		return ClusterPolicy{}, err
 	}
 
 	var policy ClusterPolicy
-	if err := yaml.Unmarshal(in, &policy); err != nil {
+	if err := yaml.Unmarshal(bytes, &policy); err != nil {
 		return ClusterPolicy{}, errors.Wrap(err, "while unmarshalling policy from YAML bytes")
 	}
 
 	return policy, nil
 }
 
-// TODO: Use https://github.com/Masterminds/semver and validate only major and minor versions
 func Validate(in []byte) error {
 	var unmarshalled struct {
-		APIVersion string `json:"apiVersion"`
+		APIVersion semver.Version `json:"apiVersion"`
 	}
 
 	if err := yaml.Unmarshal(in, &unmarshalled); err != nil {
 		return errors.Wrap(err, "while unmarshalling policy to validate API version")
 	}
 
-	if _, ok := SupportedAPIVersions[unmarshalled.APIVersion]; !ok {
-		return NewUnsupportedAPIVersionError(SupportedAPIVersions.ToStringSlice())
+	constraints, err := semver.NewConstraint(supportedAPIVersionConstraintString)
+	if err != nil {
+		return errors.Wrap(err, "while parsing SemVer constraints")
+	}
+
+	_, errs := constraints.Validate(&unmarshalled.APIVersion)
+	if len(errs) > 0 {
+		return NewUnsupportedAPIVersionError(errs)
 	}
 
 	return nil

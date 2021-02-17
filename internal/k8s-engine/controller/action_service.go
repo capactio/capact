@@ -51,22 +51,6 @@ type ArgoRenderer interface {
 	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
-type Config struct {
-	BuiltinRunner BuiltinRunnerConfig
-	ClusterPolicy ClusterPolicyConfig
-}
-
-type BuiltinRunnerConfig struct {
-	Timeout time.Duration `envconfig:"default=30m"`
-	Image   string
-}
-
-// TODO: Move it somewhere
-type ClusterPolicyConfig struct {
-	Name      string `envconfig:"default=voltron-engine-cluster-policy"`
-	Namespace string `envconfig:"default=voltron-system"`
-}
-
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli        client.Client
@@ -341,8 +325,7 @@ func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context)
 		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
 	}
 
-	clusterPolicyBytes := []byte(policyCfgMap.Data[clusterPolicyConfigMapKey])
-	policy, err := clusterpolicy.FromYAMLBytes(clusterPolicyBytes)
+	policy, err := clusterpolicy.FromYAMLString(policyCfgMap.Data[clusterPolicyConfigMapKey])
 	if err != nil {
 		return clusterpolicy.ClusterPolicy{},
 			errors.Wrapf(err, "while unmarshaling policy from ConfigMap '%s/%s' from %q key", key.Namespace, key.Name, clusterPolicyConfigMapKey)

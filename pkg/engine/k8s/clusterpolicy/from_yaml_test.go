@@ -1,6 +1,7 @@
 package clusterpolicy_test
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestFromYAMLBytes_Valid(t *testing.T) {
 	expected := fixValidPolicy()
 
 	// when
-	actual, err := clusterpolicy.FromYAMLBytes(in)
+	actual, err := clusterpolicy.FromYAMLString(in)
 
 	// then
 	require.NoError(t, err)
@@ -27,20 +28,22 @@ func TestFromYAMLBytes_Valid(t *testing.T) {
 func TestFromYAMLBytes_Invalid(t *testing.T) {
 	// given
 	in := loadInput(t, "testdata/invalid.yaml")
-	expectedErr := clusterpolicy.NewUnsupportedAPIVersionError(clusterpolicy.SupportedAPIVersions.ToStringSlice())
+
+	expectedConstraintErrs := []error{fmt.Errorf("2.0.0 does not have same major version as 0.1")}
+	expectedErr := clusterpolicy.NewUnsupportedAPIVersionError(expectedConstraintErrs)
 
 	// when
-	_, err := clusterpolicy.FromYAMLBytes(in)
+	_, err := clusterpolicy.FromYAMLString(in)
 
 	// then
 	require.Error(t, err)
 	assert.Equal(t, expectedErr, err)
 }
 
-func loadInput(t *testing.T, path string) []byte {
+func loadInput(t *testing.T, path string) string {
 	bytes, err := ioutil.ReadFile(path)
 	require.NoError(t, err)
-	return bytes
+	return string(bytes)
 }
 
 func fixValidPolicy() clusterpolicy.ClusterPolicy {
