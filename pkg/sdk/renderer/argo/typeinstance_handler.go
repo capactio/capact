@@ -62,12 +62,12 @@ func (r *TypeInstanceHandler) AddInputTypeInstance(rootWorkflow *Workflow, insta
 }
 
 type OutputTypeInstanceRelation struct {
-	From string
-	To   string
+	From *string
+	To   *string
 }
 
 type OutputTypeInstance struct {
-	ArtifactName string
+	ArtifactName *string
 	TypeInstance types.OutputTypeInstance
 }
 
@@ -87,7 +87,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 
 	for _, ti := range output.typeInstances {
 		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
-			Alias: &ti.ArtifactName,
+			Alias: ti.ArtifactName,
 			TypeRef: &graphqllocal.TypeReferenceInput{
 				Path:     ti.TypeInstance.TypeRef.Path,
 				Revision: *ti.TypeInstance.TypeRef.Revision,
@@ -96,20 +96,20 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 		})
 
 		artifacts = append(artifacts, wfv1.Artifact{
-			Name: ti.ArtifactName,
-			Path: fmt.Sprintf("/upload/typeInstances/%s", ti.ArtifactName),
+			Name: *ti.ArtifactName,
+			Path: fmt.Sprintf("/upload/typeInstances/%s", *ti.ArtifactName),
 		})
 
 		arguments = append(arguments, wfv1.Artifact{
-			Name: ti.ArtifactName,
-			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", ti.ArtifactName),
+			Name: *ti.ArtifactName,
+			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", *ti.ArtifactName),
 		})
 	}
 
 	for _, relation := range output.relations {
 		payload.UsesRelations = append(payload.UsesRelations, &graphqllocal.TypeInstanceUsesRelationInput{
-			From: relation.From,
-			To:   relation.To,
+			From: *relation.From,
+			To:   *relation.To,
 		})
 	}
 
@@ -130,8 +130,25 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workf
 	})
 
 	template := &wfv1.Template{
-		Name:      "upload-output-type-instances",
-		Container: &apiv1.Container{},
+		Name: "upload-output-type-instances",
+		Container: &apiv1.Container{
+			Image:           "local/argo-actions:dev-9704",
+			ImagePullPolicy: apiv1.PullIfNotPresent,
+			Env: []apiv1.EnvVar{
+				{
+					Name:  "APP_ACTION",
+					Value: "UploadAction",
+				},
+				{
+					Name:  "APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH",
+					Value: "/upload/payload",
+				},
+				{
+					Name:  "APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR",
+					Value: "/upload/typeInstances",
+				},
+			},
+		},
 		Inputs: wfv1.Inputs{
 			Artifacts: artifacts,
 		},

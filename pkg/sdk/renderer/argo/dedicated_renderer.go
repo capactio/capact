@@ -37,7 +37,7 @@ type dedicatedRenderer struct {
 	tplInputArguments  map[string]wfv1.Artifacts
 
 	outputTypeInstances *OutputTypeInstances
-	toUpload            map[string]bool
+	typeInstanceNames   []*string
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -46,11 +46,12 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 		policyEnforcedCli:   policyEnforcedCli,
 		typeInstanceHandler: typeInstanceHandler,
 		tplInputArguments:   map[string]wfv1.Artifacts{},
+
 		outputTypeInstances: &OutputTypeInstances{
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
-		toUpload: map[string]bool{},
+		typeInstanceNames: []*string{},
 	}
 
 	for _, opt := range opts {
@@ -143,6 +144,13 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return err
 					}
 
+					fmt.Println("rendering action", actionRef)
+
+					iface, err := r.ochCli.GetInterfaceRevision(ctx, *actionRef)
+					if err != nil {
+						return err
+					}
+
 					// 3.2 Get `voltron-action` specific implementation
 					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
@@ -173,7 +181,13 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					for k, v := range newArtifactMappings {
 						artifactMappings[k] = v
+						r.replaceTypeInstanceName(k, v)
 					}
+
+					if err := r.noteOutputArtifacts(iface, &implementation, newArtifactMappings); err != nil {
+						return errors.Wrap(err, "while noting output artifacts")
+					}
+
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
 
@@ -669,51 +683,84 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep) {
 
 func (r *dedicatedRenderer) noteOutputArtifacts(iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision,
 	artifactMappings map[string]string) error {
-
 	for _, item := range impl.Spec.OutputTypeInstanceRelations {
-		fmt.Println(*impl.Metadata.Path, impl.Spec.AdditionalOutput.TypeInstances[0].Name)
-		typeRef := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
-		if typeRef == nil {
-			// TODO refactor to error func
-			return errors.Errorf("cannot find typeRef for TypeInstance %s", item.TypeInstanceName)
+		artifactName, new := r.addTypeInstanceName(artifactMappings[item.TypeInstanceName])
+
+		if new {
+			typeRef := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
+			if typeRef == nil {
+				// TODO refactor to error func
+				return errors.Errorf("cannot find typeRef for TypeInstance %s", item.TypeInstanceName)
+			}
+
+			r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+				ArtifactName: artifactName,
+				TypeInstance: types.OutputTypeInstance{
+					TypeRef: &types.TypeRef{
+						Path:     typeRef.Path,
+						Revision: &typeRef.Revision,
+					},
+				},
+			})
 		}
 
-		artifactName := artifactMappings[item.TypeInstanceName]
-
-		r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
-			ArtifactName: artifactName,
-			TypeInstance: types.OutputTypeInstance{
-				TypeRef: &types.TypeRef{
-					Path:     typeRef.Path,
-					Revision: &typeRef.Revision,
-				},
-			},
-		})
-
 		for _, uses := range item.Uses {
-			usesArtifactName := artifactMappings[uses]
+			usesArtifactName, new := r.addTypeInstanceName(artifactMappings[uses])
 
 			r.outputTypeInstances.relations = append(r.outputTypeInstances.relations, OutputTypeInstanceRelation{
 				From: artifactName,
 				To:   usesArtifactName,
 			})
 
-			//typeRef := findTypeInstanceTypeRef(uses, impl, iface)
-			//if typeRef == nil {
-			//	return errors.Errorf("cannot find typeRef for TypeInstance %s", uses)
-			//}
+			if new {
+				typeRef := findTypeInstanceTypeRef(uses, impl, iface)
+				if typeRef == nil {
+					return errors.Errorf("cannot find typeRef for TypeInstance %s", uses)
+				}
 
-			//r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
-			//	ArtifactName: uses,
-			//	TypeInstance: types.OutputTypeInstance{
-			//		TypeRef: &types.TypeRef{
-			//			Path:     typeRef.Path,
-			//			Revision: &typeRef.Revision,
-			//		},
-			//	},
-			//})
+				r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+					ArtifactName: usesArtifactName,
+					TypeInstance: types.OutputTypeInstance{
+						TypeRef: &types.TypeRef{
+							Path:     typeRef.Path,
+							Revision: &typeRef.Revision,
+						},
+					},
+				})
+			}
 		}
 	}
 
 	return nil
+}
+
+func (r *dedicatedRenderer) addTypeInstanceName(name string) (*string, bool) {
+	if found := r.findTypeInstanceName(name); found != nil {
+		return found, false
+	}
+
+	fmt.Println("addTypeInstanceName", name)
+	r.typeInstanceNames = append(r.typeInstanceNames, &name)
+	return &name, true
+}
+
+func (r *dedicatedRenderer) findTypeInstanceName(name string) *string {
+	for i := range r.typeInstanceNames {
+		item := r.typeInstanceNames[i]
+		if *item == name {
+			return item
+		}
+	}
+
+	return nil
+}
+
+func (r *dedicatedRenderer) replaceTypeInstanceName(oldName string, newName string) {
+	for i := range r.typeInstanceNames {
+		name := r.typeInstanceNames[i]
+		if *name == oldName {
+			fmt.Println("Replacing", oldName, "with", newName)
+			*name = newName
+		}
+	}
 }
