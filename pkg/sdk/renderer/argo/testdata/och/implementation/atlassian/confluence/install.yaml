@@ -29,7 +29,15 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-
+      - name: postgresql
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs:
+          - GET
+  outputTypeInstanceRelations:
+    - typeInstanceName: confluence-config
+      uses: [confluence-helm-release, postgresql]
   appVersion: 8.x.x
   implements:
     - path: cap.interface.productivity.confluence.install
@@ -49,7 +57,7 @@ spec:
           revision: 0.1.0
     - alias: jinja2
       appVersion:
-      interfaceGroupPath: cap.interface.jinja2
+      interfaceGroupPath: cap.interface.templating.jinja2
       methods:
         - name: template
           revision: 0.1.0
@@ -82,11 +90,18 @@ spec:
                 - name: input-parameters
                 - name: postgresql
                   optional: true
+            outputs:
+              artifacts:
+                - name: confluence-config
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
               # If the postgresql TypeInstance was not provided, then create it
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
                   voltron-action: postgresql.install
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   voltron-when: postgresql == nil
                   arguments:
                     artifacts:
@@ -101,7 +116,7 @@ spec:
               # Here we prepare the input for the Helm runner. In the next two steps,
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be better way to do this.
-              - - name: render-helm-args
+              - - name: create-helm-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
@@ -115,8 +130,8 @@ spec:
                               repo: "https://helm.mox.sh"
                             output:{% raw %}
                               goTemplate:
-                                version: {{ '"{{ .Values.image.tag }}"' }}
-                                host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
+                                version: "{{ .Values.image.tag }}"
+                                host: '{{ template "confluence-server.fullname" . }}'{% endraw %}
                             values:
                               postgresql:
                                 enabled: false
@@ -133,7 +148,6 @@ spec:
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
 
-
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-run
@@ -146,6 +160,6 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"

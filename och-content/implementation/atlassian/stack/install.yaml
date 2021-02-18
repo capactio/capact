@@ -83,6 +83,9 @@ spec:
             steps:
               - - name: install-shared-db
                   voltron-action: postgresql.install
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -105,6 +108,9 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
               - - name: jira-install
                   voltron-action: jira.install
+                  voltron-outputTypeInstances:
+                    - name: jira-config
+                      from: jira-config
                   arguments:
                     artifacts:
                       - name: postgresql
@@ -124,6 +130,9 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
                 - name: confluence-install
                   voltron-action: confluence.install
+                  voltron-outputTypeInstances:
+                    - name: confluence-config
+                      from: confluence-config
                   arguments:
                     artifacts:
                       - name: postgresql

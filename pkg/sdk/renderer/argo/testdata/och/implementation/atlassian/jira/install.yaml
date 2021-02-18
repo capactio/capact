@@ -86,10 +86,18 @@ spec:
                 - name: input-parameters
                 - name: postgresql
                   optional: true
+            outputs:
+              artifacts:
+                - name: jira-config
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
             name: jira-install
             steps:
               - - voltron-action: postgresql.install
                   name: install-db
+                  voltron-when: postgresql == nil
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -99,10 +107,6 @@ spec:
                               username: jira
                               password: okon
                             defaultDBName: jira
-                  voltron-when: postgresql == nil
-                  voltron-outputTypeInstances:
-                    - name: postgresql
-                      from: postgresql
               - - voltron-action: jinja2.template
                   name: create-helm-args
                   arguments:

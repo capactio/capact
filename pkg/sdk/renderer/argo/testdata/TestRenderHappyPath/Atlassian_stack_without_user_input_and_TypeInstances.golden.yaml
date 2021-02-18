@@ -58,6 +58,18 @@ args:
               name: input-parameters
           name: confluence-install
           template: stack-install-sequentialy-confluence-install-main
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-shared-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.jira-install.outputs.artifacts.jira-config}}'
+              name: jira-config
+          name: output-jira-config
+          template: output-jira-config
     - arguments: {}
       inputs:
         artifacts:
@@ -109,15 +121,15 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: postgresql
-          name: output-postgresql
-          template: stack-install-sequentialy-install-shared-db-output-postgresql
+              name: stack-install-sequentialy-install-shared-db-postgresql
+          name: output-stack-install-sequentialy-install-shared-db-postgresql
+          template: stack-install-sequentialy-install-shared-db-output-stack-install-sequentialy-install-shared-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: psql-helm-release
-          name: output-psql-helm-release
-          template: stack-install-sequentialy-install-shared-db-output-psql-helm-release
+              name: stack-install-sequentialy-install-shared-db-psql-helm-release
+          name: output-stack-install-sequentialy-install-shared-db-psql-helm-release
+          template: stack-install-sequentialy-install-shared-db-output-stack-install-sequentialy-install-shared-db-psql-helm-release
     - arguments: {}
       container:
         args:
@@ -185,14 +197,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: postgresql
+        - name: stack-install-sequentialy-install-shared-db-postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-install-shared-db-output-postgresql
+      name: stack-install-sequentialy-install-shared-db-output-stack-install-sequentialy-install-shared-db-postgresql
       outputs:
         artifacts:
         - globalName: stack-install-sequentialy-install-shared-db-postgresql
-          name: postgresql
+          name: stack-install-sequentialy-install-shared-db-postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -206,14 +218,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: psql-helm-release
+        - name: stack-install-sequentialy-install-shared-db-psql-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-install-shared-db-output-psql-helm-release
+      name: stack-install-sequentialy-install-shared-db-output-stack-install-sequentialy-install-shared-db-psql-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-sequentialy-install-shared-db-psql-helm-release
-          name: psql-helm-release
+          name: stack-install-sequentialy-install-shared-db-psql-helm-release
           path: /typeinstance
     - arguments: {}
       container:
@@ -295,16 +307,22 @@ args:
           template: stack-install-sequentialy-jira-install-jira-install-helm-run-helm
       - - arguments:
             artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: stack-install-sequentialy-jira-install-postgresql
+          name: output-stack-install-sequentialy-jira-install-postgresql
+          template: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-postgresql
+      - - arguments:
+            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: jira-config
-          name: output-jira-config
-          template: stack-install-sequentialy-jira-install-output-jira-config
+              name: stack-install-sequentialy-jira-install-jira-config
+          name: output-stack-install-sequentialy-jira-install-jira-config
+          template: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-jira-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: jira-helm-release
-          name: output-jira-helm-release
-          template: stack-install-sequentialy-jira-install-output-jira-helm-release
+              name: stack-install-sequentialy-jira-install-jira-helm-release
+          name: output-stack-install-sequentialy-jira-install-jira-helm-release
+          template: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-jira-helm-release
     - arguments: {}
       container:
         args:
@@ -392,14 +410,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-config
+        - name: stack-install-sequentialy-jira-install-postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-jira-install-output-jira-config
+      name: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-postgresql
       outputs:
         artifacts:
-        - globalName: stack-install-sequentialy-jira-install-jira-config
-          name: jira-config
+        - globalName: stack-install-sequentialy-jira-install-postgresql
+          name: stack-install-sequentialy-jira-install-postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -413,14 +431,35 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-helm-release
+        - name: stack-install-sequentialy-jira-install-jira-config
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-jira-install-output-jira-helm-release
+      name: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-jira-config
+      outputs:
+        artifacts:
+        - globalName: stack-install-sequentialy-jira-install-jira-config
+          name: stack-install-sequentialy-jira-install-jira-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: stack-install-sequentialy-jira-install-jira-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: stack-install-sequentialy-jira-install-output-stack-install-sequentialy-jira-install-jira-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-sequentialy-jira-install-jira-helm-release
-          name: jira-helm-release
+          name: stack-install-sequentialy-jira-install-jira-helm-release
           path: /typeinstance
     - arguments: {}
       container:
@@ -503,15 +542,15 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: confluence-config
-          name: output-confluence-config
-          template: stack-install-sequentialy-confluence-install-output-confluence-config
+              name: stack-install-sequentialy-confluence-install-confluence-config
+          name: output-stack-install-sequentialy-confluence-install-confluence-config
+          template: stack-install-sequentialy-confluence-install-output-stack-install-sequentialy-confluence-install-confluence-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: confluence-helm-release
-          name: output-confluence-helm-release
-          template: stack-install-sequentialy-confluence-install-output-confluence-helm-release
+              name: stack-install-sequentialy-confluence-install-confluence-helm-release
+          name: output-stack-install-sequentialy-confluence-install-confluence-helm-release
+          template: stack-install-sequentialy-confluence-install-output-stack-install-sequentialy-confluence-install-confluence-helm-release
     - arguments: {}
       container:
         args:
@@ -599,14 +638,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-config
+        - name: stack-install-sequentialy-confluence-install-confluence-config
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-confluence-install-output-confluence-config
+      name: stack-install-sequentialy-confluence-install-output-stack-install-sequentialy-confluence-install-confluence-config
       outputs:
         artifacts:
         - globalName: stack-install-sequentialy-confluence-install-confluence-config
-          name: confluence-config
+          name: stack-install-sequentialy-confluence-install-confluence-config
           path: /typeinstance
     - arguments: {}
       container:
@@ -620,14 +659,56 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-helm-release
+        - name: stack-install-sequentialy-confluence-install-confluence-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-sequentialy-confluence-install-output-confluence-helm-release
+      name: stack-install-sequentialy-confluence-install-output-stack-install-sequentialy-confluence-install-confluence-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-sequentialy-confluence-install-confluence-helm-release
-          name: confluence-helm-release
+          name: stack-install-sequentialy-confluence-install-confluence-helm-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-config
+      outputs:
+        artifacts:
+        - globalName: jira-config
+          name: jira-config
           path: /typeinstance
     - arguments: {}
       inputs: {}
@@ -641,6 +722,81 @@ args:
       - - arguments: {}
           name: start-entrypoint
           template: stack-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.jira-config}}'
+              name: jira-config
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{workflow.outputs.artifacts.confluence-config}}'
+              name: confluence-config
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{workflow.outputs.artifacts.stack-install-sequentialy-install-shared-db-psql-helm-release}}'
+              name: stack-install-sequentialy-install-shared-db-psql-helm-release
+            - from: '{{workflow.outputs.artifacts.stack-install-sequentialy-jira-install-jira-helm-release}}'
+              name: stack-install-sequentialy-jira-install-jira-helm-release
+            - from: '{{workflow.outputs.artifacts.stack-install-sequentialy-jira-install-postgresql}}'
+              name: stack-install-sequentialy-jira-install-postgresql
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: jira-config
+                    attributes: []
+                    typeRef:
+                      path: cap.type.productivity.jira.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: confluence-config
+                    attributes: []
+                    typeRef:
+                      path: cap.type.productivity.confluence.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: stack-install-sequentialy-install-shared-db-psql-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: stack-install-sequentialy-jira-install-jira-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: stack-install-sequentialy-jira-install-postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: jira-config
+                    to: postgresql
+                  - from: confluence-config
+                    to: postgresql
+                  - from: postgresql
+                    to: stack-install-sequentialy-install-shared-db-psql-helm-release
+                  - from: jira-config
+                    to: stack-install-sequentialy-jira-install-jira-helm-release
+                  - from: jira-config
+                    to: stack-install-sequentialy-jira-install-postgresql
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
     - arguments: {}
       container:
         args:
@@ -671,4 +827,38 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: argo-actions
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /upload/typeInstances/jira-config
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
+        - name: confluence-config
+          path: /upload/typeInstances/confluence-config
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
+        - name: stack-install-sequentialy-install-shared-db-psql-helm-release
+          path: /upload/typeInstances/stack-install-sequentialy-install-shared-db-psql-helm-release
+        - name: stack-install-sequentialy-jira-install-jira-helm-release
+          path: /upload/typeInstances/stack-install-sequentialy-jira-install-jira-helm-release
+        - name: stack-install-sequentialy-jira-install-postgresql
+          path: /upload/typeInstances/stack-install-sequentialy-jira-install-postgresql
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
 runnerInterface: cap.interface.runner.argo.run

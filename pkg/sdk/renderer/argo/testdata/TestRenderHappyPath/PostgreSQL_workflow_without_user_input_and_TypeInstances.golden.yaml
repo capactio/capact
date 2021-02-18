@@ -238,7 +238,7 @@ args:
           value: /upload/payload
         - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
           value: /upload/typeInstances
-        image: local/argo-actions:dev-16938
+        image: argo-actions
         imagePullPolicy: IfNotPresent
         name: ""
         resources: {}

@@ -9,6 +9,7 @@ require (
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/fatih/color v1.10.0
+	github.com/go-delve/delve v1.6.0 // indirect
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/google/go-cmp v0.5.1 // indirect
@@ -16,6 +17,7 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.2
 	github.com/iancoleman/strcase v0.1.2
+	github.com/jinzhu/copier v0.2.4
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.3
@@ -31,6 +33,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
+	github.com/ulule/deepcopier v0.0.0-20200430083143-45decc6639b6
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/vrischmann/envconfig v1.3.0
 	github.com/xeipuuv/gojsonschema v1.2.0

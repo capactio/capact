@@ -52,6 +52,7 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 	if len(out) == 0 {
 		return nil, fmt.Errorf("no ImplementationRevisions for Interface %v", ref)
 	}
+
 	return out, nil
 }
 

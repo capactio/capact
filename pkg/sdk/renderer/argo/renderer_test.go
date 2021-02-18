@@ -26,40 +26,28 @@ import (
 // To update golden file, run:
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
-	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och")
-	require.NoError(t, err)
-
-	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
-
-	argoRenderer := NewRenderer(renderer.Config{
-		RenderTimeout: time.Second,
-		MaxDepth:      20,
-	}, policyEnforcedCli, typeInstanceHandler)
-
 	tests := []struct {
 		name               string
 		ref                types.InterfaceRef
 		inputTypeInstances []types.InputTypeInstanceRef
 		userInput          *UserInputSecretRef
 	}{
-		//{
-		//	name: "PostgreSQL workflow without user input and TypeInstances",
-		//	ref: types.InterfaceRef{
-		//		Path: "cap.interface.database.postgresql.install",
-		//	},
-		//},
-		//{
-		//	name: "PostgreSQL workflow with user input and without TypeInstances",
-		//	ref: types.InterfaceRef{
-		//		Path: "cap.interface.database.postgresql.install",
-		//	},
-		//	userInput: &UserInputSecretRef{
-		//		Name: "user-input",
-		//		Key:  "parameters.json",
-		//	},
-		//},
+		{
+			name: "PostgreSQL workflow without user input and TypeInstances",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.database.postgresql.install",
+			},
+		},
+		{
+			name: "PostgreSQL workflow with user input and without TypeInstances",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.database.postgresql.install",
+			},
+			userInput: &UserInputSecretRef{
+				Name: "user-input",
+				Key:  "parameters.json",
+			},
+		},
 		{
 			name: "Jira workflow with user input and TypeInstances",
 			ref: types.InterfaceRef{
@@ -76,12 +64,12 @@ func TestRenderHappyPath(t *testing.T) {
 				},
 			},
 		},
-		//{
-		//	name: "Atlassian stack without user input and TypeInstances",
-		//	ref: types.InterfaceRef{
-		//		Path: "cap.interface.atlassian.stack.install",
-		//	},
-		//},
+		{
+			name: "Atlassian stack without user input and TypeInstances",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.atlassian.stack.install",
+			},
+		},
 		//{
 		//	name: "Two level nested workflow",
 		//	ref: types.InterfaceRef{
@@ -93,6 +81,19 @@ func TestRenderHappyPath(t *testing.T) {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
+
+			// given
+			fakeCli, err := fake.NewFromLocal("testdata/och")
+			require.NoError(t, err)
+
+			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
+			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+
+			argoRenderer := NewRenderer(renderer.Config{
+				RenderTimeout:   time.Second,
+				MaxDepth:        20,
+				OCHActionsImage: "argo-actions",
+			}, policyEnforcedCli, typeInstanceHandler)
 
 			// when
 			renderedArgs, err := argoRenderer.Render(
