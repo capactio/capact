@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"time"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
+
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 
@@ -19,23 +19,24 @@ const (
 	runnerContext = "runner-context"
 )
 
-type OCHClient interface {
-	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
-	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
+type PolicyEnforcedOCHClient interface {
+	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error)
+	ListTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	SetPolicy(policy clusterpolicy.ClusterPolicy)
 }
 
 type Renderer struct {
-	ochCli        OCHClient
 	maxDepth      int
 	renderTimeout time.Duration
 
-	typeInstanceHandler TypeInstanceHandler
+	policyEnforcedCli   PolicyEnforcedOCHClient
+	typeInstanceHandler *TypeInstanceHandler
 }
 
-func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
+func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
 	r := &Renderer{
-		ochCli:              ochCli,
-		typeInstanceHandler: TypeInstanceHandler{ochCli: ochCli},
+		typeInstanceHandler: typeInstanceHandler,
+		policyEnforcedCli:   policyEnforcedCli,
 		maxDepth:            cfg.MaxDepth,
 		renderTimeout:       cfg.RenderTimeout,
 	}
@@ -45,13 +46,13 @@ func NewRenderer(cfg renderer.Config, ochCli OCHClient) *Renderer {
 
 func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
 	// 0. Populate render options
-	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.ochCli, &r.typeInstanceHandler, opts...)
+	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, opts...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
 	// 1. Find the root implementation
-	implementations, err := r.ochCli.GetImplementationRevisionsForInterface(ctxWithTimeout, interfaceRefToOCH(ref), dedicatedRenderer.ochImplementationFilters...)
+	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRefToOCH(ref))
 	if err != nil {
 		return nil, err
 	}
@@ -59,42 +60,49 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// business decision select the first one
 	implementation := implementations[0]
 
-	// 2. Ensure that the runner was defined in imports section
+	// 2. Get TypeInstances to inject based on policy
+	typeInstancesToInject, err := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Ensure that the runner was defined in imports section
 	// TODO: we should check whether imported revision is valid for this render algorithm
 	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while resolving runner interface")
 	}
 
-	// 3. Extract workflow from the root Implementation
+	// 4. Extract workflow from the root Implementation
 	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
-	// 3.1 Add our own root step and replace entrypoint
+	// 4.1 Add our own root step and replace entrypoint
 	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
-	// 4. Add user input
+	// 5. Add user input
 	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
-	// 5. Add runner context
+	// 6 Inject step which downloads TypeInstances based on Cluster Policy
+	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
+	if err != nil {
+		return nil, err
+	}
+
+	// 7. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
 
-	// 6. Inject TypeInstances based on policy
-	if err := dedicatedRenderer.InjectTypeInstancesBasedOnPolicy(rootWorkflow); err != nil {
-		return nil, err
-	}
-
-	// 7. Add steps to populate rootWorkflow with input TypeInstances
+	// 8. Add steps to populate rootWorkflow with input TypeInstances
 	// TODO: should be handled properly in https://cshark.atlassian.net/browse/SV-189
 	if err := dedicatedRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
 		return nil, err
 	}
 
-	// 8. Render rootWorkflow templates
+	// 9. Render rootWorkflow templates
 	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances)
 	if err != nil {
 		return nil, err

@@ -4,15 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"strings"
-
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
 	"projectvoltron.dev/voltron/internal/ptr"
 
 	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 
 	"github.com/Knetic/govaluate"
@@ -26,14 +22,12 @@ import (
 type dedicatedRenderer struct {
 	// required vars
 	maxDepth            int
-	ochCli              OCHClient
+	policyEnforcedCli   PolicyEnforcedOCHClient
 	typeInstanceHandler *TypeInstanceHandler
 
 	// set with options
-	userInputSecretRef       *UserInputSecretRef
-	inputTypeInstances       []types.InputTypeInstanceRef
-	ochImplementationFilters []public.GetImplementationOption
-	clusterPolicy            clusterpolicy.ClusterPolicy
+	userInputSecretRef *UserInputSecretRef
+	inputTypeInstances []types.InputTypeInstanceRef
 
 	// internal vars
 	currentIteration   int
@@ -43,10 +37,10 @@ type dedicatedRenderer struct {
 	tplInputArguments  map[string]wfv1.Artifacts
 }
 
-func newDedicatedRenderer(maxDepth int, ochCli OCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
+func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
 	r := &dedicatedRenderer{
 		maxDepth:            maxDepth,
-		ochCli:              ochCli,
+		policyEnforcedCli:   policyEnforcedCli,
 		typeInstanceHandler: typeInstanceHandler,
 		tplInputArguments:   map[string]wfv1.Artifacts{},
 	}
@@ -138,7 +132,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 
 					// 3.2 Get `voltron-action` specific implementation
-					implementations, err := r.ochCli.GetImplementationRevisionsForInterface(ctx, *actionRef, r.ochImplementationFilters...)
+					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
 						return errors.Wrapf(err, "while processing step: %s", step.Name)
 					}
@@ -146,7 +140,19 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					// business decision select the first one
 					implementation := implementations[0]
 
-					// 3.3 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					// 3.3 Get TypeInstances to inject based on policy
+					typeInstances, err := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+					if err != nil {
+						return errors.Wrapf(err, "while listing TypeInstances to inject based on policy for step: %s", step.Name)
+					}
+
+					// 3.4 Inject step which downloads TypeInstances
+					err = r.InjectDownloadStepForTypeInstancesIfProvided(workflow, typeInstances)
+					if err != nil {
+						return errors.Wrapf(err, "while injecting step downloading TypeInstances based on policy for step: %s", step.Name)
+					}
+
+					// 3.5 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
@@ -159,10 +165,10 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
 
-					// 3.4 Right now we know the template name, so let's try to register step input arguments
+					// 3.6 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step)
 
-					// 3.5 Render imported Workflow templates and add them to root templates
+					// 3.7 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
 					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
 					if err != nil {
@@ -400,11 +406,12 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 	return nil
 }
 
-func (r *dedicatedRenderer) InjectTypeInstancesBasedOnPolicy(rootWorkflow *Workflow) error {
-	// TODO: Implement in SV-226 - probably as a part of TypeInstance handler
-	log.Printf("Cluster policy: %+v", r.clusterPolicy)
-
-	return nil
+// TODO: Rework if needed as a part of SV-185
+func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflow *Workflow, typeInstances []types.InputTypeInstanceRef) error {
+	if len(typeInstances) == 0 {
+		return nil
+	}
+	return r.typeInstanceHandler.AddInputTypeInstance(workflow, typeInstances)
 }
 
 // Internal helpers

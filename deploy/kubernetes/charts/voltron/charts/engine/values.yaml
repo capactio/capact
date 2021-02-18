@@ -60,7 +60,7 @@ gateway:
 clusterPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #
-#  cap.interface.database.postgresql.install:
+#  cap.interface.database.postgresql.install:0.1.0:
 #    oneOf:
 #      - implementationConstraints:
 #          requires:

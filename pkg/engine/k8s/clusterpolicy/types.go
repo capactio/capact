@@ -9,6 +9,8 @@ type ClusterPolicy struct {
 	Rules      RulesMap `json:"rules"`
 }
 
+const AnyInterfacePath InterfacePath = "cap.*"
+
 // TODO: Change structure to preserve keys order in map, once we support regexes
 type RulesMap map[InterfacePath]Rules
 
