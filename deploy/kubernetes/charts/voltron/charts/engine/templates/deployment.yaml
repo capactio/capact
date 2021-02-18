@@ -52,7 +52,7 @@ spec:
               value: "{{ .Values.global.mockEngineGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
-            - name: APP_RENDERER_OCH_ACTIONS_IMAGE
+            - name: APP_OCH_ACTIONS_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.argoActions.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           ports:
             - name: http

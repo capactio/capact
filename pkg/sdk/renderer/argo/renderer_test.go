@@ -31,7 +31,7 @@ func TestRenderHappyPath(t *testing.T) {
 	require.NoError(t, err)
 
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -116,7 +116,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	require.NoError(t, err)
 
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,

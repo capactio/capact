@@ -18,7 +18,7 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
-	github.com/mitchellh/mapstructure v1.3.3
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
@@ -39,7 +39,6 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.20.0
-	gopkg.in/yaml.v2 v2.3.0
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.18.2
