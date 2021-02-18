@@ -139,7 +139,3 @@ func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, er
 
 	return out, nil
 }
-
-func (r *Renderer) PolicyEnforcer() PolicyEnforcedOCHClient {
-	return r.policyEnforcedCli
-}

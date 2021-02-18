@@ -49,7 +49,6 @@ type OCHImplementationGetter interface {
 
 type ArgoRenderer interface {
 	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
-	PolicyEnforcer() argo.PolicyEnforcedOCHClient
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -252,14 +251,12 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	clusterPolicyKeeper := a.argoRenderer.PolicyEnforcer()
-	clusterPolicyKeeper.SetPolicy(policy)
-
 	renderedAction, err := a.argoRenderer.Render(
 		ctx,
 		runnerCtxSecretRef,
 		interfaceRef,
 		argo.WithSecretUserInput(ref),
+		argo.WithPolicy(policy),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
