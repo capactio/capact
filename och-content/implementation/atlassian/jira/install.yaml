@@ -32,6 +32,14 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+      database:
+        typeRef:
+          path: cap.type.database.postgresql.database
+          revision: 0.1.0
 
   outputTypeInstanceRelations:
     jira-config:
@@ -91,6 +99,9 @@ spec:
               - - name: install-db
                   voltron-when: postgresql == nil # conditional execution
                   voltron-action: postgresql.install
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters

@@ -23,10 +23,7 @@ type PolicyEnforcedOCHClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error)
 	ListTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	SetPolicy(policy clusterpolicy.ClusterPolicy)
-type OCHClient interface {
-	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
 	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
-	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
 }
 
 type Renderer struct {
@@ -55,7 +52,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
-	iface, err := r.ochCli.GetInterfaceRevision(ctx, interfaceRefToOCH(ref))
+	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRefToOCH(ref))
 	if err != nil {
 		return nil, err
 	}
@@ -83,12 +80,12 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 3. Extract workflow from the root Implementation
-	rootWorkflow, artifactMappings, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
+	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
-	if err := dedicatedRenderer.noteOutputArtifacts(iface, &implementation, artifactMappings); err != nil {
+	if err := dedicatedRenderer.noteOutputArtifacts(iface, &implementation); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 

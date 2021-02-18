@@ -383,8 +383,8 @@ args:
               name: jira-config
             - from: '{{workflow.outputs.artifacts.jira-helm-release}}'
               name: jira-helm-release
-            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
-              name: jira-install-install-db-postgresql
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-psql-helm-release}}'
               name: jira-install-install-db-psql-helm-release
             - name: payload
@@ -403,7 +403,7 @@ args:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-install-db-postgresql
+                  - alias: postgresql
                     attributes: []
                     typeRef:
                       path: cap.type.database.postgresql.config
@@ -419,8 +419,8 @@ args:
                   - from: jira-config
                     to: jira-helm-release
                   - from: jira-config
-                    to: jira-install-install-db-postgresql
-                  - from: jira-install-install-db-postgresql
+                    to: postgresql
+                  - from: postgresql
                     to: jira-install-install-db-psql-helm-release
           name: upload-output-type-instances-step
           template: upload-output-type-instances
@@ -520,7 +520,7 @@ args:
           value: /upload/payload
         - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
           value: /upload/typeInstances
-        image: local/argo-actions:dev-9704
+        image: local/argo-actions:dev-16938
         imagePullPolicy: IfNotPresent
         name: ""
         resources: {}
@@ -530,8 +530,8 @@ args:
           path: /upload/typeInstances/jira-config
         - name: jira-helm-release
           path: /upload/typeInstances/jira-helm-release
-        - name: jira-install-install-db-postgresql
-          path: /upload/typeInstances/jira-install-install-db-postgresql
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
         - name: jira-install-install-db-psql-helm-release
           path: /upload/typeInstances/jira-install-install-db-psql-helm-release
         - name: payload

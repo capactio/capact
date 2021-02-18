@@ -44,12 +44,12 @@ func TestRenderHappyPath(t *testing.T) {
 		inputTypeInstances []types.InputTypeInstanceRef
 		userInput          *UserInputSecretRef
 	}{
-		{
-			name: "PostgreSQL workflow without user input and TypeInstances",
-			ref: types.InterfaceRef{
-				Path: "cap.interface.database.postgresql.install",
-			},
-		},
+		//{
+		//	name: "PostgreSQL workflow without user input and TypeInstances",
+		//	ref: types.InterfaceRef{
+		//		Path: "cap.interface.database.postgresql.install",
+		//	},
+		//},
 		//{
 		//	name: "PostgreSQL workflow with user input and without TypeInstances",
 		//	ref: types.InterfaceRef{
