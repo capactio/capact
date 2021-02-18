@@ -74,7 +74,7 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: stack-install
+        entrypoint: stack-install-sequentialy
         templates:
           - name: stack-install-sequentialy
             inputs:
