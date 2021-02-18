@@ -22,11 +22,12 @@ type OCHClient interface {
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as
 // injecting download step and upload step.
 type TypeInstanceHandler struct {
-	ochCli OCHClient
+	ochCli          OCHClient
+	ochActionsImage string
 }
 
-func NewTypeInstanceHandler(ochCli client.OCHClient) *TypeInstanceHandler {
-	return &TypeInstanceHandler{ochCli: ochCli}
+func NewTypeInstanceHandler(ochCli client.OCHClient, ochActionsImage string) *TypeInstanceHandler {
+	return &TypeInstanceHandler{ochCli: ochCli, ochActionsImage: ochActionsImage}
 }
 
 // TODO(SV-189): Handle that properly
@@ -77,7 +78,7 @@ func (r *TypeInstanceHandler) getInjectTypeInstanceTemplate(input types.InputTyp
 	return &wfv1.Template{
 		Name: fmt.Sprintf("inject-%s", input.Name),
 		Container: &apiv1.Container{
-			Image:   "alpine:3.7",
+			Image:   r.ochActionsImage,
 			Command: []string{"sh", "-c"},
 			Args:    []string{fmt.Sprintf("sleep 2 && echo '%s' | tee /output", string(data))},
 		},

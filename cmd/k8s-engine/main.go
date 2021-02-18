@@ -69,7 +69,8 @@ type Config struct {
 
 	ClusterPolicy controller.ClusterPolicyConfig
 
-	Renderer renderer.Config
+	Renderer        renderer.Config
+	OCHActionsImage string
 }
 
 func main() {
@@ -101,7 +102,7 @@ func main() {
 
 	ochClient := getOCHClient(&cfg)
 
-	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient)
+	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage)
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
 
