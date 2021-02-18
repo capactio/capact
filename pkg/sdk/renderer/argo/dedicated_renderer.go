@@ -4,7 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"strings"
+
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
 	"projectvoltron.dev/voltron/internal/ptr"
 
@@ -30,6 +33,7 @@ type dedicatedRenderer struct {
 	userInputSecretRef       *UserInputSecretRef
 	inputTypeInstances       []types.InputTypeInstanceRef
 	ochImplementationFilters []public.GetImplementationOption
+	clusterPolicy            clusterpolicy.ClusterPolicy
 
 	// internal vars
 	currentIteration   int
@@ -392,6 +396,13 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 	}, r.rootTemplate.Steps...)
 
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+
+	return nil
+}
+
+func (r *dedicatedRenderer) InjectTypeInstancesBasedOnPolicy(rootWorkflow *Workflow) error {
+	// TODO: Implement in SV-226 - probably as a part of TypeInstance handler
+	log.Printf("Cluster policy: %+v", r.clusterPolicy)
 
 	return nil
 }

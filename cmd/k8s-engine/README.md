@@ -57,6 +57,8 @@ query {
 | APP_GRAPHQLGATEWAY_PASSWORD     | yes      |                                  | Basic auth password used to authenticate at the Voltron Gateway                                              |
 | APP_BUILTIN_RUNNER_TIMEOUT      | no       | `30m`                            | Set the timeout for the workflow execution of the builtin runners                                            |
 | APP_BUILTIN_RUNNER_IMAGE        | yes      |                                  | Set the image of the builtin runner                                                                          |
+| APP_CLUSTER_POLICY_NAME         | no       | `voltron-engine-cluster-policy`  | Name of the ConfigMap with cluster policy                                                                    |
+| APP_CLUSTER_POLICY_NAMESPACE    | no       | `voltron-system`                 | Namespace of the ConfigMap with cluster policy                                                               |
 | APP_RENDERER_RENDER_TIMEOUT     | no       | `10m`                            | Maximum time for rendering process. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".          |
 | APP_RENDERER_MAX_DEPTH          | no       | `50`                             | Maximum number of allowed nested workflows to be processed.                                                  |
 | KUBECONFIG                      | no       | `~/.kube/config`                 | Path to kubeconfig file                                                                                      |

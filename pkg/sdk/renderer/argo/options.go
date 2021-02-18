@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -23,5 +24,11 @@ func WithImplementationRevisionFilter(filter gqlpublicapi.ImplementationRevision
 func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.userInputSecretRef = ref
+	}
+}
+
+func WithClusterPolicy(policy clusterpolicy.ClusterPolicy) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.clusterPolicy = policy
 	}
 }

@@ -65,10 +65,9 @@ type Config struct {
 		Password string
 	}
 
-	BuiltinRunner struct {
-		Timeout time.Duration `envconfig:"default=30m"`
-		Image   string
-	}
+	BuiltinRunner controller.BuiltinRunnerConfig
+
+	ClusterPolicy controller.ClusterPolicyConfig
 
 	Renderer renderer.Config
 }
@@ -103,7 +102,10 @@ func main() {
 	ochClient := getOCHClient(&cfg)
 
 	argoRenderer := argo.NewRenderer(cfg.Renderer, ochClient)
-	actionSvc := controller.NewActionService(mgr.GetClient(), argoRenderer, cfg.BuiltinRunner.Image, cfg.BuiltinRunner.Timeout)
+	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, controller.Config{
+		BuiltinRunner: cfg.BuiltinRunner,
+		ClusterPolicy: cfg.ClusterPolicy,
+	})
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc, cfg.MaxRetryForFailedAction)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)

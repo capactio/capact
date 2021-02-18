@@ -7,6 +7,10 @@ import (
 	"fmt"
 	"time"
 
+	"go.uber.org/zap"
+
+	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
+
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -36,6 +40,7 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
+	clusterPolicyConfigMapKey      = "cluster-policy.yaml"
 )
 
 type OCHImplementationGetter interface {
@@ -48,19 +53,21 @@ type ArgoRenderer interface {
 
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
-	k8sCli             client.Client
-	runnerTimeout      time.Duration
-	builtinRunnerImage string
-	argoRenderer       ArgoRenderer
+	k8sCli        client.Client
+	builtinRunner BuiltinRunnerConfig
+	clusterPolicy ClusterPolicyConfig
+	argoRenderer  ArgoRenderer
+	log           *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(cli client.Client, argoRenderer ArgoRenderer, builtinRunnerImage string, runnerTimeout time.Duration) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
 	return &ActionService{
-		k8sCli:             cli,
-		runnerTimeout:      runnerTimeout,
-		builtinRunnerImage: builtinRunnerImage,
-		argoRenderer:       argoRenderer,
+		k8sCli:        cli,
+		builtinRunner: cfg.BuiltinRunner,
+		clusterPolicy: cfg.ClusterPolicy,
+		argoRenderer:  argoRenderer,
+		log:           log,
 	}
 }
 
@@ -138,7 +145,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	runnerCtx := runner.Context{
 		Name:    action.Name,
 		DryRun:  action.Spec.IsDryRun(),
-		Timeout: runner.Duration(a.runnerTimeout),
+		Timeout: runner.Duration(a.builtinRunner.Timeout),
 		Platform: runner.KubernetesPlatformConfig{
 			Namespace:          action.Namespace,
 			ServiceAccountName: saName,
@@ -238,12 +245,19 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		Path:     string(action.Spec.ActionRef.Path),
 		Revision: action.Spec.ActionRef.Revision,
 	}
+
+	policy, err := a.getClusterPolicyWithFallbackToEmpty(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	renderedAction, err := a.argoRenderer.Render(
 		ctx,
 		runnerCtxSecretRef,
 		interfaceRef,
 		argo.WithSecretUserInput(ref),
 		argo.WithImplementationRevisionFilter(a.defaultOCHImplementationFilter()),
+		argo.WithClusterPolicy(policy),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
@@ -293,6 +307,31 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 		Name: action.Spec.Input.Parameters.SecretRef.Name,
 		Key:  graphqldomain.ParametersSecretDataKey,
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
+}
+
+func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
+	key := client.ObjectKey{
+		Namespace: a.clusterPolicy.Namespace,
+		Name:      a.clusterPolicy.Name,
+	}
+
+	policyCfgMap := &corev1.ConfigMap{}
+	if err := a.k8sCli.Get(ctx, key, policyCfgMap); err != nil {
+		if apierrors.IsNotFound(err) {
+			a.log.Info("ConfigMap with cluster policy not found. Fallback to empty Cluster Policy", zap.Any("key", key))
+			return clusterpolicy.ClusterPolicy{}, nil
+		}
+
+		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
+	}
+
+	policy, err := clusterpolicy.FromYAMLString(policyCfgMap.Data[clusterPolicyConfigMapKey])
+	if err != nil {
+		return clusterpolicy.ClusterPolicy{},
+			errors.Wrapf(err, "while unmarshaling policy from ConfigMap '%s/%s' from %q key", key.Namespace, key.Name, clusterPolicyConfigMapKey)
+	}
+
+	return policy, nil
 }
 
 type GetReportedRunnerStatusOutput struct {
@@ -376,7 +415,7 @@ func (a *ActionService) objectMetaFromAction(action *v1alpha1.Action) metav1.Obj
 }
 
 func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *batchv1.Job {
-	activeDeadline := a.runnerTimeout + k8sJobActiveDeadlinePadding
+	activeDeadline := a.builtinRunner.Timeout + k8sJobActiveDeadlinePadding
 	activeDeadlineSec := activeDeadline.Seconds()
 
 	return &batchv1.Job{
@@ -392,7 +431,7 @@ func (a *ActionService) argoRunnerJob(saName string, action *v1alpha1.Action) *b
 					Containers: []corev1.Container{
 						{
 							Name:  "runner",
-							Image: a.builtinRunnerImage,
+							Image: a.builtinRunner.Image,
 							Env: []corev1.EnvVar{
 								{
 									Name:  "RUNNER_ARGS_PATH",
