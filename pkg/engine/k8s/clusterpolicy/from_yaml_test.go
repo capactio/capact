@@ -105,10 +105,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 					},
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Exact: &types.ImplementationRef{
-								Path:     "cap.implementation.bitnami.postgresql.install",
-								Revision: ptr.String("1.0.0"),
-							},
+							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
 						},
 					},
 				},

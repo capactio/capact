@@ -1,0 +1,220 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: voltron-root
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: postgres-install
+      outputs:
+        artifacts:
+        - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
+          name: postgresql
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  group: "sql"
+                  command: "create"
+                  generateName: true
+                  instance: # this maps to https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1beta4/instances
+                    databaseVersion: "POSTGRES_11"
+                    region: "us-central"
+                    defaultDBName: {{ defaultDBName }}
+                    rootPassword: {{ superuser.password }}
+                    settings:
+                      tier: "db-g1-small"
+                      ipConfiguration:
+                        authorizedNetworks:
+                          - name: internet
+                            value: "0.0.0.0/0"
+                  output:{% raw %}
+                    goTemplate:
+                      host: "{{ (index .DBInstance.IpAddresses 0).IpAddress  }}"
+                      port: "{{ .Port }}"
+                      defaultDBName: "{{ .DefaultDBName }}"
+                      superuser:
+                        username: "{{ .Username }}"
+                        password: "{{ .Password }}"{% endraw %}
+          name: create-cloudsql-args
+          template: postgres-install-create-cloudsql-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-cloudsql-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+            - from: '{{workflow.outputs.artifacts.gcp-sa}}'
+              name: gcp-sa
+          name: cloudsql-run
+          template: postgres-install-cloudsql-run-gcp
+      - - arguments:
+            artifacts:
+            - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: postgres-install-create-cloudsql-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH
+          value: '{{inputs.artifacts.gcp-sa.path}}'
+        - name: RUNNER_GCP_SERVICE_ACCOUNT_FILE_FORMAT
+          value: YAML
+        - name: RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH
+          value: '{{outputs.artifacts.cloudsql-instance.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-113
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: gcp-sa
+          path: /gcp/sa.yaml
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: postgres-install-cloudsql-run-gcp
+      outputs:
+        artifacts:
+        - globalName: postgres-install-cloudsql-run-cloudsql-instance
+          name: cloudsql-instance
+          path: /instance.yaml
+        - globalName: postgres-install-cloudsql-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: inject-gcp-sa-step
+          template: inject-gcp-sa
+      - - arguments: {}
+          name: start-entrypoint
+          template: postgres-install
+    - arguments: {}
+      container:
+        args:
+        - |-
+          sleep 2 && echo 'auth_provider_x509_cert_url: fake
+          auth_uri: fake
+          client_email: fake
+          client_id: fake
+          client_x509_cert_url: fake
+          private_key: fake
+          private_key_id: fake
+          project_id: projectvoltron
+          token_uri: fake
+          type: service_account
+          ' | tee /output
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-gcp-sa
+      outputs:
+        artifacts:
+        - globalName: gcp-sa
+          name: gcp-sa
+          path: /output
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+runnerInterface: cap.interface.runner.argo.run

@@ -32,8 +32,8 @@ type ImplementationConstraints struct {
 	// Attributes refers a specific Attribute by path and optional revision.
 	Attributes *[]types.AttributeRef `json:"attributes,omitempty"`
 
-	// Exact refers a specific Implementation by path and optional revision.
-	Exact *types.ImplementationRef `json:"exact,omitempty"`
+	// Path refers a specific Implementation with exact path.
+	Path *string `json:"path,omitempty"`
 }
 
 type TypeInstanceToInject struct {

@@ -274,8 +274,8 @@ This project uses the [GQLGen](https://github.com/99designs/gqlgen) library, whi
 
 In Voltron project we have three GraphQL schemas, from which the Go code is generated:
 - [Engine](../pkg/engine/api/graphql/schema.graphql)
-- [Local OCH Mock](../pkg/och/api/graphql/local/schema.graphql)
-- [Public OCH Mock](../pkg/och/api/graphql/public/schema.graphql)
+- [Local OCH](../och-js/graphql/local/schema.graphql)
+- [Public OCH](../och-js/graphql/public/schema.graphql)
 
 Each time the GraphQL schema changes, you need to update generated resources. To do this, execute:
 

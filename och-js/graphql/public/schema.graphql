@@ -47,26 +47,38 @@ Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
 scalar VersionRange
 
 input InterfaceFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 }
 
 input ImplementationFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 }
 
 input ImplementationRevisionFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 
   """
   If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
   For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
   """
   requirementsSatisfiedBy: [TypeInstanceValue!]
+
   attributes: [AttributeFilterInput!]
+
+  """
+  If provided, the ImplementationRevisions for a given Interface will be filtered
+  according to provided Type references looked up in the `Implementation.spec.requires` field.
+
+  For every item in the array, the returned ImplementationRevisions must specify
+  such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
+
+  Not implemented.
+  """
+  requires: [TypeReferenceWithOptionalRevision]
 }
 
 input TypeInstanceValue {
-  typeRef: TypeReferenceInput
+  typeRef: TypeReferenceWithOptionalRevision
 
   """
   Currently not supported.
@@ -75,9 +87,9 @@ input TypeInstanceValue {
   value: Any
 }
 
-input TypeReferenceInput {
+input TypeReferenceWithOptionalRevision {
   path: NodePath!
-  revision: Version!
+  revision: Version
 }
 
 input AttributeFilterInput {
@@ -96,15 +108,15 @@ enum FilterRule {
 }
 
 input InterfaceGroupFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 }
 
 input AttributeFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 }
 
 input TypeFilter {
-  prefixPattern: NodePathPattern
+  pathPattern: NodePathPattern
 }
 
 type RepoMetadata @additionalLabels(labels: ["published"]){
@@ -262,7 +274,7 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
       OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)
       MATCH (rev)
       WHERE
-        ($filter.prefixPattern IS null OR meta.prefix =~ $filter.prefixPattern)
+        ($filter.pathPattern IS null OR meta.path =~ $filter.pathPattern)
         AND
         (
           all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))
@@ -536,7 +548,7 @@ interface MetadataBaseFields {
 
 type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath! @index
-  name: NodeName @index
+  name: NodeName! @index
   prefix: NodePrefix @index
 
   displayName: String
@@ -549,7 +561,7 @@ type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["p
 
 type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath! @index
-  name: NodeName @index
+  name: NodeName! @index
   prefix: NodePrefix @index
 
   displayName: String
@@ -565,7 +577,7 @@ type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labe
 
 type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
   path: NodePath! @index
-  name: NodeName @index
+  name: NodeName! @index
   prefix: NodePrefix @index
   displayName: String
   description: String!
@@ -602,7 +614,7 @@ type Query @additionalLabels(labels: ["published"]){
     @cypher(
       statement: """
       MATCH (this:InterfaceGroup:published)
-      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
       """
     )
   interfaceGroup(path: NodePath!): InterfaceGroup
@@ -611,7 +623,7 @@ type Query @additionalLabels(labels: ["published"]){
     @cypher(
       statement: """
       MATCH (this:Interface:published)
-      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
       """
     )
   interface(path: NodePath!): Interface
@@ -620,7 +632,7 @@ type Query @additionalLabels(labels: ["published"]){
     @cypher(
       statement: """
       MATCH (this:Type:published)
-      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
       """
     )
   type(path: NodePath!): Type
@@ -629,7 +641,7 @@ type Query @additionalLabels(labels: ["published"]){
     @cypher(
       statement: """
       MATCH (this:Implementation:published)
-      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
       """
     )
 
@@ -639,7 +651,7 @@ type Query @additionalLabels(labels: ["published"]){
     @cypher(
       statement: """
       MATCH (this:Attribute:published)
-      WHERE $filter = {} OR this.prefix =~ $filter.prefixPattern RETURN this
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
       """
     )
   attribute(path: NodePath!): Attribute

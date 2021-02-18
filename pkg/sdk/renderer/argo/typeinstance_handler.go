@@ -8,8 +8,6 @@ import (
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
-	"projectvoltron.dev/voltron/pkg/och/client"
-
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
 	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
@@ -28,7 +26,7 @@ type TypeInstanceHandler struct {
 	ochActionsImage string
 }
 
-func NewTypeInstanceHandler(ochCli client.OCHClient, ochActionsImage string) *TypeInstanceHandler {
+func NewTypeInstanceHandler(ochCli OCHClient, ochActionsImage string) *TypeInstanceHandler {
 	return &TypeInstanceHandler{ochCli: ochCli, ochActionsImage: ochActionsImage}
 }
 

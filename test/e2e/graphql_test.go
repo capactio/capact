@@ -63,14 +63,14 @@ var _ = Describe("GraphQL API", func() {
 
 			})
 
-			It("with specified prefixPattern", func() {
+			It("with specified pathPattern", func() {
 				ref := gqlpublicapi.InterfaceReference{
 					Path:     interfacePath,
 					Revision: revision,
 				}
-				prefixPattern := "cap.implementation.voltron.*"
+				pathPattern := "cap.implementation.voltron.*"
 				filter := gqlpublicapi.ImplementationRevisionFilter{
-					PrefixPattern: ptr.String(prefixPattern),
+					PathPattern: ptr.String(pathPattern),
 				}
 
 				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithImplementationFilter(filter))
@@ -82,7 +82,7 @@ var _ = Describe("GraphQL API", func() {
 				Expect(revisionsForInterface[0].Spec.Implements[0].Path).To(Equal(ref.Path))
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
-				Expect(*revisionsForInterface[0].Metadata.Prefix).To(MatchRegexp(prefixPattern))
+				Expect(*revisionsForInterface[0].Metadata.Prefix).To(MatchRegexp(pathPattern))
 
 			})
 
@@ -107,7 +107,7 @@ var _ = Describe("GraphQL API", func() {
 				Expect(revisionsForInterface[0].Spec.Implements[0].Revision).To(Equal(ref.Revision))
 
 				Expect(revisionsForInterface[0].Metadata.Attributes).To(HaveLen(1))
-				Expect(*revisionsForInterface[0].Metadata.Attributes[0].Metadata.Path).To(Equal(attr.Path))
+				Expect(revisionsForInterface[0].Metadata.Attributes[0].Metadata.Path).To(Equal(attr.Path))
 				Expect(revisionsForInterface[0].Metadata.Attributes[0].Revision).To(Equal(*attr.Revision))
 
 			})
@@ -144,7 +144,7 @@ var _ = Describe("GraphQL API", func() {
 				filter := gqlpublicapi.ImplementationRevisionFilter{
 					RequirementsSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
 						{
-							TypeRef: &gqlpublicapi.TypeReferenceInput{
+							TypeRef: &gqlpublicapi.TypeReferenceWithOptionalRevision{
 								Path:     "cap.core.type.platform.kubernetes",
 								Revision: ptr.String("0.1.0"),
 							},

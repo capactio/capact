@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
@@ -20,10 +20,10 @@ const (
 )
 
 type PolicyEnforcedOCHClient interface {
-	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error)
-	ListTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicapi.InterfaceReference) ([]ochpublicapi.ImplementationRevision, clusterpolicy.Rule, error)
+	ListTypeInstancesToInjectBasedOnPolicy(policyRule clusterpolicy.Rule, implRev ochpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
 	SetPolicy(policy clusterpolicy.ClusterPolicy)
-	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
+	GetInterfaceRevision(ctx context.Context, ref ochpublicapi.InterfaceReference) (*ochpublicapi.InterfaceRevision, error)
 }
 
 type Renderer struct {
@@ -53,26 +53,30 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	defer cancel()
 
 	// 1. Find the root manifests
-	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRefToOCH(ref))
+	interfaceRef := interfaceRefToOCH(ref)
+
+	// 1.1 Get Interface
+	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRef)
 	if err != nil {
 		return nil, err
 	}
 
-	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRefToOCH(ref))
+	// 1.2 Get all ImplementationRevisions for a given Interface
+	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRef)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, `while listing ImplementationRevisions for Interface "%s:%s"`,
+			interfaceRef.Path, interfaceRef.Revision,
+		)
 	}
 
-	// business decision select the first one
-	implementation := implementations[0]
-
-	// 2. Get TypeInstances to inject based on policy
-	typeInstancesToInject, err := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+	// 1.3 Pick one of the Implementations
+	implementation, err := dedicatedRenderer.PickImplementationRevision(implementations)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, `while picking ImplementationRevision for Interface "%s:%s"`,
+			interfaceRef.Path, interfaceRef.Revision)
 	}
 
-	// 2.1 Register output TypeInstances
+	// 2. Register output TypeInstances
 	if err := dedicatedRenderer.registerOutputTypeInstances(iface, &implementation); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
@@ -81,7 +85,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// TODO: we should check whether imported revision is valid for this render algorithm
 	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
 	if err != nil {
-		return nil, errors.Wrap(err, "while resolving runner interface")
+		return nil, errors.Wrap(err, "while resolving runner Interface")
 	}
 
 	// 4. Extract workflow from the root Implementation
@@ -96,10 +100,11 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// 5. Add user input
 	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
-	// 6 Inject step which downloads TypeInstances based on Cluster Policy
+	// 6. List TypeInstances to inject based on policy and inject them if provided
+	typeInstancesToInject := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
 	}
 
 	// 7. Add runner context

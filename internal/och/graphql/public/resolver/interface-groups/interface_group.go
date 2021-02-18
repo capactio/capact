@@ -34,7 +34,7 @@ func dummyInterfaceGroup() *gqlpublicapi.InterfaceGroup {
 		Metadata: &gqlpublicapi.GenericMetadata{
 			Name:        "wordpress",
 			Prefix:      ptr.String("cap.interface.cms"),
-			Path:        ptr.String("cap.interface.cms.wordpress"),
+			Path:        "cap.interface.cms.wordpress",
 			DisplayName: ptr.String("Wordpress"),
 			Description: "Wordpress Application",
 			Maintainers: []*gqlpublicapi.Maintainer{

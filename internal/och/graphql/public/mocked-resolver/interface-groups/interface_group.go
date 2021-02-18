@@ -35,7 +35,7 @@ func (r *InterfaceGroupResolver) InterfaceGroup(ctx context.Context, path string
 		return &gqlpublicapi.InterfaceGroup{}, err
 	}
 	for _, group := range groups {
-		if group.Metadata != nil && group.Metadata.Path != nil && *group.Metadata.Path == path {
+		if group.Metadata != nil && group.Metadata.Path == path {
 			return group, nil
 		}
 	}
@@ -43,7 +43,7 @@ func (r *InterfaceGroupResolver) InterfaceGroup(ctx context.Context, path string
 }
 
 func (r *InterfaceGroupInterfacesResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.InterfaceGroup, filter *gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
-	if obj == nil || obj.Metadata == nil || obj.Metadata.Path == nil {
+	if obj == nil || obj.Metadata == nil {
 		return []*gqlpublicapi.Interface{}, nil
 	}
 	ifaces, err := mockedresolver.MockedInterfaces()
@@ -53,7 +53,7 @@ func (r *InterfaceGroupInterfacesResolver) Interfaces(ctx context.Context, obj *
 
 	filtered := []*gqlpublicapi.Interface{}
 	for _, iface := range ifaces {
-		if *obj.Metadata.Path == iface.Prefix {
+		if obj.Metadata.Path == iface.Prefix {
 			filtered = append(filtered, iface)
 		}
 	}

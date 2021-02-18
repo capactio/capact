@@ -64,7 +64,7 @@ gateway:
 clusterPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #
-#  cap.interface.database.postgresql.install:0.1.0:
+#  cap.interface.database.postgresql.install:0.1.0: # Rules for exact path and revision (looked up in first place)
 #    oneOf:
 #      - implementationConstraints:
 #          requires:
@@ -83,13 +83,21 @@ clusterPolicyRules:
 #           - path: cap.attribute.cloud.provider.aws
 #             # any revision
 #      - implementationConstraints:
-#          exact:
-#            path: cap.implementation.bitnami.postgresql.install
-#            revision: 0.1.0
+#          path: cap.implementation.bitnami.postgresql.install
+#  cap.interface.database.postgresql.install: # Rules for exact path in any revision (looked up in second place)
+#    oneOf:
+#      - implementationConstraints:
+#          requires:
+#            - path: "cap.type.gcp.auth.service-account"
+#              # any revision
+#          attributes:
+#            - path: "cap.attribute.cloud.provider.gcp"
+#              # any revision
 
-  cap.*: # any other Interface
+  cap.*: # any other Interface (looked up in third place, if there is no rule for `path:revision` or `path`)
     oneOf:
-      - implementationConstraints:
+      - implementationConstraints: # prefer Implementation for Kubernetes
           requires:
             - path: "cap.core.type.platform.kubernetes"
               # any revision
+      - implementationConstraints: {} # fallback to any Implementation

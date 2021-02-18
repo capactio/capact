@@ -9,7 +9,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"github.com/Masterminds/semver/v3"
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
@@ -42,6 +45,9 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 }
 
 func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
+	getOpts := &public.GetImplementationOptions{}
+	getOpts.Apply(opts...)
+
 	var out []ochpublicgraphql.ImplementationRevision
 	for i := range s.OCHImplementations {
 		impl := s.OCHImplementations[i]
@@ -58,11 +64,48 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 		}
 	}
 
-	if len(out) == 0 {
-		return nil, fmt.Errorf("no ImplementationRevisions for Interface %v", ref)
+	result := public.FilterImplementationRevisions(out, getOpts)
+	if len(result) == 0 {
+		return nil, public.NewImplementationRevisionNotFoundError(ref)
 	}
 
-	return out, nil
+	return result, nil
+}
+
+func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
+	var typeInstanceTypeRefs []ochlocalgraphql.TypeReference
+	for _, ti := range s.OCHTypeInstances {
+		if ti.Spec == nil || ti.Spec.TypeRef == nil {
+			continue
+		}
+
+		typeInstanceTypeRefs = append(typeInstanceTypeRefs, *ti.Spec.TypeRef)
+	}
+
+	return typeInstanceTypeRefs, nil
+}
+
+func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error) {
+	var versions semver.Collection
+	for _, impl := range s.OCHImplementations {
+		for _, implements := range impl.Spec.Implements {
+			if implements.Path == ref.Path {
+				v, err := semver.NewVersion(implements.Revision)
+				if err != nil {
+					return "", err
+				}
+				versions = append(versions, v)
+			}
+		}
+	}
+
+	if len(versions) == 0 {
+		return "", errors.New("no Interface found for a given ref")
+	}
+
+	sort.Sort(versions)
+	latestVersion := versions[len(versions)-1]
+	return latestVersion.String(), nil
 }
 
 func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
