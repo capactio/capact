@@ -3,13 +3,14 @@ package argo
 import (
 	"context"
 	"fmt"
+	"path"
+	"strings"
 
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
 	"projectvoltron.dev/voltron/pkg/och/client"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
 	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -31,32 +32,62 @@ func NewTypeInstanceHandler(ochCli client.OCHClient, ochActionsImage string) *Ty
 	return &TypeInstanceHandler{ochCli: ochCli, ochActionsImage: ochActionsImage}
 }
 
-// TODO(SV-189): Handle that properly
-func (r *TypeInstanceHandler) AddInputTypeInstance(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
+func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
 	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
 	if err != nil {
 		return err
 	}
 
-	for _, tiInput := range instances {
-		template, err := r.getInjectTypeInstanceTemplate(tiInput)
-		if err != nil {
-			return errors.Wrapf(err, "while getting inject TypeInstance template for %s", tiInput.ID)
-		}
+	if len(instances) == 0 {
+		return nil
+	}
 
-		rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
-			{
-				&WorkflowStep{
-					WorkflowStep: &wfv1.WorkflowStep{
-						Name:     fmt.Sprintf("%s-step", template.Name),
-						Template: template.Name,
-					},
+	artifacts := wfv1.Artifacts{}
+	paths := []string{}
+
+	for _, tiInput := range instances {
+		path := path.Join("/", tiInput.Name)
+		path = path + ".yaml"
+		artifacts = append(artifacts, wfv1.Artifact{
+			Name:       tiInput.Name,
+			GlobalName: tiInput.Name,
+			Path:       path,
+		})
+		paths = append(paths, fmt.Sprintf("{%s,%s}", tiInput.ID, path))
+	}
+
+	template := &wfv1.Template{
+		Name: fmt.Sprintf("inject-input-type-instances"),
+		Container: &apiv1.Container{
+			Image: r.ochActionsImage,
+			Env: []apiv1.EnvVar{
+				{
+					Name:  "APP_ACTION",
+					Value: "DownloadAction",
+				},
+				{
+					Name:  "APP_DOWNLOAD_CONFIG",
+					Value: strings.Join(paths, ","),
 				},
 			},
-		}, rootWorkflow.Templates[idx].Steps...)
-
-		rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+		},
+		Outputs: wfv1.Outputs{
+			Artifacts: artifacts,
+		},
 	}
+
+	rootWorkflow.Templates[idx].Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: &wfv1.WorkflowStep{
+					Name:     fmt.Sprintf("%s-step", template.Name),
+					Template: template.Name,
+				},
+			},
+		},
+	}, rootWorkflow.Templates[idx].Steps...)
+
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 
 	return nil
 }
@@ -174,38 +205,4 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 
 	return nil
-}
-
-func (r *TypeInstanceHandler) getInjectTypeInstanceTemplate(input types.InputTypeInstanceRef) (*wfv1.Template, error) {
-	// this will be removed in SV-189
-	typeInstance, err := r.ochCli.GetTypeInstance(context.TODO(), input.ID)
-	if err != nil {
-		return nil, err
-	}
-	if typeInstance == nil {
-		return nil, fmt.Errorf("failed to find TypeInstance %s", input.ID)
-	}
-
-	data, err := yaml.Marshal(typeInstance.Spec.Value)
-	if err != nil {
-		return nil, errors.Wrap(err, "while to marshal TypeInstance to YAML")
-	}
-
-	return &wfv1.Template{
-		Name: fmt.Sprintf("inject-%s", input.Name),
-		Container: &apiv1.Container{
-			Image:   r.ochActionsImage,
-			Command: []string{"sh", "-c"},
-			Args:    []string{fmt.Sprintf("sleep 2 && echo '%s' | tee /output", string(data))},
-		},
-		Outputs: wfv1.Outputs{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name:       input.Name,
-					GlobalName: input.Name,
-					Path:       "/output",
-				},
-			},
-		},
-	}, nil
 }
