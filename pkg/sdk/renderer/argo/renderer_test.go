@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"projectvoltron.dev/voltron/pkg/och/client"
+
 	"projectvoltron.dev/voltron/pkg/och/client/fake"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
@@ -28,10 +30,13 @@ func TestRenderHappyPath(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och")
 	require.NoError(t, err)
 
+	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
-	}, fakeCli)
+	}, policyEnforcedCli, typeInstanceHandler)
 
 	tests := []struct {
 		name               string
@@ -110,10 +115,13 @@ func TestRendererMaxDepth(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och")
 	require.NoError(t, err)
 
+	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli)
+	}, policyEnforcedCli, typeInstanceHandler)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",

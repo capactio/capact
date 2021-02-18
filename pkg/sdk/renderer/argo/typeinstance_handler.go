@@ -4,6 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+
+	"projectvoltron.dev/voltron/pkg/och/client"
+
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
@@ -11,10 +15,18 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+type OCHClient interface {
+	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
+}
+
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as
 // injecting download step and upload step.
 type TypeInstanceHandler struct {
 	ochCli OCHClient
+}
+
+func NewTypeInstanceHandler(ochCli client.OCHClient) *TypeInstanceHandler {
+	return &TypeInstanceHandler{ochCli: ochCli}
 }
 
 // TODO(SV-189): Handle that properly

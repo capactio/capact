@@ -1,6 +1,6 @@
 apiVersion: 0.1.0
 rules:
-  cap.interface.database.postgresql.install:
+  cap.interface.database.postgresql.install:0.1.0:
     oneOf:
       - implementationConstraints:
           requires:

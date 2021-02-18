@@ -49,25 +49,26 @@ type OCHImplementationGetter interface {
 
 type ArgoRenderer interface {
 	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
+	PolicyEnforcer() argo.PolicyEnforcedOCHClient
 }
 
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
-	k8sCli        client.Client
-	builtinRunner BuiltinRunnerConfig
-	clusterPolicy ClusterPolicyConfig
-	argoRenderer  ArgoRenderer
-	log           *zap.Logger
+	k8sCli           client.Client
+	builtinRunner    BuiltinRunnerConfig
+	clusterPolicyCfg ClusterPolicyConfig
+	argoRenderer     ArgoRenderer
+	log              *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
 func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
 	return &ActionService{
-		k8sCli:        cli,
-		builtinRunner: cfg.BuiltinRunner,
-		clusterPolicy: cfg.ClusterPolicy,
-		argoRenderer:  argoRenderer,
-		log:           log,
+		k8sCli:           cli,
+		builtinRunner:    cfg.BuiltinRunner,
+		clusterPolicyCfg: cfg.ClusterPolicy,
+		argoRenderer:     argoRenderer,
+		log:              log,
 	}
 }
 
@@ -251,13 +252,14 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
+	clusterPolicyKeeper := a.argoRenderer.PolicyEnforcer()
+	clusterPolicyKeeper.SetPolicy(policy)
+
 	renderedAction, err := a.argoRenderer.Render(
 		ctx,
 		runnerCtxSecretRef,
 		interfaceRef,
 		argo.WithSecretUserInput(ref),
-		argo.WithImplementationRevisionFilter(a.defaultOCHImplementationFilter()),
-		argo.WithClusterPolicy(policy),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
@@ -273,23 +275,6 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status.SetInputParameters(userInput)
 
 	return status, nil
-}
-
-func (*ActionService) defaultOCHImplementationFilter() ochpublicapi.ImplementationRevisionFilter {
-	exclude := ochpublicapi.FilterRuleExclude
-
-	return ochpublicapi.ImplementationRevisionFilter{
-		RequirementsSatisfiedBy: []*ochpublicapi.TypeInstanceValue{
-			{TypeRef: &ochpublicapi.TypeReferenceInput{Path: "cap.core.type.platform.kubernetes"}},
-		},
-		// currently we do not have any policies, so GCP solutions are not supported
-		Attributes: []*ochpublicapi.AttributeFilterInput{
-			{
-				Path: "cap.attribute.cloud.provider.gcp",
-				Rule: &exclude,
-			},
-		},
-	}
 }
 
 func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {
@@ -311,8 +296,8 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 
 func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
 	key := client.ObjectKey{
-		Namespace: a.clusterPolicy.Namespace,
-		Name:      a.clusterPolicy.Name,
+		Namespace: a.clusterPolicyCfg.Namespace,
+		Name:      a.clusterPolicyCfg.Name,
 	}
 
 	policyCfgMap := &corev1.ConfigMap{}

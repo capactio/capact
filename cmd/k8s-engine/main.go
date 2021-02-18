@@ -101,7 +101,10 @@ func main() {
 
 	ochClient := getOCHClient(&cfg)
 
-	argoRenderer := argo.NewRenderer(cfg.Renderer, ochClient)
+	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient)
+	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
+	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
+
 	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, controller.Config{
 		BuiltinRunner: cfg.BuiltinRunner,
 		ClusterPolicy: cfg.ClusterPolicy,

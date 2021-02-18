@@ -63,7 +63,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 					},
 				},
 			},
-			"cap.interface.database.postgresql.install": {
+			"cap.interface.database.postgresql.install:0.1.0": {
 				OneOf: []clusterpolicy.Rule{
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
