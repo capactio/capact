@@ -8,7 +8,6 @@ import (
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
-	"github.com/argoproj/argo/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	"github.com/argoproj/argo/workflow/util"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -156,43 +155,11 @@ func statusFromEvent(event *watch.Event) (wfv1.WorkflowStatus, error) {
 
 func (r *Runner) submitWorkflow(wf *wfv1.Workflow, runnerCtx runner.Context) error {
 	wfNSCli := r.wfClientset.ArgoprojV1alpha1().Workflows(runnerCtx.Platform.Namespace)
-	_, err := SubmitWorkflow(wfNSCli, r.wfClientset, runnerCtx.Platform.Namespace, wf, &wfv1.SubmitOpts{
+	_, err := util.SubmitWorkflow(wfNSCli, r.wfClientset, runnerCtx.Platform.Namespace, wf, &wfv1.SubmitOpts{
 		ServiceAccount: runnerCtx.Platform.ServiceAccountName,
 		ServerDryRun:   runnerCtx.DryRun,
 	})
 	return err
-}
-
-// SubmitWorkflow validates and submit a single workflow and override some of the fields of the workflow
-//
-// Copied from https://github.com/argoproj/argo/blob/a730b4f43184c26d2a16423581b31d95738391bf/workflow/util/util.go#L171
-
-func SubmitWorkflow(wfIf v1alpha1.WorkflowInterface, wfClientset wfclientset.Interface, namespace string, wf *wfv1.Workflow, opts *wfv1.SubmitOpts) (*wfv1.Workflow, error) {
-	err := util.ApplySubmitOpts(wf, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	// TODO: Currently we had to disable the workflow validation because of this bug: https://github.com/argoproj/argo/issues/4772
-
-	//wftmplGetter := templateresolution.WrapWorkflowTemplateInterface(wfClientset.ArgoprojV1alpha1().WorkflowTemplates(namespace))
-	//cwftmplGetter := templateresolution.WrapClusterWorkflowTemplateInterface(wfClientset.ArgoprojV1alpha1().ClusterWorkflowTemplates())
-
-	//_, err = validate.ValidateWorkflow(wftmplGetter, cwftmplGetter, wf, validate.ValidateOpts{})
-	//if err != nil {
-	//	return nil, err
-	//}
-	//if opts.DryRun {
-	//	return wf, nil
-	//} else if opts.ServerDryRun {
-	//	wf, err := util.CreateServerDryRun(wf, wfClientset)
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	return wf, err
-	//} else {
-	return wfIf.Create(wf)
-	//}
 }
 
 // Name returns runner name.

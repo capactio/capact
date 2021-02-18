@@ -52,6 +52,8 @@ require (
 )
 
 replace (
+
+	github.com/argoproj/argo => github.com/Project-Voltron/argo-workflows v0.0.0-20210218075014-46fe14be5029
 	// Remove when the issues are resolved:
 	// https://github.com/graphql-go/graphql/issues/586
 	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
