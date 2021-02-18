@@ -15,8 +15,9 @@ import (
 
 type Config struct {
 	Action           string
-	DownloadConfig   []argoactions.DownloadConfig
-	LocalOCHEndpoint string `envconfig:"default=https://voltron-och-local.voltron.local/graphql"`
+	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
+	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
+	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
 }
 
 func main() {
@@ -28,9 +29,14 @@ func main() {
 
 	client := NewOCHLocalClient(cfg.LocalOCHEndpoint)
 
-	if cfg.Action == argoactions.DownloadAction {
+	switch cfg.Action {
+	case argoactions.DownloadAction:
 		action = argoactions.NewDownloadAction(client, cfg.DownloadConfig)
-	} else {
+
+	case argoactions.UploadAction:
+		action = argoactions.NewUploadAction(client, cfg.UploadConfig)
+
+	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)
 		exitOnError(err, "while selecting action")
 	}

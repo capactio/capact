@@ -8,6 +8,10 @@ builtInRunner:
   image:
     name: argo-runner
 
+argoActions:
+  image:
+    name: argo-actions
+
 controller:
   metricsPort: "8081"
 
