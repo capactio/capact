@@ -14,7 +14,6 @@ import (
 	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
-	graphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 )
 
@@ -40,8 +39,8 @@ var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
 
-	//	waitTillServiceEndpointsAreReady()
-	//	waitTillDataIsPopulated()
+	waitTillServiceEndpointsAreReady()
+	waitTillDataIsPopulated()
 })
 
 func TestE2E(t *testing.T) {
@@ -73,9 +72,10 @@ func waitTillServiceEndpointsAreReady() {
 func waitTillDataIsPopulated() {
 	cli := getOCHGraphQLClient()
 
-	Eventually(func() ([]graphql.Interface, error) {
-		return cli.ListInterfacesMetadata(context.Background())
-	}, cfg.PollingTimeout, cfg.PollingInterval).Should(HaveLen(3))
+	Eventually(func() (int, error) {
+		ifaces, err := cli.ListInterfacesMetadata(context.Background())
+		return len(ifaces), err
+	}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNumerically(">", 1))
 }
 
 func getOCHGraphQLClient() *ochclient.Client {

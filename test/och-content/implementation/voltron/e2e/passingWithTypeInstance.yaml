@@ -55,7 +55,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: e2e
-                        from: "{{workflow.outputs.artifacts.e2e}}"
+                        from: "{{ workflow.outputs.artifacts.e2e }}"
           - name: cat
             inputs:
               artifacts:

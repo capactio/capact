@@ -4,7 +4,6 @@ package e2e
 
 import (
 	"context"
-	"fmt"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -86,8 +85,7 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		FIt("should download input TypeInstance", func() {
-			fmt.Println("Running!!!")
+		It("should download input TypeInstance", func() {
 			input := &ochlocalgraphql.CreateTypeInstanceInput{
 				TypeRef: &ochlocalgraphql.TypeReferenceInput{
 					Path:     "cap.type.e2e.test",
