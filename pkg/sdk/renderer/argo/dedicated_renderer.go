@@ -170,9 +170,9 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return errors.Wrapf(err, "while injecting step downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 
-					// 3.5 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
 
+					// 3.5 Prefix output TypeInstances in the manifests
 					if step.VoltronTypeInstanceOutputs != nil {
 						for _, output := range step.VoltronTypeInstanceOutputs {
 							for i := range implementation.Spec.OutputTypeInstanceRelations {
@@ -198,7 +198,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						ti.Name = fmt.Sprintf("%s-%s", workflowPrefix, ti.Name)
 					}
 
-					// 3.3 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					// 3.6 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
 						return errors.Wrap(err, "while creating workflow for action step")
@@ -215,10 +215,10 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
 
-					// 3.6 Right now we know the template name, so let's try to register step input arguments
+					// 3.7 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step)
 
-					// 3.7 Render imported Workflow templates and add them to root templates
+					// 3.8 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
 					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
 					if err != nil {
@@ -719,8 +719,7 @@ func (r *dedicatedRenderer) noteOutputArtifacts(iface *ochpublicapi.InterfaceRev
 		if new {
 			typeRef := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
 			if typeRef == nil {
-				// TODO refactor to error func
-				return errors.Errorf("cannot find typeRef for TypeInstance %s", item.TypeInstanceName)
+				return NewTypeReferenceNotFoundError(item.TypeInstanceName)
 			}
 
 			r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
