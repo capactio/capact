@@ -15,7 +15,6 @@ import (
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 
-	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
@@ -72,7 +71,7 @@ func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpubl
 		if *iface.Metadata.Path == ref.Path {
 			item := ochpublicgraphql.InterfaceRevision{}
 
-			if err := copier.CopyWithOption(&item, &iface, copier.Option{DeepCopy: true, IgnoreEmpty: true}); err != nil {
+			if err := deepCopy(&iface, &item); err != nil {
 				return nil, err
 			}
 

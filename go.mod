@@ -16,7 +16,6 @@ require (
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.2
 	github.com/iancoleman/strcase v0.1.2
-	github.com/jinzhu/copier v0.2.4
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.3.3
