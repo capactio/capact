@@ -33,6 +33,7 @@ else
 fi
 
 # TODO: Read components to build in automated way, e.g. from directory structure
+# TODO: jinja2 is a Voltron Action move it to a separate directory or create a new repo for it
 cat <<EOT >> "$GITHUB_ENV"
 APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och"},{"APP":"och-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}

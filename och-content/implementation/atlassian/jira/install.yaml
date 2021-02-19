@@ -83,7 +83,8 @@ spec:
           - name: jira-install
             inputs:
               artifacts:
-                - name: input-parameters
+                # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
+                # - name: input-parameters
                 - name: postgresql
                   optional: true
             steps:
