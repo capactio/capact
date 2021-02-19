@@ -1,0 +1,40 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: test
+  prefix: cap.type.e2e # Computed during fetching the manifest
+  displayName: Test type for e2e tests
+  description: Defines test type for e2e tests
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for GCP service account",
+        "examples": [
+          {
+            "key": "value"
+          }
+        ],
+        "required": [
+            "key"
+        ],
+        "properties": {
+          "key": {
+            "$id": "#/properties/key",
+            "type": "string",
+            "title": "Test key"
+          }
+          "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

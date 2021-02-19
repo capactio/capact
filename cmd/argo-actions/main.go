@@ -19,26 +19,39 @@ type Config struct {
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
 	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
+	LoggerDevMode    bool                         `envconfig:"default=false"`
 }
 
 func main() {
+	start := time.Now()
+
 	var cfg Config
 	var action argoactions.Action
 
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	logger, err := zap.NewProductionConfig().Build()
-	exitOnError(err, "while creating logger")
+	// setup logger
+	var logCfg zap.Config
+	if cfg.LoggerDevMode {
+		logCfg = zap.NewDevelopmentConfig()
+	} else {
+		logCfg = zap.NewProductionConfig()
+	}
+
+	logger, err := logCfg.Build()
+	exitOnError(err, "while creating zap logger")
 
 	client := NewOCHLocalClient(cfg.LocalOCHEndpoint)
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:
-		action = argoactions.NewDownloadAction(client, cfg.DownloadConfig)
+		log := logger.With(zap.String("Action", argoactions.DownloadAction))
+		action = argoactions.NewDownloadAction(log, client, cfg.DownloadConfig)
 
 	case argoactions.UploadAction:
-		action = argoactions.NewUploadAction(logger, client, cfg.UploadConfig)
+		log := logger.With(zap.String("Action", argoactions.UploadAction))
+		action = argoactions.NewUploadAction(log, client, cfg.UploadConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)
@@ -48,6 +61,14 @@ func main() {
 	ctx := context.Background()
 	err = action.Do(ctx)
 	exitOnError(err, "while executing action")
+
+	// Argo doesn't like when a Pod exits too fast
+	// See https://cshark.atlassian.net/browse/SV-236
+	minTime := start.Add(time.Second)
+	if time.Now().Before(minTime) {
+		time.Sleep(time.Second)
+	}
+
 }
 
 func NewOCHLocalClient(endpoint string) *local.Client {

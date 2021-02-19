@@ -40,8 +40,8 @@ var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
 
-	waitTillServiceEndpointsAreReady()
-	waitTillDataIsPopulated()
+	//	waitTillServiceEndpointsAreReady()
+	//	waitTillDataIsPopulated()
 })
 
 func TestE2E(t *testing.T) {
