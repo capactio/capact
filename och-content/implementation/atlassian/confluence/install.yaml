@@ -89,7 +89,8 @@ spec:
             # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
-                - name: input-parameters
+                # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
+                # - name: input-parameters
                 - name: postgresql
                   optional: true
             steps:
@@ -140,22 +141,22 @@ spec:
                             chart:
                               name: "confluence-server"
                               repo: "https://helm.mox.sh"
-                            output:{% raw %}
+                            output:
                               goTemplate:
-                                version: {{ '"{{ .Values.image.tag }}"' }}
-                                host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ template \"confluence-server.fullname\" . }}"
                             values:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: "{{ host }}"
-                                user: "{{ superuser.username }}"
-                                password: "{{ superuser.password }}"
-                                {% raw %}database: "{{ name }}"{% endraw %}
+                                host: "<@ host @>"
+                                user: "<@ superuser.username @>"
+                                password: "<@ superuser.password | default(random_string()) @>"
+                                database: "<@ name @>"
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: confluence.voltron.local
+                                - host: confluence<@random_word()@>.voltron.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"

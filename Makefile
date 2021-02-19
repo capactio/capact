@@ -19,7 +19,7 @@ all: generate build-all-images test-ocf-manifests test-unit test-lint
 
 APPS = gateway k8s-engine och och-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
 TESTS = e2e
-INFRA = json-go-gen graphql-schema-linter
+INFRA = json-go-gen graphql-schema-linter jinja2
 
 build-tool-ocftool:
 	./hack/build-tool-ocftool.sh

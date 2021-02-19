@@ -64,3 +64,21 @@ telepresence.log
 
 # vscode
 .vscode
+
+# Python
+__pycache__
+*.py[cod]
+*.so
+*.egg
+*.egg-info
+dist
+build
+eggs
+sdist
+develop-eggs
+pip-log.txt
+.coverage
+.tox
+nosetests.xml
+.cache
+.pytest_cache

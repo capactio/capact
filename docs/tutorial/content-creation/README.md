@@ -475,18 +475,18 @@ spec:
                             chart:
                               name: "confluence-server"
                               repo: "https://helm.mox.sh"
-                            output:{% raw %}
+                            output:
                               goTemplate:
-                                version: {{ '"{{ .Values.image.tag }}"' }}
-                                host: {{ "'{{ template \"confluence-server.fullname\" . }}'" }}{% endraw %}
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ template \"confluence-server.fullname\" . }}"
                             values:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: "{{ host }}"
-                                user: "{{ superuser.username }}"
-                                password: "{{ superuser.password }}"
-                                {% raw %}database: "{{ name }}"{% endraw %}
+                                host: "<@ host @>"
+                                user: "<@ superuser.username @>"
+                                password: "<@ superuser.password @>"
+                                database: "<@ name @>"
                               ingress:
                                 enabled: true
                                 hosts:

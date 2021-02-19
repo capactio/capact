@@ -66,18 +66,16 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            export PGPASSWORD={{superuser.password}}
-                            PSQL_CMD="psql -h {{host}} -U {{superuser.username}} {{defaultDBName}} -c"
-                            {% raw %}
-                            ${PSQL_CMD} "CREATE DATABASE {{name}}"
-                            ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE {{name}} TO {{owner}}"
+                            export PGPASSWORD=<@ superuser.password @>
+                            PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                            ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                            ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
 
                             cat <<EOF > /database.yml
-                            name: {{name}}
-                            owner: {{owner}}
+                            name: <@name@>
+                            owner: <@owner@>
                             tablespace: ""
                             EOF
-                            {% endraw %}
                       - name: input-parameters
                         from: "{{inputs.artifacts.postgresql}}"
 

@@ -84,7 +84,7 @@ spec:
             inputs:
               artifacts:
                 # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
-                #- name: input-parameters
+                # - name: input-parameters
                 - name: postgresql
                   optional: true
             steps:
@@ -98,7 +98,6 @@ spec:
                           data: |
                             superuser:
                               username: superuser
-                              password: okon
                             defaultDBName: postgres
 
               - - name: create-db
@@ -128,22 +127,22 @@ spec:
                             chart:
                               name: "jira-software"
                               repo: "https://helm.mox.sh"
-                            output:{% raw %}
+                            output:
                               goTemplate:
-                                version: {{ '"{{ .Values.image.tag }}"' }}
-                                host: {{ "'{{ template \"jira-software.fullname\" . }}'" }}{% endraw %}
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ template \"jira-software.fullname\" . }}"
                             values:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: "{{ host }}"
-                                user: "{{ superuser.username }}"
-                                password: "{{ superuser.password }}"
-                                {% raw %}database: "{{ name }}"{% endraw %}
+                                host: "<@ host @>"
+                                user: "<@ superuser.username @>"
+                                password: "<@ superuser.password | default(random_string()) @>"
+                                database: "<@ name @>"
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: jira-cloud.voltron.local
+                                - host: jira-cloud-<@random_word()@>.voltron.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
