@@ -237,10 +237,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	typeInstances, err := a.getUserInputTypeInstances(action)
-	if err != nil {
-		return nil, err
-	}
+	typeInstances := a.getUserInputTypeInstances(action)
 
 	runnerCtxSecretRef := argo.RunnerContextSecretRef{
 		Name: action.Name,
@@ -297,9 +294,9 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) ([]types.InputTypeInstanceRef, error) {
+func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []types.InputTypeInstanceRef {
 	if action.Spec.Input == nil || action.Spec.Input.TypeInstances == nil {
-		return nil, nil
+		return nil
 	}
 
 	refs := []types.InputTypeInstanceRef{}
@@ -307,7 +304,7 @@ func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) ([]ty
 		refs = append(refs, types.InputTypeInstanceRef{Name: ti.Name, ID: ti.ID})
 	}
 
-	return refs, nil
+	return refs
 }
 
 func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
