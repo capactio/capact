@@ -57,7 +57,7 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 	}
 
 	template := &wfv1.Template{
-		Name: fmt.Sprintf("inject-input-type-instances"),
+		Name: "inject-input-type-instances",
 		Container: &apiv1.Container{
 			Image: r.ochActionsImage,
 			Env: []apiv1.EnvVar{

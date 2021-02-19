@@ -68,7 +68,6 @@ func main() {
 	if time.Now().Before(minTime) {
 		time.Sleep(time.Second)
 	}
-
 }
 
 func NewOCHLocalClient(endpoint string) *local.Client {

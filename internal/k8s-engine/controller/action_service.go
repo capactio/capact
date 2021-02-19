@@ -237,7 +237,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	typeInstances, err := a.getUserInputTypeInstances(ctx, action)
+	typeInstances, err := a.getUserInputTypeInstances(action)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getUserInputTypeInstances(ctx context.Context, action *v1alpha1.Action) ([]types.InputTypeInstanceRef, error) {
+func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) ([]types.InputTypeInstanceRef, error) {
 	if action.Spec.Input == nil || action.Spec.Input.TypeInstances == nil {
 		return nil, nil
 	}
