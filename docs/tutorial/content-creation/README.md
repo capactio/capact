@@ -477,8 +477,8 @@ spec:
                               repo: "https://helm.mox.sh"
                             output:
                               goTemplate:
-                                version: "<@ .Values.image.tag @>"
-                                host: <@ template \"confluence-server.fullname\" . @>
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ template \"confluence-server.fullname\" . }}"
                             values:
                               postgresql:
                                 enabled: false
