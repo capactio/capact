@@ -26,6 +26,18 @@ import (
 // To update golden file, run:
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
+	// given
+	fakeCli, err := fake.NewFromLocal("testdata/och")
+	require.NoError(t, err)
+
+	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+
+	argoRenderer := NewRenderer(renderer.Config{
+		RenderTimeout: time.Second,
+		MaxDepth:      20,
+	}, policyEnforcedCli, typeInstanceHandler)
+
 	tests := []struct {
 		name               string
 		ref                types.InterfaceRef
@@ -70,30 +82,17 @@ func TestRenderHappyPath(t *testing.T) {
 				Path: "cap.interface.atlassian.stack.install",
 			},
 		},
-		//{
-		//	name: "Two level nested workflow",
-		//	ref: types.InterfaceRef{
-		//		Path: "cap.interface.nested.root",
-		//	},
-		//},
+		{
+			name: "Two level nested workflow",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.nested.root",
+			},
+		},
 	}
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-
-			// given
-			fakeCli, err := fake.NewFromLocal("testdata/och")
-			require.NoError(t, err)
-
-			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
-
-			argoRenderer := NewRenderer(renderer.Config{
-				RenderTimeout:   time.Second,
-				MaxDepth:        20,
-				OCHActionsImage: "argo-actions",
-			}, policyEnforcedCli, typeInstanceHandler)
 
 			// when
 			renderedArgs, err := argoRenderer.Render(

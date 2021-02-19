@@ -1,7 +1,9 @@
 package fake
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -13,6 +15,7 @@ import (
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 
+	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
@@ -41,10 +44,17 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 
 func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
 	var out []ochpublicgraphql.ImplementationRevision
-	for _, impl := range s.OCHImplementations {
+	for i := range s.OCHImplementations {
+		impl := s.OCHImplementations[i]
 		for _, implements := range impl.Spec.Implements {
 			if implements.Path == ref.Path {
-				out = append(out, impl)
+				item := ochpublicgraphql.ImplementationRevision{}
+
+				if err := deepCopy(&impl, &item); err != nil {
+					return nil, err
+				}
+
+				out = append(out, item)
 			}
 		}
 	}
@@ -60,7 +70,13 @@ func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpubl
 	for i := range s.OCHInterfaces {
 		iface := s.OCHInterfaces[i]
 		if *iface.Metadata.Path == ref.Path {
-			return &iface, nil
+			item := ochpublicgraphql.InterfaceRevision{}
+
+			if err := copier.CopyWithOption(&item, &iface, copier.Option{DeepCopy: true, IgnoreEmpty: true}); err != nil {
+				return nil, err
+			}
+
+			return &item, nil
 		}
 	}
 
@@ -136,4 +152,17 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 	}
 
 	return nil
+}
+
+func deepCopy(src interface{}, dst interface{}) error {
+	var mod bytes.Buffer
+	enc := gob.NewEncoder(&mod)
+	dec := gob.NewDecoder(&mod)
+
+	err := enc.Encode(src)
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(dst)
 }

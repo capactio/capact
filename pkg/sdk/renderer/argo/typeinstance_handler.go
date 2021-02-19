@@ -76,7 +76,7 @@ type OutputTypeInstances struct {
 	relations     []OutputTypeInstanceRelation
 }
 
-func (r *TypeInstanceHandler) AddUploadTypeInstancesTemplate(rootWorkflow *Workflow, output *OutputTypeInstances) error {
+func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow, output *OutputTypeInstances) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 

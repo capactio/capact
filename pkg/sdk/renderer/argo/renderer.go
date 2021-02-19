@@ -52,12 +52,12 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
+	// 1. Find the root manifests
 	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRefToOCH(ref))
 	if err != nil {
 		return nil, err
 	}
 
-	// 1. Find the root implementation
 	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRefToOCH(ref))
 	if err != nil {
 		return nil, err
@@ -72,6 +72,11 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, err
 	}
 
+	// 2.1 Register output TypeInstances
+	if err := dedicatedRenderer.registerOutputTypeInstances(iface, &implementation); err != nil {
+		return nil, errors.Wrap(err, "while noting output artifacts")
+	}
+
 	// 3. Ensure that the runner was defined in imports section
 	// TODO: we should check whether imported revision is valid for this render algorithm
 	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
@@ -79,17 +84,13 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, errors.Wrap(err, "while resolving runner interface")
 	}
 
-	// 3. Extract workflow from the root Implementation
+	// 4. Extract workflow from the root Implementation
 	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
-	if err := dedicatedRenderer.noteOutputArtifacts(iface, &implementation); err != nil {
-		return nil, errors.Wrap(err, "while noting output artifacts")
-	}
-
-	// 3.1 Add our own root step and replace entrypoint
+	// 4.1 Add our own root step and replace entrypoint
 	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
 	// 5. Add user input
@@ -120,7 +121,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 
 	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
 
-	if err := dedicatedRenderer.AddOutputTypeInstances(rootWorkflow); err != nil {
+	if err := dedicatedRenderer.AddOutputTypeInstancesStep(rootWorkflow); err != nil {
 		return nil, err
 	}
 
