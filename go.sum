@@ -64,6 +64,8 @@ github.com/Microsoft/hcsshim v0.8.7 h1:ptnOoufxGSzauVTsdE+wMYnCWA301PdoN4xg5oRdZ
 github.com/Microsoft/hcsshim v0.8.7/go.mod h1:OHd7sQqRFrYd3RmSgbgji+ctCwkbq2wbEYNSzOYtcBQ=
 github.com/NYTimes/gziphandler v0.0.0-20170623195520-56545f4a5d46/go.mod h1:3wb06e3pkSAbeQ52E9H9iFoQsEEwGN64994WTCIhntQ=
 github.com/OneOfOne/xxhash v1.2.2/go.mod h1:HSdplMjZKSmBqAxg5vPj2TmRDmfkzw+cTzAElWljhcU=
+github.com/Project-Voltron/argo-workflows v0.0.0-20210218075014-46fe14be5029 h1:jiJ+9/Kwz2mk/gHQmGBCtU6tr97DyIM50RUm1fXrEAc=
+github.com/Project-Voltron/argo-workflows v0.0.0-20210218075014-46fe14be5029/go.mod h1:JBjTDKqQPwqQUVeHxZNkRv+TMEecsmM+bQX13peTw9s=
 github.com/PuerkitoBio/purell v1.0.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.0/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
@@ -91,8 +93,6 @@ github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kd
 github.com/antonmedv/expr v1.8.2/go.mod h1:5qsM3oLGDND7sDmQGDXHkYfkjYMUX14qsgqmHhwGEk8=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0 h1:jfIu9sQUG6Ig+0+Ap1h4unLjW6YQJpKZVmUzxsD4E/Q=
 github.com/arbovm/levenshtein v0.0.0-20160628152529-48b4e1c0c4d0/go.mod h1:t2tdKJDJF9BV14lnkjHmOQgcvEKgtqs5a1N3LNdJhGE=
-github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029 h1:24nzA0TCtBPFZ4AR+yOJFPP8GttzIxxQTqmtd9+CEXQ=
-github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029/go.mod h1:JBjTDKqQPwqQUVeHxZNkRv+TMEecsmM+bQX13peTw9s=
 github.com/argoproj/pkg v0.2.0 h1:ETgC600kr8WcAi3MEVY5sA1H7H/u1/IysYOobwsZ8No=
 github.com/argoproj/pkg v0.2.0/go.mod h1:F4TZgInLUEjzsWFB/BTJBsewoEy0ucnKSq6vmQiD/yc=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
