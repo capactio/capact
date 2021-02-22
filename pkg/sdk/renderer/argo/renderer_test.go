@@ -61,7 +61,7 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
-			name: "Jira workflow with user input and TypeInstances",
+			name: "Jira workflow with user input and gcp TypeInstance",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.jira.install",
 			},
@@ -73,6 +73,26 @@ func TestRenderHappyPath(t *testing.T) {
 				{
 					Name: "gcp",
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
+				},
+			},
+		},
+		{
+			name: "Jira workflow with user input and gcp and postgresql TypeInstances",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.jira.install",
+			},
+			userInput: &UserInputSecretRef{
+				Name: "user-input",
+				Key:  "parameters.json",
+			},
+			inputTypeInstances: []types.InputTypeInstanceRef{
+				{
+					Name: "gcp",
+					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
+				},
+				{
+					Name: "postgresql",
+					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
 		},

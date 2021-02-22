@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.voltron.e2e
-  name: passingWithTypeInstance
+  name: type-instance-download
   displayName: Passing Voltron test action
   description: ""
   documentationURL: ""
@@ -15,7 +15,13 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  input: {}
+  input:
+    typeInstance:
+      gcp:
+        typeRef:
+          path: cap.type.gcp.auth.service-account
+          revision: "0.1.0"
+        verbs: ["get"]
   output: {}
 
 signature:

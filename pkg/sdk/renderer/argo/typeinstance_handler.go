@@ -33,27 +33,27 @@ func NewTypeInstanceHandler(ochCli client.OCHClient, ochActionsImage string) *Ty
 }
 
 func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
+	if len(instances) == 0 {
+		return nil
+	}
+
 	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
 	if err != nil {
 		return err
 	}
 
-	if len(instances) == 0 {
-		return nil
-	}
-
 	artifacts := wfv1.Artifacts{}
-	paths := []string{}
+	var typeInstanceToDownload []string
 
 	for _, tiInput := range instances {
-		path := path.Join("/", tiInput.Name)
-		path = path + ".yaml"
+		writePath := path.Join("/", tiInput.Name)
+		writePath = writePath + ".yaml"
 		artifacts = append(artifacts, wfv1.Artifact{
 			Name:       tiInput.Name,
 			GlobalName: tiInput.Name,
-			Path:       path,
+			Path:       writePath,
 		})
-		paths = append(paths, fmt.Sprintf("{%s,%s}", tiInput.ID, path))
+		typeInstanceToDownload = append(typeInstanceToDownload, fmt.Sprintf("{%s,%s}", tiInput.ID, writePath))
 	}
 
 	template := &wfv1.Template{
@@ -67,7 +67,7 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 				},
 				{
 					Name:  "APP_DOWNLOAD_CONFIG",
-					Value: strings.Join(paths, ","),
+					Value: strings.Join(typeInstanceToDownload, ","),
 				},
 			},
 		},

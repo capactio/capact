@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: test
+  name: simple-key-value
   prefix: cap.type.e2e # Computed during fetching the manifest
   displayName: Test type for e2e tests
-  description: Defines test type for e2e tests
+  description: Defines simple test type for e2e tests
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -18,7 +18,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for GCP service account",
+        "title": "The schema for simple test type",
         "examples": [
           {
             "key": "value"

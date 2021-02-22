@@ -299,7 +299,7 @@ func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []typ
 		return nil
 	}
 
-	refs := []types.InputTypeInstanceRef{}
+	var refs []types.InputTypeInstanceRef
 	for _, ti := range *action.Spec.Input.TypeInstances {
 		refs = append(refs, types.InputTypeInstanceRef{Name: ti.Name, ID: ti.ID})
 	}

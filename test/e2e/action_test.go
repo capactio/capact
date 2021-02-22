@@ -86,9 +86,10 @@ var _ = Describe("Action", func() {
 		})
 
 		It("should download input TypeInstance", func() {
+			var typeInstances []*enginegraphql.InputTypeInstanceData
 			input := &ochlocalgraphql.CreateTypeInstanceInput{
 				TypeRef: &ochlocalgraphql.TypeReferenceInput{
-					Path:     "cap.type.e2e.test",
+					Path:     "cap.type.e2e.simple-key-value",
 					Revision: "0.1.0",
 				},
 				Value: map[string]string{"key": "e2e test"},
@@ -102,16 +103,36 @@ var _ = Describe("Action", func() {
 			typeInstance, err := ochClient.CreateTypeInstance(ctx, input)
 			Expect(err).ToNot(HaveOccurred())
 
-			inputTypeInstance := enginegraphql.InputTypeInstanceData{Name: "e2e", ID: typeInstance.Metadata.ID}
+			typeInstances = append(typeInstances,
+				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: typeInstance.Metadata.ID})
+
+			input = &ochlocalgraphql.CreateTypeInstanceInput{
+				TypeRef: &ochlocalgraphql.TypeReferenceInput{
+					Path:     "cap.type.gcp.auth.service-account",
+					Revision: "0.1.0",
+				},
+				Value: map[string]string{"project": "voltron"},
+				Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+					{
+						Path:     "com.voltron.attribute1",
+						Revision: "0.1.0",
+					},
+				},
+			}
+			typeInstance, err = ochClient.CreateTypeInstance(ctx, input)
+			Expect(err).ToNot(HaveOccurred())
+
+			typeInstances = append(typeInstances,
+				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: typeInstance.Metadata.ID})
 
 			_, err = engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.passingWithTypeInstance",
+					Path:     "cap.interface.voltron.e2e.type-instance-download",
 					Revision: ptr.String("0.1.0"),
 				},
 				Input: &enginegraphql.ActionInputData{
-					TypeInstances: []*enginegraphql.InputTypeInstanceData{&inputTypeInstance},
+					TypeInstances: typeInstances,
 				},
 			})
 

@@ -97,6 +97,9 @@ func (r *dedicatedRenderer) GetRootTemplates() []*Template {
 	return r.processedTemplates
 }
 
+// TODO Refactor it. It's too long
+// 1. Split it to smaller functions and leave only high level steps here
+// 2. Do not use global state, calling it multiple times seems not to work
 func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport, typeInstances []types.InputTypeInstanceRef) error {
 	r.currentIteration++
 
@@ -131,7 +134,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 				// 2.1 Replace step and emit input arguments as step output
 				if satisfiedArg != "" {
-					emitStep, wfTpl := r.emitWorkflowInputAsStepOutput(tpl.Name, step, satisfiedArg)
+					emitStep, wfTpl := r.emitWorkflowInputArgsAsStepOutput(tpl.Name, step, satisfiedArg)
 					step = emitStep
 					r.addToRootTemplates(wfTpl)
 				}
@@ -710,7 +713,7 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 }
 
 // TODO: current limitation: we handle properly only one artifacts `voltron-when: postgres == nil` but not `voltron-when: postgres == nil && jira-config == nil`
-func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
+func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *WorkflowStep, inputArgName string, reference string) (*WorkflowStep, *Template) {
 	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
 
 	// 1. Create step which outputs workflow input argument as step artifact
@@ -743,7 +746,7 @@ func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *
 			Artifacts: wfv1.Artifacts{
 				{
 					Name: inputArgName,
-					From: fmt.Sprintf("{{inputs.artifacts.%s}}", inputArgName),
+					From: fmt.Sprintf(reference, inputArgName),
 				},
 			},
 		},
@@ -751,45 +754,12 @@ func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *
 	return &WorkflowStep{WorkflowStep: userInputWfStep}, &Template{Template: userInputWfTpl}
 }
 
+func (r *dedicatedRenderer) emitWorkflowInputArgsAsStepOutput(tplName string, step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
+	return r.emitWorkflowInputAsStepOutput(tplName, step, inputArgName, "{{inputs.artifacts.%s}}")
+}
+
 func (r *dedicatedRenderer) emitWorkflowInputTypeInstanceAsStepOutput(tplName string, step *WorkflowStep, inputArgName string) (*WorkflowStep, *Template) {
-	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
-
-	// 1. Create step which outputs workflow input argument as step artifact
-	userInputWfTpl := &wfv1.Template{
-		Name:      fmt.Sprintf("mock-%s-%s", tplName, step.Name),
-		Container: r.sleepContainer(),
-		Outputs: wfv1.Outputs{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name: inputArgName,
-					Path: artifactPath,
-				},
-			},
-		},
-		Inputs: wfv1.Inputs{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name:     inputArgName,
-					Optional: false,
-					Path:     artifactPath,
-				},
-			},
-		},
-	}
-
-	userInputWfStep := &wfv1.WorkflowStep{
-		Name:     step.Name,
-		Template: userInputWfTpl.Name,
-		Arguments: wfv1.Arguments{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name: inputArgName,
-					From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", inputArgName),
-				},
-			},
-		},
-	}
-	return &WorkflowStep{WorkflowStep: userInputWfStep}, &Template{Template: userInputWfTpl}
+	return r.emitWorkflowInputAsStepOutput(tplName, step, inputArgName, "{{workflow.outputs.artifacts.%s}}")
 }
 
 func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep) {
