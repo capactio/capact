@@ -36,8 +36,8 @@ type dedicatedRenderer struct {
 	entrypointStep     *wfv1.WorkflowStep
 	tplInputArguments  map[string]wfv1.Artifacts
 
-	outputTypeInstances     *OutputTypeInstances
-	outputTypeInstanceNames map[string]struct{}
+	outputTypeInstances               *OutputTypeInstances
+	registeredOutputTypeInstanceNames map[string]struct{}
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -51,7 +51,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
-		outputTypeInstanceNames: map[string]struct{}{},
+		registeredOutputTypeInstanceNames: map[string]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -774,9 +774,9 @@ func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.Inte
 }
 
 func (r *dedicatedRenderer) addTypeInstanceName(name string) (*string, bool) {
-	_, found := r.outputTypeInstanceNames[name]
+	_, found := r.registeredOutputTypeInstanceNames[name]
 	if !found {
-		r.outputTypeInstanceNames[name] = struct{}{}
+		r.registeredOutputTypeInstanceNames[name] = struct{}{}
 	}
 
 	return &name, !found
