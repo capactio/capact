@@ -366,8 +366,8 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-gcp-step
-          template: inject-gcp
+          name: inject-input-type-instances-step
+          template: inject-input-type-instances
       - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
@@ -487,33 +487,22 @@ args:
           secretName: secret
     - arguments: {}
       container:
-        args:
-        - |-
-          sleep 2 && echo 'auth_provider_x509_cert_url: fake
-          auth_uri: fake
-          client_email: fake
-          client_id: fake
-          client_x509_cert_url: fake
-          private_key: fake
-          private_key_id: fake
-          project_id: projectvoltron
-          token_uri: fake
-          type: service_account
-          ' | tee /output
-        command:
-        - sh
-        - -c
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp.yaml}'
         image: alpine:3.7
         name: ""
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-gcp
+      name: inject-input-type-instances
       outputs:
         artifacts:
         - globalName: gcp
           name: gcp
-          path: /output
+          path: /gcp.yaml
     - arguments: {}
       container:
         env:

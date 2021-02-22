@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"projectvoltron.dev/voltron/pkg/och/client/local"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
@@ -18,19 +19,22 @@ type DownloadConfig struct {
 }
 
 type Download struct {
+	log    *zap.Logger
 	cfg    []DownloadConfig
 	client *local.Client
 }
 
-func NewDownloadAction(client *local.Client, cfg []DownloadConfig) Action {
+func NewDownloadAction(log *zap.Logger, client *local.Client, cfg []DownloadConfig) Action {
 	return &Download{
-		client: client,
+		log:    log,
 		cfg:    cfg,
+		client: client,
 	}
 }
 
 func (d *Download) Do(ctx context.Context) error {
 	for _, config := range d.cfg {
+		d.log.Info("Downloading TypeInstance", zap.String("ID", config.ID), zap.String("Path", config.Path))
 		typeInstance, err := d.client.GetTypeInstance(context.TODO(), config.ID)
 		if err != nil {
 			return err

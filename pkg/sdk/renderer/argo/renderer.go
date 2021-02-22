@@ -108,8 +108,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 8. Add steps to populate rootWorkflow with input TypeInstances
-	// TODO: should be handled properly in https://cshark.atlassian.net/browse/SV-189
-	if err := dedicatedRenderer.AddInputTypeInstance(rootWorkflow); err != nil {
+	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
 		return nil, err
 	}
 

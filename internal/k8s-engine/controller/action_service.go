@@ -237,6 +237,8 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
+	typeInstances := a.getUserInputTypeInstances(action)
+
 	runnerCtxSecretRef := argo.RunnerContextSecretRef{
 		Name: action.Name,
 		Key:  runnerContextSecretKey,
@@ -257,6 +259,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		interfaceRef,
 		argo.WithSecretUserInput(ref),
 		argo.WithPolicy(policy),
+		argo.WithTypeInstances(typeInstances),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
@@ -289,6 +292,19 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 		Name: action.Spec.Input.Parameters.SecretRef.Name,
 		Key:  graphqldomain.ParametersSecretDataKey,
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
+}
+
+func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []types.InputTypeInstanceRef {
+	if action.Spec.Input == nil || action.Spec.Input.TypeInstances == nil {
+		return nil
+	}
+
+	var refs []types.InputTypeInstanceRef
+	for _, ti := range *action.Spec.Input.TypeInstances {
+		refs = append(refs, types.InputTypeInstanceRef{Name: ti.Name, ID: ti.ID})
+	}
+
+	return refs
 }
 
 func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
