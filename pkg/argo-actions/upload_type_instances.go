@@ -82,8 +82,13 @@ func (u *Upload) Do(ctx context.Context) error {
 
 	u.log.Info("Uploading TypeInstances to OCH...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
 
-	if err := u.uploadTypeInstances(ctx, payload); err != nil {
+	uploadOutput, err := u.uploadTypeInstances(ctx, payload)
+	if err != nil {
 		return errors.Wrap(err, "while uploading TypeInstances")
+	}
+
+	for _, ti := range uploadOutput {
+		u.log.Info("TypeInstance uploaded", zap.String("alias", ti.Alias), zap.String("ID", ti.ID))
 	}
 
 	return nil
@@ -103,7 +108,6 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 	return nil
 }
 
-func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) error {
-	_, err := u.client.CreateTypeInstances(ctx, in)
-	return err
+func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
+	return u.client.CreateTypeInstances(ctx, in)
 }

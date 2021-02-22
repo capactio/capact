@@ -790,8 +790,6 @@ args:
               name: postgresql
             - from: '{{workflow.outputs.artifacts.confluence-config}}'
               name: confluence-config
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
-              name: postgresql
             - from: '{{workflow.outputs.artifacts.stack-install-install-shared-db-psql-helm-release}}'
               name: stack-install-install-shared-db-psql-helm-release
             - from: '{{workflow.outputs.artifacts.stack-install-jira-install-jira-helm-release}}'
@@ -822,12 +820,6 @@ args:
                     attributes: []
                     typeRef:
                       path: cap.type.productivity.confluence.config
-                      revision: 0.1.0
-                    value: null
-                  - alias: postgresql
-                    attributes: []
-                    typeRef:
-                      path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: stack-install-install-shared-db-psql-helm-release
@@ -928,8 +920,6 @@ args:
           path: /upload/typeInstances/postgresql
         - name: confluence-config
           path: /upload/typeInstances/confluence-config
-        - name: postgresql
-          path: /upload/typeInstances/postgresql
         - name: stack-install-install-shared-db-psql-helm-release
           path: /upload/typeInstances/stack-install-install-shared-db-psql-helm-release
         - name: stack-install-jira-install-jira-helm-release

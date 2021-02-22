@@ -37,7 +37,7 @@ type dedicatedRenderer struct {
 	tplInputArguments  map[string]wfv1.Artifacts
 
 	outputTypeInstances     *OutputTypeInstances
-	outputTypeInstanceNames []*string
+	outputTypeInstanceNames map[string]struct{}
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -51,7 +51,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
-		outputTypeInstanceNames: []*string{},
+		outputTypeInstanceNames: map[string]struct{}{},
 	}
 
 	for _, opt := range opts {
@@ -508,9 +508,11 @@ func (r *dedicatedRenderer) prefixOutputTypeInstancesInManifests(step *WorkflowS
 		}
 	}
 
-	for i := range iface.Spec.Output.TypeInstances {
-		ti := iface.Spec.Output.TypeInstances[i]
-		ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
+	if iface.Spec.Output != nil && iface.Spec.Output.TypeInstances != nil {
+		for i := range iface.Spec.Output.TypeInstances {
+			ti := iface.Spec.Output.TypeInstances[i]
+			ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
+		}
 	}
 }
 
@@ -722,12 +724,12 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep) {
 
 func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision) error {
 	for _, item := range impl.Spec.OutputTypeInstanceRelations {
-		artifactName, new := r.addTypeInstanceName(item.TypeInstanceName)
+		artifactName, isNew := r.addTypeInstanceName(item.TypeInstanceName)
 
-		if new {
-			typeRef := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
-			if typeRef == nil {
-				return NewTypeReferenceNotFoundError(item.TypeInstanceName)
+		if isNew {
+			typeRef, err := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
+			if err != nil {
+				return err
 			}
 
 			r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
@@ -742,27 +744,29 @@ func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.Inte
 		}
 
 		for _, uses := range item.Uses {
-			usesArtifactName, _ := r.addTypeInstanceName(uses)
+			usesArtifactName, isNew := r.addTypeInstanceName(uses)
 
 			r.outputTypeInstances.relations = append(r.outputTypeInstances.relations, OutputTypeInstanceRelation{
 				From: artifactName,
 				To:   usesArtifactName,
 			})
 
-			typeRef := findTypeInstanceTypeRef(uses, impl, iface)
-			if typeRef == nil {
-				return NewTypeReferenceNotFoundError(uses)
-			}
+			if isNew {
+				typeRef, err := findTypeInstanceTypeRef(uses, impl, iface)
+				if err != nil {
+					return NewTypeReferenceNotFoundError(uses)
+				}
 
-			r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
-				ArtifactName: usesArtifactName,
-				TypeInstance: types.OutputTypeInstance{
-					TypeRef: &types.TypeRef{
-						Path:     typeRef.Path,
-						Revision: &typeRef.Revision,
+				r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+					ArtifactName: usesArtifactName,
+					TypeInstance: types.OutputTypeInstance{
+						TypeRef: &types.TypeRef{
+							Path:     typeRef.Path,
+							Revision: &typeRef.Revision,
+						},
 					},
-				},
-			})
+				})
+			}
 		}
 	}
 
@@ -770,21 +774,10 @@ func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.Inte
 }
 
 func (r *dedicatedRenderer) addTypeInstanceName(name string) (*string, bool) {
-	if found := r.findTypeInstanceName(name); found != nil {
-		return found, false
+	_, found := r.outputTypeInstanceNames[name]
+	if !found {
+		r.outputTypeInstanceNames[name] = struct{}{}
 	}
 
-	r.outputTypeInstanceNames = append(r.outputTypeInstanceNames, &name)
-	return &name, true
-}
-
-func (r *dedicatedRenderer) findTypeInstanceName(name string) *string {
-	for i := range r.outputTypeInstanceNames {
-		item := r.outputTypeInstanceNames[i]
-		if *item == name {
-			return item
-		}
-	}
-
-	return nil
+	return &name, !found
 }

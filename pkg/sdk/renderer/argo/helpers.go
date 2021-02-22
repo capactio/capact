@@ -44,25 +44,23 @@ func getEntrypointWorkflowIndex(w *Workflow) (int, error) {
 	return 0, NewEntrypointWorkflowIndexNotFoundError(w.Entrypoint)
 }
 
-func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.ImplementationRevision, iface *ochpublicgraphql.InterfaceRevision) *ochpublicgraphql.TypeReference {
+func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.ImplementationRevision, iface *ochpublicgraphql.InterfaceRevision) (*ochpublicgraphql.TypeReference, error) {
+	toSearch := []*ochpublicgraphql.OutputTypeInstance{}
+
 	if iface.Spec.Output != nil {
-		for i := range iface.Spec.Output.TypeInstances {
-			ti := iface.Spec.Output.TypeInstances[i]
-			if ti.Name == typeInstanceName {
-				return ti.TypeRef
-			}
-		}
+		toSearch = append(toSearch, iface.Spec.Output.TypeInstances...)
 	}
 
 	if impl.Spec.AdditionalOutput != nil {
-		for i := range impl.Spec.AdditionalOutput.TypeInstances {
-			ti := impl.Spec.AdditionalOutput.TypeInstances[i]
+		toSearch = append(toSearch, impl.Spec.AdditionalOutput.TypeInstances...)
+	}
 
-			if ti.Name == typeInstanceName {
-				return ti.TypeRef
-			}
+	for i := range toSearch {
+		ti := toSearch[i]
+		if ti.Name == typeInstanceName {
+			return ti.TypeRef, nil
 		}
 	}
 
-	return nil
+	return nil, NewTypeReferenceNotFoundError(typeInstanceName)
 }
