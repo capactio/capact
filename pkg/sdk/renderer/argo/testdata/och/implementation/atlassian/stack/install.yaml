@@ -24,17 +24,6 @@ spec:
           revision: 0.1.0
         verbs:
           - GET
-  additionalOutput:
-    typeInstances:
-      - name: postgresql
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-  outputTypeInstanceRelations:
-    - typeInstanceName: jira-config
-      uses: [postgresql]
-    - typeInstanceName: confluence-config
-      uses: [postgresql]
   appVersion: 8.x.x
   implements:
     - path: cap.interface.atlassian.stack.install
@@ -115,9 +104,6 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
               - - name: jira-install
                   voltron-action: jira.install
-                  voltron-outputTypeInstances:
-                    - name: jira-config
-                      from: jira-config
                   arguments:
                     artifacts:
                       - name: postgresql
@@ -137,9 +123,6 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
               - - name: confluence-install
                   voltron-action: confluence.install
-                  voltron-outputTypeInstances:
-                    - name: confluence-config
-                      from: confluence-config
                   arguments:
                     artifacts:
                       - name: postgresql

@@ -2,6 +2,8 @@ package argo
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -63,4 +65,33 @@ func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.Imp
 	}
 
 	return nil, NewTypeReferenceNotFoundError(typeInstanceName)
+}
+
+func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *TypeInstanceDefinition {
+	if step.VoltronTypeInstanceOutputs != nil {
+		for _, output := range step.VoltronTypeInstanceOutputs {
+			if output.From == typeInstanceName {
+				return &output
+			}
+		}
+	}
+
+	return nil
+}
+
+func argoArtifactRefToName(ref string) string {
+	ref = strings.TrimPrefix(ref, "{{")
+	ref = strings.TrimSuffix(ref, "}}")
+	parts := strings.Split(ref, ".")
+
+	prefix := parts[0]
+	switch prefix {
+	case "steps":
+		stepName := parts[1]
+		artifactName := parts[4]
+
+		return fmt.Sprintf("%s-%s", stepName, artifactName)
+	}
+
+	return ""
 }

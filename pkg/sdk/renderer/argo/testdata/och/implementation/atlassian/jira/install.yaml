@@ -24,16 +24,6 @@ spec:
           revision: 0.1.0
         verbs:
           - GET
-  additionalOutput:
-    typeInstances:
-      - name: jira-helm-release
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
-      - name: postgresql
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
   outputTypeInstanceRelations:
     - typeInstanceName: jira-config
       uses: [jira-helm-release, postgresql]

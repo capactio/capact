@@ -30,15 +30,7 @@ spec:
               },
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
   output:
-    typeInstances:
-      - name: jira-config
-        typeRef:
-          path: cap.type.productivity.jira.config
-          revision: 0.1.0
-      - name: confluence-config
-        typeRef:
-          path: cap.type.productivity.confluence.config
-          revision: 0.1.0
+    typeInstances: []
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

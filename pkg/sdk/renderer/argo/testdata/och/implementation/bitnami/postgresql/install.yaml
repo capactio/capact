@@ -18,12 +18,6 @@ signature:
 spec:
   additionalInput:
     typeInstances: []
-  additionalOutput:
-    typeInstances:
-      - name: psql-helm-release
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
   outputTypeInstanceRelations:
     - typeInstanceName: postgresql
       uses: [psql-helm-release]
