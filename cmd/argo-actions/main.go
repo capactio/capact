@@ -8,6 +8,7 @@ import (
 
 	"github.com/machinebox/graphql"
 	"github.com/vrischmann/envconfig"
+	"go.uber.org/zap"
 	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/och/client/local"
@@ -27,6 +28,9 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
+	logger, err := zap.NewProductionConfig().Build()
+	exitOnError(err, "while creating logger")
+
 	client := NewOCHLocalClient(cfg.LocalOCHEndpoint)
 
 	switch cfg.Action {
@@ -34,7 +38,7 @@ func main() {
 		action = argoactions.NewDownloadAction(client, cfg.DownloadConfig)
 
 	case argoactions.UploadAction:
-		action = argoactions.NewUploadAction(client, cfg.UploadConfig)
+		action = argoactions.NewUploadAction(logger, client, cfg.UploadConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)

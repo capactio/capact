@@ -23,6 +23,7 @@ type PolicyEnforcedOCHClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error)
 	ListTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	SetPolicy(policy clusterpolicy.ClusterPolicy)
+	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 }
 
 type Renderer struct {
@@ -51,7 +52,12 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
-	// 1. Find the root implementation
+	// 1. Find the root manifests
+	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRefToOCH(ref))
+	if err != nil {
+		return nil, err
+	}
+
 	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRefToOCH(ref))
 	if err != nil {
 		return nil, err
@@ -64,6 +70,11 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	typeInstancesToInject, err := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
 	if err != nil {
 		return nil, err
+	}
+
+	// 2.1 Register output TypeInstances
+	if err := dedicatedRenderer.registerOutputTypeInstances(iface, &implementation); err != nil {
+		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
 	// 3. Ensure that the runner was defined in imports section
@@ -109,6 +120,10 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
+
+	if err := dedicatedRenderer.AddOutputTypeInstancesStep(rootWorkflow); err != nil {
+		return nil, err
+	}
 
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"projectvoltron.dev/voltron/pkg/och/client/local"
 	"sigs.k8s.io/yaml"
@@ -19,6 +20,7 @@ type UploadConfig struct {
 }
 
 type Upload struct {
+	log    *zap.Logger
 	client *local.Client
 	cfg    UploadConfig
 }
@@ -27,8 +29,9 @@ func ErrMissingTypeInstanceValue(typeInstanceName string) error {
 	return errors.Errorf("missing value for TypeInstance %s", typeInstanceName)
 }
 
-func NewUploadAction(client *local.Client, cfg UploadConfig) Action {
+func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
 	return &Upload{
+		log:    log,
 		client: client,
 		cfg:    cfg,
 	}
@@ -43,6 +46,11 @@ func (u *Upload) Do(ctx context.Context) error {
 	payload := &graphqllocal.CreateTypeInstancesInput{}
 	if err := yaml.Unmarshal(payloadBytes, payload); err != nil {
 		return errors.Wrap(err, "while unmarshaling payload bytes")
+	}
+
+	if len(payload.TypeInstances) == 0 {
+		u.log.Info("No TypeInstances to upload")
+		return nil
 	}
 
 	files, err := ioutil.ReadDir(u.cfg.TypeInstancesDir)
@@ -72,8 +80,15 @@ func (u *Upload) Do(ctx context.Context) error {
 		return errors.Wrap(err, "while rendering CreateTypeInstancesInput")
 	}
 
-	if err := u.uploadTypeInstances(ctx, payload); err != nil {
+	u.log.Info("Uploading TypeInstances to OCH...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
+
+	uploadOutput, err := u.uploadTypeInstances(ctx, payload)
+	if err != nil {
 		return errors.Wrap(err, "while uploading TypeInstances")
+	}
+
+	for _, ti := range uploadOutput {
+		u.log.Info("TypeInstance uploaded", zap.String("alias", ti.Alias), zap.String("ID", ti.ID))
 	}
 
 	return nil
@@ -93,7 +108,6 @@ func (u *Upload) render(payload *graphqllocal.CreateTypeInstancesInput, values m
 	return nil
 }
 
-func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) error {
-	_, err := u.client.CreateTypeInstances(ctx, in)
-	return err
+func (u *Upload) uploadTypeInstances(ctx context.Context, in *graphqllocal.CreateTypeInstancesInput) ([]graphqllocal.CreateTypeInstanceOutput, error) {
+	return u.client.CreateTypeInstances(ctx, in)
 }

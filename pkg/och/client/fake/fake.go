@@ -1,7 +1,9 @@
 package fake
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -22,11 +24,13 @@ const manifestsExtension = ".yaml"
 type FileSystemClient struct {
 	OCHTypeInstances   map[string]ochlocalgraphql.TypeInstance
 	OCHImplementations []ochpublicgraphql.ImplementationRevision
+	OCHInterfaces      []ochpublicgraphql.InterfaceRevision
 }
 
 func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 	store := &FileSystemClient{
 		OCHImplementations: []ochpublicgraphql.ImplementationRevision{},
+		OCHInterfaces:      []ochpublicgraphql.InterfaceRevision{},
 		OCHTypeInstances:   map[string]ochlocalgraphql.TypeInstance{},
 	}
 
@@ -39,10 +43,17 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 
 func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
 	var out []ochpublicgraphql.ImplementationRevision
-	for _, impl := range s.OCHImplementations {
+	for i := range s.OCHImplementations {
+		impl := s.OCHImplementations[i]
 		for _, implements := range impl.Spec.Implements {
 			if implements.Path == ref.Path {
-				out = append(out, impl)
+				item := ochpublicgraphql.ImplementationRevision{}
+
+				if err := deepCopy(&impl, &item); err != nil {
+					return nil, err
+				}
+
+				out = append(out, item)
 			}
 		}
 	}
@@ -50,7 +61,25 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 	if len(out) == 0 {
 		return nil, fmt.Errorf("no ImplementationRevisions for Interface %v", ref)
 	}
+
 	return out, nil
+}
+
+func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
+	for i := range s.OCHInterfaces {
+		iface := s.OCHInterfaces[i]
+		if *iface.Metadata.Path == ref.Path {
+			item := ochpublicgraphql.InterfaceRevision{}
+
+			if err := deepCopy(&iface, &item); err != nil {
+				return nil, err
+			}
+
+			return &item, nil
+		}
+	}
+
+	return nil, fmt.Errorf("cannot find Interface for %v", ref)
 }
 
 func (s *FileSystemClient) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
@@ -105,6 +134,14 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		s.OCHImplementations = append(s.OCHImplementations, impl)
 	}
 
+	if strings.Contains(filepath, "interface") {
+		iface := ochpublicgraphql.InterfaceRevision{}
+		if err := json.Unmarshal(jsonData, &iface); err != nil {
+			return err
+		}
+		s.OCHInterfaces = append(s.OCHInterfaces, iface)
+	}
+
 	if strings.Contains(filepath, "typeinstance") {
 		ti := ochlocalgraphql.TypeInstance{}
 		if err := json.Unmarshal(jsonData, &ti); err != nil {
@@ -114,4 +151,17 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 	}
 
 	return nil
+}
+
+func deepCopy(src interface{}, dst interface{}) error {
+	var mod bytes.Buffer
+	enc := gob.NewEncoder(&mod)
+	dec := gob.NewDecoder(&mod)
+
+	err := enc.Encode(src)
+	if err != nil {
+		return err
+	}
+
+	return dec.Decode(dst)
 }

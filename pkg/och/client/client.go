@@ -26,6 +26,7 @@ type Local interface {
 
 type Public interface {
 	ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql.Interface, error)
+	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
 }
 

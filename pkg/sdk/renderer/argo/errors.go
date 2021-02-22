@@ -29,3 +29,7 @@ func NewWorkflowNilError() error {
 func NewEntrypointWorkflowIndexNotFoundError(entrypoint string) error {
 	return errors.Errorf("cannot find workflow index specified by entrypoint %q", entrypoint)
 }
+
+func NewTypeReferenceNotFoundError(typeInstanceName string) error {
+	return errors.Errorf("cannot find TypeReference for TypeInstance %s", typeInstanceName)
+}

@@ -14,6 +14,7 @@ import (
 type OCHClient interface {
 	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
 	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
+	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 }
 
 type PolicyEnforcedClient struct {
@@ -33,6 +34,10 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 	}
 
 	return impls, clusterpolicy.Rule{}, err
+}
+
+func (e *PolicyEnforcedClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
+	return e.ochCli.GetInterfaceRevision(ctx, ref)
 }
 
 func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {

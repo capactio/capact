@@ -113,3 +113,37 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 				och
 			}
 			`, GenericMetadataFields, AttributeFields)
+
+var InterfaceRevisionFields = fmt.Sprintf(`
+      revision
+      metadata {
+				%s
+      }
+      spec {
+        input {
+          parameters {
+            jsonSchema
+          }
+          typeInstances {
+            name
+            typeRef {
+              path
+              revision
+            }
+            verbs
+          }
+        }
+        output {
+          typeInstances {
+            name
+            typeRef {
+              path
+              revision
+            }
+          }
+        }
+      }
+			implementationRevisions {
+					%s
+			}
+`, GenericMetadataFields, ImplementationRevisionFields)

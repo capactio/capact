@@ -47,6 +47,33 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 	return resp.Interfaces, nil
 }
 
+func (c *Client) GetInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
+	query, params := c.interfaceQueryForRef(ref)
+	req := graphql.NewRequest(fmt.Sprintf(`query($interfacePath: NodePath!, %s) {
+		  interface(path: $interfacePath) {
+				%s
+		  }
+		}`, params.Query(), query))
+
+	req.Var("interfacePath", ref.Path)
+	params.PopulateVars(req)
+
+	var resp struct {
+		Interface struct {
+			Revision gqlpublicapi.InterfaceRevision `json:"rev"`
+		} `json:"interface"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to fetch OCH Interface Revision")
+	}
+
+	return &resp.Interface.Revision, nil
+}
+
 func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
 	getOpts := &getImplementationOptions{}
 	getOpts.Apply(opts...)
@@ -114,10 +141,8 @@ func (c *Client) interfaceQueryForRef(ref gqlpublicapi.InterfaceReference) (stri
 func (c *Client) latestInterfaceRevision() (string, Args) {
 	latestRevision := fmt.Sprintf(`
 			rev: latestRevision {
-			  implementationRevisions {
-					%s
-			  }
-			}`, ImplementationRevisionFields)
+				%s
+			}`, InterfaceRevisionFields)
 
 	return latestRevision, Args{}
 }
@@ -125,10 +150,8 @@ func (c *Client) latestInterfaceRevision() (string, Args) {
 func (c *Client) specificInterfaceRevision(rev string) (string, Args) {
 	specificRevision := fmt.Sprintf(`
 			rev: revision(revision: $interfaceRev) {
-			  implementationRevisions {
-					%s
-			  }
-			}`, ImplementationRevisionFields)
+				%s
+			}`, InterfaceRevisionFields)
 
 	return specificRevision, Args{
 		"$interfaceRev: Version!": rev,

@@ -18,8 +18,10 @@ spec:
   additionalInput:
     typeInstances: []
   additionalOutput:
-    typeInstanceRelations: []
     typeInstances: []
+  outputTypeInstanceRelations:
+    - typeInstanceName: helm-release
+      uses: []
   appVersion: 3.x.x
   implements:
     - path: cap.core.interface.runner.generic.run
