@@ -38,12 +38,16 @@ spec:
                   path: "/template.yml"
                 - name: input-parameters
                   path: "/values.yml"
+                - name: configuration
+                  path: "/configuration.yaml"
+                  # TODO: Do we support optional?
+                  optional: true
             outputs:
               artifacts:
                 - name: render
                   path: "/render.yml"
             container:
-              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-134
+              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-144
               args:
                 - /template.yml 
                 - /values.yml 

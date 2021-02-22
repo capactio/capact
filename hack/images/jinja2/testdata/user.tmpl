@@ -1,4 +1,4 @@
-< title >
-My name is: < user.name >
-My password is: < user.password | default(random_string()) >
+<@ meta.title @>
+My name is: <@ postgresql.user.name @>
+My password is: <@ postgresql.user.password | default('aaa') @>
 Hmm "{{ .Value.image.tag }}"

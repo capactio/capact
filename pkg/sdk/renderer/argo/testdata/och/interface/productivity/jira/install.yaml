@@ -16,21 +16,21 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  input: {}
-  #    parameters:
-  #      input-parameters:
-  #        jsonSchema:
-  #          value: |-
-  #            {
-  #              "$schema": "http://json-schema.org/draft-07/schema",
-  #              "$ocfRefs": {
-  #                "inputType": {
-  #                  "name": "cap.type.productivity.jira.install-input",
-  #                  "revision": "0.1.0"
-  #                }
-  #              },
-  #              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
-  #            }
+  input:
+    parameters:
+      input-parameters:
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.productivity.jira.install-input",
+                  "revision": "0.1.0"
+                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+            }
   output:
     typeInstances:
       - name: jira-config

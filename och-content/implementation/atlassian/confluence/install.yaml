@@ -26,12 +26,27 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
+  additionalOutput:
+    typeInstances:
+      confluence-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+      database:
+        typeRef:
+          path: cap.type.postgresql.database
+          revision: 0.1.0
+
   outputTypeInstanceRelations:
       confluence-config:
         uses:
           - confluence-helm-release
-          - postgresql
           - database
+          - postgresql
 
   implements:
     - path: cap.interface.productivity.confluence.install
@@ -78,8 +93,7 @@ spec:
             # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
-                # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
-                # - name: input-parameters
+                - name: input-parameters
                 - name: postgresql
                   optional: true
             steps:
@@ -87,10 +101,10 @@ spec:
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
                   voltron-action: postgresql.install
-                  voltron-outputTypeInstances:
-                    - name: postgresql # Defining the output TypeInstance 'database'
-                      from: postgresql
                   voltron-when: postgresql == nil
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -148,7 +162,7 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: confluence<@random_word()@>.voltron.local
+                                - host: <@ input.host @>
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
@@ -162,6 +176,19 @@ spec:
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
 
+              - - name: fill-input-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-run
@@ -174,7 +201,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
