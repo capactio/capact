@@ -213,7 +213,3 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 
 	return nil
 }
-
-func (r *TypeInstanceHandler) SetGenUUID(genUUID func() string) {
-	r.genUUID = genUUID
-}
