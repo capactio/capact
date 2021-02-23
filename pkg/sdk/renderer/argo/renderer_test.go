@@ -39,7 +39,7 @@ func TestRenderHappyPath(t *testing.T) {
 	typeInstanceHandler.SetGenUUID(genUUID)
 
 	argoRenderer := NewRenderer(renderer.Config{
-		RenderTimeout: time.Second * 1000,
+		RenderTimeout: time.Second,
 		MaxDepth:      20,
 	}, policyEnforcedCli, typeInstanceHandler)
 

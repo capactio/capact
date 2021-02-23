@@ -132,7 +132,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 			for _, step := range parallelSteps {
 				// 1. Register step arguments, so we can process them in referenced template and check
 				// whether steps in referenced template are satisfied
-				r.registerTemplateInputArguments(step, availableTypeInstances) // TODO dlaczego to jest dwa razy?
+				r.registerTemplateInputArguments(step, availableTypeInstances)
 
 				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
 				satisfiedArg, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
@@ -223,7 +223,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					// 3.9 Add TypeInstances to the upload graph
 					inputArtifacts := r.tplInputArguments[step.Template]
 					if err := r.addOutputTypeInstancesToGraph(step, workflowPrefix, iface, &implementation, inputArtifacts); err != nil {
-						return errors.Wrap(err, "while registering output artifacts")
+						return errors.Wrap(err, "while adding TypeInstances to graph")
 					}
 
 					// 3.9 Render imported Workflow templates and add them to root templates
@@ -527,7 +527,6 @@ func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, 
 	if iface.Spec.Output != nil && iface.Spec.Output.TypeInstances != nil {
 		for i := range iface.Spec.Output.TypeInstances {
 			ti := iface.Spec.Output.TypeInstances[i]
-
 			newName := fmt.Sprintf("%s-%s", prefix, ti.Name)
 			newNamePtr := r.addTypeInstanceName(newName)
 			step.typeInstanceOutputs[ti.Name] = newNamePtr
@@ -554,13 +553,16 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 	artifactPath := "/typeinstance"
 
 	stepName := fmt.Sprintf("output-%s", output.Name)
-	artifactGlobalName := output.Name
-	if prefix != "" {
-		stepName = fmt.Sprintf("output-%s-%s", prefix, output.Name)
+
+	var templateName string
+	var artifactGlobalName string
+	if prefix == "" {
+		templateName = stepName
+		artifactGlobalName = output.Name
+	} else {
+		templateName = fmt.Sprintf("output-%s-%s", prefix, output.Name)
 		artifactGlobalName = fmt.Sprintf("%s-%s", prefix, output.Name)
 	}
-
-	templateName := stepName
 
 	fromDirective := fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", step.Name, output.From)
 
@@ -569,7 +571,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Template: templateName,
 		Arguments: wfv1.Arguments{Artifacts: wfv1.Artifacts{
 			wfv1.Artifact{
-				Name: artifactGlobalName,
+				Name: output.Name,
 				From: fromDirective,
 			},
 		}},
@@ -580,7 +582,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Inputs: wfv1.Inputs{
 			Artifacts: wfv1.Artifacts{
 				{
-					Name: artifactGlobalName,
+					Name: output.Name,
 					Path: artifactPath,
 				},
 			},
@@ -588,7 +590,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
 				{
-					Name:       artifactGlobalName,
+					Name:       output.Name,
 					GlobalName: artifactGlobalName,
 					Path:       artifactPath,
 				},

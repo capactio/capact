@@ -135,14 +135,14 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: jira-install-install-db-postgresql
-          name: output-jira-install-install-db-postgresql
+              name: postgresql
+          name: output-postgresql
           template: output-jira-install-install-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: jira-install-install-db-psql-helm-release
-          name: output-jira-install-install-db-psql-helm-release
+              name: psql-helm-release
+          name: output-psql-helm-release
           template: output-jira-install-install-db-psql-helm-release
     - arguments: {}
       container:
@@ -211,14 +211,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-install-db-postgresql
+        - name: postgresql
           path: /typeinstance
       metadata: {}
       name: output-jira-install-install-db-postgresql
       outputs:
         artifacts:
         - globalName: jira-install-install-db-postgresql
-          name: jira-install-install-db-postgresql
+          name: postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -232,14 +232,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-install-db-psql-helm-release
+        - name: psql-helm-release
           path: /typeinstance
       metadata: {}
       name: output-jira-install-install-db-psql-helm-release
       outputs:
         artifacts:
         - globalName: jira-install-install-db-psql-helm-release
-          name: jira-install-install-db-psql-helm-release
+          name: psql-helm-release
           path: /typeinstance
     - arguments: {}
       container:

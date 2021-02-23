@@ -18,6 +18,8 @@ metadata:
 spec:
   appVersion: "8.x.x"
 
+  outputTypeInstanceRelations: {}
+
   implements:
     - path: cap.interface.atlassian.stack.install
       revision: 0.1.0

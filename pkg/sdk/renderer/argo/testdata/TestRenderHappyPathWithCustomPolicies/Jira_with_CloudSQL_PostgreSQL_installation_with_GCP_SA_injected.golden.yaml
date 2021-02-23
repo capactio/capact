@@ -142,14 +142,14 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
-              name: jira-install-install-db-postgresql
-          name: output-jira-install-install-db-postgresql
+              name: postgresql
+          name: output-postgresql
           template: output-jira-install-install-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.cloudsql-run.outputs.artifacts.cloudsql-instance}}'
-              name: jira-install-install-db-cloudsql-instance
-          name: output-jira-install-install-db-cloudsql-instance
+              name: cloudsql-instance
+          name: output-cloudsql-instance
           template: output-jira-install-install-db-cloudsql-instance
     - arguments: {}
       container:
@@ -224,14 +224,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-install-db-postgresql
+        - name: postgresql
           path: /typeinstance
       metadata: {}
       name: output-jira-install-install-db-postgresql
       outputs:
         artifacts:
         - globalName: jira-install-install-db-postgresql
-          name: jira-install-install-db-postgresql
+          name: postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -245,14 +245,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-install-db-cloudsql-instance
+        - name: cloudsql-instance
           path: /typeinstance
       metadata: {}
       name: output-jira-install-install-db-cloudsql-instance
       outputs:
         artifacts:
         - globalName: jira-install-install-db-cloudsql-instance
-          name: jira-install-install-db-cloudsql-instance
+          name: cloudsql-instance
           path: /typeinstance
     - arguments: {}
       container:

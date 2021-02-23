@@ -89,14 +89,14 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: stack-install-install-shared-db-postgresql
-          name: output-stack-install-install-shared-db-postgresql
+              name: postgresql
+          name: output-postgresql
           template: output-stack-install-install-shared-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: stack-install-install-shared-db-psql-helm-release
-          name: output-stack-install-install-shared-db-psql-helm-release
+              name: psql-helm-release
+          name: output-psql-helm-release
           template: output-stack-install-install-shared-db-psql-helm-release
     - arguments: {}
       container:
@@ -165,14 +165,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: stack-install-install-shared-db-postgresql
+        - name: postgresql
           path: /typeinstance
       metadata: {}
       name: output-stack-install-install-shared-db-postgresql
       outputs:
         artifacts:
         - globalName: stack-install-install-shared-db-postgresql
-          name: stack-install-install-shared-db-postgresql
+          name: postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -186,14 +186,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: stack-install-install-shared-db-psql-helm-release
+        - name: psql-helm-release
           path: /typeinstance
       metadata: {}
       name: output-stack-install-install-shared-db-psql-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-install-shared-db-psql-helm-release
-          name: stack-install-install-shared-db-psql-helm-release
+          name: psql-helm-release
           path: /typeinstance
     - arguments: {}
       inputs:
@@ -306,20 +306,20 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
-              name: jira-install-jira-install-postgresql
-          name: output-jira-install-jira-install-postgresql
+              name: postgresql
+          name: output-postgresql
           template: output-jira-install-jira-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: jira-install-jira-install-jira-config
-          name: output-jira-install-jira-install-jira-config
+              name: jira-config
+          name: output-jira-config
           template: output-jira-install-jira-install-jira-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: jira-install-jira-install-jira-helm-release
-          name: output-jira-install-jira-install-jira-helm-release
+              name: jira-helm-release
+          name: output-jira-helm-release
           template: output-jira-install-jira-install-jira-helm-release
     - arguments: {}
       container:
@@ -408,14 +408,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-jira-install-postgresql
+        - name: postgresql
           path: /typeinstance
       metadata: {}
       name: output-jira-install-jira-install-postgresql
       outputs:
         artifacts:
         - globalName: jira-install-jira-install-postgresql
-          name: jira-install-jira-install-postgresql
+          name: postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -429,14 +429,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-jira-install-jira-config
+        - name: jira-config
           path: /typeinstance
       metadata: {}
       name: output-jira-install-jira-install-jira-config
       outputs:
         artifacts:
         - globalName: jira-install-jira-install-jira-config
-          name: jira-install-jira-install-jira-config
+          name: jira-config
           path: /typeinstance
     - arguments: {}
       container:
@@ -450,14 +450,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-install-jira-install-jira-helm-release
+        - name: jira-helm-release
           path: /typeinstance
       metadata: {}
       name: output-jira-install-jira-install-jira-helm-release
       outputs:
         artifacts:
         - globalName: jira-install-jira-install-jira-helm-release
-          name: jira-install-jira-install-jira-helm-release
+          name: jira-helm-release
           path: /typeinstance
     - arguments: {}
       inputs:
@@ -570,20 +570,20 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
-              name: confluence-install-confluence-install-postgresql
-          name: output-confluence-install-confluence-install-postgresql
+              name: postgresql
+          name: output-postgresql
           template: output-confluence-install-confluence-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: confluence-install-confluence-install-confluence-config
-          name: output-confluence-install-confluence-install-confluence-config
+              name: confluence-config
+          name: output-confluence-config
           template: output-confluence-install-confluence-install-confluence-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: confluence-install-confluence-install-confluence-helm-release
-          name: output-confluence-install-confluence-install-confluence-helm-release
+              name: confluence-helm-release
+          name: output-confluence-helm-release
           template: output-confluence-install-confluence-install-confluence-helm-release
     - arguments: {}
       container:
@@ -672,14 +672,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-install-confluence-install-postgresql
+        - name: postgresql
           path: /typeinstance
       metadata: {}
       name: output-confluence-install-confluence-install-postgresql
       outputs:
         artifacts:
         - globalName: confluence-install-confluence-install-postgresql
-          name: confluence-install-confluence-install-postgresql
+          name: postgresql
           path: /typeinstance
     - arguments: {}
       container:
@@ -693,14 +693,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-install-confluence-install-confluence-config
+        - name: confluence-config
           path: /typeinstance
       metadata: {}
       name: output-confluence-install-confluence-install-confluence-config
       outputs:
         artifacts:
         - globalName: confluence-install-confluence-install-confluence-config
-          name: confluence-install-confluence-install-confluence-config
+          name: confluence-config
           path: /typeinstance
     - arguments: {}
       container:
@@ -714,14 +714,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-install-confluence-install-confluence-helm-release
+        - name: confluence-helm-release
           path: /typeinstance
       metadata: {}
       name: output-confluence-install-confluence-install-confluence-helm-release
       outputs:
         artifacts:
         - globalName: confluence-install-confluence-install-confluence-helm-release
-          name: confluence-install-confluence-install-confluence-helm-release
+          name: confluence-helm-release
           path: /typeinstance
     - arguments: {}
       inputs: {}
