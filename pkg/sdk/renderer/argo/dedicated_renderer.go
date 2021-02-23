@@ -120,7 +120,8 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 		// 0. Aggregate processed templates
 		r.addToRootTemplates(tpl)
 
-		availableTypeInstances := getAvailableTypeInstancesFromInput(r.tplInputArguments[tpl.Name])
+		// 0.1. Get TypeInstances available for this template
+		availableTypeInstances := getAvailableTypeInstancesFromInputArtifacts(r.tplInputArguments[tpl.Name])
 
 		artifactMappings := map[string]string{}
 		var newStepGroup []ParallelSteps
@@ -193,9 +194,6 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
 
-					// 3.5 Prefix output TypeInstances in the manifests
-					r.prefixOutputTypeInstancesInManifests(step, workflowPrefix, &implementation, iface)
-
 					// 3.6 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
@@ -216,20 +214,15 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
 
-					// 3.8 Right now we know the template name, so let's try to register step input arguments
+					// 3.7 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step, availableTypeInstances)
 
-					// TODO wtf
-					inputNameMappings := map[string]*string{}
-					inputArtifacts := r.tplInputArguments[step.Template]
-					for _, artifact := range inputArtifacts {
-						if artifact.typeInstanceReference != nil {
-							inputName := fmt.Sprintf("%s-%s", workflowPrefix, artifact.artifact.Name)
-							inputNameMappings[inputName] = artifact.typeInstanceReference
-						}
-					}
+					// 3.8 Register output TypeInstances from this action step
+					r.registerStepOutputTypeInstances(step, workflowPrefix, iface)
 
-					if err := r.registerOutputTypeInstances(iface, &implementation, inputNameMappings); err != nil {
+					// 3.9 Add TypeInstances to the upload graph
+					inputArtifacts := r.tplInputArguments[step.Template]
+					if err := r.addOutputTypeInstancesToGraph(step, workflowPrefix, iface, &implementation, inputArtifacts); err != nil {
 						return errors.Wrap(err, "while registering output artifacts")
 					}
 
@@ -324,14 +317,8 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 					step.Template = fmt.Sprintf("%s-%s", prefix, step.Template)
 				}
 
-				for i := range step.VoltronTypeInstanceOutputs {
-					ti := &step.VoltronTypeInstanceOutputs[i]
-
-					if prefix != "" {
-						ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
-					}
-
-					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, *ti)
+				for _, ti := range step.VoltronTypeInstanceOutputs {
+					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, &template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
 
@@ -533,34 +520,8 @@ func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.I
 	return ref, nil
 }
 
-func (r *dedicatedRenderer) prefixOutputTypeInstancesInManifests(step *WorkflowStep, prefix string,
-	impl *ochpublicapi.ImplementationRevision, iface *ochpublicapi.InterfaceRevision) {
-	for i := range impl.Spec.OutputTypeInstanceRelations {
-		ti := impl.Spec.OutputTypeInstanceRelations[i]
-
-		if output := findOutputTypeInstance(step, ti.TypeInstanceName); output != nil {
-			ti.TypeInstanceName = fmt.Sprintf("%s-%s", prefix, output.From)
-
-			r.tryReplaceTypeInstanceName(output.Name, ti.TypeInstanceName)
-		} else {
-			oldName := ti.TypeInstanceName
-			ti.TypeInstanceName = fmt.Sprintf("%s-%s", prefix, oldName)
-
-			r.tryReplaceTypeInstanceName(oldName, ti.TypeInstanceName)
-		}
-
-		for usesIdx := range ti.Uses {
-			ti.Uses[usesIdx] = fmt.Sprintf("%s-%s", prefix, ti.Uses[usesIdx])
-		}
-	}
-
-	if impl.Spec.AdditionalOutput != nil && impl.Spec.AdditionalOutput.TypeInstances != nil {
-		for i := range impl.Spec.AdditionalOutput.TypeInstances {
-			ti := impl.Spec.AdditionalOutput.TypeInstances[i]
-			ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
-		}
-	}
-
+func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string,
+	iface *ochpublicapi.InterfaceRevision) {
 	step.typeInstanceOutputs = make(map[string]*string)
 
 	if iface.Spec.Output != nil && iface.Spec.Output.TypeInstances != nil {
@@ -570,7 +531,6 @@ func (r *dedicatedRenderer) prefixOutputTypeInstancesInManifests(step *WorkflowS
 			newName := fmt.Sprintf("%s-%s", prefix, ti.Name)
 			newNamePtr := r.addTypeInstanceName(newName)
 			step.typeInstanceOutputs[ti.Name] = newNamePtr
-			ti.Name = newName
 		}
 	}
 }
@@ -590,12 +550,17 @@ func (*dedicatedRenderer) createWorkflow(implementation *ochpublicapi.Implementa
 	return &renderedWorkflow.Spec, nil
 }
 
-func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition) (WorkflowStep, Template, map[string]string) {
+func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template, map[string]string) {
 	artifactPath := "/typeinstance"
 
 	stepName := fmt.Sprintf("output-%s", output.Name)
-	templateName := stepName
 	artifactGlobalName := output.Name
+	if prefix != "" {
+		stepName = fmt.Sprintf("output-%s-%s", prefix, output.Name)
+		artifactGlobalName = fmt.Sprintf("%s-%s", prefix, output.Name)
+	}
+
+	templateName := stepName
 
 	fromDirective := fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", step.Name, output.From)
 
@@ -604,7 +569,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Template: templateName,
 		Arguments: wfv1.Arguments{Artifacts: wfv1.Artifacts{
 			wfv1.Artifact{
-				Name: output.Name,
+				Name: artifactGlobalName,
 				From: fromDirective,
 			},
 		}},
@@ -615,7 +580,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Inputs: wfv1.Inputs{
 			Artifacts: wfv1.Artifacts{
 				{
-					Name: output.Name,
+					Name: artifactGlobalName,
 					Path: artifactPath,
 				},
 			},
@@ -623,7 +588,7 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
 				{
-					Name:       output.Name,
+					Name:       artifactGlobalName,
 					GlobalName: artifactGlobalName,
 					Path:       artifactPath,
 				},
@@ -822,14 +787,32 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep, a
 	r.tplInputArguments[step.Template] = inputArtifacts
 }
 
-func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision, artifactsNameMapping map[string]*string) error {
+func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, prefix string, iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision, inputArtifacts []InputArtifact) error {
+	inputArtifactNamesMap := map[string]*string{}
+	for _, artifact := range inputArtifacts {
+		inputArtifactNamesMap[artifact.artifact.Name] = artifact.typeInstanceReference
+	}
+
 	for _, item := range impl.Spec.OutputTypeInstanceRelations {
-		artifactName := r.addTypeInstanceName(item.TypeInstanceName)
+		// we have to track the renaming based on voltron-outputTypeInstances
+		if step != nil {
+			if output := findOutputTypeInstance(step, item.TypeInstanceName); output != nil {
+				item.TypeInstanceName = output.From
+				r.tryReplaceTypeInstanceName(output.Name, fmt.Sprintf("%s-%s", prefix, output.From))
+			}
+		}
 
 		typeRef, err := findTypeInstanceTypeRef(item.TypeInstanceName, impl, iface)
 		if err != nil {
 			return err
 		}
+
+		name := item.TypeInstanceName
+		if prefix != "" {
+			name = fmt.Sprintf("%s-%s", prefix, name)
+		}
+
+		artifactName := r.addTypeInstanceName(name)
 
 		r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
 			ArtifactName: artifactName,
@@ -842,7 +825,7 @@ func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.Inte
 		})
 
 		for _, uses := range item.Uses {
-			usesArtifactName, ok := artifactsNameMapping[uses]
+			usesArtifactName, ok := inputArtifactNamesMap[uses]
 			if !ok {
 				usesArtifactName = r.addTypeInstanceName(uses)
 			}

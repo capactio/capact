@@ -109,7 +109,7 @@ func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 	return nil, errors.New("not found")
 }
 
-func getAvailableTypeInstancesFromInput(inputArtifacts []InputArtifact) map[argoArtifactRef]*string {
+func getAvailableTypeInstancesFromInputArtifacts(inputArtifacts []InputArtifact) map[argoArtifactRef]*string {
 	availableTypeInstances := map[argoArtifactRef]*string{}
 
 	for _, artifact := range inputArtifacts {

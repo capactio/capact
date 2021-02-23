@@ -77,7 +77,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 2.1 Register output TypeInstances
-	if err := dedicatedRenderer.registerOutputTypeInstances(iface, &implementation, map[string]*string{}); err != nil {
+	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, []InputArtifact{}); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
