@@ -6,9 +6,9 @@ import (
 	"path"
 	"strings"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	"github.com/google/uuid"
 
-	"projectvoltron.dev/voltron/pkg/och/client"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
@@ -26,10 +26,17 @@ type OCHClient interface {
 type TypeInstanceHandler struct {
 	ochCli          OCHClient
 	ochActionsImage string
+	genUUID         func() string
 }
 
-func NewTypeInstanceHandler(ochCli client.OCHClient, ochActionsImage string) *TypeInstanceHandler {
-	return &TypeInstanceHandler{ochCli: ochCli, ochActionsImage: ochActionsImage}
+func NewTypeInstanceHandler(ochCli OCHClient, ochActionsImage string) *TypeInstanceHandler {
+	return &TypeInstanceHandler{
+		ochCli:          ochCli,
+		ochActionsImage: ochActionsImage,
+		genUUID: func() string {
+			return uuid.New().String()
+		},
+	}
 }
 
 func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
@@ -57,7 +64,7 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 	}
 
 	template := &wfv1.Template{
-		Name: "inject-input-type-instances",
+		Name: fmt.Sprintf("inject-input-type-instances-%s", r.genUUID()),
 		Container: &apiv1.Container{
 			Image: r.ochActionsImage,
 			Env: []apiv1.EnvVar{
@@ -205,4 +212,8 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 
 	return nil
+}
+
+func (r *TypeInstanceHandler) SetGenUUID(genUUID func() string) {
+	r.genUUID = genUUID
 }

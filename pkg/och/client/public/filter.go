@@ -1,24 +1,26 @@
 package public
 
 import (
+	"fmt"
 	"regexp"
 
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-func filterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, filter *getImplementationOptions) []gqlpublicapi.ImplementationRevision {
+func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, filter *GetImplementationOptions) []gqlpublicapi.ImplementationRevision {
 	if filter == nil {
 		return revs
 	}
 
-	revs = filterImplementationRevisionsByPattern(revs, filter.implPrefixPattern)
+	revs = filterImplementationRevisionsByPathPattern(revs, filter.implPathPattern)
 	revs = filterImplementationRevisionsByAttr(revs, filter.attrFilter)
-	revs = filterImplementationRevisionsByRequirements(revs, filter.requirementsSatisfiedBy)
+	revs = filterImplementationRevisionsByRequirementsSatisfiedBy(revs, filter.requirementsSatisfiedBy)
+	revs = filterImplementationRevisionsByRequires(revs, filter.requires)
 
 	return revs
 }
 
-func filterImplementationRevisionsByPattern(revs []gqlpublicapi.ImplementationRevision, pattern *string) []gqlpublicapi.ImplementationRevision {
+func filterImplementationRevisionsByPathPattern(revs []gqlpublicapi.ImplementationRevision, pattern *string) []gqlpublicapi.ImplementationRevision {
 	if pattern == nil {
 		return revs
 	}
@@ -26,10 +28,7 @@ func filterImplementationRevisionsByPattern(revs []gqlpublicapi.ImplementationRe
 	var out []gqlpublicapi.ImplementationRevision
 
 	for _, impl := range revs {
-		if impl.Metadata.Prefix == nil {
-			continue
-		}
-		matched, err := regexp.Match(*pattern, []byte(*impl.Metadata.Prefix))
+		matched, err := regexp.Match(*pattern, []byte(impl.Metadata.Path))
 		if err != nil || !matched {
 			continue
 		}
@@ -38,7 +37,7 @@ func filterImplementationRevisionsByPattern(revs []gqlpublicapi.ImplementationRe
 	return out
 }
 
-func filterImplementationRevisionsByRequirements(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]*string) []gqlpublicapi.ImplementationRevision {
+func filterImplementationRevisionsByRequirementsSatisfiedBy(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]*string) []gqlpublicapi.ImplementationRevision {
 	if len(requirementsSatisfiedBy) == 0 {
 		return revs
 	}
@@ -47,7 +46,11 @@ func filterImplementationRevisionsByRequirements(revs []gqlpublicapi.Implementat
 
 requirements:
 	for _, impl := range revs {
-		if impl.Spec == nil || len(impl.Spec.Requires) == 0 {
+		if impl.Spec == nil {
+			continue
+		}
+
+		if len(impl.Spec.Requires) == 0 {
 			out = append(out, impl)
 			continue
 		}
@@ -67,6 +70,50 @@ requirements:
 			if !onlyOneSatisfied {
 				continue requirements
 			}
+		}
+
+		out = append(out, impl)
+	}
+	return out
+}
+
+func filterImplementationRevisionsByRequires(revs []gqlpublicapi.ImplementationRevision, requiredTypeInstances map[string]*string) []gqlpublicapi.ImplementationRevision {
+	if len(requiredTypeInstances) == 0 {
+		return revs
+	}
+
+	var out []gqlpublicapi.ImplementationRevision
+
+	for _, impl := range revs {
+		if impl.Spec == nil || len(impl.Spec.Requires) == 0 {
+			continue
+		}
+
+		requiresItemsToSatisfy := visitedMapForTypeInstances(requiredTypeInstances)
+
+		for _, req := range impl.Spec.Requires {
+			var itemsToCheck []*gqlpublicapi.ImplementationRequirementItem
+			itemsToCheck = append(itemsToCheck, req.OneOf...)
+			itemsToCheck = append(itemsToCheck, req.AllOf...)
+			itemsToCheck = append(itemsToCheck, req.AnyOf...)
+
+			for _, req := range itemsToCheck {
+				if req == nil || req.TypeRef == nil {
+					continue
+				}
+
+				key, found := findInVisitedMap(requiredTypeInstances, req.TypeRef.Path, req.TypeRef.Revision)
+				if !found {
+					continue
+				}
+
+				delete(requiresItemsToSatisfy, key)
+			}
+		}
+
+		if len(requiresItemsToSatisfy) > 0 {
+			// conditions are not met
+			continue
 		}
 
 		out = append(out, impl)
@@ -159,11 +206,11 @@ func filterImplementationRevisionsByAttr(revs []gqlpublicapi.ImplementationRevis
 //  contains returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
 func containsAtLeastOne(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*string) bool {
 	for _, atr := range attr {
-		if atr == nil || atr.Metadata == nil || atr.Metadata.Path == nil {
+		if atr == nil || atr.Metadata == nil {
 			continue
 		}
 
-		if contains(expAttr, *atr.Metadata.Path, atr.Revision) {
+		if contains(expAttr, atr.Metadata.Path, atr.Revision) {
 			return true
 		}
 	}
@@ -175,11 +222,11 @@ func containsAtLeastOne(attr []*gqlpublicapi.AttributeRevision, expAttr map[stri
 func containsAll(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*string) bool {
 	matchedEntities := 0
 	for _, atr := range attr {
-		if atr == nil || atr.Metadata == nil || atr.Metadata.Path == nil {
+		if atr == nil || atr.Metadata == nil {
 			continue
 		}
 
-		if contains(expAttr, *atr.Metadata.Path, atr.Revision) {
+		if contains(expAttr, atr.Metadata.Path, atr.Revision) {
 			matchedEntities++
 		}
 	}
@@ -198,4 +245,36 @@ func contains(attr map[string]*string, path, rev string) bool {
 	}
 
 	return true
+}
+
+func visitedMapForTypeInstances(typeInstances map[string]*string) map[string]bool {
+	visitedMap := make(map[string]bool)
+	for path, rev := range typeInstances {
+		mapKey := visitedMapKey(path, rev)
+		visitedMap[mapKey] = false
+	}
+
+	return visitedMap
+}
+
+func visitedMapKey(path string, revisionPtr *string) string {
+	suffix := ""
+	if revisionPtr != nil {
+		suffix = fmt.Sprintf(":%s", *revisionPtr)
+	}
+
+	return fmt.Sprintf("%s%s", path, suffix)
+}
+
+func findInVisitedMap(attr map[string]*string, path, rev string) (string, bool) {
+	revision, found := attr[path]
+	if !found {
+		return "", false
+	}
+
+	if revision != nil && *revision != rev {
+		return "", false
+	}
+
+	return visitedMapKey(path, revision), true
 }

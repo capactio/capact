@@ -1,46 +1,47 @@
-ocfVersion: 0.0.1
-revision: 0.1.0
-kind: Implementation
 metadata:
-  prefix: cap.implementation.runner.cloudsql # Computed during fetching the manifest
-  name: run
-  license:
-    name: "Apache 2.0"
+  attributes: []
   displayName: Run Action for Google Cloud Platform CloudSQL Runner
   description: Running GCP CloudSQL operations
   documentationURL: https://cloud.google.com/sdk/gcloud/reference/sql
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
-      url: https://projectvoltron.dev
-
+  name: run
+  path: cap.implementation.runner.cloudsql.run
+  prefix: cap.implementation.runner.cloudsql
+  supportURL:
+revision: 0.1.0
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
+  additionalInput:
+    typeInstances: []
+  additionalOutput:
+    typeInstances: []
+  outputTypeInstanceRelations:
+    - typeInstanceName: cloudsql-instance
   appVersion: "318.x.x" # version of the gcloud CLI
-
   implements:
     - path: cap.core.interface.runner.generic.run
       revision: 0.1.0
     - path: cap.interface.runner.cloudsql.run
       revision: 0.1.0
-
-  requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
-          revision: 0.1.0
-
   imports:
-    - interfaceGroupPath: cap.interface.runner.argo
-      alias: argo
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
       methods:
         - name: run
           revision: 0.1.0
-
-  outputTypeInstanceRelations:
-    cloudsql-instance: {} # no dependencies
-    # Do not upload `additional` TypeInstance by default.
-    # Upper-level workflows may define it in the outputTypeInstanceRelations.
-
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
   action:
     runnerInterface: argo.run
     args:
@@ -82,6 +83,3 @@ spec:
                   value: "{{outputs.artifacts.additional.path}}"
                 - name: RUNNER_LOGGER_DEV_MODE
                   value: "true"
-
-signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

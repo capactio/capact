@@ -33,11 +33,11 @@ query InterfaceGroups {
     }
 }
 
-# Example variables: {"interfaceGroupPrefixPattern": "cap.interface.*"}
+# Example variables: {"interfaceGroupPathPattern": "cap.interface.*"}
 query InterfaceGroupsWithPrefixFilter(
-    $interfaceGroupPrefixPattern: NodePathPattern!
+    $interfaceGroupPathPattern: NodePathPattern!
 ) {
-    interfaceGroups(filter: { prefixPattern: $interfaceGroupPrefixPattern }) {
+    interfaceGroups(filter: { pathPattern: $interfaceGroupPathPattern }) {
         ...InterfaceGroup
     }
 }
@@ -108,9 +108,9 @@ query InterfacesWithImplementations {
     }
 }
 
-# Example variables: {"interfacesPrefixPattern": "cap.interface.*"}
-query InterfacesWithPrefixFilter($interfacesPrefixPattern: NodePathPattern!) {
-    interfaces(filter: { prefixPattern: $interfacesPrefixPattern }) {
+# Example variables: {"interfacesPathPattern": "cap.interface.*"}
+query InterfacesWithPrefixFilter($interfacesPathPattern: NodePathPattern!) {
+    interfaces(filter: { pathPattern: $interfacesPathPattern }) {
         name
         prefix
         path
@@ -161,11 +161,11 @@ query Implementations {
     }
 }
 
-# Example variables: {"implementationsPrefixPattern": "cap.implementation.gcp.*"}
+# Example variables: {"implementationsPathPattern": "cap.implementation.gcp.*"}
 query ImplementationsWithPrefixFilter(
-    $implementationsPrefixPattern: NodePathPattern!
+    $implementationsPathPattern: NodePathPattern!
 ) {
-    implementations(filter: { prefixPattern: $implementationsPrefixPattern }) {
+    implementations(filter: { pathPattern: $implementationsPathPattern }) {
         name
         prefix
         path
@@ -216,9 +216,9 @@ query Types {
     }
 }
 
-# Example variables: {"typesPrefixPattern": "cap.core.type.*"}
-query TypesWithPrefixFilter($typesPrefixPattern: NodePathPattern!) {
-    types(filter: { prefixPattern: $typesPrefixPattern }) {
+# Example variables: {"typesPathPattern": "cap.core.type.*"}
+query TypesWithPrefixFilter($typesPathPattern: NodePathPattern!) {
+    types(filter: { pathPattern: $typesPathPattern }) {
         name
         prefix
         path
@@ -270,9 +270,9 @@ query Attributes {
 }
 
 # Lists all Attributes with a given prefix.
-# Example variables: {"attributesPrefixPattern": "cap.core.attribute.workload.*"}
-query AttributesWithPrefixFilter($attributesPrefixPattern: NodePathPattern!) {
-    attributes(filter: { prefixPattern: $attributesPrefixPattern }) {
+# Example variables: {"attributesPathPattern": "cap.core.attribute.workload.*"}
+query AttributesWithPrefixFilter($attributesPathPattern: NodePathPattern!) {
+    attributes(filter: { pathPattern: $attributesPathPattern }) {
         name
         prefix
         path
@@ -518,7 +518,7 @@ fragment ImplementationsForInterface on InterfaceRevision {
 
     implementationRevisionsForRequirements(
         filter: {
-            prefixPattern: "cap"
+            pathPattern: "cap"
             attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
             requirementsSatisfiedBy: [
                 {

@@ -95,6 +95,42 @@ func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraph
 	return &resp.TypeInstance, nil
 }
 
+func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
+	query := `query {
+	  typeInstances {
+		spec {
+		  typeRef {
+			path
+			revision
+		  }
+		}
+	  }
+	}`
+
+	req := graphql.NewRequest(query)
+
+	var resp struct {
+		TypeInstances []ochlocalgraphql.TypeInstance `json:"typeInstances"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to list TypeRef for TypeInstances")
+	}
+
+	var typeRefs []ochlocalgraphql.TypeReference
+	for _, ti := range resp.TypeInstances {
+		if ti.Spec == nil || ti.Spec.TypeRef == nil {
+			continue
+		}
+
+		typeRefs = append(typeRefs, *ti.Spec.TypeRef)
+	}
+
+	return typeRefs, nil
+}
+
 func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 	req := graphql.NewRequest(`mutation ($id: ID!) {
 	  deleteTypeInstance(

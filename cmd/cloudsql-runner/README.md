@@ -32,15 +32,16 @@ RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH={path-to-gcp-service-account-credentials-jso
 
 The following environment variables can be set:
 
-| Name                                       | Required | Default                      | Description                                                        |
-|--------------------------------------------|----------|------------------------------|--------------------------------------------------------------------|
-| RUNNER_CONTEXT_PATH                        | yes      |                              | Path to the YAML file with runner context                          |
-| RUNNER_ARGS_PATH                           | yes      |                              | Path to the YAML file with input arguments                         |
-| RUNNER_LOGGER_DEV_MODE                     | no       | `false`                      | Enable additional log messages                                     |
-| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH        | no       | `/etc/gcp/sa.json`           | Path to the GCP JSON credentials file                              |
-| RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH | no       | `/tmp/cloudSQLInstance.yaml` | Defines path under which the Cloud SQL instance artifacts is saved |
-| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH         | no       | `/tmp/additional.yaml`       | Defines path under which the additional output is saved            |
-| KUBECONFIG                                 | no       | `~/.kube/config`             | Path to kubeconfig file                                            |
+| Name                                       | Required | Default                      | Description                                                           |
+|--------------------------------------------|----------|------------------------------|-----------------------------------------------------------------------|
+| RUNNER_CONTEXT_PATH                        | yes      |                              | Path to the YAML file with runner context                             |
+| RUNNER_ARGS_PATH                           | yes      |                              | Path to the YAML file with input arguments                            |
+| RUNNER_LOGGER_DEV_MODE                     | no       | `false`                      | Enable additional log messages                                        |
+| RUNNER_GCP_SERVICE_ACCOUNT_FILEPATH        | no       | `/etc/gcp/sa.json`           | Path to the GCP Service Account credentials file                      |
+| RUNNER_GCP_SERVICE_ACCOUNT_FORMAT          | no       | `json`                       | Format of the GCP Service Account credentials file - `yaml` or `json` |
+| RUNNER_OUTPUT_CLOUD_SQL_INSTANCE_FILE_PATH | no       | `/tmp/cloudSQLInstance.yaml` | Defines path under which the Cloud SQL instance artifacts is saved    |
+| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH         | no       | `/tmp/additional.yaml`       | Defines path under which the additional output is saved               |
+| KUBECONFIG                                 | no       | `~/.kube/config`             | Path to kubeconfig file                                               |
 
 ## Development
 

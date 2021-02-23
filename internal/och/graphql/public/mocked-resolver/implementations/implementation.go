@@ -54,19 +54,19 @@ func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi
 	return nil, nil
 }
 
-func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
+func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.InterfaceRevision, error) {
 	if obj == nil {
-		return []*gqlpublicapi.Interface{}, nil
+		return []*gqlpublicapi.InterfaceRevision{}, nil
 	}
 	ifaces, err := mockedresolver.MockedInterfaces()
 	if err != nil {
-		return []*gqlpublicapi.Interface{}, err
+		return []*gqlpublicapi.InterfaceRevision{}, err
 	}
-	filtered := []*gqlpublicapi.Interface{}
+	filtered := []*gqlpublicapi.InterfaceRevision{}
 	for _, iface := range ifaces {
 		for _, impl := range obj.Spec.Implements {
 			if iface.Path == impl.Path {
-				filtered = append(filtered, iface)
+				filtered = append(filtered, iface.Revisions...)
 			}
 		}
 	}

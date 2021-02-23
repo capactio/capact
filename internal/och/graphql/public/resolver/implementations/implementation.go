@@ -38,8 +38,8 @@ func (i *ImplementationResolver) Revision(ctx context.Context, obj *gqlpublicapi
 	return &gqlpublicapi.ImplementationRevision{}, fmt.Errorf("No Implementation with revision %s", revision)
 }
 
-func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.Interface, error) {
-	return []*gqlpublicapi.Interface{}, nil
+func (i *ImplementationRevisionResolver) Interfaces(ctx context.Context, obj *gqlpublicapi.ImplementationRevision) ([]*gqlpublicapi.InterfaceRevision, error) {
+	return []*gqlpublicapi.InterfaceRevision{}, nil
 }
 
 func dummyImplementation(path string) *gqlpublicapi.Implementation {

@@ -7,52 +7,42 @@ args:
       inputs:
         artifacts:
         - name: input-parameters
-        - name: postgresql
-          optional: true
       metadata: {}
-      name: jira-install
+      name: postgres-install
       outputs:
         artifacts:
         - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-          name: jira-config
+          name: postgresql
       steps:
       - - arguments:
             artifacts:
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
-              name: postgresql
-          name: install-db
-          template: mock-jira-install-install-db
-      - - arguments:
-            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
             - name: template
               raw:
                 data: |
                   command: "install"
                   generateName: true
                   chart:
-                    name: "jira-software"
-                    repo: "https://helm.mox.sh"
+                    name: "postgresql"
+                    repo: "https://charts.bitnami.com/bitnami"
+                    version: "10.2.6"
+                  values:
+                    image:
+                      pullPolicy: Always
+                    postgresqlDatabase: {{ defaultDBName }}
+                    postgresqlUsername: {{ superuser.username }}
+                    postgresqlPassword: {{ superuser.password }}
                   output:{% raw %}
                     goTemplate:
-                      version: "{{ .Values.image.tag }}"
-                      host: '{{ template "jira-software.fullname" . }}'{% endraw %}
-                  values:
-                    postgresql:
-                      enabled: false
-                    databaseConnection:
-                      host: "{{ host }}"
-                      user: "{{ superuser.username }}"
-                      password: "{{ superuser.password }}"
-                      database: "{{ defaultDBName }}"
-                    ingress:
-                      enabled: true
-                      hosts:
-                      - host: jira-cloud.voltron.local
-                        paths: ['/']
-            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
-              name: input-parameters
+                      host: '{{ template "common.names.fullname" . }}'
+                      port: '{{ template "postgresql.port" . }}'
+                      defaultDBName: '{{ template "postgresql.database" . }}'
+                      superuser:
+                        username: '{{ template "postgresql.username" . }}'
+                        password: '{{ template "postgresql.password" . }}'{% endraw %}
           name: create-helm-args
-          template: jira-install-create-helm-args-template
+          template: postgres-install-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
@@ -60,45 +50,19 @@ args:
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-run
-          template: jira-install-helm-run-helm
+          template: postgres-install-helm-run-helm
       - - arguments:
             artifacts:
-            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: postgresql
           name: output-postgresql
           template: output-postgresql
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
-              name: jira-config
-          name: output-jira-config
-          template: output-jira-config
-      - - arguments:
-            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
-              name: jira-helm-release
-          name: output-jira-helm-release
-          template: output-jira-helm-release
-    - arguments: {}
-      container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: postgresql
-          path: output/postgresql
-      metadata: {}
-      name: mock-jira-install-install-db
-      outputs:
-        artifacts:
-        - name: postgresql
-          path: output/postgresql
+              name: psql-helm-release
+          name: output-psql-helm-release
+          template: output-psql-helm-release
     - arguments: {}
       container:
         args:
@@ -117,7 +81,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-create-helm-args-template
+      name: postgres-install-create-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -145,13 +109,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: jira-install-helm-run-helm
+      name: postgres-install-helm-run-helm
       outputs:
         artifacts:
-        - globalName: jira-install-helm-run-helm-release
+        - globalName: postgres-install-helm-run-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: jira-install-helm-run-additional
+        - globalName: postgres-install-helm-run-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -187,35 +151,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-config
+        - name: psql-helm-release
           path: /typeinstance
       metadata: {}
-      name: output-jira-config
+      name: output-psql-helm-release
       outputs:
         artifacts:
-        - globalName: jira-config
-          name: jira-config
-          path: /typeinstance
-    - arguments: {}
-      container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: jira-helm-release
-          path: /typeinstance
-      metadata: {}
-      name: output-jira-helm-release
-      outputs:
-        artifacts:
-        - globalName: jira-helm-release
-          name: jira-helm-release
+        - globalName: psql-helm-release
+          name: psql-helm-release
           path: /typeinstance
     - arguments: {}
       inputs: {}
@@ -224,85 +167,38 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-uuid-step
-          template: inject-input-type-instances-uuid
-      - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: populate-user-input-step
-          template: populate-user-input
-      - - arguments:
-            artifacts:
-            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
-              name: input-parameters
           name: start-entrypoint
-          template: jira-install
+          template: postgres-install
       - - arguments:
             artifacts:
-            - from: '{{workflow.outputs.artifacts.jira-config}}'
-              name: jira-config
-            - from: '{{workflow.outputs.artifacts.jira-helm-release}}'
-              name: jira-helm-release
             - from: '{{workflow.outputs.artifacts.postgresql}}'
               name: postgresql
+            - from: '{{workflow.outputs.artifacts.psql-helm-release}}'
+              name: psql-helm-release
             - name: payload
               raw:
                 data: |
                   typeInstances:
-                  - alias: jira-config
-                    attributes: []
-                    typeRef:
-                      path: cap.type.productivity.jira.config
-                      revision: 0.1.0
-                    value: null
-                  - alias: jira-helm-release
-                    attributes: []
-                    typeRef:
-                      path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
                   - alias: postgresql
                     attributes: []
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
+                  - alias: psql-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
                   usesRelations:
-                  - from: jira-config
-                    to: jira-helm-release
-                  - from: jira-config
-                    to: postgresql
+                  - from: postgresql
+                    to: psql-helm-release
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-        volumeMounts:
-        - mountPath: /output
-          name: user-secret-volume
-      inputs: {}
-      metadata: {}
-      name: populate-user-input
-      outputs:
-        artifacts:
-        - name: input-parameters
-          path: /output/parameters.json
-      volumes:
-      - name: user-secret-volume
-        secret:
-          items:
-          - key: parameters.json
-            path: parameters.json
-          optional: false
-          secretName: user-input
     - arguments: {}
       container:
         args:
@@ -337,27 +233,6 @@ args:
       container:
         env:
         - name: APP_ACTION
-          value: DownloadAction
-        - name: APP_DOWNLOAD_CONFIG
-          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp.yaml},{f2421415-b8a4-464b-be12-b617794411c5,/postgresql.yaml}'
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs: {}
-      metadata: {}
-      name: inject-input-type-instances-uuid
-      outputs:
-        artifacts:
-        - globalName: gcp
-          name: gcp
-          path: /gcp.yaml
-        - globalName: postgresql
-          name: postgresql
-          path: /postgresql.yaml
-    - arguments: {}
-      container:
-        env:
-        - name: APP_ACTION
           value: UploadAction
         - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
           value: /upload/payload
@@ -369,12 +244,10 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-config
-          path: /upload/typeInstances/jira-config
-        - name: jira-helm-release
-          path: /upload/typeInstances/jira-helm-release
         - name: postgresql
           path: /upload/typeInstances/postgresql
+        - name: psql-helm-release
+          path: /upload/typeInstances/psql-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

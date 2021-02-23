@@ -20,9 +20,7 @@ rules:
           attributes:
             - path: cap.attribute.cloud.provider.aws
       - implementationConstraints:
-          exact:
-            path: cap.implementation.bitnami.postgresql.install
-            revision: 1.0.0
+          path: cap.implementation.bitnami.postgresql.install
 
   cap.*: # any other Interface
     oneOf:

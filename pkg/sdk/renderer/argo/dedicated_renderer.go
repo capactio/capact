@@ -162,42 +162,44 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return err
 					}
 
-					// 3.2 Get `voltron-action` Interface
+					// 3.2 Get InterfaceRevision
 					iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, *actionRef)
 					if err != nil {
 						return err
 					}
 
-					// 3.3 Get `voltron-action` specific implementation
+					// 3.3 Get all ImplementationRevisions for a given `voltron-action`
 					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
-						return errors.Wrapf(err, "while processing step: %s", step.Name)
+						return errors.Wrapf(err,
+							`while listing ImplementationRevisions for step %q with action reference "%s:%s"`,
+							step.Name, actionRef.Path, actionRef.Revision)
 					}
 
-					// business decision select the first one
-					implementation := implementations[0]
-
-					// 3.4 Get TypeInstances to inject based on policy
-					typeInstances, err := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+					// 3.4 Pick one of the Implementations
+					implementation, err := r.PickImplementationRevision(implementations)
 					if err != nil {
-						return errors.Wrapf(err, "while listing TypeInstances to inject based on policy for step: %s", step.Name)
-					}
-
-					// 3.5 Inject step which downloads TypeInstances
-					err = r.InjectDownloadStepForTypeInstancesIfProvided(workflow, typeInstances)
-					if err != nil {
-						return errors.Wrapf(err, "while injecting step downloading TypeInstances based on policy for step: %s", step.Name)
+						return errors.Wrapf(err,
+							`while picking ImplementationRevision for step %q with action reference with action reference "%s:%s"`,
+							step.Name, actionRef.Path, actionRef.Revision)
 					}
 
 					workflowPrefix := fmt.Sprintf("%s-%s", tpl.Name, step.Name)
 
-					// 3.6 Prefix output TypeInstances in the manifests
+					// 3.5 Prefix output TypeInstances in the manifests
 					r.prefixOutputTypeInstancesInManifests(step, workflowPrefix, &implementation, iface)
 
-					// 3.7 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					// 3.6 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
 						return errors.Wrap(err, "while creating workflow for action step")
+					}
+
+					// 3.7 List TypeInstances to inject based on policy and inject them if provided
+					typeInstances := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
+					err = r.InjectDownloadStepForTypeInstancesIfProvided(importedWorkflow, typeInstances)
+					if err != nil {
+						return errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 
 					for k, v := range newArtifactMappings {
@@ -459,12 +461,20 @@ func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef R
 	return nil
 }
 
-// TODO: Rework if needed as a part of SV-185
 func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflow *Workflow, typeInstances []types.InputTypeInstanceRef) error {
 	if len(typeInstances) == 0 {
 		return nil
 	}
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, typeInstances)
+}
+
+func (r *dedicatedRenderer) PickImplementationRevision(in []ochpublicapi.ImplementationRevision) (ochpublicapi.ImplementationRevision, error) {
+	if len(in) == 0 {
+		return ochpublicapi.ImplementationRevision{}, errors.New("No Implementations found with current policy for given Interface")
+	}
+
+	// business decision - pick first Implementation
+	return in[0], nil
 }
 
 // Internal helpers

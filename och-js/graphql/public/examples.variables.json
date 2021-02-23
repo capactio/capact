@@ -1,12 +1,12 @@
 {
   "interfaceGroupPath": "cap.interface.productivity.jira",
-  "interfaceGroupPrefixPattern": "cap.interface.*",
+  "interfaceGroupPathPattern": "cap.interface.*",
   "interfacePath": "cap.interface.productivity.jira.install",
-  "interfacesPrefixPattern": "cap.interface.*",
+  "interfacesPathPattern": "cap.interface.*",
   "implementationPath": "cap.implementation.atlassian.jira.install",
-  "implementationsPrefixPattern": "cap.implementation.gcp.*",
+  "implementationsPathPattern": "cap.implementation.gcp.*",
   "typePath": "cap.core.type.networking.hostname",
-  "typesPrefixPattern": "cap.core.type.*",
+  "typesPathPattern": "cap.core.type.*",
   "attributePath": "cap.core.attribute.workload.stateless",
-  "attributesPrefixPattern": "cap.core.attribute.workload.*"
+  "attributesPathPattern": "cap.core.attribute.workload.*"
 }
