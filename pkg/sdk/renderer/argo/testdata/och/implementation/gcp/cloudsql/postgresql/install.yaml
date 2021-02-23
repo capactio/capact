@@ -20,12 +20,6 @@ signature:
 spec:
   additionalInput:
     typeInstances: []
-  additionalOutput:
-    typeInstances:
-      - name: cloudsql-instance
-        typeRef:
-          path: cap.type.gcp.cloudsql.instance
-          revision: 0.1.0
   outputTypeInstanceRelations:
     - typeInstanceName: postgresql
       uses:

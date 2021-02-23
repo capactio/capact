@@ -144,13 +144,13 @@ args:
             - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
               name: jira-install-install-db-postgresql
           name: output-jira-install-install-db-postgresql
-          template: jira-install-install-db-output-jira-install-install-db-postgresql
+          template: output-jira-install-install-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.cloudsql-run.outputs.artifacts.cloudsql-instance}}'
               name: jira-install-install-db-cloudsql-instance
           name: output-jira-install-install-db-cloudsql-instance
-          template: jira-install-install-db-output-jira-install-install-db-cloudsql-instance
+          template: output-jira-install-install-db-cloudsql-instance
     - arguments: {}
       container:
         args:
@@ -227,7 +227,7 @@ args:
         - name: jira-install-install-db-postgresql
           path: /typeinstance
       metadata: {}
-      name: jira-install-install-db-output-jira-install-install-db-postgresql
+      name: output-jira-install-install-db-postgresql
       outputs:
         artifacts:
         - globalName: jira-install-install-db-postgresql
@@ -248,7 +248,7 @@ args:
         - name: jira-install-install-db-cloudsql-instance
           path: /typeinstance
       metadata: {}
-      name: jira-install-install-db-output-jira-install-install-db-cloudsql-instance
+      name: output-jira-install-install-db-cloudsql-instance
       outputs:
         artifacts:
         - globalName: jira-install-install-db-cloudsql-instance
@@ -409,12 +409,12 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.jira-config}}'
               name: jira-config
-            - from: '{{workflow.outputs.artifacts.jira-helm-release}}'
-              name: jira-helm-release
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
-              name: postgresql
-            - from: '{{workflow.outputs.artifacts.jira-install-install-db-cloudsql-instance}}'
-              name: jira-install-install-db-cloudsql-instance
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
+              name: jira-install-install-db-postgresql
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance}}'
+              name: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
+            - from: '{{workflow.outputs.artifacts.jira-install-helm-run-helm-release}}'
+              name: jira-install-helm-run-helm-release
             - name: payload
               raw:
                 data: |
@@ -425,31 +425,31 @@ args:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
-                  - alias: jira-helm-release
-                    attributes: []
-                    typeRef:
-                      path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
-                  - alias: postgresql
+                  - alias: jira-install-install-db-postgresql
                     attributes: []
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-install-db-cloudsql-instance
+                  - alias: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
                     attributes: []
                     typeRef:
                       path: cap.type.gcp.cloudsql.instance
                       revision: 0.1.0
                     value: null
+                  - alias: jira-install-helm-run-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
                   usesRelations:
                   - from: jira-config
-                    to: jira-helm-release
+                    to: jira-install-helm-run-helm-release
                   - from: jira-config
-                    to: postgresql
-                  - from: postgresql
-                    to: jira-install-install-db-cloudsql-instance
+                    to: jira-install-install-db-postgresql
+                  - from: jira-install-install-db-postgresql
+                    to: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -517,12 +517,12 @@ args:
         artifacts:
         - name: jira-config
           path: /upload/typeInstances/jira-config
-        - name: jira-helm-release
-          path: /upload/typeInstances/jira-helm-release
-        - name: postgresql
-          path: /upload/typeInstances/postgresql
-        - name: jira-install-install-db-cloudsql-instance
-          path: /upload/typeInstances/jira-install-install-db-cloudsql-instance
+        - name: jira-install-install-db-postgresql
+          path: /upload/typeInstances/jira-install-install-db-postgresql
+        - name: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
+          path: /upload/typeInstances/jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
+        - name: jira-install-helm-run-helm-release
+          path: /upload/typeInstances/jira-install-helm-run-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

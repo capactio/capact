@@ -189,8 +189,8 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.postgresql}}'
               name: postgresql
-            - from: '{{workflow.outputs.artifacts.cloudsql-instance}}'
-              name: cloudsql-instance
+            - from: '{{workflow.outputs.artifacts.postgres-install-cloudsql-run-cloudsql-instance}}'
+              name: postgres-install-cloudsql-run-cloudsql-instance
             - name: payload
               raw:
                 data: |
@@ -201,7 +201,7 @@ args:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
-                  - alias: cloudsql-instance
+                  - alias: postgres-install-cloudsql-run-cloudsql-instance
                     attributes: []
                     typeRef:
                       path: cap.type.gcp.cloudsql.instance
@@ -209,7 +209,7 @@ args:
                     value: null
                   usesRelations:
                   - from: postgresql
-                    to: cloudsql-instance
+                    to: postgres-install-cloudsql-run-cloudsql-instance
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -277,8 +277,8 @@ args:
         artifacts:
         - name: postgresql
           path: /upload/typeInstances/postgresql
-        - name: cloudsql-instance
-          path: /upload/typeInstances/cloudsql-instance
+        - name: postgres-install-cloudsql-run-cloudsql-instance
+          path: /upload/typeInstances/postgres-install-cloudsql-run-cloudsql-instance
         - name: payload
           path: /upload/payload
       metadata: {}
