@@ -7,8 +7,6 @@
 #      default-ssl-certificate: "ingress-nginx/default-ssl-cert"
 ingress-nginx:
   controller:
-    service:
-      loadBalancerIP: 35.228.223.55
     resources:
       requests:
         cpu: 50m

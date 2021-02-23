@@ -305,7 +305,7 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_TEST_SETUP_OVERRIDES=""
     fi
 
-    # VOLTRON_SET_FLAGS cannot be quoted
+    # VOLTRON_SET_FLAGS and CUSTOM_VOLTRON_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --install \
@@ -318,6 +318,7 @@ voltron::install_upgrade::charts() {
         --set och-local.image.name="${OCH_IMAGE}" \
         --set och-public.image.name="${OCH_IMAGE}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
+        ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
         -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \
         -f "${VOLTRON_OVERRIDES}" \
         -f "${VOLTRON_RESOURCE_OVERRIDES}" \
@@ -377,11 +378,14 @@ voltron::install_upgrade::ingress_controller() {
       readonly INGRESS_CTRL_OVERRIDES=""
     fi
 
+    # CUSTOM_NGINX_SET_FLAGS cannot be quoted
+    # shellcheck disable=SC2086
     helm upgrade ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
         --install \
         --create-namespace \
         --namespace="ingress-nginx" \
         -f "${INGRESS_CTRL_OVERRIDES}" \
+        ${CUSTOM_NGINX_SET_FLAGS:-} \
         --wait
 
     echo -e "\n- Waiting for Ingress Controller to be ready...\n"
