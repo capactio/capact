@@ -4,19 +4,27 @@ package e2e
 
 import (
 	"context"
-
+	"encoding/json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"projectvoltron.dev/voltron/internal/ptr"
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	client "projectvoltron.dev/voltron/pkg/engine/client"
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"strings"
+
+	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	engine "projectvoltron.dev/voltron/pkg/engine/client"
 )
 
+const clusterPolicyConfigMapKey = "cluster-policy.yaml"
+const clusterPolicyTokenToReplace = "{typeInstanceUUID}"
+
 var _ = Describe("Action", func() {
-	var engineClient *client.Client
+	var engineClient *engine.Client
 	var ochClient *ochclient.Client
 
 	actionName := "e2e-test"
@@ -57,6 +65,39 @@ var _ = Describe("Action", func() {
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
+		})
+
+		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
+			actionPath := "cap.interface.voltron.policy.install"
+
+			log("1. Expecting Implementation A is picked based on test policy and requirements met...")
+
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath)
+			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			log("2. Deleting Action...")
+
+			err := engineClient.DeleteAction(ctx, actionName)
+			Expect(err).ToNot(HaveOccurred())
+
+			log("3. Creating TypeInstance and modifying Policy to make Implementation B picked for next run...")
+
+			// 3.1. Create TypeInstance which is required for second Implementation to be picked
+			typeInstanceValue := fixTypeInstanceInputForPolicy()
+			typeInstance, tiCleanupFn := createTypeInstance(ctx, ochClient, typeInstanceValue)
+			defer tiCleanupFn()
+
+			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
+			typeInstanceID := typeInstance.Metadata.ID
+			cfgMapCleanupFn := updateClusterPolicyConfigMap(clusterPolicyTokenToReplace, typeInstanceID)
+			defer cfgMapCleanupFn()
+
+			log("4. Expecting Implementation B is picked based on test policy...")
+
+			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath)
+			assertActionRenderedWorkflowContains(action, "echo 'Implementation B'")
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -159,12 +200,143 @@ var _ = Describe("Action", func() {
 	})
 })
 
-func getActionStatusFunc(ctx context.Context, cl *client.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
+func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
 	return func() (enginegraphql.ActionStatusPhase, error) {
-		action, err := cl.GetAction(ctx, name)
+		action, err := getAction(ctx, cl, name)
 		if err != nil {
 			return "", err
 		}
 		return action.Status.Phase, err
 	}
 }
+
+func getAction(ctx context.Context, cl *engine.Client, name string) (*enginegraphql.Action, error) {
+	action, err := cl.GetAction(ctx, name)
+	if err != nil {
+		return nil, err
+	}
+
+	return action, nil
+}
+
+func fixTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
+	return &ochlocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &ochlocalgraphql.TypeReferenceInput{
+			Path:     "cap.type.simple.single-key",
+			Revision: "0.1.0",
+		},
+		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+			{
+				Path:     "com.voltron.attribute",
+				Revision: "0.1.0",
+			},
+		},
+		Value: map[string]interface{}{
+			"key": true,
+		},
+	}
+}
+
+func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *engine.Client, actionName, actionPath string) *enginegraphql.Action {
+	_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+		Name: actionName,
+		ActionRef: &enginegraphql.ManifestReferenceInput{
+			Path: actionPath,
+		},
+	})
+	Expect(err).ToNot(HaveOccurred())
+
+	// Wait for Action Ready to Run
+	Eventually(
+		getActionStatusFunc(ctx, engineClient, actionName),
+		cfg.PollingTimeout, cfg.PollingInterval,
+	).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
+
+	action, err := getAction(ctx, engineClient, actionName)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(action).ToNot(BeNil())
+
+	return action
+}
+
+func assertActionRenderedWorkflowContains(action *enginegraphql.Action, stringToFind string) {
+	jsonBytes, err := json.Marshal(action.RenderedAction)
+	Expect(err).ToNot(HaveOccurred())
+	Expect(
+		strings.Contains(string(jsonBytes), stringToFind),
+	).To(BeTrue())
+}
+
+func runActionAndWaitForSucceeded(ctx context.Context, engineClient *engine.Client, actionName string) {
+	err := engineClient.RunAction(ctx, actionName)
+	Expect(err).ToNot(HaveOccurred())
+
+	// Wait for Action Succeeded
+	Eventually(
+		getActionStatusFunc(ctx, engineClient, actionName),
+		cfg.PollingTimeout, cfg.PollingInterval,
+	).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
+}
+
+func createTypeInstance(ctx context.Context, ochClient *ochclient.Client, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, func()) {
+	createdTypeInstance, err := ochClient.CreateTypeInstance(ctx, in)
+	Expect(err).ToNot(HaveOccurred())
+
+	Expect(createdTypeInstance.Metadata).NotTo(BeNil())
+	typeInstanceID := createdTypeInstance.Metadata.ID
+
+	cleanupFn := func() {
+		err := ochClient.DeleteTypeInstance(ctx, typeInstanceID)
+		if err != nil {
+			log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", typeInstanceID).Error())
+		}
+	}
+
+	return createdTypeInstance, cleanupFn
+}
+
+func updateClusterPolicyConfigMap(stringToFind, stringToReplace string) func() {
+	err := replaceInClusterPolicyConfigMap(stringToFind, stringToReplace)
+	Expect(err).ToNot(HaveOccurred())
+
+	cleanupFn := func() {
+		err := replaceInClusterPolicyConfigMap(stringToReplace, stringToFind)
+		if err != nil {
+			log(errors.Wrap(err, "while cleaning up ConfigMap with cluster policy").Error())
+		}
+	}
+
+	return cleanupFn
+}
+
+func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error {
+	k8sCfg, err := config.GetConfig()
+	if err != nil {
+		return err
+	}
+
+	clientset, err := kubernetes.NewForConfig(k8sCfg)
+	if err != nil {
+		return err
+	}
+
+	cfgMapCli := clientset.CoreV1().ConfigMaps(cfg.ClusterPolicy.Namespace)
+
+	clusterPolicyCfgMap, err := cfgMapCli.Get(cfg.ClusterPolicy.Name, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	oldContent := clusterPolicyCfgMap.Data[clusterPolicyConfigMapKey]
+	newContent := strings.ReplaceAll(oldContent, stringToFind, stringToReplace)
+	clusterPolicyCfgMap.Data[clusterPolicyConfigMapKey] = newContent
+
+	_, err = cfgMapCli.Update(clusterPolicyCfgMap)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+

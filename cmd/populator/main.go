@@ -101,6 +101,7 @@ func main() {
 	err = getter.Download(ctx, src, dstDir)
 	exitOnError(err, "while downloading och content")
 
+	logger.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
 	rootDir := path.Join(dstDir, cfg.ManifestsPath)
 	files, err := dbpopulator.List(rootDir)
 	exitOnError(err, "while loading manifests")

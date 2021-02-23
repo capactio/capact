@@ -1,0 +1,28 @@
+och-public:
+  populator:
+    manifestsPath: file:///test
+    updateOnGitCommit: false
+
+engine:
+  clusterPolicyRules:
+      cap.interface.voltron.policy.install: # Rules for exact path and revision (looked up in first place)
+        oneOf:
+          - implementationConstraints:
+              requires:
+                - path: "cap.type.simple.single-key"
+              attributes:
+                - path: "cap.attribute.policy.most-preferred"
+            injectTypeInstances:
+              - id: "{typeInstanceUUID}"
+                typeRef:
+                  path: "cap.type.simple.single-key"
+                  revision: "0.1.0"
+          - implementationConstraints:
+              requires:
+                - path: "cap.core.type.platform.kubernetes"
+      cap.*:
+        oneOf:
+          - implementationConstraints:
+              requires:
+                - path: "cap.core.type.platform.kubernetes"
+          - implementationConstraints: { }

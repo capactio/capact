@@ -3,9 +3,6 @@
 package e2e
 
 import (
-	"fmt"
-	"time"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -88,12 +85,4 @@ func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 		log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
 		return false
 	}
-}
-
-func nowStamp() string {
-	return time.Now().Format(time.StampMilli)
-}
-
-func log(format string, args ...interface{}) {
-	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+format+"\n", args...)
 }
