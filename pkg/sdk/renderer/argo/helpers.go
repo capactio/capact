@@ -84,7 +84,7 @@ type argoArtifactRef struct {
 	name string
 }
 
-func argoArtifactRefToStepAndName(ref string) (*argoArtifactRef, error) {
+func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 	ref = strings.TrimPrefix(ref, "{{")
 	ref = strings.TrimSuffix(ref, "}}")
 	parts := strings.Split(ref, ".")
@@ -107,4 +107,19 @@ func argoArtifactRefToStepAndName(ref string) (*argoArtifactRef, error) {
 	}
 
 	return nil, errors.New("not found")
+}
+
+func getAvailableTypeInstancesFromInput(inputArtifacts []InputArtifact) map[argoArtifactRef]*string {
+	availableTypeInstances := map[argoArtifactRef]*string{}
+
+	for _, artifact := range inputArtifacts {
+		if artifact.typeInstanceReference != nil {
+			availableTypeInstances[argoArtifactRef{
+				name: artifact.artifact.Name,
+				step: "",
+			}] = artifact.typeInstanceReference
+		}
+	}
+
+	return availableTypeInstances
 }

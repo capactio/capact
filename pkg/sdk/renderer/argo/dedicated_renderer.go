@@ -120,17 +120,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 		// 0. Aggregate processed templates
 		r.addToRootTemplates(tpl)
 
-		availableTypeInstances := map[argoArtifactRef]*string{}
-
-		inputArtifacts := r.tplInputArguments[tpl.Name]
-		for _, artifact := range inputArtifacts {
-			if artifact.typeInstanceReference != nil {
-				availableTypeInstances[argoArtifactRef{
-					name: artifact.artifact.Name,
-					step: "",
-				}] = artifact.typeInstanceReference
-			}
-		}
+		availableTypeInstances := getAvailableTypeInstancesFromInput(r.tplInputArguments[tpl.Name])
 
 		artifactMappings := map[string]string{}
 		var newStepGroup []ParallelSteps
@@ -141,7 +131,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 			for _, step := range parallelSteps {
 				// 1. Register step arguments, so we can process them in referenced template and check
 				// whether steps in referenced template are satisfied
-				r.registerTemplateInputArguments(step, availableTypeInstances)
+				r.registerTemplateInputArguments(step, availableTypeInstances) // TODO dlaczego to jest dwa razy?
 
 				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
 				satisfiedArg, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
@@ -229,8 +219,8 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					// 3.8 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step, availableTypeInstances)
 
+					// TODO wtf
 					inputNameMappings := map[string]*string{}
-
 					inputArtifacts := r.tplInputArguments[step.Template]
 					for _, artifact := range inputArtifacts {
 						if artifact.typeInstanceReference != nil {
@@ -817,7 +807,7 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep, a
 			artifact: art,
 		}
 
-		ref, err := argoArtifactRefToStepAndName(art.From)
+		ref, err := getArgoArtifactRef(art.From)
 		if err != nil {
 			continue
 		}
