@@ -32,7 +32,7 @@ spec:
             }
   output:
     typeInstances:
-      jira-config:
+      confluence-config:
         typeRef:
           path: cap.type.productivity.confluence.config
           revision: 0.1.0

@@ -34,10 +34,15 @@ type dedicatedRenderer struct {
 	processedTemplates []*Template
 	rootTemplate       *Template
 	entrypointStep     *wfv1.WorkflowStep
-	tplInputArguments  map[string]wfv1.Artifacts
+	tplInputArguments  map[string][]InputArtifact
 
 	outputTypeInstances               *OutputTypeInstances
 	registeredOutputTypeInstanceNames []*string
+}
+
+type InputArtifact struct {
+	artifact              wfv1.Artifact
+	typeInstanceReference *string
 }
 
 func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
@@ -45,7 +50,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 		maxDepth:            maxDepth,
 		policyEnforcedCli:   policyEnforcedCli,
 		typeInstanceHandler: typeInstanceHandler,
-		tplInputArguments:   map[string]wfv1.Artifacts{},
+		tplInputArguments:   map[string][]InputArtifact{},
 
 		outputTypeInstances: &OutputTypeInstances{
 			typeInstances: []OutputTypeInstance{},
@@ -115,6 +120,18 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 		// 0. Aggregate processed templates
 		r.addToRootTemplates(tpl)
 
+		availableTypeInstances := map[argoArtifactRef]*string{}
+
+		inputArtifacts := r.tplInputArguments[tpl.Name]
+		for _, artifact := range inputArtifacts {
+			if artifact.typeInstanceReference != nil {
+				availableTypeInstances[argoArtifactRef{
+					name: artifact.artifact.Name,
+					step: "",
+				}] = artifact.typeInstanceReference
+			}
+		}
+
 		artifactMappings := map[string]string{}
 		var newStepGroup []ParallelSteps
 
@@ -124,7 +141,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 			for _, step := range parallelSteps {
 				// 1. Register step arguments, so we can process them in referenced template and check
 				// whether steps in referenced template are satisfied
-				r.registerTemplateInputArguments(step)
+				r.registerTemplateInputArguments(step, availableTypeInstances)
 
 				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
 				satisfiedArg, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
@@ -210,21 +227,16 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					step.VoltronAction = nil
 
 					// 3.8 Right now we know the template name, so let's try to register step input arguments
-					r.registerTemplateInputArguments(step)
+					r.registerTemplateInputArguments(step, availableTypeInstances)
 
 					inputNameMappings := map[string]*string{}
 
 					inputArtifacts := r.tplInputArguments[step.Template]
 					for _, artifact := range inputArtifacts {
-						typeInstanceName := fmt.Sprintf("%s-%s", tpl.Name, argoArtifactRefToName(artifact.From))
-
-						registeredName := r.findTypeInstanceName(typeInstanceName)
-						if registeredName == nil {
-							continue
+						if artifact.typeInstanceReference != nil {
+							inputName := fmt.Sprintf("%s-%s", workflowPrefix, artifact.artifact.Name)
+							inputNameMappings[inputName] = artifact.typeInstanceReference
 						}
-
-						inputName := fmt.Sprintf("%s-%s", workflowPrefix, artifact.Name)
-						inputNameMappings[inputName] = registeredName
 					}
 
 					if err := r.registerOutputTypeInstances(iface, &implementation, inputNameMappings); err != nil {
@@ -237,6 +249,10 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					if err != nil {
 						return err
 					}
+				}
+
+				for name, tiPtr := range step.typeInstanceOutputs {
+					availableTypeInstances[argoArtifactRef{step.Name, name}] = tiPtr
 				}
 
 				step.VoltronTypeInstanceOutputs = nil
@@ -325,7 +341,7 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 						ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
 					}
 
-					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, *ti, prefix)
+					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, *ti)
 					workflow.Templates = append(workflow.Templates, &template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
 
@@ -555,10 +571,16 @@ func (r *dedicatedRenderer) prefixOutputTypeInstancesInManifests(step *WorkflowS
 		}
 	}
 
+	step.typeInstanceOutputs = make(map[string]*string)
+
 	if iface.Spec.Output != nil && iface.Spec.Output.TypeInstances != nil {
 		for i := range iface.Spec.Output.TypeInstances {
 			ti := iface.Spec.Output.TypeInstances[i]
-			ti.Name = fmt.Sprintf("%s-%s", prefix, ti.Name)
+
+			newName := fmt.Sprintf("%s-%s", prefix, ti.Name)
+			newNamePtr := r.addTypeInstanceName(newName)
+			step.typeInstanceOutputs[ti.Name] = newNamePtr
+			ti.Name = newName
 		}
 	}
 }
@@ -578,20 +600,12 @@ func (*dedicatedRenderer) createWorkflow(implementation *ochpublicapi.Implementa
 	return &renderedWorkflow.Spec, nil
 }
 
-func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition, prefix string) (WorkflowStep, Template, map[string]string) {
+func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, output TypeInstanceDefinition) (WorkflowStep, Template, map[string]string) {
 	artifactPath := "/typeinstance"
 
 	stepName := fmt.Sprintf("output-%s", output.Name)
-
-	var templateName string
-	var artifactGlobalName string
-	if prefix == "" {
-		templateName = stepName
-		artifactGlobalName = output.Name
-	} else {
-		templateName = fmt.Sprintf("%s-%s", prefix, stepName)
-		artifactGlobalName = output.Name
-	}
+	templateName := stepName
+	artifactGlobalName := output.Name
 
 	fromDirective := fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", step.Name, output.From)
 
@@ -665,7 +679,7 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 
 	params := &mapEvalParameters{}
 	for _, a := range args {
-		params.Set(a.Name)
+		params.Set(a.artifact.Name)
 	}
 
 	notSatisfied, err := r.evaluateWhenExpression(params, *step.VoltronWhen)
@@ -791,11 +805,31 @@ func (r *dedicatedRenderer) emitWorkflowInputTypeInstanceAsStepOutput(tplName st
 	return r.emitWorkflowInputAsStepOutput(tplName, step, inputArgName, "{{workflow.outputs.artifacts.%s}}")
 }
 
-func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep) {
+func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep, availableTypeInstances map[argoArtifactRef]*string) {
 	if step.GetTemplateName() == "" || len(step.Arguments.Artifacts) == 0 {
 		return
 	}
-	r.tplInputArguments[step.Template] = step.Arguments.Artifacts
+
+	inputArtifacts := []InputArtifact{}
+
+	for _, art := range step.Arguments.Artifacts {
+		inputArt := InputArtifact{
+			artifact: art,
+		}
+
+		ref, err := argoArtifactRefToStepAndName(art.From)
+		if err != nil {
+			continue
+		}
+
+		if tiName, ok := availableTypeInstances[*ref]; ok {
+			inputArt.typeInstanceReference = tiName
+		}
+
+		inputArtifacts = append(inputArtifacts, inputArt)
+	}
+
+	r.tplInputArguments[step.Template] = inputArtifacts
 }
 
 func (r *dedicatedRenderer) registerOutputTypeInstances(iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision, artifactsNameMapping map[string]*string) error {

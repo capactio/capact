@@ -182,8 +182,8 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.postgresql}}'
               name: postgresql
-            - from: '{{workflow.outputs.artifacts.psql-helm-release}}'
-              name: psql-helm-release
+            - from: '{{workflow.outputs.artifacts.postgres-install-helm-run-helm-release}}'
+              name: postgres-install-helm-run-helm-release
             - name: payload
               raw:
                 data: |
@@ -194,7 +194,7 @@ args:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
-                  - alias: psql-helm-release
+                  - alias: postgres-install-helm-run-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -202,7 +202,7 @@ args:
                     value: null
                   usesRelations:
                   - from: postgresql
-                    to: psql-helm-release
+                    to: postgres-install-helm-run-helm-release
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -280,8 +280,8 @@ args:
         artifacts:
         - name: postgresql
           path: /upload/typeInstances/postgresql
-        - name: psql-helm-release
-          path: /upload/typeInstances/psql-helm-release
+        - name: postgres-install-helm-run-helm-release
+          path: /upload/typeInstances/postgres-install-helm-run-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

@@ -2,9 +2,9 @@ package argo
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
@@ -79,7 +79,12 @@ func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *TypeIn
 	return nil
 }
 
-func argoArtifactRefToName(ref string) string {
+type argoArtifactRef struct {
+	step string
+	name string
+}
+
+func argoArtifactRefToStepAndName(ref string) (*argoArtifactRef, error) {
 	ref = strings.TrimPrefix(ref, "{{")
 	ref = strings.TrimSuffix(ref, "}}")
 	parts := strings.Split(ref, ".")
@@ -89,9 +94,17 @@ func argoArtifactRefToName(ref string) string {
 	case "steps":
 		stepName := parts[1]
 		artifactName := parts[4]
-
-		return fmt.Sprintf("%s-%s", stepName, artifactName)
+		return &argoArtifactRef{
+			step: stepName,
+			name: artifactName,
+		}, nil
+	case "inputs":
+		artifactName := parts[2]
+		return &argoArtifactRef{
+			step: "",
+			name: artifactName,
+		}, nil
 	}
 
-	return ""
+	return nil, errors.New("not found")
 }

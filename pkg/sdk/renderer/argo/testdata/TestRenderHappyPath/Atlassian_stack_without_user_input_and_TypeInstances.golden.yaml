@@ -64,18 +64,6 @@ args:
               name: postgresql
           name: output-postgresql
           template: output-postgresql
-      - - arguments:
-            artifacts:
-            - from: '{{steps.jira-install.outputs.artifacts.jira-config}}'
-              name: jira-config
-          name: output-jira-config
-          template: output-jira-config
-      - - arguments:
-            artifacts:
-            - from: '{{steps.confluence-install.outputs.artifacts.confluence-config}}'
-              name: confluence-config
-          name: output-confluence-config
-          template: output-confluence-config
     - arguments: {}
       inputs:
         artifacts:
@@ -129,13 +117,13 @@ args:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: stack-install-install-shared-db-postgresql
           name: output-stack-install-install-shared-db-postgresql
-          template: stack-install-install-shared-db-output-stack-install-install-shared-db-postgresql
+          template: output-stack-install-install-shared-db-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
               name: stack-install-install-shared-db-psql-helm-release
           name: output-stack-install-install-shared-db-psql-helm-release
-          template: stack-install-install-shared-db-output-stack-install-install-shared-db-psql-helm-release
+          template: output-stack-install-install-shared-db-psql-helm-release
     - arguments: {}
       container:
         args:
@@ -206,7 +194,7 @@ args:
         - name: stack-install-install-shared-db-postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-shared-db-output-stack-install-install-shared-db-postgresql
+      name: output-stack-install-install-shared-db-postgresql
       outputs:
         artifacts:
         - globalName: stack-install-install-shared-db-postgresql
@@ -227,7 +215,7 @@ args:
         - name: stack-install-install-shared-db-psql-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-install-shared-db-output-stack-install-install-shared-db-psql-helm-release
+      name: output-stack-install-install-shared-db-psql-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-install-shared-db-psql-helm-release
@@ -319,19 +307,19 @@ args:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: stack-install-jira-install-postgresql
           name: output-stack-install-jira-install-postgresql
-          template: stack-install-jira-install-output-stack-install-jira-install-postgresql
+          template: output-stack-install-jira-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: stack-install-jira-install-jira-config
           name: output-stack-install-jira-install-jira-config
-          template: stack-install-jira-install-output-stack-install-jira-install-jira-config
+          template: output-stack-install-jira-install-jira-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
               name: stack-install-jira-install-jira-helm-release
           name: output-stack-install-jira-install-jira-helm-release
-          template: stack-install-jira-install-output-stack-install-jira-install-jira-helm-release
+          template: output-stack-install-jira-install-jira-helm-release
     - arguments: {}
       container:
         args:
@@ -422,7 +410,7 @@ args:
         - name: stack-install-jira-install-postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-jira-install-output-stack-install-jira-install-postgresql
+      name: output-stack-install-jira-install-postgresql
       outputs:
         artifacts:
         - globalName: stack-install-jira-install-postgresql
@@ -443,7 +431,7 @@ args:
         - name: stack-install-jira-install-jira-config
           path: /typeinstance
       metadata: {}
-      name: stack-install-jira-install-output-stack-install-jira-install-jira-config
+      name: output-stack-install-jira-install-jira-config
       outputs:
         artifacts:
         - globalName: stack-install-jira-install-jira-config
@@ -464,7 +452,7 @@ args:
         - name: stack-install-jira-install-jira-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-jira-install-output-stack-install-jira-install-jira-helm-release
+      name: output-stack-install-jira-install-jira-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-jira-install-jira-helm-release
@@ -556,19 +544,19 @@ args:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: stack-install-confluence-install-postgresql
           name: output-stack-install-confluence-install-postgresql
-          template: stack-install-confluence-install-output-stack-install-confluence-install-postgresql
+          template: output-stack-install-confluence-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: stack-install-confluence-install-confluence-config
           name: output-stack-install-confluence-install-confluence-config
-          template: stack-install-confluence-install-output-stack-install-confluence-install-confluence-config
+          template: output-stack-install-confluence-install-confluence-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
               name: stack-install-confluence-install-confluence-helm-release
           name: output-stack-install-confluence-install-confluence-helm-release
-          template: stack-install-confluence-install-output-stack-install-confluence-install-confluence-helm-release
+          template: output-stack-install-confluence-install-confluence-helm-release
     - arguments: {}
       container:
         args:
@@ -659,7 +647,7 @@ args:
         - name: stack-install-confluence-install-postgresql
           path: /typeinstance
       metadata: {}
-      name: stack-install-confluence-install-output-stack-install-confluence-install-postgresql
+      name: output-stack-install-confluence-install-postgresql
       outputs:
         artifacts:
         - globalName: stack-install-confluence-install-postgresql
@@ -680,7 +668,7 @@ args:
         - name: stack-install-confluence-install-confluence-config
           path: /typeinstance
       metadata: {}
-      name: stack-install-confluence-install-output-stack-install-confluence-install-confluence-config
+      name: output-stack-install-confluence-install-confluence-config
       outputs:
         artifacts:
         - globalName: stack-install-confluence-install-confluence-config
@@ -701,7 +689,7 @@ args:
         - name: stack-install-confluence-install-confluence-helm-release
           path: /typeinstance
       metadata: {}
-      name: stack-install-confluence-install-output-stack-install-confluence-install-confluence-helm-release
+      name: output-stack-install-confluence-install-confluence-helm-release
       outputs:
         artifacts:
         - globalName: stack-install-confluence-install-confluence-helm-release
@@ -729,48 +717,6 @@ args:
           name: postgresql
           path: /typeinstance
     - arguments: {}
-      container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: jira-config
-          path: /typeinstance
-      metadata: {}
-      name: output-jira-config
-      outputs:
-        artifacts:
-        - globalName: jira-config
-          name: jira-config
-          path: /typeinstance
-    - arguments: {}
-      container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: confluence-config
-          path: /typeinstance
-      metadata: {}
-      name: output-confluence-config
-      outputs:
-        artifacts:
-        - globalName: confluence-config
-          name: confluence-config
-          path: /typeinstance
-    - arguments: {}
       inputs: {}
       metadata: {}
       name: voltron-root
@@ -784,89 +730,69 @@ args:
           template: stack-install
       - - arguments:
             artifacts:
-            - from: '{{workflow.outputs.artifacts.jira-config}}'
-              name: jira-config
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
-              name: postgresql
-            - from: '{{workflow.outputs.artifacts.confluence-config}}'
-              name: confluence-config
-            - from: '{{workflow.outputs.artifacts.stack-install-install-shared-db-psql-helm-release}}'
-              name: stack-install-install-shared-db-psql-helm-release
-            - from: '{{workflow.outputs.artifacts.stack-install-jira-install-jira-helm-release}}'
-              name: stack-install-jira-install-jira-helm-release
-            - from: '{{workflow.outputs.artifacts.stack-install-jira-install-postgresql}}'
-              name: stack-install-jira-install-postgresql
-            - from: '{{workflow.outputs.artifacts.stack-install-confluence-install-confluence-helm-release}}'
-              name: stack-install-confluence-install-confluence-helm-release
-            - from: '{{workflow.outputs.artifacts.stack-install-confluence-install-postgresql}}'
-              name: stack-install-confluence-install-postgresql
+            - from: '{{workflow.outputs.artifacts.stack-install-install-shared-db-postgresql}}'
+              name: stack-install-install-shared-db-postgresql
+            - from: '{{workflow.outputs.artifacts.stack-install-install-shared-db-postgres-install-helm-run-helm-release}}'
+              name: stack-install-install-shared-db-postgres-install-helm-run-helm-release
+            - from: '{{workflow.outputs.artifacts.stack-install-jira-install-jira-config}}'
+              name: stack-install-jira-install-jira-config
+            - from: '{{workflow.outputs.artifacts.stack-install-jira-install-jira-install-helm-run-helm-release}}'
+              name: stack-install-jira-install-jira-install-helm-run-helm-release
+            - from: '{{workflow.outputs.artifacts.stack-install-confluence-install-confluence-config}}'
+              name: stack-install-confluence-install-confluence-config
+            - from: '{{workflow.outputs.artifacts.stack-install-confluence-install-main-helm-run-helm-release}}'
+              name: stack-install-confluence-install-main-helm-run-helm-release
             - name: payload
               raw:
                 data: |
                   typeInstances:
-                  - alias: jira-config
+                  - alias: stack-install-install-shared-db-postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: stack-install-install-shared-db-postgres-install-helm-run-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: stack-install-jira-install-jira-config
                     attributes: []
                     typeRef:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
-                  - alias: postgresql
+                  - alias: stack-install-jira-install-jira-install-helm-run-helm-release
                     attributes: []
                     typeRef:
-                      path: cap.type.database.postgresql.config
+                      path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
-                  - alias: confluence-config
+                  - alias: stack-install-confluence-install-confluence-config
                     attributes: []
                     typeRef:
                       path: cap.type.productivity.confluence.config
                       revision: 0.1.0
                     value: null
-                  - alias: stack-install-install-shared-db-psql-helm-release
+                  - alias: stack-install-confluence-install-main-helm-run-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
-                  - alias: stack-install-jira-install-jira-helm-release
-                    attributes: []
-                    typeRef:
-                      path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
-                  - alias: stack-install-jira-install-postgresql
-                    attributes: []
-                    typeRef:
-                      path: cap.type.database.postgresql.config
-                      revision: 0.1.0
-                    value: null
-                  - alias: stack-install-confluence-install-confluence-helm-release
-                    attributes: []
-                    typeRef:
-                      path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
-                  - alias: stack-install-confluence-install-postgresql
-                    attributes: []
-                    typeRef:
-                      path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   usesRelations:
-                  - from: jira-config
-                    to: postgresql
-                  - from: confluence-config
-                    to: postgresql
-                  - from: postgresql
-                    to: stack-install-install-shared-db-psql-helm-release
-                  - from: jira-config
-                    to: stack-install-jira-install-jira-helm-release
-                  - from: jira-config
-                    to: stack-install-jira-install-postgresql
-                  - from: confluence-config
-                    to: stack-install-confluence-install-confluence-helm-release
-                  - from: confluence-config
-                    to: stack-install-confluence-install-postgresql
+                  - from: stack-install-install-shared-db-postgresql
+                    to: stack-install-install-shared-db-postgres-install-helm-run-helm-release
+                  - from: stack-install-jira-install-jira-config
+                    to: stack-install-jira-install-jira-install-helm-run-helm-release
+                  - from: stack-install-jira-install-jira-config
+                    to: stack-install-install-shared-db-postgresql
+                  - from: stack-install-confluence-install-confluence-config
+                    to: stack-install-confluence-install-main-helm-run-helm-release
+                  - from: stack-install-confluence-install-confluence-config
+                    to: stack-install-install-shared-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -914,22 +840,18 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-config
-          path: /upload/typeInstances/jira-config
-        - name: postgresql
-          path: /upload/typeInstances/postgresql
-        - name: confluence-config
-          path: /upload/typeInstances/confluence-config
-        - name: stack-install-install-shared-db-psql-helm-release
-          path: /upload/typeInstances/stack-install-install-shared-db-psql-helm-release
-        - name: stack-install-jira-install-jira-helm-release
-          path: /upload/typeInstances/stack-install-jira-install-jira-helm-release
-        - name: stack-install-jira-install-postgresql
-          path: /upload/typeInstances/stack-install-jira-install-postgresql
-        - name: stack-install-confluence-install-confluence-helm-release
-          path: /upload/typeInstances/stack-install-confluence-install-confluence-helm-release
-        - name: stack-install-confluence-install-postgresql
-          path: /upload/typeInstances/stack-install-confluence-install-postgresql
+        - name: stack-install-install-shared-db-postgresql
+          path: /upload/typeInstances/stack-install-install-shared-db-postgresql
+        - name: stack-install-install-shared-db-postgres-install-helm-run-helm-release
+          path: /upload/typeInstances/stack-install-install-shared-db-postgres-install-helm-run-helm-release
+        - name: stack-install-jira-install-jira-config
+          path: /upload/typeInstances/stack-install-jira-install-jira-config
+        - name: stack-install-jira-install-jira-install-helm-run-helm-release
+          path: /upload/typeInstances/stack-install-jira-install-jira-install-helm-run-helm-release
+        - name: stack-install-confluence-install-confluence-config
+          path: /upload/typeInstances/stack-install-confluence-install-confluence-config
+        - name: stack-install-confluence-install-main-helm-run-helm-release
+          path: /upload/typeInstances/stack-install-confluence-install-main-helm-run-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

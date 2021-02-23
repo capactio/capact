@@ -18,21 +18,6 @@ metadata:
 spec:
   appVersion: "8.x.x"
 
-  additionalOutput:
-    typeInstances:
-      postgresql:
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-
-  outputTypeInstanceRelations:
-    jira-config:
-      uses:
-        - postgresql
-    confluence-config:
-      uses:
-        - postgresql
-
   implements:
     - path: cap.interface.atlassian.stack.install
       revision: 0.1.0
