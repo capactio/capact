@@ -35,7 +35,8 @@ func TestRenderHappyPath(t *testing.T) {
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUID)
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler.SetGenUUID(genUUID)
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -190,7 +191,8 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 			genUUID := genUUIDFn(strconv.Itoa(tc))
-			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUID)
+			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+			typeInstanceHandler.SetGenUUID(genUUID)
 
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
@@ -220,7 +222,8 @@ func TestRendererMaxDepth(t *testing.T) {
 
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUIDFn(""))
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -250,7 +253,8 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	policy := clusterpolicy.NewDenyAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUIDFn(""))
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -270,7 +274,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	// then
 	assert.EqualError(t, err,
-		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:0.1.0": No Implementations found with current policy for given Interface`)
+		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:": No Implementations found with current policy for given Interface`)
 	assert.Nil(t, renderedArgs)
 }
 

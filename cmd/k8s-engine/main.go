@@ -4,8 +4,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
-
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
@@ -104,9 +102,7 @@ func main() {
 
 	ochClient := getOCHClient(&cfg)
 
-	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage, func() string {
-		return uuid.New().String()
-	})
+	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage)
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
 

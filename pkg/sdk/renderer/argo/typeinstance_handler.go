@@ -6,6 +6,8 @@ import (
 	"path"
 	"strings"
 
+	"github.com/google/uuid"
+
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
@@ -27,8 +29,14 @@ type TypeInstanceHandler struct {
 	genUUID         func() string
 }
 
-func NewTypeInstanceHandler(ochCli OCHClient, ochActionsImage string, genUUID func() string) *TypeInstanceHandler {
-	return &TypeInstanceHandler{ochCli: ochCli, ochActionsImage: ochActionsImage, genUUID: genUUID}
+func NewTypeInstanceHandler(ochCli OCHClient, ochActionsImage string) *TypeInstanceHandler {
+	return &TypeInstanceHandler{
+		ochCli:          ochCli,
+		ochActionsImage: ochActionsImage,
+		genUUID: func() string {
+			return uuid.New().String()
+		},
+	}
 }
 
 func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
@@ -204,4 +212,8 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
 
 	return nil
+}
+
+func (r *TypeInstanceHandler) SetGenUUID(genUUID func() string) {
+	r.genUUID = genUUID
 }

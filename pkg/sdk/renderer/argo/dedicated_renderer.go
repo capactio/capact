@@ -169,9 +169,6 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 
 					// 3.3 Get all ImplementationRevisions for a given `voltron-action`
-					if iface != nil && actionRef.Revision == "" {
-						actionRef.Revision = iface.Revision
-					}
 					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
 						return errors.Wrapf(err,

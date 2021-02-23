@@ -62,9 +62,6 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 1.2 Get all ImplementationRevisions for a given Interface
-	if iface != nil && interfaceRef.Revision == "" {
-		interfaceRef.Revision = iface.Revision
-	}
 	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRef)
 	if err != nil {
 		return nil, errors.Wrapf(err, `while listing ImplementationRevisions for Interface "%s:%s"`,
