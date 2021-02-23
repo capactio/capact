@@ -366,8 +366,8 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-step
-          template: inject-input-type-instances
+          name: inject-input-type-instances-uuid-step
+          template: inject-input-type-instances-uuid
       - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
@@ -497,7 +497,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances
+      name: inject-input-type-instances-uuid
       outputs:
         artifacts:
         - globalName: gcp

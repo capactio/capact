@@ -2,6 +2,8 @@ package argo
 
 import (
 	"context"
+	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -32,7 +34,8 @@ func TestRenderHappyPath(t *testing.T) {
 
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUID)
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -148,14 +151,21 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name   string
-		ref    types.InterfaceRef
-		policy clusterpolicy.ClusterPolicy
+		name               string
+		ref                types.InterfaceRef
+		inputTypeInstances []types.InputTypeInstanceRef
+		policy             clusterpolicy.ClusterPolicy
 	}{
 		{
 			name: "Jira with CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.jira.install",
+			},
+			inputTypeInstances: []types.InputTypeInstanceRef{
+				{
+					Name: "foo",
+					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
+				},
 			},
 			policy: fixGCPClusterPolicy(),
 		},
@@ -174,11 +184,13 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policy: fixClusterPolicyForFallback(),
 		},
 	}
-	for _, test := range tests {
+	for testIdx, test := range tests {
+		tc := testIdx
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+			genUUID := genUUIDFn(strconv.Itoa(tc))
+			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUID)
 
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
@@ -190,6 +202,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				context.Background(),
 				RunnerContextSecretRef{Name: "secret", Key: "key"},
 				tt.ref,
+				WithTypeInstances(tt.inputTypeInstances),
 				WithPolicy(tt.policy),
 			)
 
@@ -207,7 +220,7 @@ func TestRendererMaxDepth(t *testing.T) {
 
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -237,7 +250,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	policy := clusterpolicy.NewDenyAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7", genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
@@ -257,7 +270,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	// then
 	assert.EqualError(t, err,
-		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:": No Implementations found with current policy for given Interface`)
+		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:0.1.0": No Implementations found with current policy for given Interface`)
 	assert.Nil(t, renderedArgs)
 }
 
@@ -267,4 +280,15 @@ func assertYAMLGoldenFile(t *testing.T, actualYAMLData interface{}, filename str
 	out, err := yaml.Marshal(actualYAMLData)
 	require.NoError(t, err)
 	golden.Assert(t, string(out), filename+".golden.yaml", msgAndArgs)
+}
+
+func genUUIDFn(prefix string) func() string {
+	return func() func() string {
+		i := 0
+		return func() string {
+			uuid := fmt.Sprintf("%s-%s", prefix, strconv.Itoa(i))
+			i++
+			return uuid
+		}
+	}()
 }

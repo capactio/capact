@@ -29,9 +29,9 @@ spec:
           revision: 0.1.0
 
   outputTypeInstanceRelations:
-    cloudsql-instance:
+    postgresql:
       uses:
-        - postgresql
+        - cloudsql-instance
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -112,6 +112,8 @@ spec:
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
+                    - name: cloudsql-instance
+                      from: cloudsql-instance
                   arguments:
                     artifacts:
                       - name: input-parameters

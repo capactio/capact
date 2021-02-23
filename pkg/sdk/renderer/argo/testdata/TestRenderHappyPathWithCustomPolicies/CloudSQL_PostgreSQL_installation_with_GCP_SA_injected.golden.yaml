@@ -61,6 +61,12 @@ args:
               name: postgresql
           name: output-postgresql
           template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.cloudsql-run.outputs.artifacts.cloudsql-instance}}'
+              name: cloudsql-instance
+          name: output-cloudsql-instance
+          template: output-cloudsql-instance
     - arguments: {}
       container:
         args:
@@ -144,6 +150,27 @@ args:
           name: postgresql
           path: /typeinstance
     - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: cloudsql-instance
+          path: /typeinstance
+      metadata: {}
+      name: output-cloudsql-instance
+      outputs:
+        artifacts:
+        - globalName: cloudsql-instance
+          name: cloudsql-instance
+          path: /typeinstance
+    - arguments: {}
       inputs: {}
       metadata: {}
       name: voltron-root
@@ -153,40 +180,56 @@ args:
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: inject-gcp-sa-step
-          template: inject-gcp-sa
+          name: inject-input-type-instances-1-0-step
+          template: inject-input-type-instances-1-0
       - - arguments: {}
           name: start-entrypoint
           template: postgres-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{workflow.outputs.artifacts.cloudsql-instance}}'
+              name: cloudsql-instance
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: cloudsql-instance
+                    attributes: []
+                    typeRef:
+                      path: cap.type.gcp.cloudsql.instance
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: postgresql
+                    to: cloudsql-instance
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
     - arguments: {}
       container:
-        args:
-        - |-
-          sleep 2 && echo 'auth_provider_x509_cert_url: fake
-          auth_uri: fake
-          client_email: fake
-          client_id: fake
-          client_x509_cert_url: fake
-          private_key: fake
-          private_key_id: fake
-          project_id: projectvoltron
-          token_uri: fake
-          type: service_account
-          ' | tee /output
-        command:
-        - sh
-        - -c
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp-sa.yaml}'
         image: alpine:3.7
         name: ""
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-gcp-sa
+      name: inject-input-type-instances-1-0
       outputs:
         artifacts:
         - globalName: gcp-sa
           name: gcp-sa
-          path: /output
+          path: /gcp-sa.yaml
     - arguments: {}
       container:
         args:
@@ -217,4 +260,28 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
+        - name: cloudsql-instance
+          path: /upload/typeInstances/cloudsql-instance
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
 runnerInterface: cap.interface.runner.argo.run

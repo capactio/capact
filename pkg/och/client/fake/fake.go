@@ -111,15 +111,17 @@ func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context,
 func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
 	for i := range s.OCHInterfaces {
 		iface := s.OCHInterfaces[i]
-		if *iface.Metadata.Path == ref.Path {
-			item := ochpublicgraphql.InterfaceRevision{}
-
-			if err := deepCopy(&iface, &item); err != nil {
-				return nil, err
-			}
-
-			return &item, nil
+		if iface.Metadata.Path != ref.Path {
+			continue
 		}
+
+		item := ochpublicgraphql.InterfaceRevision{}
+
+		if err := deepCopy(&iface, &item); err != nil {
+			return nil, err
+		}
+
+		return &item, nil
 	}
 
 	return nil, fmt.Errorf("cannot find Interface for %v", ref)

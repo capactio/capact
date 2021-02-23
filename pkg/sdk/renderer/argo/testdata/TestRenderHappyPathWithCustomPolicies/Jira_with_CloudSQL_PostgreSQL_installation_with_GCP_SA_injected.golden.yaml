@@ -11,7 +11,10 @@ args:
           optional: true
       metadata: {}
       name: jira-install
-      outputs: {}
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+          name: jira-config
       steps:
       - - arguments:
             artifacts:
@@ -65,6 +68,12 @@ args:
           template: jira-install-helm-run-helm
       - - arguments:
             artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: jira-config
           name: output-jira-config
@@ -87,8 +96,8 @@ args:
           name: postgresql
       steps:
       - - arguments: {}
-          name: inject-gcp-sa-step
-          template: inject-gcp-sa
+          name: inject-input-type-instances-0-1-step
+          template: inject-input-type-instances-0-1
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -133,9 +142,15 @@ args:
       - - arguments:
             artifacts:
             - from: '{{steps.cloudsql-run.outputs.artifacts.additional}}'
-              name: postgresql
-          name: output-postgresql
-          template: jira-install-install-db-output-postgresql
+              name: jira-install-install-db-postgresql
+          name: output-jira-install-install-db-postgresql
+          template: jira-install-install-db-output-jira-install-install-db-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.cloudsql-run.outputs.artifacts.cloudsql-instance}}'
+              name: jira-install-install-db-cloudsql-instance
+          name: output-jira-install-install-db-cloudsql-instance
+          template: jira-install-install-db-output-jira-install-install-db-cloudsql-instance
     - arguments: {}
       container:
         args:
@@ -209,44 +224,54 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: postgresql
+        - name: jira-install-install-db-postgresql
           path: /typeinstance
       metadata: {}
-      name: jira-install-install-db-output-postgresql
+      name: jira-install-install-db-output-jira-install-install-db-postgresql
       outputs:
         artifacts:
         - globalName: jira-install-install-db-postgresql
-          name: postgresql
+          name: jira-install-install-db-postgresql
           path: /typeinstance
     - arguments: {}
       container:
         args:
-        - |-
-          sleep 2 && echo 'auth_provider_x509_cert_url: fake
-          auth_uri: fake
-          client_email: fake
-          client_id: fake
-          client_x509_cert_url: fake
-          private_key: fake
-          private_key_id: fake
-          project_id: projectvoltron
-          token_uri: fake
-          type: service_account
-          ' | tee /output
+        - sleep 1
         command:
         - sh
         - -c
         image: alpine:3.7
         name: ""
         resources: {}
+      inputs:
+        artifacts:
+        - name: jira-install-install-db-cloudsql-instance
+          path: /typeinstance
+      metadata: {}
+      name: jira-install-install-db-output-jira-install-install-db-cloudsql-instance
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-cloudsql-instance
+          name: jira-install-install-db-cloudsql-instance
+          path: /typeinstance
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp-sa.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
       inputs: {}
       metadata: {}
-      name: inject-gcp-sa
+      name: inject-input-type-instances-0-1
       outputs:
         artifacts:
         - globalName: gcp-sa
           name: gcp-sa
-          path: /output
+          path: /gcp-sa.yaml
     - arguments: {}
       container:
         args:
@@ -314,6 +339,27 @@ args:
         resources: {}
       inputs:
         artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
         - name: jira-config
           path: /typeinstance
       metadata: {}
@@ -351,11 +397,61 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
+          name: inject-input-type-instances-0-0-step
+          template: inject-input-type-instances-0-0
+      - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
           name: start-entrypoint
           template: jira-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.jira-config}}'
+              name: jira-config
+            - from: '{{workflow.outputs.artifacts.jira-helm-release}}'
+              name: jira-helm-release
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-cloudsql-instance}}'
+              name: jira-install-install-db-cloudsql-instance
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: jira-config
+                    attributes: []
+                    typeRef:
+                      path: cap.type.productivity.jira.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-install-install-db-cloudsql-instance
+                    attributes: []
+                    typeRef:
+                      path: cap.type.gcp.cloudsql.instance
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: jira-config
+                    to: jira-helm-release
+                  - from: jira-config
+                    to: postgresql
+                  - from: postgresql
+                    to: jira-install-install-db-cloudsql-instance
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
     - arguments: {}
       container:
         args:
@@ -386,4 +482,50 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/foo.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-0-0
+      outputs:
+        artifacts:
+        - globalName: foo
+          name: foo
+          path: /foo.yaml
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /upload/typeInstances/jira-config
+        - name: jira-helm-release
+          path: /upload/typeInstances/jira-helm-release
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
+        - name: jira-install-install-db-cloudsql-instance
+          path: /upload/typeInstances/jira-install-install-db-cloudsql-instance
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
 runnerInterface: cap.interface.runner.argo.run

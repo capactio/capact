@@ -27,9 +27,9 @@ spec:
           path: cap.type.gcp.cloudsql.instance
           revision: 0.1.0
   outputTypeInstanceRelations:
-    - typeInstanceName: cloudsql-instance
+    - typeInstanceName: postgresql
       uses:
-        - postgresql
+        - cloudsql-instance
   appVersion: '10,11,12,13'
   implements:
     - path: cap.interface.database.postgresql.install
@@ -43,7 +43,7 @@ spec:
           revision: 0.1.0
     - alias: jinja2
       appVersion:
-      interfaceGroupPath: cap.interface.jinja2
+      interfaceGroupPath: cap.interface.templating.jinja2
       methods:
         - name: template
           revision: 0.1.0
@@ -115,6 +115,8 @@ spec:
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
+                    - name: cloudsql-instance
+                      from: cloudsql-instance
                   arguments:
                     artifacts:
                       - name: input-parameters
