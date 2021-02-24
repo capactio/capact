@@ -84,8 +84,9 @@ nosetests.xml
 .pytest_cache
 
 # Terraform
-/hack/ci/terraform/terraform.tfvars
-/hack/ci/terraform/terraform.tfstate.backup
-/hack/ci/terraform/terraform.tfstate
-/hack/ci/terraform/.terraform.lock.hcl
 /hack/ci/terraform/.terraform
+/hack/ci/terraform/terraform.tfvars
+/hack/ci/terraform/terraform.tfstate
+/hack/ci/terraform/terraform.tfstate.backup
+/hack/ci/terraform/.terraform.tfstate.lock.info
+/hack/ci/terraform/.terraform.lock.hcl

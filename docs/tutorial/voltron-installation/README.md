@@ -35,14 +35,13 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
    	
 1. Create a private GKE cluster.
     
-    **1. Export the GKE cluster name.**
+    **1. Export the GKE cluster name and region.**
        
     > **NOTE:** To reduce latency when working with a cluster, select the region based on your location.
     
     ```bash
     export NAME="voltron-demo-v1"
     export REGION="europe-west2"
-    export DOMAIN="demo.cluster.projectvoltron.dev" # you can use your own domain if you have one
     ```
        
     **2. Create Terraform variables.**
@@ -98,7 +97,14 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
      - Address ranges that you have authorized, for example `203.0.113.0/32`
 
 1. Install Voltron.
-
+    
+    **1. Export Gateway password and domain name.**
+    
+    ```bash
+    export DOMAIN="demo.cluster.projectvoltron.dev" # you can use your own domain if you have one
+    export GATEWAY_PASSWORD=$(openssl rand -base64 32)
+    ```
+    
     **1. Install Cert Manager.**
        
     ```bash 
@@ -108,7 +114,7 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
     **2. Install all Voltron components (Voltron core, Grafana, Prometheus, Neo4J, NGINX, Argo).**
        
     ```bash
-    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN" \
+    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN --set gateway.auth.password=$GATEWAY_PASSWORD" \
     DOCKER_REPOSITORY="gcr.io/projectvoltron" \
     OVERRIDE_DOCKER_TAG="76a84bf" \
     ./hack/ci/cluster-components-install-upgrade.sh
@@ -119,11 +125,13 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
  
     **3. Update the DNS record.**
        
-    As the previous step created a LoadBalancer, you now need to create a DNS for its external IP. 
+    As the previous step created a LoadBalancer, you now need to create a DNS record for its external IP. 
     
     ```bash
     export EXTERNAL_PUBLIC_IP=$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
-    gcloud dns --project=projectvoltron record-sets transaction start --zone=cluster-voltron
-    gcloud dns --project=projectvoltron record-sets transaction add $EXTERNAL_PUBLIC_IP --name=\gateway.$DOMAIN. --ttl=60 --type=A --zone=$DNS_ZONE
-    gcloud dns --project=projectvoltron record-sets transaction execute --zone=cluster-voltron
+    export DNS_ZONE=cluster-voltron
+    export GCP_PROJECT=projectvoltron
+    gcloud dns --project=$GCP_PROJECT record-sets transaction start --zone=$DNS_ZONE
+    gcloud dns --project=$GCP_PROJECT record-sets transaction add $EXTERNAL_PUBLIC_IP --name=\*.$DOMAIN. --ttl=60 --type=A --zone=$DNS_ZONE
+    gcloud dns --project=$GCP_PROJECT record-sets transaction execute --zone=$DNS_ZONE
     ```
