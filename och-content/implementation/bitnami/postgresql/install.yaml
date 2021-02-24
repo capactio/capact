@@ -85,7 +85,7 @@ spec:
                                 pullPolicy: Always
                               postgresqlDatabase: <@ defaultDBName @>
                               postgresqlUsername: <@ superuser.username @>
-                              postgresqlPassword: <@ superuser.password | default(random_string()) @>
+                              postgresqlPassword: <@ superuser.password | default(random_word()) @>
                             output:
                               goTemplate:
                                 host: '{{ template "common.names.fullname" . }}'
@@ -94,6 +94,10 @@ spec:
                                 superuser:
                                   username: '{{ template "postgresql.username" . }}'
                                   password: '{{ template "postgresql.password" . }}'
+                      - name: configuration
+                        raw:
+                          data: |
+
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances

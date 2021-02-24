@@ -40,8 +40,6 @@ spec:
                   path: "/values.yml"
                 - name: configuration
                   path: "/configuration.yaml"
-                  # TODO: Do we support optional?
-                  optional: true
             outputs:
               artifacts:
                 - name: render

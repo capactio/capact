@@ -27,9 +27,9 @@ Jinja cli is a copy of https://github.com/mattrobenolt/jinja2-cli (commit de5e8b
 Docker part is a copy of https://github.com/dinuta/jinja2docker (commit 9a44ceecd83cbe195d2d2c47e969dbb5cb5dbaa2)
 
 
-## Limitations ##
+## Limitations
 
-### Multiple rendering ###
+### Multiple rendering
 
 Missing variables are not causing errors and template can be rendered several times.
 This has one limitation related to variables which have `default` filter.
@@ -38,7 +38,7 @@ The possible workaround for such variables is escaping them.
 
 As a potential solution we may create a custom `default` filter which will be aware of prefixes.
 
-### Prefixing ###
+### Prefixing
 
 Let's consider such template
 

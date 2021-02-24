@@ -150,7 +150,7 @@ spec:
                             output:
                               goTemplate:
                                 version: "{{ .Values.image.tag }}"
-                                host: "{{ template \"confluence-server.fullname\" . }}"
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:
                               postgresql:
                                 enabled: false
@@ -166,6 +166,9 @@ spec:
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
               - - name: fill-params-in-helm-args
                   voltron-action: jinja2.template
@@ -175,6 +178,9 @@ spec:
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
               - - name: fill-input-params-in-helm-args
                   voltron-action: jinja2.template

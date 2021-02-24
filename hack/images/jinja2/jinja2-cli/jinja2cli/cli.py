@@ -361,8 +361,11 @@ def read_configuration(config_path):
         return {}
 
     load, _, _ = _load_yaml()
-    with open(config_path) as config:
-        return load(config.read())
+    with open(config_path) as config_file:
+        config = load(config_file.read())
+        if config is None:
+            return {}
+        return config
 
 
 def main():
