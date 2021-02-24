@@ -68,7 +68,7 @@ var _ = Describe("Action", func() {
 		})
 
 		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
-			actionPath := "cap.interface.voltron.policy.install"
+			actionPath := "cap.interface.voltron.policy.test"
 
 			log("1. Expecting Implementation A is picked based on test policy and requirements met...")
 
@@ -84,7 +84,7 @@ var _ = Describe("Action", func() {
 			log("3. Creating TypeInstance and modifying Policy to make Implementation B picked for next run...")
 
 			// 3.1. Create TypeInstance which is required for second Implementation to be picked
-			typeInstanceValue := fixTypeInstanceInputForPolicy()
+			typeInstanceValue := getTypeInstanceInputForPolicy()
 			typeInstance, tiCleanupFn := createTypeInstance(ctx, ochClient, typeInstanceValue)
 			defer tiCleanupFn()
 
@@ -130,10 +130,10 @@ var _ = Describe("Action", func() {
 			var typeInstances []*enginegraphql.InputTypeInstanceData
 			input := &ochlocalgraphql.CreateTypeInstanceInput{
 				TypeRef: &ochlocalgraphql.TypeReferenceInput{
-					Path:     "cap.type.e2e.simple-key-value",
+					Path:     "cap.type.simple.single-key",
 					Revision: "0.1.0",
 				},
-				Value: map[string]string{"key": "e2e test"},
+				Value: map[string]interface{}{"key": true},
 				Attributes: []*ochlocalgraphql.AttributeReferenceInput{
 					{
 						Path:     "com.voltron.attribute1",
@@ -141,11 +141,11 @@ var _ = Describe("Action", func() {
 					},
 				},
 			}
-			typeInstance, err := ochClient.CreateTypeInstance(ctx, input)
-			Expect(err).ToNot(HaveOccurred())
+			simpleTI, simpleTICleanupFn := createTypeInstance(ctx, ochClient, input)
+			defer simpleTICleanupFn()
 
 			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: typeInstance.Metadata.ID})
+				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: simpleTI.Metadata.ID})
 
 			input = &ochlocalgraphql.CreateTypeInstanceInput{
 				TypeRef: &ochlocalgraphql.TypeReferenceInput{
@@ -160,13 +160,12 @@ var _ = Describe("Action", func() {
 					},
 				},
 			}
-			typeInstance, err = ochClient.CreateTypeInstance(ctx, input)
-			Expect(err).ToNot(HaveOccurred())
-
+			saTypeInstance, saTICleanupFn := createTypeInstance(ctx, ochClient, input)
+			defer saTICleanupFn()
 			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: typeInstance.Metadata.ID})
+				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: saTypeInstance.Metadata.ID})
 
-			_, err = engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
 					Path:     "cap.interface.voltron.e2e.type-instance-download",
@@ -202,7 +201,7 @@ var _ = Describe("Action", func() {
 
 func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
 	return func() (enginegraphql.ActionStatusPhase, error) {
-		action, err := getAction(ctx, cl, name)
+		action, err := cl.GetAction(ctx, name)
 		if err != nil {
 			return "", err
 		}
@@ -210,16 +209,7 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 	}
 }
 
-func getAction(ctx context.Context, cl *engine.Client, name string) (*enginegraphql.Action, error) {
-	action, err := cl.GetAction(ctx, name)
-	if err != nil {
-		return nil, err
-	}
-
-	return action, nil
-}
-
-func fixTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
+func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeReferenceInput{
 			Path:     "cap.type.simple.single-key",
@@ -252,7 +242,7 @@ func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *en
 		cfg.PollingTimeout, cfg.PollingInterval,
 	).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
 
-	action, err := getAction(ctx, engineClient, actionName)
+	action, err := engineClient.GetAction(ctx, actionName)
 	Expect(err).ToNot(HaveOccurred())
 	Expect(action).ToNot(BeNil())
 

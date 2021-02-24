@@ -3,8 +3,8 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.voltron.policy
-  name: install
-  displayName: Install
+  name: test
+  displayName: Test case for Policy
   description: ""
   documentationURL: ""
   supportURL: ""

@@ -21,7 +21,7 @@ spec:
     typeInstances:
       simple-key-value:
         typeRef:
-          path: cap.type.e2e.simple-key-value
+          path: cap.type.simple.single-key
           revision: 0.1.0
         verbs: [ "get" ]
 

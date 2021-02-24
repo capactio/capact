@@ -5,23 +5,20 @@ metadata:
   name: single-key
   prefix: cap.type.simple.single-key
   displayName: Single Key
-  description: Defines service account for Google Cloud Platform
-  documentationURL: https://cloud.google.com/iam/docs/service-accounts
-  supportURL: https://cloud.google.com/iam/docs/service-accounts
+  description: Defines single key Type
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-  attributes:
-    cap.attribute.cloud.provider.gcp:
-      revision: 0.1.0
 spec:
   jsonSchema:
     value: |-
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for GCP service account",
+        "title": "The schema for single key Type",
         "examples": [
           {
             "key": true

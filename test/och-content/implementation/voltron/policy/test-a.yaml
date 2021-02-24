@@ -3,10 +3,10 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.voltron.policy
-  name: install-a
+  name: test-a
   license:
     name: "Apache 2.0"
-  displayName: Install A
+  displayName: Test Implementation A
   description: "This Implementation should be filtered out in the Cluster policy test on second stage."
   documentationURL: ""
   maintainers:
@@ -18,7 +18,7 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.policy.install
+    - path: cap.interface.voltron.policy.test
       revision: 0.1.0
 
   requires:
@@ -42,9 +42,9 @@ spec:
         templates:
           - name: main
             steps:
-              - - name: fail
-                  template: fail
-          - name: fail
+              - - name: success
+                  template: success
+          - name: success
             container:
               image: alpine:latest
               command: ["sh", "-c"]
