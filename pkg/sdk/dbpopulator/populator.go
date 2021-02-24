@@ -126,9 +126,17 @@ MERGE (interface:Interface:unpublished{
   name: value.metadata.name})
 
 CREATE (input:InterfaceInput:unpublished)
-CREATE (inputParameters:InputParameters:unpublished {
-  jsonSchema: value.spec.input.parameters.jsonSchema.value})
-CREATE (input)-[:HAS]->(inputParameters)
+
+WITH *, value.spec.input.parameters as parameters
+CALL {
+  WITH input, parameters
+  UNWIND keys(parameters) as name
+    CREATE (parameter: InputParameter:unpublished {
+      name: name,
+      jsonSchema: parameters[name].jsonSchema.value})
+    CREATE (input)-[:HAS]->(parameter)
+  RETURN count([]) as _tmp0
+}
 
 CREATE (output:InterfaceOutput:unpublished)
 

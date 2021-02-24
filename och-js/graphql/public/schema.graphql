@@ -305,11 +305,12 @@ type InterfaceSpec @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceInput @additionalLabels(labels: ["published"]){
-  parameters: InputParameters @relation(name: "HAS", direction: "OUT")
+  parameters: [InputParameter!]! @relation(name: "HAS", direction: "OUT")
   typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
-type InputParameters @additionalLabels(labels: ["published"]){
+type InputParameter @additionalLabels(labels: ["published"]){
+  name: String!
   jsonSchema: Any
 }
 
