@@ -6,5 +6,5 @@ Here is the list of exposed services:
 Use the following header configuration in the Gateway GraphQL Playground:
 
   {
-    "Authorization": "Basic {{ printf "%s:%s" .Values.gateway.auth.username .Values.gateway.auth.password | b64enc -}}"
+    "Authorization": "Basic {{ printf "%s:%s" .Values.global.gateway.auth.username .Values.global.gateway.auth.password | b64enc -}}"
   }

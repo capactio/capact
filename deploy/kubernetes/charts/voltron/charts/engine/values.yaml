@@ -57,10 +57,6 @@ tolerations: []
 
 affinity: {}
 
-gateway:
-  username: graphql
-  password: t0p_s3cr3t
-
 clusterPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #

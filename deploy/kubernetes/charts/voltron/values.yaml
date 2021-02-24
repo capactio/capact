@@ -13,10 +13,10 @@ global:
     username: neo4j
     password: okon
 
-gateway:
-  auth:
-    username: graphql
-    password: t0p_s3cr3t
+  gateway:
+    auth:
+      username: graphql
+      password: t0p_s3cr3t
 
 integrationTest:
   image:

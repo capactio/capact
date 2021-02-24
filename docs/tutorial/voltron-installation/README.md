@@ -83,7 +83,7 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
      - The primary range of **subnetwork-${NAME}**
      - The secondary range used for Pods
     
-    **6. If you have your machine outside of your VPC network, authorize it to access the public endpoint.**
+    **6. If you have your machine outside your VPC network, authorize it to access the public endpoint.**
        
     ```bash
     gcloud container clusters update $NAME --region $REGION \
@@ -114,7 +114,7 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
     **2. Install all Voltron components (Voltron core, Grafana, Prometheus, Neo4J, NGINX, Argo).**
        
     ```bash
-    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN --set gateway.auth.password=$GATEWAY_PASSWORD" \
+    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN --set global.gateway.auth.password=$GATEWAY_PASSWORD" \
     DOCKER_REPOSITORY="gcr.io/projectvoltron" \
     OVERRIDE_DOCKER_TAG="76a84bf" \
     ./hack/ci/cluster-components-install-upgrade.sh
