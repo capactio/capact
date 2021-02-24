@@ -235,7 +235,7 @@ docker::delete_images() {
 #  - MOCK_OCH_GRAPHQL - if set to true then predifined values are used in och graphql(local and public)
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
-#  - USE_TEST_MANIFESTS - if set to true, then manifests from 'test/och-content' will be populated instead
+#  - USE_TEST_SETUP - if set to true, then the OCH manifests are populated from `test/och-content` and a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
@@ -245,7 +245,7 @@ voltron::install_upgrade::charts() {
     export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
-    export USE_TEST_MANIFESTS=${USE_TEST_MANIFESTS:-${VOLTRON_USE_TEST_MANIFESTS}}
+    export USE_TEST_SETUP=${USE_TEST_SETUP:-${VOLTRON_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${VOLTRON_INCREASE_RESOURCE_LIMITS}}
 
     # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
@@ -298,13 +298,11 @@ voltron::install_upgrade::charts() {
       readonly OCH_IMAGE="och"
     fi
 
-    if [ "${USE_TEST_MANIFESTS}" == "true" ]; then
-      readonly VOLTRON_SET_FLAGS="
-        --set och-public.populator.manifestsPath=file:///test
-        --set och-public.populator.updateOnGitCommit=false
-      "
+    if [ "${USE_TEST_SETUP}" == "true" ]; then
+      readonly VOLTRON_TEST_SETUP_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.voltron.test-setup.yaml"
+      echo -e "- Applying overrides from ${VOLTRON_TEST_SETUP_OVERRIDES}\n"
     else
-      readonly VOLTRON_SET_FLAGS=""
+      readonly VOLTRON_TEST_SETUP_OVERRIDES=""
     fi
 
     # VOLTRON_SET_FLAGS cannot be quoted
@@ -320,7 +318,7 @@ voltron::install_upgrade::charts() {
         --set och-local.image.name="${OCH_IMAGE}" \
         --set och-public.image.name="${OCH_IMAGE}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
-        ${VOLTRON_SET_FLAGS} \
+        -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \
         -f "${VOLTRON_OVERRIDES}" \
         -f "${VOLTRON_RESOURCE_OVERRIDES}" \
         --wait

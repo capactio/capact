@@ -43,7 +43,7 @@ readonly GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION="0.1.0"
 readonly VOLTRON_MOCK_OCH_GRAPHQL="false"
 readonly VOLTRON_MOCK_ENGINE_GRAPHQL="false"
 readonly VOLTRON_ENABLE_POPULATOR="true"
-readonly VOLTRON_USE_TEST_MANIFESTS="false"
+readonly VOLTRON_USE_TEST_SETUP="false"
 
 #
 # Cluster Configuration

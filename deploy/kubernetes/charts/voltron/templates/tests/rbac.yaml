@@ -32,3 +32,10 @@ rules:
   verbs:
   - get
   - list
+- apiGroups:
+    - ""
+  resources:
+    - configmaps
+  verbs:
+    - get
+    - update

@@ -80,7 +80,7 @@ main() {
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
     export CLUSTER_TYPE="KIND"
-    export USE_TEST_MANIFESTS="true"
+    export USE_TEST_SETUP="true"
     voltron::install_upgrade::charts
 
     voltron::test::execute

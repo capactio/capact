@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: simple-key-value
-  prefix: cap.type.e2e # Computed during fetching the manifest
-  displayName: Test type for e2e tests
-  description: Defines simple test type for e2e tests
+  name: single-key
+  prefix: cap.type.simple.single-key
+  displayName: Single Key
+  description: Defines single key Type
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -18,10 +18,10 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for simple test type",
+        "title": "The schema for single key Type",
         "examples": [
           {
-            "key": "value"
+            "key": true
           }
         ],
         "required": [
@@ -29,11 +29,12 @@ spec:
         ],
         "properties": {
           "key": {
-            "$id": "#/properties/key",
-            "type": "string",
-            "title": "Test key"
+           "$id": "#/properties/key",
+           "type": "bool",
+           "title": "Key"
           }
-          "additionalProperties": false
+        }
+        "additionalProperties": false
       }
 
 signature:

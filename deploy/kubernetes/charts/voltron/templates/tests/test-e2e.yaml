@@ -24,6 +24,10 @@ spec:
           value: "{{ .Values.gateway.auth.username }}"
         - name: GATEWAY_PASSWORD
           value: "{{ .Values.gateway.auth.password }}"
+        - name: APP_CLUSTER_POLICY_NAME
+          value: {{ include "voltron.fullname" . }}-engine-cluster-policy
+        - name: APP_CLUSTER_POLICY_NAMESPACE
+          value: {{.Release.Namespace}}
       command:
         - /app
       args:

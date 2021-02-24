@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -23,14 +24,20 @@ type GatewayConfig struct {
 	Password string
 }
 
+type ClusterPolicyConfig struct {
+	Name      string `envconfig:"default=voltron-engine-cluster-policy"`
+	Namespace string `envconfig:"default=voltron-system"`
+}
+
 type Config struct {
 	StatusEndpoints []string
 	// total number of pods that should be scheduled
 	ExpectedNumberOfRunningPods int `envconfig:"default=25"`
-	IgnoredPodsNames            []string
+	IgnoredPodsNames            []string `envconfig:"optional"`
 	PollingInterval             time.Duration `envconfig:"default=2s"`
 	PollingTimeout              time.Duration `envconfig:"default=5m"`
 	Gateway                     GatewayConfig
+	ClusterPolicy               ClusterPolicyConfig
 }
 
 var cfg Config
@@ -94,4 +101,12 @@ func getEngineGraphQLClient() *engineclient.Client {
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
 	return engineclient.New(cfg.Gateway.Endpoint, httpClient)
+}
+
+func log(format string, args ...interface{}) {
+	fmt.Fprintf(GinkgoWriter, nowStamp()+": "+format+"\n", args...)
+}
+
+func nowStamp() string {
+	return time.Now().Format(time.StampMilli)
 }
