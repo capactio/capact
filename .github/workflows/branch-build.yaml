@@ -213,7 +213,7 @@ jobs:
           ./hack/ci/add-job-ip.sh
       - name: Install and upgrade existing components
         env:
-          USE_TEST_MANIFESTS: "true"
+          USE_TEST_SETUP: "true"
         run: |
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Network cleanup

@@ -305,7 +305,7 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_TEST_SETUP_OVERRIDES=""
     fi
 
-    # VOLTRON_SET_FLAGS and CUSTOM_VOLTRON_SET_FLAGS cannot be quoted
+    # CUSTOM_VOLTRON_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
         --install \
