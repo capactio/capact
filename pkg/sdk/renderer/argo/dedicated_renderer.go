@@ -159,6 +159,12 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						emitStep, wfTpl := r.emitWorkflowInputTypeInstanceAsStepOutput(tpl.Name, step, satisfiedArg)
 						step = emitStep
 						r.addToRootTemplates(wfTpl)
+
+						typeInstance := findTypeInstanceInputRef(r.inputTypeInstances, satisfiedArg)
+						if typeInstance == nil {
+							return errors.Errorf("failed to find InputTypeInstanceRef for %s", satisfiedArg)
+						}
+						r.tryReplaceTypeInstanceName(satisfiedArg, typeInstance.ID)
 					}
 				}
 

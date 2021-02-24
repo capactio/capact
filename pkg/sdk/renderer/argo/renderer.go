@@ -76,45 +76,45 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 			interfaceRef.Path, interfaceRef.Revision)
 	}
 
-	// 2 Register output TypeInstances
-	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, []InputArtifact{}); err != nil {
-		return nil, errors.Wrap(err, "while noting output artifacts")
-	}
-
-	// 3. Ensure that the runner was defined in imports section
+	// 2. Ensure that the runner was defined in imports section
 	// TODO: we should check whether imported revision is valid for this render algorithm
 	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while resolving runner Interface")
 	}
 
-	// 4. Extract workflow from the root Implementation
+	// 3. Extract workflow from the root Implementation
 	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
-	// 4.1 Add our own root step and replace entrypoint
+	// 3.1 Add our own root step and replace entrypoint
 	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
-	// 5. Add user input
+	// 4. Add user input
 	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
-	// 6. List TypeInstances to inject based on policy and inject them if provided
+	// 5. List TypeInstances to inject based on policy and inject them if provided
 	typeInstancesToInject := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
 	}
 
-	// 7. Add runner context
+	// 6. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
 		return nil, err
 	}
 
-	// 8. Add steps to populate rootWorkflow with input TypeInstances
+	// 7. Add steps to populate rootWorkflow with input TypeInstances
 	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
 		return nil, err
+	}
+
+	// 8 Register output TypeInstances
+	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, []InputArtifact{}); err != nil {
+		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
 	// 9. Render rootWorkflow templates

@@ -264,7 +264,7 @@ args:
                   - from: jira-config
                     to: jira-install-helm-run-helm-release
                   - from: jira-config
-                    to: postgresql
+                    to: f2421415-b8a4-464b-be12-b617794411c5
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
