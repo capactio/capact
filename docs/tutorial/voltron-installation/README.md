@@ -135,3 +135,25 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
     gcloud dns --project=$GCP_PROJECT record-sets transaction add $EXTERNAL_PUBLIC_IP --name=\*.$DOMAIN. --ttl=60 --type=A --zone=$DNS_ZONE
     gcloud dns --project=$GCP_PROJECT record-sets transaction execute --zone=$DNS_ZONE
     ```
+
+1. Get information about Voltron Gateway.
+
+    To obtain Gatway URL and authorization information, run:
+    
+   ```bash
+   helm get notes -n voltron-system voltron    
+   ```
+   
+   Example output:
+   ```bash
+   Thank you for installing Voltron components.
+   
+   Here is the list of exposed services:
+   - Gateway GraphQL Playground: https://gateway.demo.cluster.projectvoltron.dev
+   
+   Use the following header configuration in the Gateway GraphQL Playground:
+   
+     {
+       "Authorization": "Basic Z3JhcGhxbDpBbjR4YzQwb1M3MEllRnVkd0owcE9Bb2UxU3hVWWJ2a1dxNS8zZVRJZnJNPQ=="
+     }
+   ```
