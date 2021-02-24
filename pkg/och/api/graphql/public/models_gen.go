@@ -168,7 +168,8 @@ type ImplementationSpec struct {
 	OutputTypeInstanceRelations []*TypeInstanceRelationItem     `json:"outputTypeInstanceRelations"`
 }
 
-type InputParameters struct {
+type InputParameter struct {
+	Name       string      `json:"name"`
 	JSONSchema interface{} `json:"jsonSchema"`
 }
 
@@ -205,7 +206,7 @@ type InterfaceGroupFilter struct {
 }
 
 type InterfaceInput struct {
-	Parameters    *InputParameters     `json:"parameters"`
+	Parameters    []*InputParameter    `json:"parameters"`
 	TypeInstances []*InputTypeInstance `json:"typeInstances"`
 }
 

@@ -17,7 +17,7 @@ metadata:
 spec:
   input:
     parameters:
-      input-parameters:
+      - name: input-parameters
         jsonSchema:
           value: |-
             {

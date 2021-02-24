@@ -165,8 +165,9 @@ type ComplexityRoot struct {
 		Requires                    func(childComplexity int) int
 	}
 
-	InputParameters struct {
+	InputParameter struct {
 		JSONSchema func(childComplexity int) int
+		Name       func(childComplexity int) int
 	}
 
 	InputTypeInstance struct {
@@ -869,12 +870,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationSpec.Requires(childComplexity), true
 
-	case "InputParameters.jsonSchema":
-		if e.complexity.InputParameters.JSONSchema == nil {
+	case "InputParameter.jsonSchema":
+		if e.complexity.InputParameter.JSONSchema == nil {
 			break
 		}
 
-		return e.complexity.InputParameters.JSONSchema(childComplexity), true
+		return e.complexity.InputParameter.JSONSchema(childComplexity), true
+
+	case "InputParameter.name":
+		if e.complexity.InputParameter.Name == nil {
+			break
+		}
+
+		return e.complexity.InputParameter.Name(childComplexity), true
 
 	case "InputTypeInstance.name":
 		if e.complexity.InputTypeInstance.Name == nil {
@@ -1931,11 +1939,12 @@ type InterfaceSpec @additionalLabels(labels: ["published"]){
 }
 
 type InterfaceInput @additionalLabels(labels: ["published"]){
-  parameters: InputParameters @relation(name: "HAS", direction: "OUT")
+  parameters: [InputParameter!]! @relation(name: "HAS", direction: "OUT")
   typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
 }
 
-type InputParameters @additionalLabels(labels: ["published"]){
+type InputParameter @additionalLabels(labels: ["published"]){
+  name: String!
   jsonSchema: Any
 }
 
@@ -6445,7 +6454,7 @@ func (ec *executionContext) _ImplementationSpec_outputTypeInstanceRelations(ctx 
 	return ec.marshalNTypeInstanceRelationItem2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐTypeInstanceRelationItemᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InputParameters_jsonSchema(ctx context.Context, field graphql.CollectedField, obj *InputParameters) (ret graphql.Marshaler) {
+func (ec *executionContext) _InputParameter_name(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -6453,7 +6462,42 @@ func (ec *executionContext) _InputParameters_jsonSchema(ctx context.Context, fie
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "InputParameters",
+		Object:     "InputParameter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InputParameter_jsonSchema(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InputParameter",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -7355,21 +7399,24 @@ func (ec *executionContext) _InterfaceInput_parameters(ctx context.Context, fiel
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*InputParameters); ok {
+		if data, ok := tmp.([]*InputParameter); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/public.InputParameters`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.InputParameter`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(*InputParameters)
+	res := resTmp.([]*InputParameter)
 	fc.Result = res
-	return ec.marshalOInputParameters2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameters(ctx, field.Selections, res)
+	return ec.marshalNInputParameter2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameterᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfaceInput_typeInstances(ctx context.Context, field graphql.CollectedField, obj *InterfaceInput) (ret graphql.Marshaler) {
@@ -13883,19 +13930,24 @@ func (ec *executionContext) _ImplementationSpec(ctx context.Context, sel ast.Sel
 	return out
 }
 
-var inputParametersImplementors = []string{"InputParameters"}
+var inputParameterImplementors = []string{"InputParameter"}
 
-func (ec *executionContext) _InputParameters(ctx context.Context, sel ast.SelectionSet, obj *InputParameters) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, inputParametersImplementors)
+func (ec *executionContext) _InputParameter(ctx context.Context, sel ast.SelectionSet, obj *InputParameter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, inputParameterImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("InputParameters")
+			out.Values[i] = graphql.MarshalString("InputParameter")
+		case "name":
+			out.Values[i] = ec._InputParameter_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "jsonSchema":
-			out.Values[i] = ec._InputParameters_jsonSchema(ctx, field, obj)
+			out.Values[i] = ec._InputParameter_jsonSchema(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14063,6 +14115,9 @@ func (ec *executionContext) _InterfaceInput(ctx context.Context, sel ast.Selecti
 			out.Values[i] = graphql.MarshalString("InterfaceInput")
 		case "parameters":
 			out.Values[i] = ec._InterfaceInput_parameters(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "typeInstances":
 			out.Values[i] = ec._InterfaceInput_typeInstances(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -15664,6 +15719,53 @@ func (ec *executionContext) marshalNImplementationSpec2ᚖprojectvoltronᚗdev�
 	return ec._ImplementationSpec(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNInputParameter2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*InputParameter) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInputParameter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) marshalNInputParameter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameter(ctx context.Context, sel ast.SelectionSet, v *InputParameter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._InputParameter(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNInputTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx context.Context, sel ast.SelectionSet, v []*InputTypeInstance) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -17047,13 +17149,6 @@ func (ec *executionContext) unmarshalOImplementationRevisionFilter2ᚖprojectvol
 	}
 	res, err := ec.unmarshalInputImplementationRevisionFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOInputParameters2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputParameters(ctx context.Context, sel ast.SelectionSet, v *InputParameters) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._InputParameters(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalOInputTypeInstance2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx context.Context, sel ast.SelectionSet, v *InputTypeInstance) graphql.Marshaler {
