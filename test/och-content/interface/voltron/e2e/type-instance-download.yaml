@@ -16,7 +16,7 @@ metadata:
 
 spec:
   input:
-    typeInstance:
+    typeInstances:
       gcp:
         typeRef:
           path: cap.type.gcp.auth.service-account
