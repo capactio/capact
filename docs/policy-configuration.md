@@ -29,57 +29,6 @@ Policy is defined in a form of YAML file. It contains two main features:
 - selecting Implementations based on their constraints,
 - injecting given TypeInstance for Implementation with a set of constraints.
 
-### Example 
-
-The following example policy presents a Policy, which configures the following behavior for Engine during rendering Action:
-- For `cap.interface.database.postgresql.install` in revision `0.1.0`:
-    - Select Implementation which:
-        - has Attribute `cap.attribute.cloud.provider.gcp` in revision `0.1.0`,
-        - requires `cap.type.gcp.auth.service-account` TypeInstance.
-
-        If the given Implementation requires TypeInstance `cap.type.gcp.auth.service-account` in revision `0.1.0`, and uses it in Action workflow, inject the TypeInstance with ID `9038dcdc-e959-41c4-a690-d8ebf929ac0c`.
-
-    - If not found, select Implementation with Attribute `cap.attribute.cloud.provider.aws`.
-    - If not found, select Implementation with exact path `cap.implementation.bitnami.postgresql.install`.
-    - If not found, return error.
-- For any other Interface:
-    - select Implementation which requires `cap.core.type.platform.kubernetes` TypeInstance
-    - If not found, select any Implementation which has requirements that current system satisfies.
-    - If not found, return error.
-
-```yaml
-apiVersion: 0.1.0 # Defines syntax version for policy
-
-rules:
- cap.interface.database.postgresql.install:0.1.0: # Rules for exact path and revision
-   oneOf: # Engine follows the order of the preferences exiting when at least one matching Implementation is found
-     - implementationConstraints:
-         attributes: # Implementation that contains the following Attributes
-           - path: "cap.attribute.cloud.provider.gcp"
-             revision: "0.1.0"
-         requires: # Implementation that contains the Type references in `spec.requires` section
-           - path: "cap.type.gcp.auth.service-account"
-             # any revision
-       injectTypeInstances: # Inject the TypeInstance to the Implementations matching constraints above, if it's used in `spec.requires` section and contains an `alias`
-         - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
-           typeRef:
-             path: "cap.type.gcp.auth.service-account"
-             revision: "0.1.0"
-     - implementationConstraints:
-         attributes:
-          - path: cap.attribute.cloud.provider.aws
-            # any revision
-     - implementationConstraints:
-         path: "cap.implementation.bitnami.postgresql.install" # Select the Implementation with exact path
-  cap.*: # any other Interface (looked up in third place, if there is no rule for `path:revision` or `path`)
-    oneOf:
-      - implementationConstraints: # select Implementation which requires TypeInstance of Kubernetes Type
-          requires:
-            - path: "cap.core.type.platform.kubernetes"
-              # any revision
-      - implementationConstraints: {} # fallback to any Implementation which requirements are satisfied by the system
-```
-
 ### Definition of rules for Interface
 
 You can specify which Implementations should be selected for:
@@ -203,6 +152,55 @@ The rule defines that Engine should select Implementation, which requires GCP Se
 If the `alias` property is defined for an item from `requires` section, Engine injects a workflow step which downloads a given TypeInstance by ID and outputs it under the `alias`. For this example, in the Implementation workflow, the TypeInstance value is available under `{{workflow.outputs.artifacts.gcp-sa}}`.
 
 Even if the Implementation satisfies the constraints, and the `alias` is not defined or `injectTypeInstances[].typeRef` cannot be found in the `requires` section, the TypeInstance is not injected in workflow. In this case Engine doesn't return an error.
+
+### Example
+
+The following YAML snippet presents full Policy example with additional comments:
+
+```yaml
+apiVersion: 0.1.0 # Defines syntax version for policy
+
+rules: # Configures the following behavior for Engine during rendering Action
+ cap.interface.database.postgresql.install:0.1.0: # Rules for Interface with exact path in exact revision   
+   oneOf: # Engine follows the order of the Implementation selection,
+          # finishing when at least one matching Implementation is found
+     - implementationConstraints: # In first place, find and use an Implementation which:
+         attributes: # contains the following Attributes:
+           - path: "cap.attribute.cloud.provider.gcp"
+             revision: "0.1.0" # in exact revision
+         requires: # AND has the following Type references defined in the `spec.requires` property:
+           - path: "cap.type.gcp.auth.service-account"
+             # in any revision
+       injectTypeInstances: # For such Implementation, inject the following TypeInstances: 
+         - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
+           typeRef: # Find the alias of the Type reference in `spec.requires` property.
+                    # If it is defined, inject the TypeInstance with ID `9038dcdc-e959-41c4-a690-d8ebf929ac0c` under this alias.
+             path: "cap.type.gcp.auth.service-account"
+             revision: "0.1.0"
+             
+     - implementationConstraints: # In second place find and select Implementation which:
+         attributes: # contains the following attributes
+          - path: cap.attribute.cloud.provider.aws
+            # in any revision
+            
+     - implementationConstraints: # In third place, find and select Implementation which:
+         path: "cap.implementation.bitnami.postgresql.install" # has exact path
+         
+      # If not found any of such Implementations defined in `oneOf`, return error.
+   
+  cap.*: # For any other Interface
+         # (looked up in third place, if there is no key under `rules` for a given Interface `path:revision` or `path`)
+    oneOf: # Engine follows the order of the Implementation selection,
+           # finishing when at least one matching Implementation is found
+      - implementationConstraints: # In first place, select Implementation which:
+          requires: # has the following Type references defined in the `spec.requires` property:
+            - path: "cap.core.type.platform.kubernetes"
+              # in any revision
+
+      - implementationConstraints: {} # If not found, fallback to any Implementation which has requirements that current system satisfies.
+
+      # If not found any of such Implementations defined in `oneOf`, return error. 
+```
 
 ## Configuration
 
