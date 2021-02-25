@@ -7,19 +7,18 @@ Created on 2020-12-22 by Damian Czaja ([@trojan295](https://github.com/trojan295
 This document shows how we can render the workflow in Voltron Engine.
 
 <!-- toc -->
-- [Workflow rendering](#workflow-rendering)
-  - [Overview](#overview)
-  - [Motivation](#motivation)
-    - [Goals](#goals)
-  - [Proposal](#proposal)
-    - [How to reference an Interface to be called in an Action workflow](#how-to-reference-an-interface-to-be-called-in-an-action-workflow)
-    - [How to use and pass user input parameters to Interfaces](#how-to-use-and-pass-user-input-parameters-to-interfaces)
-    - [How to reference output TypeInstances from a called Interface](#how-to-reference-output-typeinstances-from-a-called-interface)
-    - [How to conditionally call an Interface](#how-to-conditionally-call-an-interface)
-    - [How to define, which workflow artifacts are TypeInstances](#how-to-define-which-workflow-artifacts-are-typeinstances)
-    - [How to merge called Interfaces into the Action workflow](#how-to-merge-called-interfaces-into-the-action-workflow)
-  - [Example manifests with new directives](#example-manifests-with-new-directives)
-  - [Consequences](#consequences)
+
+- [Motivation](#motivation)
+  * [Goals](#goals)
+- [Proposal](#proposal)
+  * [How to reference an Interface to be called in an Action workflow](#how-to-reference-an-interface-to-be-called-in-an-action-workflow)
+  * [How to use and pass user input parameters to Interfaces](#how-to-use-and-pass-user-input-parameters-to-interfaces)
+  * [How to reference output TypeInstances from a called Interface](#how-to-reference-output-typeinstances-from-a-called-interface)
+  * [How to conditionally call an Interface](#how-to-conditionally-call-an-interface)
+  * [How to define, which workflow artifacts are TypeInstances](#how-to-define-which-workflow-artifacts-are-typeinstances)
+  * [How to merge called Interfaces into the Action workflow](#how-to-merge-called-interfaces-into-the-action-workflow)
+- [Example manifests with new directives](#example-manifests-with-new-directives)
+- [Consequences](#consequences)
 
 <!-- tocstop -->
 

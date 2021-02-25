@@ -6,10 +6,10 @@
 
 - [Introduction](#introduction)
 - [Syntax](#syntax)
-  * [Example](#example)
   * [Definition of rules for Interface](#definition-of-rules-for-interface)
   * [Selecting Implementations](#selecting-implementations)
   * [TypeInstance injection](#typeinstance-injection)
+  * [Example](#example)
 - [Configuration](#configuration)
   * [View current Policy](#view-current-policy)
   * [Modify Policy](#modify-policy)

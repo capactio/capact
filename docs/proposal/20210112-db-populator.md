@@ -8,16 +8,21 @@ This document describes way, how to populate OCF manifests from Git repository i
 
 <!-- toc -->
 
-- [Motivation](#motivation)
-  * [Goal](#goal)
-  * [Non-goal](#non-goal)
-- [Proposal](#proposal)
-  + [Load as JSON using CYPHER and APOC](#load-as-json-using-cypher-and-apoc)
-  + [Alternatives](#alternatives)
-    - [neo4j-admin import](#neo4j-admin-import)
-    - [Cypher - LOAD CSV](#cyphera--load-csv)
-    - [Cypher - CREATE/MERGE](#cypher---createmerge)
-    - [GraphQL Mutations](#graphql-mutations)
+  * [Motivation](#motivation)
+    + [Goal](#goal)
+    + [Non-goal](#non-goal)
+  * [Proposal](#proposal)
+    + [Load as JSON using Cypher and APOC](#load-as-json-using-cypher-and-apoc)
+      - [Summary](#summary)
+    + [Alternatives](#alternatives)
+      - [neo4j-admin import](#neo4j-admin-import)
+        * [Summary](#summary-1)
+      - [Cypher - LOAD CSV](#cypher---load-csv)
+        * [Summary](#summary-2)
+      - [Cypher - CREATE/MERGE](#cypher---createmerge)
+        * [Summary](#summary-3)
+      - [GraphQL Mutations](#graphql-mutations)
+        * [Summary](#summary-4)
 - [Consequences](#consequences)
 
 <!-- tocstop -->
