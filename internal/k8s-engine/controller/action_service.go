@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,14 +14,12 @@ import (
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	"github.com/argoproj/argo/workflow/validate"
 
-	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -280,15 +277,6 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
-	//ctx, apiClient := argoclient.NewAPIClient()
-	//wfTmplClient := apiClient.NewWorkflowTemplateServiceClient()
-	//cronWfClient := apiClient.NewCronWorkflowServiceClient()
-	//clusterWfTmplClient := apiClient.NewClusterWorkflowTemplateServiceClient()
-
-	//wfClient := auth.GetWfClient(ctx)
-	//wftmplGetter := templateresolution.WrapWorkflowTemplateInterface(wfClient.ArgoprojV1alpha1().WorkflowTemplates(req.Namespace))
-	//cwftmplGetter := templateresolution.WrapClusterWorkflowTemplateInterface(wfClient.ArgoprojV1alpha1().ClusterWorkflowTemplates())
-
 	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
 	status.SetInputParameters(userInput)
@@ -297,24 +285,34 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 }
 
 func (a *ActionService) lintWorkflow(action *types.Action) error {
-	obj := &unstructured.Unstructured{}
-	obj.SetKind("Workflow")
-	obj.SetAPIVersion("argoproj.io/v1alpha1")
-	obj.SetName("workflow-my")
-	if err := mapstructure.Decode(map[string]interface{}{
-		"spec": action.Args["workflow"],
-	}, &obj.Object); err != nil {
-		log.Fatal(err)
+	workflow, err := getWorkflowFromAction(action)
+	if err != nil {
+		return errors.Wrap(err, "while getting Workflow from Action")
 	}
 
-	_, err := validate.ValidateWorkflow(nil, nil, &wfv1.Workflow{}, validate.ValidateOpts{
+	_, err = validate.ValidateWorkflow(nil, nil, workflow, validate.ValidateOpts{
 		Lint: true,
 	})
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while linting Workflow")
 	}
 
 	return nil
+}
+
+func getWorkflowFromAction(action *types.Action) (*wfv1.Workflow, error) {
+	data, err := yaml.Marshal(action.Args["workflow"])
+	if err != nil {
+		return nil, err
+	}
+
+	workflow := &wfv1.Workflow{}
+	err = yaml.Unmarshal(data, &workflow.Spec)
+	if err != nil {
+		return nil, err
+	}
+
+	return workflow, nil
 }
 
 func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {
