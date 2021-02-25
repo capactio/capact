@@ -89,6 +89,9 @@ spec:
                             host: {{ jiraHost }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
               - - name: jira-install
                   voltron-action: jira.install
                   arguments:
@@ -108,6 +111,9 @@ spec:
                             host: {{ confluenceHost }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
               - - name: confluence-install
                   voltron-action: confluence.install
                   arguments:
