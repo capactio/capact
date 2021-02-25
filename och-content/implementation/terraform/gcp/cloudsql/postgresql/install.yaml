@@ -144,6 +144,13 @@ spec:
                           data: |
                             prefix: tfmodule
 
+              - - name: convert-gcp-yaml-to-json
+                  template: convert-yaml-to-json
+                  arguments:
+                    artifacts:
+                      - name: in
+                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+
               - - name: terraform-apply
                   voltron-action: terraform.apply
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
@@ -158,7 +165,20 @@ spec:
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: additional
-                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+                        from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
+
+          - name: convert-yaml-to-json
+            inputs:
+              artifacts:
+                - name: in
+                  path: /file
+            container:
+              image: mikefarah/yq
+              args: [ "eval", "-j", "-i", "/file" ]
+            outputs:
+              artifacts:
+                - name: out
+                  path: /file
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
