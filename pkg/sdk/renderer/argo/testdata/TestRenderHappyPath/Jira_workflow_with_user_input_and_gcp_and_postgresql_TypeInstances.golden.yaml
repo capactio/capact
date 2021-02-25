@@ -242,10 +242,8 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.jira-config}}'
               name: jira-config
-            - from: '{{workflow.outputs.artifacts.jira-helm-release}}'
-              name: jira-helm-release
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
-              name: postgresql
+            - from: '{{workflow.outputs.artifacts.jira-install-helm-run-helm-release}}'
+              name: jira-install-helm-run-helm-release
             - name: payload
               raw:
                 data: |
@@ -256,23 +254,17 @@ args:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
-                  - alias: jira-helm-release
+                  - alias: jira-install-helm-run-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
-                  - alias: postgresql
-                    attributes: []
-                    typeRef:
-                      path: cap.type.database.postgresql.config
-                      revision: 0.1.0
-                    value: null
                   usesRelations:
                   - from: jira-config
-                    to: jira-helm-release
+                    to: jira-install-helm-run-helm-release
                   - from: jira-config
-                    to: postgresql
+                    to: f2421415-b8a4-464b-be12-b617794411c5
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -371,10 +363,8 @@ args:
         artifacts:
         - name: jira-config
           path: /upload/typeInstances/jira-config
-        - name: jira-helm-release
-          path: /upload/typeInstances/jira-helm-release
-        - name: postgresql
-          path: /upload/typeInstances/postgresql
+        - name: jira-install-helm-run-helm-release
+          path: /upload/typeInstances/jira-install-helm-run-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

@@ -2,7 +2,9 @@ package argo
 
 import (
 	"context"
+	"strings"
 
+	"github.com/pkg/errors"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
@@ -63,4 +65,72 @@ func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.Imp
 	}
 
 	return nil, NewTypeReferenceNotFoundError(typeInstanceName)
+}
+
+func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *TypeInstanceDefinition {
+	for _, output := range step.VoltronTypeInstanceOutputs {
+		if output.From == typeInstanceName {
+			return &output
+		}
+	}
+
+	return nil
+}
+
+type argoArtifactRef struct {
+	step string
+	name string
+}
+
+const ArgoArtifactNoStep = ""
+
+func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
+	ref = strings.TrimPrefix(ref, "{{")
+	ref = strings.TrimSuffix(ref, "}}")
+	parts := strings.Split(ref, ".")
+
+	prefix := parts[0]
+	switch prefix {
+	case "steps":
+		stepName := parts[1]
+		artifactName := parts[4]
+		return &argoArtifactRef{
+			step: stepName,
+			name: artifactName,
+		}, nil
+	case "inputs":
+		artifactName := parts[2]
+		return &argoArtifactRef{
+			step: ArgoArtifactNoStep,
+			name: artifactName,
+		}, nil
+	}
+
+	return nil, errors.New("not found")
+}
+
+func getAvailableTypeInstancesFromInputArtifacts(inputArtifacts []InputArtifact) map[argoArtifactRef]*string {
+	availableTypeInstances := map[argoArtifactRef]*string{}
+
+	for _, artifact := range inputArtifacts {
+		if artifact.typeInstanceReference != nil {
+			availableTypeInstances[argoArtifactRef{
+				name: artifact.artifact.Name,
+				step: ArgoArtifactNoStep,
+			}] = artifact.typeInstanceReference
+		}
+	}
+
+	return availableTypeInstances
+}
+
+func findTypeInstanceInputRef(refs []types.InputTypeInstanceRef, name string) *types.InputTypeInstanceRef {
+	for i := range refs {
+		ref := refs[i]
+		if ref.Name == name {
+			return &ref
+		}
+	}
+
+	return nil
 }

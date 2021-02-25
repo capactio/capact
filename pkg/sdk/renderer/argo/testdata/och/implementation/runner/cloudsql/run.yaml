@@ -20,6 +20,7 @@ spec:
     typeInstances: []
   outputTypeInstanceRelations:
     - typeInstanceName: cloudsql-instance
+      uses: []
   appVersion: "318.x.x" # version of the gcloud CLI
   implements:
     - path: cap.core.interface.runner.generic.run

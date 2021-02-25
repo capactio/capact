@@ -24,6 +24,9 @@ type WorkflowStep struct {
 	VoltronWhen                *string                  `json:"voltron-when,omitempty"`
 	VoltronAction              *string                  `json:"voltron-action,omitempty"`
 	VoltronTypeInstanceOutputs []TypeInstanceDefinition `json:"voltron-outputTypeInstances,omitempty"`
+
+	// internal fields
+	typeInstanceOutputs map[string]*string
 }
 
 type TypeInstanceDefinition struct {

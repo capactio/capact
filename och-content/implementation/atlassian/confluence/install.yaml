@@ -26,17 +26,6 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
-  additionalOutput:
-    typeInstances:
-      confluence-helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
-      database:
-        typeRef:
-          path: cap.type.postgresql.database
-          revision: 0.1.0
-
   outputTypeInstanceRelations:
       confluence-config:
         uses:
@@ -98,6 +87,9 @@ spec:
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
                   voltron-action: postgresql.install
+                  voltron-outputTypeInstances:
+                    - name: postgresql # Defining the output TypeInstance 'database'
+                      from: postgresql
                   voltron-when: postgresql == nil
                   arguments:
                     artifacts:
