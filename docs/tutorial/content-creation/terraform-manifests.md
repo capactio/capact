@@ -198,14 +198,16 @@ data:
           - implementationConstraints: {}
 ```
 
-### Run Action
-Now you can create an action using for example the GraphQL API:
+### Create Action
+Now you can create an Action using the GraphQL API on [https://gateway.voltron.local](https://gateway.voltron.local):
+
+To provision standalone CloudSQL run:
 
 ```graphql
-mutation CreateAction {
+mutation CreateCloudSQLAction {
     createAction(
         in: {
-            name: "postgresql-install",
+            name: "action-install",
             actionRef: {
                 path: "cap.interface.database.postgresql.install",
                 revision: "0.1.0",
@@ -225,20 +227,59 @@ mutation CreateAction {
 }
 ```
 
-And run it:
+If you want to run Jira installation with CloudSQL, then use:
+
+```graphql
+mutation CreateJiraAction {
+    createAction(
+        in: {
+            name: "action-install",
+            actionRef: {
+                path: "cap.interface.database.postgresql.install",
+                revision: "0.1.0",
+            },
+            dryRun: false,
+            advancedRendering: false,
+            input: {
+                parameters: "{\r\n  \"superuser\": {\r\n    \"username\": \"postgres\",\r\n    \"password\": \"s3cr3t\"\r\n  },\r\n  \"defaultDBName\": \"postgres\"\r\n}"
+            }
+        }
+    ) {
+        name
+        input {
+            parameters
+        }
+    }
+}
+```
+
+### Run Action
+
+Run Action:
 
 ```graphql
 mutation Run {
-    runAction(name: "postgresql-install") {
+    runAction(name: "action-install") {
         name
     }
 }
 ```
 
+### Observe Running Action:
+
 Observe the running workflow with Argo CLI:
 
 ```bash
-argo watch postgresql-install
+argo watch action-install
 ```
 
-After around 10 minutes, a new CloudSQL instance should be up and running.
+> **NOTE**: CloudSQL instance provisioning can take around  10 minutes.
+
+### Cleanup
+
+1. Navigate to [https://console.cloud.google.com](https://console.cloud.google.com) and delete the CloudSQL instance.
+1. To delete Jira and other Helm charts in the `default` namespace, run:
+
+   ```bash
+   helm delete $(helm list -q)
+   ```
