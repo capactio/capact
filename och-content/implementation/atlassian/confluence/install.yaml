@@ -107,7 +107,7 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            name: jiradb
+                            name: confluencedb
                             owner: "<@ superuser.username @>"
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
