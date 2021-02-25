@@ -20,10 +20,10 @@ argo:
     defaultBucket:
       enabled: false
     buckets:
-      - name: argo-artifacts
+      - name: argo-artifacts # Used by Argo workflows
         policy: public
-      - name: terraform
-        policy: public
+      - name: terraform # For storing input files for Terraform Runner
+        policy: download
     resources:
       requests:
         memory: 256Mi
