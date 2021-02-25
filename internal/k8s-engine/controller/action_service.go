@@ -301,13 +301,13 @@ func (a *ActionService) lintWorkflow(action *types.Action) error {
 }
 
 func getWorkflowFromAction(action *types.Action) (*wfv1.Workflow, error) {
-	data, err := yaml.Marshal(action.Args["workflow"])
+	data, err := json.Marshal(action.Args["workflow"])
 	if err != nil {
 		return nil, err
 	}
 
 	workflow := &wfv1.Workflow{}
-	err = yaml.Unmarshal(data, &workflow.Spec)
+	err = json.Unmarshal(data, &workflow.Spec)
 	if err != nil {
 		return nil, err
 	}
