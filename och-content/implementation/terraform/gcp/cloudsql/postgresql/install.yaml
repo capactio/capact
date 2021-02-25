@@ -4,7 +4,7 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.terraform.gcp.cloudsql.postgresql # Computed during fetching the manifest
   name: install
-  displayName: Install Cloudsql PostgreSQL database using Terraform
+  displayName: Install CloudSQL PostgreSQL database using Terraform
   description: Action which provisions CloudSQL for PostgreSQL database using Terraform
   documentationURL: https://cloud.google.com/cloudsql
   supportURL: https://cloud.google.com/cloudsql
@@ -103,7 +103,7 @@ spec:
                           data: |
                             variables: |+
                               user_name = "<@ input.superuser.username @>"
-                              user_password = "<@ input.superuser.password @>"
+                              user_password = "<@ input.superuser.password | default(random_word()) @>"
                             command: "apply"
                             module:
                               name: "<@ tfmodule.name @>"
@@ -117,8 +117,8 @@ spec:
                                 port: 5432
                                 defaultDBName: postgres
                                 superuser:
-                                  username: <@ input.superuser.username @>
-                                  password: <@ input.superuser.password @>
+                                  username: "{{ .username }}"
+                                  password: "{{ .password }}"
 
               - - name: fill-gcp-params-in-module-args
                   voltron-action: jinja2.template

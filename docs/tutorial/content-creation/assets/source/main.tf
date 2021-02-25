@@ -30,8 +30,8 @@ variable "user_name" {
 
 variable "user_password" {
   type = string
-  sensitive = true
   description = "Database user password"
+  //  can't be sensitive as we need it on output
 }
 
 terraform {
@@ -69,4 +69,13 @@ resource "google_sql_user" "users" {
 
 output "instance_ip_addr" {
   value = google_sql_database_instance.master.public_ip_address
+}
+
+output "username" {
+  value = google_sql_user.users.name
+}
+
+output "password" {
+  value = google_sql_user.users.password
+  sensitive = false
 }
