@@ -100,6 +100,21 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              - - name: render-create-db-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: confluencedb
+                            owner: "<@ superuser.username @>"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+
               # Create the database for Confluence in our PostgreSQL instance
               # using the imported 'postgresql.create-db' Interface
               - - name: create-db
@@ -112,10 +127,7 @@ spec:
                       - name: postgresql
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: database-input
-                        raw:
-                          data: |
-                            name: confluencedb 
-                            owner: superuser
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
               # Here we prepare the input for the Helm runner. In the next two steps,
               # we use Jinja2 to render the input and fill the required parameters.

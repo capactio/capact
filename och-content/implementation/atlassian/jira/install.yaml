@@ -95,6 +95,21 @@ spec:
                               username: superuser
                             defaultDBName: postgres
 
+              - - name: render-create-db-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: jiradb
+                            owner: "<@ superuser.username @>"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+
               - - name: create-db
                   voltron-action: postgresql.create-db
                   voltron-outputTypeInstances:
@@ -105,10 +120,7 @@ spec:
                       - name: postgresql
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: database-input
-                        raw:
-                          data: |
-                            name: jiradb
-                            owner: superuser
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
               - - name: render-helm-args
                   voltron-action: jinja2.template

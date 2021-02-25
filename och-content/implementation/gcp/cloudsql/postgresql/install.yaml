@@ -108,6 +108,10 @@ spec:
                                 superuser:
                                   username: "{{ .Username }}"
                                   password: "{{ .Password }}"
+                      - name: configuration
+                        raw:
+                          data: |
+
               - - name: cloudsql-run
                   voltron-action: cloudsql.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
