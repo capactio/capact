@@ -26,27 +26,12 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
-  additionalOutput:
-    typeInstances:
-      confluence-helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
-      postgresql:
-        typeRef:
-          path: cap.type.database.postgresql.config
-          revision: 0.1.0
-      database:
-        typeRef:
-          path: cap.type.postgresql.database
-          revision: 0.1.0
-
   outputTypeInstanceRelations:
       confluence-config:
         uses:
           - confluence-helm-release
-          - database
           - postgresql
+          - database
 
   implements:
     - path: cap.interface.productivity.confluence.install
