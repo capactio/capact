@@ -86,7 +86,7 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            host: "{{ jiraHost }}"
+                            host: <@ jiraHost @>
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
@@ -108,7 +108,7 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            host: "{{ confluenceHost }}"
+                            host: <@ confluenceHost @>
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
