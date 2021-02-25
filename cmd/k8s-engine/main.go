@@ -26,6 +26,7 @@ import (
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
+	"projectvoltron.dev/voltron/pkg/sdk/validate"
 )
 
 var (
@@ -105,8 +106,9 @@ func main() {
 	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage)
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
+	actionValidator := validate.NewActionValidator()
 
-	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, controller.Config{
+	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, controller.Config{
 		BuiltinRunner: cfg.BuiltinRunner,
 		ClusterPolicy: cfg.ClusterPolicy,
 	})

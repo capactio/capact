@@ -11,9 +11,6 @@ import (
 
 	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
 
-	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
-	"github.com/argoproj/argo/workflow/validate"
-
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -54,22 +51,28 @@ type ArgoRenderer interface {
 	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
+type ActionValidator interface {
+	Validate(action *types.Action) error
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli           client.Client
 	builtinRunner    BuiltinRunnerConfig
 	clusterPolicyCfg ClusterPolicyConfig
 	argoRenderer     ArgoRenderer
+	actionValidator  ActionValidator
 	log              *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:           cli,
 		builtinRunner:    cfg.BuiltinRunner,
 		clusterPolicyCfg: cfg.ClusterPolicy,
 		argoRenderer:     argoRenderer,
+		actionValidator:  actionValidator,
 		log:              log,
 	}
 }
@@ -268,8 +271,8 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if err := a.lintWorkflow(renderedAction); err != nil {
-		return nil, errors.Wrap(err, "while linting rendered Action")
+	if err := a.actionValidator.Validate(renderedAction); err != nil {
+		return nil, errors.Wrap(err, "while validating rendered Action")
 	}
 
 	actionBytes, err := json.Marshal(renderedAction)
@@ -282,37 +285,6 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status.SetInputParameters(userInput)
 
 	return status, nil
-}
-
-func (a *ActionService) lintWorkflow(action *types.Action) error {
-	workflow, err := getWorkflowFromAction(action)
-	if err != nil {
-		return errors.Wrap(err, "while getting Workflow from Action")
-	}
-
-	_, err = validate.ValidateWorkflow(nil, nil, workflow, validate.ValidateOpts{
-		Lint: true,
-	})
-	if err != nil {
-		return errors.Wrap(err, "while linting Workflow")
-	}
-
-	return nil
-}
-
-func getWorkflowFromAction(action *types.Action) (*wfv1.Workflow, error) {
-	data, err := json.Marshal(action.Args["workflow"])
-	if err != nil {
-		return nil, err
-	}
-
-	workflow := &wfv1.Workflow{}
-	err = json.Unmarshal(data, &workflow.Spec)
-	if err != nil {
-		return nil, err
-	}
-
-	return workflow, nil
 }
 
 func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {

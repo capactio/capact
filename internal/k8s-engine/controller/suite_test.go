@@ -4,21 +4,22 @@ package controller
 
 import (
 	"context"
+	"io/ioutil"
+	"path/filepath"
+	"strings"
+	"testing"
+	"time"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"io/ioutil"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"path/filepath"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"strings"
-	"testing"
-	"time"
 
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
@@ -80,7 +81,7 @@ var _ = BeforeSuite(func(done Done) {
 	}
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, cfg),
+		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -106,10 +107,16 @@ type argoRendererFake struct{}
 func (c *argoRendererFake) Render(ctx context.Context, runnerCtx argo.RunnerContextSecretRef, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error) {
 	return &types.Action{
 		Args: map[string]interface{}{
-			"workflow": "{}",
+			"workflow": struct{}{},
 		},
 		RunnerInterface: "argo.run",
 	}, nil
+}
+
+type actionValidatorFake struct{}
+
+func (v *actionValidatorFake) Validate(action *types.Action) error {
+	return nil
 }
 
 // returns path with OS specific Separator
