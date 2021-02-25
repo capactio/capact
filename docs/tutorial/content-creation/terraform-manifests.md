@@ -186,9 +186,9 @@ data:
                   path: "cap.type.gcp.auth.service-account"
                   revision: "0.1.0"
               - id: {terraform-module-uuid}
-                 typeRef:
-                   path: "cap.type.terraform-module"
-                   revision: "0.1.0"
+                typeRef:
+                  path: "cap.type.terraform.module"
+                  revision: "0.1.0"
       cap.*:
         oneOf:
           - implementationConstraints:

@@ -23,6 +23,14 @@ metadata:
 spec:
   appVersion: "10, 11, 12, 13"
 
+  additionalInput:
+    typeInstances:
+      additional:
+        typeRef:
+          path: cap.core.type.generic.value
+          revision: 0.1.0
+        verbs: [ "get" ]
+
   outputTypeInstanceRelations:
     postgresql: {} # TODO:
 
@@ -36,11 +44,11 @@ spec:
         - name: service-account
           alias: gcp-sa
           revision: 0.1.0
-    cap.type.storage.minio:
+    cap.type.terraform:
       allOf:
-        - name: auth
-          alias: minio-credentials
-          revision: 0.1.0
+        - name: module
+          alias: tfmodule
+          revision: "0.1.0"
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
@@ -84,30 +92,57 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
                       - name: template
                         raw:
                           data: |
                             variables: |+
-                              user_name = "<@ superuser.username @>"
-                              user_password = "<@ superuser.password @>"
+                              user_name = "<@ input.superuser.username @>"
+                              user_password = "<@ input.superuser.password @>"
                             command: "apply"
                             module:
-                              name: cloudsql
-                              source: "http://argo-minio.argo:9000/terraform/cloudsql/cloudsql.tgz
+                              name: "<@ tfmodule.name @>"
+                              source: "<@ tfmodule.source @>"
                             env:
-                            # This looks like a bug. google_sql_database_instance.settings.provider is optional and when missing
-                            # it should be taken from credentials. In credentials there is no `project` though but only `project_id`
-                            # so setting it directly
-                            - GOOGLE_PROJECT=<PROJECT_NAME>
-                            - GOOGLE_APPLICATION_CREDENTIALS={% raw %}{{workflow.outputs.artifacts.gcp-sa.path}}{% endraw %}
+                            - GOOGLE_PROJECT=<@ gcp.project_id @>
+                            - GOOGLE_APPLICATION_CREDENTIALS=/additional
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
                                 port: 5432
                                 defaultDBName: postgres
                                 superuser:
-                                  username: <@ superuser.username @>
-                                  password: <@ superuser.password @>
+                                  username: <@ input.superuser.username @>
+                                  password: <@ input.superuser.password @>
+
+              - - name: fill-gcp-params-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: gcp
+
+              - - name: fill-tfmodule-params-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.tfmodule}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: tfmodule
 
               - - name: terraform-apply
                   voltron-action: terraform.apply
@@ -119,10 +154,10 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-tfmodule-params-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
-                      - name: gcp-sa
+                      - name: additional
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
 signature:
