@@ -32,7 +32,9 @@ spec:
         verbs: [ "get" ]
 
   outputTypeInstanceRelations:
-    postgresql: {} # TODO:
+    postgresql:
+      uses:
+        - terraform-release
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -154,8 +156,8 @@ spec:
               - - name: terraform-apply
                   voltron-action: terraform.apply
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-#                    - name: terraform-release # TODO:
-#                      from: terraform-release
+                    - name: terraform-release
+                      from: terraform-release
                     - name: postgresql
                       from: additional
                   arguments:
