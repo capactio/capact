@@ -266,6 +266,15 @@ args:
           template: mock-jira-install-jira-install-jira-install-install-db
       - - arguments:
             artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: "name: jiradb \nowner: superuser\n"
+          name: create-db
+          template: jira-install-jira-install-jira-install-create-db-main
+      - - arguments:
+            artifacts:
             - name: template
               raw:
                 data: |
@@ -311,6 +320,12 @@ args:
           template: output-jira-install-jira-install-postgresql
       - - arguments:
             artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-jira-install-jira-install-database
+      - - arguments:
+            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: jira-config
           name: output-jira-config
@@ -341,6 +356,143 @@ args:
         artifacts:
         - name: postgresql
           path: output/postgresql
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: jira-install-jira-install-jira-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: jira-install-jira-install-jira-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: jira-install-jira-install-jira-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: jira-install-jira-install-jira-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-jira-install-jira-install-jira-install-create-db-database
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-jira-install-jira-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-jira-install-jira-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /script.sh
+        command:
+        - bash
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: jira-install-jira-install-jira-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-jira-install-jira-install-create-db-database
+      outputs:
+        artifacts:
+        - globalName: jira-install-jira-install-jira-install-create-db-database
+          name: database
+          path: /typeinstance
     - arguments: {}
       container:
         args:
@@ -416,6 +568,27 @@ args:
         artifacts:
         - globalName: jira-install-jira-install-postgresql
           name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-jira-install-database
+      outputs:
+        artifacts:
+        - globalName: jira-install-jira-install-database
+          name: database
           path: /typeinstance
     - arguments: {}
       container:
@@ -530,6 +703,15 @@ args:
           template: mock-confluence-install-confluence-install-main-install-db
       - - arguments:
             artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: "name: confluencedb \nowner: superuser\n"
+          name: create-db
+          template: confluence-install-confluence-install-main-create-db-main
+      - - arguments:
+            artifacts:
             - name: template
               raw:
                 data: |
@@ -575,6 +757,12 @@ args:
           template: output-confluence-install-confluence-install-postgresql
       - - arguments:
             artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-confluence-install-confluence-install-database
+      - - arguments:
+            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: confluence-config
           name: output-confluence-config
@@ -605,6 +793,143 @@ args:
         artifacts:
         - name: postgresql
           path: output/postgresql
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: confluence-install-confluence-install-main-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: confluence-install-confluence-install-main-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: confluence-install-confluence-install-main-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: confluence-install-confluence-install-main-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-confluence-install-confluence-install-main-create-db-database
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: confluence-install-confluence-install-main-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: confluence-install-confluence-install-main-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /script.sh
+        command:
+        - bash
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: confluence-install-confluence-install-main-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-confluence-install-confluence-install-main-create-db-database
+      outputs:
+        artifacts:
+        - globalName: confluence-install-confluence-install-main-create-db-database
+          name: database
+          path: /typeinstance
     - arguments: {}
       container:
         args:
@@ -693,6 +1018,27 @@ args:
         resources: {}
       inputs:
         artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-confluence-install-confluence-install-database
+      outputs:
+        artifacts:
+        - globalName: confluence-install-confluence-install-database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
         - name: confluence-config
           path: /typeinstance
       metadata: {}
@@ -743,10 +1089,14 @@ args:
               name: stack-install-install-shared-db-postgres-install-helm-run-helm-release
             - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-config}}'
               name: jira-install-jira-install-jira-config
+            - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-install-create-db-database}}'
+              name: jira-install-jira-install-jira-install-create-db-database
             - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-install-helm-run-helm-release}}'
               name: jira-install-jira-install-jira-install-helm-run-helm-release
             - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-confluence-config}}'
               name: confluence-install-confluence-install-confluence-config
+            - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-main-create-db-database}}'
+              name: confluence-install-confluence-install-main-create-db-database
             - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-main-helm-run-helm-release}}'
               name: confluence-install-confluence-install-main-helm-run-helm-release
             - name: payload
@@ -771,6 +1121,12 @@ args:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
+                  - alias: jira-install-jira-install-jira-install-create-db-database
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.database
+                      revision: 0.1.0
+                    value: null
                   - alias: jira-install-jira-install-jira-install-helm-run-helm-release
                     attributes: []
                     typeRef:
@@ -781,6 +1137,12 @@ args:
                     attributes: []
                     typeRef:
                       path: cap.type.productivity.confluence.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: confluence-install-confluence-install-main-create-db-database
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: confluence-install-confluence-install-main-helm-run-helm-release
@@ -796,9 +1158,13 @@ args:
                     to: jira-install-jira-install-jira-install-helm-run-helm-release
                   - from: jira-install-jira-install-jira-config
                     to: stack-install-install-shared-db-postgresql
+                  - from: jira-install-jira-install-jira-install-create-db-database
+                    to: stack-install-install-shared-db-postgresql
                   - from: confluence-install-confluence-install-confluence-config
                     to: confluence-install-confluence-install-main-helm-run-helm-release
                   - from: confluence-install-confluence-install-confluence-config
+                    to: stack-install-install-shared-db-postgresql
+                  - from: confluence-install-confluence-install-main-create-db-database
                     to: stack-install-install-shared-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
@@ -853,10 +1219,14 @@ args:
           path: /upload/typeInstances/stack-install-install-shared-db-postgres-install-helm-run-helm-release
         - name: jira-install-jira-install-jira-config
           path: /upload/typeInstances/jira-install-jira-install-jira-config
+        - name: jira-install-jira-install-jira-install-create-db-database
+          path: /upload/typeInstances/jira-install-jira-install-jira-install-create-db-database
         - name: jira-install-jira-install-jira-install-helm-run-helm-release
           path: /upload/typeInstances/jira-install-jira-install-jira-install-helm-run-helm-release
         - name: confluence-install-confluence-install-confluence-config
           path: /upload/typeInstances/confluence-install-confluence-install-confluence-config
+        - name: confluence-install-confluence-install-main-create-db-database
+          path: /upload/typeInstances/confluence-install-confluence-install-main-create-db-database
         - name: confluence-install-confluence-install-main-helm-run-helm-release
           path: /upload/typeInstances/confluence-install-confluence-install-main-helm-run-helm-release
         - name: payload

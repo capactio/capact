@@ -145,6 +145,13 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					emitStep, wfTpl := r.emitWorkflowInputArgsAsStepOutput(tpl.Name, step, satisfiedArg)
 					step = emitStep
 					r.addToRootTemplates(wfTpl)
+
+					artifact := findInputArtifact(r.tplInputArguments[tpl.Name], satisfiedArg)
+					if artifact == nil {
+						return errors.Errorf("failed to find InputArtifact %s for step %s", satisfiedArg, step)
+					}
+
+					availableTypeInstances[argoArtifactRef{step.Name, satisfiedArg}] = artifact.typeInstanceReference
 				}
 
 				// 2.2 Check step with `voltron-when` statements if it can be satisfied by input TypeInstances
@@ -165,6 +172,9 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 							return errors.Errorf("failed to find InputTypeInstanceRef for %s", satisfiedArg)
 						}
 						r.tryReplaceTypeInstanceName(satisfiedArg, typeInstance.ID)
+
+						namePtr := r.findTypeInstanceName(typeInstance.ID)
+						availableTypeInstances[argoArtifactRef{step.Name, satisfiedArg}] = namePtr
 					}
 				}
 

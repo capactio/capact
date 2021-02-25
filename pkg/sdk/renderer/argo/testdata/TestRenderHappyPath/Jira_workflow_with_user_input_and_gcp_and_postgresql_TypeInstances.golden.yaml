@@ -24,6 +24,15 @@ args:
           template: mock-jira-install-install-db
       - - arguments:
             artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: "name: jiradb \nowner: superuser\n"
+          name: create-db
+          template: jira-install-create-db-main
+      - - arguments:
+            artifacts:
             - name: template
               raw:
                 data: |
@@ -69,6 +78,12 @@ args:
           template: output-postgresql
       - - arguments:
             artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-database
+      - - arguments:
+            artifacts:
             - from: '{{steps.helm-run.outputs.artifacts.additional}}'
               name: jira-config
           name: output-jira-config
@@ -99,6 +114,143 @@ args:
         artifacts:
         - name: postgresql
           path: output/postgresql
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: jira-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: jira-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: jira-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: jira-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-jira-install-create-db-database
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /script.sh
+        command:
+        - bash
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: jira-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-create-db-database
+      outputs:
+        artifacts:
+        - globalName: jira-install-create-db-database
+          name: database
+          path: /typeinstance
     - arguments: {}
       container:
         args:
@@ -187,6 +339,27 @@ args:
         resources: {}
       inputs:
         artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-database
+      outputs:
+        artifacts:
+        - globalName: database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
         - name: jira-config
           path: /typeinstance
       metadata: {}
@@ -242,6 +415,8 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.jira-config}}'
               name: jira-config
+            - from: '{{workflow.outputs.artifacts.jira-install-create-db-database}}'
+              name: jira-install-create-db-database
             - from: '{{workflow.outputs.artifacts.jira-install-helm-run-helm-release}}'
               name: jira-install-helm-run-helm-release
             - name: payload
@@ -254,6 +429,12 @@ args:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
+                  - alias: jira-install-create-db-database
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.database
+                      revision: 0.1.0
+                    value: null
                   - alias: jira-install-helm-run-helm-release
                     attributes: []
                     typeRef:
@@ -264,6 +445,8 @@ args:
                   - from: jira-config
                     to: jira-install-helm-run-helm-release
                   - from: jira-config
+                    to: f2421415-b8a4-464b-be12-b617794411c5
+                  - from: jira-install-create-db-database
                     to: f2421415-b8a4-464b-be12-b617794411c5
           name: upload-output-type-instances-step
           template: upload-output-type-instances
@@ -363,6 +546,8 @@ args:
         artifacts:
         - name: jira-config
           path: /upload/typeInstances/jira-config
+        - name: jira-install-create-db-database
+          path: /upload/typeInstances/jira-install-create-db-database
         - name: jira-install-helm-run-helm-release
           path: /upload/typeInstances/jira-install-helm-run-helm-release
         - name: payload

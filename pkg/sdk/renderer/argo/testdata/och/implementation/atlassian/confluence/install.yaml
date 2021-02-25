@@ -67,6 +67,9 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+
   requires:
     - allOf: []
       anyOf: []
@@ -113,6 +116,21 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              - - name: create-db
+                  voltron-action: postgresql.create-db
+                  voltron-outputTypeInstances:
+                    - name: database # Defining the output TypeInstance 'database'
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        raw:
+                          data: |
+                            name: confluencedb 
+                            owner: superuser
+
               # Here we prepare the input for the Helm runner. In the next two steps,
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be better way to do this.
@@ -153,9 +171,9 @@ spec:
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:
-                    - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
+                    - name: confluence-config # Defining the output TypeInstance 'confluence-config'
                       from: additional
-                    - name: confluence-helm-release   # Defining the output TypeInstance 'confluence-helm-release'
+                    - name: confluence-helm-release # Defining the output TypeInstance 'confluence-helm-release'
                       from: helm-release
                   arguments:
                     artifacts:
