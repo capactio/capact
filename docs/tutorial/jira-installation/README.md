@@ -30,95 +30,75 @@ The bellow diagrams show possible scenarios:
 
 ###  Prerequisites
 
-* Install Docker
-* Install [Helm v3](https://helm.sh/docs/intro/install/)
-* Install [`kind`](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * Install [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
 * Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* Access to Google Cloud Platform 
-	
-### Install Jira with managed Cloud SQL
+* GKE cluster with fresh Voltron installation. See [installation tutorial](../voltron-installation/README.md). 
+* Access to Google Cloud Platform for the scenario with CloudSQL.  
 
-The below scenario installs Jira with Cloud SQL database because Engine detected the `gcp-credentials` secret in `gcp-scenario` namespace. 
+### Install all Jira components in Kubernetes cluster
 
-1. Clone the `release-0.1` branch from the `go-voltron` repository:
+By default, Voltron Engine has [cluster-policy](../../../deploy/kubernetes/charts/voltron/charts/engine/values.yaml) which prefers the Kubernetes solutions. 
 
-	```bash
-	git clone --depth 1 --branch release-0.1 https://github.com/Project-Voltron/go-voltron.git
-	cd ./go-voltron
-	```
+```yaml
+apiVersion: 0.1.0 # Defines syntax version for policy
 
-1. Create a local cluster with Voltron components installed:
+rules: # Configures the following behavior for Engine during rendering Action
+  cap.*:
+    oneOf:
+      - implementationConstraints: # prefer Implementation for Kubernetes
+          requires:
+            - path: "cap.core.type.platform.kubernetes"
+              # any revision
+      - implementationConstraints: {} # fallback to any Implementation
+```
 
-	```bash
-	make jira-tutorial-cluster
-	```
+As a result all external solutions such as CloudSQL have lower priority and they are not selected. The below scenario shows how to install Jira with locally deploy PostgreSQL Helm chart.
 
-	> **NOTE:** This takes around 5 minutes to finish.
+#### Instruction
 
 1. Create Kubernetes namespace:
 
 	```bash
-	kubectl create namespace gcp-scenario
+    export NAMESPACE=local-scenario
+	kubectl create namespace $NAMESPACE
 	```
-
-1. Create the Kubernetes Secret which contains a GCP JSON access key:
-   
-   	* Open [https://console.cloud.google.com](https://console.cloud.google.com) and select your project.
-   
-   	* On the left pane, go to **Identity** and select **Service accounts**.
-   
-   	* Click **Create service account**, name your account, and click **Create**.
-   
-   	* Set the `Cloud SQL Admin` role.
-   
-   	* Click **Create key** and choose `JSON` as a key type.
-   
-   	* Save the `JSON` file.
-   
-   	* Create a Secret from the JSON file by running this command:
-   
-   		```bash
-   		kubectl create secret generic gcp-credentials --from-file=sa.json={FILENAME}  --namespace gcp-scenario
-   		```
-   
-   	* Click **Done**.
-
-1. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local) to open the GraphQL console.
  
-1. Add the following Authorization header:
+1. Open GraphQL console:
 
-	```json
-	{
-	  "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"
-	}
-	```
+    To obtain Gateway URL and authorization information, run:
+    ```bash
+    helm get notes -n voltron-system voltron    
+    ```
+   
+   Based on returned response, navigate to GraphQL console and add required Authorization header.
+   
+   ![gql-auth](./assets/graphql-auth.png)
 
-	![gql-auth](./assets/graphql-auth.png)
-
-1. List all available Interfaces:
+1. List all `cap.interface.productivity.*` Interfaces:
 
 	<details><summary>Query</summary>
 
 	```graphql
-	query GetInterfaces {
-	  interfaces {
-	    revisions {
-	      metadata {
-	        path
-	        displayName
-	      }
-	      revision
-	    }
-	  }
-	}
+    query GetInterfaces {
+      interfaces(filter: { pathPattern: "cap.interface.productivity.*" }) {
+        path
+        revisions {
+          metadata {
+            path
+            displayName
+          }
+          revision
+        }
+      }
+    }
 	```
 
 	</details>
 
 	![list-interface](./assets/list-interface.png)
 
-	The returned response on the right-hand side represents all available Actions that you can execute. As you can see, you can install and upgrade a Jira instance. For installation, there are two revisions. Different revisions mean that the installation input/output parameters differ. It might be due to a new feature or one removed in a non-backward-compatible way.
+	The returned response on the right-hand side represents all available Actions that you can execute for **productivity** category. As you can see, you can install a Jira and Confluence instance. For manifests, there might be more revisions. Different revisions mean that the installation input/output parameters differ. It might be due to a new feature or one removed in a non-backward-compatible way.
+
 
 1. Create an Action with the `cap.interface.productivity.jira.install` Interface:
 
@@ -128,33 +108,40 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 	
 	```json
 	{
-	 "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0",
-	 "Namespace": "gcp-scenario"
+	 "Authorization": "....",
+	 "Namespace": "local-scenario"
 	}
 	```
     
-    </details>
-
+    Additionally, you must change the host value in input parameters.
+ 	
 	<details><summary>Mutation</summary>
 
 	```graphql
-	mutation CreateAction {
-	  createAction(in: { name: "jira-instance", action: "cap.interface.productivity.jira.install" }) {
-	    name
-	    createdAt
-	    path
-	    renderedAction
-	    run
-	    status {
-	      condition
-	      timestamp
-	      message
-	      runner {
-	        status
-	      }
-	    }
-	  }
-	}
+    mutation CreateAction {
+      createAction(
+        in: {
+          name: "jira-instance"
+          actionRef: { path: "cap.interface.productivity.jira.install" }
+          input: {
+            parameters: "{ \"host\": \"{REPLACE_WITH_HOST_NAME}\" }"
+          }
+        }
+      ) {
+        name
+        createdAt
+        renderedAction
+        run
+        status {
+          phase
+          timestamp
+          message
+          runner {
+            status
+          }
+        }
+      }
+    }
 	```
 
 	</details>
@@ -170,11 +157,10 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 	  action(name: "jira-instance") {
 	    name
 	    createdAt
-	    path
 	    renderedAction
 	    run
 	    status {
-	      condition
+	      phase
 	      timestamp
 	      message
 	      runner {
@@ -189,7 +175,7 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	![get-action](./assets/get-action.png)
 
-	In the previous step, when you created the Action, you saw the `INITIAL` phase  in the response. Now the Action is in `READY_TO_RUN`. It means that the Action was processed by the Engine and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `RENDERING` phase.
+	In the previous step, when you created the Action, you saw the `INITIAL` phase  in the response. Now the Action is in `READY_TO_RUN`. It means that the Action was processed by the Engine and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
 
 1. Run the rendered Action:
 
@@ -202,7 +188,6 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 	  runAction(name: "jira-instance") {
 	    name
 	    createdAt
-	    path
 	    run
 	  }
 	}
@@ -212,12 +197,24 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	![run-action](./assets/run-action.png)
 
-1. Navigate to [https://argo.voltron.local](https://gateway.voltron.local) to open Argo UI and check the currently running `jira-install` workflow.
+1. Check Action execution:
+    
+    **Using [Argo CLI](https://github.com/argoproj/argo-workflows/releases/tag/v2.12.8)**
+    
+    ```
+    argo watch jira-instance -n $NAMESPACE
+    ```
+    
+    **Using Argo UI**
+    
+    By default, the Argo UI doesn't have dedicated Ingress. You need to port-forward Service to your local machine: 
+    
+    ```
+    kubectl -n argo port-forward svc/argo-server 2746
+    ```
+   
+    Navigate to [http://localhost:2746](http://localhost:2746) to open Argo UI and check the currently running `jira-install` workflow.
 
-1. Navigate to your [GCP CloudSQL Console](https://console.cloud.google.com/sql/instances). You should see that a new CloudSQL instance is being created.
-    
-    ![gcp-cloudsql](./assets/gcp-cloudsql.png)
-    
 1. Wait until the Action is in the `SUCCEEDED` phase:
 
 	<details><summary>Query</summary>
@@ -227,11 +224,10 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 	  action(name: "jira-instance") {
 	    name
 	    createdAt
-	    path
 	    renderedAction
 	    run
 	    status {
-	      condition
+	      phase
 	      timestamp
 	      message
 	      runner {
@@ -245,8 +241,16 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 	</details>
 
 1. Get Argo Workflow logs to check the uploaded TypeInstance ID: 
+    
+    **Using Argo CLI**
+    
+    ```bash
+    argo logs jira-instance -n $NAMESPACE | grep -e 'upload_type_instances*'
+    ```
 
-    From the **Workflows** view select `jira-instance`. Next, select the last step called `upload-type-instances` and get its logs. The logs contain the uploaded TypeInstance ID.
+    **Using Argo UI**
+    
+    From the **Workflows** view select `jira-instance`. Next, select the last step called `upload-output-type-instances-step` and get its logs. The logs contain the uploaded TypeInstance ID.
 
 	![get-logs](./assets/get-logs.png)
 
@@ -258,7 +262,7 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	```graphql
     query GetTypeInstance {
-      typeInstance(id: "13343627-ab4a-4fbf-a312-f96f11b07d0b") {
+      typeInstance(id: "{JIRA_CONFIG_ID}") {
         spec {
           value
           typeRef {
@@ -273,19 +277,136 @@ The below scenario installs Jira with Cloud SQL database because Engine detected
 
 	![get-type-instance](./assets/get-type-instance.png)
 
-1. Open Jira console using the **hostname** value from the previous step:
+1. Open Jira console using the **host** value from the previous step:
 
-	The installed Jira URL is: [https://jira-cloud.cluster.local/](https://gateway.voltron.local).
+    ![jira-installation](./assets/jira-installation.png)
 
-1. When you are done, remove the Cloud SQL manually and delete the local cluster:
+1. When you are done, remove the Action and Helm charts:
 
     ```bash
-    make jira-tutorial-cluster-delete
+    kubectl delete action jira-instance -n $NAMESPACE
+    helm delete -n $NAMESPACE $(helm list -f="jira-software-*|postgresql-*" -q -n $NAMESPACE)
     ```
 
-### Install Jira with on-premise PostgreSQL database
+### Install Jira with external CloudSQL database
 
-Repeat the steps from [Install Jira with managed Cloud SQL](#install-jira-with-managed-cloud-sql) in a different namespace and skip the 4th and 9th step. If the `gcp-credentials` secret does not exist, Engine renders the Workflow with the step to locally deploy PostgreSQL Helm chart. Shortly, we will provide dedicated policies that will allow cluster admins to set more complicated rules e.g. to associate GCP subscription with a given user.
+To change the Jira installation we need to adjust our cluster-policy to prefer the GCP solutions.  More information about policy configuration can be found [here](../../policy-configuration.md).
+
+#### Instructions
+
+
+1. Create the GCP Service Account JSON access key:
+   
+   	* Open [https://console.cloud.google.com](https://console.cloud.google.com) and select your project.
+   
+   	* On the left pane, go to **IAM & Admin** and select **Service accounts**.
+   
+   	* Click **Create service account**, name your account, and click **Create**.
+   
+   	* Set the `Cloud SQL Admin` role.
+   
+   	* Click **Create key** and choose `JSON` as a key type.
+   
+   	* Save the `JSON` file.
+   
+   	* Click **Done**.
+
+
+1. Convert GCP Service Account to JavaScript format:
+
+   ```bash
+   cat {PATH_TO_GCP_SA_FILE} | sed -E 's/(^ *)"([^"]*)":/\1\2:/'
+   ```
+
+1. Create TypeInstance with GCP Service Account:
+
+   	Before running the GraphQL mutation, you must replace the `value` parameter with output from the previous step. 
+   
+   ```graphql
+    mutation CreateTypeInstance {
+      createTypeInstance(
+        in: {
+          typeRef: { path: "cap.type.gcp.auth.service-account", revision: "0.1.0" }
+          value: {} # Replace with SA in JS format
+          attributes: [
+            { path: "cap.attribute.cloud.provider.gcp", revision: "0.1.0" }
+          ]
+        }
+      ) {
+        metadata {
+          id
+        }
+        spec {
+          typeRef {
+            path
+            revision
+          }
+        }
+      }
+    }
+   ```
+
+1. Export TypeInstance UUID:
+
+   In the response from the previous step, you have the TypeInstance ID, export it as environment variable:
+   ```bash
+   export TI_ID={TYPE_INSTANCE_ID}
+   ```
+
+1. Create a file with new cluster policy:
+
+   ```yaml
+   cat > /tmp/policy.yaml << ENDOFFILE
+   apiVersion: 0.1.0
+   rules:
+     cap.interface.database.postgresql.install:
+      oneOf:
+        - implementationConstraints:
+            attributes:
+              - path: "cap.attribute.cloud.provider.gcp"
+            requires:
+              - path: "cap.type.gcp.auth.service-account"
+          injectTypeInstances:
+            - id: ${TI_ID}
+              typeRef:
+                path: "cap.type.gcp.auth.service-account"
+                revision: "0.1.0"
+     cap.*:
+       oneOf:
+         - implementationConstraints:
+             requires:
+               - path: "cap.core.type.platform.kubernetes"
+         - implementationConstraints: {} # fallback to any Implementation
+   ENDOFFILE
+   ```
+   >**NOTE**: Check [policy configuration document](../../policy-configuration.md) if you are not familiar with the above syntax.  
+
+1. Update cluster policy ConfigMap:
+
+   ```bash
+   kubectl create configmap -n voltron-system voltron-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
+   ``` 
+
+1. Create Kubernetes namespace:
+
+	```bash
+    export NAMESPACE=gcp-scenario
+	kubectl create namespace $NAMESPACE
+	```
+
+1. Install Jira with new cluster policy:
+
+   Cluster policy is updated to prefer the GCP solutions for PostgreSQL Interface. As a result, Engine during the render process will select a CloudSQL Implementation which is available in our OCH server.
+   
+
+   Repeat the steps from [Install all Jira components in Kubernetes cluster](#install-all-jira-components-in-kubernetes-cluster) in the `gcp-scenario` Namespace. Start with the 4th and remember to update Namespace value in the GraphQL *HTTP HEADERS** section.
+
+
+1. When you are done, remove the Cloud SQL manually and delete Action:
+
+    ```bash
+    kubectl delete action jira-instance -n $NAMESPACE
+    ```
 
 ### Behind the scenes
 
@@ -321,6 +442,7 @@ If you want to learn more about the project check the [go-voltron](https://githu
 
 Here are some useful links:
 
+- [Tutorial which shows the first steps on how to develop OCF content for Voltron.](../content-creation/README.md)
+- The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
 - Documentation which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guidelines can be found [here](https://github.com/Project-Voltron/go-voltron/tree/master/docs),
 - Google Drive folder with the [initial draft concepts](https://drive.google.com/drive/u/1/folders/1SBpIR0QUn9Rp68w6N3G-hqXdi1HfZQsn),
-- The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
