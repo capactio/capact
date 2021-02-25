@@ -345,6 +345,7 @@ fragment InterfaceRevision on InterfaceRevision {
     spec {
         input {
             parameters {
+                name
                 jsonSchema
             }
             typeInstances {
