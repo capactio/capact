@@ -93,7 +93,7 @@ spec:
                               databaseVersion: "POSTGRES_11"
                               region: "us-central"
                               defaultDBName: <@ defaultDBName @>
-                              rootPassword: <@ superuser.password | default(random_string()) @>
+                              rootPassword: <@ superuser.password | default(random_word()) @>
                               settings:
                                 tier: "db-g1-small"
                                 ipConfiguration:

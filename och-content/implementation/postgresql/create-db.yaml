@@ -80,6 +80,9 @@ spec:
                             EOF
                       - name: input-parameters
                         from: "{{inputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
               - - name: fill-params-in-create-db-script
                   voltron-action: jinja2.template
@@ -89,6 +92,9 @@ spec:
                         from: "{{steps.render-create-db-script.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{inputs.artifacts.database-input}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
               - - name: create-db
                   template: create-psql-db

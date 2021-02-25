@@ -230,7 +230,7 @@ def render(template_path, data, extensions, filters, strict=False):
     if strict:
         env.undefined = StrictUndefined
     else:
-        env.undefined = voltron.VoltronUndefined
+        env.undefined = voltron.Undefined
 
     # Add environ global
     env.globals["environ"] = lambda key: force_text(os.environ.get(key))
@@ -249,7 +249,7 @@ def render(template_path, data, extensions, filters, strict=False):
     return env.get_template(os.path.basename(template_path)).render(data)
 
 
-def cli(opts, args):
+def cli(opts, args, config):
     template_path, *data_files = args
     format = opts.format
     parsed_data = {}
@@ -305,6 +305,9 @@ def cli(opts, args):
 
         out = codecs.getwriter("utf8")(out)
 
+    if config.get("prefix") is not None and len(parsed_data) != 0:
+        parsed_data = {config["prefix"]: parsed_data}
+
     template_path = os.path.abspath(template_path)
     out.write(render(template_path, parsed_data, extensions, opts.filters, opts.strict))
     out.flush()
@@ -351,6 +354,18 @@ class LazyOptionParser(OptionParser):
         from jinja2cli import __version__
 
         return "jinja2-cli v%s\n - Jinja2 v%s" % (__version__, jinja_version)
+
+
+def read_configuration(config_path):
+    if not os.path.exists(config_path):
+        return {}
+
+    load, _, _ = _load_yaml()
+    with open(config_path) as config_file:
+        config = load(config_file.read())
+        if config is None:
+            return {}
+        return config
 
 
 def main():
@@ -402,6 +417,7 @@ def main():
         action="append",
         default=[],
     )
+
     opts, args = parser.parse_args()
 
     # Dedupe list
@@ -418,7 +434,10 @@ def main():
     if opts.format not in formats and opts.format != "auto":
         raise InvalidDataFormat(opts.format)
 
-    sys.exit(cli(opts, args))
+    config_path = os.getenv("CONFIG_PATH", "/configuration.yaml")
+    config = read_configuration(config_path)
+
+    sys.exit(cli(opts, args, config))
 
 
 if __name__ == "__main__":

@@ -76,8 +76,7 @@ spec:
           - name: jira-install
             inputs:
               artifacts:
-                # TODO: Currently we cannot handle jira-install input parameters in a readable way: https://cshark.atlassian.net/browse/SV-229
-                # - name: input-parameters
+                - name: input-parameters
                 - name: postgresql
                   optional: true
             steps:
@@ -126,22 +125,25 @@ spec:
                             output:
                               goTemplate:
                                 version: "{{ .Values.image.tag }}"
-                                host: "{{ template \"jira-software.fullname\" . }}"
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: "<@ host @>"
-                                user: "<@ superuser.username @>"
-                                password: "<@ superuser.password | default(random_string()) @>"
-                                database: "<@ name @>"
+                                host: <@ host @>
+                                user: <@ superuser.username @>
+                                password: <@ superuser.password @>
+                                database: <@ name @>
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: jira-cloud-<@random_word()@>.voltron.local
+                                - host: <@ input.host @>
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
               - - name: fill-params-in-helm-args
                   voltron-action: jinja2.template
@@ -151,6 +153,22 @@ spec:
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+
+              - - name: fill-input-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
 
               - - name: helm-run
                   voltron-action: helm.run
@@ -162,7 +180,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 

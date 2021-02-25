@@ -4,23 +4,32 @@ import random
 from jinja2.runtime import Undefined, missing
 
 
-class VoltronUndefined(Undefined):
+class UndefinedDict:
+    def __init__(self, parent, data):
+        self.parent = parent
+        self.data = data
+
+    def __getattr__(self, attr):
+        val = self.data.get(attr, None)
+        if val is not None:
+            return UndefinedDict(".".join([self.parent, attr]), val)
+        else:
+            raise AttributeError()
+            return UndefinedDict(".".join([self.parent, attr]), None)
+
+    def __str__(self):
+        return str(self.data)
+
+
+class Undefined(Undefined):
     __slots__ = ()
 
     def __str__(self):
-        if self._undefined_obj is missing:
-            message = self._undefined_name
-
-        else:
-            message = (
-                f"no such element: {object_type_repr(self._undefined_obj)}"
-                f"[{self._undefined_name!r}]"
-            )
-
+        message = self._undefined_name
         return f"<@ {message} @>"
 
     def __getattr__(self, attr):
-        return VoltronUndefined(name=".".join([self._undefined_name, attr]))
+        return Undefined(name=".".join([self._undefined_name, attr]))
 
 
 def random_string(letters: str = "", length: int = 10) -> str:
