@@ -56,6 +56,9 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+
   requires:
     - allOf: []
       anyOf: []
@@ -97,6 +100,22 @@ spec:
                               username: jira
                               password: okon
                             defaultDBName: jira
+
+              - - name: create-db
+                  voltron-action: postgresql.create-db
+                  voltron-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        raw:
+                          data: |
+                            name: jiradb 
+                            owner: superuser
+
               - - voltron-action: jinja2.template
                   name: create-helm-args
                   arguments:

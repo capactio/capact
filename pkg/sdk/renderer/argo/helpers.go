@@ -124,6 +124,16 @@ func getAvailableTypeInstancesFromInputArtifacts(inputArtifacts []InputArtifact)
 	return availableTypeInstances
 }
 
+func findInputArtifact(inputArtifacts []InputArtifact, name string) *InputArtifact {
+	for _, art := range inputArtifacts {
+		if art.artifact.Name == name {
+			return &art
+		}
+	}
+
+	return nil
+}
+
 func findTypeInstanceInputRef(refs []types.InputTypeInstanceRef, name string) *types.InputTypeInstanceRef {
 	for i := range refs {
 		ref := refs[i]
