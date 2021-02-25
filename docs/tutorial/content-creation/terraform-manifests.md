@@ -47,13 +47,13 @@ In `testdata` directory there is a Terraform module to configure CloudSQL Postgr
 Let's create tar directory first:
 
 ```shell
-cd ./testdata/source && tar -zcvf ../cloudsql.tgz . && cd -
+cd ./assets/source && tar -zcvf ../cloudsql.tgz . && cd -
 ```
 
 And upload it to Minio:
 
 ```shell
-mc cp ./testdata/cloudsql.tgz minio/terraform/cloudsql/cloudsql.tgz
+mc cp ./assets/cloudsql.tgz minio/terraform/cloudsql/cloudsql.tgz
 ```
 
 As the `terraform` bucket has `download` policy set by default, you can access all files with unauthenticated HTTP calls. Try it:
@@ -79,6 +79,41 @@ If the Minio is populated with Terraform content and all manifests are ready, tr
 
 ### Create TypeInstances
 
+#### Terraform module
+
+1. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local). Copy the JS object with ServiceAccount to input of the mutation and create GCP SA TypeInstance:
+
+    ```graphql
+    mutation CreateTerraformTypeInstance {
+      createTypeInstance(
+        in: {
+          typeRef: { path: "cap.type.terraform.module", revision: "0.1.0" }
+          value: {
+             name: "cloudsql",
+             source: "http://argo-minio.argo:9000/terraform/cloudsql/cloudsql.tgz",
+          },
+          attributes: [
+            { path: "cap.attribute.cloud.provider.gcp", revision: "0.1.0" }
+          ]
+        }
+      ) {
+        metadata {
+          id
+        }
+        spec {
+          typeRef {
+            path
+            revision
+          }
+        }
+      }
+    }
+    ```
+
+1. Note the TypeInstance ID. You will need that for Policy configuration.
+
+#### GCP Service Account
+
 1. Get JSON file with ServiceAccount according to the instruction [here](https://github.com/Project-Voltron/go-voltron/tree/master/docs/tutorial/jira-installation#install-jira-with-managed-cloud-sql). 
    
 1. Convert JSON to JS (remove quotes around object keys) and paste it into `in.value` for `createTypeInstance` input:
@@ -90,7 +125,7 @@ If the Minio is populated with Terraform content and all manifests are ready, tr
 1. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local). Copy the JS object with ServiceAccount to input of the mutation and create GCP SA TypeInstance:
     
     ```graphql
-    mutation CreateTypeInstance {
+    mutation CreateGCPSATypeInstance {
       createTypeInstance(
         in: {
           typeRef: { path: "cap.type.gcp.auth.service-account", revision: "0.1.0" }
@@ -123,7 +158,10 @@ Configure the Policy with the following command:
 kubectl edit configmap -n voltron-system voltron-engine-cluster-policy
 ```
 
-Copy and paste the following content. Replace `{my-uuid}` with the actual TypeInstance ID with GCP Service Account from previous step.
+Copy and paste the following content.
+
+- Replace `{gcp-sa-uuid}` with the actual TypeInstance ID with GCP Service Account from one of previous steps.
+- Replace `{terraform-module-uuid}` with the actual TypeInstance ID with Terraform Module from one of previous steps.
 
 ```yaml
 data:
@@ -143,10 +181,14 @@ data:
                 - path: "cap.attribute.infra.iac.terraform"
                   # any revision
             injectTypeInstances:
-              - id: {my-uuid}
+              - id: {gcp-sa-uuid}
                 typeRef:
                   path: "cap.type.gcp.auth.service-account"
                   revision: "0.1.0"
+              - id: {terraform-module-uuid}
+                 typeRef:
+                   path: "cap.type.terraform-module"
+                   revision: "0.1.0"
       cap.*:
         oneOf:
           - implementationConstraints:
