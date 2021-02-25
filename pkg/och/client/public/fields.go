@@ -122,6 +122,7 @@ var InterfaceRevisionFields = fmt.Sprintf(`
       spec {
         input {
           parameters {
+						name
             jsonSchema
           }
           typeInstances {
