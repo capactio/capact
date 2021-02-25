@@ -24,9 +24,7 @@ spec:
   appVersion: "10, 11, 12, 13"
 
   outputTypeInstanceRelations:
-    postgresql:
-      uses:
-        - terraform-release
+    postgresql: {} # TODO:
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -114,8 +112,8 @@ spec:
               - - name: terraform-apply
                   voltron-action: terraform.apply
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-                    - name: terraform-release
-                      from: terraform-release
+#                    - name: terraform-release # TODO:
+#                      from: terraform-release
                     - name: postgresql
                       from: additional
                   arguments:
