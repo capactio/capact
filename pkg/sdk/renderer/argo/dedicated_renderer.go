@@ -220,19 +220,19 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					step.Template = importedWorkflow.Entrypoint
 					step.VoltronAction = nil
 
-					// 3.7 Right now we know the template name, so let's try to register step input arguments
+					// 3.8 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step, availableTypeInstances)
 
-					// 3.8 Register output TypeInstances from this action step
+					// 3.9 Register output TypeInstances from this action step
 					r.registerStepOutputTypeInstances(step, workflowPrefix, iface)
 
-					// 3.9 Add TypeInstances to the upload graph
+					// 3.10 Add TypeInstances to the upload graph
 					inputArtifacts := r.tplInputArguments[step.Template]
 					if err := r.addOutputTypeInstancesToGraph(step, workflowPrefix, iface, &implementation, inputArtifacts); err != nil {
 						return errors.Wrap(err, "while adding TypeInstances to graph")
 					}
 
-					// 3.9 Render imported Workflow templates and add them to root templates
+					// 3.11 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
 					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
 					if err != nil {

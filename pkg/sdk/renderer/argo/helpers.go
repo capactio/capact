@@ -68,11 +68,9 @@ func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.Imp
 }
 
 func findOutputTypeInstance(step *WorkflowStep, typeInstanceName string) *TypeInstanceDefinition {
-	if step.VoltronTypeInstanceOutputs != nil {
-		for _, output := range step.VoltronTypeInstanceOutputs {
-			if output.From == typeInstanceName {
-				return &output
-			}
+	for _, output := range step.VoltronTypeInstanceOutputs {
+		if output.From == typeInstanceName {
+			return &output
 		}
 	}
 
