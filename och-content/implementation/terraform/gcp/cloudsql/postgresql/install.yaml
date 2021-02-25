@@ -175,7 +175,7 @@ spec:
                 - name: in
                   path: /file
             container:
-              image: mikefarah/yq
+              image: gcr.io/projectvoltron/yq:4 # Original image: mikefarah/yq:4
               args: [ "eval", "-j", "-i", "/file" ]
             outputs:
               artifacts:

@@ -54,6 +54,9 @@ spec:
                   path: "/terraform-args"
                 - name: runner-context
                   path: "/runner-context"
+                - name: additional
+                  path: "/additional"
+                  optional: true
             outputs:
               artifacts:
                 - name: terraform-release
