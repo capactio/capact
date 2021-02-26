@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: release
-  prefix: cap.type.terraform.module.release  # Computed during fetching the manifest
-  displayName: Terraform module
-  description: Describes Terraform module 
+  prefix: cap.type.terraform  # Computed during fetching the manifest
+  displayName: Terraform release
+  description: Describes Terraform release
   documentationURL: https://www.terraform.io/docs
   supportURL: https://www.terraform.io
   maintainers:
@@ -19,7 +19,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The Terraform module release",
+        "title": "The Terraform release",
         "examples": [
           {
             "name": "foo",

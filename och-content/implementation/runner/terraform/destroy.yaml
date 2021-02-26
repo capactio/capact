@@ -35,9 +35,9 @@ spec:
           revision: 0.1.0
 
   outputTypeInstanceRelations:
-    tfstate:
+    terraform-release:
       uses:
-        - terraform-release
+        - tfstate
     # Do not upload `additional` TypeInstance by default.
     # Upper-level workflows may define it in the outputTypeInstanceRelations.
 
@@ -54,6 +54,9 @@ spec:
                   path: "/terraform-args"
                 - name: runner-context
                   path: "/runner-context"
+                - name: additional
+                  path: "/additional"
+                  optional: true
             outputs:
               artifacts:
                 - name: terraform-release

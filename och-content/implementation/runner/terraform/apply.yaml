@@ -35,9 +35,8 @@ spec:
           revision: 0.1.0
 
   outputTypeInstanceRelations:
-    tfstate:
-      uses:
-        - terraform-release
+    terraform-release: {}
+    # TODO: Upload tfstate: {}
     # Do not upload `additional` TypeInstance by default.
     # Upper-level workflows may define it in the outputTypeInstanceRelations.
 
@@ -54,6 +53,9 @@ spec:
                   path: "/terraform-args"
                 - name: runner-context
                   path: "/runner-context"
+                - name: additional
+                  path: "/additional"
+                  optional: true
             outputs:
               artifacts:
                 - name: terraform-release
@@ -63,7 +65,6 @@ spec:
                   globalName: additional
                   path: "/terraform.yaml"
                 - name: tfstate
-                  globalName: tfstate
                   path: "/terraform.tfstate"
             container:
               image: gcr.io/projectvoltron/terraform-runner:a6e2ac4
