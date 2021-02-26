@@ -158,6 +158,8 @@ This guide explains how to deploy Voltron on a cluster using your own domain.
       ```
      
       A successful response returns the list of the name servers you fetched from GCP.
+      
+      >**NOTE:** It may take a few minutes before the DNS is updated.
 
 1. Export Gateway password and domain name
 
@@ -177,7 +179,7 @@ This guide explains how to deploy Voltron on a cluster using your own domain.
    ```bash
    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN --set global.gateway.auth.password=$GATEWAY_PASSWORD" \
    DOCKER_REPOSITORY="gcr.io/projectvoltron" \
-   OVERRIDE_DOCKER_TAG="76a84bf" \
+   OVERRIDE_DOCKER_TAG="ce38bb3" \
    ./hack/ci/cluster-components-install-upgrade.sh
    ```
 
@@ -224,6 +226,8 @@ This guide explains how to deploy Voltron on a cluster using your own domain.
       "Authorization": "Basic Z3JhcGhxbDpBbjR4YzQwb1M3MEllRnVkd0owcE9Bb2UxU3hVWWJ2a1dxNS8zZVRJZnJNPQ=="
     }
    ```
+
+   Now you are ready to start a journey with the Voltron project. Check out our [Jira installation tutorial](../jira-installation/README.md)!
 
 ### Clean-up
 
