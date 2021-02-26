@@ -68,7 +68,3 @@ ingress:
   tls:
     enabled: true
     secretName: gateway-tls
-
-auth:
-  username: graphql
-  password: t0p_s3cr3t

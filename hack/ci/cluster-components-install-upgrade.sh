@@ -20,7 +20,6 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
-    export USE_TEST_SETUP="true"
     voltron::install_upgrade::charts
 }
 

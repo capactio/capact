@@ -47,9 +47,9 @@ spec:
             - name: APP_INTROSPECTION_RETRY_DELAY
               value: "1s"
             - name: APP_AUTH_USERNAME
-              value: {{ .Values.auth.username }}
+              value: {{ .Values.global.gateway.auth.username }}
             - name: APP_AUTH_PASSWORD
-              value: "{{ .Values.auth.password }}"
+              value: "{{ .Values.global.gateway.auth.password }}"
           ports:
             - name: http
               containerPort: 8080

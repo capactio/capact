@@ -20,7 +20,7 @@ variable "region" {
 variable "tier" {
   type = string
   default = "db-f1-micro"
-  description = "CloudSQL isntance tier"
+  description = "CloudSQL instance tier"
 }
 
 variable "user_name" {

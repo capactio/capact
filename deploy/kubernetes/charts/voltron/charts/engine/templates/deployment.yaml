@@ -45,9 +45,9 @@ spec:
             - name: APP_MAX_CONCURRENT_RECONCILES
               value: "1"
             - name: APP_GRAPHQLGATEWAY_USERNAME
-              value: "{{ .Values.gateway.username }}"
+              value: "{{ .Values.global.gateway.auth.username }}"
             - name: APP_GRAPHQLGATEWAY_PASSWORD
-              value: "{{ .Values.gateway.password }}"
+              value: "{{ .Values.global.gateway.auth.password }}"
             - name: APP_MOCKGRAPHQL
               value: "{{ .Values.global.mockEngineGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
