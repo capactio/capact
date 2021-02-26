@@ -56,7 +56,8 @@ And upload it to Minio:
 mc cp ./assets/cloudsql.tgz minio/terraform/cloudsql/cloudsql.tgz
 ```
 
-As the `terraform` bucket has `download` policy set by default, you can access all files with unauthenticated HTTP calls. Try it:
+As the `terraform` bucket has `download` policy set by default, you can access all files with unauthenticated HTTP calls.
+As you port-forwarded in-cluster Minio installation, you can check that by using `wget`. Run:
 
 ```shell
 wget http://localhost:9000/terraform/cloudsql/cloudsql.tgz
@@ -69,7 +70,10 @@ To use the module, you need to prepare Voltron manifests - InterfaceGroup, Inter
 In this example, we have them all already defined for PostgreSQL installation. To create your own manifests, you can base on them:
 - [InterfaceGroup](../../och-content/interface/database/postgresql.yaml)
 - [Interface](../../och-content/interface/database/postgresql/install.yaml)
-- [Implementation](../../och-content/implementation/terraform/gcp/cloudsql/postgresql/install.yaml), which uses Terraform Runner.
+- [Implementation](../../och-content/implementation/terraform/gcp/cloudsql/postgresql/install.yaml), which uses Terraform Runner.\
+  
+   Instead of using GCS as module source, you can use internal Minio URL, such as "http://argo-minio.argo:9000/terraform/cloudsql/cloudsql.tgz".
+
 - [Input Type](../../och-content/type/database/postgresql/install-input.yaml)
 - [Output Type](../../och-content/type/database/postgresql/config.yaml)
 
@@ -77,42 +81,7 @@ In this example, we have them all already defined for PostgreSQL installation. T
 
 If the Minio is populated with Terraform content and all manifests are ready, trigger the PostgreSQL installation.
 
-### Create TypeInstances
-
-#### Terraform module
-
-1. Navigate to [https://gateway.voltron.local](https://gateway.voltron.local). Copy the JS object with ServiceAccount to input of the mutation and create GCP SA TypeInstance:
-
-    ```graphql
-    mutation CreateTerraformTypeInstance {
-      createTypeInstance(
-        in: {
-          typeRef: { path: "cap.type.terraform.module", revision: "0.1.0" }
-          value: {
-             name: "cloudsql",
-             source: "http://argo-minio.argo:9000/terraform/cloudsql/cloudsql.tgz",
-          },
-          attributes: [
-            { path: "cap.attribute.cloud.provider.gcp", revision: "0.1.0" }
-          ]
-        }
-      ) {
-        metadata {
-          id
-        }
-        spec {
-          typeRef {
-            path
-            revision
-          }
-        }
-      }
-    }
-    ```
-
-1. Note the TypeInstance ID. You will need that for Policy configuration.
-
-#### GCP Service Account
+### Creating TypeInstance
 
 1. Get JSON file with ServiceAccount according to the instruction [here](https://github.com/Project-Voltron/go-voltron/tree/master/docs/tutorial/jira-installation#install-jira-with-managed-cloud-sql). 
    
@@ -161,7 +130,6 @@ kubectl edit configmap -n voltron-system voltron-engine-cluster-policy
 Copy and paste the following content.
 
 - Replace `{gcp-sa-uuid}` with the actual TypeInstance ID with GCP Service Account from one of previous steps.
-- Replace `{terraform-module-uuid}` with the actual TypeInstance ID with Terraform Module from one of previous steps.
 
 ```yaml
 data:
@@ -184,10 +152,6 @@ data:
               - id: {gcp-sa-uuid}
                 typeRef:
                   path: "cap.type.gcp.auth.service-account"
-                  revision: "0.1.0"
-              - id: {terraform-module-uuid}
-                typeRef:
-                  path: "cap.type.terraform.module"
                   revision: "0.1.0"
       cap.*:
         oneOf:

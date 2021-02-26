@@ -46,11 +46,6 @@ spec:
         - name: service-account
           alias: gcp-sa
           revision: 0.1.0
-    cap.type.terraform:
-      allOf:
-        - name: module
-          alias: tfmodule
-          revision: "0.1.0"
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
@@ -106,8 +101,8 @@ spec:
                               user_password = "<@ input.superuser.password | default(random_word()) @>"
                             command: "apply"
                             module:
-                              name: "<@ tfmodule.name @>"
-                              source: "<@ tfmodule.source @>"
+                              name: "cloudsql"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.1.0/cloudsql.tgz"
                             env:
                             - GOOGLE_PROJECT=<@ gcp.project_id @>
                             - GOOGLE_APPLICATION_CREDENTIALS=/additional
@@ -133,19 +128,6 @@ spec:
                           data: |
                             prefix: gcp
 
-              - - name: fill-tfmodule-params-in-module-args
-                  voltron-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.tfmodule}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: tfmodule
-
               - - name: convert-gcp-yaml-to-json
                   template: convert-yaml-to-json
                   arguments:
@@ -163,7 +145,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-tfmodule-params-in-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: additional
