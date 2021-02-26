@@ -424,7 +424,7 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
    
    Repeat the steps from [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster) in the `gcp-scenario` Namespace. Start with the 4th step, and remember to update the Namespace value in the GraphQL **HTTP HEADERS** section.
 
-🎉 Hurray! You now have your own Jira instance installed. Be productive!
+🎉 Hooray! You now have your own Jira instance installed. Be productive!
 
 When you are done, remove the Cloud SQL manually and delete the Action:
 
