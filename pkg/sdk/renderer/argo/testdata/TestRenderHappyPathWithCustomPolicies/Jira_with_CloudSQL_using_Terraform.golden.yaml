@@ -1,0 +1,769 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: voltron-root
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+        - name: postgresql
+          optional: true
+      metadata: {}
+      name: jira-install
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+          name: jira-config
+      steps:
+      - - arguments:
+            artifacts:
+            - name: input-parameters
+              raw:
+                data: |
+                  superuser:
+                    username: jira
+                    password: okon
+                  defaultDBName: jira
+          name: install-db
+          template: jira-install-install-db-postgres-install
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: "name: jiradb \nowner: superuser\n"
+          name: create-db
+          template: jira-install-create-db-main
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  command: "install"
+                  generateName: true
+                  chart:
+                    name: "jira-software"
+                    repo: "https://helm.mox.sh"
+                  output:{% raw %}
+                    goTemplate:
+                      version: "{{ .Values.image.tag }}"
+                      host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                  values:
+                    postgresql:
+                      enabled: false
+                    databaseConnection:
+                      host: "{{ host }}"
+                      user: "{{ superuser.username }}"
+                      password: "{{ superuser.password }}"
+                      database: "{{ defaultDBName }}"
+                    ingress:
+                      enabled: true
+                      hosts:
+                      - host: jira-cloud.voltron.local
+                        paths: ['/']
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: create-helm-args
+          template: jira-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-run
+          template: jira-install-helm-run-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-database
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+              name: jira-config
+          name: output-jira-config
+          template: output-jira-config
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+              name: jira-helm-release
+          name: output-jira-helm-release
+          template: output-jira-helm-release
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+      metadata: {}
+      name: jira-install-install-db-postgres-install
+      outputs:
+        artifacts:
+        - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+          name: postgresql
+      steps:
+      - - arguments: {}
+          name: inject-input-type-instances-2-0-step
+          template: inject-input-type-instances-2-0
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: input
+            - name: template
+              raw:
+                data: |
+                  variables: |+
+                    user_name = "<@ input.superuser.username @>"
+                    user_password = "<@ input.superuser.password | default(random_word()) @>"
+                  command: "apply"
+                  module:
+                    name: "cloudsql"
+                    source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.1.0/cloudsql.tgz"
+                  env:
+                  - GOOGLE_PROJECT=<@ gcp.project_id @>
+                  - GOOGLE_APPLICATION_CREDENTIALS=/additional
+                  output:
+                    goTemplate:
+                      host: "{{ .instance_ip_addr }}"
+                      port: 5432
+                      defaultDBName: postgres
+                      superuser:
+                        username: "{{ .username }}"
+                        password: "{{ .password }}"
+          name: create-module-args
+          template: jira-install-install-db-postgres-install-create-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-module-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{workflow.outputs.artifacts.gcp-sa}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: gcp
+          name: fill-gcp-params-in-module-args
+          template: jira-install-install-db-postgres-install-fill-gcp-params-in-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.gcp-sa}}'
+              name: in
+          name: convert-gcp-yaml-to-json
+          template: jira-install-install-db-convert-yaml-to-json
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+            - from: '{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}'
+              name: additional
+          name: terraform-apply
+          template: jira-install-install-db-postgres-install-terraform-apply-terraform
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.terraform-release}}'
+              name: terraform-release
+          name: output-terraform-release
+          template: output-jira-install-install-db-terraform-release
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-jira-install-install-db-postgresql
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-install-db-postgres-install-create-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-install-db-postgres-install-fill-gcp-params-in-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.terraform-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_OUTPUT_TFSTATE_FILE_PATH
+          value: '{{outputs.artifacts.tfstate.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/terraform-runner:a6e2ac4
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /terraform-args
+        - name: runner-context
+          path: /runner-context
+        - name: additional
+          optional: true
+          path: /additional
+      metadata: {}
+      name: jira-install-install-db-postgres-install-terraform-apply-terraform
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+          name: terraform-release
+          path: /terraform-release.yaml
+        - globalName: jira-install-install-db-postgres-install-terraform-apply-additional
+          name: additional
+          path: /terraform.yaml
+        - name: tfstate
+          path: /terraform.tfstate
+    - arguments: {}
+      container:
+        args:
+        - sleep 1 && yq eval -j -i /file
+        command:
+        - sh
+        - -c
+        image: gcr.io/projectvoltron/yq:4
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: in
+          path: /file
+      metadata: {}
+      name: jira-install-install-db-convert-yaml-to-json
+      outputs:
+        artifacts:
+        - name: out
+          path: /file
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: terraform-release
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-install-db-terraform-release
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-terraform-release
+          name: terraform-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-install-db-postgresql
+      outputs:
+        artifacts:
+        - globalName: jira-install-install-db-postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp-sa.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-2-0
+      outputs:
+        artifacts:
+        - globalName: gcp-sa
+          name: gcp-sa
+          path: /gcp-sa.yaml
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: jira-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: jira-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: jira-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: jira-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-jira-install-create-db-database
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /script.sh
+        command:
+        - bash
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: jira-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-install-create-db-database
+      outputs:
+        artifacts:
+        - globalName: jira-install-create-db-database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: jira-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: jira-install-helm-run-helm
+      outputs:
+        artifacts:
+        - globalName: jira-install-helm-run-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: jira-install-helm-run-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-database
+      outputs:
+        artifacts:
+        - globalName: database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-config
+      outputs:
+        artifacts:
+        - globalName: jira-config
+          name: jira-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-jira-helm-release
+      outputs:
+        artifacts:
+        - globalName: jira-helm-release
+          name: jira-helm-release
+          path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: voltron-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: start-entrypoint
+          template: jira-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.jira-config}}'
+              name: jira-config
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
+              name: jira-install-install-db-postgresql
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-terraform-apply-terraform-release}}'
+              name: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-terraform-apply-tfstate}}'
+              name: jira-install-install-db-postgres-install-terraform-apply-tfstate
+            - from: '{{workflow.outputs.artifacts.jira-install-create-db-database}}'
+              name: jira-install-create-db-database
+            - from: '{{workflow.outputs.artifacts.jira-install-helm-run-helm-release}}'
+              name: jira-install-helm-run-helm-release
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: jira-config
+                    attributes: []
+                    typeRef:
+                      path: cap.type.productivity.jira.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-install-install-db-postgresql
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.terraform.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-install-install-db-postgres-install-terraform-apply-tfstate
+                    attributes: []
+                    typeRef:
+                      path: cap.core.type.generic.value
+                      revision: 0.0.1
+                    value: null
+                  - alias: jira-install-create-db-database
+                    attributes: []
+                    typeRef:
+                      path: cap.type.database.postgresql.database
+                      revision: 0.1.0
+                    value: null
+                  - alias: jira-install-helm-run-helm-release
+                    attributes: []
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: jira-config
+                    to: jira-install-helm-run-helm-release
+                  - from: jira-config
+                    to: jira-install-install-db-postgresql
+                  - from: jira-install-install-db-postgresql
+                    to: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+                  - from: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+                    to: tfstate
+                  - from: jira-install-create-db-database
+                    to: jira-install-install-db-postgresql
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: jira-config
+          path: /upload/typeInstances/jira-config
+        - name: jira-install-install-db-postgresql
+          path: /upload/typeInstances/jira-install-install-db-postgresql
+        - name: jira-install-install-db-postgres-install-terraform-apply-terraform-release
+          path: /upload/typeInstances/jira-install-install-db-postgres-install-terraform-apply-terraform-release
+        - name: jira-install-install-db-postgres-install-terraform-apply-tfstate
+          path: /upload/typeInstances/jira-install-install-db-postgres-install-terraform-apply-tfstate
+        - name: jira-install-create-db-database
+          path: /upload/typeInstances/jira-install-create-db-database
+        - name: jira-install-helm-run-helm-release
+          path: /upload/typeInstances/jira-install-helm-run-helm-release
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
+runnerInterface: cap.interface.runner.argo.run
