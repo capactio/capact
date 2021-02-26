@@ -148,6 +148,15 @@ spec:
                                 database: <@ name @>
                               ingress:
                                 enabled: true
+                                annotations:
+                                  acmechallengetype: http01
+                                  cert-manager.io/cluster-issuer: letsencrypt
+                                  kubernetes.io/ingress.class: nginx
+                                  kubernetes.io/tls-acme: "true"
+                                tls:
+                                  - secretName: jira-server-tls-<@ random_word(length=5) @>
+                                    hosts:
+                                      - <@ input.host @>
                                 hosts:
                                 - host: <@ input.host @>
                                   paths: ['/']
