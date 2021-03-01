@@ -27,6 +27,7 @@ atlassian-ide-plugin.xml
 *.dylib
 /bin
 /populator
+/ocftool
 
 # Test binary, built with `go test -c`
 *.test
