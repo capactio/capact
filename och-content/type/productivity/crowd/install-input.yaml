@@ -1,0 +1,42 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: install-input
+  prefix: cap.type.productivity.crowd
+  displayName: Atlassian Crowd installation input
+  description: Defines installation parameters for Atlassian Crowd
+  documentationURL: https://www.atlassian.com/software/crowd
+  supportURL: https://www.atlassian.com/software/crowd
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:fd5bfb32-1640-4806-add6-760d7c33b57c/Crowd@2x-blue.png
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for Atlassian Crowd configuration",
+        "required": [
+            "host"
+        ],
+        "$ocfRefs": {
+          "hostname": {
+            "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          }
+        },
+        "properties": {
+          "host": {
+            "$ref": "#/$ocfRefs/hostname"
+          }
+        },
+        "additionalProperties": true
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
