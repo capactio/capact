@@ -1,0 +1,126 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.elastic.elasticsearch
+  name: install
+  displayName: Install Elasticsearch
+  description: Action which installs Elasticsearch via Helm chart
+  documentationURL: https://github.com/elastic/helm-charts/tree/7.11/elasticsearch
+  supportURL: https://github.com/elastic/helm-charts
+  iconURL: https://helm.elastic.co/icons/elasticsearch.png
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "7.11.2-SNAPSHOT"
+
+  outputTypeInstanceRelations:
+      elasticsearch-config:
+        uses:
+          - elasticsearch-helm-release
+
+  implements:
+    - path: cap.interface.analytics.elasticsearch.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: elasticsearch
+        templates:
+          - name: elasticsearch
+            inputs:
+              artifacts:
+                # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+                # It contains the Interface parameters, in our case it is `confluence.install-input`.
+                - name: input-parameters
+            steps:
+
+              # Here we prepare the input for the Helm runner.
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "elasticsearch"
+                              repo: "https://helm.elastic.co"
+                              version: "7.11.1"
+                            output:
+                              goTemplate:
+                                version: "{{ .Values.imageTag }}"
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
+                            values:
+                              replicas: <@ replicas | default('3')@>
+                              ingress:
+                                enabled: true
+                                annotations:
+                                  acmechallengetype: http01
+                                  cert-manager.io/cluster-issuer: letsencrypt
+                                  kubernetes.io/ingress.class: nginx
+                                  kubernetes.io/tls-acme: "true"
+                                tls:
+                                  - secretName: elasticsearch-server-tls-<@ random_word(length=5) @>
+                                    hosts:
+                                      - <@ host @>
+                                hosts:
+                                - host: <@ host @>
+                                  paths:
+                                    - path: '/'
+                      - name: input-parameters
+                        from:  "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+
+              # Execute the Helm runner, with the input parameters created in the previous step.
+              # This will create the Helm chart and deploy our Confluence instance
+              - - name: helm-run
+                  voltron-action: helm.run
+                  voltron-outputTypeInstances:
+                    - name: elasticsearch-config         # Defining the output TypeInstance 'elasticsearch-config'
+                      from: additional
+                    - name: elasticsearch-helm-release   # Defining the output TypeInstance 'elasticsearch-helm-release'
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
