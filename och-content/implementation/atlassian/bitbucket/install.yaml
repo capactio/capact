@@ -26,11 +26,18 @@ spec:
           revision: 0.1.0
         verbs: [ "get" ]
 
+  additionalInput:
+    typeInstances:
+      elasticsearch-config:
+        typeRef:
+          path: cap.type.analytics.elasticsearch.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
   outputTypeInstanceRelations:
     bitbucket-config:
       uses:
         - bitbucket-helm-release
-        - postgresql
         - database
 
   implements:
@@ -66,6 +73,11 @@ spec:
       methods:
         - name: template
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.analytics.elasticsearch
+      alias: elasticsearch
+      methods:
+        - name: install
+          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
@@ -79,13 +91,12 @@ spec:
                 - name: input-parameters
                 - name: postgresql
                   optional: true
+                - name: elasticsearch
+                  optional: true
             steps:
               - - name: install-db
                   voltron-when: postgresql == nil # conditional execution
                   voltron-action: postgresql.install
-                  voltron-outputTypeInstances:
-                    - name: postgresql
-                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -94,6 +105,17 @@ spec:
                             superuser:
                               username: superuser
                             defaultDBName: postgres
+
+              - - name: install-elasticsearch
+                  voltron-when: "'elasticsearch-config' == nil" # conditional execution
+                  voltron-action: elasticsearch.install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            host: elastic.voltron.local
+                            replicas: 1
 
               - - name: render-create-db-args
                   voltron-action: jinja2.template
@@ -145,6 +167,10 @@ spec:
                                   value: <@ installdb.superuser.username @>
                                 - name: JDBC_PASSWORD
                                   value: <@ installdb.superuser.password @>
+                                elasticSearch:
+                                  baseUrl: http://<@ elastic.host @>
+                                  credentials:
+                                    secretName: <@ elastic.basicAuthSecretName @>
                               database:
                                 url: jdbc:postgresql://<@ installdb.host @>:<@ installdb.port @>/<@ createdb.name @>
                                 driver: org.postgresql.Driver
@@ -163,12 +189,24 @@ spec:
                         raw:
                           data: "prefix: installdb"
 
-              - - name: fill-params-in-helm-args
+              - - name: fill-elasticsearch-params-in-helm-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.install-elasticsearch.outputs.artifacts.elasticsearch-config}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: elastic"
+
+              - - name: fill-createdb-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-elasticsearch-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
                       - name: configuration
@@ -180,7 +218,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-createdb-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
