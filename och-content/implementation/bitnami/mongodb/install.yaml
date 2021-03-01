@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.bitnami.postgresql # Computed during fetching the manifest
+  prefix: cap.implementation.bitnami.mongodb # Computed during fetching the manifest
   name: install
-  displayName: Install PostgreSQL database
-  description: Action which installs PostgreSQL database via Helm chart
+  displayName: Install MongoDB database
+  description: Action which installs MongoDB database via Helm chart
   documentationURL: https://github.com/bitnami/charts
   supportURL: https://bitnami.com
   license:
@@ -16,15 +16,15 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "10,11,12,13"
+  appVersion: "4"
 
   outputTypeInstanceRelations:
-    postgresql:
+    mongodb:
       uses:
-        - psql-helm-release
+        - mongo-helm-release
 
   implements:
-    - path: cap.interface.database.postgresql.install
+    - path: cap.interface.database.mongodb.install
       revision: 0.1.0
 
   requires:
@@ -54,15 +54,15 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: postgres-install
+        entrypoint: mongo-install
         templates:
-          - name: postgres-install
+          - name: mongo-install
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
             outputs:
               artifacts:
-                - name: postgresql
+                - name: mongodb
                   from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
               - - name: create-helm-args
@@ -77,23 +77,30 @@ spec:
                             command: "install"
                             generateName: true
                             chart:
-                              name: "postgresql"
+                              name: "mongodb"
                               repo: "https://charts.bitnami.com/bitnami"
-                              version: "10.2.6"
+                              version: 10.3.1
                             values:
                               image:
                                 pullPolicy: Always
-                              postgresqlDatabase: <@ defaultDBName @>
-                              postgresqlUsername: <@ superuser.username @>
-                              postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
+                              auth:
+                                username: <@ user.username | default('mongo') @>
+                                password: <@ user.password | default(random_word(length=16)) @>
+                                database: <@ defaultDBName | default('mongo') @>
+                                rootPassword: <@ rootPassword | default(random_word(length=16)) @>
+                              architecture: replicaset
+                              replicaCount: <@ replicas | default('1') @>
+                              arbiter:
+                                enabled: false
                             output:
                               goTemplate:
-                                host: '{{ template "common.names.fullname" . }}'
-                                port: '{{ template "postgresql.port" . }}'
-                                defaultDBName: '{{ template "postgresql.database" . }}'
-                                superuser:
-                                  username: '{{ template "postgresql.username" . }}'
-                                  password: '{{ template "postgresql.password" . }}'
+                                host: '{{ include "mongodb.fullname" . }}-headless'
+                                port: '{{ .Values.service.port }}'
+                                defaultDBName: '{{ .Values.auth.database }}'
+                                rootPassword: '{{ .Values.auth.rootPassword }}'
+                                user:
+                                  username: '{{ .Values.auth.username }}'
+                                  password: '{{ .Values.auth.password }}'
                       - name: configuration
                         raw:
                           data: |
@@ -101,9 +108,9 @@ spec:
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-                    - name: postgresql
+                    - name: mongodb
                       from: additional
-                    - name: psql-helm-release
+                    - name: mongo-helm-release
                       from: helm-release
                   arguments:
                     artifacts:
