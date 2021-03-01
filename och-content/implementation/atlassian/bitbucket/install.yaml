@@ -16,7 +16,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "8.x.x"
+  appVersion: "7.7.0-jdk11"
 
   additionalInput:
     typeInstances:
@@ -25,9 +25,6 @@ spec:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
         verbs: [ "get" ]
-
-  additionalInput:
-    typeInstances:
       elasticsearch:
         typeRef:
           path: cap.type.analytics.elasticsearch.config
@@ -39,6 +36,8 @@ spec:
       uses:
         - bitbucket-helm-release
         - database
+        - elasticsearch
+        - postgresql
 
   implements:
     - path: cap.interface.productivity.bitbucket.install
@@ -105,6 +104,9 @@ spec:
                             superuser:
                               username: superuser
                             defaultDBName: postgres
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
 
               - - name: install-elasticsearch
                   voltron-when: elasticsearch == nil # conditional execution
@@ -116,6 +118,9 @@ spec:
                           data: |
                             host: elastic.voltron.local
                             replicas: 1
+                  voltron-outputTypeInstances:
+                    - name: elasticsearch
+                      from: elasticsearch
 
               - - name: render-create-db-args
                   voltron-action: jinja2.template
