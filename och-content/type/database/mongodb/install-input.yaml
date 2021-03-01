@@ -1,0 +1,66 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: install-input
+  prefix: cap.type.database.mongodb  # Computed during fetching the manifest
+  displayName: MongoDB installation input
+  description: Defines input for MongoDB installation
+  documentationURL: https://docs.mongodb.com/manual/
+  supportURL: https://www.mongodb.com/
+  iconURL: https://webassets.mongodb.com/_com_assets/cms/MongoDB_Logo_FullColorBlack_RGB-4td3yuxzjs.png
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  attributes:
+    cap.core.attribute.workload.stateful:
+      revision: 0.1.0
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for MongoDB configuration",
+        "examples": [
+          {
+            "user": {
+              "username": "username",
+              "password": "password"
+            }
+          }
+        ],
+        "required": [
+            "user"
+        ],
+        "properties": {
+          "user": {
+            "$id": "#/properties/user",
+            "type": "object",
+            "title": "Defines custom user details",
+            "required": [
+                "username",
+                "password"
+            ],
+            "properties": {
+              "username": {
+                "$id": "#/properties/user/properties/username",
+                "type": "string",
+                "title": "Create the specified custom user.",
+                "default": "postgres"
+              },
+              "password": {
+                "$id": "#/properties/user/properties/password",
+                "type": "string",
+                "title": "Sets the custom user password"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

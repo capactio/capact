@@ -1,0 +1,116 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.bitnami.mongodb # Computed during fetching the manifest
+  name: install
+  displayName: Install MongoDB database
+  description: Action which installs MongoDB database via Helm chart
+  documentationURL: https://github.com/bitnami/charts
+  supportURL: https://bitnami.com
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "4"
+
+  outputTypeInstanceRelations:
+    mongodb:
+      uses:
+        - mongo-helm-release
+
+  implements:
+    - path: cap.interface.database.mongodb.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: mongo-install
+        templates:
+          - name: mongo-install
+            inputs:
+              artifacts:
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            outputs:
+              artifacts:
+                - name: mongodb
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+            steps:
+              - - name: create-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "mongodb"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "10.7.1"
+                            values:
+                              image:
+                                pullPolicy: Always
+                              auth:
+                                username: <@ user.username @>
+                                password: <@ user.password | default(random_word()) @>
+                                rootPassword: <@ rootPassword | default(random_word()) @>
+                            output:
+                              goTemplate:
+                                host: '{{ template "common.names.fullname" . }}'
+                                port: '{{ .Values.service.port }}'
+                                user:
+                                  username: '{{ template "mongodb.username" . }}'
+                                  password: '{{ template "mongodb.password" . }}'
+                      - name: configuration
+                        raw:
+                          data: |
+
+              - - name: helm-run
+                  voltron-action: helm.run
+                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                    - name: mongodb
+                      from: additional
+                    - name: mongo-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
