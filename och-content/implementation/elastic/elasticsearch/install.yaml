@@ -90,6 +90,9 @@ spec:
                                 password: "<@ password @>"
                             values:
                               replicas: <@ replicas | default('3')@>
+                              esConfig:
+                                elasticsearch.yml: |
+                                  xpack.security.enabled: true
                               extraEnvs:
                                 - name: ELASTIC_PASSWORD
                                   value: "<@ password @>"
