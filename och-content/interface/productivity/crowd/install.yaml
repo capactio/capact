@@ -8,7 +8,7 @@ metadata:
   description: "Install action for Atlassian Crowd"
   documentationURL: https://www.atlassian.com/software/crowd
   supportURL: https://www.atlassian.com/software/crowd
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  iconURL: https://wac-cdn.atlassian.com/dam/jcr:fd5bfb32-1640-4806-add6-760d7c33b57c/Crowd@2x-blue.png
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
