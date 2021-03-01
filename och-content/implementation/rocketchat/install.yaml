@@ -109,9 +109,10 @@ spec:
                                 pullPolicy: Always
                               mongodb:
                                 enabled: false
-                              <% set mongo_url = 'mongodb://' + mongo.user.username + ':' + mongo.user.password + '@' + mongo.host + ':' + mongo.port %>
+                              <% set mongo_addr = mongo.host + ':' + mongo.port %>
+                              <% set mongo_url = 'mongodb://' + mongo.user.username + ':' + mongo.user.password + '@' + mongo_addr %>
                               externalMongodbUrl: "<@ mongo_url @>/<@ mongo.defaultDBName @>"
-                              <% set oplog_mongo_url = 'mongodb://root:' + mongo.rootPassword + '@' + mongo.host + ':' + mongo.port + '/local?replicaSet=rs0&authSource=admin' %>
+                              <% set oplog_mongo_url = 'mongodb://root:' + mongo.rootPassword + '@' + mongo_addr + '/local?replicaSet=rs0&authSource=admin' %>
                               externalMongodbOplogUrl: "<@ oplog_mongo_url @>"
                               ingress:
                                 enabled: true
