@@ -1,0 +1,206 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.atlassian.bitbucket # Computed during fetching the manifest
+  name: install
+  displayName: "Bitbucket"
+  description: "Git-based source code repository hosting service"
+  documentationURL: https://confluence.atlassian.com/bitbucketserver
+  supportURL: https://support.atlassian.com/bitbucket-server/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "8.x.x"
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: [ "get" ]
+
+  outputTypeInstanceRelations:
+    bitbucket-config:
+      uses:
+        - bitbucket-helm-release
+        - postgresql
+        - database
+
+  implements:
+    - path: cap.interface.productivity.bitbucket.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: bitbucket-install
+        templates:
+          - name: bitbucket-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+                  optional: true
+            steps:
+              - - name: install-db
+                  voltron-when: postgresql == nil # conditional execution
+                  voltron-action: postgresql.install
+                  voltron-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                            defaultDBName: postgres
+
+              - - name: render-create-db-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: bitbucketdb
+                            owner: "<@ superuser.username @>"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+
+              - - name: create-db
+                  voltron-action: postgresql.create-db
+                  voltron-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
+
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            command: "install"
+                            generateName: true
+                            chart:
+                              name: "bitbucket"
+                              repo: "https://atlassian-labs.github.io/data-center-helm-charts"
+                            output:
+                              goTemplate:
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ .Values.ingress.host }}"
+                            values:
+                              bitbucket:
+                                additionalEnvironmentVariables:
+                                - name: JDBC_USER
+                                  value: <@ installdb.superuser.username @>
+                                - name: JDBC_PASSWORD
+                                  value: <@ installdb.superuser.password @>
+                              database:
+                                url: jdbc:postgresql://<@ installdb.host @>:<@ installdb.port @>/<@ createdb.name @>
+                                driver: org.postgresql.Driver
+                              ingress:
+                                create: true
+                                nginx: true
+                                host: <@ input.host @>
+                                tlsSecretName: bitbucket-server-tls-<@ random_word(length=5) @>
+                                annotations:
+                                  acmechallengetype: http01
+                                  cert-manager.io/cluster-issuer: letsencrypt
+                                  kubernetes.io/tls-acme: "true"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: installdb"
+
+              - - name: fill-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: createdb"
+
+              - - name: fill-input-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: helm-run
+                  voltron-action: helm.run
+                  voltron-outputTypeInstances:
+                    - name: bitbucket-config
+                      from: additional
+                    - name: bitbucket-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
