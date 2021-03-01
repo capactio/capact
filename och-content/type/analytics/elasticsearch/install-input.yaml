@@ -20,7 +20,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Jira configuration",
+        "title": "The schema for Elasticsearch input parameters.",
         "required": [
             "host"
         ],

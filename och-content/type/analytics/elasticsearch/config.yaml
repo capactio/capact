@@ -13,6 +13,9 @@ metadata:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
+  attributes:
+    cap.core.attribute.workload.stateful:
+      revision: 0.1.0
 
 spec:
   jsonSchema:
