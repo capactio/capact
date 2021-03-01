@@ -28,7 +28,9 @@ spec:
             "user": {
               "username": "username",
               "password": "password"
-            }
+            },
+            "rootPassword": "pass",
+            "defaultDBName": "default_db"
           }
         ],
         "required": [
@@ -40,7 +42,6 @@ spec:
             "type": "object",
             "title": "Defines custom user details",
             "required": [
-                "username",
                 "password"
             ],
             "properties": {
@@ -48,7 +49,7 @@ spec:
                 "$id": "#/properties/user/properties/username",
                 "type": "string",
                 "title": "Create the specified custom user.",
-                "default": "postgres"
+                "default": "mongo"
               },
               "password": {
                 "$id": "#/properties/user/properties/password",
@@ -57,6 +58,17 @@ spec:
               }
             },
             "additionalProperties": false
+          },
+          "rootPassword": {
+            "$id": "#/properties/rootPassword",
+            "type": "string",
+            "title": "Defines a root password"
+          },
+          "defaultDBName": {
+            "$id": "#/properties/defaultDBName",
+            "type": "string",
+            "title": "Defines a name for the default database that is created",
+            "default": "mongo"
           }
         },
         "additionalProperties": false

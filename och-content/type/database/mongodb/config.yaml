@@ -29,6 +29,8 @@ spec:
               "username": "username",
               "password": "password"
             },
+            "rootPassword": "pass",
+            "defaultDBName": "default_db",
             "host": "host",
             "port": 27017,
           }
@@ -36,6 +38,7 @@ spec:
         "required": [
             "user",
             "defaultDBName",
+            "rootPassword",
             "host",
             "port"
         ],
@@ -76,7 +79,12 @@ spec:
           "defaultDBName": {
             "$id": "#/properties/defaultDBName",
             "type": "string",
-            "title": "Defines a different name for the default database that is created"
+            "title": "Defines a name for the default database that is created"
+          },
+          "rootPassword": {
+            "$id": "#/properties/rootPassword",
+            "type": "string",
+            "title": "Defines a root password"
           },
           "host": {
             "$ref": "#/$ocfRefs/hostname"
