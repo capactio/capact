@@ -18,12 +18,19 @@ metadata:
 spec:
   appVersion: "3.6.x"
 
-  # TODO: Support external MongoDB
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.mongodb.config
+          revision: 0.1.0
+        verbs: [ "get" ]
 
   outputTypeInstanceRelations:
     rocketchat-config:
       uses:
         - rocketchat-helm-release
+        - mongodb
 
   implements:
     - path: cap.interface.productivity.rocketchat.install
@@ -46,6 +53,11 @@ spec:
       methods:
         - name: run
           revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.mongodb
+      alias: mongodb
+      methods:
+        - name: install
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
@@ -61,22 +73,31 @@ spec:
           - name: rocketchat-install
             inputs:
               artifacts:
-                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
-            outputs:
-              artifacts:
-                - name: rocketchat-config
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+                - name: input-parameters
+                - name: mongodb
+                  optional: true
             steps:
-              - - name: create-helm-args
-                  voltron-action: jinja2.template
+              - - name: install-db
+                  voltron-when: mongodb == nil # conditional execution
+                  voltron-action: mongodb.install
+                  voltron-outputTypeInstances:
+                    - name: mongodb
+                      from: mongodb
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        raw:
+                          data: |
+                            user:
+                              username: "mongo"
+                            defaultDBName: "mongo"
+
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
                       - name: template
                         raw:
-                          # TODO: Migrate to https://github.com/RocketChat/helm-charts
-                          # once https://github.com/RocketChat/helm-charts/pull/3 is merged
                           data: |
                             command: "install"
                             generateName: true
@@ -87,10 +108,10 @@ spec:
                               image:
                                 pullPolicy: Always
                               mongodb:
-                                mongodbUsername: rocketchat
-                                mongodbPassword: <@ random_word() @>
-                                mongodbDatabase: rocketchat
-                                mongodbRootPassword: <@ random_word() @>
+                                enabled: false
+                              <% set mongo_url = 'mongodb://' + mongo.user.username + ':' + mongo.user.password + '@' + mongo.host + ':' + mongo.port + '/' + mongo.defaultDBName %>
+                              externalMongodbUrl: "<@ mongo_url @>"
+                              externalMongodbOplogUrl: "<@ mongo_url @>"
                               ingress:
                                 enabled: true
                                 annotations:
@@ -101,21 +122,37 @@ spec:
                                 tls:
                                   - secretName: rocketchat-server-tls-<@ random_word(length=5) @>
                                     hosts:
-                                      - <@ host @>
+                                      - <@ input.host @>
                                 hosts:
-                                - host: <@ host @>
+                                - host: <@ input.host @>
                                   paths: ['/']
                             output:
                               goTemplate:
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                                 version: "{{ .Values.image.tag }}"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.mongodb}}"
                       - name: configuration
                         raw:
                           data: |
+                            prefix: mongo
+
+              - - name: fill-input-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
 
               - - name: helm-run
                   voltron-action: helm.run
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                  voltron-outputTypeInstances:
                     - name: rocketchat-config
                       from: additional
                     - name: rocketchat-helm-release
@@ -123,7 +160,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
