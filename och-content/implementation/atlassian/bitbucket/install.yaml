@@ -116,7 +116,7 @@ spec:
                       - name: input-parameters
                         raw:
                           data: |
-                            host: elastic.voltron.local
+                            host: elastic-<@ random_word() @>.voltron.local
                             replicas: 1
                   voltron-outputTypeInstances:
                     - name: elasticsearch
