@@ -28,7 +28,7 @@ spec:
 
   additionalInput:
     typeInstances:
-      elasticsearch-config:
+      elasticsearch:
         typeRef:
           path: cap.type.analytics.elasticsearch.config
           revision: 0.1.0
@@ -107,7 +107,7 @@ spec:
                             defaultDBName: postgres
 
               - - name: install-elasticsearch
-                  voltron-when: "'elasticsearch-config' == nil" # conditional execution
+                  voltron-when: elasticsearch == nil # conditional execution
                   voltron-action: elasticsearch.install
                   arguments:
                     artifacts:
@@ -196,7 +196,7 @@ spec:
                       - name: template
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{steps.install-elasticsearch.outputs.artifacts.elasticsearch-config}}"
+                        from: "{{steps.install-elasticsearch.outputs.artifacts.elasticsearch}}"
                       - name: configuration
                         raw:
                           data: "prefix: elastic"
