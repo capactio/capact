@@ -88,9 +88,13 @@ spec:
                                 password: <@ user.password | default(random_word()) @>
                                 database: <@ defaultDBName | default('mongo') @>
                                 rootPassword: <@ rootPassword | default(random_word()) @>
+                              architecture: replicaset
+                              replicaCount: 1
+                              arbiter:
+                                enabled: false
                             output:
                               goTemplate:
-                                host: '{{ template "common.names.fullname" . }}'
+                                host: '{{ include "mongodb.fullname" . }}-headless'
                                 port: '{{ .Values.service.port }}'
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'
