@@ -64,6 +64,13 @@ spec:
             "type": "string",
             "title": "Defines a root password"
           },
+          "replicas": {
+            "$id": "#/properties/replicas",
+            "type": "integer",
+            "title": "Defines replicas number",
+            "default": 1,
+            "minimum": 0
+          },
           "defaultDBName": {
             "$id": "#/properties/defaultDBName",
             "type": "string",

@@ -85,11 +85,11 @@ spec:
                                 pullPolicy: Always
                               auth:
                                 username: <@ user.username | default('mongo') @>
-                                password: <@ user.password | default(random_word()) @>
+                                password: <@ user.password | default(random_word(length=16)) @>
                                 database: <@ defaultDBName | default('mongo') @>
-                                rootPassword: <@ rootPassword | default(random_word()) @>
+                                rootPassword: <@ rootPassword | default(random_word(length=16)) @>
                               architecture: replicaset
-                              replicaCount: 1
+                              replicaCount: <@ replicas | default('1') @>
                               arbiter:
                                 enabled: false
                             output:

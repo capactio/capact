@@ -85,7 +85,7 @@ spec:
                                 pullPolicy: Always
                               postgresqlDatabase: <@ defaultDBName @>
                               postgresqlUsername: <@ superuser.username @>
-                              postgresqlPassword: <@ superuser.password | default(random_word()) @>
+                              postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
                             output:
                               goTemplate:
                                 host: '{{ template "common.names.fullname" . }}'

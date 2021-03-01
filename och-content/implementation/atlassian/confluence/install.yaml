@@ -154,7 +154,7 @@ spec:
                               databaseConnection:
                                 host: "<@ host @>"
                                 user: "<@ superuser.username @>"
-                                password: "<@ superuser.password | default(random_word()) @>"
+                                password: "<@ superuser.password | default(random_word(length=16)) @>"
                                 database: "<@ name @>"
                               ingress:
                                 enabled: true
