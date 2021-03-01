@@ -98,7 +98,7 @@ spec:
                           data: |
                             variables: |+
                               user_name = "<@ input.superuser.username @>"
-                              user_password = "<@ input.superuser.password | default(random_word()) @>"
+                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
                             command: "apply"
                             module:
                               name: "cloudsql"
