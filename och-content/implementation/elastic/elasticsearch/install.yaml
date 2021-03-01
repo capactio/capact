@@ -104,7 +104,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            <% set password = random_word(length=20) %>
                             command: "install"
                             generateName: true
                             chart:
