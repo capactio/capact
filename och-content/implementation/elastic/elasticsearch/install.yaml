@@ -20,7 +20,7 @@ spec:
   appVersion: "7.11.2-SNAPSHOT"
 
   outputTypeInstanceRelations:
-    elasticsearch-config:
+    elasticsearch:
       uses:
         - elasticsearch-helm-release
 
@@ -64,7 +64,7 @@ spec:
                 - name: input-parameters
             outputs:
               artifacts:
-                - name: elasticsearch-config
+                - name: elasticsearch
                   from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
               # Here we prepare the input for K8s Secret creation.
@@ -174,7 +174,7 @@ spec:
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:
-                    - name: elasticsearch-config         # Defining the output TypeInstance 'elasticsearch-config'
+                    - name: elasticsearch         # Defining the output TypeInstance 'elasticsearch-config'
                       from: additional
                     - name: elasticsearch-helm-release   # Defining the output TypeInstance 'elasticsearch-helm-release'
                       from: helm-release

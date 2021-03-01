@@ -30,7 +30,7 @@ spec:
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
   output:
     typeInstances:
-      elasticsearch-config:
+      elasticsearch:
         typeRef:
           path: cap.type.analytics.elasticsearch.config
           revision: 0.1.0
