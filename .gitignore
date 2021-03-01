@@ -26,6 +26,8 @@ atlassian-ide-plugin.xml
 *.so
 *.dylib
 /bin
+/populator
+/ocftool
 
 # Test binary, built with `go test -c`
 *.test
@@ -90,3 +92,4 @@ nosetests.xml
 /hack/ci/terraform/terraform.tfstate.backup
 /hack/ci/terraform/.terraform.tfstate.lock.info
 /hack/ci/terraform/.terraform.lock.hcl
+

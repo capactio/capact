@@ -32,10 +32,10 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
 
 ### Create GKE private cluster 
 
-1. Clone the `master` branch from the `go-voltron` repository.
+1. Clone the `release-0.2` branch from the `go-voltron` repository.
 	
 	```bash
-	git clone --depth 1 --branch master https://github.com/Project-Voltron/go-voltron.git
+	git clone --depth 1 --branch release-0.2 https://github.com/Project-Voltron/go-voltron.git
 	cd ./go-voltron
 	```
  
