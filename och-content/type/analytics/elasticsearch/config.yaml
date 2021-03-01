@@ -23,8 +23,8 @@ spec:
         "title": "The schema for Elasticsearch configuration",
         "required": [
             "version",
-            "username",
-            "password"
+            "host",
+            "basicAuthSecretName"
         ],
         "$ocfRefs": {
           "semVer": {
@@ -43,10 +43,7 @@ spec:
           "host": {
             "$ref": "#/$ocfRefs/hostname"
           },
-          "username": {
-            "type": "string"
-          },
-          "password": {
+          "basicAuthSecretName": {
             "type": "string"
           }
         },

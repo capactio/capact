@@ -20,9 +20,9 @@ spec:
   appVersion: "7.11.2-SNAPSHOT"
 
   outputTypeInstanceRelations:
-      elasticsearch-config:
-        uses:
-          - elasticsearch-helm-release
+    elasticsearch-config:
+      uses:
+        - elasticsearch-helm-release
 
   implements:
     - path: cap.interface.analytics.elasticsearch.install
@@ -67,6 +67,35 @@ spec:
                 - name: elasticsearch-config
                   from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
+              # Here we prepare the input for K8s Secret creation.
+              - - name: render-secret-manifest
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            apiVersion: v1
+                            kind: Secret
+                            metadata:
+                              generateName: elastic-basic-auth
+                            type: kubernetes.io/basic-auth
+                            stringData:
+                              username: elastic
+                              password: <@ random_word(length=20) @>
+                      - name: input-parameters
+                        raw:
+                          data: ""
+                      - name: configuration
+                        raw:
+                          data: ""
+              - - name: create-basic-auth-secret
+                  template: kubectl-create
+                  arguments:
+                    artifacts:
+                      - name: manifest
+                        from: "{{steps.render-secret-manifest.outputs.artifacts.render}}"
+
               # Here we prepare the input for the Helm runner.
               - - name: render-helm-args
                   voltron-action: jinja2.template
@@ -86,8 +115,7 @@ spec:
                               goTemplate:
                                 version: "{{ .Values.imageTag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
-                                username: "elastic"
-                                password: "<@ password @>"
+                                basicAuthSecretName: <@ metadata.name @>
                             values:
                               replicas: <@ replicas | default('3')@>
                               esConfig:
@@ -95,9 +123,15 @@ spec:
                                   xpack.security.enabled: true
                               extraEnvs:
                                 - name: ELASTIC_PASSWORD
-                                  value: "<@ password @>"
+                                  valueFrom:
+                                    secretKeyRef:
+                                      name: <@ metadata.name @>
+                                      key: password
                                 - name: ELASTIC_USERNAME
-                                  value: 'elastic'
+                                  valueFrom:
+                                    secretKeyRef:
+                                      name: <@ metadata.name @>
+                                      key: username
                               ingress:
                                 enabled: true
                                 annotations:
@@ -119,11 +153,24 @@ spec:
                         raw:
                           data: ""
 
+              - - name: fill-secret-name-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-basic-auth-secret.outputs.artifacts.manifest}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Elasticsearch instance
+              #
               # To delete this release, you can use `helm uninstall`.
               # The release name is available in elasticsearch-helm-release TypeInstance.
-              # Additionally, remove the PV and PVC as they are not remove as a part of helm uninstall.
+              # Additionally, remove PVCs as they are not remove as a part of helm uninstall.
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:
@@ -134,9 +181,26 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-secret-name-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
+
+          # You can always run custom images, we use the kubectl image to create a K8s resources
+          # it will use the same serviceAccount as `helm install`
+          - name: kubectl-create
+            inputs:
+              artifacts:
+                - name: manifest
+                  path: "/in/manifest.yaml"
+            outputs:
+              artifacts:
+                - name: manifest
+                  path: "/tmp/manifest.yaml"
+            container:
+              image: bitnami/kubectl:1.18
+              command: [sh, -c]
+              args: ["kubectl create -f {{inputs.artifacts.manifest.path}} --output=yaml > {{outputs.artifacts.manifest.path}}"]
+
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
