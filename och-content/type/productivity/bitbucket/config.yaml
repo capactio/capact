@@ -1,0 +1,48 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.productivity.bitbucket # Computed during fetching the manifest
+  displayName: "Bitbucket"
+  description: "Git-based source code repository hosting service"
+  documentationURL: https://confluence.atlassian.com/bitbucketserver
+  supportURL: https://support.atlassian.com/bitbucket-server/
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for Bitbucket configuration",
+        "required": [
+            "version"
+        ],
+        "$ocfRefs": {
+          "semVer": {
+            "name": "cap.core.type.versioning.semver",
+            "revision": "0.1.0"
+          }
+          "hostname": {
+            "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          }
+        },
+        "properties": {
+          "version": {
+            "$ref": "#/$ocfRefs/semVer"
+          }
+          "host": {
+            "$ref": "#/$ocfRefs/hostname"
+          }
+        },
+        "additionalProperties": true
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
