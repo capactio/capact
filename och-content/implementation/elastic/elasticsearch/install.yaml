@@ -61,10 +61,12 @@ spec:
             inputs:
               artifacts:
                 # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
-                # It contains the Interface parameters, in our case it is `confluence.install-input`.
                 - name: input-parameters
+            outputs:
+              artifacts:
+                - name: elasticsearch-config
+                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
             steps:
-
               # Here we prepare the input for the Helm runner.
               - - name: render-helm-args
                   voltron-action: jinja2.template
@@ -73,6 +75,7 @@ spec:
                       - name: template
                         raw:
                           data: |
+                            <% set password = random_word(length=20) %>
                             command: "install"
                             generateName: true
                             chart:
@@ -83,8 +86,15 @@ spec:
                               goTemplate:
                                 version: "{{ .Values.imageTag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
+                                username: "elastic"
+                                password: "<@ password @>"
                             values:
                               replicas: <@ replicas | default('3')@>
+                              extraEnvs:
+                                - name: ELASTIC_PASSWORD
+                                  value: "<@ password @>"
+                                - name: ELASTIC_USERNAME
+                                  value: 'elastic'
                               ingress:
                                 enabled: true
                                 annotations:
@@ -107,7 +117,10 @@ spec:
                           data: ""
 
               # Execute the Helm runner, with the input parameters created in the previous step.
-              # This will create the Helm chart and deploy our Confluence instance
+              # This will create the Helm chart and deploy our Elasticsearch instance
+              # To delete this release, you can use `helm uninstall`.
+              # The release name is available in elasticsearch-helm-release TypeInstance.
+              # Additionally, remove the PV and PVC as they are not remove as a part of helm uninstall.
               - - name: helm-run
                   voltron-action: helm.run
                   voltron-outputTypeInstances:

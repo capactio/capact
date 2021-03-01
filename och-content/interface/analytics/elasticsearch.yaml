@@ -4,7 +4,7 @@ kind: InterfaceGroup
 metadata:
   prefix: cap.interface.analytics # Computed during fetching the manifest
   name: elasticsearch
-  displayName: "Atlassian stack installation"
+  displayName: "Elasticsearch installation"
   description: "Elasticsearch is a distributed, free and open search and analytics engine for all types of data, including textual, numerical, geospatial, structured, and unstructured."
   documentationURL: https://www.elastic.co/what-is/elasticsearch
   supportURL: https://github.com/elastic/elasticsearch/issues
