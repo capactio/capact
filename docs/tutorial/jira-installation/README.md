@@ -11,8 +11,10 @@ This tutorial shows the basic concepts of Voltron on the Jira installation examp
 - [Prerequisites](#prerequisites)
 - [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster)
   * [Instructions](#instructions)
+  * [Clean-up](#clean-up)
 - [Install Jira with an external CloudSQL database](#install-jira-with-an-external-cloudsql-database)
   * [Instructions](#instructions-1)
+  * [Clean-up](#clean-up-1)
 - [Behind the scenes](#behind-the-scenes)
   * [OCF manifests](#ocf-manifests)
   * [Content development](#content-development)
@@ -303,7 +305,11 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     ![jira-installation](./assets/jira-installation.png)
 
 🎉 Hurray! You now have your own Jira instance installed. Be productive!
-   
+
+#### Clean-up 
+
+>⚠️ **CAUTION:** This removes all resources that you created.
+
 When you are done, remove the Action and Helm charts:
 
 ```bash
@@ -426,6 +432,10 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
 🎉 Hooray! You now have your own Jira instance installed. Be productive!
 
+#### Clean-up
+
+>⚠️ **CAUTION:** This removes all resources that you created.
+
 When you are done, remove the Cloud SQL manually and delete the Action:
 
 ```bash
@@ -469,5 +479,5 @@ Here are some useful links:
 
 - [Tutorial which shows the first steps on how to develop OCF content for Voltron.](../content-creation/README.md)
 - The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
-- [Documentation](https://github.com/Project-Voltron/go-voltron/tree/master/docs), which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guideline,
-- Google Drive folder with the [initial draft concepts](https://drive.google.com/drive/u/1/folders/1SBpIR0QUn9Rp68w6N3G-hqXdi1HfZQsn),
+- [Documentation](https://github.com/Project-Voltron/go-voltron/tree/master/docs), which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guideline.
+- Google Drive folder with the [initial draft concepts](https://drive.google.com/drive/u/1/folders/1SBpIR0QUn9Rp68w6N3G-hqXdi1HfZQsn).
