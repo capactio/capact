@@ -699,7 +699,7 @@ args:
                   - from: jira-install-install-db-postgresql
                     to: jira-install-install-db-postgres-install-terraform-apply-terraform-release
                   - from: jira-install-install-db-postgres-install-terraform-apply-terraform-release
-                    to: tfstate
+                    to: jira-install-install-db-postgres-install-terraform-apply-tfstate
                   - from: jira-install-create-db-database
                     to: jira-install-install-db-postgresql
           name: upload-output-type-instances-step

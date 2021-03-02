@@ -818,6 +818,8 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 			if output := findOutputTypeInstance(step, item.TypeInstanceName); output != nil {
 				item.TypeInstanceName = output.From
 				r.tryReplaceTypeInstanceName(output.Name, fmt.Sprintf("%s-%s", prefix, output.From))
+			} else {
+				r.tryReplaceTypeInstanceName(item.TypeInstanceName, fmt.Sprintf("%s-%s", prefix, item.TypeInstanceName))
 			}
 		}
 
