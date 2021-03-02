@@ -20,13 +20,13 @@ import (
 	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
+	"projectvoltron.dev/voltron/internal/k8s-engine/validate"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
-	"projectvoltron.dev/voltron/pkg/sdk/validate"
 )
 
 var (
