@@ -136,6 +136,8 @@ func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref
 		return nil, NewImplementationRevisionNotFoundError(ref)
 	}
 
+	result = SortImplementationRevisions(result, getOpts)
+
 	return result, nil
 }
 

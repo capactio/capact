@@ -7,6 +7,7 @@ type GetImplementationOptions struct {
 	implPathPattern         *string
 	requirementsSatisfiedBy map[string]*string
 	requires                map[string]*string
+	sortByPathAndRevision   bool
 }
 
 func (o *GetImplementationOptions) Apply(opts ...GetImplementationOption) {
@@ -18,7 +19,7 @@ func (o *GetImplementationOptions) Apply(opts ...GetImplementationOption) {
 // ListOption is some configuration that modifies options for a list request.
 type GetImplementationOption func(*GetImplementationOptions)
 
-func WithImplementationFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
+func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
 	return func(opt *GetImplementationOptions) {
 		// 1. Process attributes
 		opt.attrFilter = map[gqlpublicapi.FilterRule]map[string]*string{}
@@ -59,5 +60,11 @@ func WithImplementationFilter(filter gqlpublicapi.ImplementationRevisionFilter) 
 				opt.requires[req.Path] = req.Revision
 			}
 		}
+	}
+}
+
+func WithSortingByPathAndRevision() GetImplementationOption {
+	return func(options *GetImplementationOptions) {
+		options.sortByPathAndRevision = true
 	}
 }
