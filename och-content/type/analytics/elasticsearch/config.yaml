@@ -27,7 +27,8 @@ spec:
         "required": [
             "version",
             "host",
-            "basicAuthSecretName"
+            "basicAuthSecretName",
+            "port"
         ],
         "$ocfRefs": {
           "semVer": {
@@ -36,6 +37,10 @@ spec:
           },
           "hostname": {
             "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          },
+          "port": {
+            "name": "cap.core.type.networking.port",
             "revision": "0.1.0"
           }
         },
@@ -48,6 +53,9 @@ spec:
           },
           "basicAuthSecretName": {
             "type": "string"
+          }
+          "port": {
+            "$ref": "#/$ocfRefs/port"
           }
         },
         "additionalProperties": false

@@ -113,13 +113,21 @@ spec:
                             output:
                               goTemplate:
                                 version: "{{ .Values.imageTag }}"
+                              <% if host %>
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
+                                port: 80
+                              <% else %>
+                                host: "{{ template \"elasticsearch.masterService\" . }}"
+                                port: "{{ .Values.httpPort }}"
+                              <% endif %>
                                 basicAuthSecretName: <@ metadata.name @>
                             values:
                               replicas: <@ replicas | default('3')@>
                               esConfig:
                                 elasticsearch.yml: |
+                                  network.host: 0.0.0.0
                                   xpack.security.enabled: true
+                                  xpack.security.transport.ssl.enabled: true
                               extraEnvs:
                                 - name: ELASTIC_PASSWORD
                                   valueFrom:
@@ -131,6 +139,7 @@ spec:
                                     secretKeyRef:
                                       name: <@ metadata.name @>
                                       key: username
+                              <% if host %>
                               ingress:
                                 enabled: true
                                 annotations:
@@ -146,6 +155,7 @@ spec:
                                 - host: <@ host @>
                                   paths:
                                     - path: '/'
+                              <% endif %>
                       - name: input-parameters
                         from:  "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
