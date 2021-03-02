@@ -73,7 +73,7 @@ var _ = Describe("GraphQL API", func() {
 					PathPattern: ptr.String(pathPattern),
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithImplementationFilter(filter))
+				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -97,7 +97,7 @@ var _ = Describe("GraphQL API", func() {
 					Attributes: []*gqlpublicapi.AttributeFilterInput{&attr},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithImplementationFilter(filter))
+				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -122,7 +122,7 @@ var _ = Describe("GraphQL API", func() {
 					Attributes: []*gqlpublicapi.AttributeFilterInput{&attr},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithImplementationFilter(filter))
+				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -152,7 +152,7 @@ var _ = Describe("GraphQL API", func() {
 					},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithImplementationFilter(filter))
+				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))

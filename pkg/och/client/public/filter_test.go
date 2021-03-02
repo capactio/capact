@@ -90,7 +90,7 @@ func TestImplementationAttributeFilters(t *testing.T) {
 			}
 
 			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 
@@ -176,7 +176,7 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 			}
 
 			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 
@@ -209,7 +209,7 @@ func TestImplementationPathPatternFilters(t *testing.T) {
 	}
 
 	getOpts := &GetImplementationOptions{}
-	getOpts.Apply(WithImplementationFilter(filter))
+	getOpts.Apply(WithFilter(filter))
 
 	allRevs := append(expRevision, revisionToFilterOut...)
 
@@ -369,7 +369,7 @@ func TestImplementationRequiresFilters(t *testing.T) {
 			}
 
 			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 
