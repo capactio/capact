@@ -133,7 +133,12 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 		filter := e.implementationConstraintsToOCHFilter(rule.ImplementationConstraints)
 		filter.RequirementsSatisfiedBy = currentTypeInstances
 
-		implementations, err := e.ochCli.GetImplementationRevisionsForInterface(ctx, interfaceRef, public.WithFilter(filter))
+		implementations, err := e.ochCli.GetImplementationRevisionsForInterface(
+			ctx,
+			interfaceRef,
+			public.WithFilter(filter),
+			public.WithSortingByPathAscAndRevisionDesc(),
+		)
 		switch err := errors.Cause(err).(type) {
 		case nil:
 		case *public.ImplementationRevisionNotFoundError:

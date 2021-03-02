@@ -3,11 +3,11 @@ package public
 import gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 type GetImplementationOptions struct {
-	attrFilter              map[gqlpublicapi.FilterRule]map[string]*string
-	implPathPattern         *string
-	requirementsSatisfiedBy map[string]*string
-	requires                map[string]*string
-	sortByPathAndRevision   bool
+	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
+	implPathPattern              *string
+	requirementsSatisfiedBy      map[string]*string
+	requires                     map[string]*string
+	sortByPathAscAndRevisionDesc bool
 }
 
 func (o *GetImplementationOptions) Apply(opts ...GetImplementationOption) {
@@ -63,8 +63,8 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementat
 	}
 }
 
-func WithSortingByPathAndRevision() GetImplementationOption {
+func WithSortingByPathAscAndRevisionDesc() GetImplementationOption {
 	return func(options *GetImplementationOptions) {
-		options.sortByPathAndRevision = true
+		options.sortByPathAscAndRevisionDesc = true
 	}
 }

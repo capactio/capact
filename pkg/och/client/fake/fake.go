@@ -69,7 +69,7 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 		return nil, public.NewImplementationRevisionNotFoundError(ref)
 	}
 
-	return result, nil
+	return public.SortImplementationRevisions(result, getOpts), nil
 }
 
 func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
