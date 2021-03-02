@@ -17,6 +17,8 @@ metadata:
   attributes:
     cap.attribute.cloud.provider.gcp:
       revision: 0.1.0
+    cap.attribute.cloud.tooling.gcloud-cli:
+      revision: 0.1.0
 
 spec:
   appVersion: "10, 11, 12, 13"
