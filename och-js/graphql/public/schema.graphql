@@ -54,6 +54,14 @@ input ImplementationFilter {
   pathPattern: NodePathPattern
 }
 
+# TODO: Enable lint rule once the InterfaceRevision.implementationRevisionsForRequirements is implemented
+# lint-disable defined-types-are-used
+"""
+Dedicated input type for filtering ImplementationRevisions in future resolver
+`InterfaceRevision.implementationRevisionsForRequirements`.
+
+Currently used only for OCH Go client package as the server-side resolver is not implemented.
+"""
 input ImplementationRevisionFilter {
   pathPattern: NodePathPattern
 
@@ -71,11 +79,10 @@ input ImplementationRevisionFilter {
 
   For every item in the array, the returned ImplementationRevisions must specify
   such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
-
-  Not implemented.
   """
   requires: [TypeReferenceWithOptionalRevision]
 }
+# lint-enable defined-types-are-used
 
 input TypeInstanceValue {
   typeRef: TypeReferenceWithOptionalRevision
@@ -214,89 +221,9 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
   implementationRevisions: [ImplementationRevision!]!
     @relation(name: "IMPLEMENTS", direction: "IN")
 
-  implementationRevisionsForRequirements(
-    filter: ImplementationRevisionFilter = {}
-  ): [ImplementationRevision!]!
-    @cypher(
-      statement: """
-      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
-        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
-
-      // Get all Attribute nodes, which cannot be in the Implementation graph.
-      CALL {
-        WITH excluded
-        UNWIND excluded AS f
-        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
-        RETURN collect(ex) as excludedAttributes
-      }
-
-      // Get all Attribute nodes, which must be in the Implementation graph.
-      CALL {
-        WITH included
-        UNWIND included AS f
-        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
-        RETURN collect(ex) as includedAttributes
-      }
-
-      // Get all ImplementationRequirementItem nodes, which are considered by the filter.
-      CALL {
-        UNWIND $filter.requirementsSatisfiedBy AS instance
-        MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})
-        RETURN collect(items) as matchedItems
-      }
-
-      // Flatten and group requirements for ImplementationRevision.
-      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)
-      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)
-        WITH collect(oneOfItem) as oneOfReq
-        RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs
-      }
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)
-        WITH collect(anyOfItem) as anyOfReq
-        RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs
-      }
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)
-        WITH collect(allOfItem) as allOfReq
-        RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs
-      }
-
-      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)
-      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)
-      MATCH (rev)
-      WHERE
-        ($filter.pathPattern IS null OR meta.path =~ $filter.pathPattern)
-        AND
-        (
-          all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))
-          AND
-          all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))
-          AND
-          all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))
-        )
-        AND
-        (
-          $filter.attributes IS NULL
-          OR
-          (
-            all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))
-            AND
-            none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))
-          )
-        )
-
-      RETURN rev
-      """
-    )
+  # TODO: Reimplement the resolver:
+  # implementationRevisionsForRequirements(filter: ImplementationRevisionFilter): [ImplementationRevision!]!
+  # See the initial implementation: https://github.com/Project-Voltron/go-voltron/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
 }
 
 type InterfaceSpec @additionalLabels(labels: ["published"]){

@@ -207,12 +207,11 @@ type ComplexityRoot struct {
 	}
 
 	InterfaceRevision struct {
-		ImplementationRevisions                func(childComplexity int) int
-		ImplementationRevisionsForRequirements func(childComplexity int, filter *ImplementationRevisionFilter) int
-		Metadata                               func(childComplexity int) int
-		Revision                               func(childComplexity int) int
-		Signature                              func(childComplexity int) int
-		Spec                                   func(childComplexity int) int
+		ImplementationRevisions func(childComplexity int) int
+		Metadata                func(childComplexity int) int
+		Revision                func(childComplexity int) int
+		Signature               func(childComplexity int) int
+		Spec                    func(childComplexity int) int
 	}
 
 	InterfaceSpec struct {
@@ -1027,18 +1026,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InterfaceRevision.ImplementationRevisions(childComplexity), true
 
-	case "InterfaceRevision.implementationRevisionsForRequirements":
-		if e.complexity.InterfaceRevision.ImplementationRevisionsForRequirements == nil {
-			break
-		}
-
-		args, err := ec.field_InterfaceRevision_implementationRevisionsForRequirements_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.InterfaceRevision.ImplementationRevisionsForRequirements(childComplexity, args["filter"].(*ImplementationRevisionFilter)), true
-
 	case "InterfaceRevision.metadata":
 		if e.complexity.InterfaceRevision.Metadata == nil {
 			break
@@ -1688,6 +1675,14 @@ input ImplementationFilter {
   pathPattern: NodePathPattern
 }
 
+# TODO: Enable lint rule once the InterfaceRevision.implementationRevisionsForRequirements is implemented
+# lint-disable defined-types-are-used
+"""
+Dedicated input type for filtering ImplementationRevisions in future resolver
+` + "`" + `InterfaceRevision.implementationRevisionsForRequirements` + "`" + `.
+
+Currently used only for OCH Go client package as the server-side resolver is not implemented.
+"""
 input ImplementationRevisionFilter {
   pathPattern: NodePathPattern
 
@@ -1705,11 +1700,10 @@ input ImplementationRevisionFilter {
 
   For every item in the array, the returned ImplementationRevisions must specify
   such TypeReference in ` + "`" + `Implementation.spec.requires` + "`" + ` in any of the sections: oneOf, anyOf or allOf.
-
-  Not implemented.
   """
   requires: [TypeReferenceWithOptionalRevision]
 }
+# lint-enable defined-types-are-used
 
 input TypeInstanceValue {
   typeRef: TypeReferenceWithOptionalRevision
@@ -1848,89 +1842,9 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
   implementationRevisions: [ImplementationRevision!]!
     @relation(name: "IMPLEMENTS", direction: "IN")
 
-  implementationRevisionsForRequirements(
-    filter: ImplementationRevisionFilter = {}
-  ): [ImplementationRevision!]!
-    @cypher(
-      statement: """
-      WITH [x IN $filter.attributes WHERE x.rule = "EXCLUDE" | x ] AS excluded,
-        [x IN $filter.attributes WHERE x.rule = "INCLUDE" | x ] AS included
-
-      // Get all Attribute nodes, which cannot be in the Implementation graph.
-      CALL {
-        WITH excluded
-        UNWIND excluded AS f
-        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
-        RETURN collect(ex) as excludedAttributes
-      }
-
-      // Get all Attribute nodes, which must be in the Implementation graph.
-      CALL {
-        WITH included
-        UNWIND included AS f
-        MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})
-        RETURN collect(ex) as includedAttributes
-      }
-
-      // Get all ImplementationRequirementItem nodes, which are considered by the filter.
-      CALL {
-        UNWIND $filter.requirementsSatisfiedBy AS instance
-        MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})
-        RETURN collect(items) as matchedItems
-      }
-
-      // Flatten and group requirements for ImplementationRevision.
-      MATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)
-      OPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)
-        WITH collect(oneOfItem) as oneOfReq
-        RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs
-      }
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)
-        WITH collect(anyOfItem) as anyOfReq
-        RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs
-      }
-
-      CALL {
-      	WITH requirement
-        OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)
-        WITH collect(allOfItem) as allOfReq
-        RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs
-      }
-
-      MATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)
-      OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)
-      MATCH (rev)
-      WHERE
-        ($filter.pathPattern IS null OR meta.path =~ $filter.pathPattern)
-        AND
-        (
-          all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))
-          AND
-          all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))
-          AND
-          all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))
-        )
-        AND
-        (
-          $filter.attributes IS NULL
-          OR
-          (
-            all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))
-            AND
-            none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))
-          )
-        )
-
-      RETURN rev
-      """
-    )
+  # TODO: Reimplement the resolver:
+  # implementationRevisionsForRequirements(filter: ImplementationRevisionFilter): [ImplementationRevision!]!
+  # See the initial implementation: https://github.com/Project-Voltron/go-voltron/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
 }
 
 type InterfaceSpec @additionalLabels(labels: ["published"]){
@@ -2410,21 +2324,6 @@ func (ec *executionContext) field_InterfaceGroup_interfaces_args(ctx context.Con
 	if tmp, ok := rawArgs["filter"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
 		arg0, err = ec.unmarshalOInterfaceFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInterfaceFilter(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["filter"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_InterfaceRevision_implementationRevisionsForRequirements_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *ImplementationRevisionFilter
-	if tmp, ok := rawArgs["filter"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
-		arg0, err = ec.unmarshalOImplementationRevisionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionFilter(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -7993,82 +7892,6 @@ func (ec *executionContext) _InterfaceRevision_implementationRevisions(ctx conte
 				return nil, errors.New("directive relation is not implemented")
 			}
 			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.([]*ImplementationRevision); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/public.ImplementationRevision`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*ImplementationRevision)
-	fc.Result = res
-	return ec.marshalNImplementationRevision2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _InterfaceRevision_implementationRevisionsForRequirements(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InterfaceRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_InterfaceRevision_implementationRevisionsForRequirements_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.ImplementationRevisionsForRequirements, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\n// Get all Attribute nodes, which cannot be in the Implementation graph.\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})\n  RETURN collect(ex) as excludedAttributes\n}\n\n// Get all Attribute nodes, which must be in the Implementation graph.\nCALL {\n  WITH included\n  UNWIND included AS f\n  MATCH (ex:AttributeRevision:published)-[:DESCRIBED_BY]->(meta:GenericMetadata:published {path: f.path})\n  RETURN collect(ex) as includedAttributes\n}\n\n// Get all ImplementationRequirementItem nodes, which are considered by the filter.\nCALL {\n  UNWIND $filter.requirementsSatisfiedBy AS instance\n  MATCH (items:ImplementationRequirementItem:published)-[:REFERENCES_TYPE]->(:TypeReference:published {path: instance.typeRef.path, revision: instance.typeRef.revision})\n  RETURN collect(items) as matchedItems\n}\n\n// Flatten and group requirements for ImplementationRevision.\nMATCH (this)<-[:IMPLEMENTS]-(rev:ImplementationRevision:published)-[:SPECIFIED_BY]->(spec:ImplementationSpec:published)\nOPTIONAL MATCH (spec)-[:REQUIRES]->(requirement:ImplementationRequirement:published)\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ONE_OF]->(oneOfItem:ImplementationRequirementItem:published)\n  WITH collect(oneOfItem) as oneOfReq\n  RETURN [req IN collect(oneOfReq) WHERE req <> [] | req] as oneOfReqs\n}\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ANY_OF]->(anyOfItem:ImplementationRequirementItem:published)\n  WITH collect(anyOfItem) as anyOfReq\n  RETURN [req IN collect(anyOfReq) WHERE req <> [] | req] as anyOfReqs\n}\n\nCALL {\n\tWITH requirement\n  OPTIONAL MATCH (requirement)-[:ALL_OF]->(allOfItem:ImplementationRequirementItem:published)\n  WITH collect(allOfItem) as allOfReq\n  RETURN [req IN collect(allOfReq) WHERE req <> [] | req] as allOfReqs\n}\n\nMATCH (rev)-[:DESCRIBED_BY]->(meta:ImplementationMetadata:published)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeRevision:published)-[:DESCRIBED_BY]->(attrMeta:GenericMetadata:published)\nMATCH (rev)\nWHERE\n  ($filter.pathPattern IS null OR meta.path =~ $filter.pathPattern)\n  AND\n  (\n    all(oneOfReq IN oneOfReqs WHERE single(item in oneOfReq WHERE item in matchedItems))\n    AND\n    all(anyOfReq IN anyOfReqs WHERE any(item in anyOfReq WHERE item in matchedItems))\n    AND\n    all(allOfReq IN allOfReqs WHERE all(item in allOfReq WHERE item in matchedItems))\n  )\n  AND\n  (\n    $filter.attributes IS NULL\n    OR\n    (\n      all(inc IN includedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(inc))\n      AND\n      none(exc IN excludedAttributes WHERE (meta)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n\nRETURN rev")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Cypher == nil {
-				return nil, errors.New("directive cypher is not implemented")
-			}
-			return ec.directives.Cypher(ctx, obj, directive1, statement)
 		}
 
 		tmp, err := directive2(rctx)
@@ -14229,11 +14052,6 @@ func (ec *executionContext) _InterfaceRevision(ctx context.Context, sel ast.Sele
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "implementationRevisionsForRequirements":
-			out.Values[i] = ec._InterfaceRevision_implementationRevisionsForRequirements(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -17141,14 +16959,6 @@ func (ec *executionContext) marshalOImplementationRevision2ᚖprojectvoltronᚗd
 		return graphql.Null
 	}
 	return ec._ImplementationRevision(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOImplementationRevisionFilter2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationRevisionFilter(ctx context.Context, v interface{}) (*ImplementationRevisionFilter, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputImplementationRevisionFilter(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOInputTypeInstance2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx context.Context, sel ast.SelectionSet, v *InputTypeInstance) graphql.Marshaler {
