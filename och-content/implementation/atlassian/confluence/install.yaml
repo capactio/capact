@@ -150,6 +150,11 @@ spec:
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:
+                              envVars:
+                                ATL_PROXY_NAME: <@ input.host @>
+                                ATL_PROXY_PORT: "443"
+                                ATL_TOMCAT_SCHEME: "https"
+                                ATL_TOMCAT_SECURE: "true"
                               image:
                                 tag: "7.4.4"
                               postgresql:
