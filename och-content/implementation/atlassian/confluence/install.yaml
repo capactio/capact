@@ -144,11 +144,14 @@ spec:
                             chart:
                               name: "confluence-server"
                               repo: "https://helm.mox.sh"
+                              version: "0.2.5"
                             output:
                               goTemplate:
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:
+                              image:
+                                tag: "7.4.4"
                               postgresql:
                                 enabled: false
                               databaseConnection:
