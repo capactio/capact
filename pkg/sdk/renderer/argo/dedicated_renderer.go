@@ -807,9 +807,9 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep, a
 }
 
 func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, prefix string, iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision, inputArtifacts []InputArtifact) error {
-	inputArtifactNamesMap := map[string]*string{}
+	artifactNamesMap := map[string]*string{}
 	for _, artifact := range inputArtifacts {
-		inputArtifactNamesMap[artifact.artifact.Name] = artifact.typeInstanceReference
+		artifactNamesMap[artifact.artifact.Name] = artifact.typeInstanceReference
 	}
 
 	for _, item := range impl.Spec.OutputTypeInstanceRelations {
@@ -834,6 +834,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 		}
 
 		artifactName := r.addTypeInstanceName(name)
+		artifactNamesMap[item.TypeInstanceName] = artifactName
 
 		r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
 			ArtifactName: artifactName,
@@ -846,7 +847,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 		})
 
 		for _, uses := range item.Uses {
-			usesArtifactName, ok := inputArtifactNamesMap[uses]
+			usesArtifactName, ok := artifactNamesMap[uses]
 			if !ok {
 				usesArtifactName = r.addTypeInstanceName(uses)
 			}

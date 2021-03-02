@@ -267,7 +267,8 @@ args:
         - globalName: jira-install-install-db-postgres-install-terraform-apply-additional
           name: additional
           path: /terraform.yaml
-        - name: tfstate
+        - globalName: jira-install-install-db-postgres-install-terraform-apply-tfstate
+          name: tfstate
           path: /terraform.tfstate
     - arguments: {}
       container:

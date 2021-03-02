@@ -94,7 +94,7 @@ func (r *terraformRunner) WaitForCompletion(ctx context.Context, in runner.WaitF
 		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while saving output files")
 	}
 
-	return &runner.WaitForCompletionOutput{Succeeded: true, Message: "Terraform fnished"}, nil
+	return &runner.WaitForCompletionOutput{Succeeded: true, Message: "Terraform finished"}, nil
 }
 
 func (r *terraformRunner) Name() string {

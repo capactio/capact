@@ -69,6 +69,7 @@ spec:
                   globalName: additional
                   path: "/terraform.yaml"
                 - name: tfstate
+                  globalName: tfstate
                   path: "/terraform.tfstate"
             container:
               image: gcr.io/projectvoltron/terraform-runner:a6e2ac4
