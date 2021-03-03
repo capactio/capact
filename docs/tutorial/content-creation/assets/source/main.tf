@@ -58,6 +58,10 @@ resource "google_sql_database_instance" "master" {
         value = "0.0.0.0/0"
       }
     }
+    database_flags {
+      name  = "max_connections"
+      value = 1000
+    }
   }
 }
 
