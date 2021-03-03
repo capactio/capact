@@ -560,11 +560,9 @@ func currentCommit(session neo4j.Session) (string, error) {
 
 func getPrefix(manifestPath string, rootDir string) string {
 	path := strings.TrimPrefix(manifestPath, rootDir)
-	path = strings.TrimSuffix(path, ".yaml")
-	path = strings.ReplaceAll(path, "/", ".")
-	path = "cap" + path
-	parts := strings.Split(path, ".")
+	parts := strings.Split(path, "/")
 	prefix := strings.Join(parts[:len(parts)-1], ".")
+	prefix = "cap" + prefix
 	return prefix
 }
 

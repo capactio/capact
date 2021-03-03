@@ -89,8 +89,8 @@ func TestImplementationAttributeFilters(t *testing.T) {
 				Attributes: []*gqlpublicapi.AttributeFilterInput{tt.filterAttr},
 			}
 
-			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts := &GetImplementationRevisionOptions{}
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 
@@ -175,8 +175,8 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 				RequirementsSatisfiedBy: tt.requirementsSatisfiedBy,
 			}
 
-			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts := &GetImplementationRevisionOptions{}
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 
@@ -208,8 +208,8 @@ func TestImplementationPathPatternFilters(t *testing.T) {
 		PathPattern: ptr.String("cap.implementation.db.postgres.*"),
 	}
 
-	getOpts := &GetImplementationOptions{}
-	getOpts.Apply(WithImplementationFilter(filter))
+	getOpts := &GetImplementationRevisionOptions{}
+	getOpts.Apply(WithFilter(filter))
 
 	allRevs := append(expRevision, revisionToFilterOut...)
 
@@ -368,8 +368,8 @@ func TestImplementationRequiresFilters(t *testing.T) {
 				Requires: tt.requires,
 			}
 
-			getOpts := &GetImplementationOptions{}
-			getOpts.Apply(WithImplementationFilter(filter))
+			getOpts := &GetImplementationRevisionOptions{}
+			getOpts.Apply(WithFilter(filter))
 
 			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
 

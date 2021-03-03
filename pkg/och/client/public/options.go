@@ -2,24 +2,25 @@ package public
 
 import gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
-type GetImplementationOptions struct {
-	attrFilter              map[gqlpublicapi.FilterRule]map[string]*string
-	implPathPattern         *string
-	requirementsSatisfiedBy map[string]*string
-	requires                map[string]*string
+type GetImplementationRevisionOptions struct {
+	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
+	implPathPattern              *string
+	requirementsSatisfiedBy      map[string]*string
+	requires                     map[string]*string
+	sortByPathAscAndRevisionDesc bool
 }
 
-func (o *GetImplementationOptions) Apply(opts ...GetImplementationOption) {
+func (o *GetImplementationRevisionOptions) Apply(opts ...GetImplementationOption) {
 	for _, opt := range opts {
 		opt(o)
 	}
 }
 
 // ListOption is some configuration that modifies options for a list request.
-type GetImplementationOption func(*GetImplementationOptions)
+type GetImplementationOption func(*GetImplementationRevisionOptions)
 
-func WithImplementationFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
-	return func(opt *GetImplementationOptions) {
+func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
+	return func(opt *GetImplementationRevisionOptions) {
 		// 1. Process attributes
 		opt.attrFilter = map[gqlpublicapi.FilterRule]map[string]*string{}
 
@@ -59,5 +60,11 @@ func WithImplementationFilter(filter gqlpublicapi.ImplementationRevisionFilter) 
 				opt.requires[req.Path] = req.Revision
 			}
 		}
+	}
+}
+
+func WithSortingByPathAscAndRevisionDesc() GetImplementationOption {
+	return func(options *GetImplementationRevisionOptions) {
+		options.sortByPathAscAndRevisionDesc = true
 	}
 }
