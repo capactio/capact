@@ -141,6 +141,10 @@ type ImplementationRevision struct {
 	Interfaces []*InterfaceRevision    `json:"interfaces"`
 }
 
+// Dedicated input type for filtering ImplementationRevisions in future resolver
+// `InterfaceRevision.implementationRevisionsForRequirements`.
+//
+// Currently used only for OCH Go client package as the server-side resolver is not implemented.
 type ImplementationRevisionFilter struct {
 	PathPattern *string `json:"pathPattern"`
 	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
@@ -152,8 +156,6 @@ type ImplementationRevisionFilter struct {
 	//
 	// For every item in the array, the returned ImplementationRevisions must specify
 	// such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
-	//
-	// Not implemented.
 	Requires []*TypeReferenceWithOptionalRevision `json:"requires"`
 }
 
@@ -220,12 +222,11 @@ type InterfaceReference struct {
 }
 
 type InterfaceRevision struct {
-	Revision                               string                    `json:"revision"`
-	Metadata                               *GenericMetadata          `json:"metadata"`
-	Spec                                   *InterfaceSpec            `json:"spec"`
-	Signature                              *Signature                `json:"signature"`
-	ImplementationRevisions                []*ImplementationRevision `json:"implementationRevisions"`
-	ImplementationRevisionsForRequirements []*ImplementationRevision `json:"implementationRevisionsForRequirements"`
+	Revision                string                    `json:"revision"`
+	Metadata                *GenericMetadata          `json:"metadata"`
+	Spec                    *InterfaceSpec            `json:"spec"`
+	Signature               *Signature                `json:"signature"`
+	ImplementationRevisions []*ImplementationRevision `json:"implementationRevisions"`
 }
 
 type InterfaceSpec struct {
