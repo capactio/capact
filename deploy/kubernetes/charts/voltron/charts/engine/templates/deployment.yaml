@@ -58,6 +58,8 @@ spec:
               value: {{.Release.Namespace}}
             - name: APP_OCH_ACTIONS_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.argoActions.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+            - name: GOGC
+              value: "50"
           ports:
             - name: http
               containerPort: 8080
