@@ -5,6 +5,7 @@ import (
 	"time"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
+	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
 	uber_zap "go.uber.org/zap"
@@ -106,7 +107,10 @@ func main() {
 	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage)
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
-	actionValidator := validate.NewActionValidator()
+
+	wfCli, err := wfclientset.NewForConfig(k8sCfg)
+	exitOnError(err, "while creating Argo client")
+	actionValidator := validate.NewActionValidator(wfCli)
 
 	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, controller.Config{
 		BuiltinRunner: cfg.BuiltinRunner,

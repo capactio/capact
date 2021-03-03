@@ -4,24 +4,37 @@ import (
 	"encoding/json"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
+	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
+	"github.com/argoproj/argo/workflow/templateresolution"
 	"github.com/argoproj/argo/workflow/validate"
 	"github.com/pkg/errors"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
 
-type ActionValidator struct{}
-
-func NewActionValidator() *ActionValidator {
-	return &ActionValidator{}
+type ActionValidator struct {
+	wfCli *wfclientset.Clientset
 }
 
-func (v *ActionValidator) Validate(action *types.Action) error {
+func NewActionValidator(wfCli *wfclientset.Clientset) *ActionValidator {
+	return &ActionValidator{
+		wfCli: wfCli,
+	}
+}
+
+func (v *ActionValidator) Validate(action *types.Action, namespace string) error {
+	if action == nil {
+		return nil
+	}
+
 	workflow, err := getWorkflowFromAction(action)
 	if err != nil {
 		return errors.Wrap(err, "while getting workflow from Action")
 	}
 
-	_, err = validate.ValidateWorkflow(nil, nil, workflow, validate.ValidateOpts{
+	wfTmplGetter := templateresolution.WrapWorkflowTemplateInterface(v.wfCli.ArgoprojV1alpha1().WorkflowTemplates(namespace))
+	cwfTmplGetter := templateresolution.WrapClusterWorkflowTemplateInterface(v.wfCli.ArgoprojV1alpha1().ClusterWorkflowTemplates())
+
+	_, err = validate.ValidateWorkflow(wfTmplGetter, cwfTmplGetter, workflow, validate.ValidateOpts{
 		Lint: true,
 	})
 	if err != nil {

@@ -52,7 +52,7 @@ type ArgoRenderer interface {
 }
 
 type ActionValidator interface {
-	Validate(action *types.Action) error
+	Validate(action *types.Action, namespace string) error
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -271,7 +271,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if err := a.actionValidator.Validate(renderedAction); err != nil {
+	if err := a.actionValidator.Validate(renderedAction, action.Namespace); err != nil {
 		return nil, errors.Wrap(err, "while validating rendered Action")
 	}
 

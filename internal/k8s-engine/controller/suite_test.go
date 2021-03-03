@@ -115,7 +115,7 @@ func (c *argoRendererFake) Render(ctx context.Context, runnerCtx argo.RunnerCont
 
 type actionValidatorFake struct{}
 
-func (v *actionValidatorFake) Validate(action *types.Action) error {
+func (v *actionValidatorFake) Validate(action *types.Action, namespace string) error {
 	return nil
 }
 
