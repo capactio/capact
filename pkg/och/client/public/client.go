@@ -103,7 +103,7 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 }
 
 func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
-	getOpts := &GetImplementationOptions{}
+	getOpts := &GetImplementationRevisionOptions{}
 	getOpts.Apply(opts...)
 
 	query, params := c.interfaceQueryForRef(ref)

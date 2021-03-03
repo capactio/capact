@@ -45,7 +45,7 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 }
 
 func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
-	getOpts := &public.GetImplementationOptions{}
+	getOpts := &public.GetImplementationRevisionOptions{}
 	getOpts.Apply(opts...)
 
 	var out []ochpublicgraphql.ImplementationRevision

@@ -7,48 +7,51 @@ import (
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *GetImplementationOptions) []gqlpublicapi.ImplementationRevision {
+func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *GetImplementationRevisionOptions) []gqlpublicapi.ImplementationRevision {
 	if opts == nil {
 		return revs
 	}
 
-	revs = sortImplementationRevisionsByPathAscAndRevisionDesc(revs, opts.sortByPathAscAndRevisionDesc)
+	if opts.sortByPathAscAndRevisionDesc {
+		sort.Sort(implRevsByPathAscAndRevisionDesc(revs))
+	}
 
 	return revs
 }
 
-// sortImplementationRevisionsByPathAscAndRevisionDesc sorts by Path ascending, and Revision descending.
-func sortImplementationRevisionsByPathAscAndRevisionDesc(revs []gqlpublicapi.ImplementationRevision, shouldSort bool) []gqlpublicapi.ImplementationRevision {
-	if !shouldSort {
-		return revs
+type implRevsByPathAscAndRevisionDesc []gqlpublicapi.ImplementationRevision
+
+func (revs implRevsByPathAscAndRevisionDesc) Len() int {
+	return len(revs)
+}
+
+func (revs implRevsByPathAscAndRevisionDesc) Swap(i, j int) {
+	revs[i], revs[j] = revs[j], revs[i]
+}
+
+func (revs implRevsByPathAscAndRevisionDesc) Less(i, j int) bool {
+	if revs[i].Metadata == nil {
+		return false
 	}
 
-	sort.Slice(revs, func(i, j int) bool {
-		if revs[i].Metadata == nil {
-			return false
-		}
+	if revs[j].Metadata == nil {
+		return true
+	}
 
-		if revs[j].Metadata == nil {
-			return true
-		}
+	if revs[i].Metadata.Path < revs[j].Metadata.Path {
+		return true
+	}
 
-		if revs[i].Metadata.Path < revs[j].Metadata.Path {
-			return true
-		}
+	if revs[i].Metadata.Path > revs[j].Metadata.Path {
+		return false
+	}
 
-		if revs[i].Metadata.Path > revs[j].Metadata.Path {
-			return false
-		}
+	vi, erri := semver.NewVersion(revs[i].Revision)
+	vj, errj := semver.NewVersion(revs[j].Revision)
+	if erri != nil || errj != nil {
+		// fallback to string comparison
+		return revs[i].Revision > revs[j].Revision
+	}
 
-		vi, erri := semver.NewVersion(revs[i].Revision)
-		vj, errj := semver.NewVersion(revs[j].Revision)
-		if erri != nil || errj != nil {
-			// fallback to string comparison
-			return revs[i].Revision > revs[j].Revision
-		}
-
-		return vi.GreaterThan(vj)
-	})
-
-	return revs
+	return vi.GreaterThan(vj)
 }
