@@ -5,6 +5,7 @@ import (
 	"time"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
+	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
 	uber_zap "go.uber.org/zap"
@@ -20,6 +21,7 @@ import (
 	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
+	"projectvoltron.dev/voltron/internal/k8s-engine/validate"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/httputil"
@@ -106,7 +108,11 @@ func main() {
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
 
-	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, controller.Config{
+	wfCli, err := wfclientset.NewForConfig(k8sCfg)
+	exitOnError(err, "while creating Argo client")
+	actionValidator := validate.NewActionValidator(wfCli)
+
+	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, controller.Config{
 		BuiltinRunner: cfg.BuiltinRunner,
 		ClusterPolicy: cfg.ClusterPolicy,
 	})

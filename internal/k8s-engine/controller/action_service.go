@@ -51,22 +51,28 @@ type ArgoRenderer interface {
 	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
 }
 
+type ActionValidator interface {
+	Validate(action *types.Action, namespace string) error
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli           client.Client
 	builtinRunner    BuiltinRunnerConfig
 	clusterPolicyCfg ClusterPolicyConfig
 	argoRenderer     ArgoRenderer
+	actionValidator  ActionValidator
 	log              *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:           cli,
 		builtinRunner:    cfg.BuiltinRunner,
 		clusterPolicyCfg: cfg.ClusterPolicy,
 		argoRenderer:     argoRenderer,
+		actionValidator:  actionValidator,
 		log:              log,
 	}
 }
@@ -263,6 +269,10 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
+	}
+
+	if err := a.actionValidator.Validate(renderedAction, action.Namespace); err != nil {
+		return nil, errors.Wrap(err, "while validating rendered Action")
 	}
 
 	actionBytes, err := json.Marshal(renderedAction)
