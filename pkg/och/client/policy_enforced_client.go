@@ -18,9 +18,9 @@ import (
 
 type OCHClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
-	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
+	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
 	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error)
-	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 }
 
 type PolicyEnforcedClient struct {
@@ -86,8 +86,8 @@ func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule
 	return typeInstancesToInject
 }
 
-func (e *PolicyEnforcedClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
-	return e.ochCli.GetInterfaceRevision(ctx, ref)
+func (e *PolicyEnforcedClient) FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
+	return e.ochCli.FindInterfaceRevision(ctx, ref)
 }
 
 // SetPolicy sets policy to use. This setter is thread safe.
@@ -133,17 +133,13 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 		filter := e.implementationConstraintsToOCHFilter(rule.ImplementationConstraints)
 		filter.RequirementsSatisfiedBy = currentTypeInstances
 
-		implementations, err := e.ochCli.GetImplementationRevisionsForInterface(
+		implementations, err := e.ochCli.ListImplementationRevisionsForInterface(
 			ctx,
 			interfaceRef,
 			public.WithFilter(filter),
 			public.WithSortingByPathAscAndRevisionDesc(),
 		)
-		switch err := errors.Cause(err).(type) {
-		case nil:
-		case *public.ImplementationRevisionNotFoundError:
-			continue
-		default:
+		if err != nil {
 			return nil, clusterpolicy.Rule{}, err
 		}
 

@@ -34,7 +34,7 @@ var _ = Describe("GraphQL API", func() {
 			)
 
 			It("for latest Interface when revision is not specified", func() {
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, gqlpublicapi.InterfaceReference{
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, gqlpublicapi.InterfaceReference{
 					Path: interfacePath,
 				})
 
@@ -48,7 +48,7 @@ var _ = Describe("GraphQL API", func() {
 			})
 
 			It("for a specific Interface when revision is defined", func() {
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, gqlpublicapi.InterfaceReference{
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, gqlpublicapi.InterfaceReference{
 					Path:     interfacePath,
 					Revision: revision,
 				})
@@ -73,7 +73,7 @@ var _ = Describe("GraphQL API", func() {
 					PathPattern: ptr.String(pathPattern),
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -97,7 +97,7 @@ var _ = Describe("GraphQL API", func() {
 					Attributes: []*gqlpublicapi.AttributeFilterInput{&attr},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -122,7 +122,7 @@ var _ = Describe("GraphQL API", func() {
 					Attributes: []*gqlpublicapi.AttributeFilterInput{&attr},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -152,7 +152,7 @@ var _ = Describe("GraphQL API", func() {
 					},
 				}
 
-				revisionsForInterface, err := cli.GetImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
+				revisionsForInterface, err := cli.ListImplementationRevisionsForInterface(ctx, ref, public.WithFilter(filter))
 
 				Expect(err).ToNot(HaveOccurred())
 				Expect(revisionsForInterface).To(HaveLen(1))
@@ -191,7 +191,7 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).ToNot(HaveOccurred())
 			defer deleteTypeInstance(ctx, cli, createdTypeInstance.Metadata.ID)
 
-			typeInstance, err := cli.GetTypeInstance(ctx, createdTypeInstance.Metadata.ID)
+			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstance.Metadata.ID)
 
 			Expect(err).ToNot(HaveOccurred())
 			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
@@ -242,7 +242,7 @@ var _ = Describe("GraphQL API", func() {
 })
 
 func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *graphql.TypeInstance) {
-	childTI, err := cli.GetTypeInstance(ctx, ID)
+	childTI, err := cli.FindTypeInstance(ctx, ID)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(childTI).To(Equal(expected))
 }

@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+
 	"github.com/machinebox/graphql"
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/local"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
@@ -20,7 +21,7 @@ type Client struct {
 type Local interface {
 	CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error)
 	CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreateTypeInstanceOutput, error)
-	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
+	FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
 	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error)
 	DeleteTypeInstance(ctx context.Context, id string) error
 }
@@ -28,8 +29,8 @@ type Local interface {
 type Public interface {
 	ListInterfacesMetadata(ctx context.Context) ([]ochpublicgraphql.Interface, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
-	GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
-	GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
+	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
 }
 
 func NewClient(endpoint string, httpClient *http.Client) *Client {

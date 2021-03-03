@@ -29,7 +29,7 @@ func TestSortImplementationRevisionsByPathAndRevision(t *testing.T) {
 		fixImplementationRevision("path1", "0.2.0"),
 	}
 
-	getOpts := &GetImplementationRevisionOptions{}
+	getOpts := &ListImplementationRevisionsOptions{}
 	getOpts.Apply(WithSortingByPathAscAndRevisionDesc())
 
 	// when

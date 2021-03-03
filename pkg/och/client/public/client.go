@@ -47,7 +47,7 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 	return resp.Interfaces, nil
 }
 
-func (c *Client) GetInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
+func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
 	query, params := c.interfaceQueryForRef(ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
@@ -60,7 +60,7 @@ func (c *Client) GetInterfaceRevision(ctx context.Context, ref gqlpublicapi.Inte
 
 	var resp struct {
 		Interface struct {
-			Revision gqlpublicapi.InterfaceRevision `json:"rev"`
+			Revision *gqlpublicapi.InterfaceRevision `json:"rev"`
 		} `json:"interface"`
 	}
 	err := retry.Do(func() error {
@@ -71,7 +71,7 @@ func (c *Client) GetInterfaceRevision(ctx context.Context, ref gqlpublicapi.Inte
 		return nil, errors.Wrap(err, "while executing query to fetch OCH Interface Revision")
 	}
 
-	return &resp.Interface.Revision, nil
+	return resp.Interface.Revision, nil
 }
 
 func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpublicapi.InterfaceReference) (string, error) {
@@ -87,7 +87,7 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 
 	var resp struct {
 		Interface struct {
-			LatestRevision struct {
+			LatestRevision *struct {
 				Revision string `json:"revision"`
 			} `json:"latestRevision"`
 		} `json:"interface"`
@@ -99,11 +99,15 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 		return "", errors.Wrap(err, "while executing query to fetch Interface latest revision string")
 	}
 
+	if resp.Interface.LatestRevision == nil {
+		return "", fmt.Errorf("cannot find latest revision for Interface %q", ref.Path)
+	}
+
 	return resp.Interface.LatestRevision.Revision, nil
 }
 
-func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
-	getOpts := &GetImplementationRevisionOptions{}
+func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
+	getOpts := &ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)
 
 	query, params := c.interfaceQueryForRef(ref)
@@ -132,9 +136,6 @@ func (c *Client) GetImplementationRevisionsForInterface(ctx context.Context, ref
 	}
 
 	result := FilterImplementationRevisions(resp.Interface.LatestRevision.ImplementationRevisions, getOpts)
-	if len(result) == 0 {
-		return nil, NewImplementationRevisionNotFoundError(ref)
-	}
 
 	result = SortImplementationRevisions(result, getOpts)
 
