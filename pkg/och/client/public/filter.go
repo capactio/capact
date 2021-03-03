@@ -7,15 +7,15 @@ import (
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, filter *GetImplementationOptions) []gqlpublicapi.ImplementationRevision {
-	if filter == nil {
+func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *GetImplementationRevisionOptions) []gqlpublicapi.ImplementationRevision {
+	if opts == nil {
 		return revs
 	}
 
-	revs = filterImplementationRevisionsByPathPattern(revs, filter.implPathPattern)
-	revs = filterImplementationRevisionsByAttr(revs, filter.attrFilter)
-	revs = filterImplementationRevisionsByRequirementsSatisfiedBy(revs, filter.requirementsSatisfiedBy)
-	revs = filterImplementationRevisionsByRequires(revs, filter.requires)
+	revs = filterImplementationRevisionsByPathPattern(revs, opts.implPathPattern)
+	revs = filterImplementationRevisionsByAttr(revs, opts.attrFilter)
+	revs = filterImplementationRevisionsByRequirementsSatisfiedBy(revs, opts.requirementsSatisfiedBy)
+	revs = filterImplementationRevisionsByRequires(revs, opts.requires)
 
 	return revs
 }
