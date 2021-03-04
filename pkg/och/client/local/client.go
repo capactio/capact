@@ -34,7 +34,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 	req.Var("in", in)
 
 	var resp struct {
-		TypeInstance ochlocalgraphql.TypeInstance `json:"createTypeInstance"`
+		TypeInstance *ochlocalgraphql.TypeInstance `json:"createTypeInstance"`
 	}
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)
@@ -43,7 +43,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 		return nil, errors.Wrap(err, "while executing mutation to create TypeInstance")
 	}
 
-	return &resp.TypeInstance, nil
+	return resp.TypeInstance, nil
 }
 
 func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreateTypeInstanceOutput, error) {
@@ -72,7 +72,7 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.Cr
 	return resp.CreatedTypeInstances, nil
 }
 
-func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
+func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query($id: ID!) {
 		typeInstance(id: $id) {
 			%s	
@@ -83,7 +83,7 @@ func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraph
 	req.Var("id", id)
 
 	var resp struct {
-		TypeInstance ochlocalgraphql.TypeInstance `json:"typeInstance"`
+		TypeInstance *ochlocalgraphql.TypeInstance `json:"typeInstance"`
 	}
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)
@@ -92,7 +92,7 @@ func (c *Client) GetTypeInstance(ctx context.Context, id string) (*ochlocalgraph
 		return nil, errors.Wrap(err, "while executing query to get TypeInstance")
 	}
 
-	return &resp.TypeInstance, nil
+	return resp.TypeInstance, nil
 }
 
 func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/gob"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -44,8 +43,8 @@ func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
 	return store, nil
 }
 
-func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
-	getOpts := &public.GetImplementationRevisionOptions{}
+func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
+	getOpts := &public.ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)
 
 	var out []ochpublicgraphql.ImplementationRevision
@@ -65,9 +64,6 @@ func (s *FileSystemClient) GetImplementationRevisionsForInterface(ctx context.Co
 	}
 
 	result := public.FilterImplementationRevisions(out, getOpts)
-	if len(result) == 0 {
-		return nil, public.NewImplementationRevisionNotFoundError(ref)
-	}
 
 	return public.SortImplementationRevisions(result, getOpts), nil
 }
@@ -108,7 +104,7 @@ func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context,
 	return latestVersion.String(), nil
 }
 
-func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
+func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error) {
 	for i := range s.OCHInterfaces {
 		iface := s.OCHInterfaces[i]
 		if iface.Metadata.Path != ref.Path {
@@ -124,13 +120,13 @@ func (s *FileSystemClient) GetInterfaceRevision(ctx context.Context, ref ochpubl
 		return &item, nil
 	}
 
-	return nil, fmt.Errorf("cannot find Interface for %v", ref)
+	return nil, nil
 }
 
-func (s *FileSystemClient) GetTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
+func (s *FileSystemClient) FindTypeInstance(_ context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	ti, found := s.OCHTypeInstances[id]
 	if !found {
-		return nil, fmt.Errorf("type instance with id %v not found", id)
+		return nil, nil
 	}
 
 	return &ti, nil
