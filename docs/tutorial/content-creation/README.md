@@ -346,7 +346,7 @@ spec:
   
   # We specify which TypeInstances are uploaded to OCH as TypeInstances, along with theirs relations.
   # We can specify here both required and optional output TypeInstances for a given manifest.
-  # You can also specify TypeInstances, which are defined in voltron-outputTypeInstances in steps.
+  # You can also specify TypeInstances, which are defined in voltron-outputTypeInstances in steps, to create proper relations.
   # If a given Argo artifact is not mentioned here, it won't be created in OCH as TypeInstance.
   outputTypeInstanceRelations:
       confluence-config:
