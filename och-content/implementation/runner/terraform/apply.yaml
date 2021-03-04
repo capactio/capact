@@ -36,7 +36,8 @@ spec:
 
   outputTypeInstanceRelations:
     terraform-release:
-      uses: [tfstate]
+      uses: 
+        - tfstate
     tfstate: {}
 
   action:
