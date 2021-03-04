@@ -35,12 +35,12 @@ func NewDownloadAction(log *zap.Logger, client *local.Client, cfg []DownloadConf
 func (d *Download) Do(ctx context.Context) error {
 	for _, config := range d.cfg {
 		d.log.Info("Downloading TypeInstance", zap.String("ID", config.ID), zap.String("Path", config.Path))
-		typeInstance, err := d.client.GetTypeInstance(context.TODO(), config.ID)
+		typeInstance, err := d.client.FindTypeInstance(ctx, config.ID)
 		if err != nil {
 			return err
 		}
 		if typeInstance == nil {
-			return fmt.Errorf("failed to find TypeInstance %s", config.ID)
+			return fmt.Errorf("failed to find TypeInstance with ID %q", config.ID)
 		}
 
 		data, err := yaml.Marshal(typeInstance.Spec.Value)

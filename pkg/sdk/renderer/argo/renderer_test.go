@@ -35,7 +35,7 @@ func TestRenderHappyPath(t *testing.T) {
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUID)
 
 	argoRenderer := NewRenderer(renderer.Config{
@@ -191,7 +191,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 			genUUID := genUUIDFn(strconv.Itoa(tc))
-			typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 			typeInstanceHandler.SetGenUUID(genUUID)
 
 			argoRenderer := NewRenderer(renderer.Config{
@@ -222,7 +222,7 @@ func TestRendererMaxDepth(t *testing.T) {
 
 	policy := clusterpolicy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
@@ -253,7 +253,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	policy := clusterpolicy.NewDenyAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
-	typeInstanceHandler := NewTypeInstanceHandler(fakeCli, "alpine:3.7")
+	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{

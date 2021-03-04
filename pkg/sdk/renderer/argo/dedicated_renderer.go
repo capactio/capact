@@ -187,7 +187,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 
 					// 3.2 Get InterfaceRevision
-					iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, *actionRef)
+					iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, *actionRef)
 					if err != nil {
 						return err
 					}
@@ -536,17 +536,18 @@ func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.I
 	return ref, nil
 }
 
-func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string,
-	iface *ochpublicapi.InterfaceRevision) {
+func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string, iface *ochpublicapi.InterfaceRevision) {
 	step.typeInstanceOutputs = make(map[string]*string)
 
-	if iface.Spec.Output != nil && iface.Spec.Output.TypeInstances != nil {
-		for i := range iface.Spec.Output.TypeInstances {
-			ti := iface.Spec.Output.TypeInstances[i]
-			newName := fmt.Sprintf("%s-%s", prefix, ti.Name)
-			newNamePtr := r.addTypeInstanceName(newName)
-			step.typeInstanceOutputs[ti.Name] = newNamePtr
-		}
+	if iface == nil || iface.Spec.Output == nil || iface.Spec.Output.TypeInstances == nil {
+		return
+	}
+
+	for i := range iface.Spec.Output.TypeInstances {
+		ti := iface.Spec.Output.TypeInstances[i]
+		newName := fmt.Sprintf("%s-%s", prefix, ti.Name)
+		newNamePtr := r.addTypeInstanceName(newName)
+		step.typeInstanceOutputs[ti.Name] = newNamePtr
 	}
 }
 

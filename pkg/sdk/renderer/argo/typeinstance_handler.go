@@ -1,14 +1,11 @@
 package argo
 
 import (
-	"context"
 	"fmt"
 	"path"
 	"strings"
 
 	"github.com/google/uuid"
-
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
@@ -17,21 +14,15 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type OCHClient interface {
-	GetTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
-}
-
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as
 // injecting download step and upload step.
 type TypeInstanceHandler struct {
-	ochCli          OCHClient
 	ochActionsImage string
 	genUUID         func() string
 }
 
-func NewTypeInstanceHandler(ochCli OCHClient, ochActionsImage string) *TypeInstanceHandler {
+func NewTypeInstanceHandler(ochActionsImage string) *TypeInstanceHandler {
 	return &TypeInstanceHandler{
-		ochCli:          ochCli,
 		ochActionsImage: ochActionsImage,
 		genUUID: func() string {
 			return uuid.New().String()

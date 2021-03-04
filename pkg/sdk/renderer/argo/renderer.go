@@ -23,7 +23,7 @@ type PolicyEnforcedOCHClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicapi.InterfaceReference) ([]ochpublicapi.ImplementationRevision, clusterpolicy.Rule, error)
 	ListTypeInstancesToInjectBasedOnPolicy(policyRule clusterpolicy.Rule, implRev ochpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
 	SetPolicy(policy clusterpolicy.ClusterPolicy)
-	GetInterfaceRevision(ctx context.Context, ref ochpublicapi.InterfaceReference) (*ochpublicapi.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref ochpublicapi.InterfaceReference) (*ochpublicapi.InterfaceRevision, error)
 }
 
 type Renderer struct {
@@ -56,7 +56,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	interfaceRef := interfaceRefToOCH(ref)
 
 	// 1.1 Get Interface
-	iface, err := r.policyEnforcedCli.GetInterfaceRevision(ctx, interfaceRef)
+	iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, interfaceRef)
 	if err != nil {
 		return nil, err
 	}

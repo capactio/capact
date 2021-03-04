@@ -103,9 +103,8 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	ochClient := getOCHClient(&cfg)
-
-	typeInstanceHandler := argo.NewTypeInstanceHandler(ochClient, cfg.OCHActionsImage)
 	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
+	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.OCHActionsImage)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)

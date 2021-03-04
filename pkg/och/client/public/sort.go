@@ -7,7 +7,7 @@ import (
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
-func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *GetImplementationRevisionOptions) []gqlpublicapi.ImplementationRevision {
+func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsOptions) []gqlpublicapi.ImplementationRevision {
 	if opts == nil {
 		return revs
 	}
