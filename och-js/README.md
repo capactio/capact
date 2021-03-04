@@ -30,12 +30,20 @@ docker run -d \
   -p 7687:7687 -p 7474:7474 \
   -e "NEO4J_AUTH=neo4j/okon" \
   -e "NEO4JLABS_PLUGINS=[\"apoc\"]" \
+  --name och-neo4j-instance \
   neo4j:4.2.3
+```
+
+When you are done, remove the Docker container:
+
+```bash
+docker rm -f och-neo4j-instance
 ```
 
 ## Usage
 
 Download the NPM dependencies using:
+
 ```bash
 npm install
 ```
@@ -91,10 +99,10 @@ To access Neo4j Browser, follow the steps:
 
 1. Run the following commands:
 
-  ```bash
-  kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
-  kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687                                             
-  ```
+```bash
+kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
+kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
+```
 
 1. Navigate to [http://localhost:7474](http://localhost:7474).
 1. Change the connection URL to `neo4j://localhost:7687`.

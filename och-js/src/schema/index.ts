@@ -3,16 +3,21 @@ import { Driver } from "neo4j-driver";
 import { assertSchema } from "neo4j-graphql-js";
 import { schema as publicSchema } from "./public";
 import { schema as localSchema } from "./local";
+import { schema as localV2Schema } from "./local-v2";
 
 export enum OCHMode {
   Local = "local",
   Public = "public",
+  LocalAPIV2 = "local-v2",
 }
 
 export function getSchemaForMode(mode: string): GraphQLSchema {
   switch (mode) {
     case OCHMode.Local:
       return localSchema;
+
+    case OCHMode.LocalAPIV2:
+      return localV2Schema;
 
     case OCHMode.Public:
       return publicSchema;
