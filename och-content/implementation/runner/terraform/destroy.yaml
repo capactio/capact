@@ -36,7 +36,7 @@ spec:
 
   outputTypeInstanceRelations:
     terraform-release:
-      uses: 
+      uses:
         - tfstate
     tfstate: {}
     # Do not upload `additional` TypeInstance by default.
