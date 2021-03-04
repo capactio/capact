@@ -30,6 +30,8 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
 
 ## Instructions
 
+[![asciicast](https://asciinema.org/a/395877.svg)](https://asciinema.org/a/395877)
+
 ### Create GKE private cluster 
 
 1. Clone the `release-0.2` branch from the `go-voltron` repository.
