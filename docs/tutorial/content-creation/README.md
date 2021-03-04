@@ -335,21 +335,18 @@ spec:
         verbs: [ "get" ]
 
   # We can also define additional output TypeInstances, which our Implementation creates.
-  # This is needed to build the dependency graph, so Voltron can properly handle updates and rollbacks
-  # of these TypeInstances.
-  additionalOutput:
-    typeInstances:
-      confluence-helm-release:
-        typeRef:
-          path: cap.type.helm.chart.release
-          revision: 0.1.0
-      database:
-        typeRef:
-          path: cap.type.postgresql.database
-          revision: 0.1.0
+  # You can use in case your Implementation creates some additional resources,
+  # which are not mentioned in the Interface, but have to be managed by Voltron.
+  #additionalOutput:
+  #  typeInstances:
+  #    some-additional-resource:
+  #      typeRef:
+  #        path: cap.type.instance
+  #        revision: 0.1.0
   
   # We specify which TypeInstances are uploaded to OCH as TypeInstances, along with theirs relations.
-  # We need to Specify here both required and optional output TypeInstances for a given manifest.
+  # We can specify here both required and optional output TypeInstances for a given manifest.
+  # You can also specify TypeInstances, which are defined in voltron-outputTypeInstances in steps.
   # If a given Argo artifact is not mentioned here, it won't be created in OCH as TypeInstance.
   outputTypeInstanceRelations:
       confluence-config:
@@ -358,8 +355,8 @@ spec:
           - postgresql
           - database
   # If a given TypeInstance should be uploaded to OCH, but it doesn't have any dependencies,
-  # and there are no TypeInstances which uses it, you can specify it such as:
-  #   helm-release: {}
+  # you can specify it such as:
+  #   some-additional-resource: {}
 
   # Here we say, we implement the Interface, we defined before.
   implements:
@@ -532,11 +529,13 @@ Let's take a look on the **Implementation** YAML. **Implementation** has the fol
 | `appVersion`                  | Application versions, which this **Implementation** supports.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `additionalInput`             | Additional input for the **Implementation**, compared to the **Interface**. In our case, here we define the `postgresql.config`, as our **Implementation** uses a PostgreSQL instance for Confluence.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `additionalOutput`            | This section defines any additional **TypeInstances**, which are created in this **Implementation**, compared to the **Interface**. In our **Implementation**, we create a database in the database instance with the `postgresql.create-db` **Interface**, which outputs an `postgresql.database` **TypeInstance**. We have to write this down in `additionalOutput`, so Voltron will resolve this **TypeInstance** metadata for uploading it to OCH.                                                                                                                                                                                      |
-| `outputTypeInstanceRelations` | Specifies all output TypeInstances to upload to OCH with theirs relationships between them. The property should include both optional and required TypeInstance aliases. If a given output TypeInstance is not mentioned, it won't be uploaded.                                                                                                                                                                                                                                                                                                                                                                                             |
+| `outputTypeInstanceRelations` | Specifies all output TypeInstances to upload to OCH with theirs relationships between them. Only the TypeInstances created in this Implementation have to be mentioned here. If a TypeInstances in created in another action and brought into the context with `voltron-outputTypeInstances`, then it should not be defined here.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `implements`                  | Defines which **Interfaces** are implemented by this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `requires`                    | List of system prerequisites that need to be present in the environment managed by Voltron to use this **Implementation**. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means we need a Kubernetes cluster. Requirement items can specify `alias` and be used inside workflow under `{{workflow.outputs.artifacts.{alias}}}`, where `{alias-name}` is the alias. A TypeInstance with alias is injected into the workflow based on Policy configuration. To learn more, see the [TypeInstance Injection](../../policy-configuration.md#typeinstance-injection) paragraph in Policy Configuration document. |
 | `imports`                     | Here we define all other **Interfaces**, we use in our **Implementation**. We can then refer to them as `'<alias>.<method-name>'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `action`                      | Holds information about the actions that is executed. In the case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+
+> You can notice, that `confluence-config` (which is the `additional` output TypeInstance from `helm.run`) is defined in the `outputTypeInstanceRelations`, although is was created in `helm.run`. The `additional` from `helm.run` is specially, because `helm.run` does not know the Type of TypeInstances, so it's not defined in `helm.run` Implementation, but must be defined in the caller Implementation. In the future, we will improve the syntax, so it will be more clear, how to define the output TypeInstances and relations between them.
 
 The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with a few extensions introduced by Voltron. These extensions are:
 
@@ -544,7 +543,7 @@ The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.templates.steps[][].voltron-when`               | Allows for conditional execution of a step, based on an expression with an input workflow artifacts arguments. You can make assertions on artifacts defined under `inputs.arguments.artifacts` for a given template. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md). |
 | `.templates.steps[][].voltron-action`             | Allows to import another **Interface**. In our example, we use this to provision PostgreSQL with `postgresql.install` **Interface**.                                                                                                                                                                                  |
-| `.templates.steps[][].voltron-outputTypeInstance` | A list of **TypeInstances**, from the **Implementations** outputs, which are created in this step. The `name` must match with the output name defined in the implemented **Interface** or **Implementations** `additionalOutput` and `from` is the name of the Argo output artifacts from this step.                  |
+| `.templates.steps[][].voltron-outputTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations**. The `from` property must match the name of the output from the called Action. You can then use it in the Implementations `outputTypeInstanceRelations`, when defining relations between TypeInstances. |
 
 Let's go through the **Implementation** and try to understand, what is happening in each step of the action. Our Confluence installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no **TypeInstance** for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` **Interface** to create an PostgreSQL instance.
 
