@@ -9,7 +9,7 @@ directive @relation(
 ) on FIELD_DEFINITION | OBJECT
 
 directive @cypher(statement: String) on FIELD_DEFINITION
-
+directive @index on FIELD_DEFINITION
 directive @id on FIELD_DEFINITION
 
 """
@@ -218,6 +218,11 @@ input UpdateTypeInstanceInput {
   resourceVersion: Int!
 }
 
+input UpdateTypeInstancesInput {
+  id: ID!
+  typeInstance: UpdateTypeInstanceInput!
+}
+
 type Query {
   typeInstances(filter: TypeInstanceFilter = {}): [TypeInstance!]!
     @cypher(
@@ -315,6 +320,11 @@ type Mutation {
   TODO: SV-265
   """
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
+
+  """
+  TODO: SV-265
+  """
+  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance]!
 
   """
   TODO: SV-263, fix problem with not delete orphan typeRef

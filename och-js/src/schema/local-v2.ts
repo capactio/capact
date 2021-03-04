@@ -11,6 +11,107 @@ interface CreateTypeInstancesArgs {
   };
 }
 
+interface UpdateTypeInstancesInput {
+  in: [{ id: string }];
+}
+
+function fixTypeInstance(id: string) {
+  return {
+    id: id,
+    typeRef: {
+      path: "cap.mocked.update.type.instance",
+      revision: "0.1.1",
+    },
+    latestResourceVersion: {
+      resourceVersion: 1,
+      metadata: {
+        id: id,
+        attributes: [
+          {
+            path: "cap.attribute.sample",
+            revision: "0.1.0",
+          },
+        ],
+      },
+      spec: {
+        typeRef: {
+          path: "cap.type.sample",
+          revision: "0.1.0",
+        },
+        value: {
+          hello: "world",
+        },
+      },
+    },
+    firstResourceVersion: {
+      resourceVersion: 1,
+      metadata: {
+        id: id,
+        attributes: [
+          {
+            path: "cap.attribute.sample",
+            revision: "0.1.0",
+          },
+        ],
+      },
+      spec: {
+        typeRef: {
+          path: "cap.type.sample",
+          revision: "0.1.0",
+        },
+        value: {
+          hello: "world",
+        },
+      },
+    },
+    previousResourceVersion: null,
+    resourceVersions: [
+      {
+        resourceVersion: 1,
+        metadata: {
+          id: id,
+          attributes: [
+            {
+              path: "cap.attribute.sample",
+              revision: "0.1.0",
+            },
+          ],
+        },
+        spec: {
+          typeRef: {
+            path: "cap.type.sample",
+            revision: "0.1.0",
+          },
+          value: {
+            hello: "world",
+          },
+        },
+      },
+    ],
+    resourceVersion: {
+      resourceVersion: 1,
+      metadata: {
+        id: id,
+        attributes: [
+          {
+            path: "cap.attribute.sample",
+            revision: "0.1.0",
+          },
+        ],
+      },
+      spec: {
+        typeRef: {
+          path: "cap.type.sample",
+          revision: "0.1.0",
+        },
+        value: {
+          hello: "world",
+        },
+      },
+    },
+  };
+}
+
 export const schema = makeAugmentedSchema({
   typeDefs,
   resolvers: {
@@ -48,101 +149,12 @@ export const schema = makeAugmentedSchema({
           neo4jSession.close();
         }
       },
-      updateTypeInstance: async (_obj) => {
-        return Object({
-          id: "4123-mocked-id",
-          typeRef: {
-            path: "cap.mocked.update.type.instance",
-            revision: "0.1.1",
-          },
-          latestResourceVersion: {
-            resourceVersion: 1,
-            metadata: {
-              id: "dba53e7e-2249-4d10-854f-4803b331313f",
-              attributes: [
-                {
-                  path: "cap.attribute.sample",
-                  revision: "0.1.0",
-                },
-              ],
-            },
-            spec: {
-              typeRef: {
-                path: "cap.type.sample",
-                revision: "0.1.0",
-              },
-              value: {
-                hello: "world",
-              },
-            },
-          },
-          firstResourceVersion: {
-            resourceVersion: 1,
-            metadata: {
-              id: "dba53e7e-2249-4d10-854f-4803b331313f",
-              attributes: [
-                {
-                  path: "cap.attribute.sample",
-                  revision: "0.1.0",
-                },
-              ],
-            },
-            spec: {
-              typeRef: {
-                path: "cap.type.sample",
-                revision: "0.1.0",
-              },
-              value: {
-                hello: "world",
-              },
-            },
-          },
-          previousResourceVersion: null,
-          resourceVersions: [
-            {
-              resourceVersion: 1,
-              metadata: {
-                id: "dba53e7e-2249-4d10-854f-4803b331313f",
-                attributes: [
-                  {
-                    path: "cap.attribute.sample",
-                    revision: "0.1.0",
-                  },
-                ],
-              },
-              spec: {
-                typeRef: {
-                  path: "cap.type.sample",
-                  revision: "0.1.0",
-                },
-                value: {
-                  hello: "world",
-                },
-              },
-            },
-          ],
-          resourceVersion: {
-            resourceVersion: 1,
-            metadata: {
-              id: "dba53e7e-2249-4d10-854f-4803b331313f",
-              attributes: [
-                {
-                  path: "cap.attribute.sample",
-                  revision: "0.1.0",
-                },
-              ],
-            },
-            spec: {
-              typeRef: {
-                path: "cap.type.sample",
-                revision: "0.1.0",
-              },
-              value: {
-                hello: "world",
-              },
-            },
-          },
-        });
+      updateTypeInstance: async (_obj, args) => {
+        return Object(fixTypeInstance(args.id));
+      },
+      updateTypeInstances: async (_obj, args: UpdateTypeInstancesInput) => {
+        const ti = args.in.map((elem) => fixTypeInstance(elem.id));
+        return Object(ti);
       },
     },
   },

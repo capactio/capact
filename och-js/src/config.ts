@@ -12,7 +12,7 @@ export const config = {
     password: process.env.APP_NEO4J_PASSWORD,
   },
   graphql: {
-    bindAddress: graphQLAddr || "localhost",
+    bindAddress: graphQLAddr,
     bindPort: Number(graphQLPort),
   },
   ochMode: process.env.APP_OCH_MODE || "public",

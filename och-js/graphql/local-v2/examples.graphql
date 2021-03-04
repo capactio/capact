@@ -100,6 +100,37 @@ mutation UpdateTypeInstance($typeInstanceID: ID!) {
   }
 }
 
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
+  updateTypeInstances(
+    in: [
+      {
+        id: $typeInstanceID
+        typeInstance: {
+          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+          attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+          value: { name: "Luke Skywalker" }
+          resourceVersion: 1
+        }
+      }
+      {
+        id: $secondTypeInstanceID
+        typeInstance: {
+          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+          attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+          value: { name: "Darth Vader" }
+          resourceVersion: 1
+        }
+      }
+    ]
+  ) {
+    id
+    resourceVersions {
+      ...TypeInstanceResourceVersion
+    }
+  }
+}
+
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
 mutation DeleteTypeInstance($typeInstanceID: ID!) {
   deleteTypeInstance(id: $typeInstanceID)
