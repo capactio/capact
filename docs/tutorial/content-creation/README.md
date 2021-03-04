@@ -336,7 +336,7 @@ spec:
 
   # We can also define additional output TypeInstances, which our Implementation creates.
   # You can use in case your Implementation creates some additional resources,
-  # which are not mentioned in the Interface, but have to be managed by Voltron.
+  # which are not specified in the Interface, but they should be uploaded to OCH.
   #additionalOutput:
   #  typeInstances:
   #    some-additional-resource:
