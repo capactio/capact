@@ -4,6 +4,7 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/machinebox/graphql"
@@ -251,44 +252,22 @@ var _ = Describe("GraphQL API", func() {
 	})
 
 	Context("Local OCH v2", func() {
-		const (
-			ochLocalDeployName      = "voltron-och-local"
-			ochLocalDeployNamespace = "voltron-system"
-		)
-		// TODO: temporary solution, remove in: SV-266
+		// TODO(SV-266): temporary solution
 		It("should switch to Local OCH v2 mode", func() {
 			clientset, err := kubernetes.NewForConfig(config.GetConfigOrDie())
 			Expect(err).NotTo(HaveOccurred())
-			cli := clientset.AppsV1().Deployments(ochLocalDeployNamespace)
+			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
 
 			By("setting OCH_MODE to local-v2")
-			mergePatch := []byte(`{
-						  "spec": {
-							"template": {
-							  "spec": {
-								"containers": [
-								  {
-									"env": [
-									  {
-										"name": "APP_OCH_MODE",
-										"value": "local-v2"
-									  }
-									],
-									"name": "och-local"
-								  }
-								]
-							  }
-							}
-						  }
-						}`)
-			newDeploy, err := cli.Patch(ochLocalDeployName, types.StrategicMergePatchType, mergePatch)
+			mergePatch := ochLocalModePatch("local-v2")
+			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = statusReady(cli, ochLocalDeployName, newDeploy.Generation)
+			err = statusReady(cli, cfg.OCHLocalDeployName, newDeploy.Generation)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
-		It("creates and deletes TypeInstance", func() {
+		It("should create, find and delete TypeInstance", func() {
 			cli := newOCHLocalV2Client()
 
 			// create TypeInstance
@@ -357,6 +336,21 @@ var _ = Describe("GraphQL API", func() {
 		It("creates multiple TypeInstances with uses relations", func() {
 			Skip("Not yet implemented")
 		})
+
+		// TODO(SV-266): temporary solution
+		It("should switch back the Local OCH v1 mode", func() {
+			clientset, err := kubernetes.NewForConfig(config.GetConfigOrDie())
+			Expect(err).NotTo(HaveOccurred())
+			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
+
+			By("setting OCH_MODE to local")
+			mergePatch := ochLocalModePatch("local")
+			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
+			Expect(err).NotTo(HaveOccurred())
+
+			err = statusReady(cli, cfg.OCHLocalDeployName, newDeploy.Generation)
+			Expect(err).NotTo(HaveOccurred())
+		})
 	})
 
 })
@@ -383,6 +377,28 @@ func statusReady(cli cliappsv1.DeploymentInterface, deployName string, expGen in
 		}
 		return dep.Status.ObservedGeneration == expGen && dep.Status.Replicas == dep.Status.ReadyReplicas, nil
 	})
+}
+
+func ochLocalModePatch(mode string) []byte {
+	return []byte(fmt.Sprintf(`{
+		  "spec": {
+			"template": {
+			  "spec": {
+				"containers": [
+				  {
+					"env": [
+					  {
+						"name": "APP_OCH_MODE",
+						"value": "%s"
+					  }
+					],
+					"name": "och-local"
+				  }
+				]
+			  }
+			}
+		  }
+		}`, mode))
 }
 
 func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {

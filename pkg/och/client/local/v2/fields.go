@@ -50,10 +50,6 @@ const typeInstanceResourceVersion = `
 		}
 	  }
 	  spec {
-		typeRef {
-		  path
-		  revision
-		}
 		value
 	  }
 `
