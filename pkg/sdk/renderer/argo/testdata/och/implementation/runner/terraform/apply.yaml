@@ -22,10 +22,14 @@ spec:
       revision: 0.1.0
 
   requires:
-    cap.core.type.platform:
+    - allOf: []
+      anyOf: []
       oneOf:
-        - name: kubernetes
-          revision: 0.1.0
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -35,10 +39,10 @@ spec:
           revision: 0.1.0
 
   outputTypeInstanceRelations:
-    terraform-release:
-      uses: 
-        - tfstate
-    tfstate: {}
+    - typeInstanceName: terraform-release
+      uses: [tfstate]
+    - typeInstanceName: tfstate
+      uses: []
 
   action:
     runnerInterface: argo.run

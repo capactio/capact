@@ -38,6 +38,7 @@ spec:
     terraform-release:
       uses:
         - tfstate
+    tfstate: {}
     # Do not upload `additional` TypeInstance by default.
     # Upper-level workflows may define it in the outputTypeInstanceRelations.
 

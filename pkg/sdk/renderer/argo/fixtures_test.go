@@ -114,3 +114,36 @@ func fixClusterPolicyForFallback() clusterpolicy.ClusterPolicy {
 		},
 	}
 }
+
+func fixTerraformPolicy() clusterpolicy.ClusterPolicy {
+	return clusterpolicy.ClusterPolicy{
+		APIVersion: "0.1.0",
+		Rules: clusterpolicy.RulesMap{
+			"cap.interface.database.postgresql.install:0.1.0": {
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+							Path: ptr.String("cap.implementation.terraform.gcp.cloudsql.postgresql.install"),
+						},
+						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
+							{
+								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+								TypeRef: types.TypeRef{
+									Path:     "cap.type.gcp.auth.service-account",
+									Revision: ptr.String("0.1.0"),
+								},
+							},
+						},
+					},
+				},
+			},
+			"cap.*": {
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{},
+					},
+				},
+			},
+		},
+	}
+}

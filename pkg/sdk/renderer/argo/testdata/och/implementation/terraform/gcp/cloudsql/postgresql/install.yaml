@@ -1,0 +1,164 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.terraform.gcp.cloudsql.postgresql
+  name: install
+  path: cap.implementation.terraform.gcp.cloudsql.postgresql.install
+  displayName: Install CloudSQL PostgreSQL database using Terraform
+  description: Action which provisions CloudSQL for PostgreSQL database using Terraform
+  documentationURL: https://cloud.google.com/cloudsql
+  supportURL: https://cloud.google.com/cloudsql
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  attributes:
+    - metadata:
+        path: cap.attribute.cloud.provider.gcp
+      revision: 0.1.0
+    - metadata:
+        path: cap.attribute.infra.iac.terraform
+      revision: 0.1.0
+
+spec:
+  appVersion: "10, 11, 12, 13"
+
+  outputTypeInstanceRelations:
+    - typeInstanceName: postgresql
+      uses:
+        - terraform-release
+
+  implements:
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
+
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.type.gcp.auth.service-account
+            revision: 0.1.0
+          valueConstraints: {}
+          alias: gcp-sa
+      prefix: cap.type.gcp.auth
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
+      methods:
+        - name: apply
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: postgres-install
+        templates:
+          - name: postgres-install
+            inputs:
+              artifacts:
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+            steps:
+              - - name: create-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+                      - name: template
+                        raw:
+                          data: |
+                            variables: |+
+                              user_name = "<@ input.superuser.username @>"
+                              user_password = "<@ input.superuser.password | default(random_word()) @>"
+                            command: "apply"
+                            module:
+                              name: "cloudsql"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.1.0/cloudsql.tgz"
+                            env:
+                            - GOOGLE_PROJECT=<@ gcp.project_id @>
+                            - GOOGLE_APPLICATION_CREDENTIALS=/additional
+                            output:
+                              goTemplate:
+                                host: "{{ .instance_ip_addr }}"
+                                port: 5432
+                                defaultDBName: postgres
+                                superuser:
+                                  username: "{{ .username }}"
+                                  password: "{{ .password }}"
+
+              - - name: fill-gcp-params-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: gcp
+
+              - - name: convert-gcp-yaml-to-json
+                  template: convert-yaml-to-json
+                  arguments:
+                    artifacts:
+                      - name: in
+                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+
+              - - name: terraform-apply
+                  voltron-action: terraform.apply
+                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                    - name: terraform-release
+                      from: terraform-release
+                    - name: postgresql
+                      from: additional
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: additional
+                        from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
+
+          - name: convert-yaml-to-json
+            inputs:
+              artifacts:
+                - name: in
+                  path: /file
+            container:
+              image: gcr.io/projectvoltron/yq:4 # Original image: mikefarah/yq:4
+              command: ["sh", "-c"]
+              args: [ "sleep 1 && yq eval -j -i /file" ]
+            outputs:
+              artifacts:
+                - name: out
+                  path: /file
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
