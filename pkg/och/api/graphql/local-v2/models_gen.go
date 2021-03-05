@@ -94,8 +94,6 @@ type TypeInstanceResourceVersionMetadata struct {
 }
 
 type TypeInstanceResourceVersionSpec struct {
-	// Consider to remove this relation as it cannot be changed and user should take it from higher layer (TypeInstance)
-	TypeRef         *TypeReference               `json:"typeRef"`
 	Value           interface{}                  `json:"value"`
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
 }
@@ -127,7 +125,7 @@ type UpdateTypeInstanceInput struct {
 	TypeRef    *TypeReferenceInput        `json:"typeRef"`
 	Attributes []*AttributeReferenceInput `json:"attributes"`
 	Value      interface{}                `json:"value"`
-	// The resourceVersion of the TypeInstanceResourceVersion that you want to modify
+	// Provide the latest resourceVersion number of the TypeInstance that you want to modify
 	ResourceVersion int `json:"resourceVersion"`
 }
 

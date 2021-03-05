@@ -116,7 +116,6 @@ type ComplexityRoot struct {
 
 	TypeInstanceResourceVersionSpec struct {
 		Instrumentation func(childComplexity int) int
-		TypeRef         func(childComplexity int) int
 		Value           func(childComplexity int) int
 	}
 
@@ -438,13 +437,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TypeInstanceResourceVersionSpec.Instrumentation(childComplexity), true
 
-	case "TypeInstanceResourceVersionSpec.typeRef":
-		if e.complexity.TypeInstanceResourceVersionSpec.TypeRef == nil {
-			break
-		}
-
-		return e.complexity.TypeInstanceResourceVersionSpec.TypeRef(childComplexity), true
-
 	case "TypeInstanceResourceVersionSpec.value":
 		if e.complexity.TypeInstanceResourceVersionSpec.Value == nil {
 			break
@@ -604,10 +596,6 @@ type TypeInstanceResourceVersionMetadata {
 }
 
 type TypeInstanceResourceVersionSpec {
-  """
-  Consider to remove this relation as it cannot be changed and user should take it from higher layer (TypeInstance)
-  """
-  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   value: Any!
     @cypher(
       statement: """
@@ -745,7 +733,7 @@ input UpdateTypeInstanceInput {
   attributes: [AttributeReferenceInput!]
   value: Any
   """
-  The resourceVersion of the TypeInstanceResourceVersion that you want to modify
+  Provide the latest resourceVersion number of the TypeInstance that you want to modify
   """
   resourceVersion: Int!
 }
@@ -838,10 +826,10 @@ type Mutation {
 
       CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})
       CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})
-      CREATE (spec)-[:OF_TYPE]->(typeRef)
 
       FOREACH (attr in $in.attributes |
-        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+        MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
       )
 
       RETURN ti
@@ -865,19 +853,12 @@ type Mutation {
     @cypher(
       statement: """
       MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
+      MATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)
       MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
       MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
-      MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
       OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
 
       DETACH DELETE ti, metadata, spec, attrRef, tirs
-
-      WITH typeRef
-      CALL apoc.when(
-        size((typeRef)<-[:OF_TYPE]-()) <> 0,
-        '',
-        'DELETE typeRef',
-        {typeRef:typeRef}) YIELD value
 
       RETURN $id
       """
@@ -1343,7 +1324,7 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 			return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\nCREATE (spec)-[:OF_TYPE]->(typeRef)\n\nFOREACH (attr in $in.attributes |\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n)\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -1493,7 +1474,7 @@ func (ec *executionContext) _Mutation_deleteTypeInstance(ctx context.Context, fi
 			return ec.resolvers.Mutation().DeleteTypeInstance(rctx, args["id"].(string))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)\nMATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)\nMATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)\nMATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)\nOPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)\n\nDETACH DELETE ti, metadata, spec, attrRef, tirs\n\nWITH typeRef\nCALL apoc.when(\n  size((typeRef)<-[:OF_TYPE]-()) <> 0,\n  '',\n  'DELETE typeRef',\n  {typeRef:typeRef}) YIELD value\n\nRETURN $id")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)\nMATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)\nMATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)\nMATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)\nOPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)\n\nDETACH DELETE ti, metadata, spec, attrRef, tirs\n\nRETURN $id")
 			if err != nil {
 				return nil, err
 			}
@@ -2943,69 +2924,6 @@ func (ec *executionContext) _TypeInstanceResourceVersionMetadata_attributes(ctx 
 	res := resTmp.([]*AttributeReference)
 	fc.Result = res
 	return ec.marshalNAttributeReference2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TypeInstanceResourceVersionSpec_typeRef(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpec) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TypeInstanceResourceVersionSpec",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.TypeRef, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "OF_TYPE")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive0, name, direction, nil, nil)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*TypeReference); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2.TypeReference`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*TypeReference)
-	fc.Result = res
-	return ec.marshalNTypeReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstanceResourceVersionSpec_value(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpec) (ret graphql.Marshaler) {
@@ -5033,11 +4951,6 @@ func (ec *executionContext) _TypeInstanceResourceVersionSpec(ctx context.Context
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TypeInstanceResourceVersionSpec")
-		case "typeRef":
-			out.Values[i] = ec._TypeInstanceResourceVersionSpec_typeRef(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "value":
 			out.Values[i] = ec._TypeInstanceResourceVersionSpec_value(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

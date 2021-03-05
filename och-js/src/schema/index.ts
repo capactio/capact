@@ -8,7 +8,7 @@ import { schema as localV2Schema } from "./local-v2";
 export enum OCHMode {
   Local = "local",
   Public = "public",
-  LocalAPIV2 = "local-v2",
+  LocalV2 = "local-v2",
 }
 
 export function getSchemaForMode(mode: string): GraphQLSchema {
@@ -16,7 +16,7 @@ export function getSchemaForMode(mode: string): GraphQLSchema {
     case OCHMode.Local:
       return localSchema;
 
-    case OCHMode.LocalAPIV2:
+    case OCHMode.LocalV2:
       return localV2Schema;
 
     case OCHMode.Public:
