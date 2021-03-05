@@ -43,7 +43,7 @@ function main() {
 
   server.listen(bindPort, bindAddress, () => {
     logger.info("GraphQL API is listening", {
-      endpoint: `http://${bindAddress}:${bindPort}`,
+      endpoint: `http://${bindAddress}:${bindPort}/graphql`,
     });
   });
 }
