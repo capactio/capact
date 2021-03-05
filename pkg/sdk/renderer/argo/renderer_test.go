@@ -178,6 +178,13 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policy: fixGCPClusterPolicy(),
 		},
 		{
+			name: "Jira with CloudSQL using Terraform",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.jira.install",
+			},
+			policy: fixTerraformPolicy(),
+		},
+		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
