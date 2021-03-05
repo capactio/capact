@@ -2,6 +2,7 @@ package argo
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -147,4 +148,8 @@ func findTypeInstanceInputRef(refs []types.InputTypeInstanceRef, name string) *t
 	}
 
 	return nil
+}
+
+func addPrefix(prefix, s string) string {
+	return fmt.Sprintf("%s-%s", prefix, s)
 }
