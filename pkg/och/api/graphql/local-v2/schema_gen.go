@@ -846,23 +846,7 @@ type Mutation {
   """
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance]!
 
-  """
-  TODO: SV-263, fix problem with not delete orphan typeRef
-  """
   deleteTypeInstance(id: ID!): ID!
-    @cypher(
-      statement: """
-      MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
-      MATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)
-      MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
-      MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
-      OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
-
-      DETACH DELETE ti, metadata, spec, attrRef, tirs
-
-      RETURN $id
-      """
-    )
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
@@ -1469,32 +1453,8 @@ func (ec *executionContext) _Mutation_deleteTypeInstance(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().DeleteTypeInstance(rctx, args["id"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)\nMATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)\nMATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)\nMATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)\nOPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)\n\nDETACH DELETE ti, metadata, spec, attrRef, tirs\n\nRETURN $id")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Cypher == nil {
-				return nil, errors.New("directive cypher is not implemented")
-			}
-			return ec.directives.Cypher(ctx, nil, directive0, statement)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().DeleteTypeInstance(rctx, args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)

@@ -156,6 +156,50 @@ export const schema = makeAugmentedSchema({
         const ti = args.in.map((elem) => fixTypeInstance(elem.id));
         return Object(ti);
       },
+      deleteTypeInstance: async (_obj, args, context) => {
+        const neo4jSession = context.driver.session();
+        try {
+          return await neo4jSession.writeTransaction(
+            async (tx: Transaction) => {
+              await tx.run(
+                `
+                    MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
+                    MATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)
+                    MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
+                    MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
+                    OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
+              
+                    DETACH DELETE ti, metadata, spec, tirs
+              
+                    WITH typeRef
+                    CALL {
+                      MATCH (typeRef)
+                      WHERE NOT (typeRef)--()
+                      DELETE (typeRef)
+                      RETURN 'remove typeRef'
+                    }
+              
+                    WITH *
+                    CALL {
+                      MATCH (attrRef)
+                      WHERE attrRef IS NOT NULL AND NOT (attrRef)--()
+                      DELETE (attrRef)
+                      RETURN 'remove attr'
+                    }
+              
+                    RETURN $id`,
+                { id: args.id }
+              );
+              // Always return ID even if not found, request should be idempotent
+              return args.id;
+            }
+          );
+        } catch (e) {
+          throw new Error(`failed to create the TypeInstances: ${e.message}`);
+        } finally {
+          neo4jSession.close();
+        }
+      },
     },
   },
   config: {
