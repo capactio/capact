@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: role-input
-  prefix: cap.type.database.postgresql
-  displayName: PostgreSQL Role Input
-  description: Defines PostgreSQL role input
+  name: user
+  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  displayName: PostgreSQL user
+  description: Defines PostgreSQL user
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -18,26 +18,27 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for PostgreSQL role input",
+        "title": "The schema for PostgreSQL database",
         "examples": [
           {
-            "name": "roleName",
+            "name": "userName",
             "password": "some_secret",
           }
         ],
         "required": [
             "name",
+            "password"
         ],
         "properties": {
           "name": {
             "$id": "#/properties/name",
             "type": "string",
-            "title": "Role name",
+            "title": "User name",
           },
           "password": {
             "$id": "#/properties/password",
             "type": "string",
-            "title": "Role password",
+            "title": "User password",
           },
         },
         "additionalProperties": false

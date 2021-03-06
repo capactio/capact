@@ -23,13 +23,11 @@ spec:
           {
             "name": "dbName",
             "owner": "userName",
-            "tablespace": "tablespace"
           }
         ],
         "required": [
             "name",
             "owner",
-            "tablespace"
         ],
         "properties": {
           "name": {
@@ -42,11 +40,6 @@ spec:
             "type": "string",
             "title": "The DB owner username",
           },
-          "tablespace": {
-            "$id": "#/properties/tablespace",
-            "type": "string",
-            "title": "The DB tablespace",
-          }
         },
         "additionalProperties": false
       }
