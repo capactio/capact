@@ -575,7 +575,10 @@ args:
       - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
-      - - arguments: {}
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.foo}}'
+              name: foo
           name: start-entrypoint
           template: jira-install
       - - arguments:

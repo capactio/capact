@@ -64,15 +64,6 @@ args:
       - - arguments: {}
           name: start-entrypoint
           template: main
-      - - arguments:
-            artifacts:
-            - name: payload
-              raw:
-                data: |
-                  typeInstances: []
-                  usesRelations: []
-          name: upload-output-type-instances-step
-          template: upload-output-type-instances
     - arguments: {}
       container:
         args:
@@ -103,24 +94,4 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
-        env:
-        - name: APP_ACTION
-          value: UploadAction
-        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
-          value: /upload/payload
-        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
-          value: /upload/typeInstances
-        image: alpine:3.7
-        imagePullPolicy: IfNotPresent
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: payload
-          path: /upload/payload
-      metadata: {}
-      name: upload-output-type-instances
-      outputs: {}
 runnerInterface: cap.interface.runner.argo.run

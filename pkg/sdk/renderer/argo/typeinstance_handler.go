@@ -9,7 +9,7 @@ import (
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
-	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )
@@ -216,10 +216,7 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
-	payload := &graphqllocal.CreateTypeInstancesInput{
-		TypeInstances: []*graphqllocal.CreateTypeInstanceInput{},
-		UsesRelations: []*graphqllocal.TypeInstanceUsesRelationInput{},
-	}
+	payload := []graphqllocal.UpdateTypeInstancesInput{}
 
 	for _, ti := range typeInstances {
 		artifacts = append(artifacts, wfv1.Artifact{
@@ -230,6 +227,11 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		arguments = append(arguments, wfv1.Artifact{
 			Name: ti.ID,
 			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", ti.ArtifactName),
+		})
+
+		payload = append(payload, graphqllocal.UpdateTypeInstancesInput{
+			ID:           ti.ID,
+			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{},
 		})
 	}
 

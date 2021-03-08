@@ -112,8 +112,10 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, err
 	}
 
+	availableArtifacts := dedicatedRenderer.tplInputArguments[dedicatedRenderer.entrypointStep.Template]
+
 	// 8 Register output TypeInstances
-	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, []InputArtifact{}); err != nil {
+	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 

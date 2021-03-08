@@ -18,7 +18,7 @@ args:
       steps:
       - - arguments:
             artifacts:
-            - from: '{{workflow.outputs.artifacts.postgresql}}'
+            - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
           name: install-db
           template: mock-jira-install-install-db
@@ -409,6 +409,10 @@ args:
             artifacts:
             - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
+            - from: '{{workflow.outputs.artifacts.gcp}}'
+              name: gcp
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
           name: start-entrypoint
           template: jira-install
       - - arguments:

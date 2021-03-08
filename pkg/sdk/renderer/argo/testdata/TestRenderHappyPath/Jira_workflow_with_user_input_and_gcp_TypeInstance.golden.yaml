@@ -551,6 +551,8 @@ args:
             artifacts:
             - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
+            - from: '{{workflow.outputs.artifacts.gcp}}'
+              name: gcp
           name: start-entrypoint
           template: jira-install
       - - arguments:
