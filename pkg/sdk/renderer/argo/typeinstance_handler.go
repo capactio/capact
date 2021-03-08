@@ -105,6 +105,13 @@ type OutputTypeInstances struct {
 	relations     []OutputTypeInstanceRelation
 }
 
+type UpdateTypeInstance struct {
+	ArtifactName string
+	ID           string
+}
+
+type UpdateTypeInstances []UpdateTypeInstance
+
 func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow, output *OutputTypeInstances) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
@@ -175,6 +182,90 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 				{
 					Name:  "APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR",
 					Value: "/upload/typeInstances",
+				},
+			},
+		},
+		Inputs: wfv1.Inputs{
+			Artifacts: artifacts,
+		},
+	}
+
+	idx, err := getEntrypointWorkflowIndex(rootWorkflow)
+	if err != nil {
+		return err
+	}
+
+	rootWorkflow.Templates[idx].Steps = append(rootWorkflow.Templates[idx].Steps, ParallelSteps{
+		{
+			WorkflowStep: &wfv1.WorkflowStep{
+				Name:     fmt.Sprintf("%s-step", template.Name),
+				Template: template.Name,
+				Arguments: wfv1.Arguments{
+					Artifacts: arguments,
+				},
+			},
+		},
+	})
+
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: template})
+
+	return nil
+}
+
+func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances) error {
+	artifacts := wfv1.Artifacts{}
+	arguments := wfv1.Artifacts{}
+
+	payload := &graphqllocal.CreateTypeInstancesInput{
+		TypeInstances: []*graphqllocal.CreateTypeInstanceInput{},
+		UsesRelations: []*graphqllocal.TypeInstanceUsesRelationInput{},
+	}
+
+	for _, ti := range typeInstances {
+		artifacts = append(artifacts, wfv1.Artifact{
+			Name: ti.ID,
+			Path: fmt.Sprintf("/upload/typeInstances/%s", ti.ID),
+		})
+
+		arguments = append(arguments, wfv1.Artifact{
+			Name: ti.ID,
+			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", ti.ArtifactName),
+		})
+	}
+
+	payloadBytes, _ := yaml.Marshal(payload)
+
+	arguments = append(arguments, wfv1.Artifact{
+		Name: "payload",
+		ArtifactLocation: wfv1.ArtifactLocation{
+			Raw: &wfv1.RawArtifact{
+				Data: string(payloadBytes),
+			},
+		},
+	})
+
+	artifacts = append(artifacts, wfv1.Artifact{
+		Name: "payload",
+		Path: "/upload/payload",
+	})
+
+	template := &wfv1.Template{
+		Name: "upload-update-type-instances",
+		Container: &apiv1.Container{
+			Image:           r.ochActionsImage,
+			ImagePullPolicy: apiv1.PullIfNotPresent,
+			Env: []apiv1.EnvVar{
+				{
+					Name:  "APP_ACTION",
+					Value: "UpdateAction",
+				},
+				{
+					Name:  "APP_UPDATE_CONFIG_PAYLOAD_FILEPATH",
+					Value: "/update/payload",
+				},
+				{
+					Name:  "APP_UPDATE_CONFIG_TYPE_INSTANCES_DIR",
+					Value: "/update/typeInstances",
 				},
 			},
 		},

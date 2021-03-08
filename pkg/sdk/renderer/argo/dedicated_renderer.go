@@ -33,10 +33,12 @@ type dedicatedRenderer struct {
 	currentIteration   int
 	processedTemplates []*Template
 	rootTemplate       *Template
-	entrypointStep     *wfv1.WorkflowStep
-	tplInputArguments  map[string][]InputArtifact
+	//entrypointStep     *wfv1.WorkflowStep
+	entrypointStep    *WorkflowStep
+	tplInputArguments map[string][]InputArtifact
 
 	outputTypeInstances               *OutputTypeInstances
+	updatedTypeInstances              UpdateTypeInstances
 	registeredOutputTypeInstanceNames []*string
 }
 
@@ -56,6 +58,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
+		updatedTypeInstances:              UpdateTypeInstances{},
 		registeredOutputTypeInstanceNames: []*string{},
 	}
 
@@ -66,10 +69,11 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 }
 
 func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Workflow {
-	r.entrypointStep = &wfv1.WorkflowStep{
-		Name:     "start-entrypoint",
-		Template: workflow.Entrypoint, // previous entry point
-	}
+	r.entrypointStep = &WorkflowStep{
+		WorkflowStep: &wfv1.WorkflowStep{
+			Name:     "start-entrypoint",
+			Template: workflow.Entrypoint, // previous entry point
+		}}
 
 	r.rootTemplate = &Template{
 		Template: &wfv1.Template{
@@ -78,7 +82,7 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Work
 		Steps: []ParallelSteps{
 			{
 				{
-					WorkflowStep: r.entrypointStep,
+					WorkflowStep: r.entrypointStep.WorkflowStep,
 				},
 			},
 		},
@@ -91,11 +95,40 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Work
 }
 
 func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
+	availableTypeInstances := map[argoArtifactRef]*string{}
+
+	for _, ti := range r.inputTypeInstances {
+		r.entrypointStep.Arguments.Artifacts = append(r.entrypointStep.Arguments.Artifacts, wfv1.Artifact{
+			Name: ti.Name,
+			From: fmt.Sprintf("{{workflow.outputs.artifacts.%s}}", ti.Name),
+		})
+
+		tiPtr := r.addTypeInstanceName(ti.ID)
+		availableTypeInstances[argoArtifactRef{
+			step: ArgoArtifactNoStep,
+			name: ti.Name,
+		}] = tiPtr
+	}
+
+	r.registerTemplateInputArguments(r.entrypointStep, availableTypeInstances)
+
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, r.inputTypeInstances)
 }
 
 func (r *dedicatedRenderer) AddOutputTypeInstancesStep(workflow *Workflow) error {
-	return r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.outputTypeInstances)
+	if len(r.outputTypeInstances.relations) != 0 || len(r.outputTypeInstances.typeInstances) != 0 {
+		if err := r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.outputTypeInstances); err != nil {
+			return err
+		}
+	}
+
+	if len(r.updatedTypeInstances) > 0 {
+		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.updatedTypeInstances); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *dedicatedRenderer) GetRootTemplates() []*Template {
@@ -178,6 +211,22 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 				}
 
+				for _, update := range step.VoltronTypeInstanceUpdates {
+					typeInstance, ok := availableTypeInstances[argoArtifactRef{
+						step: ArgoArtifactNoStep,
+						name: update.Name,
+					}]
+
+					if !ok {
+						return errors.Errorf("failed to find TypeInstance for %s", update.Name)
+					}
+
+					r.updatedTypeInstances = append(r.updatedTypeInstances, UpdateTypeInstance{
+						ArtifactName: *typeInstance,
+						ID:           *typeInstance,
+					})
+				}
+
 				// 3. Import and resolve Implementation for `voltron-action`
 				if step.VoltronAction != nil {
 					// 3.1 Expand `voltron-action` alias based on imports section
@@ -255,6 +304,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 				}
 
 				step.VoltronTypeInstanceOutputs = nil
+				step.VoltronTypeInstanceUpdates = nil
 
 				// 4. Replace global artifacts names in references, based on previous gathered mappings.
 				for artIdx := range step.Arguments.Artifacts {
@@ -333,7 +383,7 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 					step.Template = addPrefix(prefix, step.Template)
 				}
 
-				for _, ti := range step.VoltronTypeInstanceOutputs {
+				for _, ti := range append(step.VoltronTypeInstanceOutputs, step.VoltronTypeInstanceUpdates...) {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, &template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})

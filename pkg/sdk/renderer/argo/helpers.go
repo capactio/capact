@@ -109,6 +109,12 @@ func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 			step: ArgoArtifactNoStep,
 			name: artifactName,
 		}, nil
+	case "workflow":
+		artifactName := parts[3]
+		return &argoArtifactRef{
+			step: ArgoArtifactNoStep,
+			name: artifactName,
+		}, nil
 	}
 
 	return nil, errors.New("not found")

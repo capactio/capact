@@ -108,6 +108,26 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
+			name: "PostgreSQL change password",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.database.postgresql.change-password",
+			},
+			inputTypeInstances: []types.InputTypeInstanceRef{
+				{
+					Name: "role",
+					ID:   "6fc7dd6b-d150-4af3-a1aa-a868962b7d68",
+				},
+				{
+					Name: "postgresql",
+					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
+				},
+			},
+			userInput: &UserInputSecretRef{
+				Name: "user-input",
+				Key:  "parameters.json",
+			},
+		},
+		{
 			name: "Two level nested workflow",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.nested.root",
