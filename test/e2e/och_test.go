@@ -259,7 +259,7 @@ var _ = Describe("GraphQL API", func() {
 			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
 
 			By("setting OCH_MODE to local-v2")
-			mergePatch := ochLocalModePatch("local-v2")
+			mergePatch := ochLocalModePatch(OCHModeLocalV2)
 			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -344,7 +344,7 @@ var _ = Describe("GraphQL API", func() {
 			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
 
 			By("setting OCH_MODE to local")
-			mergePatch := ochLocalModePatch("local")
+			mergePatch := ochLocalModePatch(OCHModeLocal)
 			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -357,6 +357,7 @@ var _ = Describe("GraphQL API", func() {
 
 // Same configuration as we have for argo-actions app
 // Note: skip gateway as it still has wrong schema, additional pod restart will cost more time
+// TODO(SV-266): temporary solution
 func newOCHLocalV2Client() *ochv2cli.Client {
 	httpClient := httputil.NewClient(
 		30*time.Second,
@@ -364,13 +365,15 @@ func newOCHLocalV2Client() *ochv2cli.Client {
 	)
 
 	clientOpt := graphql.WithHTTPClient(httpClient)
-	gcli := graphql.NewClient("http://voltron-och-local.voltron-system/graphql", clientOpt)
+	endpoint := fmt.Sprintf("http://%s.%s/graphql", cfg.OCHLocalDeployName, cfg.OCHLocalDeployNamespace)
+	gcli := graphql.NewClient(endpoint, clientOpt)
 
 	return ochv2cli.NewClient(gcli)
 }
 
+// TODO(SV-266): temporary solution
 func statusReady(cli cliappsv1.DeploymentInterface, deployName string, expGen int64) error {
-	return wait.Poll(time.Second, 2*time.Minute, func() (done bool, err error) {
+	return wait.Poll(cfg.PollingInterval, cfg.PollingTimeout, func() (done bool, err error) {
 		dep, err := cli.Get(deployName, metav1.GetOptions{})
 		if err != nil {
 			return false, err
@@ -379,7 +382,15 @@ func statusReady(cli cliappsv1.DeploymentInterface, deployName string, expGen in
 	})
 }
 
-func ochLocalModePatch(mode string) []byte {
+type OCHMode string
+
+const (
+	OCHModeLocalV2 OCHMode = "local-v2"
+	OCHModeLocal           = "local"
+)
+
+// TODO(SV-266): temporary solution
+func ochLocalModePatch(mode OCHMode) []byte {
 	return []byte(fmt.Sprintf(`{
 		  "spec": {
 			"template": {

@@ -64,7 +64,7 @@ var _ = AfterSuite(func() {
 	cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
 
 	By("setting OCH_MODE to local")
-	mergePatch := ochLocalModePatch("local")
+	mergePatch := ochLocalModePatch(OCHModeLocal)
 	_, err = cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
 	Expect(err).NotTo(HaveOccurred())
 })
