@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	local "projectvoltron.dev/voltron/pkg/och/client/local/v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -23,10 +23,6 @@ type Upload struct {
 	log    *zap.Logger
 	client *local.Client
 	cfg    UploadConfig
-}
-
-func ErrMissingTypeInstanceValue(typeInstanceName string) error {
-	return errors.Errorf("missing value for TypeInstance %s", typeInstanceName)
 }
 
 func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {

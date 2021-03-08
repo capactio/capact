@@ -11,13 +11,14 @@ import (
 	"go.uber.org/zap"
 	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
 	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	local "projectvoltron.dev/voltron/pkg/och/client/local/v2"
 )
 
 type Config struct {
 	Action           string
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
+	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
 	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
 	LoggerDevMode    bool                         `envconfig:"default=false"`
 }
@@ -52,6 +53,10 @@ func main() {
 	case argoactions.UploadAction:
 		log := logger.With(zap.String("Action", argoactions.UploadAction))
 		action = argoactions.NewUploadAction(log, client, cfg.UploadConfig)
+
+	case argoactions.UpdateAction:
+		log := logger.With(zap.String("Action", argoactions.UpdateAction))
+		action = argoactions.NewUpdateAction(log, client, cfg.UpdateConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)
