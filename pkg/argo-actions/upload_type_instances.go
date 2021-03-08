@@ -7,8 +7,8 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
-	local "projectvoltron.dev/voltron/pkg/och/client/local/v2"
+	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	local "projectvoltron.dev/voltron/pkg/och/client/local"
 	"sigs.k8s.io/yaml"
 )
 
