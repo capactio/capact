@@ -45,7 +45,7 @@ func (u *Update) Do(ctx context.Context) error {
 	}
 
 	if len(payload) == 0 {
-		u.log.Info("No TypeInstances to upload")
+		u.log.Info("No TypeInstances to update")
 		return nil
 	}
 
