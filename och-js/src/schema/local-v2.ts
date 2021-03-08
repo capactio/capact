@@ -150,11 +150,11 @@ export const schema = makeAugmentedSchema({
         }
       },
       updateTypeInstance: async (_obj, args) => {
-        return Object(fixTypeInstance(args.id));
+        return fixTypeInstance(args.id);
       },
       updateTypeInstances: async (_obj, args: UpdateTypeInstancesInput) => {
         const ti = args.in.map((elem) => fixTypeInstance(elem.id));
-        return Object(ti);
+        return ti;
       },
     },
   },
