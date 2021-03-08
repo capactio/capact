@@ -72,7 +72,7 @@ func (u *Update) Do(ctx context.Context) error {
 		typeInstanceValues[f.Name()] = values
 	}
 
-	if err := u.render(ctx, payload, typeInstanceValues); err != nil {
+	if err := u.render(payload, typeInstanceValues); err != nil {
 		return errors.Wrap(err, "while rendering UpdateTypeInstancesInput")
 	}
 
@@ -90,7 +90,7 @@ func (u *Update) Do(ctx context.Context) error {
 	return nil
 }
 
-func (u *Update) render(ctx context.Context, payload []graphqllocal.UpdateTypeInstancesInput, values map[string]map[string]interface{}) error {
+func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values map[string]map[string]interface{}) error {
 	for i := range payload {
 		typeInstance := payload[i]
 
@@ -100,27 +100,10 @@ func (u *Update) render(ctx context.Context, payload []graphqllocal.UpdateTypeIn
 		}
 
 		typeInstance.TypeInstance.Value = value
-
-		resourceVersion, err := u.fetchTypeInstanceResourceVersion(ctx, typeInstance.ID)
-		if err != nil {
-			return errors.Wrapf(err, "while getting resourceVersion for TypeInstance %s", typeInstance.ID)
-		}
-		typeInstance.TypeInstance.ResourceVersion = resourceVersion
+		// TODO: remove after resourceVersion gets deleted from API
+		typeInstance.TypeInstance.ResourceVersion = 0
 	}
 	return nil
-}
-
-func (u *Update) fetchTypeInstanceResourceVersion(ctx context.Context, id string) (int, error) {
-	ti, err := u.client.FindTypeInstance(ctx, id)
-	if err != nil {
-		return 0, errors.Wrap(err, "while finding TypeInstance")
-	}
-
-	if ti == nil || ti.LatestResourceVersion == nil {
-		return 0, ErrMissingResourceVersion()
-	}
-
-	return ti.LatestResourceVersion.ResourceVersion, nil
 }
 
 func (u *Update) updateTypeInstances(ctx context.Context, in []graphqllocal.UpdateTypeInstancesInput) ([]graphqllocal.TypeInstance, error) {
