@@ -71,11 +71,10 @@ export const schema = makeAugmentedSchema({
               );
 
               const usesRelationsParams = usesRelations.map(
-                ({ from, to }: { from: string; to: string }) =>
-                  Object({
-                    from: aliasMappings[from] || from,
-                    to: aliasMappings[to] || to,
-                  })
+                ({ from, to }: { from: string; to: string }) => ({
+                  from: aliasMappings[from] || from,
+                  to: aliasMappings[to] || to,
+                })
               );
 
               const createRelationsResult = await tx.run(
@@ -99,12 +98,10 @@ export const schema = makeAugmentedSchema({
                 );
               }
 
-              return Object.entries(aliasMappings).map((entry) =>
-                Object({
-                  alias: entry[0],
-                  id: entry[1],
-                })
-              );
+              return Object.entries(aliasMappings).map((entry) => ({
+                alias: entry[0],
+                id: entry[1],
+              }));
             }
           );
         } catch (e) {

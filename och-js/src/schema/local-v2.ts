@@ -1,8 +1,12 @@
 import { readFileSync } from "fs";
 import { makeAugmentedSchema } from "neo4j-graphql-js";
-import { Transaction } from "neo4j-driver";
+import { Driver, Transaction } from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local-v2/schema.graphql", "utf-8");
+
+interface UpdateTypeInstancesInput {
+  in: [{ id: string }];
+}
 
 interface CreateTypeInstancesArgs {
   in: {
@@ -11,13 +15,13 @@ interface CreateTypeInstancesArgs {
   };
 }
 
-interface UpdateTypeInstancesInput {
-  in: [{ id: string }];
+interface ContextWithDriver {
+  driver: Driver;
 }
 
 function fixTypeInstance(id: string) {
   return {
-    id: id,
+    id,
     typeRef: {
       path: "cap.mocked.update.type.instance",
       revision: "0.1.1",
@@ -25,7 +29,7 @@ function fixTypeInstance(id: string) {
     latestResourceVersion: {
       resourceVersion: 1,
       metadata: {
-        id: id,
+        id,
         attributes: [
           {
             path: "cap.attribute.sample",
@@ -46,7 +50,7 @@ function fixTypeInstance(id: string) {
     firstResourceVersion: {
       resourceVersion: 1,
       metadata: {
-        id: id,
+        id,
         attributes: [
           {
             path: "cap.attribute.sample",
@@ -69,7 +73,7 @@ function fixTypeInstance(id: string) {
       {
         resourceVersion: 1,
         metadata: {
-          id: id,
+          id,
           attributes: [
             {
               path: "cap.attribute.sample",
@@ -91,7 +95,7 @@ function fixTypeInstance(id: string) {
     resourceVersion: {
       resourceVersion: 1,
       metadata: {
-        id: id,
+        id,
         attributes: [
           {
             path: "cap.attribute.sample",
@@ -117,9 +121,9 @@ export const schema = makeAugmentedSchema({
   resolvers: {
     Mutation: {
       createTypeInstances: async (
-        _obj,
+        _: any,
         args: CreateTypeInstancesArgs,
-        context
+        context: ContextWithDriver
       ) => {
         const { typeInstances, usesRelations } = args.in;
 
@@ -135,23 +139,95 @@ export const schema = makeAugmentedSchema({
         const neo4jSession = context.driver.session();
 
         try {
-          return await neo4jSession.writeTransaction(async (_: Transaction) => {
-            return aliases.map((entry) =>
-              Object({
-                alias: entry,
-                id: `4123-mocked-id-for-${entry}`,
-              })
-            );
-          });
+          return await neo4jSession.writeTransaction(
+            async (tx: Transaction) => {
+              // create TypeInstances
+              const createTypeInstanceResult = await tx.run(
+                `UNWIND $typeInstances AS typeInstance
+               MERGE (typeRef:TypeReference {path: typeInstance.typeRef.path, revision: typeInstance.typeRef.revision})
+               
+               CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+               CREATE (ti)-[:OF_TYPE]->(typeRef)
+               
+               CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
+               CREATE (ti)-[:CONTAINS]->(tir)
+               
+               CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
+               CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: apoc.convert.toJson(typeInstance.value)})
+
+               FOREACH (attr in typeInstance.attributes |
+                 MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+                 CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+               )
+
+               RETURN ti.id as uuid, typeInstance.alias as alias
+              `,
+                { typeInstances }
+              );
+
+              if (
+                createTypeInstanceResult.records.length !== typeInstances.length
+              ) {
+                throw new Error(
+                  "Failed to create some TypeInstances. Please verify, if you provided all the required fields for TypeInstances."
+                );
+              }
+
+              const aliasMappings: {
+                [key: string]: string;
+              } = createTypeInstanceResult.records.reduce(
+                (acc: { [key: string]: string }, cur) => {
+                  const uuid = cur.get("uuid");
+                  const alias = cur.get("alias");
+
+                  return {
+                    ...acc,
+                    [alias || uuid]: uuid,
+                  };
+                },
+                {}
+              );
+              const usesRelationsParams = usesRelations.map(
+                ({ from, to }: { from: string; to: string }) => ({
+                  from: aliasMappings[from] || from,
+                  to: aliasMappings[to] || to,
+                })
+              );
+
+              const createRelationsResult = await tx.run(
+                `UNWIND $usesRelations as usesRelation
+               MATCH (fromTi:TypeInstance {id: usesRelation.from})
+               MATCH (toTi:TypeInstance {id: usesRelation.to})
+               CREATE (fromTi)-[:USES]->(toTi)
+               RETURN fromTi AS from, toTi AS to
+              `,
+                {
+                  usesRelations: usesRelationsParams,
+                }
+              );
+
+              if (
+                createRelationsResult.records.length !==
+                usesRelationsParams.length
+              ) {
+                throw new Error(
+                  "Failed to create some relations. Please verify, if you use proper aliases or IDs in relations definition."
+                );
+              }
+
+              return Object.entries(aliasMappings).map((entry) => ({
+                alias: entry[0],
+                id: entry[1],
+              }));
+            }
+          );
         } catch (e) {
           throw new Error(`failed to create the TypeInstances: ${e.message}`);
         } finally {
-          neo4jSession.close();
+          await neo4jSession.close();
         }
       },
-      updateTypeInstance: async (_obj, args) => {
-        return fixTypeInstance(args.id);
-      },
+      updateTypeInstance: async (_obj, args) => fixTypeInstance(args.id),
       updateTypeInstances: async (_obj, args: UpdateTypeInstancesInput) => {
         const ti = args.in.map((elem) => fixTypeInstance(elem.id));
         return ti;
@@ -190,9 +266,10 @@ export const schema = makeAugmentedSchema({
                     RETURN $id`,
                 { id: args.id }
               );
-              // Always return ID even if not found, request should be idempotent
 
-              if (deleteTypeInstanceResult.records.length === 0) {
+              if (
+                !deleteTypeInstanceResult.summary.counters.containsUpdates()
+              ) {
                 throw new Error(`TypeInstance not found`);
               }
               return args.id;

@@ -295,7 +295,6 @@ var _ = Describe("GraphQL API", func() {
 			rev := &gqllocalapiv2.TypeInstanceResourceVersion{
 				ResourceVersion: 1,
 				Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
-					ID: createdTypeInstance.ResourceVersion.Metadata.ID,
 					Attributes: []*gqllocalapiv2.AttributeReference{
 						{
 							Path:     "com.voltron.attribute1",

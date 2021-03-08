@@ -89,7 +89,6 @@ type TypeInstanceResourceVersion struct {
 }
 
 type TypeInstanceResourceVersionMetadata struct {
-	ID         string                `json:"id"`
 	Attributes []*AttributeReference `json:"attributes"`
 }
 
