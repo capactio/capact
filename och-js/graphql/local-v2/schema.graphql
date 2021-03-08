@@ -66,7 +66,7 @@ type TypeInstanceResourceVersion {
 }
 
 type TypeInstanceResourceVersionMetadata {
-  attributes: [AttributeReference!]!
+  attributes: [AttributeReference!]
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
@@ -203,14 +203,19 @@ type CreateTypeInstanceOutput {
   alias: String!
 }
 
+"""
+At least one property needs to be specified.
+"""
 input UpdateTypeInstanceInput {
-  typeRef: TypeReferenceInput
+  """
+  The attributes property is optional. If not provided, previous value is used.
+  """
   attributes: [AttributeReferenceInput!]
+
+  """
+  The value property is optional. If not provided, previous value is used.
+  """
   value: Any
-  """
-  Provide the latest resourceVersion number of the TypeInstance that you want to modify
-  """
-  resourceVersion: Int!
 }
 
 input UpdateTypeInstancesInput {
@@ -311,15 +316,133 @@ type Mutation {
       """
     )
 
-  """
-  TODO: SV-265
-  """
+  # Keep in sync with the updateTypeInstances mutation
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
+    @cypher(
+      statement: """
+      MATCH (ti: TypeInstance {id: $id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
 
-  """
-  TODO: SV-265
-  """
-  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance]!
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the `spec.value` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision
+      CALL apoc.do.when(
+        $in.value IS NOT NULL,
+        '
+          SET spec.value = apoc.convert.toJson($in.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value
+
+      // Handle the `metadata.attributes` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
+
+      WITH ti, tir, latestRevision, metadata
+      CALL apoc.do.when(
+        $in.attributes IS NOT NULL,
+        '
+          FOREACH (attr in in.attributes |
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+          )
+
+          RETURN metadata
+        ',
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, in: $in}
+      ) YIELD value
+
+
+      RETURN ti
+      """
+    )
+
+  # Keep in sync with the updateTypeInstance mutation
+  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
+    @cypher(
+      statement: """
+      UNWIND $in as item
+      MATCH (ti: TypeInstance {id: item.id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
+
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the `spec.value` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision, item
+      CALL apoc.do.when(
+          item.typeInstance.value IS NOT NULL,
+        '
+          SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
+
+      // Handle the `metadata.attributes` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
+
+      WITH ti, tir, latestRevision, metadata, item
+      CALL apoc.do.when(
+        item.typeInstance.attributes IS NOT NULL,
+        '
+          FOREACH (attr in item.typeInstance.attributes |
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+          )
+
+          RETURN metadata
+        ',
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, item: item}
+      ) YIELD value
+
+      RETURN ti
+      """
+    )
 
   deleteTypeInstance(id: ID!): ID!
 }

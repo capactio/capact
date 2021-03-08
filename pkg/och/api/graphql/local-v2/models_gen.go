@@ -120,12 +120,12 @@ type TypeReferenceInput struct {
 	Revision string `json:"revision"`
 }
 
+// At least one property needs to be specified.
 type UpdateTypeInstanceInput struct {
-	TypeRef    *TypeReferenceInput        `json:"typeRef"`
+	// The attributes property is optional. If not provided, previous value is used.
 	Attributes []*AttributeReferenceInput `json:"attributes"`
-	Value      interface{}                `json:"value"`
-	// Provide the latest resourceVersion number of the TypeInstance that you want to modify
-	ResourceVersion int `json:"resourceVersion"`
+	// The value property is optional. If not provided, previous value is used.
+	Value interface{} `json:"value"`
 }
 
 type UpdateTypeInstancesInput struct {

@@ -87,7 +87,6 @@ mutation UpdateTypeInstance($typeInstanceID: ID!) {
   updateTypeInstance(
     id: $typeInstanceID
     in: {
-      resourceVersion: 3
       value: { foo: "bar" }
       typeRef: { path: "cap.type.sample", revision: "0.1.0" }
       attributes: [
@@ -110,7 +109,6 @@ mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
           typeRef: { path: "cap.type.sample", revision: "0.1.0" }
           attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
           value: { name: "Luke Skywalker" }
-          resourceVersion: 1
         }
       }
       {
@@ -119,7 +117,6 @@ mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
           typeRef: { path: "cap.type.sample", revision: "0.1.0" }
           attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
           value: { name: "Darth Vader" }
-          resourceVersion: 1
         }
       }
     ]
