@@ -161,7 +161,7 @@ export const schema = makeAugmentedSchema({
         try {
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              await tx.run(
+              const deleteTypeInstanceResult = await tx.run(
                 `
                     MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
                     MATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)
@@ -191,11 +191,17 @@ export const schema = makeAugmentedSchema({
                 { id: args.id }
               );
               // Always return ID even if not found, request should be idempotent
+
+              if (deleteTypeInstanceResult.records.length === 0) {
+                throw new Error(`TypeInstance not found`);
+              }
               return args.id;
             }
           );
         } catch (e) {
-          throw new Error(`failed to create the TypeInstances: ${e.message}`);
+          throw new Error(
+            `failed to delete TypeInstance with ID "${args.id}": ${e.message}`
+          );
         } finally {
           neo4jSession.close();
         }
