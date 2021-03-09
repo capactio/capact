@@ -25,10 +25,6 @@ type Upload struct {
 	cfg    UploadConfig
 }
 
-func ErrMissingTypeInstanceValue(typeInstanceName string) error {
-	return errors.Errorf("missing value for TypeInstance %s", typeInstanceName)
-}
-
 func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
 	return &Upload{
 		log:    log,

@@ -72,6 +72,31 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.Cr
 	return resp.CreatedTypeInstances, nil
 }
 
+func (c *Client) UpdateTypeInstances(ctx context.Context, in []ochlocalgraphql.UpdateTypeInstancesInput) ([]ochlocalgraphql.TypeInstance, error) {
+	query := fmt.Sprintf(`mutation($in: [UpdateTypeInstancesInput]!) {
+		updateTypeInstances(
+			in: $in
+		) {
+			%s
+		}
+	}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	var resp struct {
+		TypeInstances []ochlocalgraphql.TypeInstance `json:"updateTypeInstances"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to update TypeInstances")
+	}
+
+	return resp.TypeInstances, nil
+}
+
 func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query($id: ID!) {
 		typeInstance(id: $id) {

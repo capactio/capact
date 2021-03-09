@@ -12,12 +12,14 @@ import (
 	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/och/client/local"
+	localv2 "projectvoltron.dev/voltron/pkg/och/client/local/v2"
 )
 
 type Config struct {
 	Action           string
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
+	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
 	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
 	LoggerDevMode    bool                         `envconfig:"default=false"`
 }
@@ -42,7 +44,9 @@ func main() {
 	logger, err := logCfg.Build()
 	exitOnError(err, "while creating zap logger")
 
+	// TODO: switch to v2 client after SV-266
 	client := NewOCHLocalClient(cfg.LocalOCHEndpoint)
+	clientV2 := NewOCHLocalClientV2(cfg.LocalOCHEndpoint)
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:
@@ -52,6 +56,10 @@ func main() {
 	case argoactions.UploadAction:
 		log := logger.With(zap.String("Action", argoactions.UploadAction))
 		action = argoactions.NewUploadAction(log, client, cfg.UploadConfig)
+
+	case argoactions.UpdateAction:
+		log := logger.With(zap.String("Action", argoactions.UpdateAction))
+		action = argoactions.NewUpdateAction(log, clientV2, cfg.UpdateConfig)
 
 	default:
 		err := fmt.Errorf("Invalid action: %s", cfg.Action)
@@ -79,6 +87,17 @@ func NewOCHLocalClient(endpoint string) *local.Client {
 	client := graphql.NewClient(endpoint, clientOpt)
 
 	return local.NewClient(client)
+}
+
+func NewOCHLocalClientV2(endpoint string) *localv2.Client {
+	httpClient := httputil.NewClient(
+		30*time.Second,
+		true,
+	)
+	clientOpt := graphql.WithHTTPClient(httpClient)
+	client := graphql.NewClient(endpoint, clientOpt)
+
+	return localv2.NewClient(client)
 }
 
 func exitOnError(err error, context string) {
