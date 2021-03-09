@@ -74,7 +74,9 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.Cr
 
 func (c *Client) UpdateTypeInstances(ctx context.Context, in []ochlocalgraphql.UpdateTypeInstancesInput) ([]ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`mutation($in: [UpdateTypeInstancesInput]!) {
-		updateTypeInstances(in: $in) {
+		updateTypeInstances(
+			in: $in
+		) {
 			%s
 		}
 	}`, typeInstanceFields)

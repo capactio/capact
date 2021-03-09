@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	local "projectvoltron.dev/voltron/pkg/och/client/local"
+	"projectvoltron.dev/voltron/pkg/och/client/local"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )

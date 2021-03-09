@@ -2,13 +2,13 @@ package argoactions
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
+	"path"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
-	local "projectvoltron.dev/voltron/pkg/och/client/local/v2"
+	"projectvoltron.dev/voltron/pkg/och/client/local/v2"
 	"sigs.k8s.io/yaml"
 )
 
@@ -57,7 +57,7 @@ func (u *Update) Do(ctx context.Context) error {
 	typeInstanceValues := map[string]map[string]interface{}{}
 
 	for _, f := range files {
-		path := fmt.Sprintf("%s/%s", u.cfg.TypeInstancesDir, f.Name())
+		path := path.Join(u.cfg.TypeInstancesDir, f.Name())
 
 		typeInstanceValueBytes, err := ioutil.ReadFile(path)
 		if err != nil {
@@ -91,9 +91,7 @@ func (u *Update) Do(ctx context.Context) error {
 }
 
 func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values map[string]map[string]interface{}) error {
-	for i := range payload {
-		typeInstance := payload[i]
-
+	for _, typeInstance := range payload {
 		value, ok := values[typeInstance.ID]
 		if !ok {
 			return ErrMissingTypeInstanceValue(typeInstance.ID)
