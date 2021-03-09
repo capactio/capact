@@ -98,8 +98,6 @@ func (u *Update) render(payload []graphqllocal.UpdateTypeInstancesInput, values 
 		}
 
 		typeInstance.TypeInstance.Value = value
-		// TODO: remove after resourceVersion gets deleted from API
-		typeInstance.TypeInstance.ResourceVersion = 0
 	}
 	return nil
 }

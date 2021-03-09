@@ -1,5 +1,5 @@
 import { readFileSync } from "fs";
-import { makeAugmentedSchema } from "neo4j-graphql-js";
+import { makeAugmentedSchema, neo4jgraphql } from "neo4j-graphql-js";
 import { Driver, Transaction } from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local-v2/schema.graphql", "utf-8");
@@ -17,103 +17,6 @@ interface CreateTypeInstancesArgs {
 
 interface ContextWithDriver {
   driver: Driver;
-}
-
-function fixTypeInstance(id: string) {
-  return {
-    id,
-    typeRef: {
-      path: "cap.mocked.update.type.instance",
-      revision: "0.1.1",
-    },
-    latestResourceVersion: {
-      resourceVersion: 1,
-      metadata: {
-        id,
-        attributes: [
-          {
-            path: "cap.attribute.sample",
-            revision: "0.1.0",
-          },
-        ],
-      },
-      spec: {
-        typeRef: {
-          path: "cap.type.sample",
-          revision: "0.1.0",
-        },
-        value: {
-          hello: "world",
-        },
-      },
-    },
-    firstResourceVersion: {
-      resourceVersion: 1,
-      metadata: {
-        id,
-        attributes: [
-          {
-            path: "cap.attribute.sample",
-            revision: "0.1.0",
-          },
-        ],
-      },
-      spec: {
-        typeRef: {
-          path: "cap.type.sample",
-          revision: "0.1.0",
-        },
-        value: {
-          hello: "world",
-        },
-      },
-    },
-    previousResourceVersion: null,
-    resourceVersions: [
-      {
-        resourceVersion: 1,
-        metadata: {
-          id,
-          attributes: [
-            {
-              path: "cap.attribute.sample",
-              revision: "0.1.0",
-            },
-          ],
-        },
-        spec: {
-          typeRef: {
-            path: "cap.type.sample",
-            revision: "0.1.0",
-          },
-          value: {
-            hello: "world",
-          },
-        },
-      },
-    ],
-    resourceVersion: {
-      resourceVersion: 1,
-      metadata: {
-        id,
-        attributes: [
-          {
-            path: "cap.attribute.sample",
-            revision: "0.1.0",
-          },
-        ],
-      },
-      spec: {
-        typeRef: {
-          path: "cap.type.sample",
-          revision: "0.1.0",
-        },
-        value: {
-          hello: "world",
-        },
-      },
-    },
-  };
 }
 
 export const schema = makeAugmentedSchema({
@@ -227,10 +130,55 @@ export const schema = makeAugmentedSchema({
           await neo4jSession.close();
         }
       },
-      updateTypeInstance: async (_obj, args) => fixTypeInstance(args.id),
-      updateTypeInstances: async (_obj, args: UpdateTypeInstancesInput) => {
-        const ti = args.in.map((elem) => fixTypeInstance(elem.id));
-        return ti;
+      updateTypeInstances: async (
+          obj,
+          args: { in: [{ id: string }] },
+          context,
+          resolveInfo
+      ) => {
+        const neo4jSession = context.driver.session();
+        try {
+          const ids = args.in.map((item) => item.id);
+
+          return await neo4jSession.writeTransaction(
+              async (tx: Transaction) => {
+                const updateTypeInstancesResult = await tx.run(
+                    `
+                    OPTIONAL MATCH (ti:TypeInstance)
+                    WHERE ti.id IN $ids 
+                    RETURN ti.id as foundIds`,
+                    { ids: ids }
+                );
+
+                const extractedResult = updateTypeInstancesResult.records.map(
+                    (record) => record.get("foundIds")
+                );
+                const notFoundIDs = ids.filter(
+                    (x) => !extractedResult.includes(x)
+                );
+
+                if (notFoundIDs.length !== 0) {
+                  throw new Error(
+                      `TypeInstance with ID(s) "${notFoundIDs.join(", ")}" not found`
+                  );
+                }
+                return neo4jgraphql(obj, args, context, resolveInfo);
+              }
+          );
+        } catch (e) {
+          throw new Error(`failed to update TypeInstances": ${e.message}`);
+        } finally {
+          neo4jSession.close();
+        }
+      },
+      updateTypeInstance: async (obj, args, context, resolveInfo) => {
+        const data = await neo4jgraphql(obj, args, context, resolveInfo);
+        if (data === null) {
+          return new Error(
+              `failed to update TypeInstance with ID "${args.id}": TypeInstance not found`
+          );
+        }
+        return data;
       },
       deleteTypeInstance: async (_obj, args, context) => {
         const neo4jSession = context.driver.session();

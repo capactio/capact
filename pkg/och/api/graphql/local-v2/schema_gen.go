@@ -582,7 +582,7 @@ type TypeInstanceResourceVersion {
 }
 
 type TypeInstanceResourceVersionMetadata {
-  attributes: [AttributeReference!]!
+  attributes: [AttributeReference!]
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
@@ -719,14 +719,19 @@ type CreateTypeInstanceOutput {
   alias: String!
 }
 
+"""
+At least one property needs to be specified.
+"""
 input UpdateTypeInstanceInput {
-  typeRef: TypeReferenceInput
+  """
+  The attributes property is optional. If not provided, previous value is used.
+  """
   attributes: [AttributeReferenceInput!]
+
+  """
+  The value property is optional. If not provided, previous value is used.
+  """
   value: Any
-  """
-  Provide the latest resourceVersion number of the TypeInstance that you want to modify
-  """
-  resourceVersion: Int!
 }
 
 input UpdateTypeInstancesInput {
@@ -827,15 +832,133 @@ type Mutation {
       """
     )
 
-  """
-  TODO: SV-265
-  """
+  # Keep in sync with the updateTypeInstances mutation
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
+    @cypher(
+      statement: """
+      MATCH (ti: TypeInstance {id: $id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
 
-  """
-  TODO: SV-265
-  """
-  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance]!
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the ` + "`" + `spec.value` + "`" + ` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision
+      CALL apoc.do.when(
+        $in.value IS NOT NULL,
+        '
+          SET spec.value = apoc.convert.toJson($in.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value
+
+      // Handle the ` + "`" + `metadata.attributes` + "`" + ` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
+
+      WITH ti, tir, latestRevision, metadata
+      CALL apoc.do.when(
+        $in.attributes IS NOT NULL,
+        '
+          FOREACH (attr in in.attributes |
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+          )
+
+          RETURN metadata
+        ',
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, in: $in}
+      ) YIELD value
+
+
+      RETURN ti
+      """
+    )
+
+  # Keep in sync with the updateTypeInstance mutation
+  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
+    @cypher(
+      statement: """
+      UNWIND $in as item
+      MATCH (ti: TypeInstance {id: item.id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
+
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the ` + "`" + `spec.value` + "`" + ` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision, item
+      CALL apoc.do.when(
+          item.typeInstance.value IS NOT NULL,
+        '
+          SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
+
+      // Handle the ` + "`" + `metadata.attributes` + "`" + ` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
+
+      WITH ti, tir, latestRevision, metadata, item
+      CALL apoc.do.when(
+        item.typeInstance.attributes IS NOT NULL,
+        '
+          FOREACH (attr in item.typeInstance.attributes |
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+          )
+
+          RETURN metadata
+        ',
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, item: item}
+      ) YIELD value
+
+      RETURN ti
+      """
+    )
 
   deleteTypeInstance(id: ID!): ID!
 }
@@ -1360,8 +1483,32 @@ func (ec *executionContext) _Mutation_updateTypeInstance(ctx context.Context, fi
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTypeInstance(rctx, args["id"].(string), args["in"].(UpdateTypeInstanceInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateTypeInstance(rctx, args["id"].(string), args["in"].(UpdateTypeInstanceInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "MATCH (ti: TypeInstance {id: $id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision\nCALL apoc.do.when(\n  $in.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson($in.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata\nCALL apoc.do.when(\n  $in.attributes IS NOT NULL,\n  '\n    FOREACH (attr in in.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, in: $in}\n) YIELD value\n\n\nRETURN ti")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive0, statement)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2.TypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1402,8 +1549,32 @@ func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, f
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateTypeInstances(rctx, args["in"].([]*UpdateTypeInstancesInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateTypeInstances(rctx, args["in"].([]*UpdateTypeInstancesInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "UNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Cypher == nil {
+				return nil, errors.New("directive cypher is not implemented")
+			}
+			return ec.directives.Cypher(ctx, nil, directive0, statement)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*TypeInstance); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2.TypeInstance`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1417,7 +1588,7 @@ func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, f
 	}
 	res := resTmp.([]*TypeInstance)
 	fc.Result = res
-	return ec.marshalNTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstance(ctx, field.Selections, res)
+	return ec.marshalNTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstanceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_deleteTypeInstance(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -2812,14 +2983,11 @@ func (ec *executionContext) _TypeInstanceResourceVersionMetadata_attributes(ctx 
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*AttributeReference)
 	fc.Result = res
-	return ec.marshalNAttributeReference2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceᚄ(ctx, field.Selections, res)
+	return ec.marshalOAttributeReference2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstanceResourceVersionSpec_value(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionSpec) (ret graphql.Marshaler) {
@@ -4356,14 +4524,6 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 
 	for k, v := range asMap {
 		switch k {
-		case "typeRef":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
-			it.TypeRef, err = ec.unmarshalOTypeReferenceInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeReferenceInput(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "attributes":
 			var err error
 
@@ -4377,14 +4537,6 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalOAny2interface(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "resourceVersion":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resourceVersion"))
-			it.ResourceVersion, err = ec.unmarshalNInt2int(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4817,9 +4969,6 @@ func (ec *executionContext) _TypeInstanceResourceVersionMetadata(ctx context.Con
 			out.Values[i] = graphql.MarshalString("TypeInstanceResourceVersionMetadata")
 		case "attributes":
 			out.Values[i] = ec._TypeInstanceResourceVersionMetadata_attributes(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5158,43 +5307,6 @@ func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNAttributeReference2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceᚄ(ctx context.Context, sel ast.SelectionSet, v []*AttributeReference) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNAttributeReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReference(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
 func (ec *executionContext) marshalNAttributeReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReference(ctx context.Context, sel ast.SelectionSet, v *AttributeReference) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5370,43 +5482,6 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 
 func (ec *executionContext) marshalNTypeInstance2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstance(ctx context.Context, sel ast.SelectionSet, v TypeInstance) graphql.Marshaler {
 	return ec._TypeInstance(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstance(ctx context.Context, sel ast.SelectionSet, v []*TypeInstance) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalOTypeInstance2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstance(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
 }
 
 func (ec *executionContext) marshalNTypeInstance2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*TypeInstance) graphql.Marshaler {
@@ -5933,6 +6008,46 @@ func (ec *executionContext) unmarshalOAttributeFilterInput2ᚖprojectvoltronᚗd
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalOAttributeReference2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceᚄ(ctx context.Context, sel ast.SelectionSet, v []*AttributeReference) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAttributeReference2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReference(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
 func (ec *executionContext) unmarshalOAttributeReferenceInput2ᚕᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐAttributeReferenceInputᚄ(ctx context.Context, v interface{}) ([]*AttributeReferenceInput, error) {
 	if v == nil {
 		return nil, nil
@@ -6101,14 +6216,6 @@ func (ec *executionContext) unmarshalOTypeRefFilterInput2ᚖprojectvoltronᚗdev
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputTypeRefFilterInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalOTypeReferenceInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeReferenceInput(ctx context.Context, v interface{}) (*TypeReferenceInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	res, err := ec.unmarshalInputTypeReferenceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
