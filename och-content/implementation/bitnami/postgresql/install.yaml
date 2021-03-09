@@ -83,16 +83,18 @@ spec:
                             values:
                               image:
                                 pullPolicy: Always
-                              postgresqlDatabase: <@ defaultDBName @>
-                              postgresqlUsername: <@ superuser.username @>
-                              postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
+                              global:
+                                postgresql:
+                                  postgresqlDatabase: <@ defaultDBName @>
+                                  postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
                             output:
                               goTemplate:
                                 host: '{{ template "common.names.fullname" . }}'
                                 port: '{{ template "postgresql.port" . }}'
                                 defaultDBName: '{{ template "postgresql.database" . }}'
                                 superuser:
-                                  username: '{{ template "postgresql.username" . }}'
+                                  # It cannot be changed
+                                  username: 'postgres'
                                   password: '{{ template "postgresql.password" . }}'
                       - name: configuration
                         raw:
@@ -106,6 +108,7 @@ spec:
                     - name: psql-helm-release
                       from: helm-release
                   arguments:
+
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.create-helm-args.outputs.artifacts.render}}"
