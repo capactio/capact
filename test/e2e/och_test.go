@@ -200,7 +200,7 @@ var _ = Describe("GraphQL API", func() {
 			})
 
 			Expect(err).ToNot(HaveOccurred())
-			defer deleteTypeInstance(ctx, cli, createdTypeInstance.Metadata.ID)
+			defer deleteTypeInstanceLegacy(ctx, cli, createdTypeInstance.Metadata.ID)
 
 			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstance.Metadata.ID)
 
@@ -233,21 +233,21 @@ var _ = Describe("GraphQL API", func() {
 		It("creates multiple TypeInstances with uses relations", func() {
 			cli := getOCHGraphQLClient()
 
-			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
+			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInputLegacy())
 
 			Expect(err).NotTo(HaveOccurred())
 			for _, ti := range createdTypeInstanceIDs {
-				defer deleteTypeInstance(ctx, cli, ti.ID)
+				defer deleteTypeInstanceLegacy(ctx, cli, ti.ID)
 			}
 
-			parentTiID := findCreatedTypeInstanceID("parent", createdTypeInstanceIDs)
+			parentTiID := findCreatedTypeInstanceIDLegacy("parent", createdTypeInstanceIDs)
 			Expect(parentTiID).ToNot(BeNil())
 
-			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
+			childTiID := findCreatedTypeInstanceIDLegacy("child", createdTypeInstanceIDs)
 			Expect(childTiID).ToNot(BeNil())
 
-			assertTypeInstance(ctx, cli, *childTiID, expectedChildTypeInstance(*childTiID, *parentTiID))
-			assertTypeInstance(ctx, cli, *parentTiID, expectedParentTypeInstance(*parentTiID, *childTiID))
+			assertTypeInstanceLegacy(ctx, cli, *childTiID, expectedChildTypeInstanceLegacy(*childTiID, *parentTiID))
+			assertTypeInstanceLegacy(ctx, cli, *parentTiID, expectedParentTypeInstanceLegacy(*parentTiID, *childTiID))
 		})
 	})
 
@@ -295,7 +295,6 @@ var _ = Describe("GraphQL API", func() {
 			rev := &gqllocalapiv2.TypeInstanceResourceVersion{
 				ResourceVersion: 1,
 				Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
-					ID: createdTypeInstance.ResourceVersion.Metadata.ID,
 					Attributes: []*gqllocalapiv2.AttributeReference{
 						{
 							Path:     "com.voltron.attribute1",
@@ -334,7 +333,30 @@ var _ = Describe("GraphQL API", func() {
 		})
 
 		It("creates multiple TypeInstances with uses relations", func() {
-			Skip("Not yet implemented")
+			cli := newOCHLocalV2Client()
+
+			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
+
+			Expect(err).NotTo(HaveOccurred())
+			for _, ti := range createdTypeInstanceIDs {
+				defer deleteTypeInstance(ctx, cli, ti.ID)
+			}
+
+			parentTiID := findCreatedTypeInstanceID("parent", createdTypeInstanceIDs)
+			Expect(parentTiID).ToNot(BeNil())
+
+			childTiID := findCreatedTypeInstanceID("child", createdTypeInstanceIDs)
+			Expect(childTiID).ToNot(BeNil())
+
+			expectedChild := expectedChildTypeInstance(*childTiID)
+			expectedParent := expectedParentTypeInstance(*parentTiID)
+			expectedChild.UsedBy = []*gqllocalapiv2.TypeInstance{expectedParentTypeInstance(*parentTiID)}
+			expectedChild.Uses = []*gqllocalapiv2.TypeInstance{}
+			expectedParent.Uses = []*gqllocalapiv2.TypeInstance{expectedChildTypeInstance(*childTiID)}
+			expectedParent.UsedBy = []*gqllocalapiv2.TypeInstance{}
+
+			assertTypeInstance(ctx, cli, *childTiID, expectedChild)
+			assertTypeInstance(ctx, cli, *parentTiID, expectedParent)
 		})
 
 		// TODO(SV-266): temporary solution
@@ -412,10 +434,12 @@ func ochLocalModePatch(mode OCHMode) []byte {
 		}`, mode))
 }
 
-func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
-	childTI, err := cli.FindTypeInstance(ctx, ID)
+func assertTypeInstance(ctx context.Context, cli *ochv2cli.Client, ID string, expected *gqllocalapiv2.TypeInstance) {
+	actual, err := cli.FindTypeInstance(ctx, ID)
 	Expect(err).NotTo(HaveOccurred())
-	Expect(childTI).To(Equal(expected))
+	Expect(actual).NotTo(BeNil())
+	Expect(expected).NotTo(BeNil())
+	Expect(*actual).To(Equal(*expected))
 }
 
 func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpublicapi.AttributeFilterInput {
@@ -426,22 +450,214 @@ func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpub
 	}
 }
 
-func findCreatedTypeInstanceID(alias string, instances []gqllocalapi.CreateTypeInstanceOutput) *string {
+func findCreatedTypeInstanceID(alias string, instances []gqllocalapiv2.CreateTypeInstanceOutput) *string {
 	for _, el := range instances {
-		if el.Alias == alias {
-			return &el.ID
+		if el.Alias != alias {
+			continue
 		}
+		return &el.ID
 	}
 
 	return nil
 }
 
-func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
+func deleteTypeInstance(ctx context.Context, cli *ochv2cli.Client, ID string) {
 	err := cli.DeleteTypeInstance(ctx, ID)
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
+func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
+	return &gqllocalapiv2.CreateTypeInstancesInput{
+		TypeInstances: []*gqllocalapiv2.CreateTypeInstanceInput{
+			{
+				Alias: ptr.String("parent"),
+				TypeRef: &gqllocalapiv2.TypeReferenceInput{
+					Path:     "com.parent",
+					Revision: "0.1.0",
+				},
+				Attributes: []*gqllocalapiv2.AttributeReferenceInput{
+					{
+						Path:     "com.attr",
+						Revision: "0.1.0",
+					},
+				},
+				Value: map[string]interface{}{
+					"parent": true,
+				},
+			},
+			{
+				Alias: ptr.String("child"),
+				TypeRef: &gqllocalapiv2.TypeReferenceInput{
+					Path:     "com.child",
+					Revision: "0.1.0",
+				},
+				Attributes: []*gqllocalapiv2.AttributeReferenceInput{
+					{
+						Path:     "com.attr",
+						Revision: "0.1.0",
+					},
+				},
+				Value: map[string]interface{}{
+					"child": true,
+				},
+			},
+		},
+		UsesRelations: []*gqllocalapiv2.TypeInstanceUsesRelationInput{
+			{
+				From: "parent",
+				To:   "child",
+			},
+		},
+	}
+}
+
+func expectedChildTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
+	tiRev := &gqllocalapiv2.TypeInstanceResourceVersion{
+		ResourceVersion: 1,
+		Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
+			Attributes: []*gqllocalapiv2.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &gqllocalapiv2.TypeInstanceResourceVersionSpec{
+			Value: map[string]interface{}{
+				"child": true,
+			},
+		},
+	}
+
+	return &gqllocalapiv2.TypeInstance{
+		ID: ID,
+		TypeRef: &gqllocalapiv2.TypeReference{
+			Path:     "com.child",
+			Revision: "0.1.0",
+		},
+		LatestResourceVersion:   tiRev,
+		FirstResourceVersion:    tiRev,
+		PreviousResourceVersion: nil,
+		ResourceVersion:         tiRev,
+		ResourceVersions:        []*gqllocalapiv2.TypeInstanceResourceVersion{tiRev},
+		UsedBy:                  nil,
+		Uses:                    nil,
+	}
+}
+
+func expectedParentTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
+	tiRev := &gqllocalapiv2.TypeInstanceResourceVersion{
+		ResourceVersion: 1,
+		Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
+			Attributes: []*gqllocalapiv2.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &gqllocalapiv2.TypeInstanceResourceVersionSpec{
+			Value: map[string]interface{}{
+				"parent": true,
+			},
+		},
+	}
+
+	return &gqllocalapiv2.TypeInstance{
+		ID: ID,
+		TypeRef: &gqllocalapiv2.TypeReference{
+			Path:     "com.parent",
+			Revision: "0.1.0",
+		},
+		LatestResourceVersion:   tiRev,
+		FirstResourceVersion:    tiRev,
+		PreviousResourceVersion: nil,
+		ResourceVersion:         tiRev,
+		ResourceVersions:        []*gqllocalapiv2.TypeInstanceResourceVersion{tiRev},
+		UsedBy:                  nil,
+		Uses:                    nil,
+	}
+}
+
+// TODO(SV-266): Delete legacy functions - start
+
+func expectedChildTypeInstanceLegacy(ID string, parentID string) *gqllocalapi.TypeInstance {
+	return &gqllocalapi.TypeInstance{
+		ResourceVersion: 1,
+		Metadata: &gqllocalapi.TypeInstanceMetadata{
+			ID: ID,
+			Attributes: []*gqllocalapi.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &gqllocalapi.TypeInstanceSpec{
+			TypeRef: &gqllocalapi.TypeReference{
+				Path:     "com.child",
+				Revision: "0.1.0",
+			},
+			Value: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+		Uses: []*gqllocalapi.TypeInstance{},
+		UsedBy: []*gqllocalapi.TypeInstance{
+			{
+				Metadata: &gqllocalapi.TypeInstanceMetadata{
+					ID: parentID,
+				},
+				Spec: &gqllocalapi.TypeInstanceSpec{
+					TypeRef: &gqllocalapi.TypeReference{
+						Path:     "com.parent",
+						Revision: "0.1.0",
+					},
+				},
+			},
+		},
+	}
+}
+
+func expectedParentTypeInstanceLegacy(ID string, childID string) *gqllocalapi.TypeInstance {
+	return &gqllocalapi.TypeInstance{
+		ResourceVersion: 1,
+		Metadata: &gqllocalapi.TypeInstanceMetadata{
+			ID: ID,
+			Attributes: []*gqllocalapi.AttributeReference{
+				{
+					Path:     "com.attr",
+					Revision: "0.1.0",
+				},
+			},
+		},
+		Spec: &gqllocalapi.TypeInstanceSpec{
+			TypeRef: &gqllocalapi.TypeReference{
+				Path:     "com.parent",
+				Revision: "0.1.0",
+			},
+			Value: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+		Uses: []*gqllocalapi.TypeInstance{
+			{
+				Metadata: &gqllocalapi.TypeInstanceMetadata{
+					ID: childID,
+				},
+				Spec: &gqllocalapi.TypeInstanceSpec{
+					TypeRef: &gqllocalapi.TypeReference{
+						Path:     "com.child",
+						Revision: "0.1.0",
+					},
+				},
+			},
+		},
+		UsedBy: []*gqllocalapi.TypeInstance{},
+	}
+}
+
+func createTypeInstancesInputLegacy() *gqllocalapi.CreateTypeInstancesInput {
 	return &gqllocalapi.CreateTypeInstancesInput{
 		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
 			{
@@ -486,78 +702,25 @@ func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
 	}
 }
 
-func expectedChildTypeInstance(ID string, parentID string) *gqllocalapi.TypeInstance {
-	return &gqllocalapi.TypeInstance{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceMetadata{
-			ID: ID,
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceSpec{
-			TypeRef: &gqllocalapi.TypeReference{
-				Path:     "com.child",
-				Revision: "0.1.0",
-			},
-			Value: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-		Uses: []*gqllocalapi.TypeInstance{},
-		UsedBy: []*gqllocalapi.TypeInstance{
-			{
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: parentID,
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.parent",
-						Revision: "0.1.0",
-					},
-				},
-			},
-		},
-	}
+func assertTypeInstanceLegacy(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
+	childTI, err := cli.FindTypeInstance(ctx, ID)
+	Expect(err).NotTo(HaveOccurred())
+	Expect(childTI).To(Equal(expected))
 }
 
-func expectedParentTypeInstance(ID string, childID string) *gqllocalapi.TypeInstance {
-	return &gqllocalapi.TypeInstance{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceMetadata{
-			ID: ID,
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceSpec{
-			TypeRef: &gqllocalapi.TypeReference{
-				Path:     "com.parent",
-				Revision: "0.1.0",
-			},
-			Value: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-		Uses: []*gqllocalapi.TypeInstance{
-			{
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: childID,
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.child",
-						Revision: "0.1.0",
-					},
-				},
-			},
-		},
-		UsedBy: []*gqllocalapi.TypeInstance{},
+func findCreatedTypeInstanceIDLegacy(alias string, instances []gqllocalapi.CreateTypeInstanceOutput) *string {
+	for _, el := range instances {
+		if el.Alias == alias {
+			return &el.ID
+		}
 	}
+
+	return nil
 }
+
+func deleteTypeInstanceLegacy(ctx context.Context, cli *ochclient.Client, ID string) {
+	err := cli.DeleteTypeInstance(ctx, ID)
+	Expect(err).ToNot(HaveOccurred())
+}
+
+// TODO(SV-266): Delete functions - stop

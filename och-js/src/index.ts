@@ -9,7 +9,7 @@ import {
 import * as http from "http";
 import { GraphQLSchema } from "graphql";
 
-import { assertSchemaOnDatabase, getSchemaForMode, OCHMode } from "./schema";
+import { assertSchemaOnDatabase, getSchemaForMode } from "./schema";
 import { config } from "./config";
 import { logger } from "./logger";
 

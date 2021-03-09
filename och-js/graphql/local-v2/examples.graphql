@@ -171,7 +171,6 @@ fragment TypeInstance on TypeInstance {
 fragment TypeInstanceResourceVersion on TypeInstanceResourceVersion {
   resourceVersion
   metadata {
-    id
     attributes {
       path
       revision

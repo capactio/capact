@@ -43,7 +43,6 @@ var typeInstanceFields = fmt.Sprintf(`
 const typeInstanceResourceVersion = `
 	  resourceVersion
 	  metadata {
-		id
 		attributes {
 		  path
 		  revision

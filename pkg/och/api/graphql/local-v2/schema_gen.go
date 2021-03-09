@@ -111,7 +111,6 @@ type ComplexityRoot struct {
 
 	TypeInstanceResourceVersionMetadata struct {
 		Attributes func(childComplexity int) int
-		ID         func(childComplexity int) int
 	}
 
 	TypeInstanceResourceVersionSpec struct {
@@ -423,13 +422,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TypeInstanceResourceVersionMetadata.Attributes(childComplexity), true
 
-	case "TypeInstanceResourceVersionMetadata.id":
-		if e.complexity.TypeInstanceResourceVersionMetadata.ID == nil {
-			break
-		}
-
-		return e.complexity.TypeInstanceResourceVersionMetadata.ID(childComplexity), true
-
 	case "TypeInstanceResourceVersionSpec.instrumentation":
 		if e.complexity.TypeInstanceResourceVersionSpec.Instrumentation == nil {
 			break
@@ -590,7 +582,6 @@ type TypeInstanceResourceVersion {
 }
 
 type TypeInstanceResourceVersionMetadata {
-  id: ID! @id
   attributes: [AttributeReference!]!
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
@@ -824,7 +815,7 @@ type Mutation {
       CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
       CREATE (ti)-[:CONTAINS]->(tir)
 
-      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})
 
       FOREACH (attr in $in.attributes |
@@ -1308,7 +1299,7 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 			return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -2766,61 +2757,6 @@ func (ec *executionContext) _TypeInstanceResourceVersion_spec(ctx context.Contex
 	res := resTmp.(*TypeInstanceResourceVersionSpec)
 	fc.Result = res
 	return ec.marshalNTypeInstanceResourceVersionSpec2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚑv2ᚐTypeInstanceResourceVersionSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TypeInstanceResourceVersionMetadata_id(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionMetadata) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TypeInstanceResourceVersionMetadata",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.ID, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.Id == nil {
-				return nil, errors.New("directive id is not implemented")
-			}
-			return ec.directives.Id(ctx, obj, directive0)
-		}
-
-		tmp, err := directive1(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstanceResourceVersionMetadata_attributes(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersionMetadata) (ret graphql.Marshaler) {
@@ -4879,11 +4815,6 @@ func (ec *executionContext) _TypeInstanceResourceVersionMetadata(ctx context.Con
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TypeInstanceResourceVersionMetadata")
-		case "id":
-			out.Values[i] = ec._TypeInstanceResourceVersionMetadata_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "attributes":
 			out.Values[i] = ec._TypeInstanceResourceVersionMetadata_attributes(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

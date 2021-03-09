@@ -66,7 +66,6 @@ type TypeInstanceResourceVersion {
 }
 
 type TypeInstanceResourceVersionMetadata {
-  id: ID! @id
   attributes: [AttributeReference!]!
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
@@ -300,7 +299,7 @@ type Mutation {
       CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
       CREATE (ti)-[:CONTAINS]->(tir)
 
-      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata {id: apoc.create.uuid()})
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})
 
       FOREACH (attr in $in.attributes |
