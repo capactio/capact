@@ -7,8 +7,8 @@ import (
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 	"github.com/machinebox/graphql"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	"projectvoltron.dev/voltron/pkg/och/client/local/v2"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
 

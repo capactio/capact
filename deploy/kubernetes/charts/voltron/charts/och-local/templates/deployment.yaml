@@ -37,7 +37,7 @@ spec:
             - name: APP_GRAPH_QL_ADDR
               value: ":8080"
             - name: APP_OCH_MODE
-              value: "local"
+              value: "local-v2"
             - name: APP_LOGGER_DEV_MODE
               value: "true"
             - name: APP_NEO4J_ENDPOINT

@@ -51,7 +51,7 @@ var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
 
-	waitTillServiceEndpointsAreReady()
+	// waitTillServiceEndpointsAreReady()
 	waitTillDataIsPopulated()
 })
 

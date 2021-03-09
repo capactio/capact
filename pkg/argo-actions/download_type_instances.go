@@ -6,7 +6,7 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	"projectvoltron.dev/voltron/pkg/och/client/local/v2"
 	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )
@@ -43,7 +43,7 @@ func (d *Download) Do(ctx context.Context) error {
 			return fmt.Errorf("failed to find TypeInstance with ID %q", config.ID)
 		}
 
-		data, err := yaml.Marshal(typeInstance.Spec.Value)
+		data, err := yaml.Marshal(typeInstance.LatestResourceVersion.Spec.Value)
 		if err != nil {
 			return errors.Wrap(err, "while marshaling TypeInstance to YAML")
 		}
