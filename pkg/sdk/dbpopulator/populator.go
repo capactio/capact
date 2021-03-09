@@ -171,7 +171,7 @@ CALL {
   CREATE (inputTypeInstance: InputTypeInstance:unpublished{
     name: name,
     verbs: typeInstances[name].verbs})
-  CREATE (typeReference: TypeReference:unpublished{
+  MERGE (typeReference: TypeReference:unpublished{
     path: typeInstances[name].typeRef.path,
     revision: typeInstances[name].typeRef.revision})
   CREATE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
@@ -189,7 +189,7 @@ CALL {
  WITH typeInstances, output, interfaceRevision
  UNWIND keys(typeInstances) as name
   CREATE (outputTypeInstance: OutputTypeInstance:unpublished{name: name})
-  CREATE (typeReference: TypeReference:unpublished{
+  MERGE (typeReference: TypeReference:unpublished{
     path: typeInstances[name].typeRef.path,
     revision: typeInstances[name].typeRef.revision})
   CREATE (outputTypeInstance)-[:OF_TYPE]->(typeReference)
@@ -267,7 +267,7 @@ CALL {
   UNWIND keys(requires[r]) as of
    UNWIND requires[r][of] as listItem
     MATCH (type:Type:unpublished{path: apoc.text.join([r, listItem.name], ".")})-[:CONTAINS]->(typeRevision:TypeRevision {revision: listItem.revision})
-    CREATE (typeReference:TypeReference:unpublished{
+    MERGE (typeReference:TypeReference:unpublished{
       path: apoc.text.join([r, listItem.name], "."),
       revision: listItem.revision})
     CREATE (item:ImplementationRequirementItem:unpublished {valueConstraints: listItem.valueConstraints, alias: listItem.alias})
@@ -307,7 +307,7 @@ CALL {
     name: name,
     verbs: typeInstances[name].verbs})
   CREATE (implementationAdditionalInput)-[:CONTAINS]->(inputTypeInstance)
-  CREATE (typeReference: TypeReference:unpublished{
+  MERGE (typeReference: TypeReference:unpublished{
     path: typeInstances[name].typeRef.path,
     revision: typeInstances[name].typeRef.revision})
   CREATE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
@@ -325,7 +325,7 @@ CALL {
     name: name,
     verbs: typeInstances[name].verbs})
   CREATE (implementationAdditionalOutput)-[:CONTAINS]->(outputTypeInstance)
-  CREATE (typeReference: TypeReference:unpublished{
+  MERGE (typeReference: TypeReference:unpublished{
     path: typeInstances[name].typeRef.path,
     revision: typeInstances[name].typeRef.revision})
   CREATE (outputTypeInstance)-[:OF_TYPE]->(typeReference)

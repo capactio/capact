@@ -1,5 +1,5 @@
 ocfVersion: 0.0.1
-revision: 0.0.1
+revision: 0.1.0
 kind: RepoMetadata
 metadata:
   prefix: cap.core # Computed during fetching the manifest
