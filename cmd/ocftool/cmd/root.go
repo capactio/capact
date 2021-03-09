@@ -8,7 +8,7 @@ import (
 
 const (
 	appName = "ocftool"
-	version = "0.2.0"
+	version = "0.2.1"
 )
 
 func NewRoot() *cobra.Command {
