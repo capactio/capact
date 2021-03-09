@@ -28,14 +28,11 @@ spec:
           "password"
         ],
         "properties": {
-<<<<<<< HEAD:och-content/type/database/postgresql/user-input.yaml
           "name": {
             "$id": "#/properties/name",
             "type": "string",
             "title": "User name",
           },
-=======
->>>>>>> d60cb62... add manifests for postgresql.change-password:och-content/type/database/postgresql/role-input.yaml
           "password": {
             "$id": "#/properties/password",
             "type": "string",

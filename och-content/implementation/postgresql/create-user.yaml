@@ -78,6 +78,7 @@ spec:
                             name: <@ input.name @>
                             password: <@ password @>
                             EOF
+                            sleep 1
                       - name: input-parameters
                         from: "{{inputs.artifacts.user-input}}"
                       - name: configuration
