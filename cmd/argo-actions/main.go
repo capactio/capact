@@ -11,7 +11,7 @@ import (
 	"go.uber.org/zap"
 	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
 	"projectvoltron.dev/voltron/pkg/httputil"
-	local "projectvoltron.dev/voltron/pkg/och/client/local"
+	"projectvoltron.dev/voltron/pkg/och/client/local"
 	localv2 "projectvoltron.dev/voltron/pkg/och/client/local/v2"
 )
 
