@@ -1,0 +1,62 @@
+## Example variables: {"interfacesPathPattern": "cap.interface.*"}
+query InterfacesWithPrefixFilter($pathPattern: NodePathPattern!) {
+    interfaces(filter: { pathPattern: $pathPattern }) {
+        name
+        prefix
+        path
+        latestRevision {
+            ...InterfaceRevisionFragment
+        }
+        revisions {
+            ...InterfaceRevisionFragment
+        }
+    }
+}
+
+#
+# Fragments with all possible fields for Public OCH entities
+#
+
+fragment InterfaceRevisionFragment on InterfaceRevision {
+    metadata {
+        prefix
+        path
+        name
+        displayName
+        description
+        maintainers {
+            name
+            email
+        }
+        iconURL
+    }
+    revision
+    spec {
+        input {
+            parameters {
+                name
+                jsonSchema
+            }
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+                verbs
+            }
+        }
+        output {
+            typeInstances {
+                name
+                typeRef {
+                    path
+                    revision
+                }
+            }
+        }
+    }
+    signature {
+        och
+    }
+}

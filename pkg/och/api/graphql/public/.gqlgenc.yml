@@ -1,17 +1,18 @@
-schema: ../../../../../och-js/graphql/public/schema.graphql
-
-# Let gqlgen know where to put the generated server
-exec:
-  filename: schema_gen.go
-  package: graphql
-
 # Let gqlgen know where to the generated models (if any)
 model:
-  filename: models_gen.go
   package: graphql
+  filename: ./models_gen.go # https://github.com/99designs/gqlgen/tree/master/plugin/modelgen
 
-# Optional turns on binding to field names by tag provided
-struct_tag: json
+# Let gqlgenc know where to the generated client
+client:
+  package: graphql
+  filename: ../../../client/public/generated/client.go # Where should any generated client go?
+
+schema:
+  - "../../../../../och-js/graphql/public/schema.graphql"
+# Let gqlgenc know where all the query files located
+query:
+  - "../../../client/public/generated/queries.graphql" # Where are all the query files located? # Where are all the query files located?
 
 models:
   Interface:
