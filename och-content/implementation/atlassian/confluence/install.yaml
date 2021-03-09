@@ -32,6 +32,7 @@ spec:
           - confluence-helm-release
           - postgresql
           - database
+          - user
 
   implements:
     - path: cap.interface.productivity.confluence.install
@@ -58,6 +59,8 @@ spec:
       alias: postgresql
       methods:
         - name: install
+          revision: 0.1.0
+        - name: create-user
           revision: 0.1.0
         - name: create-db
           revision: 0.1.0
@@ -100,6 +103,20 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              - - name: create-user
+                  voltron-action: postgresql.create-user
+                  voltron-outputTypeInstances:
+                    - name: user
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: user-input
+                        raw:
+                          data: |
+                            name: confluence
+
               - - name: render-create-db-args
                   voltron-action: jinja2.template
                   arguments:
@@ -108,9 +125,9 @@ spec:
                         raw:
                           data: |
                             name: confluencedb
-                            owner: "<@ superuser.username @>"
+                            owner: "<@ name @>"
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
                       - name: configuration
                         raw:
                           data: |
@@ -160,10 +177,10 @@ spec:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: "<@ host @>"
-                                user: "<@ superuser.username @>"
-                                password: "<@ superuser.password | default(random_word(length=16)) @>"
-                                database: "<@ name @>"
+                                host: "<@ db.host @>"
+                                user: "<@ user.name @>"
+                                password: "<@ user.password @>"
+                                database: "<@ database.name @>"
                               ingress:
                                 enabled: true
                                 annotations:
@@ -185,9 +202,9 @@ spec:
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: configuration
                         raw:
-                          data: ""
+                          data: "prefix: db"
 
-              - - name: fill-params-in-helm-args
+              - - name: fill-database-params-in-helm-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
@@ -197,20 +214,32 @@ spec:
                         from: "{{steps.create-db.outputs.artifacts.database}}"
                       - name: configuration
                         raw:
-                          data: ""
+                          data: "prefix: database"
 
               - - name: fill-input-params-in-helm-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-database-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
                           data: |
                             prefix: input
+
+              - - name: fill-user-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: user"
 
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
@@ -224,7 +253,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-user-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
