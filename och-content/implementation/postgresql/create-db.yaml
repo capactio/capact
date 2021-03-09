@@ -68,6 +68,7 @@ spec:
                       - name: template
                         raw:
                           data: |
+                            set -e
                             export PGPASSWORD=<@ superuser.password @>
                             PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
                             ${PSQL_CMD} "CREATE DATABASE <@name@>"
