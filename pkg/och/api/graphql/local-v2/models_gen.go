@@ -28,7 +28,7 @@ type AttributeReferenceInput struct {
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
 	Alias      *string                    `json:"alias"`
-	TypeRef    *TypeReferenceInput        `json:"typeRef"`
+	TypeRef    *LocalTypeReferenceInput   `json:"typeRef"`
 	Attributes []*AttributeReferenceInput `json:"attributes"`
 	Value      interface{}                `json:"value"`
 }
@@ -43,10 +43,20 @@ type CreateTypeInstancesInput struct {
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
 }
 
+type LocalTypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type LocalTypeReferenceInput struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
 type TypeInstance struct {
 	ID string `json:"id"`
 	// Common properties for all TypeInstances which cannot be changed
-	TypeRef                 *TypeReference                 `json:"typeRef"`
+	TypeRef                 *LocalTypeReference            `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
 	UsedBy                  []*TypeInstance                `json:"usedBy"`
 	LatestResourceVersion   *TypeInstanceResourceVersion   `json:"latestResourceVersion"`
@@ -108,16 +118,6 @@ type TypeRefFilterInput struct {
 	Path string `json:"path"`
 	// If not provided, it returns TypeInstances for all revisions of given Type
 	Revision *string `json:"revision"`
-}
-
-type TypeReference struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
-type TypeReferenceInput struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
 }
 
 // At least one property needs to be specified.

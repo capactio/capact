@@ -33,7 +33,7 @@ type TypeInstance {
   """
   Common properties for all TypeInstances which cannot be changed
   """
-  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  typeRef: LocalTypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
   usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
 
@@ -81,7 +81,7 @@ type TypeInstanceResourceVersionSpec {
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
 
-type TypeReference {
+type LocalTypeReference {
   path: NodePath!
   revision: Version!
 }
@@ -165,7 +165,7 @@ input TypeRefFilterInput {
   revision: Version
 }
 
-input TypeReferenceInput {
+input LocalTypeReferenceInput {
   path: NodePath!
   revision: Version!
 }
@@ -176,7 +176,7 @@ input CreateTypeInstanceInput {
   """
   alias: String
 
-  typeRef: TypeReferenceInput!
+  typeRef: LocalTypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
 }
@@ -240,7 +240,7 @@ type Query {
 
       MATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)
       OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
-      MATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeReference)
+      MATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:LocalTypeReference)
       MATCH (ti:TypeInstance)-[:CONTAINS]->(tir)
       WHERE
       $filter = {} OR
@@ -296,7 +296,7 @@ type Mutation {
     @cypher(
       statement: """
       WITH apoc.convert.toJson($in.value) as value
-      MERGE (typeRef:TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
+      MERGE (typeRef:LocalTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
 
       CREATE (ti:TypeInstance {id: apoc.create.uuid()})
       CREATE (ti)-[:OF_TYPE]->(typeRef)

@@ -47,7 +47,7 @@ export const schema = makeAugmentedSchema({
               // create TypeInstances
               const createTypeInstanceResult = await tx.run(
                 `UNWIND $typeInstances AS typeInstance
-               MERGE (typeRef:TypeReference {path: typeInstance.typeRef.path, revision: typeInstance.typeRef.revision})
+               MERGE (typeRef:LocalTypeReference {path: typeInstance.typeRef.path, revision: typeInstance.typeRef.revision})
                
                CREATE (ti:TypeInstance {id: apoc.create.uuid()})
                CREATE (ti)-[:OF_TYPE]->(typeRef)
@@ -188,7 +188,7 @@ export const schema = makeAugmentedSchema({
               const deleteTypeInstanceResult = await tx.run(
                 `
                     MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
-                    MATCH (ti)-[:OF_TYPE]->(typeRef: TypeReference)
+                    MATCH (ti)-[:OF_TYPE]->(typeRef: LocalTypeReference)
                     MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
                     MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
                     OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
