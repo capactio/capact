@@ -120,7 +120,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgrap
 	return resp.TypeInstance, nil
 }
 
-func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
+func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error) {
 	query := `query {
 	  typeInstances {
 		  typeRef {
@@ -142,7 +142,7 @@ func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphq
 		return nil, errors.Wrap(err, "while executing query to list TypeRef for TypeInstances")
 	}
 
-	var typeRefs []ochlocalgraphql.TypeReference
+	var typeRefs []ochlocalgraphql.TypeInstanceTypeReference
 	for _, ti := range resp.TypeInstances {
 		if ti.TypeRef == nil {
 			continue

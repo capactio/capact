@@ -27,10 +27,10 @@ type AttributeReferenceInput struct {
 
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
-	Alias      *string                    `json:"alias"`
-	TypeRef    *TypeReferenceInput        `json:"typeRef"`
-	Attributes []*AttributeReferenceInput `json:"attributes"`
-	Value      interface{}                `json:"value"`
+	Alias      *string                         `json:"alias"`
+	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
+	Attributes []*AttributeReferenceInput      `json:"attributes"`
+	Value      interface{}                     `json:"value"`
 }
 
 type CreateTypeInstanceOutput struct {
@@ -46,7 +46,7 @@ type CreateTypeInstancesInput struct {
 type TypeInstance struct {
 	ID string `json:"id"`
 	// Common properties for all TypeInstances which cannot be changed
-	TypeRef                 *TypeReference                 `json:"typeRef"`
+	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
 	UsedBy                  []*TypeInstance                `json:"usedBy"`
 	LatestResourceVersion   *TypeInstanceResourceVersion   `json:"latestResourceVersion"`
@@ -97,6 +97,16 @@ type TypeInstanceResourceVersionSpec struct {
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
 }
 
+type TypeInstanceTypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type TypeInstanceTypeReferenceInput struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
 type TypeInstanceUsesRelationInput struct {
 	// Can be existing TypeInstance ID or alias of a TypeInstance from typeInstances list
 	From string `json:"from"`
@@ -108,16 +118,6 @@ type TypeRefFilterInput struct {
 	Path string `json:"path"`
 	// If not provided, it returns TypeInstances for all revisions of given Type
 	Revision *string `json:"revision"`
-}
-
-type TypeReference struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
-type TypeReferenceInput struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
 }
 
 // At least one property needs to be specified.

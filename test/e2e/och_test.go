@@ -272,7 +272,7 @@ var _ = Describe("GraphQL API", func() {
 
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapiv2.CreateTypeInstanceInput{
-				TypeRef: &gqllocalapiv2.TypeReferenceInput{
+				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
 					Path:     "com.voltron.ti",
 					Revision: "0.1.0",
 				},
@@ -310,7 +310,7 @@ var _ = Describe("GraphQL API", func() {
 			}
 			Expect(typeInstance).To(Equal(&gqllocalapiv2.TypeInstance{
 				ID: createdTypeInstance.ID,
-				TypeRef: &gqllocalapiv2.TypeReference{
+				TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
 					Path:     "com.voltron.ti",
 					Revision: "0.1.0",
 				},
@@ -471,7 +471,7 @@ func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
 		TypeInstances: []*gqllocalapiv2.CreateTypeInstanceInput{
 			{
 				Alias: ptr.String("parent"),
-				TypeRef: &gqllocalapiv2.TypeReferenceInput{
+				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
 					Path:     "com.parent",
 					Revision: "0.1.0",
 				},
@@ -487,7 +487,7 @@ func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
 			},
 			{
 				Alias: ptr.String("child"),
-				TypeRef: &gqllocalapiv2.TypeReferenceInput{
+				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
 					Path:     "com.child",
 					Revision: "0.1.0",
 				},
@@ -531,7 +531,7 @@ func expectedChildTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
 
 	return &gqllocalapiv2.TypeInstance{
 		ID: ID,
-		TypeRef: &gqllocalapiv2.TypeReference{
+		TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
 			Path:     "com.child",
 			Revision: "0.1.0",
 		},
@@ -565,7 +565,7 @@ func expectedParentTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
 
 	return &gqllocalapiv2.TypeInstance{
 		ID: ID,
-		TypeRef: &gqllocalapiv2.TypeReference{
+		TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
 			Path:     "com.parent",
 			Revision: "0.1.0",
 		},

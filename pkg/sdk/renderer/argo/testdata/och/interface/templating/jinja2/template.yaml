@@ -26,7 +26,7 @@ spec:
               "$ocfRefs": {
                 "inputType": {
                   "name": "cap.core.type.generic.value",
-                  "revision": "0.0.1"
+                  "revision": "0.1.0"
                 }
               },
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
@@ -39,7 +39,7 @@ spec:
               "$ocfRefs": {
                 "inputType": {
                   "name": "cap.core.type.generic.value",
-                  "revision": "0.0.1"
+                  "revision": "0.1.0"
                 }
               },
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
@@ -50,7 +50,7 @@ spec:
       - name: render
         typeRef:
           path: cap.core.type.generic.value
-          revision: 0.0.1
+          revision: 0.1.0
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

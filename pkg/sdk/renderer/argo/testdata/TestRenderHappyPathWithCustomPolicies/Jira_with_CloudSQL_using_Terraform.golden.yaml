@@ -678,7 +678,7 @@ args:
                     attributes: []
                     typeRef:
                       path: cap.core.type.generic.value
-                      revision: 0.0.1
+                      revision: 0.1.0
                     value: null
                   - alias: jira-install-create-db-database
                     attributes: []
