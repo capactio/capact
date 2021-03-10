@@ -22,10 +22,11 @@ func NewSet() *cobra.Command {
 		Use:   "set-context",
 		Short: "Print the value of a given configuration key",
 		Example: heredoc.Doc(`
+			# select what server to use of via a prompt
 			$ ocftool config set-context
-			# => select what server to use of via a prompt
+			
+			# set specified server
 			$ ocftool config set-context localhost:8080
-			# => set specified server
 		`),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

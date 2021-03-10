@@ -27,7 +27,10 @@ func NewLogin() *cobra.Command {
 		Short: "Log in to a Gateway server",
 		Example: heredoc.Doc(`
 			# start interactive setup
-			$ ocftool login localhost:8080
+			$ ocftool login
+
+			# specify server name and user 
+			$ ocftool login localhost:8080 -u user
 		`),
 		Args: cli.RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -42,7 +45,6 @@ func NewLogin() *cobra.Command {
 
 	flags.StringVarP(&opts.user, "username", "u", "", "Username")
 	flags.StringVarP(&opts.password, "password", "p", "", "Password")
-	flags.BoolVarP(&opts.passwordStdin, "password-stdin", "", false, "Take the password from stdin")
 
 	return cmd
 }

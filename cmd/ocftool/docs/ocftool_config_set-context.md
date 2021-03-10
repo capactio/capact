@@ -9,10 +9,11 @@ ocftool config set-context [flags]
 ### Examples
 
 ```
+# select what server to use of via a prompt
 $ ocftool config set-context
-# => select what server to use of via a prompt
+
+# set specified server
 $ ocftool config set-context localhost:8080
-# => set specified server
 
 ```
 

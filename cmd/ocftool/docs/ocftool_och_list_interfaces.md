@@ -10,8 +10,9 @@ ocftool och list interfaces [flags]
 
 ```
   -h, --help                 help for interfaces
+  -i, --interactive          Start interactive mode
   -o, --output string        Output format. One of:
-                             json|yaml|table|jsonpath=... (default "json")
+                             json|yaml|table|jsonpath=... (default "table")
       --path-prefix string   Pattern of the path of a given Interface, e.g. cap.interface.* (default "cap.interface.*")
 ```
 
