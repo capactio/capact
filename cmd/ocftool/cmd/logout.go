@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -70,7 +68,7 @@ func askWhatServerToLogout(store credstore.Store) (string, error) {
 	}
 
 	if len(candidates) == 0 {
-		return "", fmt.Errorf("not logged in to any server")
+		return "", errors.New("not logged in to any server")
 	}
 
 	var serverAddress string

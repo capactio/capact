@@ -33,7 +33,7 @@ func NewRoot() *cobra.Command {
 		NewDocs(),
 		NewLogin(),
 		NewLogout(),
-		och.NewOCH(),
+		hub.NewHub(),
 		config.NewConfig(),
 		action.NewAction(),
 	)

@@ -16,7 +16,14 @@ query InterfacesWithPrefixFilter($pathPattern: NodePathPattern!) {
 query InterfaceLatestRevision($interfacePath: NodePath!) {
     interface(path: $interfacePath) {
         latestRevision {
-            ...InterfaceRevisionFragment
+            spec {
+                input {
+                    parameters {
+                        name
+                        jsonSchema
+                    }
+                }
+            }
         }
     }
 }

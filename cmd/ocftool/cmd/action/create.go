@@ -4,20 +4,24 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
+	"strings"
 	"time"
 
-	"github.com/fatih/color"
+	"projectvoltron.dev/voltron/internal/ocftool/config"
+	"projectvoltron.dev/voltron/internal/ocftool/credstore"
 	"projectvoltron.dev/voltron/internal/ptr"
 	gqlengine "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"projectvoltron.dev/voltron/pkg/engine/client"
+	"projectvoltron.dev/voltron/pkg/httputil"
+	ochclient "projectvoltron.dev/voltron/pkg/och/client/public/generated"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/docker/pkg/namesgenerator"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/pkg/engine/client"
-	"projectvoltron.dev/voltron/pkg/httputil"
+	"sigs.k8s.io/yaml"
 )
 
 type CreateOptions struct {
@@ -46,8 +50,10 @@ func NewCreate() *cobra.Command {
 
 // TODO export to `internal/ocftool/action`
 func Create(ctx context.Context, opts CreateOptions, w io.Writer) error {
+	rand.Seed(time.Now().UnixNano())
 	answers := struct {
-		Name string
+		Name       string
+		Parameters string `survey:"input-parameters"`
 	}{}
 
 	qs := []*survey.Question{
@@ -55,37 +61,51 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) error {
 			Name: "Name",
 			Prompt: &survey.Input{
 				Message: "Please type Action name",
-				Default: namesgenerator.GetRandomName(0),
+
+				// invalid value: "gallant_mahavira": a DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
+				// and must start and end with an alphanumeric character (e.g. 'example.com',
+				// regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+				Default: strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1),
 			},
 			Validate: survey.Required,
 		},
 	}
-
 	if err := survey.Ask(qs, &answers); err != nil {
 		return err
 	}
 
-	// TODO: we should use JSON schema and ask for a given input parameters
-	//ochCli, err := getOCHClient(config.GetDefaultContext())
-	//if err != nil {
-	//	return err
-	//}
-	//latestRev, err := ochCli.InterfaceLatestRevision(ctx, opts.interfaceName)
-	//if err != nil {
-	//	return err
-	//}
+	ochCli, err := getOCHClient(config.GetDefaultContext())
+	if err != nil {
+		return err
+	}
+	latestRev, err := ochCli.InterfaceLatestRevision(ctx, opts.InterfaceName)
+	if err != nil {
+		return err
+	}
 
-	//params := latestRev.Interface.LatestRevision.Spec.Input.Parameters
+	//TODO: we should use JSON schema and ask for a given input parameters
+	var input *gqlengine.ActionInputData
+	if len(latestRev.Interface.LatestRevision.Spec.Input.Parameters) > 0 {
+		params := ""
+		prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
+		if err := survey.AskOne(prompt, &params); err != nil {
+			return err
+		}
+		converted, _ := yaml.YAMLToJSON([]byte(params))
+		p := gqlengine.JSON(converted)
+		input = &gqlengine.ActionInputData{
+			Parameters: &p,
+		}
+	}
 
 	actionCli, err := getActionClient(config.GetDefaultContext())
 	if err != nil {
 		return err
 	}
-	_ = actionCli
 
 	_, err = actionCli.CreateAction(ctx, &gqlengine.ActionDetailsInput{
 		Name:  answers.Name,
-		Input: nil,
+		Input: input,
 		ActionRef: &gqlengine.ManifestReferenceInput{
 			Path: opts.InterfaceName,
 		},
@@ -114,4 +134,18 @@ func getActionClient(server string) (*client.Client, error) {
 		httputil.WithBasicAuth(user, pass))
 
 	return client.New(fmt.Sprintf("%s/graphql", server), httpClient), nil
+}
+
+// TODO: move it from here
+func getOCHClient(server string) (*ochclient.Client, error) {
+	store := credstore.NewOCH()
+	user, pass, err := store.Get(server)
+	if err != nil {
+		return nil, err
+	}
+
+	httpClient := httputil.NewClient(30*time.Second, false,
+		httputil.WithBasicAuth(user, pass))
+
+	return ochclient.NewClient(httpClient, fmt.Sprintf("%s/graphql", server)), nil
 }

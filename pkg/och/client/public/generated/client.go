@@ -85,7 +85,16 @@ type InterfacesWithPrefixFilter struct {
 }
 type InterfaceLatestRevision struct {
 	Interface *struct {
-		LatestRevision *InterfaceRevisionFragment "json:\"latestRevision\" graphql:\"latestRevision\""
+		LatestRevision *struct {
+			Spec struct {
+				Input struct {
+					Parameters []*struct {
+						Name       string      "json:\"name\" graphql:\"name\""
+						JSONSchema interface{} "json:\"jsonSchema\" graphql:\"jsonSchema\""
+					} "json:\"parameters\" graphql:\"parameters\""
+				} "json:\"input\" graphql:\"input\""
+			} "json:\"spec\" graphql:\"spec\""
+		} "json:\"latestRevision\" graphql:\"latestRevision\""
 	} "json:\"interface\" graphql:\"interface\""
 }
 
@@ -163,51 +172,15 @@ func (c *Client) InterfacesWithPrefixFilter(ctx context.Context, pathPattern str
 const InterfaceLatestRevisionQuery = `query InterfaceLatestRevision ($interfacePath: NodePath!) {
 	interface(path: $interfacePath) {
 		latestRevision {
-			... InterfaceRevisionFragment
-		}
-	}
-}
-fragment InterfaceRevisionFragment on InterfaceRevision {
-	metadata {
-		prefix
-		path
-		name
-		displayName
-		description
-		maintainers {
-			name
-			email
-		}
-		iconURL
-	}
-	revision
-	spec {
-		input {
-			parameters {
-				name
-				jsonSchema
-			}
-			typeInstances {
-				name
-				typeRef {
-					path
-					revision
-				}
-				verbs
-			}
-		}
-		output {
-			typeInstances {
-				name
-				typeRef {
-					path
-					revision
+			spec {
+				input {
+					parameters {
+						name
+						jsonSchema
+					}
 				}
 			}
 		}
-	}
-	signature {
-		och
 	}
 }
 `

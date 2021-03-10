@@ -1,4 +1,4 @@
-package list
+package interfaces
 
 import (
 	"context"
@@ -8,12 +8,9 @@ import (
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
-
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client/public/generated"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -22,29 +19,28 @@ import (
 )
 
 type interfaceListOptions struct {
-	pathPrefix  string
-	output      string
-	interactive bool
+	pathPrefix string
+	output     string
 }
 
-func NewInterface() *cobra.Command {
+func NewSearch() *cobra.Command {
 	var opts interfaceListOptions
 
 	cmd := &cobra.Command{
-		Use:   "interfaces",
-		Short: "List OCH Interfaces",
+		Use:   "search",
+		Short: "Search provides the ability to search for OCH Interfaces",
 		Example: heredoc.Doc(`
-			#  List all interfaces in table format
-			ocftool och list interfaces
+			#  Show all interfaces in table format
+			ocftool hub interfaces search
 			
 			# Print path for the first entry in returned response 
-			ocftool och list interfaces -o=jsonpath="{.interfaces[0]['path']}"
+			ocftool hub interfaces search -oyaml
+
+			# Print path for the first entry in returned response 
+			ocftool hub interfaces search -o=jsonpath="{.interfaces[0]['path']}"
 			
 			# Print paths
-			ocftool och list interfaces -o=jsonpath="{range .interfaces[*]}{.path}{'\n'}{end}"
-
-			# Start interactive mode
-			ocftool och list interfaces -i
+			ocftool hub interfaces search -o=jsonpath="{range .interfaces[*]}{.path}{'\n'}{end}"
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listInterfaces(opts, os.Stdout)
@@ -55,7 +51,6 @@ func NewInterface() *cobra.Command {
 
 	flags.StringVar(&opts.pathPrefix, "path-prefix", "cap.interface.*", "Pattern of the path of a given Interface, e.g. cap.interface.*")
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson|yaml|table|jsonpath=...")
-	flags.BoolVarP(&opts.interactive, "interactive", "i", false, "Start interactive mode")
 
 	return cmd
 }
@@ -71,35 +66,10 @@ func listInterfaces(opts interfaceListOptions, w io.Writer) error {
 		return err
 	}
 
-	if opts.interactive {
-		return interactiveSelection(interfaces)
-	}
-
 	format, pattern := extractOutputFormat(opts.output)
 	printInterfaces := selectPrinter(format)
 
 	return printInterfaces(pattern, interfaces, w)
-}
-
-func interactiveSelection(in *ochclient.InterfacesWithPrefixFilter) error {
-	interfaceName := ""
-	prompt := &survey.Select{
-		Message:  "Choose interface to run:",
-		PageSize: 20,
-	}
-	for _, i := range in.Interfaces {
-		prompt.Options = append(prompt.Options, i.Path)
-	}
-
-	if err := survey.AskOne(prompt, &interfaceName); err != nil {
-		return err
-	}
-
-	opts := action.CreateOptions{
-		InterfaceName: interfaceName,
-		DryRun:        false,
-	}
-	return action.Create(context.TODO(), opts, os.Stdout)
 }
 
 func extractOutputFormat(output string) (format string, pattern string) {
@@ -110,9 +80,9 @@ func extractOutputFormat(output string) (format string, pattern string) {
 	return split[0], split[1]
 }
 
-type printer func(pattern string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) error
-
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface
+
+type printer func(pattern string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) error
 
 func selectPrinter(format string) printer {
 	switch format {
