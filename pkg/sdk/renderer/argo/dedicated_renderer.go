@@ -33,9 +33,8 @@ type dedicatedRenderer struct {
 	currentIteration   int
 	processedTemplates []*Template
 	rootTemplate       *Template
-	//entrypointStep     *wfv1.WorkflowStep
-	entrypointStep    *WorkflowStep
-	tplInputArguments map[string][]InputArtifact
+	entrypointStep     *WorkflowStep
+	tplInputArguments  map[string][]InputArtifact
 
 	outputTypeInstances               *OutputTypeInstances
 	updatedTypeInstances              UpdateTypeInstances
@@ -138,7 +137,8 @@ func (r *dedicatedRenderer) GetRootTemplates() []*Template {
 // TODO Refactor it. It's too long
 // 1. Split it to smaller functions and leave only high level steps here
 // 2. Do not use global state, calling it multiple times seems not to work
-func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport, typeInstances []types.InputTypeInstanceRef, prefix string) error {
+func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport,
+	typeInstances []types.InputTypeInstanceRef, prefix string) error {
 	r.currentIteration++
 
 	if shouldExit(ctx) {
@@ -211,25 +211,8 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 				}
 
-				for _, update := range step.VoltronTypeInstanceUpdates {
-					typeInstance, ok := availableTypeInstances[argoArtifactRef{
-						step: ArgoArtifactNoStep,
-						name: update.Name,
-					}]
-
-					if !ok {
-						return errors.Errorf("failed to find TypeInstance for %s", update.Name)
-					}
-
-					name := update.Name
-					if prefix != "" {
-						name = addPrefix(prefix, name)
-					}
-
-					r.updatedTypeInstances = append(r.updatedTypeInstances, UpdateTypeInstance{
-						ArtifactName: name,
-						ID:           *typeInstance,
-					})
+				if err := r.registerUpdatedTypeInstances(step, availableTypeInstances, prefix); err != nil {
+					return errors.Wrap(err, "while registering updated TypeInstances")
 				}
 
 				// 3. Import and resolve Implementation for `voltron-action`
@@ -910,6 +893,31 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 				To:   usesArtifactName,
 			})
 		}
+	}
+
+	return nil
+}
+
+func (r *dedicatedRenderer) registerUpdatedTypeInstances(step *WorkflowStep, availableTypeInstances map[argoArtifactRef]*string, prefix string) error {
+	for _, update := range step.VoltronTypeInstanceUpdates {
+		typeInstance, ok := availableTypeInstances[argoArtifactRef{
+			step: ArgoArtifactNoStep,
+			name: update.Name,
+		}]
+
+		if !ok {
+			return errors.Errorf("failed to find TypeInstance for %s", update.Name)
+		}
+
+		name := update.Name
+		if prefix != "" {
+			name = addPrefix(prefix, name)
+		}
+
+		r.updatedTypeInstances = append(r.updatedTypeInstances, UpdateTypeInstance{
+			ArtifactName: name,
+			ID:           *typeInstance,
+		})
 	}
 
 	return nil
