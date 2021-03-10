@@ -9,10 +9,10 @@ ocftool logout [SERVER] [flags]
 ### Examples
 
 ```
-$ ocftool logout
+ocftool logout
 # => select what server to log out of via a prompt
 
-$ ocftool logout localhost:8080
+ocftool logout localhost:8080
 # => log out of specified server
 
 ```

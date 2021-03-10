@@ -6,6 +6,23 @@ List OCH Interfaces
 ocftool och list interfaces [flags]
 ```
 
+### Examples
+
+```
+#  List all interfaces in table format
+ocftool och list interfaces
+
+# Print path for the first entry in returned response 
+ocftool och list interfaces -o=jsonpath="{.interfaces[0]['path']}"
+
+# Print paths
+ocftool och list interfaces -o=jsonpath="{range .interfaces[*]}{.path}{'\n'}{end}"
+
+# Start interactive mode
+ocftool och list interfaces -i
+
+```
+
 ### Options
 
 ```

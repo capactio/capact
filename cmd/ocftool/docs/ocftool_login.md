@@ -10,10 +10,10 @@ ocftool login [OPTIONS] [SERVER] [flags]
 
 ```
 # start interactive setup
-$ ocftool login
+ocftool login
 
 # specify server name and user 
-$ ocftool login localhost:8080 -u user
+ocftool login localhost:8080 -u user
 
 ```
 

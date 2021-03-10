@@ -9,7 +9,7 @@ ocftool config get-contexts [flags]
 ### Examples
 
 ```
-$ ocftool config get-contexts
+ocftool config get-contexts
 
 ```
 
