@@ -13,8 +13,10 @@ on:
       - "deploy/**"
       - "!**.md"
       - "och-content/**"
+      - "Dockerfile"
     branches:
       - "master"
+      - "release-0.2"
 
 jobs:
   entry-tests:
