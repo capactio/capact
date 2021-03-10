@@ -27,10 +27,10 @@ type AttributeReferenceInput struct {
 
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
-	Alias      *string                    `json:"alias"`
-	TypeRef    *LocalTypeReferenceInput   `json:"typeRef"`
-	Attributes []*AttributeReferenceInput `json:"attributes"`
-	Value      interface{}                `json:"value"`
+	Alias      *string                         `json:"alias"`
+	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
+	Attributes []*AttributeReferenceInput      `json:"attributes"`
+	Value      interface{}                     `json:"value"`
 }
 
 type CreateTypeInstanceOutput struct {
@@ -43,20 +43,10 @@ type CreateTypeInstancesInput struct {
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
 }
 
-type LocalTypeReference struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
-type LocalTypeReferenceInput struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
 type TypeInstance struct {
 	ID string `json:"id"`
 	// Common properties for all TypeInstances which cannot be changed
-	TypeRef                 *LocalTypeReference            `json:"typeRef"`
+	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
 	UsedBy                  []*TypeInstance                `json:"usedBy"`
 	LatestResourceVersion   *TypeInstanceResourceVersion   `json:"latestResourceVersion"`
@@ -105,6 +95,16 @@ type TypeInstanceResourceVersionMetadata struct {
 type TypeInstanceResourceVersionSpec struct {
 	Value           interface{}                  `json:"value"`
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
+}
+
+type TypeInstanceTypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type TypeInstanceTypeReferenceInput struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
 
 type TypeInstanceUsesRelationInput struct {
