@@ -26,8 +26,7 @@ type CreateOptions struct {
 func Create(ctx context.Context, opts CreateOptions, w io.Writer) error {
 	rand.Seed(time.Now().UnixNano())
 	answers := struct {
-		Name       string
-		Parameters string `survey:"input-parameters"`
+		Name string
 	}{}
 
 	qs := []*survey.Question{
@@ -35,13 +34,10 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) error {
 			Name: "Name",
 			Prompt: &survey.Input{
 				Message: "Please type Action name",
-
-				// invalid value: "gallant_mahavira": a DNS-1123 subdomain must consist of lower case alphanumeric characters, '-' or '.',
-				// and must start and end with an alphanumeric character (e.g. 'example.com',
-				// regex used for validation is '[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*')
+				// must be a DNS-1123 subdomain
 				Default: strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1),
 			},
-			Validate: survey.Required,
+			Validate: survey.ComposeValidators(survey.Required, isDNSSubdomain),
 		},
 	}
 	if err := survey.Ask(qs, &answers); err != nil {
