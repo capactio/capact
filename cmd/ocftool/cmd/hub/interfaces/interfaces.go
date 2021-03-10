@@ -1,13 +1,6 @@
 package interfaces
 
 import (
-	"fmt"
-	"time"
-
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client/public/generated"
-
 	"github.com/spf13/cobra"
 )
 
@@ -22,18 +15,4 @@ func NewInterfaces() *cobra.Command {
 		NewBrowse(),
 	)
 	return cmd
-}
-
-// TODO: move it from here
-func getOCHClient(server string) (*ochclient.Client, error) {
-	store := credstore.NewOCH()
-	user, pass, err := store.Get(server)
-	if err != nil {
-		return nil, err
-	}
-
-	httpClient := httputil.NewClient(30*time.Second, false,
-		httputil.WithBasicAuth(user, pass))
-
-	return ochclient.NewClient(httpClient, fmt.Sprintf("%s/graphql", server)), nil
 }

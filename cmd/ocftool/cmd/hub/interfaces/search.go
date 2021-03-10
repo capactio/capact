@@ -7,10 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/MakeNowJust/heredoc"
+	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client/public/generated"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -56,7 +57,7 @@ func NewSearch() *cobra.Command {
 }
 
 func listInterfaces(opts interfaceListOptions, w io.Writer) error {
-	cli, err := getOCHClient(config.GetDefaultContext())
+	cli, err := client.NewHub(config.GetDefaultContext())
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,7 @@ import (
 
 	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
 	"projectvoltron.dev/voltron/cmd/ocftool/cmd/config"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/och"
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub"
 
 	"github.com/spf13/cobra"
 )

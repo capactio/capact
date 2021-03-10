@@ -6,7 +6,8 @@ import (
 	"io"
 	"os"
 
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
+	"projectvoltron.dev/voltron/internal/ocftool/action"
+	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -41,7 +42,7 @@ func NewBrowse() *cobra.Command {
 
 func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) error {
 	url := config.GetDefaultContext()
-	cli, err := getOCHClient(url)
+	cli, err := client.NewHub(url)
 	if err != nil {
 		return err
 	}
