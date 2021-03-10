@@ -124,7 +124,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	for _, ti := range output.typeInstances {
 		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
 			Alias: ti.ArtifactName,
-			TypeRef: &graphqllocal.TypeReferenceInput{
+			TypeRef: &graphqllocal.TypeInstanceTypeReferenceInput{
 				Path:     ti.TypeInstance.TypeRef.Path,
 				Revision: *ti.TypeInstance.TypeRef.Revision,
 			},
@@ -221,7 +221,7 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 	for _, ti := range typeInstances {
 		artifacts = append(artifacts, wfv1.Artifact{
 			Name: ti.ID,
-			Path: fmt.Sprintf("/upload/typeInstances/%s", ti.ID),
+			Path: fmt.Sprintf("/update/typeInstances/%s", ti.ID),
 		})
 
 		arguments = append(arguments, wfv1.Artifact{
@@ -230,8 +230,10 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		})
 
 		payload = append(payload, graphqllocal.UpdateTypeInstancesInput{
-			ID:           ti.ID,
-			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{},
+			ID: ti.ID,
+			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{
+				Attributes: []*graphqllocal.AttributeReferenceInput{},
+			},
 		})
 	}
 
@@ -248,7 +250,7 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 
 	artifacts = append(artifacts, wfv1.Artifact{
 		Name: "payload",
-		Path: "/upload/payload",
+		Path: "/update/payload",
 	})
 
 	template := &wfv1.Template{

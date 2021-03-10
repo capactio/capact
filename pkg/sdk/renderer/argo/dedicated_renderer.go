@@ -138,7 +138,7 @@ func (r *dedicatedRenderer) GetRootTemplates() []*Template {
 // TODO Refactor it. It's too long
 // 1. Split it to smaller functions and leave only high level steps here
 // 2. Do not use global state, calling it multiple times seems not to work
-func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport, typeInstances []types.InputTypeInstanceRef) error {
+func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport, typeInstances []types.InputTypeInstanceRef, prefix string) error {
 	r.currentIteration++
 
 	if shouldExit(ctx) {
@@ -221,8 +221,13 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return errors.Errorf("failed to find TypeInstance for %s", update.Name)
 					}
 
+					name := update.Name
+					if prefix != "" {
+						name = addPrefix(prefix, name)
+					}
+
 					r.updatedTypeInstances = append(r.updatedTypeInstances, UpdateTypeInstance{
-						ArtifactName: *typeInstance,
+						ArtifactName: name,
 						ID:           *typeInstance,
 					})
 				}
@@ -293,7 +298,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					// 3.11 Render imported Workflow templates and add them to root templates
 					// TODO(advanced-rendering): currently not supported.
-					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil)
+					err = r.RenderTemplateSteps(ctx, importedWorkflow, implementation.Spec.Imports, nil, workflowPrefix)
 					if err != nil {
 						return err
 					}

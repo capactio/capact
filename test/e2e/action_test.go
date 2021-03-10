@@ -130,7 +130,7 @@ var _ = Describe("Action", func() {
 		It("should download input TypeInstance", func() {
 			var typeInstances []*enginegraphql.InputTypeInstanceData
 			input := &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeReferenceInput{
+				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.simple.single-key",
 					Revision: "0.1.0",
 				},
@@ -149,7 +149,7 @@ var _ = Describe("Action", func() {
 				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: simpleTI.ID})
 
 			input = &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeReferenceInput{
+				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.gcp.auth.service-account",
 					Revision: "0.1.0",
 				},
@@ -212,7 +212,7 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 
 func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &ochlocalgraphql.TypeReferenceInput{
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.simple.single-key",
 			Revision: "0.1.0",
 		},

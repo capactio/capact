@@ -22,7 +22,7 @@ type Local interface {
 	CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error)
 	CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.CreateTypeInstancesInput) ([]ochlocalgraphql.CreateTypeInstanceOutput, error)
 	FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
-	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error)
+	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error)
 	DeleteTypeInstance(ctx context.Context, id string) error
 }
 

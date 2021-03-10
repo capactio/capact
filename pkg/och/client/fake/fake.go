@@ -68,8 +68,8 @@ func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.C
 	return public.SortImplementationRevisions(result, getOpts), nil
 }
 
-func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
-	var typeInstanceTypeRefs []ochlocalgraphql.TypeReference
+func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error) {
+	var typeInstanceTypeRefs []ochlocalgraphql.TypeInstanceTypeReference
 	for _, ti := range s.OCHTypeInstances {
 		if ti.TypeRef == nil {
 			continue
