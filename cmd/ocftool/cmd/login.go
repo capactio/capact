@@ -15,7 +15,6 @@ type loginOptions struct {
 	serverAddress string
 	user          string
 	password      string
-	passwordStdin bool
 }
 
 // NewLoginCommand creates a new `och login` command
@@ -27,10 +26,10 @@ func NewLogin() *cobra.Command {
 		Short: "Log in to a Gateway server",
 		Example: heredoc.Doc(`
 			# start interactive setup
-			$ ocftool login
+			ocftool login
 
 			# specify server name and user 
-			$ ocftool login localhost:8080 -u user
+			ocftool login localhost:8080 -u user
 		`),
 		Args: cli.RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {

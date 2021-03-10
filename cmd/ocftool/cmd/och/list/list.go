@@ -34,4 +34,3 @@ func getOCHClient(server string) (*ochclient.Client, error) {
 
 	return ochclient.NewClient(httpClient, fmt.Sprintf("%s/graphql", server)), nil
 }
-

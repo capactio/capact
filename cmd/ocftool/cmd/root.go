@@ -2,10 +2,12 @@ package cmd
 
 import (
 	"log"
+
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
 	"projectvoltron.dev/voltron/cmd/ocftool/cmd/config"
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/och"
 
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/och"
 )
 
 const (
@@ -26,12 +28,15 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
-	rootCmd.AddCommand(NewValidate())
-	rootCmd.AddCommand(NewDocs())
-	rootCmd.AddCommand(NewLogin())
-	rootCmd.AddCommand(NewLogout())
-	rootCmd.AddCommand(och.NewOCH())
-	rootCmd.AddCommand(config.NewConfig())
+	rootCmd.AddCommand(
+		NewValidate(),
+		NewDocs(),
+		NewLogin(),
+		NewLogout(),
+		och.NewOCH(),
+		config.NewConfig(),
+		action.NewAction(),
+	)
 
 	return rootCmd
 }

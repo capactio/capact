@@ -3,14 +3,17 @@ package list
 import (
 	"context"
 	"encoding/json"
-	"github.com/AlecAivazis/survey/v2"
 	"io"
 	"os"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
+
+	"projectvoltron.dev/voltron/internal/ocftool/config"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client/public/generated"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
@@ -30,6 +33,19 @@ func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interfaces",
 		Short: "List OCH Interfaces",
+		Example: heredoc.Doc(`
+			#  List all interfaces in table format
+			ocftool och list interfaces
+			
+			# Print path for the first entry in returned response 
+			ocftool och list interfaces -o=jsonpath="{.interfaces[0]['path']}"
+			
+			# Print paths
+			ocftool och list interfaces -o=jsonpath="{range .interfaces[*]}{.path}{'\n'}{end}"
+
+			# Start interactive mode
+			ocftool och list interfaces -i
+		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listInterfaces(opts, os.Stdout)
 		},
@@ -68,7 +84,7 @@ func listInterfaces(opts interfaceListOptions, w io.Writer) error {
 func interactiveSelection(in *ochclient.InterfacesWithPrefixFilter) error {
 	interfaceName := ""
 	prompt := &survey.Select{
-		Message: "Choose interface to run:",
+		Message:  "Choose interface to run:",
 		PageSize: 20,
 	}
 	for _, i := range in.Interfaces {
@@ -79,7 +95,11 @@ func interactiveSelection(in *ochclient.InterfacesWithPrefixFilter) error {
 		return err
 	}
 
-	return nil
+	opts := action.CreateOptions{
+		InterfaceName: interfaceName,
+		DryRun:        false,
+	}
+	return action.Create(context.TODO(), opts, os.Stdout)
 }
 
 func extractOutputFormat(output string) (format string, pattern string) {

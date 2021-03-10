@@ -13,6 +13,14 @@ query InterfacesWithPrefixFilter($pathPattern: NodePathPattern!) {
     }
 }
 
+query InterfaceLatestRevision($interfacePath: NodePath!) {
+    interface(path: $interfacePath) {
+        latestRevision {
+            ...InterfaceRevisionFragment
+        }
+    }
+}
+
 #
 # Fragments with all possible fields for Public OCH entities
 #

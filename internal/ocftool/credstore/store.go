@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	ochLabel = "och-store"
+	ochLabel    = "och-store"
 	configLabel = "config-store"
 )
 
@@ -28,7 +28,6 @@ func NewOCH() Store {
 	credentials.SetCredsLabel(ochLabel)
 	return nativeStore
 }
-
 
 // TODO: It is not thread save because docker uses global variable for labeling
 // Mutex needs to be added

@@ -18,10 +18,10 @@ func NewLogout() *cobra.Command {
 		Use:   "logout [SERVER]",
 		Short: "Log out from a Gateway server",
 		Example: heredoc.Doc(`
-			$ ocftool logout
+			ocftool logout
 			# => select what server to log out of via a prompt
 			
-			$ ocftool logout localhost:8080
+			ocftool logout localhost:8080
 			# => log out of specified server
 		`),
 		Args: cli.RequiresMaxArgs(1),

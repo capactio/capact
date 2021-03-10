@@ -3,6 +3,7 @@ package config
 import (
 	"io"
 	"os"
+
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"
@@ -17,7 +18,7 @@ func NewGet() *cobra.Command {
 		Use:   "get-contexts",
 		Short: "Print the value of a given configuration key",
 		Example: heredoc.Doc(`
-			$ ocftool config get-contexts
+			ocftool config get-contexts
 		`),
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {

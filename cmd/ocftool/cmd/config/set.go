@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+
 	"github.com/AlecAivazis/survey/v2"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 
@@ -23,10 +24,10 @@ func NewSet() *cobra.Command {
 		Short: "Print the value of a given configuration key",
 		Example: heredoc.Doc(`
 			# select what server to use of via a prompt
-			$ ocftool config set-context
+			ocftool config set-context
 			
 			# set specified server
-			$ ocftool config set-context localhost:8080
+			ocftool config set-context localhost:8080
 		`),
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,7 +50,6 @@ func setRun(opts setContextOptions) error {
 
 	return config.SetAsDefaultContext(opts.serverAddress, true)
 }
-
 
 func askWhatServerToSet() (string, error) {
 	store := credstore.NewOCH()

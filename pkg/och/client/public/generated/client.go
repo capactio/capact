@@ -83,6 +83,11 @@ type InterfacesWithPrefixFilter struct {
 		Revisions      []*InterfaceRevisionFragment "json:\"revisions\" graphql:\"revisions\""
 	} "json:\"interfaces\" graphql:\"interfaces\""
 }
+type InterfaceLatestRevision struct {
+	Interface *struct {
+		LatestRevision *InterfaceRevisionFragment "json:\"latestRevision\" graphql:\"latestRevision\""
+	} "json:\"interface\" graphql:\"interface\""
+}
 
 const InterfacesWithPrefixFilterQuery = `query InterfacesWithPrefixFilter ($pathPattern: NodePathPattern!) {
 	interfaces(filter: {pathPattern:$pathPattern}) {
@@ -149,6 +154,71 @@ func (c *Client) InterfacesWithPrefixFilter(ctx context.Context, pathPattern str
 
 	var res InterfacesWithPrefixFilter
 	if err := c.Client.Post(ctx, "InterfacesWithPrefixFilter", InterfacesWithPrefixFilterQuery, &res, vars, httpRequestOptions...); err != nil {
+		return nil, err
+	}
+
+	return &res, nil
+}
+
+const InterfaceLatestRevisionQuery = `query InterfaceLatestRevision ($interfacePath: NodePath!) {
+	interface(path: $interfacePath) {
+		latestRevision {
+			... InterfaceRevisionFragment
+		}
+	}
+}
+fragment InterfaceRevisionFragment on InterfaceRevision {
+	metadata {
+		prefix
+		path
+		name
+		displayName
+		description
+		maintainers {
+			name
+			email
+		}
+		iconURL
+	}
+	revision
+	spec {
+		input {
+			parameters {
+				name
+				jsonSchema
+			}
+			typeInstances {
+				name
+				typeRef {
+					path
+					revision
+				}
+				verbs
+			}
+		}
+		output {
+			typeInstances {
+				name
+				typeRef {
+					path
+					revision
+				}
+			}
+		}
+	}
+	signature {
+		och
+	}
+}
+`
+
+func (c *Client) InterfaceLatestRevision(ctx context.Context, interfacePath string, httpRequestOptions ...client.HTTPRequestOption) (*InterfaceLatestRevision, error) {
+	vars := map[string]interface{}{
+		"interfacePath": interfacePath,
+	}
+
+	var res InterfaceLatestRevision
+	if err := c.Client.Post(ctx, "InterfaceLatestRevision", InterfaceLatestRevisionQuery, &res, vars, httpRequestOptions...); err != nil {
 		return nil, err
 	}
 
