@@ -15,7 +15,7 @@ var keyringConfigDefaults = keyring.Config{
 	WinCredPrefix:            "config-vault",
 }
 
-const configStoreName = "voltron-config"
+const ConfigStoreName = "voltron-config"
 
 func SetAsDefaultContext(server string, override bool) error {
 	ks, err := keyring.Open(config())
@@ -29,7 +29,7 @@ func SetAsDefaultContext(server string, override bool) error {
 	}
 	if currentServer == "" || override {
 		return ks.Set(keyring.Item{
-			Key:  configStoreName,
+			Key:  ConfigStoreName,
 			Data: []byte(server),
 		})
 	}
@@ -46,8 +46,10 @@ func GetDefaultContext() (string, error) {
 	return getDefaultContext(ks)
 }
 
+const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
+
 func getDefaultContext(ks keyring.Keyring) (string, error) {
-	item, err := ks.Get(configStoreName)
+	item, err := ks.Get(ConfigStoreName)
 	switch {
 	case err == nil:
 		return string(item.Data), nil
@@ -59,7 +61,7 @@ func getDefaultContext(ks keyring.Keyring) (string, error) {
 }
 
 func config() keyring.Config {
-	if backend := os.Getenv("CAPECTL_CREDENTIALS_STORE_BACKEND"); backend != "" {
+	if backend := os.Getenv(overrideBackend); backend != "" {
 		keyringConfigDefaults.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
 	return keyringConfigDefaults

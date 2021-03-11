@@ -1,6 +1,7 @@
 package credstore
 
 import (
+	b64 "encoding/base64"
 	"encoding/json"
 	"os"
 
@@ -18,7 +19,7 @@ func GetHub(serverURL string) (*Credentials, error) {
 		return nil, err
 	}
 
-	item, err := ks.Get(serverURL)
+	item, err := ks.Get(b64.StdEncoding.EncodeToString([]byte(serverURL)))
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +44,7 @@ func AddHub(serverURL string, creds Credentials) error {
 	}
 
 	return ks.Set(keyring.Item{
-		Key:  serverURL,
+		Key:  b64.StdEncoding.EncodeToString([]byte(serverURL)),
 		Data: data,
 	})
 }
@@ -54,7 +55,7 @@ func DeleteHub(serverURL string) error {
 		return err
 	}
 
-	return ks.Remove(serverURL)
+	return ks.Remove(b64.StdEncoding.EncodeToString([]byte(serverURL)))
 }
 
 func ListHubServer() ([]string, error) {
@@ -63,8 +64,26 @@ func ListHubServer() ([]string, error) {
 		return nil, err
 	}
 
-	return ks.Keys()
+	keys, err := ks.Keys()
+	if err != nil {
+		return nil, err
+	}
+
+	var out []string
+	for _, k := range keys {
+		if k == "voltron-config" {
+			continue
+		}
+		dec, err := b64.StdEncoding.DecodeString(k)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, string(dec))
+	}
+	return out, nil
 }
+
+const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
 
 var cfg = keyring.Config{
 	ServiceName:              "hub-vault",
@@ -76,7 +95,7 @@ var cfg = keyring.Config{
 }
 
 func config() keyring.Config {
-	if backend := os.Getenv("CAPECTL_CREDENTIALS_STORE_BACKEND"); backend != "" {
+	if backend := os.Getenv(overrideBackend); backend != "" {
 		cfg.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
 	return cfg
