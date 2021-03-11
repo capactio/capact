@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
+	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 )
 
 // Client used to communicate with the Voltron Engine GraphQL API
@@ -34,6 +36,8 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 	}`, actionFields))
 
 	req.Var("in", in)
+	enrichWithNamespace(ctx, req)
+
 	var resp struct {
 		Action enginegraphql.Action `json:"createAction"`
 	}
@@ -50,8 +54,9 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 			%s
 		}
 	}`, actionFields))
-
 	req.Var("name", name)
+	enrichWithNamespace(ctx, req)
+
 	var resp struct {
 		Action *enginegraphql.Action `json:"action"`
 	}
@@ -68,6 +73,7 @@ func (c *Client) ListActions(ctx context.Context) ([]*enginegraphql.Action, erro
 			%s
 		}
 	}`, actionFields))
+	enrichWithNamespace(ctx, req)
 
 	var resp struct {
 		Actions []*enginegraphql.Action `json:"actions"`
@@ -87,6 +93,7 @@ func (c *Client) RunAction(ctx context.Context, name string) error {
 			%s
 		}
 	}`, actionFields))
+	enrichWithNamespace(ctx, req)
 
 	req.Var("name", name)
 	var resp struct {
@@ -107,8 +114,9 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 			%s
 		}
 	}`, actionFields))
-
 	req.Var("name", name)
+	enrichWithNamespace(ctx, req)
+
 	var resp struct {
 		Action enginegraphql.Action `json:"deleteAction"`
 	}
@@ -117,6 +125,14 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 	}
 
 	return nil
+}
+
+func enrichWithNamespace(ctx context.Context, req *graphql.Request) {
+	ns, err := namespace.FromContext(ctx)
+	if err != nil {
+		return
+	}
+	req.Header.Add(namespace.NamespaceHeaderName, ns)
 }
 
 const actionFields = `

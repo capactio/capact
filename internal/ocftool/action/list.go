@@ -71,20 +71,20 @@ func printListTable(namespace string, in []*gqlengine.Action, w io.Writer) error
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
 
-	var data []string
+	var data [][]string
 
 	for _, act := range in {
-		data = append(data,
+		data = append(data, []string{
 			namespace,
 			act.Name,
 			act.ActionRef.Path,
 			toString(act.Run),
 			string(act.Status.Phase),
 			time.Since(act.CreatedAt.Time).String(),
-		)
+		})
 	}
 
-	table.Append(data)
+	table.AppendBulk(data)
 	table.Render()
 
 	return nil

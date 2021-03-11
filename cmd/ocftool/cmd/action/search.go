@@ -12,7 +12,7 @@ func NewSearch() *cobra.Command {
 	var opts action.SearchOptions
 
 	cmd := &cobra.Command{
-		Use:   "Search",
+		Use:   "search",
 		Short: "List Actions",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
