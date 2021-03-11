@@ -34,5 +34,5 @@ ocftool hub interfaces search -o=jsonpath="{range .interfaces[*]}{.path}{'\n'}{e
 
 ### SEE ALSO
 
-* [ocftool hub interfaces](ocftool_hub_interfaces.md)	 - This command consists of multiple subcommands to interact with OCH server.
+* [ocftool hub interfaces](ocftool_hub_interfaces.md)	 - This command consists of multiple subcommands to interact with Hub server.
 

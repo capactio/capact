@@ -6,10 +6,15 @@ import (
 
 func NewAction() *cobra.Command {
 	och := &cobra.Command{
-		Use:   "action",
-		Short: "This command consists of multiple subcommands to interact with Action.",
+		Use:     "action",
+		Aliases: []string{"act"},
+		Short:   "This command consists of multiple subcommands to interact with Action.",
 	}
 
-	och.AddCommand(NewCreate())
+	och.AddCommand(
+		NewCreate(),
+		NewRun(),
+		NewGet(),
+	)
 	return och
 }

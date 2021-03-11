@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 	"projectvoltron.dev/voltron/internal/ptr"
@@ -19,75 +20,91 @@ import (
 )
 
 type CreateOptions struct {
-	InterfaceName string
+	InterfacePath string
+	ActionName    string `survey:"name"`
+	Namespace     string
 	DryRun        bool
 }
 
-func Create(ctx context.Context, opts CreateOptions, w io.Writer) error {
+type CreateOutput struct {
+	Action    *gqlengine.Action
+	Namespace string
+}
+
+func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput, error) {
 	rand.Seed(time.Now().UnixNano())
-	answers := struct {
-		Name string
-	}{}
 
+	// must be a DNS-1123 subdomain
+	defaultActionName := strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1)
 	qs := []*survey.Question{
-		{
-			Name: "Name",
-			Prompt: &survey.Input{
-				Message: "Please type Action name",
-				// must be a DNS-1123 subdomain
-				Default: strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1),
-			},
-			Validate: survey.ComposeValidators(survey.Required, isDNSSubdomain),
-		},
+		actionNameQuestion(defaultActionName),
 	}
-	if err := survey.Ask(qs, &answers); err != nil {
-		return err
+	if opts.Namespace == "" {
+		qs = append(qs, namespaceQuestion())
 	}
 
-	ochCli, err := client.NewHub(config.GetDefaultContext())
-	if err != nil {
-		return err
-	}
-	latestRev, err := ochCli.InterfaceLatestRevision(ctx, opts.InterfaceName)
-	if err != nil {
-		return err
+	if err := survey.Ask(qs, &opts); err != nil {
+		return nil, err
 	}
 
-	//TODO: we should use JSON schema and ask for a given input parameters
-	var input *gqlengine.ActionInputData
-	if len(latestRev.Interface.LatestRevision.Spec.Input.Parameters) > 0 {
-		params := ""
-		prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
-		if err := survey.AskOne(prompt, &params); err != nil {
-			return err
-		}
-		converted, _ := yaml.YAMLToJSON([]byte(params))
-		p := gqlengine.JSON(converted)
-		input = &gqlengine.ActionInputData{
-			Parameters: &p,
-		}
+	input, err := askForInputParams(ctx, opts.InterfacePath)
+	if err != nil {
+		return nil, err
 	}
 
 	actionCli, err := client.NewCluster(config.GetDefaultContext())
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = actionCli.CreateAction(ctx, &gqlengine.ActionDetailsInput{
-		Name:  answers.Name,
+	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
+	act, err := actionCli.CreateAction(ctxWithNs, &gqlengine.ActionDetailsInput{
+		Name:  opts.ActionName,
 		Input: input,
 		ActionRef: &gqlengine.ManifestReferenceInput{
-			Path: opts.InterfaceName,
+			Path: opts.InterfacePath,
 		},
 		DryRun: ptr.Bool(opts.DryRun),
 	})
-
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
 	okCheck(w, "Action created successfully")
 
-	return nil
+	return &CreateOutput{
+		Action:    act,
+		Namespace: opts.Namespace,
+	}, nil
+}
+
+func askForInputParams(ctx context.Context, interfacePath string) (*gqlengine.ActionInputData, error) {
+	ochCli, err := client.NewHub(config.GetDefaultContext())
+	if err != nil {
+		return nil, err
+	}
+	latestRev, err := ochCli.InterfaceLatestRevision(ctx, interfacePath)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(latestRev.Interface.LatestRevision.Spec.Input.Parameters) == 0 {
+		return nil, nil
+	}
+
+	editor := ""
+	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+		return nil, err
+	}
+	converted, err := yaml.YAMLToJSON([]byte(editor))
+	if err != nil {
+		return nil, err
+	}
+
+	gqlJSON := gqlengine.JSON(converted)
+	return &gqlengine.ActionInputData{
+		Parameters: &gqlJSON,
+	}, nil
 }

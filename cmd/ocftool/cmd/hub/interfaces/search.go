@@ -3,6 +3,7 @@ package interfaces
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -19,13 +20,13 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type interfaceListOptions struct {
+type searchOptions struct {
 	pathPrefix string
 	output     string
 }
 
 func NewSearch() *cobra.Command {
-	var opts interfaceListOptions
+	var opts searchOptions
 
 	cmd := &cobra.Command{
 		Use:   "search",
@@ -56,7 +57,7 @@ func NewSearch() *cobra.Command {
 	return cmd
 }
 
-func listInterfaces(opts interfaceListOptions, w io.Writer) error {
+func listInterfaces(opts searchOptions, w io.Writer) error {
 	cli, err := client.NewHub(config.GetDefaultContext())
 	if err != nil {
 		return err
@@ -68,7 +69,10 @@ func listInterfaces(opts interfaceListOptions, w io.Writer) error {
 	}
 
 	format, pattern := extractOutputFormat(opts.output)
-	printInterfaces := selectPrinter(format)
+	printInterfaces, err := selectPrinter(format)
+	if err != nil {
+		return err
+	}
 
 	return printInterfaces(pattern, interfaces, w)
 }
@@ -85,27 +89,23 @@ func extractOutputFormat(output string) (format string, pattern string) {
 
 type printer func(pattern string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) error
 
-func selectPrinter(format string) printer {
+func selectPrinter(format string) (printer, error) {
 	switch format {
 	case "json":
-		return printJSON
+		return printJSON, nil
 	case "jsonpath":
-		return printJSONPath
+		return printJSONPath, nil
 	case "yaml":
-		return printYAML
+		return printYAML, nil
 	case "table":
-		return printTable
-	default:
-		return emptyPrinter
+		return printTable, nil
 	}
-}
 
-func emptyPrinter(_ string, _ *ochclient.InterfacesWithPrefixFilter, _ io.Writer) error {
-	return nil
+	return nil, fmt.Errorf("unknow output format %q", format)
 }
 
 func printJSONPath(pattern string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) error {
-	out, err := toMapInterface(in)
+	out, err := toInterface(in)
 	if err != nil {
 		return err
 	}
@@ -138,7 +138,7 @@ func printYAML(_ string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) 
 
 func printTable(_ string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer) error {
 	table := tablewriter.NewWriter(w)
-	table.SetHeader([]string{"NAME", "LATEST REVISION"})
+	table.SetHeader([]string{"PATH", "LATEST REVISION"})
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
 
@@ -153,12 +153,12 @@ func printTable(_ string, in *ochclient.InterfacesWithPrefixFilter, w io.Writer)
 	return nil
 }
 
-func toMapInterface(src interface{}) (map[string]interface{}, error) {
+func toInterface(src interface{}) (interface{}, error) {
 	out, err := json.Marshal(src)
 	if err != nil {
 		return nil, err
 	}
 
-	var dst map[string]interface{}
+	var dst interface{}
 	return dst, json.Unmarshal(out, &dst)
 }

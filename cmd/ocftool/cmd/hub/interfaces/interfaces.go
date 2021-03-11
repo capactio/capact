@@ -7,7 +7,7 @@ import (
 func NewInterfaces() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interfaces",
-		Short: "This command consists of multiple subcommands to interact with OCH server.",
+		Short: "This command consists of multiple subcommands to interact with Hub server.",
 	}
 
 	cmd.AddCommand(

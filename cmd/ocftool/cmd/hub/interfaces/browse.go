@@ -52,7 +52,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		return err
 	}
 
-	interfaceName := ""
+	interfacePath := ""
 	prompt := &survey.Select{
 		Message:  "Choose interface to run:",
 		PageSize: 20,
@@ -66,13 +66,27 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		prompt.Options = append(prompt.Options, i.Path)
 	}
 
-	if err := survey.AskOne(prompt, &interfaceName); err != nil {
+	if err := survey.AskOne(prompt, &interfacePath); err != nil {
 		return err
 	}
 
 	create := action.CreateOptions{
-		InterfaceName: interfaceName,
+		InterfacePath: interfacePath,
 		DryRun:        false,
 	}
-	return action.Create(ctx, create, w)
+
+	cout, err := action.Create(ctx, create, w)
+	if err != nil {
+		return err
+	}
+
+	run := action.RunOptions{
+		ActionName: cout.Action.Name,
+		Namespace:  cout.Namespace,
+	}
+	if err := action.Run(ctx, run, w); err != nil {
+		return err
+	}
+
+	return nil
 }

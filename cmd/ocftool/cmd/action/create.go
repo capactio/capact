@@ -12,11 +12,12 @@ func NewCreate() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "create INTERFACE",
-		Short: "List OCH Interfaces",
+		Short: "Create Action",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.InterfaceName = args[0]
-			return action.Create(cmd.Context(), opts, os.Stdout)
+			opts.InterfacePath = args[0]
+			_, err := action.Create(cmd.Context(), opts, os.Stdout)
+			return err
 		},
 	}
 	flags := cmd.Flags()

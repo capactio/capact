@@ -1,6 +1,6 @@
 ## ocftool action create
 
-List OCH Interfaces
+Create Action
 
 ```
 ocftool action create INTERFACE [flags]
