@@ -120,6 +120,29 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgrap
 	return resp.TypeInstance, nil
 }
 
+func (c *Client) ListTypeInstances(ctx context.Context, filter *ochlocalgraphql.TypeInstanceFilter) ([]ochlocalgraphql.TypeInstance, error) {
+	query := fmt.Sprintf(`query($filter: TypeInstanceFilter) {
+		typeInstances(filter: $filter) {
+			%s	
+		}
+	}`, typeInstanceWithUsesFields)
+
+	req := graphql.NewRequest(query)
+	req.Var("filter", filter)
+
+	var resp struct {
+		TypeInstances []ochlocalgraphql.TypeInstance `json:"typeInstances"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to list TypeInstances")
+	}
+
+	return resp.TypeInstances, nil
+}
+
 func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error) {
 	query := `query {
 	  typeInstances {
