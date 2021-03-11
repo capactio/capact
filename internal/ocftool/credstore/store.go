@@ -76,7 +76,7 @@ var cfg = keyring.Config{
 }
 
 func config() keyring.Config {
-	if backend := os.Getenv("CAPECTL_CREDENTIALS_STORE_BACKEND"); backend == "" {
+	if backend := os.Getenv("CAPECTL_CREDENTIALS_STORE_BACKEND"); backend != "" {
 		cfg.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
 	return cfg
