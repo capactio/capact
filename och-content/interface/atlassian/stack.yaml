@@ -4,8 +4,8 @@ kind: InterfaceGroup
 metadata:
   prefix: cap.interface.atlassian
   name: stack
-  displayName: "Atlassian stack installation"
-  description: "Installs Jira and Confluence with shared database."
+  displayName: "Atlassian stack"
+  description: "Atlassian app bundle"
   documentationURL: https://support.atlassian.com
   supportURL: https://www.atlassian.com
   maintainers:
