@@ -74,6 +74,29 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
+func (c *Client) ListInterfacesWithLatest(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`query ListInterface($interfaceFilter: InterfaceFilter!)  {
+		  interfaces(filter: $interfaceFilter) {
+			%s
+		  }
+		}`, InterfacesFields))
+
+	req.Var("interfaceFilter", filter)
+
+	var resp struct {
+		Interfaces []*gqlpublicapi.Interface `json:"interfaces"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to list OCH Interfaces")
+	}
+
+	return resp.Interfaces, nil
+}
+
 func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpublicapi.InterfaceReference) (string, error) {
 	req := graphql.NewRequest(`query ($interfacePath: NodePath!) {
 		interface(path: $interfacePath) {

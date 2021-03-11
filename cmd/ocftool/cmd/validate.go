@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"projectvoltron.dev/voltron/internal/ocftool"
+	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
 	"projectvoltron.dev/voltron/internal/ocftool/schema"
 	"projectvoltron.dev/voltron/pkg/sdk/manifest"
 
@@ -17,17 +19,18 @@ func NewValidate() *cobra.Command {
 	validateCmd := &cobra.Command{
 		Use:   "validate",
 		Short: "Validate OCF manifests",
-		Example: `# Validate interface-group.yaml file with OCF specification in default location
-ocftool validate ocf-spec/0.0.1/examples/interface-group.yaml
-
-# Validate multiple files inside test_manifests directory
-ocftool validate pkg/ocftool/test_manifests/*.yaml
-
-# Validate interface-group.yaml file with custom OCF specification location 
-ocftool validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
-
-# Validate all OCH manifests
-ocftool validate ./och-content/**/*.yaml`,
+		Example: heredoc.WithCLIName(`
+			# Validate interface-group.yaml file with OCF specification in default location
+			<cli> validate ocf-spec/0.0.1/examples/interface-group.yaml
+			
+			# Validate multiple files inside test_manifests directory
+			<cli> validate pkg/ocftool/test_manifests/*.yaml
+			
+			# Validate interface-group.yaml file with custom OCF specification location 
+			<cli> validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
+			
+			# Validate all OCH manifests
+			<cli> validate ./och-content/**/*.yaml`, ocftool.CLIName),
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			validator := manifest.NewFilesystemValidator(schemaProvider.FileSystem())
