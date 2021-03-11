@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"github.com/fatih/color"
+	"io"
+	"os"
 	"projectvoltron.dev/voltron/internal/ocftool"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"
@@ -8,7 +11,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/cli/cli"
-	"github.com/docker/docker-credential-helpers/credentials"
 	"github.com/spf13/cobra"
 )
 
@@ -36,7 +38,7 @@ func NewLogin() *cobra.Command {
 			if len(args) > 0 {
 				opts.serverAddress = args[0]
 			}
-			return runLogin(opts)
+			return runLogin(opts, os.Stdout)
 		},
 	}
 
@@ -48,7 +50,7 @@ func NewLogin() *cobra.Command {
 	return login
 }
 
-func runLogin(opts loginOptions) error {
+func runLogin(opts loginOptions, w io.Writer) error {
 	answers := struct {
 		Server   string `survey:"server-address"`
 		Username string
@@ -89,31 +91,35 @@ func runLogin(opts loginOptions) error {
 		})
 	}
 
-	store := credstore.NewOCH()
-
 	// perform the questions if needed
 	err := survey.Ask(qs, &answers)
 	if err != nil {
 		return err
 	}
 
-	creds := &credentials.Credentials{
-		ServerURL: answers.Server,
-		Username:  answers.Username,
-		Secret:    answers.Password,
+	creds := credstore.Credentials{
+		Username: answers.Username,
+		Secret:   answers.Password,
 	}
 	if err := loginClientSide(creds); err != nil {
 		return err
 	}
 
-	if err = store.Add(creds); err != nil {
+	if err = credstore.AddHub(answers.Server, creds); err != nil {
 		return err
 	}
 
-	return config.SetAsDefaultContext(creds.ServerURL, false)
+	if err = config.SetAsDefaultContext(answers.Server, false); err != nil {
+		return err
+	}
+
+	okCheck := color.New(color.FgGreen).FprintlnFunc()
+	okCheck(w, "Login Succeeded")
+
+	return nil
 }
 
-func loginClientSide(creds *credentials.Credentials) error {
+func loginClientSide(_ credstore.Credentials) error {
 	// TODO check whether provided creds allow us to auth into the given server
 	return nil
 }

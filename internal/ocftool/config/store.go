@@ -1,31 +1,57 @@
 package config
 
 import (
-	"github.com/docker/docker-credential-helpers/credentials"
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
+	"github.com/99designs/keyring"
 )
 
 // TODO: current hack to do not play with `.config` directory. Needs to be fixed!
 
-const configStoreName = "voltron-config"
+const (
+	configStoreName = "voltron-config"
+	configLabel     = "config-store"
+)
 
 func SetAsDefaultContext(server string, override bool) error {
-	store := credstore.NewConfig()
-	currentDefault, _, _ := store.Get(configStoreName)
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: configLabel,
+	})
+	if err != nil {
+		return err
+	}
 
-	if currentDefault == "" || override {
-		return store.Add(&credentials.Credentials{
-			ServerURL: configStoreName,
-			Username:  server,
-			Secret:    server,
+	currentServer, err := getDefaultContext(ks)
+	if err != nil {
+		return err
+	}
+	if currentServer == "" || override {
+		return ks.Set(keyring.Item{
+			Key:  configStoreName,
+			Data: []byte(server),
 		})
 	}
 
 	return nil
 }
 
-func GetDefaultContext() string {
-	store := credstore.NewConfig()
-	currentDefault, _, _ := store.Get(configStoreName)
-	return currentDefault
+func GetDefaultContext() (string, error) {
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: configLabel,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return getDefaultContext(ks)
+}
+
+func getDefaultContext(ks keyring.Keyring) (string, error) {
+	item, err := ks.Get(configStoreName)
+	switch {
+	case err == nil:
+		return string(item.Data), nil
+	case err == keyring.ErrKeyNotFound:
+		return "", nil
+	default:
+		return "", err
+	}
 }

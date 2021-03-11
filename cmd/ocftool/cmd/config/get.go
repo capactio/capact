@@ -29,31 +29,32 @@ func NewGet() *cobra.Command {
 }
 
 func getRun(w io.Writer) error {
-	store := credstore.NewOCH()
-	out, err := store.List()
-
+	out, err := credstore.ListHubServer()
 	if err != nil {
 		return err
 	}
 
-	printTable(out, w)
+	def, err := config.GetDefaultContext()
+	if err != nil {
+		return err
+	}
+
+	printTable(def, out, w)
 
 	return nil
 }
 
-func printTable(in map[string]string, w io.Writer) {
+func printTable(defaultServer string, servers []string, w io.Writer) {
 	table := tablewriter.NewWriter(w)
 
-	table.SetHeader([]string{"SERVER", "USERNAME", "AUTH TYPE", "DEFAULT"})
+	table.SetHeader([]string{"SERVER", "AUTH TYPE", "DEFAULT"})
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
 
-	def := config.GetDefaultContext()
-
 	var data [][]string
-	for url, user := range in {
-		isDefault := def == url
-		data = append(data, []string{url, user, "Basic Auth", toString(isDefault)})
+	for _, url := range servers {
+		isDefault := defaultServer == url
+		data = append(data, []string{url, "Basic Auth", toString(isDefault)})
 	}
 	table.AppendBulk(data)
 	table.Render()

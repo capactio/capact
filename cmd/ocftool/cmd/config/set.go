@@ -52,15 +52,9 @@ func setRun(opts setContextOptions) error {
 }
 
 func askWhatServerToSet() (string, error) {
-	store := credstore.NewOCH()
-	out, err := store.List()
+	candidates, err := credstore.ListHubServer()
 	if err != nil {
 		return "", err
-	}
-
-	var candidates []string
-	for k := range out {
-		candidates = append(candidates, k)
 	}
 
 	if len(candidates) == 0 {

@@ -4,6 +4,7 @@ go 1.15
 
 require (
 	github.com/99designs/gqlgen v0.13.0
+	github.com/99designs/keyring v1.1.6
 	github.com/AlecAivazis/survey/v2 v2.2.8
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
@@ -13,7 +14,6 @@ require (
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
-	github.com/docker/docker-credential-helpers v0.6.3
 	github.com/fatih/color v1.10.0
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
@@ -71,6 +71,8 @@ replace (
 	// Remove when the issues are resolved:
 	// https://github.com/graphql-go/graphql/issues/586
 	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
+
+	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 	// https://github.com/nautilus/gateway/issues/121
 	github.com/nautilus/graphql => github.com/pkosiec/graphql v0.0.13-0.20201208111257-86f2e16b2778
 

@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"github.com/fatih/color"
+	"io"
+	"os"
 	"projectvoltron.dev/voltron/internal/ocftool"
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"
 	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
@@ -29,42 +32,38 @@ func NewLogout() *cobra.Command {
 				serverAddress = args[0]
 			}
 
-			return runLogout(serverAddress)
+			return runLogout(serverAddress, os.Stdout)
 		},
 	}
 
 	return cmd
 }
 
-func runLogout(serverAddress string) error {
-	store := credstore.NewOCH()
-
+func runLogout(serverAddress string, w io.Writer) error {
 	if serverAddress == "" {
-		answer, err := askWhatServerToLogout(store)
+		answer, err := askWhatServerToLogout()
 		if err != nil {
 			return err
 		}
 		serverAddress = answer
 	}
 
-	if err := store.Delete(serverAddress); err != nil {
+	if err := credstore.DeleteHub(serverAddress); err != nil {
 		return errors.Wrap(err, "could not erase credentials")
 	}
 
 	// TODO: handle current context update
 
+	okCheck := color.New(color.FgGreen).FprintlnFunc()
+	okCheck(w, "Logout Succeeded")
+
 	return nil
 }
 
-func askWhatServerToLogout(store credstore.Store) (string, error) {
-	out, err := store.List()
+func askWhatServerToLogout() (string, error) {
+	candidates, err := credstore.ListHubServer()
 	if err != nil {
 		return "", err
-	}
-
-	var candidates []string
-	for k := range out {
-		candidates = append(candidates, k)
 	}
 
 	if len(candidates) == 0 {

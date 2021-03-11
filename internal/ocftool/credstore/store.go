@@ -1,37 +1,76 @@
 package credstore
 
 import (
-	"github.com/docker/docker-credential-helpers/credentials"
+	"encoding/json"
+
+	"github.com/99designs/keyring"
 )
 
-const (
-	ochLabel    = "och-store"
-	configLabel = "config-store"
-)
+const ochLabel = "och-store"
 
-// Helper is the interface a credentials store helper must implement.
-type Store interface {
-	// Add appends credentials to the store.
-	Add(credentials *credentials.Credentials) error
-	// Delete removes credentials from the store.
-	Delete(serverURL string) error
-	// Get retrieves credentials from the store.
-	// It returns username and secret as strings.
-	Get(serverURL string) (string, string, error)
-	// List returns the stored serverURLs and their associated usernames.
-	List() (map[string]string, error)
+type Credentials struct {
+	Username string
+	Secret   string
 }
 
-// TODO: It is not thread save because docker uses global variable for labeling
-// Mutex needs to be added
-func NewOCH() Store {
-	credentials.SetCredsLabel(ochLabel)
-	return nativeStore
+func GetHub(serverURL string) (*Credentials, error) {
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: ochLabel,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	item, err := ks.Get(serverURL)
+	if err != nil {
+		return nil, err
+	}
+
+	creds := Credentials{}
+	if err := json.Unmarshal(item.Data, &creds); err != nil {
+		return nil, err
+	}
+
+	return &creds, nil
 }
 
-// TODO: It is not thread save because docker uses global variable for labeling
-// Mutex needs to be added
-func NewConfig() Store {
-	credentials.SetCredsLabel(configLabel)
-	return nativeStore
+func AddHub(serverURL string, creds Credentials) error {
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: ochLabel,
+	})
+	if err != nil {
+		return err
+	}
+
+	data, err := json.Marshal(creds)
+	if err != nil {
+		return err
+	}
+
+	return ks.Set(keyring.Item{
+		Key:  serverURL,
+		Data: data,
+	})
+}
+
+func DeleteHub(serverURL string) error {
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: ochLabel,
+	})
+	if err != nil {
+		return err
+	}
+
+	return ks.Remove(serverURL)
+}
+
+func ListHubServer() ([]string, error) {
+	ks, err := keyring.Open(keyring.Config{
+		ServiceName: ochLabel,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ks.Keys()
 }

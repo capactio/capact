@@ -54,7 +54,12 @@ func NewSearch() *cobra.Command {
 }
 
 func searchImpl(ctx context.Context, opts searchOptions, w io.Writer) error {
-	cli, err := client.NewHub(config.GetDefaultContext())
+	server, err := config.GetDefaultContext()
+	if err != nil {
+		return err
+	}
+
+	cli, err := client.NewHub(server)
 	if err != nil {
 		return err
 	}

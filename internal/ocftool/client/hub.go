@@ -18,14 +18,13 @@ type Hub interface {
 }
 
 func NewHub(server string) (*public.Client, error) {
-	store := credstore.NewOCH()
-	user, pass, err := store.Get(server)
+	creds, err := credstore.GetHub(server)
 	if err != nil {
 		return nil, err
 	}
 
 	httpClient := httputil.NewClient(30*time.Second, false,
-		httputil.WithBasicAuth(user, pass))
+		httputil.WithBasicAuth(creds.Username, creds.Secret))
 
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(fmt.Sprintf("%s/graphql", server), clientOpt)
