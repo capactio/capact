@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Attribute
 metadata:
   name: stateful
-  prefix: cap.core.attribute.workload  # Computed during fetching the manifest
+  prefix: cap.core.attribute.workload
   displayName: Stateful Workload
   description: A stateful application preserves its state and saves data to persistent storage.
   documentationURL: https://projectvoltron.dev

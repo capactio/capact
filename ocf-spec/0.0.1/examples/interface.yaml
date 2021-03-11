@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.2
 kind: Interface
 metadata:
-  prefix: cap.interface.cms.wordpress # Computed during fetching the manifest
+  prefix: cap.interface.cms.wordpress
   name: upgrade
   description: WordPress upgrade
   documentationURL: https://examples.com/docs

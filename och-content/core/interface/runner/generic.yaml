@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: cap.core.interface.runner # Computed during fetching the manifest
+  prefix: cap.core.interface.runner
   name: generic
   displayName: "Generic Runner"
   description: "Interfaces for Generic Runner actions"

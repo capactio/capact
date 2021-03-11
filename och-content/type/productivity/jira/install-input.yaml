@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.jira  # Computed during fetching the manifest
+  prefix: cap.type.productivity.jira
   displayName: Jira installation input
   description: Defines installation parameters for Jira
   documentationURL: https://support.atlassian.com/jira-software-cloud/resources/

@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: cap.interface.atlassian # Computed during fetching the manifest
+  prefix: cap.interface.atlassian
   name: stack
   displayName: "Atlassian stack installation"
   description: "Installs Jira and Confluence with shared database."

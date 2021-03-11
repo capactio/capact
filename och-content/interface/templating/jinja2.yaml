@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: cap.interface.templating # Computed during fetching the manifest
+  prefix: cap.interface.templating
   name: jinja2
   displayName: "Jinja Templating"
   description: "Jinja is a modern and designer-friendly templating language for Python, modelled after Django’s templates"

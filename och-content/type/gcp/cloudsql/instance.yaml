@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: instance
-  prefix: cap.type.gcp.cloudsql  # Computed during fetching the manifest
+  prefix: cap.type.gcp.cloudsql
   displayName: Google Cloud Platform CloudSQL instance
   description: Defines CloudSQL instance in Google Cloud Platform
   documentationURL: https://cloud.google.com/sql

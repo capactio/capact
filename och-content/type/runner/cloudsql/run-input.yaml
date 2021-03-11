@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: run-input
-  prefix: cap.type.runner.cloudsql  # Computed during fetching the manifest
+  prefix: cap.type.runner.cloudsql
   displayName: Input parameters for Run action
   description: Describes input parameters for Run action of the Google Cloud Platform CloudSQL Runner.
   documentationURL: https://cloud.google.com/sdk/gcloud/reference/sql

@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.runner.terraform # Computed during fetching the manifest
+  prefix: cap.interface.runner.terraform
   name: apply
   path: cap.interface.runner.terraform.apply
   displayName: "Apply"

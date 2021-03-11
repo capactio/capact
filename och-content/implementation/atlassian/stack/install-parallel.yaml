@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.stack.install # Computed during fetching the manifest
+  prefix: cap.implementation.stack.install
   name: install-parallel
   displayName: Example how to install Jira and Confluence with shared database in parallel.
   description: Action which installs Jira via Helm chart

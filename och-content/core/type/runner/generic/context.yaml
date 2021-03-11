@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: context
-  prefix: cap.core.type.runner.generic  # Computed during fetching the manifest
+  prefix: cap.core.type.runner.generic
   displayName: Runner Context
   description: Describes Context for Run action of the generic Runner.
   documentationURL: https://projectvoltron.dev

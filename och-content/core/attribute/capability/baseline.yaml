@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Attribute
 metadata:
-  prefix: cap.core.attribute.system # Computed during fetching the manifest
+  prefix: cap.core.attribute.system
   name: baseline
   displayName: Baseline Capability
   description: Indication that marked item is an essential system capability.

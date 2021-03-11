@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.0.1
 kind: Implementation
 metadata:
-  prefix: cap.implementation.cms.wordpress # Computed during fetching the manifest
+  prefix: cap.implementation.cms.wordpress
   name: install
   displayName: WordPress Install Action
   description: WordPress installation

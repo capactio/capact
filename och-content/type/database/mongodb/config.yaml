@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: config
-  prefix: cap.type.database.mongodb  # Computed during fetching the manifest
+  prefix: cap.type.database.mongodb
   displayName: MongoDB config
   description: Defines configuration for MongoDB
   documentationURL: https://docs.mongodb.com/manual/

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.rocketchat  # Computed during fetching the manifest
+  prefix: cap.type.productivity.rocketchat
   displayName: Rocket.Chat installation input
   description: Defines installation parameters for Rocket.Chat
   documentationURL: https://docs.rocket.chat/

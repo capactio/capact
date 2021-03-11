@@ -3,7 +3,7 @@ revision: 0.0.1
 kind: Attribute
 metadata:
   name: stateless
-  prefix: cap.attribute.workload  # Computed during fetching the manifest
+  prefix: cap.attribute.workload
   displayName: Stateless Workload
   description: -|
     A stateless application does not preserve its state and saves no data

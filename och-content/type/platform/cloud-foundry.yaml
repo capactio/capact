@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: cloud-foundry
-  prefix: cap.type.platform  # Computed during fetching the manifest
+  prefix: cap.type.platform
   displayName: Cloud Foundry Platform
   description: This Type indicates that a given platform is a Cloud Foundry installation.
   documentationURL: https://projectvoltron.dev

@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.core.interface.runner.generic # Computed during fetching the manifest
+  prefix: cap.core.interface.runner.generic
   name: run
   displayName: "Run"
   description: "Run action for generic Runner"

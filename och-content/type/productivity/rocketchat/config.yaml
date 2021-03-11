@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: config
-  prefix: cap.type.productivity.rocketchat  # Computed during fetching the manifest
+  prefix: cap.type.productivity.rocketchat
   displayName: Rocket.Chat config
   description: Defines configuration for Rocket.Chat instance
   documentationURL: https://docs.rocket.chat/

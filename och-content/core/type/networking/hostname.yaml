@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: hostname
-  prefix: cap.core.type.networking  # Computed during fetching the manifest
+  prefix: cap.core.type.networking
   displayName: Hostname
   description: Describes Internet host name
   documentationURL: https://tools.ietf.org/html/rfc1034#section-3.1

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: release
-  prefix: cap.type.terraform  # Computed during fetching the manifest
+  prefix: cap.type.terraform
   displayName: Terraform release
   description: Describes Terraform release
   documentationURL: https://www.terraform.io/docs

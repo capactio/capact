@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: run-input
-  prefix: cap.type.runner.argo  # Computed during fetching the manifest
+  prefix: cap.type.runner.argo
   displayName: Input parameters for Run action
   description: Describes input parameters for Run action of the Argo Runner.
   documentationURL: https://projectvoltron.dev

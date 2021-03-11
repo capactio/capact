@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  prefix: cap.type.database.postgresql
   displayName: PostgreSQL installation input
   description: Defines input for PostgreSQL installation
   documentationURL: https://projectvoltron.dev

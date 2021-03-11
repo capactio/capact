@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.atlassian.stack  # Computed during fetching the manifest
+  prefix: cap.type.atlassian.stack
   displayName: Atlassian installation stack input
   description: Defines installation parameters for Jira and Confluence
   documentationURL: https://support.atlassian.com

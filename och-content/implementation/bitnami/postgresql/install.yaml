@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.bitnami.postgresql # Computed during fetching the manifest
+  prefix: cap.implementation.bitnami.postgresql
   name: install
   displayName: Install PostgreSQL database
   description: Action which installs PostgreSQL database via Helm chart
