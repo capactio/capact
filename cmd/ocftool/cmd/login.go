@@ -1,9 +1,10 @@
 package cmd
 
 import (
-	"github.com/fatih/color"
 	"io"
 	"os"
+
+	"github.com/fatih/color"
 	"projectvoltron.dev/voltron/internal/ocftool"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"

@@ -6,7 +6,14 @@ import (
 	"github.com/99designs/keyring"
 )
 
-const ochLabel = "och-store"
+var keyringConfigDefaults = keyring.Config{
+	ServiceName:              "hub-vault",
+	LibSecretCollectionName:  "hubvault",
+	KWalletAppID:             "hub-vault",
+	KWalletFolder:            "hub-vault",
+	KeychainTrustApplication: true,
+	WinCredPrefix:            "hub-vault",
+}
 
 type Credentials struct {
 	Username string
@@ -14,9 +21,7 @@ type Credentials struct {
 }
 
 func GetHub(serverURL string) (*Credentials, error) {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: ochLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return nil, err
 	}
@@ -35,9 +40,7 @@ func GetHub(serverURL string) (*Credentials, error) {
 }
 
 func AddHub(serverURL string, creds Credentials) error {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: ochLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return err
 	}
@@ -54,9 +57,7 @@ func AddHub(serverURL string, creds Credentials) error {
 }
 
 func DeleteHub(serverURL string) error {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: ochLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return err
 	}
@@ -65,9 +66,7 @@ func DeleteHub(serverURL string) error {
 }
 
 func ListHubServer() ([]string, error) {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: ochLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return nil, err
 	}

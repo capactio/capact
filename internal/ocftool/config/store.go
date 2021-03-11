@@ -5,16 +5,19 @@ import (
 )
 
 // TODO: current hack to do not play with `.config` directory. Needs to be fixed!
+var keyringConfigDefaults = keyring.Config{
+	ServiceName:              "config-vault",
+	LibSecretCollectionName:  "configvault",
+	KWalletAppID:             "config-vault",
+	KWalletFolder:            "config-vault",
+	KeychainTrustApplication: true,
+	WinCredPrefix:            "config-vault",
+}
 
-const (
-	configStoreName = "voltron-config"
-	configLabel     = "config-store"
-)
+const configStoreName = "voltron-config"
 
 func SetAsDefaultContext(server string, override bool) error {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: configLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return err
 	}
@@ -34,9 +37,7 @@ func SetAsDefaultContext(server string, override bool) error {
 }
 
 func GetDefaultContext() (string, error) {
-	ks, err := keyring.Open(keyring.Config{
-		ServiceName: configLabel,
-	})
+	ks, err := keyring.Open(keyringConfigDefaults)
 	if err != nil {
 		return "", err
 	}
