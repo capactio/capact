@@ -2,9 +2,9 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.voltron.e2e
-  name: passing
-  displayName: Passing Voltron test action
+  prefix: cap.interface.voltron.action
+  name: failing
+  displayName: "Failing Voltron test action"
   description: ""
   documentationURL: ""
   supportURL: ""

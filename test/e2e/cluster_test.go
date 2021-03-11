@@ -32,7 +32,7 @@ var _ = Describe("Cluster check", func() {
 		})
 
 		Context("Pods in cluster", func() {
-			It("should be in running phase  (ignored kube-system)", func() {
+			It("should be in running phase  (ignored kube-system and default)", func() {
 				k8sCfg, err := config.GetConfig()
 				Expect(err).ToNot(HaveOccurred())
 
@@ -40,7 +40,10 @@ var _ = Describe("Cluster check", func() {
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(func() (int, error) {
 					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
-						FieldSelector: fields.OneTermNotEqualSelector("metadata.namespace", "kube-system").String(),
+						FieldSelector: fields.AndSelectors(
+							fields.OneTermNotEqualSelector("metadata.namespace", "kube-system"),
+							fields.OneTermNotEqualSelector("metadata.namespace", "default"),
+						).String(),
 					})
 					if err != nil {
 						return 0, err

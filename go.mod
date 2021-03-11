@@ -5,12 +5,12 @@ go 1.16
 require (
 	github.com/99designs/gqlgen v0.13.0
 	github.com/99designs/keyring v1.1.6
-	github.com/AlecAivazis/survey/v2 v2.2.8
+	github.com/AlecAivazis/survey/v2 v2.2.9
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/semver/v3 v3.0.3
 	github.com/agnivade/levenshtein v1.1.0 // indirect
-	github.com/argoproj/argo/v2 v2.12.10
+	github.com/argoproj/argo/v2 v2.0.0-00010101000000-000000000000
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
@@ -19,7 +19,6 @@ require (
 	github.com/gitchander/permutation v0.0.0-20210302120832-6ab79d7de174
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
-	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.2
@@ -29,15 +28,13 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
-	github.com/olekukonko/tablewriter v0.0.5
-	github.com/onsi/ginkgo v1.12.1
+	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5
+	github.com/onsi/ginkgo v1.15.1
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1
-	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0

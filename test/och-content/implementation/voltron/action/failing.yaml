@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.policy
-  name: test-a
+  prefix: cap.implementation.voltron.action
+  name: failing
   license:
     name: "Apache 2.0"
-  displayName: Test Implementation A
-  description: "This Implementation should be filtered out in the Cluster policy test on second stage."
+  displayName: Failing Voltron test action
+  description: ""
   documentationURL: ""
   maintainers:
     - email: team-dev@projectvoltron.dev
@@ -18,7 +18,7 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.policy.test
+    - path: cap.interface.voltron.action.failing
       revision: 0.1.0
 
   requires:
@@ -42,13 +42,13 @@ spec:
         templates:
           - name: main
             steps:
-              - - name: success
-                  template: success
-          - name: success
+              - - name: fail
+                  template: fail
+          - name: fail
             container:
               image: alpine:latest
               command: ["sh", "-c"]
-              args: ["echo 'Implementation A' && sleep 2 && exit 0"]
+              args: ["echo 'always exit 1' && sleep 2 && exit 1"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

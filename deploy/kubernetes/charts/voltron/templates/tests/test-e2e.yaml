@@ -28,9 +28,5 @@ spec:
           value: {{ include "voltron.fullname" . }}-engine-cluster-policy
         - name: APP_CLUSTER_POLICY_NAMESPACE
           value: {{.Release.Namespace}}
-      command:
-        - /app
-      args:
-        - "-test.v"
       imagePullPolicy: {{ .Values.integrationTest.image.pullPolicy }}
   restartPolicy: Never

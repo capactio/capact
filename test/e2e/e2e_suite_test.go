@@ -98,7 +98,7 @@ func getOCHGraphQLClient() *ochclient.Client {
 
 func getEngineGraphQLClient() *engineclient.Client {
 	httpClient := httputil.NewClient(
-		30*time.Second,
+		60*time.Second,
 		true,
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)

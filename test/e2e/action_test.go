@@ -5,6 +5,7 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	. "github.com/onsi/ginkgo"
@@ -28,7 +29,8 @@ var _ = Describe("Action", func() {
 	var engineClient *engine.Client
 	var ochClient *ochclient.Client
 
-	actionName := "e2e-test"
+	actionName := fmt.Sprintf("e2e-test-%d", GinkgoParallelNode())
+	failingActionName := fmt.Sprintf("e2e-failing-test-%d", GinkgoParallelNode())
 	ctx := context.Background()
 
 	BeforeEach(func() {
@@ -39,50 +41,57 @@ var _ = Describe("Action", func() {
 	AfterEach(func() {
 		// cleanup Action
 		engineClient.DeleteAction(ctx, actionName)
+		engineClient.DeleteAction(ctx, failingActionName)
 	})
 
 	Context("Action execution", func() {
-		It("should have succeeded status after a passed workflow", func() {
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.passing",
-					Revision: ptr.String("0.1.0"),
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
-		})
-
 		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
-			actionPath := "cap.interface.voltron.policy.test"
+			actionPath := "cap.interface.voltron.action.passing"
+			testValue := "Implementation A"
 
-			log("1. Expecting Implementation A is picked based on test policy and requirements met...")
+			By("Preparing input Type Instances")
+			var typeInstances []*enginegraphql.InputTypeInstanceData
 
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath)
+			// TypeInstance which will be downloaded
+			download := getTypeInstanceInputForDownload(testValue)
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, ochClient, download)
+			defer downloadTICleanup()
+
+			typeInstances = append(typeInstances,
+				&enginegraphql.InputTypeInstanceData{Name: "testInput", ID: downloadTI.ID})
+
+			// TypeInstance which will be downloaded and updated
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			defer updateTICleanup()
+
+			typeInstances = append(typeInstances,
+				&enginegraphql.InputTypeInstanceData{Name: "testUpdate", ID: updateTI.ID})
+
+			By("1. Expecting Implementation A is picked based on test policy and requirements met...")
+
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			log("2. Deleting Action...")
+			By("2. Check TypeInstances")
+			By("2.1. Check uploaded TypeInstances")
+			assertUploadedTypeInstance(ctx, ochClient, testValue)
 
-			err := engineClient.DeleteAction(ctx, actionName)
+			By("2.1. Check updated TypeInstances")
+			updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(updateTI).ToNot(BeNil())
+
+			_, err = getTypeInstanceWithValue([]ochlocalgraphql.TypeInstance{*updateTI}, testValue)
 			Expect(err).ToNot(HaveOccurred())
 
-			log("3. Creating TypeInstance and modifying Policy to make Implementation B picked for next run...")
+			By("2. Deleting Action...")
+
+			err = engineClient.DeleteAction(ctx, actionName)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("3. Creating TypeInstance and modifying Policy to make Implementation B picked for next run...")
 
 			// 3.1. Create TypeInstance which is required for second Implementation to be picked
 			typeInstanceValue := getTypeInstanceInputForPolicy()
@@ -94,18 +103,22 @@ var _ = Describe("Action", func() {
 			cfgMapCleanupFn := updateClusterPolicyConfigMap(clusterPolicyTokenToReplace, typeInstanceID)
 			defer cfgMapCleanupFn()
 
-			log("4. Expecting Implementation B is picked based on test policy...")
+			By("4. Expecting Implementation B is picked based on test policy...")
 
-			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath)
+			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation B'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			By("5. Check Uploaded TypeInstances")
+			assertUploadedTypeInstance(ctx, ochClient, testValue)
+
 		})
 
 		It("should have failed status after a failed workflow", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
+				Name: failingActionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.failing",
+					Path:     "cap.interface.voltron.action.failing",
 					Revision: ptr.String("0.1.0"),
 				},
 			})
@@ -113,263 +126,21 @@ var _ = Describe("Action", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
+				getActionStatusFunc(ctx, engineClient, failingActionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
 
-			err = engineClient.RunAction(ctx, actionName)
+			err = engineClient.RunAction(ctx, failingActionName)
 
 			Expect(err).ToNot(HaveOccurred())
 
 			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
+				getActionStatusFunc(ctx, engineClient, failingActionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
-
-		It("should download input TypeInstance", func() {
-			var typeInstances []*enginegraphql.InputTypeInstanceData
-			input := &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-					Path:     "cap.type.simple.single-key",
-					Revision: "0.1.0",
-				},
-				Value: map[string]interface{}{"key": true},
-				Attributes: []*ochlocalgraphql.AttributeReferenceInput{
-					{
-						Path:     "com.voltron.attribute1",
-						Revision: "0.1.0",
-					},
-				},
-			}
-			simpleTI, simpleTICleanupFn := createTypeInstance(ctx, ochClient, input)
-			defer simpleTICleanupFn()
-
-			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: simpleTI.ID})
-
-			input = &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-					Path:     "cap.type.gcp.auth.service-account",
-					Revision: "0.1.0",
-				},
-				Value: map[string]string{"project": "voltron"},
-				Attributes: []*ochlocalgraphql.AttributeReferenceInput{
-					{
-						Path:     "com.voltron.attribute1",
-						Revision: "0.1.0",
-					},
-				},
-			}
-			saTypeInstance, saTICleanupFn := createTypeInstance(ctx, ochClient, input)
-			defer saTICleanupFn()
-			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: saTypeInstance.ID})
-
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.type-instance-download",
-					Revision: ptr.String("0.1.0"),
-				},
-				Input: &enginegraphql.ActionInputData{
-					TypeInstances: typeInstances,
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
-		})
-
-		It("should upload output TypeInstances", func() {
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.type-instance-upload",
-					Revision: ptr.String("0.1.0"),
-				},
-				Input: &enginegraphql.ActionInputData{},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
-
-			typeInstances, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
-				TypeRef: &ochlocalgraphql.TypeRefFilterInput{
-					Path:     "cap.type.upload-test",
-					Revision: ptr.String("0.1.0"),
-				},
-			})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(typeInstances).To(HaveLen(1))
-
-			uploadedTypeInstance := typeInstances[0]
-			defer func() {
-				err := ochClient.DeleteTypeInstance(ctx, uploadedTypeInstance.ID)
-				if err != nil {
-					log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", uploadedTypeInstance.ID).Error())
-				}
-			}()
-
-			Expect(uploadedTypeInstance).To(Equal(getExpectedUploadActionTypeInstance(uploadedTypeInstance.ID)))
-		})
-
-		It("should update a TypeInstance", func() {
-			input := &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-					Path:     "cap.type.upload-test",
-					Revision: "0.1.0",
-				},
-				Attributes: []*ochlocalgraphql.AttributeReferenceInput{},
-				Value:      map[string]interface{}{"hello": "world"},
-			}
-			simpleTI, simpleTICleanupFn := createTypeInstance(ctx, ochClient, input)
-			defer simpleTICleanupFn()
-
-			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
-				Name: actionName,
-				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.e2e.type-instance-update",
-					Revision: ptr.String("0.1.0"),
-				},
-				Input: &enginegraphql.ActionInputData{
-					TypeInstances: []*enginegraphql.InputTypeInstanceData{
-						{
-							Name: "updateTestTypeInstance",
-							ID:   simpleTI.ID,
-						},
-					},
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
-
-			err = engineClient.RunAction(ctx, actionName)
-
-			Expect(err).ToNot(HaveOccurred())
-
-			Eventually(
-				getActionStatusFunc(ctx, engineClient, actionName),
-				cfg.PollingTimeout, cfg.PollingInterval,
-			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
-
-			typeInstances, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
-				TypeRef: &ochlocalgraphql.TypeRefFilterInput{
-					Path:     "cap.type.upload-test",
-					Revision: ptr.String("0.1.0"),
-				},
-			})
-			Expect(err).ToNot(HaveOccurred())
-			Expect(typeInstances).To(HaveLen(1))
-
-			uploadedTypeInstance := typeInstances[0]
-			defer func() {
-				err := ochClient.DeleteTypeInstance(ctx, uploadedTypeInstance.ID)
-				if err != nil {
-					log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", uploadedTypeInstance.ID).Error())
-				}
-			}()
-
-			Expect(uploadedTypeInstance).To(Equal(getExpectedUpdateActionTypeInstance(uploadedTypeInstance.ID)))
-		})
 	})
 })
-
-func getExpectedUploadActionTypeInstance(ID string) ochlocalgraphql.TypeInstance {
-	revision := getExpectedUploadActionTypeInstanceRevision()
-
-	return ochlocalgraphql.TypeInstance{
-		ID: ID,
-		TypeRef: &ochlocalgraphql.TypeInstanceTypeReference{
-			Path:     "cap.type.upload-test",
-			Revision: "0.1.0",
-		},
-		Uses:                    []*ochlocalgraphql.TypeInstance{},
-		UsedBy:                  []*ochlocalgraphql.TypeInstance{},
-		LatestResourceVersion:   revision,
-		FirstResourceVersion:    revision,
-		PreviousResourceVersion: nil,
-		ResourceVersion:         revision,
-		ResourceVersions:        []*ochlocalgraphql.TypeInstanceResourceVersion{revision},
-	}
-}
-
-func getExpectedUpdateActionTypeInstance(ID string) ochlocalgraphql.TypeInstance {
-	firstRevision := getExpectedUploadActionTypeInstanceRevision()
-	secondRevision := getExpectedUpdateActionTypeInstanceRevision()
-
-	return ochlocalgraphql.TypeInstance{
-		ID: ID,
-		TypeRef: &ochlocalgraphql.TypeInstanceTypeReference{
-			Path:     "cap.type.upload-test",
-			Revision: "0.1.0",
-		},
-		Uses:                    []*ochlocalgraphql.TypeInstance{},
-		UsedBy:                  []*ochlocalgraphql.TypeInstance{},
-		LatestResourceVersion:   secondRevision,
-		FirstResourceVersion:    firstRevision,
-		PreviousResourceVersion: firstRevision,
-		ResourceVersion:         firstRevision,
-		ResourceVersions:        []*ochlocalgraphql.TypeInstanceResourceVersion{secondRevision, firstRevision},
-	}
-}
-
-func getExpectedUploadActionTypeInstanceRevision() *ochlocalgraphql.TypeInstanceResourceVersion {
-	return &ochlocalgraphql.TypeInstanceResourceVersion{
-		ResourceVersion: 1,
-		Metadata: &ochlocalgraphql.TypeInstanceResourceVersionMetadata{
-			Attributes: []*ochlocalgraphql.AttributeReference{},
-		},
-		Spec: &ochlocalgraphql.TypeInstanceResourceVersionSpec{
-			Value:           map[string]interface{}{"hello": "world"},
-			Instrumentation: nil,
-		},
-	}
-}
-
-func getExpectedUpdateActionTypeInstanceRevision() *ochlocalgraphql.TypeInstanceResourceVersion {
-	return &ochlocalgraphql.TypeInstanceResourceVersion{
-		ResourceVersion: 2,
-		Metadata: &ochlocalgraphql.TypeInstanceResourceVersionMetadata{
-			Attributes: []*ochlocalgraphql.AttributeReference{},
-		},
-		Spec: &ochlocalgraphql.TypeInstanceResourceVersionSpec{
-			Value:           map[string]interface{}{"hello": "world2"},
-			Instrumentation: nil,
-		},
-	}
-}
 
 func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
 	return func() (enginegraphql.ActionStatusPhase, error) {
@@ -399,11 +170,46 @@ func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *engine.Client, actionName, actionPath string) *enginegraphql.Action {
+func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTypeInstanceInput {
+	return &ochlocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.simple.download",
+			Revision: "0.1.0",
+		},
+		Value: map[string]interface{}{"key": testValue},
+		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+			{
+				Path:     "com.voltron.attribute1",
+				Revision: "0.1.0",
+			},
+		},
+	}
+}
+
+func getTypeInstanceInputForUpdate() *ochlocalgraphql.CreateTypeInstanceInput {
+	return &ochlocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.simple.update",
+			Revision: "0.1.0",
+		},
+		Value: map[string]interface{}{"key": "random text to update"},
+		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+			{
+				Path:     "com.voltron.attribute1",
+				Revision: "0.1.0",
+			},
+		},
+	}
+}
+
+func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *engine.Client, actionName, actionPath string, typeInstances []*enginegraphql.InputTypeInstanceData) *enginegraphql.Action {
 	_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 		Name: actionName,
 		ActionRef: &enginegraphql.ManifestReferenceInput{
 			Path: actionPath,
+		},
+		Input: &enginegraphql.ActionInputData{
+			TypeInstances: typeInstances,
 		},
 	})
 	Expect(err).ToNot(HaveOccurred())
@@ -471,6 +277,23 @@ func updateClusterPolicyConfigMap(stringToFind, stringToReplace string) func() {
 	return cleanupFn
 }
 
+func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client, testValue string) {
+	uploaded, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
+		TypeRef: &ochlocalgraphql.TypeRefFilterInput{
+			Path:     "cap.type.simple.upload",
+			Revision: ptr.String("0.1.0"),
+		},
+	})
+	Expect(err).ToNot(HaveOccurred())
+	Expect(len(uploaded)).Should(BeNumerically(">", 0))
+
+	ti, err := getTypeInstanceWithValue(uploaded, testValue)
+	Expect(err).ToNot(HaveOccurred())
+
+	err = ochClient.DeleteTypeInstance(ctx, ti.ID)
+	Expect(err).ToNot(HaveOccurred())
+}
+
 func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error {
 	k8sCfg, err := config.GetConfig()
 	if err != nil {
@@ -499,4 +322,21 @@ func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error
 	}
 
 	return nil
+}
+
+func getTypeInstanceWithValue(typeInstances []ochlocalgraphql.TypeInstance, testValue string) (*ochlocalgraphql.TypeInstance, error) {
+	for _, ti := range typeInstances {
+		values, ok := ti.LatestResourceVersion.Spec.Value.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		value, ok := values["key"].(string)
+		if !ok {
+			continue
+		}
+		if value == testValue {
+			return &ti, nil
+		}
+	}
+	return nil, fmt.Errorf("No TypeInstance with value %s", testValue)
 }

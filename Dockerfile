@@ -43,7 +43,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /bin/$COMPONENT /app
 COPY test/och-content /test/och-content
 
-RUN apk add --no-cache 'git=~2.26' 'openssh=~8.3'
+RUN apk add --no-cache 'git=>2.26' 'openssh=~8.3'
 RUN mkdir /root/.ssh
 RUN chmod 700 /root/.ssh
 RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
@@ -52,6 +52,21 @@ LABEL source=git@github.com:Project-Voltron/go-voltron.git
 LABEL app=$COMPONENT
 
 CMD ["/app"]
+
+FROM builder as e2e
+
+# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY --from=builder /bin/$COMPONENT /app.test
+
+RUN apk add --no-cache 'git=>2.26'
+RUN go get github.com/onsi/ginkgo/ginkgo
+
+LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL app=$COMPONENT
+
+CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
 FROM alpine:3.12.3  as terraform-runner
 ARG COMPONENT

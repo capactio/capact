@@ -2,8 +2,8 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.voltron.e2e
-  name: type-instance-upload
+  prefix: cap.interface.voltron.action
+  name: passing
   displayName: Passing Voltron test action
   description: ""
   documentationURL: ""
@@ -15,12 +15,23 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  input: {}
+  input:
+    typeInstances:
+      testInput:
+        typeRef:
+          path: cap.type.simple.download
+          revision: "0.1.0"
+        verbs: ["get"]
+      testUpdate:
+        typeRef:
+          path: cap.type.simple.update
+          revision: "0.1.0"
+        verbs: ["get", "update"]
   output:
     typeInstances:
-      uploadTestTypeInstance:
+      testUpload:
         typeRef:
-          path: cap.type.upload-test
+          path: cap.type.simple.upload
           revision: "0.1.0"
 
 signature:
