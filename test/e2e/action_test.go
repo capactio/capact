@@ -192,13 +192,184 @@ var _ = Describe("Action", func() {
 				getActionStatusFunc(ctx, engineClient, actionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
-
-			// TODO when upload TypeInstances is ready add uploading result of cat and compare with input TypeInstance
-
 		})
 
+		It("should upload output TypeInstances", func() {
+			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+				Name: actionName,
+				ActionRef: &enginegraphql.ManifestReferenceInput{
+					Path:     "cap.interface.voltron.e2e.type-instance-upload",
+					Revision: ptr.String("0.1.0"),
+				},
+				Input: &enginegraphql.ActionInputData{},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
+
+			err = engineClient.RunAction(ctx, actionName)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
+
+			typeInstances, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
+				TypeRef: &ochlocalgraphql.TypeRefFilterInput{
+					Path:     "cap.type.upload-test",
+					Revision: ptr.String("0.1.0"),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(typeInstances).To(HaveLen(1))
+
+			uploadedTypeInstance := typeInstances[0]
+			defer func() {
+				err := ochClient.DeleteTypeInstance(ctx, uploadedTypeInstance.ID)
+				if err != nil {
+					log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", uploadedTypeInstance.ID).Error())
+				}
+			}()
+
+			Expect(uploadedTypeInstance).To(Equal(getExpectedUploadActionTypeInstance(uploadedTypeInstance.ID)))
+		})
+
+		It("should update a TypeInstance", func() {
+			input := &ochlocalgraphql.CreateTypeInstanceInput{
+				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+					Path:     "cap.type.upload-test",
+					Revision: "0.1.0",
+				},
+				Attributes: []*ochlocalgraphql.AttributeReferenceInput{},
+				Value:      map[string]interface{}{"hello": "world"},
+			}
+			simpleTI, simpleTICleanupFn := createTypeInstance(ctx, ochClient, input)
+			defer simpleTICleanupFn()
+
+			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
+				Name: actionName,
+				ActionRef: &enginegraphql.ManifestReferenceInput{
+					Path:     "cap.interface.voltron.e2e.type-instance-update",
+					Revision: ptr.String("0.1.0"),
+				},
+				Input: &enginegraphql.ActionInputData{
+					TypeInstances: []*enginegraphql.InputTypeInstanceData{
+						{
+							Name: "updateTestTypeInstance",
+							ID:   simpleTI.ID,
+						},
+					},
+				},
+			})
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusPhaseReadyToRun))
+
+			err = engineClient.RunAction(ctx, actionName)
+
+			Expect(err).ToNot(HaveOccurred())
+
+			Eventually(
+				getActionStatusFunc(ctx, engineClient, actionName),
+				cfg.PollingTimeout, cfg.PollingInterval,
+			).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
+
+			typeInstances, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
+				TypeRef: &ochlocalgraphql.TypeRefFilterInput{
+					Path:     "cap.type.upload-test",
+					Revision: ptr.String("0.1.0"),
+				},
+			})
+			Expect(err).ToNot(HaveOccurred())
+			Expect(typeInstances).To(HaveLen(1))
+
+			uploadedTypeInstance := typeInstances[0]
+			defer func() {
+				err := ochClient.DeleteTypeInstance(ctx, uploadedTypeInstance.ID)
+				if err != nil {
+					log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", uploadedTypeInstance.ID).Error())
+				}
+			}()
+
+			Expect(uploadedTypeInstance).To(Equal(getExpectedUpdateActionTypeInstance(uploadedTypeInstance.ID)))
+		})
 	})
 })
+
+func getExpectedUploadActionTypeInstance(ID string) ochlocalgraphql.TypeInstance {
+	revision := getExpectedUploadActionTypeInstanceRevision()
+
+	return ochlocalgraphql.TypeInstance{
+		ID: ID,
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReference{
+			Path:     "cap.type.upload-test",
+			Revision: "0.1.0",
+		},
+		Uses:                    []*ochlocalgraphql.TypeInstance{},
+		UsedBy:                  []*ochlocalgraphql.TypeInstance{},
+		LatestResourceVersion:   revision,
+		FirstResourceVersion:    revision,
+		PreviousResourceVersion: nil,
+		ResourceVersion:         revision,
+		ResourceVersions:        []*ochlocalgraphql.TypeInstanceResourceVersion{revision},
+	}
+}
+
+func getExpectedUpdateActionTypeInstance(ID string) ochlocalgraphql.TypeInstance {
+	firstRevision := getExpectedUploadActionTypeInstanceRevision()
+	secondRevision := getExpectedUpdateActionTypeInstanceRevision()
+
+	return ochlocalgraphql.TypeInstance{
+		ID: ID,
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReference{
+			Path:     "cap.type.upload-test",
+			Revision: "0.1.0",
+		},
+		Uses:                    []*ochlocalgraphql.TypeInstance{},
+		UsedBy:                  []*ochlocalgraphql.TypeInstance{},
+		LatestResourceVersion:   secondRevision,
+		FirstResourceVersion:    firstRevision,
+		PreviousResourceVersion: firstRevision,
+		ResourceVersion:         firstRevision,
+		ResourceVersions:        []*ochlocalgraphql.TypeInstanceResourceVersion{secondRevision, firstRevision},
+	}
+}
+
+func getExpectedUploadActionTypeInstanceRevision() *ochlocalgraphql.TypeInstanceResourceVersion {
+	return &ochlocalgraphql.TypeInstanceResourceVersion{
+		ResourceVersion: 1,
+		Metadata: &ochlocalgraphql.TypeInstanceResourceVersionMetadata{
+			Attributes: []*ochlocalgraphql.AttributeReference{},
+		},
+		Spec: &ochlocalgraphql.TypeInstanceResourceVersionSpec{
+			Value:           map[string]interface{}{"hello": "world"},
+			Instrumentation: nil,
+		},
+	}
+}
+
+func getExpectedUpdateActionTypeInstanceRevision() *ochlocalgraphql.TypeInstanceResourceVersion {
+	return &ochlocalgraphql.TypeInstanceResourceVersion{
+		ResourceVersion: 2,
+		Metadata: &ochlocalgraphql.TypeInstanceResourceVersionMetadata{
+			Attributes: []*ochlocalgraphql.AttributeReference{},
+		},
+		Spec: &ochlocalgraphql.TypeInstanceResourceVersionSpec{
+			Value:           map[string]interface{}{"hello": "world2"},
+			Instrumentation: nil,
+		},
+	}
+}
 
 func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) func() (enginegraphql.ActionStatusPhase, error) {
 	return func() (enginegraphql.ActionStatusPhase, error) {
