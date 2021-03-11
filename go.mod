@@ -12,8 +12,8 @@ require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
 	github.com/avast/retry-go v3.0.0+incompatible
-	github.com/danieljoos/wincred v1.1.0 // indirect
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
+	github.com/docker/docker v1.4.2-0.20200203170920-46ec8731fbce
 	github.com/fatih/color v1.10.0
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0

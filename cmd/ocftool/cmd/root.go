@@ -3,6 +3,7 @@ package cmd
 import (
 	"log"
 
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
 	"projectvoltron.dev/voltron/cmd/ocftool/cmd/config"
 	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub"
 	"projectvoltron.dev/voltron/internal/ocftool"
@@ -30,6 +31,7 @@ func NewRoot() *cobra.Command {
 		NewLogout(),
 		hub.NewHub(),
 		config.NewConfig(),
+		action.NewAction(),
 	)
 
 	return rootCmd
