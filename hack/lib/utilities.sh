@@ -232,7 +232,6 @@ docker::delete_images() {
 #  - VOLTRON_NAMESPACE
 #  - VOLTRON_RELEASE_NAME
 #  - CLUSTER_TYPE
-#  - MOCK_OCH_GRAPHQL - if set to true then predifined values are used in och graphql(local and public)
 #  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then the OCH manifests are populated from `test/och-content` and a test policy is configured
@@ -242,7 +241,6 @@ voltron::install_upgrade::charts() {
     readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
     readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
 
-    export MOCK_OCH_GRAPHQL=${MOCK_OCH_GRAPHQL:-${VOLTRON_MOCK_OCH_GRAPHQL}}
     export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${VOLTRON_USE_TEST_SETUP}}
@@ -292,12 +290,6 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_RESOURCE_OVERRIDES=""
     fi
 
-    if [ "${MOCK_OCH_GRAPHQL}" == "false" ]; then
-      readonly OCH_IMAGE="och-js"
-    else
-      readonly OCH_IMAGE="och"
-    fi
-
     if [ "${USE_TEST_SETUP}" == "true" ]; then
       readonly VOLTRON_TEST_SETUP_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.voltron.test-setup.yaml"
       echo -e "- Applying overrides from ${VOLTRON_TEST_SETUP_OVERRIDES}\n"
@@ -313,10 +305,7 @@ voltron::install_upgrade::charts() {
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
-        --set global.mockOCHGraphQL="${MOCK_OCH_GRAPHQL}" \
         --set global.mockEngineGraphQL="${MOCK_ENGINE_GRAPHQL}" \
-        --set och-local.image.name="${OCH_IMAGE}" \
-        --set och-public.image.name="${OCH_IMAGE}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
         -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \

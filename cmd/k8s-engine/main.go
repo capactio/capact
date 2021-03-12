@@ -58,8 +58,6 @@ type Config struct {
 	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
 	// and logging information, etc).
 	LoggerDevMode bool `envconfig:"default=false"`
-	// MockGraphQL sets the grapql servers to use mocked data
-	MockGraphQL bool `envconfig:"default=false"`
 
 	GraphQLGateway struct {
 		Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
@@ -130,17 +128,9 @@ func main() {
 
 	gqlLogger := logger.Named(GraphQLServerName)
 
-	var execSchema gqlgen_graphql.ExecutableSchema
-	if cfg.MockGraphQL {
-		logger.Info("Using mocked version of engine API")
-		execSchema = graphql.NewExecutableSchema(graphql.Config{
-			Resolvers: domaingraphql.NewMockedRootResolver(),
-		})
-	} else {
-		execSchema = graphql.NewExecutableSchema(graphql.Config{
-			Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
-		})
-	}
+	execSchema := graphql.NewExecutableSchema(graphql.Config{
+		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
+	})
 	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, GraphQLServerName)
 
 	err = mgr.Add(gqlSrv)

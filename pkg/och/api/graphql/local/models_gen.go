@@ -27,10 +27,10 @@ type AttributeReferenceInput struct {
 
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
-	Alias      *string                    `json:"alias"`
-	TypeRef    *TypeReferenceInput        `json:"typeRef"`
-	Attributes []*AttributeReferenceInput `json:"attributes"`
-	Value      interface{}                `json:"value"`
+	Alias      *string                         `json:"alias"`
+	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
+	Attributes []*AttributeReferenceInput      `json:"attributes"`
+	Value      interface{}                     `json:"value"`
 }
 
 type CreateTypeInstanceOutput struct {
@@ -44,11 +44,16 @@ type CreateTypeInstancesInput struct {
 }
 
 type TypeInstance struct {
-	ResourceVersion int                   `json:"resourceVersion"`
-	Metadata        *TypeInstanceMetadata `json:"metadata"`
-	Spec            *TypeInstanceSpec     `json:"spec"`
-	Uses            []*TypeInstance       `json:"uses"`
-	UsedBy          []*TypeInstance       `json:"usedBy"`
+	ID string `json:"id"`
+	// Common properties for all TypeInstances which cannot be changed
+	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
+	Uses                    []*TypeInstance                `json:"uses"`
+	UsedBy                  []*TypeInstance                `json:"usedBy"`
+	LatestResourceVersion   *TypeInstanceResourceVersion   `json:"latestResourceVersion"`
+	FirstResourceVersion    *TypeInstanceResourceVersion   `json:"firstResourceVersion"`
+	PreviousResourceVersion *TypeInstanceResourceVersion   `json:"previousResourceVersion"`
+	ResourceVersion         *TypeInstanceResourceVersion   `json:"resourceVersion"`
+	ResourceVersions        []*TypeInstanceResourceVersion `json:"resourceVersions"`
 }
 
 type TypeInstanceFilter struct {
@@ -77,15 +82,29 @@ type TypeInstanceInstrumentationMetricsDashboard struct {
 	URL string `json:"url"`
 }
 
-type TypeInstanceMetadata struct {
-	ID         string                `json:"id"`
+type TypeInstanceResourceVersion struct {
+	ResourceVersion int                                  `json:"resourceVersion"`
+	Metadata        *TypeInstanceResourceVersionMetadata `json:"metadata"`
+	Spec            *TypeInstanceResourceVersionSpec     `json:"spec"`
+}
+
+type TypeInstanceResourceVersionMetadata struct {
 	Attributes []*AttributeReference `json:"attributes"`
 }
 
-type TypeInstanceSpec struct {
-	TypeRef         *TypeReference               `json:"typeRef"`
+type TypeInstanceResourceVersionSpec struct {
 	Value           interface{}                  `json:"value"`
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
+}
+
+type TypeInstanceTypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type TypeInstanceTypeReferenceInput struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
 }
 
 type TypeInstanceUsesRelationInput struct {
@@ -101,21 +120,17 @@ type TypeRefFilterInput struct {
 	Revision *string `json:"revision"`
 }
 
-type TypeReference struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
-type TypeReferenceInput struct {
-	Path     string `json:"path"`
-	Revision string `json:"revision"`
-}
-
+// At least one property needs to be specified.
 type UpdateTypeInstanceInput struct {
-	TypeRef         *TypeReferenceInput        `json:"typeRef"`
-	Attributes      []*AttributeReferenceInput `json:"attributes"`
-	Value           interface{}                `json:"value"`
-	ResourceVersion int                        `json:"resourceVersion"`
+	// The attributes property is optional. If not provided, previous value is used.
+	Attributes []*AttributeReferenceInput `json:"attributes"`
+	// The value property is optional. If not provided, previous value is used.
+	Value interface{} `json:"value"`
+}
+
+type UpdateTypeInstancesInput struct {
+	ID           string                   `json:"id"`
+	TypeInstance *UpdateTypeInstanceInput `json:"typeInstance"`
 }
 
 type FilterRule string

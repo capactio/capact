@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"projectvoltron.dev/voltron/internal/ptr"
-	gqllocalapiv2 "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	gqllocalapiv2 "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/och/client/public"

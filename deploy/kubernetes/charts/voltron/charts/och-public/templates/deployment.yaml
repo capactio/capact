@@ -77,24 +77,10 @@ spec:
               value: "{{ .Values.global.database.username }}"
             - name: APP_NEO4J_PASSWORD
               value: "{{ .Values.global.database.password }}"
-            - name: APP_MOCKGRAPHQL
-              value: "{{ .Values.global.mockOCHGraphQL }}"
           ports:
             - name: http
               containerPort: 8080
               protocol: TCP
-          {{- if .Values.global.mockOCHGraphQL }}
-          livenessProbe:
-            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
-            httpGet:
-              path: /healthz
-              port: 8082
-          readinessProbe:
-            initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
-            httpGet:
-              path: /healthz
-              port: 8082
-          {{- else }}
           livenessProbe:
             initialDelaySeconds: {{ .Values.probe.initialDelaySeconds }}
             httpGet:
@@ -105,7 +91,6 @@ spec:
             httpGet:
               path: /healthz
               port: 8080
-          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}

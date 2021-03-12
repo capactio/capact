@@ -28,7 +28,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.Cre
 		) {
 			%s
 		}
-	}`, typeInstanceFields)
+	}`, typeInstanceWithUsesFields)
 
 	req := graphql.NewRequest(query)
 	req.Var("in", in)
@@ -72,12 +72,37 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *ochlocalgraphql.Cr
 	return resp.CreatedTypeInstances, nil
 }
 
+func (c *Client) UpdateTypeInstances(ctx context.Context, in []ochlocalgraphql.UpdateTypeInstancesInput) ([]ochlocalgraphql.TypeInstance, error) {
+	query := fmt.Sprintf(`mutation($in: [UpdateTypeInstancesInput]!) {
+		updateTypeInstances(
+			in: $in
+		) {
+			%s
+		}
+	}`, typeInstanceFields)
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	var resp struct {
+		TypeInstances []ochlocalgraphql.TypeInstance `json:"updateTypeInstances"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to update TypeInstances")
+	}
+
+	return resp.TypeInstances, nil
+}
+
 func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query($id: ID!) {
 		typeInstance(id: $id) {
 			%s	
 		}
-	}`, typeInstanceFields)
+	}`, typeInstanceWithUsesFields)
 
 	req := graphql.NewRequest(query)
 	req.Var("id", id)
@@ -95,15 +120,13 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*ochlocalgrap
 	return resp.TypeInstance, nil
 }
 
-func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
+func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error) {
 	query := `query {
 	  typeInstances {
-		spec {
 		  typeRef {
 			path
 			revision
 		  }
-		}
 	  }
 	}`
 
@@ -119,13 +142,13 @@ func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphq
 		return nil, errors.Wrap(err, "while executing query to list TypeRef for TypeInstances")
 	}
 
-	var typeRefs []ochlocalgraphql.TypeReference
+	var typeRefs []ochlocalgraphql.TypeInstanceTypeReference
 	for _, ti := range resp.TypeInstances {
-		if ti.Spec == nil || ti.Spec.TypeRef == nil {
+		if ti.TypeRef == nil {
 			continue
 		}
 
-		typeRefs = append(typeRefs, *ti.Spec.TypeRef)
+		typeRefs = append(typeRefs, *ti.TypeRef)
 	}
 
 	return typeRefs, nil

@@ -1,6 +1,6 @@
 # Default values for och.
 image:
-  name: och
+  name: och-js
   pullPolicy: IfNotPresent
 
 replicaCount: 1

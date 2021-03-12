@@ -87,7 +87,6 @@ mutation UpdateTypeInstance($typeInstanceID: ID!) {
   updateTypeInstance(
     id: $typeInstanceID
     in: {
-      resourceVersion: 3
       value: { foo: "bar" }
       typeRef: { path: "cap.type.sample", revision: "0.1.0" }
       attributes: [
@@ -97,6 +96,35 @@ mutation UpdateTypeInstance($typeInstanceID: ID!) {
     }
   ) {
     ...TypeInstance
+  }
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
+mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
+  updateTypeInstances(
+    in: [
+      {
+        id: $typeInstanceID
+        typeInstance: {
+          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+          attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+          value: { name: "Luke Skywalker" }
+        }
+      }
+      {
+        id: $secondTypeInstanceID
+        typeInstance: {
+          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
+          attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+          value: { name: "Darth Vader" }
+        }
+      }
+    ]
+  ) {
+    id
+    resourceVersions {
+      ...TypeInstanceResourceVersion
+    }
   }
 }
 
@@ -110,34 +138,43 @@ mutation DeleteTypeInstance($typeInstanceID: ID!) {
 #
 
 fragment TypeInstance on TypeInstance {
+  id
+  typeRef {
+    path
+    revision
+  }
+
+  latestResourceVersion {
+    ...TypeInstanceResourceVersion
+  }
+
+  firstResourceVersion {
+    ...TypeInstanceResourceVersion
+  }
+
+  previousResourceVersion {
+    ...TypeInstanceResourceVersion
+  }
+
+  resourceVersions {
+    ...TypeInstanceResourceVersion
+  }
+
+  resourceVersion(resourceVersion: 1) {
+    ...TypeInstanceResourceVersion
+  }
+}
+
+fragment TypeInstanceResourceVersion on TypeInstanceResourceVersion {
   resourceVersion
   metadata {
-    id
     attributes {
       path
       revision
     }
   }
   spec {
-    typeRef {
-      path
-      revision
-    }
     value
-    instrumentation {
-      metrics {
-        regex
-        endpoint
-        dashboards {
-          url
-        }
-      }
-      health {
-        url
-        method
-        status
-      }
-    }
   }
 }
 

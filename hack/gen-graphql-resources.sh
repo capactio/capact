@@ -56,7 +56,6 @@ main() {
     "/pkg/engine/api/graphql"
     "/pkg/och/api/graphql/public"
     "/pkg/och/api/graphql/local"
-    "/pkg/och/api/graphql/local-v2"
   )
 
   for path in "${apiPaths[@]}"; do
