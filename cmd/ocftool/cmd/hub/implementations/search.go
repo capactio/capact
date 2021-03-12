@@ -30,7 +30,7 @@ func NewSearch() *cobra.Command {
 
 	search := &cobra.Command{
 		Use:   "search",
-		Short: "Search provides the ability to search for OCH Interfaces",
+		Short: "Lists the currently available Implementations on the Hub server",
 		Example: heredoc.WithCLIName(`
 			# Show all implementations in table format
 			<cli> hub implementations search cap.interface.database.postgresql.install
@@ -48,7 +48,7 @@ func NewSearch() *cobra.Command {
 	flags := search.Flags()
 
 	flags.StringVar(&opts.interfaceRevision, "interface-revision", "", "Specific interface revision")
-	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson|yaml|table")
+	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
 	return search
 }

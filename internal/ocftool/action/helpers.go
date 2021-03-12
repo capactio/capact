@@ -15,7 +15,7 @@ import (
 func isDNSSubdomain(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
-		return fmt.Errorf("cannot enforce DNS syntax validation on response of type %T", val)
+		return fmt.Errorf("Cannot enforce DNS syntax validation on response of type %T", val)
 	}
 
 	validation.IsDNS1123Subdomain(str)
@@ -29,7 +29,7 @@ func isDNSSubdomain(val interface{}) error {
 func isYAML(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
-		return fmt.Errorf("cannot enforce YAML syntax validation on response of type %T", val)
+		return fmt.Errorf("Cannot enforce YAML syntax validation on response of type %T", val)
 	}
 
 	out := map[string]interface{}{}
@@ -47,7 +47,7 @@ func namespaceQuestion() *survey.Question {
 	return &survey.Question{
 		Name: "namespace",
 		Prompt: &survey.Input{
-			Message: "Please type Action namespace",
+			Message: "Please type Action namespace: ",
 			Default: "default",
 		},
 		Validate: survey.ComposeValidators(survey.Required),
@@ -58,7 +58,7 @@ func actionNameQuestion(defaultName string) *survey.Question {
 	return &survey.Question{
 		Name: "name",
 		Prompt: &survey.Input{
-			Message: "Please type Action name",
+			Message: "Please type Action name: ",
 			Default: defaultName,
 		},
 		Validate: survey.ComposeValidators(survey.Required, isDNSSubdomain),

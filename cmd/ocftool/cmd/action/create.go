@@ -12,7 +12,7 @@ func NewCreate() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "create INTERFACE",
-		Short: "Create Action",
+		Short: "Creates/renders a new Action with a specified Interface",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.InterfacePath = args[0]
@@ -21,8 +21,8 @@ func NewCreate() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-
+	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action is to be created")
 	flags.BoolVarP(&opts.DryRun, "dry-run", "", false, "Specifies whether the Action performs server-side test without actually running the Action")
-
+	// TODO: add support for creating an action directly from an implementation
 	return cmd
 }

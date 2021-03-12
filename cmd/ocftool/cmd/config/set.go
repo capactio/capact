@@ -21,12 +21,12 @@ func NewSet() *cobra.Command {
 
 	return &cobra.Command{
 		Use:   "set-context",
-		Short: "Print the value of a given configuration key",
+		Short: "Updates the active hub configuration context",
 		Example: heredoc.WithCLIName(`
-			# select what server to use of via a prompt
+			# Selects which Hub/Gateway server to use of via a prompt
 			<cli> config set-context
 			
-			# set specified server
+			# Sets the specified Hub/Gateway server
 			<cli> config set-context localhost:8080
 		`, ocftool.CLIName),
 		Args: cobra.MaximumNArgs(1),
@@ -58,12 +58,12 @@ func askWhatServerToSet() (string, error) {
 	}
 
 	if len(candidates) == 0 {
-		return "", fmt.Errorf("not logged in to any server")
+		return "", fmt.Errorf("Not logged in to any server")
 	}
 
 	var serverAddress string
 	err = survey.AskOne(&survey.Select{
-		Message: "What server do you want to set as default?",
+		Message: "Which Hub server do you want to set as the default? ",
 		Options: candidates,
 	}, &serverAddress)
 	if err != nil {

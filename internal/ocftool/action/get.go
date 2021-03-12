@@ -82,7 +82,7 @@ func selectPrinter(format string) (printer, error) {
 		return printGetTable, nil
 	}
 
-	return nil, fmt.Errorf("unknow output format %q", format)
+	return nil, fmt.Errorf("Unknown output format %q", format)
 }
 
 func printGetTable(namespace string, in *gqlengine.Action, w io.Writer) error {

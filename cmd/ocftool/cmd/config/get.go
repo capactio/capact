@@ -16,9 +16,9 @@ import (
 func NewGet() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get-contexts",
-		Short: "Print the value of a given configuration key",
+		Short: "Lists the available Hub configuration contexts",
 		Example: heredoc.WithCLIName(`
-			# List all authorized targets 
+			# List all the Hub configuration contexts 
 			<cli> config get-contexts
 		`, ocftool.CLIName),
 		Args: cobra.NoArgs,

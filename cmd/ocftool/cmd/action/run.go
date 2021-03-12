@@ -12,7 +12,7 @@ func NewRun() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "run ACTION",
-		Short: "Run Action",
+		Short: "Queues up a specified Action for processing by the workflow engine",
 		Args:  cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.ActionName = args[0]
@@ -21,6 +21,6 @@ func NewRun() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where Action is created")
+	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created")
 	return cmd
 }

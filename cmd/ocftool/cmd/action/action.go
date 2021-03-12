@@ -8,7 +8,7 @@ func NewAction() *cobra.Command {
 	och := &cobra.Command{
 		Use:     "action",
 		Aliases: []string{"act"},
-		Short:   "This command consists of multiple subcommands to interact with Action.",
+		Short:   "This command consists of multiple subcommands to interact with target Actions",
 	}
 
 	och.AddCommand(

@@ -21,17 +21,19 @@ type loginOptions struct {
 	password      string
 }
 
+// TODO: Validate the Gateway Hub URL
+
 func NewLogin() *cobra.Command {
 	var opts loginOptions
 
 	login := &cobra.Command{
 		Use:   "login [OPTIONS] [SERVER]",
-		Short: "Log in to a Gateway server",
+		Short: "Login to a Hub (Gateway) server",
 		Example: heredoc.WithCLIName(`
 			# start interactive setup
 			<cli> login
 
-			# specify server name and user 
+			# Specify server name and specify the user
 			<cli> login localhost:8080 -u user
 		`, ocftool.CLIName),
 		Args: cli.RequiresMaxArgs(1),
@@ -67,7 +69,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		qs = append(qs, &survey.Question{
 			Name: "server-address",
 			Prompt: &survey.Input{
-				Message: "Please type Gateway server address",
+				Message: "Gateway's server address: ",
 			},
 			Validate: survey.Required,
 		})
@@ -76,7 +78,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		qs = append(qs, &survey.Question{
 			Name: "username",
 			Prompt: &survey.Input{
-				Message: "Please type username",
+				Message: "Username: ",
 			},
 			Validate: survey.Required,
 		})
@@ -86,7 +88,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		qs = append(qs, &survey.Question{
 			Name: "password",
 			Prompt: &survey.Password{
-				Message: "Please type password",
+				Message: "Password: ",
 			},
 			Validate: survey.Required,
 		})
@@ -115,7 +117,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
-	okCheck(w, "Login Succeeded")
+	okCheck(w, "Login Succeeded\n")
 
 	return nil
 }
