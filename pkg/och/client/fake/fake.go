@@ -13,7 +13,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 
@@ -68,14 +68,14 @@ func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.C
 	return public.SortImplementationRevisions(result, getOpts), nil
 }
 
-func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error) {
-	var typeInstanceTypeRefs []ochlocalgraphql.TypeReference
+func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error) {
+	var typeInstanceTypeRefs []ochlocalgraphql.TypeInstanceTypeReference
 	for _, ti := range s.OCHTypeInstances {
-		if ti.Spec == nil || ti.Spec.TypeRef == nil {
+		if ti.TypeRef == nil {
 			continue
 		}
 
-		typeInstanceTypeRefs = append(typeInstanceTypeRefs, *ti.Spec.TypeRef)
+		typeInstanceTypeRefs = append(typeInstanceTypeRefs, *ti.TypeRef)
 	}
 
 	return typeInstanceTypeRefs, nil
@@ -188,7 +188,7 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		if err := json.Unmarshal(jsonData, &ti); err != nil {
 			return err
 		}
-		s.OCHTypeInstances[ti.Metadata.ID] = ti
+		s.OCHTypeInstances[ti.ID] = ti
 	}
 
 	return nil

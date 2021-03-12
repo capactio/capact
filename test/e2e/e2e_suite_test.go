@@ -12,13 +12,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes"
 	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	"projectvoltron.dev/voltron/pkg/iosafety"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
 type GatewayConfig struct {
@@ -53,20 +50,6 @@ var _ = BeforeSuite(func() {
 
 	waitTillServiceEndpointsAreReady()
 	waitTillDataIsPopulated()
-})
-
-var _ = AfterSuite(func() {
-	// TODO(SV-266): temporary solution
-	// Ensure we always finish with Local OCH in default mode
-	// even if got failed tests
-	clientset, err := kubernetes.NewForConfig(config.GetConfigOrDie())
-	Expect(err).NotTo(HaveOccurred())
-	cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
-
-	By("setting OCH_MODE to local")
-	mergePatch := ochLocalModePatch(OCHModeLocal)
-	_, err = cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
-	Expect(err).NotTo(HaveOccurred())
 })
 
 func TestE2E(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
 
 	"github.com/pkg/errors"
 
@@ -19,7 +19,7 @@ import (
 type OCHClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
-	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeReference, error)
+	ListTypeInstancesTypeRef(ctx context.Context) ([]ochlocalgraphql.TypeInstanceTypeReference, error)
 	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 }
 
@@ -239,7 +239,7 @@ func (e *PolicyEnforcedClient) listCurrentTypeInstanceValues(ctx context.Context
 	return typeInstanceValues, nil
 }
 
-func (e *PolicyEnforcedClient) typeInstancesToTypeInstanceValues(in []ochlocalgraphql.TypeReference) []*ochpublicgraphql.TypeInstanceValue {
+func (e *PolicyEnforcedClient) typeInstancesToTypeInstanceValues(in []ochlocalgraphql.TypeInstanceTypeReference) []*ochpublicgraphql.TypeInstanceValue {
 	var out []*ochpublicgraphql.TypeInstanceValue
 
 	for _, typeRef := range in {

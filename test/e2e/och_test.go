@@ -4,26 +4,14 @@ package e2e
 
 import (
 	"context"
-	"fmt"
-	"time"
 
-	"github.com/machinebox/graphql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	cliappsv1 "k8s.io/client-go/kubernetes/typed/apps/v1"
-	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqllocalapiv2 "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
-	ochv2cli "projectvoltron.dev/voltron/pkg/och/client/local/v2"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
 
@@ -179,96 +167,9 @@ var _ = Describe("GraphQL API", func() {
 		})
 	})
 
-	Context("Local OCH", func() {
-		It("creates and deletes TypeInstance", func() {
-			cli := getOCHGraphQLClient()
-
-			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
-				TypeRef: &gqllocalapi.TypeReferenceInput{
-					Path:     "com.voltron.ti",
-					Revision: "0.1.0",
-				},
-				Attributes: []*gqllocalapi.AttributeReferenceInput{
-					{
-						Path:     "com.voltron.attribute1",
-						Revision: "0.1.0",
-					},
-				},
-				Value: map[string]interface{}{
-					"foo": "bar",
-				},
-			})
-
-			Expect(err).ToNot(HaveOccurred())
-			defer deleteTypeInstanceLegacy(ctx, cli, createdTypeInstance.Metadata.ID)
-
-			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstance.Metadata.ID)
-
-			Expect(err).ToNot(HaveOccurred())
-			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
-				ResourceVersion: 1,
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: createdTypeInstance.Metadata.ID,
-					Attributes: []*gqllocalapi.AttributeReference{
-						{
-							Path:     "com.voltron.attribute1",
-							Revision: "0.1.0",
-						},
-					},
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.voltron.ti",
-						Revision: "0.1.0",
-					},
-					Value: map[string]interface{}{
-						"foo": "bar",
-					},
-				},
-				Uses:   []*gqllocalapi.TypeInstance{},
-				UsedBy: []*gqllocalapi.TypeInstance{},
-			}))
-		})
-
-		It("creates multiple TypeInstances with uses relations", func() {
-			cli := getOCHGraphQLClient()
-
-			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInputLegacy())
-
-			Expect(err).NotTo(HaveOccurred())
-			for _, ti := range createdTypeInstanceIDs {
-				defer deleteTypeInstanceLegacy(ctx, cli, ti.ID)
-			}
-
-			parentTiID := findCreatedTypeInstanceIDLegacy("parent", createdTypeInstanceIDs)
-			Expect(parentTiID).ToNot(BeNil())
-
-			childTiID := findCreatedTypeInstanceIDLegacy("child", createdTypeInstanceIDs)
-			Expect(childTiID).ToNot(BeNil())
-
-			assertTypeInstanceLegacy(ctx, cli, *childTiID, expectedChildTypeInstanceLegacy(*childTiID, *parentTiID))
-			assertTypeInstanceLegacy(ctx, cli, *parentTiID, expectedParentTypeInstanceLegacy(*parentTiID, *childTiID))
-		})
-	})
-
 	Context("Local OCH v2", func() {
-		// TODO(SV-266): temporary solution
-		It("should switch to Local OCH v2 mode", func() {
-			clientset, err := kubernetes.NewForConfig(config.GetConfigOrDie())
-			Expect(err).NotTo(HaveOccurred())
-			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
-
-			By("setting OCH_MODE to local-v2")
-			mergePatch := ochLocalModePatch(OCHModeLocalV2)
-			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = statusReady(cli, cfg.OCHLocalDeployName, newDeploy.Generation)
-			Expect(err).NotTo(HaveOccurred())
-		})
-
 		It("should create, find and delete TypeInstance", func() {
-			cli := newOCHLocalV2Client()
+			cli := getOCHGraphQLClient()
 
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapiv2.CreateTypeInstanceInput{
@@ -333,7 +234,7 @@ var _ = Describe("GraphQL API", func() {
 		})
 
 		It("creates multiple TypeInstances with uses relations", func() {
-			cli := newOCHLocalV2Client()
+			cli := getOCHGraphQLClient()
 
 			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
 
@@ -358,83 +259,13 @@ var _ = Describe("GraphQL API", func() {
 			assertTypeInstance(ctx, cli, *childTiID, expectedChild)
 			assertTypeInstance(ctx, cli, *parentTiID, expectedParent)
 		})
-
-		// TODO(SV-266): temporary solution
-		It("should switch back the Local OCH v1 mode", func() {
-			clientset, err := kubernetes.NewForConfig(config.GetConfigOrDie())
-			Expect(err).NotTo(HaveOccurred())
-			cli := clientset.AppsV1().Deployments(cfg.OCHLocalDeployNamespace)
-
-			By("setting OCH_MODE to local")
-			mergePatch := ochLocalModePatch(OCHModeLocal)
-			newDeploy, err := cli.Patch(cfg.OCHLocalDeployName, types.StrategicMergePatchType, mergePatch)
-			Expect(err).NotTo(HaveOccurred())
-
-			err = statusReady(cli, cfg.OCHLocalDeployName, newDeploy.Generation)
-			Expect(err).NotTo(HaveOccurred())
-		})
 	})
 
 })
 
-// Same configuration as we have for argo-actions app
-// Note: skip gateway as it still has wrong schema, additional pod restart will cost more time
-// TODO(SV-266): temporary solution
-func newOCHLocalV2Client() *ochv2cli.Client {
-	httpClient := httputil.NewClient(
-		30*time.Second,
-		true,
-	)
-
-	clientOpt := graphql.WithHTTPClient(httpClient)
-	endpoint := fmt.Sprintf("http://%s.%s/graphql", cfg.OCHLocalDeployName, cfg.OCHLocalDeployNamespace)
-	gcli := graphql.NewClient(endpoint, clientOpt)
-
-	return ochv2cli.NewClient(gcli)
-}
-
-// TODO(SV-266): temporary solution
-func statusReady(cli cliappsv1.DeploymentInterface, deployName string, expGen int64) error {
-	return wait.Poll(cfg.PollingInterval, cfg.PollingTimeout, func() (done bool, err error) {
-		dep, err := cli.Get(deployName, metav1.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-		return dep.Status.ObservedGeneration == expGen && dep.Status.Replicas == dep.Status.ReadyReplicas, nil
-	})
-}
-
 type OCHMode string
 
-const (
-	OCHModeLocalV2 OCHMode = "local-v2"
-	OCHModeLocal           = "local"
-)
-
-// TODO(SV-266): temporary solution
-func ochLocalModePatch(mode OCHMode) []byte {
-	return []byte(fmt.Sprintf(`{
-		  "spec": {
-			"template": {
-			  "spec": {
-				"containers": [
-				  {
-					"env": [
-					  {
-						"name": "APP_OCH_MODE",
-						"value": "%s"
-					  }
-					],
-					"name": "och-local"
-				  }
-				]
-			  }
-			}
-		  }
-		}`, mode))
-}
-
-func assertTypeInstance(ctx context.Context, cli *ochv2cli.Client, ID string, expected *gqllocalapiv2.TypeInstance) {
+func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapiv2.TypeInstance) {
 	actual, err := cli.FindTypeInstance(ctx, ID)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(actual).NotTo(BeNil())
@@ -461,7 +292,7 @@ func findCreatedTypeInstanceID(alias string, instances []gqllocalapiv2.CreateTyp
 	return nil
 }
 
-func deleteTypeInstance(ctx context.Context, cli *ochv2cli.Client, ID string) {
+func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
 	err := cli.DeleteTypeInstance(ctx, ID)
 	Expect(err).ToNot(HaveOccurred())
 }
@@ -578,149 +409,3 @@ func expectedParentTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
 		Uses:                    nil,
 	}
 }
-
-// TODO(SV-266): Delete legacy functions - start
-
-func expectedChildTypeInstanceLegacy(ID string, parentID string) *gqllocalapi.TypeInstance {
-	return &gqllocalapi.TypeInstance{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceMetadata{
-			ID: ID,
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceSpec{
-			TypeRef: &gqllocalapi.TypeReference{
-				Path:     "com.child",
-				Revision: "0.1.0",
-			},
-			Value: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-		Uses: []*gqllocalapi.TypeInstance{},
-		UsedBy: []*gqllocalapi.TypeInstance{
-			{
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: parentID,
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.parent",
-						Revision: "0.1.0",
-					},
-				},
-			},
-		},
-	}
-}
-
-func expectedParentTypeInstanceLegacy(ID string, childID string) *gqllocalapi.TypeInstance {
-	return &gqllocalapi.TypeInstance{
-		ResourceVersion: 1,
-		Metadata: &gqllocalapi.TypeInstanceMetadata{
-			ID: ID,
-			Attributes: []*gqllocalapi.AttributeReference{
-				{
-					Path:     "com.attr",
-					Revision: "0.1.0",
-				},
-			},
-		},
-		Spec: &gqllocalapi.TypeInstanceSpec{
-			TypeRef: &gqllocalapi.TypeReference{
-				Path:     "com.parent",
-				Revision: "0.1.0",
-			},
-			Value: map[string]interface{}{
-				"foo": "bar",
-			},
-		},
-		Uses: []*gqllocalapi.TypeInstance{
-			{
-				Metadata: &gqllocalapi.TypeInstanceMetadata{
-					ID: childID,
-				},
-				Spec: &gqllocalapi.TypeInstanceSpec{
-					TypeRef: &gqllocalapi.TypeReference{
-						Path:     "com.child",
-						Revision: "0.1.0",
-					},
-				},
-			},
-		},
-		UsedBy: []*gqllocalapi.TypeInstance{},
-	}
-}
-
-func createTypeInstancesInputLegacy() *gqllocalapi.CreateTypeInstancesInput {
-	return &gqllocalapi.CreateTypeInstancesInput{
-		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
-			{
-				Alias: ptr.String("parent"),
-				TypeRef: &gqllocalapi.TypeReferenceInput{
-					Path:     "com.parent",
-					Revision: "0.1.0",
-				},
-				Attributes: []*gqllocalapi.AttributeReferenceInput{
-					{
-						Path:     "com.attr",
-						Revision: "0.1.0",
-					},
-				},
-				Value: map[string]interface{}{
-					"foo": "bar",
-				},
-			},
-			{
-				Alias: ptr.String("child"),
-				TypeRef: &gqllocalapi.TypeReferenceInput{
-					Path:     "com.child",
-					Revision: "0.1.0",
-				},
-				Attributes: []*gqllocalapi.AttributeReferenceInput{
-					{
-						Path:     "com.attr",
-						Revision: "0.1.0",
-					},
-				},
-				Value: map[string]interface{}{
-					"foo": "bar",
-				},
-			},
-		},
-		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
-			{
-				From: "parent",
-				To:   "child",
-			},
-		},
-	}
-}
-
-func assertTypeInstanceLegacy(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
-	childTI, err := cli.FindTypeInstance(ctx, ID)
-	Expect(err).NotTo(HaveOccurred())
-	Expect(childTI).To(Equal(expected))
-}
-
-func findCreatedTypeInstanceIDLegacy(alias string, instances []gqllocalapi.CreateTypeInstanceOutput) *string {
-	for _, el := range instances {
-		if el.Alias == alias {
-			return &el.ID
-		}
-	}
-
-	return nil
-}
-
-func deleteTypeInstanceLegacy(ctx context.Context, cli *ochclient.Client, ID string) {
-	err := cli.DeleteTypeInstance(ctx, ID)
-	Expect(err).ToNot(HaveOccurred())
-}
-
-// TODO(SV-266): Delete functions - stop

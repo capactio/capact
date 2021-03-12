@@ -5,16 +5,17 @@ package e2e
 import (
 	"context"
 	"encoding/json"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"projectvoltron.dev/voltron/internal/ptr"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"strings"
 
 	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	engine "projectvoltron.dev/voltron/pkg/engine/client"
@@ -89,7 +90,7 @@ var _ = Describe("Action", func() {
 			defer tiCleanupFn()
 
 			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
-			typeInstanceID := typeInstance.Metadata.ID
+			typeInstanceID := typeInstance.ID
 			cfgMapCleanupFn := updateClusterPolicyConfigMap(clusterPolicyTokenToReplace, typeInstanceID)
 			defer cfgMapCleanupFn()
 
@@ -129,7 +130,7 @@ var _ = Describe("Action", func() {
 		It("should download input TypeInstance", func() {
 			var typeInstances []*enginegraphql.InputTypeInstanceData
 			input := &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeReferenceInput{
+				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.simple.single-key",
 					Revision: "0.1.0",
 				},
@@ -145,10 +146,10 @@ var _ = Describe("Action", func() {
 			defer simpleTICleanupFn()
 
 			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: simpleTI.Metadata.ID})
+				&enginegraphql.InputTypeInstanceData{Name: "simple-key-value", ID: simpleTI.ID})
 
 			input = &ochlocalgraphql.CreateTypeInstanceInput{
-				TypeRef: &ochlocalgraphql.TypeReferenceInput{
+				TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.gcp.auth.service-account",
 					Revision: "0.1.0",
 				},
@@ -163,7 +164,7 @@ var _ = Describe("Action", func() {
 			saTypeInstance, saTICleanupFn := createTypeInstance(ctx, ochClient, input)
 			defer saTICleanupFn()
 			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: saTypeInstance.Metadata.ID})
+				&enginegraphql.InputTypeInstanceData{Name: "gcp", ID: saTypeInstance.ID})
 
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: actionName,
@@ -211,7 +212,7 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 
 func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &ochlocalgraphql.TypeReferenceInput{
+		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.simple.single-key",
 			Revision: "0.1.0",
 		},
@@ -272,8 +273,8 @@ func createTypeInstance(ctx context.Context, ochClient *ochclient.Client, in *oc
 	createdTypeInstance, err := ochClient.CreateTypeInstance(ctx, in)
 	Expect(err).ToNot(HaveOccurred())
 
-	Expect(createdTypeInstance.Metadata).NotTo(BeNil())
-	typeInstanceID := createdTypeInstance.Metadata.ID
+	Expect(createdTypeInstance).NotTo(BeNil())
+	typeInstanceID := createdTypeInstance.ID
 
 	cleanupFn := func() {
 		err := ochClient.DeleteTypeInstance(ctx, typeInstanceID)
@@ -328,5 +329,3 @@ func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error
 
 	return nil
 }
-
-

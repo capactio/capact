@@ -112,13 +112,15 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, err
 	}
 
+	availableArtifacts := dedicatedRenderer.tplInputArguments[dedicatedRenderer.entrypointStep.Template]
+
 	// 8 Register output TypeInstances
-	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, []InputArtifact{}); err != nil {
+	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
 	// 9. Render rootWorkflow templates
-	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances)
+	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
 	}
