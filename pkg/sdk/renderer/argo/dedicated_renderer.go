@@ -36,8 +36,8 @@ type dedicatedRenderer struct {
 	entrypointStep     *WorkflowStep
 	tplInputArguments  map[string][]InputArtifact
 
-	outputTypeInstances               *OutputTypeInstances
-	updatedTypeInstances              UpdateTypeInstances
+	typeInstancesToOutput             *OutputTypeInstances
+	typeInstancesToUpdate             UpdateTypeInstances
 	registeredOutputTypeInstanceNames []*string
 }
 
@@ -53,11 +53,11 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClien
 		typeInstanceHandler: typeInstanceHandler,
 		tplInputArguments:   map[string][]InputArtifact{},
 
-		outputTypeInstances: &OutputTypeInstances{
+		typeInstancesToOutput: &OutputTypeInstances{
 			typeInstances: []OutputTypeInstance{},
 			relations:     []OutputTypeInstanceRelation{},
 		},
-		updatedTypeInstances:              UpdateTypeInstances{},
+		typeInstancesToUpdate:             UpdateTypeInstances{},
 		registeredOutputTypeInstanceNames: []*string{},
 	}
 
@@ -115,14 +115,14 @@ func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
 }
 
 func (r *dedicatedRenderer) AddOutputTypeInstancesStep(workflow *Workflow) error {
-	if len(r.outputTypeInstances.relations) != 0 || len(r.outputTypeInstances.typeInstances) != 0 {
-		if err := r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.outputTypeInstances); err != nil {
+	if len(r.typeInstancesToOutput.relations) != 0 || len(r.typeInstancesToOutput.typeInstances) != 0 {
+		if err := r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.typeInstancesToOutput); err != nil {
 			return err
 		}
 	}
 
-	if len(r.updatedTypeInstances) > 0 {
-		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.updatedTypeInstances); err != nil {
+	if len(r.typeInstancesToUpdate) > 0 {
+		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.typeInstancesToUpdate); err != nil {
 			return err
 		}
 	}
@@ -371,7 +371,11 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 					step.Template = addPrefix(prefix, step.Template)
 				}
 
-				for _, ti := range append(step.VoltronTypeInstanceOutputs, step.VoltronTypeInstanceUpdates...) {
+				typeInstances := make([]TypeInstanceDefinition, 0, len(step.VoltronTypeInstanceOutputs)+len(step.VoltronTypeInstanceUpdates))
+				typeInstances = append(typeInstances, step.VoltronTypeInstanceOutputs...)
+				typeInstances = append(typeInstances, step.VoltronTypeInstanceUpdates...)
+
+				for _, ti := range typeInstances {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, &template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
@@ -872,7 +876,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 		artifactName := r.addTypeInstanceName(name)
 		artifactNamesMap[item.TypeInstanceName] = artifactName
 
-		r.outputTypeInstances.typeInstances = append(r.outputTypeInstances.typeInstances, OutputTypeInstance{
+		r.typeInstancesToOutput.typeInstances = append(r.typeInstancesToOutput.typeInstances, OutputTypeInstance{
 			ArtifactName: artifactName,
 			TypeInstance: types.OutputTypeInstance{
 				TypeRef: &types.TypeRef{
@@ -888,7 +892,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 				usesArtifactName = r.addTypeInstanceName(uses)
 			}
 
-			r.outputTypeInstances.relations = append(r.outputTypeInstances.relations, OutputTypeInstanceRelation{
+			r.typeInstancesToOutput.relations = append(r.typeInstancesToOutput.relations, OutputTypeInstanceRelation{
 				From: artifactName,
 				To:   usesArtifactName,
 			})
@@ -914,7 +918,7 @@ func (r *dedicatedRenderer) registerUpdatedTypeInstances(step *WorkflowStep, ava
 			name = addPrefix(prefix, name)
 		}
 
-		r.updatedTypeInstances = append(r.updatedTypeInstances, UpdateTypeInstance{
+		r.typeInstancesToUpdate = append(r.typeInstancesToUpdate, UpdateTypeInstance{
 			ArtifactName: name,
 			ID:           *typeInstance,
 		})
