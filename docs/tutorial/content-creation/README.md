@@ -14,6 +14,7 @@
   - [Run your new action](#run-your-new-action)
     - [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
     - [View the Action Custom Resource](#view-the-action-custom-resource)
+  - [Update TypeInstance](#update-typeinstance)
   - [Summary](#summary)
 
 This guide shows the first steps on how to develop OCF content for Voltron. We will show how to:
@@ -50,7 +51,7 @@ Some other materials worth reading before are:
 If you have some software development experience, concepts like types and interfaces should be familiar to you. In Voltron, **Types** represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
 An actual object of a **Type** is called a **TypeInstance**.
 
-**Interfaces** are operations, which can be executes on certain **Types** .Let's say we have a **Type** called `postgresql.config`, which represents a PostgreSQL database instance. We could have an **Interface** `postgresql.install`, which will provision a PostgreSQL instance and create a **TypeInstance** of `postgresql.config`.
+**Interfaces** are operations, which can be executed on certain **Types**. Let's say we have a **Type** called `postgresql.config`, which represents a PostgreSQL database instance. We could have an **Interface** `postgresql.install`, which will provision a PostgreSQL instance and create a **TypeInstance** of `postgresql.config`.
 
 **Interfaces** can be grouped into **InterfaceGroups**. **InterfaceGroups** are used to logically group the **Interfaces**. This is mostly used for presentation purposes, like to show the user all **Interfaces**, which operate on PostgreSQL instances. So if you have two **Interfaces**: `postgresql.install` and `postgresql.uninstall`, you can group them into `postgresql` InterfaceGroup.
 
@@ -354,6 +355,7 @@ spec:
           - confluence-helm-release
           - postgresql
           - database
+          - user
   # If a given TypeInstance should be uploaded to OCH, but it doesn't have any dependencies,
   # you can specify it such as:
   #   some-additional-resource: {}
@@ -388,6 +390,8 @@ spec:
         - name: install
           revision: 0.1.0
         - name: create-db
+          revision: 0.1.0
+        - name: create-user
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.jinja2
       alias: jinja2
@@ -438,6 +442,25 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
+              # Create the user for Confluence in our PostgreSQL instance
+              # using the imported 'postgresql.create-user' Interface
+              - - name: create-user
+                  voltron-action: postgresql.create-user
+                  voltron-outputTypeInstances:
+                    - name: user
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" # Refer to output from `install-db` step. 
+                                                                                  # Accessing the `install-db` output is possible even if the step was 
+                                                                                  # satisfied by the input argument and replaced with the "mock" step.
+                      - name: user-input
+                        raw:
+                          data: |
+                            name: confluence
+                            # We are not passing a password. It will be generated.
+
               # Create the database for Confluence in our PostgreSQL instance
               # using the imported 'postgresql.create-db' Interface
               - - name: create-db
@@ -448,18 +471,18 @@ spec:
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" # Refer to output from `install-db` step. 
-                                                                                  # Accessing the `install-db` output is possible even if the step was 
-                                                                                  # satisfied by the input argument and replaced with the "mock" step.
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" 
                       - name: database-input
                         raw:
                           data: |
                             name: confluencedb 
                             owner: superuser
 
-              # Here we prepare the input for the Helm runner. In the next two steps,
+              # Here we prepare the input for the Helm runner. In the next three steps,
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be a better way to do this.
+
+              # In this step only <@ host @> variable will be rendered
               - - name: render-helm-args
                   voltron-action: jinja2.template
                   arguments:
@@ -481,9 +504,9 @@ spec:
                                 enabled: false
                               databaseConnection:
                                 host: "<@ host @>"
-                                user: "<@ superuser.username @>"
-                                password: "<@ superuser.password @>"
-                                database: "<@ name @>"
+                                user: "<@ user.name @>"
+                                password: "<@ user.password @>"
+                                database: "<@ db.name @>"
                               ingress:
                                 enabled: true
                                 hosts:
@@ -491,8 +514,12 @@ spec:
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: ""
 
-              - - name: fill-params-in-helm-args
+              # In this step variables with the prefix "db" will be rendered
+              - - name: fill-db-params-in-helm-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
@@ -500,6 +527,22 @@ spec:
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: db"
+
+              # In this step variables with the prefix "user" will be rendered
+              - - name: fill-user-params-in-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-db-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: user"
 
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
@@ -513,7 +556,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-user-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
@@ -545,16 +588,18 @@ The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with
 | `.templates.steps[][].voltron-action`             | Allows to import another **Interface**. In our example, we use this to provision PostgreSQL with `postgresql.install` **Interface**.                                                                                                                                                                                  |
 | `.templates.steps[][].voltron-outputTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations**. The `from` property must match the name of the output from the called Action. You can then use it in the Implementations `outputTypeInstanceRelations`, when defining relations between TypeInstances. |
 
+| `.templates.steps[][].voltron-updateTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations** and will be used to update existing TypeInstance. The `from` property must match the name of the output from the called Action.                                                                         |
+
 Let's go through the **Implementation** and try to understand, what is happening in each step of the action. Our Confluence installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no **TypeInstance** for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` **Interface** to create an PostgreSQL instance.
 
 > The `input-parameters` for `postgresql.install` are hardcoded in this example. In a real workflow, they should be generated or taken from the `input-parameters` for this **Implementation**.
 
 In the next step we are creating a database for the Confluence server. If you look at the **Interface** definition of [`cap.interface.database.postgresql.create-db`](och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` **TypeInstance** of **Type** [`cap.type.database.postgresql.config`](och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](och-content/type/database/postgresql/database-input.yaml), and outputs a `database` **TypeInstance** of **Type** [`cap.type.database.postgresql.database`](och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the **Interface** via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented **Interface** in the `voltron-outputTypeInstances` field.
 
-The `render-helm-args` and `fill-params-in-helm-args` steps are used to prepare the input parameters for the `helm.run` **Interface**. Jinja template engine is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` **TypeInstances**. Those steps don't create any **TypeInstances** and serve only the purpose of creating the input parameters for the Helm runner.
+The `render-helm-args`, `fill-db-params-in-helm-args` and `fill-user-params-in-helm-args` steps are used to prepare the input parameters for the `helm.run` **Interface**. Jinja template engine is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` **TypeInstances**. Those steps don't create any **TypeInstances** and serve only the purpose of creating the input parameters for the Helm runner.
 You can check the schema of the Helm runner args in the [Type manifest](../../../och-content/type/runner/helm/run-input.yaml).
 
-> To create the input parameters for `helm.run` we have to use data from two artifacts. As the current `jinja.run` **Interface** consumes only a template and a single variables input, we have to perform this operation twice. To seperate the variables substituted in the first and second operation, we escape some parts using `{% raw %} ... {% endraw %}`, which is removed in the first templating operation and will be processed in the second operation.
+> To create the input parameters for `helm.run` we have to use data from two artifacts. As the current `jinja.run` **Interface** consumes only a template and a single variables input, we have to perform this operation twice. To separate the variables substituted in the first, second and third operation, we add prefixes to the variables.
 >
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
@@ -721,6 +766,292 @@ Events:
 ```
 
 In the case above, we can see that the action rendering is failing, because the Voltron Engine is not able to find the `cap.interface.productivity.confluence.install` **Implementation** in OCH.
+
+## Update TypeInstance
+
+During the Confluence installation a database user "confluence" was created. You may want to change the password for this user. Let's do this.
+
+First we need to create an Interface and a Type for user input:
+
+**Type**
+
+Input type which just accepts a new password.
+
+<details>
+  <summary>och-content/type/database/postgresql/change-password-input.yaml</summary>
+
+```yaml
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: change-password-input
+  prefix: cap.type.database.postgresql
+  displayName: PostgreSQL change password input
+  description: Defines PostgreSQL change password input
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for PostgreSQL user input",
+        "examples": [
+          {
+            "password": "some_secret"
+          }
+        ],
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "$id": "#/properties/password",
+            "type": "string",
+            "title": "User password"
+          }
+        },
+        "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+```
+</details>
+
+**Interface**
+
+It accepts an user input defined earlier and two TypeInstaces:
+* postgresql - it's needed to get a database address
+* user - a database user to changes a password
+
+<details>
+  <summary>och-content/interface/database/postgresql/change-password.yaml</summary>
+
+```yaml
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.database.postgresql
+  name: change-password
+  displayName: Change user password
+  description: Action to change a user's password in PostgreSQL
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  input:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
+      user:
+        typeRef:
+          path: cap.type.database.postgresql.user
+          revision: 0.1.0
+        verbs: ["get", "update"]  # you need to add "update" verb when you want to update this TypeInstance
+    parameters:
+      input-parameters:
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.database.postgresql.change-password-input",
+                  "revision": "0.1.0"
+                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+            }
+  output:
+    typeInstances: {}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+```
+</details>
+
+The last step is to create an Implementation. Here we will just use simple `postgres` container and execute `psql` binary.
+
+<details>
+  <summary>och-content/implementation/postgresql/change-password.yaml</summary>
+
+```yaml
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.postgresql
+  name: change-password
+  displayName: Change PostgreSQL user password
+  description: Action which changes a PostgreSQL user password
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "8.x.x"
+
+  implements:
+    - path: cap.interface.database.postgresql.change-password
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  outputTypeInstanceRelations: {}
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: main
+        templates:
+          - name: main
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
+              - - name: render-change-password-script
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            set -e
+                            export PGPASSWORD=<@user.password@>
+                            PSQL_CMD="psql -h <@postgresql.host@> -U <@user.name@> <@postgresql.defaultDBName@> -c"
+                            ${PSQL_CMD} "ALTER USER <@user.name@> WITH PASSWORD '<@input.password@>'"
+
+                            cat <<EOF > /user.yml
+                            name: <@user.name@>
+                            password: <@input.password@>
+                            EOF
+                            sync
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: postgresql"
+
+              - - name: fill-params-from-user
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-change-password-script.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: user"
+
+              - - name: fill-params-from-user-input
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-params-from-user.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: input"
+
+              - - name: change-password
+                  template: change-password
+                  voltron-updateTypeInstances: # here you define that artifact from template `change-password` will
+                    - name: user               # be used to update TypeInstance
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: script
+                        from: "{{steps.fill-params-from-user-input.outputs.artifacts.render}}"
+
+          - name: change-password
+            inputs:
+              artifacts:
+                - name: script
+                  path: /script.sh
+            container:
+              image: postgres:11
+              command: [bash]
+              args: ["/script.sh"]
+            outputs:
+              artifacts:
+                - name: user
+                  path: /user.yml
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+```
+</details>
+
+We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
+
+Before using the new Interface you again need to populate data with the populator and run a new action. You can use the same GraphQL
+queries as before. Just change Query Variables:
+
+<details>
+  <summary>Query variables</summary>
+
+```json
+{
+  "actionName": "change-db-user-password",
+  "in": {
+    "name": "change-db-user-password",
+    "actionRef": {
+      "path": "cap.interface.database.postgresql.change-password,
+      "revision": "0.1.0"
+    }
+    input: {
+      parameters: "{\"password\": \"new-password\"}"
+      typeInstances: [
+        { name: "postgresql", id: "<Postgresql TypeInstance ID" }
+        { name: "user", id: "User TypeInstance ID" }
+      ]
+    }
+  }
+}
+```
+</details>
+
 
 ## Summary
 
