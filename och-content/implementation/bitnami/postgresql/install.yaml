@@ -81,8 +81,6 @@ spec:
                               repo: "https://charts.bitnami.com/bitnami"
                               version: "10.2.6"
                             values:
-                              image:
-                                pullPolicy: Always
                               global:
                                 postgresql:
                                   postgresqlDatabase: <@ defaultDBName @>

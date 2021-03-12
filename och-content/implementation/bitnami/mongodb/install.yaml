@@ -81,8 +81,6 @@ spec:
                               repo: "https://charts.bitnami.com/bitnami"
                               version: 10.3.1
                             values:
-                              image:
-                                pullPolicy: Always
                               auth:
                                 username: <@ user.username | default('mongo') @>
                                 password: <@ user.password | default(random_word(length=16)) @>
