@@ -1025,7 +1025,7 @@ signature:
 
 We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
 
-Before using the new Interface you again need to populate data with the populator and run new action. You can use the same GraphQL
+Before using the new Interface you again need to populate data with the populator and run a new action. You can use the same GraphQL
 queries as before. Just change Query Variables:
 
 <details>
