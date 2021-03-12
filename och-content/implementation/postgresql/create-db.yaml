@@ -115,7 +115,7 @@ spec:
             container:
               image: postgres:11
               command: ["bash", "-c"]
-              args: ["sleep 1 && /script.sh"]
+              args: ["sleep 1 && chmod +x /script.sh && /script.sh"]
             outputs:
               artifacts:
                 - name: database

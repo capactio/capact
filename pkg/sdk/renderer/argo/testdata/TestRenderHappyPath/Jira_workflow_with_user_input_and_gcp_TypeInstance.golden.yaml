@@ -354,9 +354,10 @@ args:
     - arguments: {}
       container:
         args:
-        - /script.sh
+        - sleep 1 && chmod +x /script.sh && /script.sh
         command:
         - bash
+        - -c
         image: postgres:11
         name: ""
         resources: {}
