@@ -6,16 +6,7 @@ import (
 )
 
 // TODO: current hack to do not play with `.config` directory. Needs to be fixed!
-var keyringConfigDefaults = keyring.Config{
-	ServiceName:              "config-vault",
-	LibSecretCollectionName:  "configvault",
-	KWalletAppID:             "config-vault",
-	KWalletFolder:            "config-vault",
-	KeychainTrustApplication: true,
-	WinCredPrefix:            "config-vault",
-}
-
-const ConfigStoreName = "voltron-config"
+const StoreName = "voltron-config"
 
 func SetAsDefaultContext(server string, override bool) error {
 	ks, err := keyring.Open(config())
@@ -29,7 +20,7 @@ func SetAsDefaultContext(server string, override bool) error {
 	}
 	if currentServer == "" || override {
 		return ks.Set(keyring.Item{
-			Key:  ConfigStoreName,
+			Key:  StoreName,
 			Data: []byte(server),
 		})
 	}
@@ -46,10 +37,9 @@ func GetDefaultContext() (string, error) {
 	return getDefaultContext(ks)
 }
 
-const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
 
 func getDefaultContext(ks keyring.Keyring) (string, error) {
-	item, err := ks.Get(ConfigStoreName)
+	item, err := ks.Get(StoreName)
 	switch {
 	case err == nil:
 		return string(item.Data), nil
@@ -59,6 +49,18 @@ func getDefaultContext(ks keyring.Keyring) (string, error) {
 		return "", err
 	}
 }
+
+const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
+
+var keyringConfigDefaults = keyring.Config{
+	ServiceName:              "config-vault",
+	LibSecretCollectionName:  "configvault",
+	KWalletAppID:             "config-vault",
+	KWalletFolder:            "config-vault",
+	KeychainTrustApplication: true,
+	WinCredPrefix:            "config-vault",
+}
+
 
 func config() keyring.Config {
 	if backend := os.Getenv(overrideBackend); backend != "" {

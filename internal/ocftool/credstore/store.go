@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os"
 
+	configstore "projectvoltron.dev/voltron/internal/ocftool/config"
+
 	"github.com/99designs/keyring"
 )
 
@@ -71,7 +73,7 @@ func ListHubServer() ([]string, error) {
 
 	var out []string
 	for _, k := range keys {
-		if k == "voltron-config" {
+		if k == configstore.StoreName {
 			continue
 		}
 		dec, err := b64.StdEncoding.DecodeString(k)
