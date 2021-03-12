@@ -769,7 +769,7 @@ In the case above, we can see that the action rendering is failing, because the 
 
 ## Update TypeInstance
 
-During the Confluence installation there was created a database user "confluence". You may want to change a password for this user. Let's do this.
+During the Confluence installation a database user "confluence" was created. You may want to change the password for this user. Let's do this.
 
 First we need to create an Interface and a Type for user input:
 
