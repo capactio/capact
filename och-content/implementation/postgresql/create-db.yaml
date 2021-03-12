@@ -114,8 +114,8 @@ spec:
                   path: /script.sh
             container:
               image: postgres:11
-              command: [bash]
-              args: ["/script.sh"]
+              command: ["bash", "-c"]
+              args: ["sleep 1 && /script.sh"]
             outputs:
               artifacts:
                 - name: database
