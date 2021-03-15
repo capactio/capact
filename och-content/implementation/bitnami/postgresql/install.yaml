@@ -87,7 +87,7 @@ spec:
                                   postgresqlPassword: <@ superuser.password | default(random_word(length=16)) @>
                             output:
                               goTemplate:
-                                host: '{{ template "common.names.fullname" . }}'
+                                host: '{{ template "common.names.fullname" . }}.{{ .Release.Namespace }}'
                                 port: '{{ template "postgresql.port" . }}'
                                 defaultDBName: '{{ template "postgresql.database" . }}'
                                 superuser:

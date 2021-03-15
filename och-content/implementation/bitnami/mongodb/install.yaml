@@ -92,7 +92,7 @@ spec:
                                 enabled: false
                             output:
                               goTemplate:
-                                host: '{{ include "mongodb.fullname" . }}-headless'
+                                host: '{{ include "mongodb.fullname" . }}-headless.{{ .Release.Namespace }}'
                                 port: '{{ .Values.service.port }}'
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'
