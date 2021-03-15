@@ -27,15 +27,16 @@ const (
 )
 
 type terraform struct {
-	log       *zap.Logger
-	workdir   string
-	args      Arguments
-	_waitCh   chan error
-	runOutput []byte
+	log             *zap.Logger
+	workdir         string
+	tfstateFilepath string
+	args            Arguments
+	_waitCh         chan error
+	runOutput       []byte
 }
 
-func newTerraform(log *zap.Logger, workdir string, args Arguments) *terraform {
-	return &terraform{log: log, workdir: workdir, args: args}
+func newTerraform(log *zap.Logger, workdir, tfstateFilepath string, args Arguments) *terraform {
+	return &terraform{log: log, workdir: workdir, args: args, tfstateFilepath: tfstateFilepath}
 }
 
 func (t *terraform) Start(dryRun bool) error {
@@ -47,6 +48,14 @@ func (t *terraform) Start(dryRun bool) error {
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while downloading module")
 			return
+		}
+
+		if t.tfstateFilepath != "" {
+			err = t.insertTfstate()
+			if err != nil {
+				t._waitCh <- errors.Wrapf(err, "while inserting tfstate into workdir from %s", t.tfstateFilepath)
+				return
+			}
 		}
 
 		err = t.writeVariables()
@@ -157,6 +166,21 @@ func (t *terraform) writeVariables() error {
 	t.log.Debug("Writing Terraform variables file", zap.String("variables", variables), zap.String("workdir", t.workdir), zap.String("file", variablesFile))
 
 	return ioutil.WriteFile(path.Join(t.workdir, variablesFile), []byte(variables), runner.DefaultFilePermissions)
+}
+
+func (t *terraform) insertTfstate() error {
+	dstFilepath := path.Join(t.workdir, "terraform.tfstate")
+
+	data, err := ioutil.ReadFile(t.tfstateFilepath)
+	if err != nil {
+		return errors.Wrap(err, "while reading provided tfstate file")
+	}
+
+	if err := ioutil.WriteFile(dstFilepath, data, 0644); err != nil {
+		return errors.Wrap(err, "while writing tfstate in workdir")
+	}
+
+	return nil
 }
 
 func (t *terraform) tfstate() ([]byte, error) {

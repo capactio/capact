@@ -43,7 +43,7 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 		return nil, errors.Wrap(err, "while proceeding Environment variables")
 	}
 
-	r.terraform = newTerraform(r.log, r.cfg.WorkDir, args)
+	r.terraform = newTerraform(r.log, r.cfg.WorkDir, r.cfg.TerraformStateFilepath, args)
 
 	err = r.terraform.Start(in.RunnerCtx.DryRun)
 	if err != nil {
