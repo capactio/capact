@@ -48,8 +48,6 @@ spec:
               value: "{{ .Values.global.gateway.auth.username }}"
             - name: APP_GRAPHQLGATEWAY_PASSWORD
               value: "{{ .Values.global.gateway.auth.password }}"
-            - name: APP_MOCKGRAPHQL
-              value: "{{ .Values.global.mockEngineGraphQL }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
             - name: APP_CLUSTER_POLICY_NAME

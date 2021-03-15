@@ -5,7 +5,6 @@ global:
     # Overrides the image tag for all Voltron component. Default is the sub-chart appVersion.
     overrideTag: "latest"
   domainName: "dev.cluster.projectvoltron.dev"
-  mockEngineGraphQL: "false"
 
   database:
     endpoint: bolt://neo4j-neo4j.neo4j:7687
