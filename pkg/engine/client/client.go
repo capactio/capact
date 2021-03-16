@@ -53,13 +53,30 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 
 	req.Var("name", name)
 	var resp struct {
-		Action enginegraphql.Action `json:"action"`
+		Action *enginegraphql.Action `json:"action"`
 	}
 	if err := c.client.Run(ctx, req, &resp); err != nil {
 		return nil, errors.Wrap(err, "while executing query to get Action")
 	}
 
-	return &resp.Action, nil
+	return resp.Action, nil
+}
+
+func (c *Client) ListActions(ctx context.Context) ([]*enginegraphql.Action, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`{
+		actions {
+			%s
+		}
+	}`, actionFields))
+
+	var resp struct {
+		Actions []*enginegraphql.Action `json:"actions"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to get Action")
+	}
+
+	return resp.Actions, nil
 }
 
 func (c *Client) RunAction(ctx context.Context, name string) error {
