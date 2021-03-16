@@ -85,20 +85,79 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 }
 
 func askForInputParams() (*gqlengine.ActionInputData, error) {
-	// TODO: ask only if needed, add support for JSON Schema
-
-	editor := ""
-	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
-	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+	gqlJSON, err := askForInputParameters()
+	if err != nil {
 		return nil, err
 	}
-	converted, err := yaml.YAMLToJSON([]byte(editor))
+
+	ti, err := askForInputTypeInstances()
+	if err != nil {
+		return nil, err
+	}
+
+	return &gqlengine.ActionInputData{
+		Parameters:    gqlJSON,
+		TypeInstances: ti,
+	}, nil
+}
+
+// TODO: ask only if input-parameters are defined, add support for JSON Schema
+func askForInputParameters() (*gqlengine.JSON, error) {
+	provideInput := false
+	askAboutTI := &survey.Confirm{Message: "Do you want to provide input parameters?", Default: false}
+	if err := survey.AskOne(askAboutTI, &provideInput); err != nil {
+		return nil, err
+	}
+
+	if !provideInput {
+		return nil, nil
+	}
+
+	rawInput := ""
+	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
+	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(isYAML)); err != nil {
+		return nil, err
+	}
+
+	converted, err := yaml.YAMLToJSON([]byte(rawInput))
 	if err != nil {
 		return nil, err
 	}
 
 	gqlJSON := gqlengine.JSON(converted)
-	return &gqlengine.ActionInputData{
-		Parameters: &gqlJSON,
-	}, nil
+	return &gqlJSON, nil
+}
+
+func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
+	provideTI := false
+	askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
+	if err := survey.AskOne(askAboutTI, &provideTI); err != nil {
+		return nil, err
+	}
+
+	if !provideTI {
+		return nil, nil
+	}
+
+	editor := ""
+	prompt := &survey.Editor{
+		Message:       "Please type Action input TypeInstance in YAML format",
+		Default:       "typeInstances:\n",
+		AppendDefault: true,
+
+		HideDefault: true,
+	}
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+		return nil, err
+	}
+
+	var resp struct {
+		TypeInstances []*gqlengine.InputTypeInstanceData `json:"typeInstances"`
+	}
+
+	if err := yaml.Unmarshal([]byte(editor), &resp); err != nil {
+		return nil, err
+	}
+
+	return resp.TypeInstances, nil
 }

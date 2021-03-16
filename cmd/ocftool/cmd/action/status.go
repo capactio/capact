@@ -192,7 +192,13 @@ func getUploadedTypeInstance(ctx context.Context, actionCli client.ClusterClient
 			return nil, fmt.Errorf("failed to find TypeInstance with ID %q", msg.ID)
 		}
 
-		outputTI[msg.Alias] = typeInstance.Spec
+		outputTI[msg.Alias] = struct {
+			Spec interface{} `json:"spec"`
+			ID   string      `json:"id"`
+		}{
+			Spec: typeInstance.Spec,
+			ID:   msg.ID,
+		}
 	}
 
 	return outputTI, nil

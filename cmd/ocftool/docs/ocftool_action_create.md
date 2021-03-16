@@ -11,7 +11,7 @@ ocftool action create INTERFACE [flags]
 ```
       --dry-run            Specifies whether the Action performs server-side test without actually running the Action
   -h, --help               help for create
-  -n, --namespace string   Kubernetes namespace where the Action is to be created (default "default")
+  -n, --namespace string   Kubernetes namespace where the Action is to be created
 ```
 
 ### SEE ALSO
