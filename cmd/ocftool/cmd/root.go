@@ -3,19 +3,19 @@ package cmd
 import (
 	"log"
 
-	"github.com/spf13/cobra"
-)
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/config"
+	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub"
+	"projectvoltron.dev/voltron/internal/ocftool"
 
-const (
-	appName = "ocftool"
-	version = "0.2.0"
+	"github.com/spf13/cobra"
 )
 
 func NewRoot() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:     appName,
-		Short:   "CLI tool for working with OCF manifest files",
-		Version: version,
+		Use:          ocftool.CLIName,
+		Short:        "CLI tool for working with OCF manifest files",
+		Version:      ocftool.Version,
+		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
 				log.Fatalln(err)
@@ -23,8 +23,14 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
-	rootCmd.AddCommand(NewValidate())
-	rootCmd.AddCommand(NewDocs())
+	rootCmd.AddCommand(
+		NewValidate(),
+		NewDocs(),
+		NewLogin(),
+		NewLogout(),
+		hub.NewHub(),
+		config.NewConfig(),
+	)
 
 	return rootCmd
 }

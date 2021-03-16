@@ -148,3 +148,12 @@ var InterfaceRevisionFields = fmt.Sprintf(`
 					%s
 			}
 `, GenericMetadataFields, ImplementationRevisionFields)
+
+var InterfacesFields = fmt.Sprintf(`
+		path
+		name
+		prefix
+		latestRevision {
+		  %s
+		}
+`, InterfaceRevisionFields)
