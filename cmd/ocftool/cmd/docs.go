@@ -13,7 +13,7 @@ func NewDocs() *cobra.Command {
 	return &cobra.Command{
 		Use:    "gen-usage-docs",
 		Hidden: true,
-		Short:  "Generate usage docs",
+		Short:  "Generate usage documentation",
 		Run: func(cmd *cobra.Command, args []string) {
 			root := NewRoot()
 			root.DisableAutoGenTag = true

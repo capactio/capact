@@ -8,7 +8,7 @@ func NewImplementations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "implementations",
 		Aliases: []string{"impl"},
-		Short:   "This command consists of multiple subcommands to interact with Hub server.",
+		Short:   "This command consists of multiple subcommands to interact with Implementations stored on the Hub server",
 	}
 
 	cmd.AddCommand(

@@ -13,7 +13,7 @@ func NewSearch() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "search",
-		Short: "List Actions",
+		Short: "Lists the available Actions",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return action.Search(cmd.Context(), opts, os.Stdout)
@@ -21,7 +21,7 @@ func NewSearch() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where Action is created")
-	flags.StringVarP(&opts.Output, "output", "o", "table", "Output format. One of:\njson|yaml|table")
+	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "The Kubernetes namespace where the Action was created")
+	flags.StringVarP(&opts.Output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 	return cmd
 }

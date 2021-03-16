@@ -25,10 +25,10 @@ func NewBrowse() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "browse",
-		Short: "Browse provides the ability to search for OCH Interfaces in interactive mode",
+		Short: "Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create a Target Action.",
 		Example: heredoc.Doc(`
-			# Start interactive mode
-			ocftool hub interfaces browse
+			# Browse (and optionally create an Action) from the available OCF Interfaces.
+			<cli> hub interfaces browse
 		`),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return interactiveSelection(cmd.Context(), opts, os.Stdout)
@@ -36,7 +36,7 @@ func NewBrowse() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path of a given Interface, e.g. cap.interface.*")
+	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "The pattern of the path of a given Interface, e.g. cap.interface.*")
 
 	return cmd
 }
@@ -61,12 +61,12 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 
 	interfacePath := ""
 	prompt := &survey.Select{
-		Message:  "Choose interface to run:",
+		Message:  "Choose interface to run: ",
 		PageSize: 20,
 	}
 
 	if len(interfaces) == 0 {
-		return fmt.Errorf("HUB %s doesn't have any Interfaces", server)
+		return fmt.Errorf("Hub %s doesn't have any Interfaces", server)
 	}
 
 	for _, i := range interfaces {

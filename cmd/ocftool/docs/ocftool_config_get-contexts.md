@@ -1,6 +1,6 @@
 ## ocftool config get-contexts
 
-Print the value of a given configuration key
+Lists the available Hub configuration contexts
 
 ```
 ocftool config get-contexts [flags]
@@ -9,7 +9,7 @@ ocftool config get-contexts [flags]
 ### Examples
 
 ```
-# List all authorized targets 
+# List all the Hub configuration contexts 
 ocftool config get-contexts
 
 ```

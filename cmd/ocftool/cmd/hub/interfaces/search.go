@@ -29,13 +29,13 @@ func NewSearch() *cobra.Command {
 
 	search := &cobra.Command{
 		Use:   "search",
-		Short: "Search provides the ability to search for OCH Interfaces",
+		Short: "Search provides the ability to list and search for OCH Interfaces",
 		Example: heredoc.WithCLIName(`
-			#  Show all interfaces in table format
+			# Show all interfaces in table format
 			<cli> hub interfaces search
 			
-			# Print path for the first entry in returned response 
-			<cli> hub interfaces search -oyaml
+			# Show all interfaces in JSON format which are located under the "cap.interface.templating" prefix 
+			<cli> hub interfaces search -o json --path-pattern "cap.interface.*"
 		`, ocftool.CLIName),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listInterfaces(cmd.Context(), opts, os.Stdout)
@@ -44,8 +44,8 @@ func NewSearch() *cobra.Command {
 
 	flags := search.Flags()
 
-	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path of a given Interface, e.g. cap.interface.*")
-	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson|yaml|table")
+	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path for a given Interface, e.g. cap.interface.*")
+	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
 	return search
 }
@@ -99,7 +99,7 @@ func selectPrinter(format string) (printer, error) {
 		return printTable, nil
 	}
 
-	return nil, fmt.Errorf("unknow output format %q", format)
+	return nil, fmt.Errorf("Unknown output format %q", format)
 }
 
 func printJSON(_ string, in []*gqlpublicapi.Interface, w io.Writer) error {

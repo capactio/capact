@@ -18,12 +18,12 @@ import (
 func NewLogout() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout [SERVER]",
-		Short: "Log out from a Gateway server",
+		Short: "Logout from the Hub (Gateway) server",
 		Example: heredoc.WithCLIName(`
 			# Select what server to log out of via a prompt			
 			<cli> logout
 			
-			# Log out of specified server
+			# Logout of a specified Hub server
 			<cli> logout localhost:8080
 		`, ocftool.CLIName),
 		Args: cli.RequiresMaxArgs(1),
@@ -56,7 +56,7 @@ func runLogout(serverAddress string, w io.Writer) error {
 	// TODO: handle current context update
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
-	okCheck(w, "Logout Succeeded")
+	okCheck(w, "Logout Succeeded\n")
 
 	return nil
 }
@@ -68,12 +68,12 @@ func askWhatServerToLogout() (string, error) {
 	}
 
 	if len(candidates) == 0 {
-		return "", errors.New("not logged in to any server")
+		return "", errors.New("Not logged in to any server")
 	}
 
 	var serverAddress string
 	err = survey.AskOne(&survey.Select{
-		Message: "What server do you want to log out of?",
+		Message: "What server do you want to log out of? ",
 		Options: candidates,
 	}, &serverAddress)
 	if err != nil {

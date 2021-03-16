@@ -21,6 +21,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// TODO: Rename to details
+
 var hiddenFlags = []string{
 	"as",
 	"as-group",
@@ -55,12 +57,12 @@ func NewStatus() *cobra.Command {
 	status.Run = nil
 	status.Args = cobra.MaximumNArgs(1)
 	status.Use = "status ACTION"
-	status.Short = "Show Action status"
+	status.Short = "Displays the details of an Action's status"
 	status.Example = heredoc.WithCLIName(`
-		# Get information about a workflow:
-		<cli> action status my-action
+		# Get the status of a specified Action's workflow execution:
+		<cli> action status ACTION
 		
-		# Get the latest workflow:
+		# Gets the status from a last-run Action's workflow execution:
 		<cli> action status @latest
 	`, ocftool.CLIName)
 

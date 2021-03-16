@@ -1,6 +1,6 @@
 ## ocftool hub implementations search
 
-Search provides the ability to search for OCH Interfaces
+Lists the currently available Implementations on the Hub server
 
 ```
 ocftool hub implementations search [flags]
@@ -23,10 +23,10 @@ ocftool hub implementations search cap.interface.database.postgresql.install -oy
   -h, --help                        help for search
       --interface-revision string   Specific interface revision
   -o, --output string               Output format. One of:
-                                    json|yaml|table (default "table")
+                                    json | yaml | table (default "table")
 ```
 
 ### SEE ALSO
 
-* [ocftool hub implementations](ocftool_hub_implementations.md)	 - This command consists of multiple subcommands to interact with Hub server.
+* [ocftool hub implementations](ocftool_hub_implementations.md)	 - This command consists of multiple subcommands to interact with Implementations stored on the Hub server
 

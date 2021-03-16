@@ -1,6 +1,6 @@
 ## ocftool action status
 
-Show Action status
+Displays the details of an Action's status
 
 ```
 ocftool action status ACTION [flags]
@@ -9,10 +9,10 @@ ocftool action status ACTION [flags]
 ### Examples
 
 ```
-# Get information about a workflow:
-ocftool action status my-action
+# Get the status of a specified Action's workflow execution:
+ocftool action status ACTION
 
-# Get the latest workflow:
+# Gets the status from a last-run Action's workflow execution:
 ocftool action status @latest
 
 ```
@@ -31,5 +31,5 @@ ocftool action status @latest
 
 ### SEE ALSO
 
-* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with Action.
+* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with target Actions
 
