@@ -31,5 +31,5 @@ ocftool validate ./och-content/**/*.yaml
 
 ### SEE ALSO
 
-* [ocftool](ocftool.md)	 - CLI tool for working with OCF manifest files
+* [ocftool](ocftool.md)	 - Collective Capability Manager CLI
 

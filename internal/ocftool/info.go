@@ -1,6 +1,6 @@
 package ocftool
 
 var (
-	CLIName = "capectl"
-	Version = "0.2.1"
+	CLIName = "ocftool"
+	Version = "0.2.0"
 )

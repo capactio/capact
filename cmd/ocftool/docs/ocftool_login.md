@@ -1,6 +1,6 @@
 ## ocftool login
 
-Log in to a Gateway server
+Login to a Hub (Gateway) server
 
 ```
 ocftool login [OPTIONS] [SERVER] [flags]
@@ -12,7 +12,7 @@ ocftool login [OPTIONS] [SERVER] [flags]
 # start interactive setup
 ocftool login
 
-# specify server name and user 
+# Specify server name and specify the user
 ocftool login localhost:8080 -u user
 
 ```
@@ -27,5 +27,5 @@ ocftool login localhost:8080 -u user
 
 ### SEE ALSO
 
-* [ocftool](ocftool.md)	 - CLI tool for working with OCF manifest files
+* [ocftool](ocftool.md)	 - Collective Capability Manager CLI
 

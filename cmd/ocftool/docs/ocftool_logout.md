@@ -1,6 +1,6 @@
 ## ocftool logout
 
-Log out from a Gateway server
+Logout from the Hub (Gateway) server
 
 ```
 ocftool logout [SERVER] [flags]
@@ -12,7 +12,7 @@ ocftool logout [SERVER] [flags]
 # Select what server to log out of via a prompt			
 ocftool logout
 
-# Log out of specified server
+# Logout of a specified Hub server
 ocftool logout localhost:8080
 
 ```
@@ -25,5 +25,5 @@ ocftool logout localhost:8080
 
 ### SEE ALSO
 
-* [ocftool](ocftool.md)	 - CLI tool for working with OCF manifest files
+* [ocftool](ocftool.md)	 - Collective Capability Manager CLI
 

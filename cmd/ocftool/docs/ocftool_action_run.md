@@ -1,6 +1,6 @@
 ## ocftool action run
 
-Run Action
+Queues up a specified Action for processing by the workflow engine
 
 ```
 ocftool action run ACTION [flags]
@@ -10,10 +10,10 @@ ocftool action run ACTION [flags]
 
 ```
   -h, --help               help for run
-  -n, --namespace string   Kubernetes namespace where Action is created (default "default")
+  -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
 ```
 
 ### SEE ALSO
 
-* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with Action.
+* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with target Actions
 

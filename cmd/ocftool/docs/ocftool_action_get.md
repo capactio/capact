@@ -1,6 +1,6 @@
 ## ocftool action get
 
-Get Action
+Displays the details of an Action from the workflow engine
 
 ```
 ocftool action get ACTION [flags]
@@ -10,12 +10,12 @@ ocftool action get ACTION [flags]
 
 ```
   -h, --help               help for get
-  -n, --namespace string   Kubernetes namespace where Action is created (default "default")
+  -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
   -o, --output string      Output format. One of:
-                           json|yaml|table (default "table")
+                           json | yaml | table (default "table")
 ```
 
 ### SEE ALSO
 
-* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with Action.
+* [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with target Actions
 
