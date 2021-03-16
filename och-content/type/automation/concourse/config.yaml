@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: config
-  prefix: cap.type.productivity.concourse
+  prefix: cap.type.automation.concourse
   displayName: Concourse config
   description: Defines configuration for Concourse instance
   documentationURL: https://concourse-ci.org/
@@ -40,6 +40,11 @@ spec:
           }
           "host": {
             "$ref": "#/$ocfRefs/hostname"
+          },
+          "userAndPassword": {
+            "$id": "#/properties/userAndPassword",
+            "type": "string",
+            "title": "User and password, separated by colon"
           }
         },
         "additionalProperties": true

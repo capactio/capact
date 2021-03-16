@@ -157,6 +157,7 @@ spec:
                               goTemplate:
                                 version: "{{ .Values.imageTag }}"
                                 host: "{{ (index .Values.web.ingress.hosts 0) }}"
+                                userAndPassword: "{{ .Values.secrets.localUsers }}"
                             values:
                               postgresql:
                                 enabled: false
