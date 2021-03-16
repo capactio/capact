@@ -43,6 +43,11 @@ var hiddenFlags = []string{
 	"node-field-selector",
 }
 
+const (
+	uploadStepName        = "upload-output-type-instances-step"
+	argoMainContainerName = "main"
+)
+
 func NewStatus() *cobra.Command {
 	status := commands.NewGetCommand()
 
@@ -59,10 +64,14 @@ func NewStatus() *cobra.Command {
 		<cli> action status @latest
 	`, ocftool.CLIName)
 
+	// We need to register KubectlFlags
+	// as we want to expose the `--namespace` option
+	// and we cannot do that directly as argocli.overrides is private variable
 	argocli.AddKubectlFlagsToCmd(status)
 
+	// Hide all others flags which are not supported by us
 	for _, hide := range hiddenFlags {
-		// set flags exits
+		// set flags exist
 		_ = status.PersistentFlags().MarkHidden(hide)
 	}
 
@@ -76,68 +85,73 @@ func wrapRun(underlying cobraRunFn) cobraRunEFn {
 	return func(cmd *cobra.Command, args []string) error {
 		underlying(cmd, args)
 
-		ctx, apiClient := argocli.NewAPIClient()
-		serviceClient := apiClient.NewWorkflowServiceClient()
-		namespace := argocli.Namespace()
+		return printUploadedTypeInstances(args[0])
+	}
+}
 
-		server, err := config.GetDefaultContext()
-		if err != nil {
-			return err
-		}
+func printUploadedTypeInstances(name string) error {
+	ctx, apiClient := argocli.NewAPIClient()
+	serviceClient := apiClient.NewWorkflowServiceClient()
+	namespace := argocli.Namespace()
 
-		actionCli, err := client.NewCluster(server)
-		if err != nil {
-			return err
-		}
+	server, err := config.GetDefaultContext()
+	if err != nil {
+		return err
+	}
 
-		name := args[0]
-		wf, err := serviceClient.GetWorkflow(ctx, &workflowpkg.WorkflowGetRequest{
-			Name:      name,
-			Namespace: namespace,
-		})
+	actionCli, err := client.NewCluster(server)
+	if err != nil {
+		return err
+	}
 
-		if err != nil {
-			return err
-		}
+	wf, err := serviceClient.GetWorkflow(ctx, &workflowpkg.WorkflowGetRequest{
+		Name:      name,
+		Namespace: namespace,
+	})
 
-		if wf.Status.Phase != wfv1.NodeSucceeded {
-			return nil
-		}
+	if err != nil {
+		return err
+	}
 
-		podName := getUploadPodName(wf.Status.Nodes)
-
-		stream, err := serviceClient.WorkflowLogs(ctx, &workflowpkg.WorkflowLogRequest{
-			Name:      name,
-			Namespace: namespace,
-			PodName:   podName,
-			LogOptions: &v1.PodLogOptions{
-				Container: "main",
-				Follow:    false,
-				Previous:  false,
-			},
-		})
-		if err != nil {
-			return err
-		}
-
-		outputTI, err := getUploadedTypeInstance(ctx, actionCli, stream)
-		if err != nil {
-			return err
-		}
-
-		data, err := yaml.Marshal(outputTI)
-		if err != nil {
-			return errors.Wrap(err, "while marshaling TypeInstance to YAML")
-		}
-
-		fmt.Printf("Output TypeInstance:\n %s", data)
+	// Upload step is always the last one, so
+	// workflow needs to be in Succeeded state
+	if wf.Status.Phase != wfv1.NodeSucceeded {
 		return nil
 	}
+
+	podName := getUploadPodName(wf.Status.Nodes)
+
+	stream, err := serviceClient.WorkflowLogs(ctx, &workflowpkg.WorkflowLogRequest{
+		Name:      name,
+		Namespace: namespace,
+		PodName:   podName,
+		LogOptions: &v1.PodLogOptions{
+			Container: argoMainContainerName,
+			Follow:    false,
+			Previous:  false,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	outputTI, err := getUploadedTypeInstance(ctx, actionCli, stream)
+	if err != nil {
+		return err
+	}
+
+	data, err := yaml.Marshal(outputTI)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling TypeInstance to YAML")
+	}
+
+	fmt.Printf("Output TypeInstance:\n%s", data)
+	return nil
 }
 
 func getUploadPodName(nodes wfv1.Nodes) string {
 	for key, node := range nodes {
-		if node.DisplayName == "upload-output-type-instances-step" {
+		if node.DisplayName == uploadStepName {
 			return key
 		}
 	}

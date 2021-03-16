@@ -1,8 +1,9 @@
 package config
 
 import (
-	"github.com/99designs/keyring"
 	"os"
+
+	"github.com/99designs/keyring"
 )
 
 // TODO: current hack to do not play with `.config` directory. Needs to be fixed!
@@ -37,7 +38,6 @@ func GetDefaultContext() (string, error) {
 	return getDefaultContext(ks)
 }
 
-
 func getDefaultContext(ks keyring.Keyring) (string, error) {
 	item, err := ks.Get(StoreName)
 	switch {
@@ -60,7 +60,6 @@ var keyringConfigDefaults = keyring.Config{
 	KeychainTrustApplication: true,
 	WinCredPrefix:            "config-vault",
 }
-
 
 func config() keyring.Config {
 	if backend := os.Getenv(overrideBackend); backend != "" {
