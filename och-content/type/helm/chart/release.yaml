@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: release
-  prefix: cap.type.helm.chart  # Computed during fetching the manifest
+  prefix: cap.type.helm.chart
   displayName: Helm chart release
   description: Describes Helm chart release
   documentationURL: https://helm.sh/docs

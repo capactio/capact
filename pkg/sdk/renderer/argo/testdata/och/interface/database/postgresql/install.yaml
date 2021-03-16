@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.database.postgresql # Computed during fetching the manifest
+  prefix: cap.interface.database.postgresql
   name: install
   path: cap.interface.database.postgresql.install
   displayName: "Install"

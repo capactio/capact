@@ -3,7 +3,7 @@ revision: 0.0.1
 kind: Type
 metadata:
   name: kubernetes
-  prefix: cap.type.platform  # Computed during fetching the manifest
+  prefix: cap.type.platform
   displayName: Kubernetes Platform
   description: This Type indicates that a given platform is a Kubernetes installation.
   documentationURL: https://examples.com/docs

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: user
-  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  prefix: cap.type.database.postgresql
   displayName: PostgreSQL user
   description: Defines PostgreSQL user
   documentationURL: https://projectvoltron.dev

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: database
-  prefix: cap.type.database.postgresql  # Computed during fetching the manifest
+  prefix: cap.type.database.postgresql
   displayName: PostgreSQL Database
   description: Defines PostgreSQL database
   documentationURL: https://projectvoltron.dev

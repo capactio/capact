@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.bitbucket # Computed during fetching the manifest
+  prefix: cap.implementation.atlassian.bitbucket
   name: install
   displayName: "Bitbucket"
   description: "Git-based source code repository hosting service"

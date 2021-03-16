@@ -28,8 +28,6 @@ args:
                     repo: "https://charts.bitnami.com/bitnami"
                     version: "10.2.6"
                   values:
-                    image:
-                      pullPolicy: Always
                     postgresqlDatabase: {{ defaultDBName }}
                     postgresqlUsername: {{ superuser.username }}
                     postgresqlPassword: {{ superuser.password }}

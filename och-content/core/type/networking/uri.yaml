@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: uri
-  prefix: cap.core.type.networking  # Computed during fetching the manifest
+  prefix: cap.core.type.networking
   displayName: URI
   description: Describes Uniform Resource Identifier
   documentationURL: https://tools.ietf.org/html/rfc3986

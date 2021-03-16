@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.2
 kind: InterfaceGroup
 metadata:
-  prefix: cap.interface.cms # Computed during fetching the manifest
+  prefix: cap.interface.cms
   name: wordpress
   description: WordPress application
   documentationURL: https://examples.com/docs

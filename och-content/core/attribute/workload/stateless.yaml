@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Attribute
 metadata:
   name: stateless
-  prefix: cap.core.attribute.workload  # Computed during fetching the manifest
+  prefix: cap.core.attribute.workload
   displayName: Stateless Workload
   description: A stateless application does not preserve its state and saves no data to persistent storage — all user and session data stays with the client.
   documentationURL: https://projectvoltron.dev

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: port
-  prefix: cap.core.type.networking  # Computed during fetching the manifest
+  prefix: cap.core.type.networking
   displayName: Port
   description: Describes TCP and UDP port number.
   documentationURL: https://tools.ietf.org/html/rfc6335#page-11

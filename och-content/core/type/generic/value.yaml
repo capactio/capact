@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: value
-  prefix: cap.core.type.generic  # Computed during fetching the manifest
+  prefix: cap.core.type.generic
   displayName: Generic Value
   description: Defines generic value
   maintainers:

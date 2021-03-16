@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.bitnami.mongodb # Computed during fetching the manifest
+  prefix: cap.implementation.bitnami.mongodb
   name: install
   displayName: Install MongoDB database
   description: Action which installs MongoDB database via Helm chart
@@ -81,8 +81,6 @@ spec:
                               repo: "https://charts.bitnami.com/bitnami"
                               version: 10.3.1
                             values:
-                              image:
-                                pullPolicy: Always
                               auth:
                                 username: <@ user.username | default('mongo') @>
                                 password: <@ user.password | default(random_word(length=16)) @>
@@ -94,7 +92,7 @@ spec:
                                 enabled: false
                             output:
                               goTemplate:
-                                host: '{{ include "mongodb.fullname" . }}-headless'
+                                host: '{{ include "mongodb.fullname" . }}-headless.{{ .Release.Namespace }}'
                                 port: '{{ .Values.service.port }}'
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'

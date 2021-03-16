@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.runner.cloudsql # Computed during fetching the manifest
+  prefix: cap.implementation.runner.cloudsql
   name: run
   license:
     name: "Apache 2.0"

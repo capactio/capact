@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.0.1
 kind: Vendor
 metadata:
-  prefix: cap.vendor  # Computed during fetching the manifest
+  prefix: cap.vendor
   name: voltron
   description: Project Voltron OCH
   displayName: Project Voltron OCH

@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.gcp.cloudsql.postgresql # Computed during fetching the manifest
+  prefix: cap.implementation.gcp.cloudsql.postgresql
   name: install
   displayName: Install PostgreSQL database using CloudSQL instance
   description: Action which provisions CloudSQL for PostgreSQL database

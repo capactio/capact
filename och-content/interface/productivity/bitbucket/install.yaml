@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.bitbucket # Computed during fetching the manifest
+  prefix: cap.interface.productivity.bitbucket
   name: install
   displayName: "Bitbucket"
   description: "Git-based source code repository hosting service"

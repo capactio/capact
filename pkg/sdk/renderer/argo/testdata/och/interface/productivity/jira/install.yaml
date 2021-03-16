@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.jira # Computed during fetching the manifest
+  prefix: cap.interface.productivity.jira
   name: install
   path: cap.interface.productivity.jira.install
   displayName: "Install"

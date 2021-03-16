@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: cap.interface.runner # Computed during fetching the manifest
+  prefix: cap.interface.runner
   name: helm
   displayName: "Helm Runner"
   description: "Interfaces for Helm Runner actions"

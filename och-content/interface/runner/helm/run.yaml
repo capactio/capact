@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.runner.helm # Computed during fetching the manifest
+  prefix: cap.interface.runner.helm
   name: run
   displayName: "Run"
   description: "Run action for Helm Runner"

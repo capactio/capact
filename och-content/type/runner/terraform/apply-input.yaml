@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: apply-input
-  prefix: cap.type.runner.terraform # Computed during fetching the manifest
+  prefix: cap.type.runner.terraform
   displayName: Input parameters for Apply action
   description: Describes input parameters for Apply action of the Terraform Runner.
   documentationURL: https://www.terraform.io/docs

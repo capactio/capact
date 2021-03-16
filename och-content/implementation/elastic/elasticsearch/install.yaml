@@ -117,7 +117,7 @@ spec:
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                                 port: 80
                               <% else %>
-                                host: "{{ template \"elasticsearch.masterService\" . }}"
+                                host: "{{ template \"elasticsearch.masterService\" . }}.{{ .Release.Namespace }}"
                                 port: "{{ .Values.httpPort }}"
                               <% endif %>
                                 basicAuthSecretName: <@ metadata.name @>

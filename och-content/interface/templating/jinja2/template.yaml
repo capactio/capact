@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.templating.jinja2 # Computed during fetching the manifest
+  prefix: cap.interface.templating.jinja2
   name: template
   displayName: Jinja2 Template
   description: Generate output using Jinja2 template engine

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: semver
-  prefix: cap.core.type.versioning  # Computed during fetching the manifest
+  prefix: cap.core.type.versioning
   displayName: Semantic Versioning 2.0
   description: Describes Semantic Versioning 2.0
   documentationURL: https://semver.org/spec/v2.0.0.html

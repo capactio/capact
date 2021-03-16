@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: kubernetes
-  prefix: cap.core.type.platform  # Computed during fetching the manifest
+  prefix: cap.core.type.platform
   displayName: Kubernetes Platform
   description: This Type indicates that a given platform is a Kubernetes installation.
   documentationURL: https://kubernetes.io/docs

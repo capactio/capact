@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.bitbucket # Computed during fetching the manifest
+  prefix: cap.type.productivity.bitbucket
   displayName: "Bitbucket"
   description: "Git-based source code repository hosting service"
   documentationURL: https://confluence.atlassian.com/bitbucketserver

@@ -51,7 +51,7 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
    revision: 0.1.0
    kind: InterfaceGroup
    metadata:
-     prefix: cap.interface.productivity # Computed during fetching the manifest
+     prefix: cap.interface.productivity
      name: jira
      displayName: "Jira"
      description: "The #1 software development tool used by agile teams"
