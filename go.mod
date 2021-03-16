@@ -10,7 +10,7 @@ require (
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/semver/v3 v3.0.3
 	github.com/agnivade/levenshtein v1.1.0 // indirect
-	github.com/argoproj/argo v0.0.0-20201118180151-53195ed56029
+	github.com/argoproj/argo v0.0.0-00010101000000-000000000000
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/docker v1.4.2-0.20200203170920-46ec8731fbce
@@ -65,9 +65,11 @@ require (
 )
 
 replace (
+	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible
 	// Remove when the is resolved:
-	// https://github.com/argoproj/argo-workflows/issues/4772
-	github.com/argoproj/argo => github.com/Project-Voltron/argo-workflows v0.0.0-20210218075014-46fe14be5029
+	// - https://github.com/argoproj/argo-workflows/issues/4772
+	// - we can compile argo without static files
+	github.com/argoproj/argo => github.com/Project-Voltron/argo-workflows v0.0.0-20210311191943-1c5e53f22a95
 	// Remove when the issues are resolved:
 	// https://github.com/graphql-go/graphql/issues/586
 	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19

@@ -16,6 +16,8 @@ func NewAction() *cobra.Command {
 		NewRun(),
 		NewGet(),
 		NewSearch(),
+		NewStatus(),
+		NewWatch(),
 	)
 	return och
 }

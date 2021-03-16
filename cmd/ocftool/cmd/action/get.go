@@ -15,7 +15,9 @@ func NewGet() *cobra.Command {
 		Short: "Get Action",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.ActionName = args[0]
+			if len(args) > 0 {
+				opts.ActionName = args[0]
+			}
 			return action.Get(cmd.Context(), opts, os.Stdout)
 		},
 	}
