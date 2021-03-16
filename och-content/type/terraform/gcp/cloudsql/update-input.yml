@@ -5,7 +5,7 @@ metadata:
   name: update-input
   prefix: cap.type.terraform.gcp.cloudsql
   displayName: CloudSQL update input
-  description: Defines update for CloudSQL Terraform based installation
+  description: Defines update input for Terraform provisioned CloudSQL database
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:

@@ -46,6 +46,7 @@ The following environment variables can be set:
 | RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH  | no       | `/tmp/terraform-release.yaml` | Defines path under which the Terraform artifacts is saved          |
 | RUNNER_OUTPUT_ADDITIONAL_FILE_PATH         | no       | `/tmp/additional.yaml`        | Defines path under which the additional output is saved            |
 | RUNNER_OUTPUT_TFSTATE_FILE_PATH            | no       | `/tmp/terraform.tfstate`      | Defines path under which the terraform.tfstate output is saved     |
+| RUNNER_TERRAFORMSTATEFILEPATH              | no       |                               | Defines path to the input tfstate file                             |
 
 ## Development
 
