@@ -9,6 +9,7 @@ import (
 // Config holds Runner related configuration.
 type Config struct {
 	Command             CommandType
+	HelmReleasePath string `envconfig:"optional"`
 	HelmDriver          string `envconfig:"default=secrets"`
 	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
 	Output              struct {
@@ -22,18 +23,32 @@ type CommandType string
 
 const (
 	InstallCommandType = "install"
+	UpgradeCommandType = "upgrade"
 )
 
 type Arguments struct {
-	Name           string                 `json:"name"`
-	Chart          Chart                  `json:"chart"`
+	CommonArgs
+	InstallArgs
+	UpgradeArgs
+}
+
+type CommonArgs struct {
 	Values         map[string]interface{} `json:"values"`
 	ValuesFromFile string                 `json:"valuesFromFile"`
 	NoHooks        bool                   `json:"noHooks"`
-	Replace        bool                   `json:"replace"`
-	GenerateName   bool                   `json:"generateName"`
-
+	Chart          Chart                  `json:"chart"`
 	Output OutputArgs `json:"output"`
+}
+
+type InstallArgs struct {
+	Name           string                 `json:"name"`
+	GenerateName   bool                   `json:"generateName"`
+	Replace        bool                   `json:"replace"`
+}
+
+type UpgradeArgs struct {
+	ReuseValues bool `json:"reuseValues"`
+	ResetValues bool `json:"resetValues"`
 }
 
 type OutputArgs struct {

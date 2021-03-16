@@ -1,0 +1,17 @@
+reuseValues: true
+chart:
+  name: "postgresql"
+  repo: "https://charts.bitnami.com/bitnami"
+  version: "10.2.6"
+values:
+  fullnameOverride: postgresql-server
+  postgresqlDatabase: postgres
+  postgresqlPassword: foo
+output:
+  goTemplate:
+    host: '{{ template "postgresql.primary.fullname" . }}'
+    port: '{{ template "postgresql.port" . }}'
+    defaultDBName: '{{ template "postgresql.database" . }}'
+    superuser:
+      username: '{{ template "postgresql.username" . }}'
+      password: '{{ template "postgresql.password" . }}'

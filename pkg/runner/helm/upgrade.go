@@ -3,49 +3,55 @@ package helm
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-
-	"go.uber.org/zap"
-
 	"github.com/pkg/errors"
-	"helm.sh/helm/v3/pkg/action"
+	"go.uber.org/zap"
 	"helm.sh/helm/v3/pkg/chart"
-	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"io/ioutil"
 	"sigs.k8s.io/yaml"
+
+	"helm.sh/helm/v3/pkg/action"
 )
 
-type renderer interface {
-	Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error)
-}
-
-type installer struct {
+type upgrader struct {
 	actionCfg           *action.Configuration
 	log                 *zap.Logger
 	renderer            renderer
 	repositoryCachePath string
+	helmReleasePath     string
 }
 
-func newInstaller(log *zap.Logger, repositoryCachePath string, actionCfg *action.Configuration, renderer renderer) *installer {
-	return &installer{
+func newUpgrader(log *zap.Logger, repositoryCachePath string, helmReleasePath string, actionCfg *action.Configuration, renderer renderer) *upgrader {
+	return &upgrader{
 		log:                 log,
 		actionCfg:           actionCfg,
 		renderer:            renderer,
 		repositoryCachePath: repositoryCachePath,
+		helmReleasePath:     helmReleasePath,
 	}
 }
 
-func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
-	installCli := i.initActionInstallFromInput(in)
-
-	name, chartName, err := i.nameAndChart(installCli, in.Args.Name, in.Args.Chart.Name)
-	if err != nil {
-		return Output{}, Status{}, errors.Wrap(err, "while getting release name")
+func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
+	if i.helmReleasePath == "" {
+		return Output{}, Status{}, errors.New("path to Helm Release is required for upgrade")
 	}
-	installCli.ReleaseName = name
 
-	chartPath, err := installCli.ChartPathOptions.LocateChart(chartName, &cli.EnvSettings{
+	helmReleaseData, err := i.loadHelmReleaseData(i.helmReleasePath)
+	if err != nil {
+		return Output{}, Status{}, err
+	}
+
+	if in.Ctx.Platform.Namespace != helmReleaseData.Namespace {
+		return Output{}, Status{}, fmt.Errorf("namespace from Runner Context (%q) differs with the Helm Release namespace (%q)", in.Ctx.Platform.Namespace, helmReleaseData.Namespace)
+	}
+
+	helmChart := i.getHelmChartData(in, helmReleaseData)
+
+	upgradeCli := i.initActionUpgradeFromInput(in, helmChart)
+
+	chartPath, err := upgradeCli.ChartPathOptions.LocateChart(helmChart.Name, &cli.EnvSettings{
 		RepositoryCache: i.repositoryCachePath,
 	})
 	if err != nil {
@@ -62,7 +68,8 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "while reading values")
 	}
 
-	helmRelease, err := installCli.Run(chartData, values)
+	helmRelease, err := upgradeCli.Run(helmReleaseData.Name, chartData, values)
+
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while installing Helm chart")
 	}
@@ -92,34 +99,59 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 	}, status, nil
 }
 
-func (i *installer) initActionInstallFromInput(in Input) *action.Install {
-	installCli := action.NewInstall(i.actionCfg)
-	installCli.DryRun = in.Ctx.DryRun
-	installCli.Namespace = in.Ctx.Platform.Namespace
-	installCli.Wait = true
-	installCli.Timeout = in.Ctx.Timeout.Duration()
-
-	installCli.GenerateName = in.Args.InstallArgs.GenerateName
-	installCli.Replace = in.Args.InstallArgs.Replace
-
-	installCli.DisableHooks = in.Args.CommonArgs.NoHooks
-	installCli.ChartPathOptions.Version = in.Args.CommonArgs.Chart.Version
-	installCli.ChartPathOptions.RepoURL = in.Args.CommonArgs.Chart.Repo
-
-	return installCli
-}
-
-func (i *installer) nameAndChart(installCli *action.Install, releaseName string, chartName string) (string, string, error) {
-	var nameAndChartArgs []string
-	if releaseName != "" {
-		nameAndChartArgs = append(nameAndChartArgs, releaseName)
+func (i *upgrader) loadHelmReleaseData(path string) (ChartRelease, error) {
+	i.log.Debug("Reading Helm Release data from file", zap.String("path", path))
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		return ChartRelease{}, errors.Wrapf(err, "while reading values from file %q", path)
 	}
-	nameAndChartArgs = append(nameAndChartArgs, chartName)
 
-	return installCli.NameAndChart(nameAndChartArgs)
+	var chartRelease ChartRelease
+	if err := yaml.Unmarshal(bytes, &chartRelease); err != nil {
+		return ChartRelease{}, errors.Wrapf(err, "while parsing %q", path)
+	}
+	return chartRelease, nil
 }
 
-func (i *installer) getValues(inlineValues map[string]interface{}, valuesFilePath string) (map[string]interface{}, error) {
+func (i *upgrader) getHelmChartData(in Input, helmRelease ChartRelease) Chart {
+	helmChart := helmRelease.Chart
+
+	if in.Args.Chart.Name != "" {
+		helmChart.Name = in.Args.Chart.Name
+	}
+
+	if in.Args.Chart.Repo != "" {
+		helmChart.Repo = in.Args.Chart.Repo
+	}
+
+	if in.Args.Chart.Version != "" {
+		helmChart.Version = in.Args.Chart.Version
+	}
+
+	return helmChart
+}
+
+func (i *upgrader) initActionUpgradeFromInput(in Input, helmChart Chart) *action.Upgrade {
+	upgradeCli := action.NewUpgrade(i.actionCfg)
+	upgradeCli.DryRun = in.Ctx.DryRun
+	upgradeCli.Namespace = in.Ctx.Platform.Namespace
+	upgradeCli.Wait = true
+	upgradeCli.Timeout = in.Ctx.Timeout.Duration()
+
+	upgradeCli.DisableHooks = in.Args.CommonArgs.NoHooks
+	upgradeCli.ChartPathOptions.Version = in.Args.CommonArgs.Chart.Version
+	upgradeCli.ChartPathOptions.RepoURL = in.Args.CommonArgs.Chart.Repo
+
+	upgradeCli.ReuseValues = in.Args.UpgradeArgs.ReuseValues
+	upgradeCli.ResetValues = in.Args.UpgradeArgs.ResetValues
+
+	upgradeCli.ChartPathOptions.Version = helmChart.Version
+	upgradeCli.ChartPathOptions.RepoURL = helmChart.Repo
+
+	return upgradeCli
+}
+
+func (i *upgrader) getValues(inlineValues map[string]interface{}, valuesFilePath string) (map[string]interface{}, error) {
 	var values map[string]interface{}
 
 	if valuesFilePath == "" {
@@ -141,7 +173,7 @@ func (i *installer) getValues(inlineValues map[string]interface{}, valuesFilePat
 	return values, nil
 }
 
-func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Release) ([]byte, error) {
+func (i *upgrader) releaseOutputFrom(args Arguments, helmRelease *release.Release) ([]byte, error) {
 	releaseData := ChartRelease{
 		Name:      helmRelease.Name,
 		Namespace: helmRelease.Namespace,
@@ -160,7 +192,7 @@ func (i *installer) releaseOutputFrom(args Arguments, helmRelease *release.Relea
 	return bytes, nil
 }
 
-func (i *installer) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
+func (i *upgrader) additionalOutputFrom(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
 	if args.Output.GoTemplate == nil {
 		i.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
