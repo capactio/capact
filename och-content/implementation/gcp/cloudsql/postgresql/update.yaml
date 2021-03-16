@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: 0.2.0
+revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.gcp.cloudsql.postgresql
-  name: install
-  displayName: Install CloudSQL PostgreSQL database using Terraform
-  description: Action which provisions CloudSQL for PostgreSQL database using Terraform
+  name: update
+  displayName: Update Terraform provisioned CloudSQL PostgreSQL database
+  description: Action which updates Terraform provisioned CloudSQL for PostgreSQL database
   documentationURL: https://cloud.google.com/cloudsql
   supportURL: https://cloud.google.com/cloudsql
   license:
@@ -23,21 +23,10 @@ metadata:
 spec:
   appVersion: "10, 11, 12, 13"
 
-  additionalInput:
-    typeInstances:
-      additional:
-        typeRef:
-          path: cap.core.type.generic.value
-          revision: 0.1.0
-        verbs: ["get"]
-
-  outputTypeInstanceRelations:
-    postgresql:
-      uses:
-        - terraform-release
+  outputTypeInstanceRelations: {}
 
   implements:
-    - path: cap.interface.database.postgresql.install
+    - path: cap.interface.terraform.gcp.cloudsql.update
       revision: 0.1.0
 
   requires:
@@ -55,7 +44,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.terraform
       alias: terraform
       methods:
-        - name: apply
+        - name: apply-with-state
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -77,11 +66,9 @@ spec:
           - name: postgres-install
             inputs:
               artifacts:
-                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
-            outputs:
-              artifacts:
+                - name: input-parameters
                 - name: postgresql
-                  from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                - name: tfstate
             steps:
               - - name: create-module-args
                   voltron-action: jinja2.template
@@ -135,19 +122,28 @@ spec:
                       - name: in
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
+              - - name: convert-tfstate-yaml-to-json
+                  template: convert-yaml-to-json
+                  arguments:
+                    artifacts:
+                      - name: in
+                        from: "{{inputs.artifacts.tfstate}}"
+
               - - name: terraform-apply
-                  voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-                    - name: terraform-release
-                      from: terraform-release
+                  voltron-action: terraform.apply-with-state
+                  voltron-updateTypeInstances:
                     - name: postgresql
                       from: additional
+                    - name: tfstate
+                      from: tfstate
                   arguments:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: tfstate
+                        from: "{{steps.convert-tfstate-yaml-to-json.outputs.artifacts.out}}"
                       - name: additional
                         from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
 

@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.runner.terraform
-  name: apply
+  name: apply-with-state
   license:
     name: "Apache 2.0"
   displayName: Apply Action for Helm Runner
@@ -18,7 +18,7 @@ spec:
   appVersion: "0.14.x"
 
   implements:
-    - path: cap.interface.runner.terraform.apply
+    - path: cap.interface.runner.terraform.apply-with-state
       revision: 0.1.0
 
   requires:
@@ -34,12 +34,6 @@ spec:
         - name: run
           revision: 0.1.0
 
-  outputTypeInstanceRelations:
-    terraform-release:
-      uses:
-        - tfstate
-    tfstate: {}
-
   action:
     runnerInterface: argo.run
     args:
@@ -53,6 +47,8 @@ spec:
                   path: "/terraform-args"
                 - name: runner-context
                   path: "/runner-context"
+                - name: tfstate
+                  path: "/input.tfstate"
                 - name: additional
                   path: "/additional"
                   optional: true
@@ -69,11 +65,14 @@ spec:
                   path: "/terraform.tfstate"
             container:
               image: gcr.io/projectvoltron/pr/terraform-runner:PR-196
+              imagePullPolicy: Always
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
                 - name: RUNNER_ARGS_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
+                - name: RUNNER_TERRAFORMSTATEFILEPATH
+                  value: "{{inputs.artifacts.tfstate.path}}"
                 - name: RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH
                   value: "{{outputs.artifacts.terraform-release.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
