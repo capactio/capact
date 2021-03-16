@@ -16,7 +16,7 @@ import (
 
 func NewRoot() *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use: ocftool.CLIName,
+		Use:   ocftool.CLIName,
 		Short: "Collective Capability Manager CLI",
 		Long: strings.Join([]string{figure.NewColorFigure(ocftool.CLIName, "mini", "green", true).String(),
 			heredoc.WithCLIName(`

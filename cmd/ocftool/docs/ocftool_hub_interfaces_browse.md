@@ -1,6 +1,6 @@
 ## ocftool hub interfaces browse
 
-Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create an Target Action.
+Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create a Target Action.
 
 ```
 ocftool hub interfaces browse [flags]

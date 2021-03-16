@@ -62,7 +62,7 @@ func NewStatus() *cobra.Command {
 		# Get the status of a specified Action's workflow execution:
 		<cli> action status ACTION
 		
-		# Gets the status from an last-run Action's workflow execution:
+		# Gets the status from a last-run Action's workflow execution:
 		<cli> action status @latest
 	`, ocftool.CLIName)
 

@@ -12,7 +12,7 @@ ocftool action status ACTION [flags]
 # Get the status of a specified Action's workflow execution:
 ocftool action status ACTION
 
-# Gets the status from an last-run Action's workflow execution:
+# Gets the status from a last-run Action's workflow execution:
 ocftool action status @latest
 
 ```

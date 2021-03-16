@@ -25,7 +25,7 @@ func NewBrowse() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "browse",
-		Short: "Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create an Target Action.",
+		Short: "Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create a Target Action.",
 		Example: heredoc.Doc(`
 			# Browse (and optionally create an Action) from the available OCF Interfaces.
 			<cli> hub interfaces browse
