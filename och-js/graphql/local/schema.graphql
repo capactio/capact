@@ -348,7 +348,7 @@ type Mutation {
         {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value
 
       // Handle the `metadata.attributes` property
-      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:DESCRIBED_BY]->(metadata)
 
       WITH ti, tir, latestRevision, metadata
@@ -413,7 +413,7 @@ type Mutation {
         {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
 
       // Handle the `metadata.attributes` property
-      CREATE (metadata: TypeInstanceResourceVersionMetadata{id: apoc.create.uuid()})
+      CREATE (metadata: TypeInstanceResourceVersionMetadata)
       CREATE (tir)-[:DESCRIBED_BY]->(metadata)
 
       WITH ti, tir, latestRevision, metadata, item
