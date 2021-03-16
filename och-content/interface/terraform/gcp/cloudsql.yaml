@@ -4,8 +4,8 @@ kind: InterfaceGroup
 metadata:
   prefix: cap.interface.terraform.gcp
   name: cloudsql
-  displayName: "Argo Runner"
-  description: "Interfaces for Argo Runner actions"
+  displayName: "Terraform based GCP actions"
+  description: "Interfaces for running Terraform on GCP"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:

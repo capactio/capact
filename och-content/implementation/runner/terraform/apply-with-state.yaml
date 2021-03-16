@@ -6,8 +6,8 @@ metadata:
   name: apply-with-state
   license:
     name: "Apache 2.0"
-  displayName: Apply Action for Helm Runner
-  description: Running Terraform apply
+  displayName: Apply Action for Terraform Runner
+  description: Running Terraform apply with an existing tfstate file
   documentationURL: https://helm.sh/
   maintainers:
     - email: team-dev@projectvoltron.dev

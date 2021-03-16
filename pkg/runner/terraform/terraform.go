@@ -169,7 +169,7 @@ func (t *terraform) writeVariables() error {
 	variables := t.args.Variables + "\n"
 	t.log.Debug("Writing Terraform variables file", zap.String("variables", variables), zap.String("workdir", t.workdir), zap.String("file", variablesFile))
 
-	return ioutil.WriteFile(path.Join(t.workdir, variablesFile), []byte(variables), runner.DefaultFilePermissions)
+	return runner.SaveToFile(path.Join(t.workdir, variablesFile), []byte(variables))
 }
 
 func (t *terraform) insertTfstate() error {
@@ -180,7 +180,7 @@ func (t *terraform) insertTfstate() error {
 		return errors.Wrap(err, "while reading provided tfstate file")
 	}
 
-	if err := ioutil.WriteFile(dstFilepath, data, 0644); err != nil {
+	if err := runner.SaveToFile(dstFilepath, data); err != nil {
 		return errors.Wrap(err, "while writing tfstate in workdir")
 	}
 
