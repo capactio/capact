@@ -53,7 +53,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.database.postgresql
       alias: postgresql
@@ -156,7 +156,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "confluence-server"
@@ -243,8 +242,8 @@ spec:
 
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
-              - - name: helm-run
-                  voltron-action: helm.run
+              - - name: helm-install
+                  voltron-action: helm.install
                   voltron-outputTypeInstances:
                     - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
                       from: additional

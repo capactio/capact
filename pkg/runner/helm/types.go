@@ -8,6 +8,7 @@ import (
 
 // Config holds Runner related configuration.
 type Config struct {
+	Command             CommandType
 	HelmDriver          string `envconfig:"default=secrets"`
 	RepositoryCachePath string `envconfig:"default=/tmp/helm"`
 	Output              struct {
@@ -24,7 +25,6 @@ const (
 )
 
 type Arguments struct {
-	Command        CommandType            `json:"command"`
 	Name           string                 `json:"name"`
 	Chart          Chart                  `json:"chart"`
 	Values         map[string]interface{} `json:"values"`

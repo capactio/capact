@@ -20,7 +20,11 @@ Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm 
 
 To start the runner execute:
 ```bash
-RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml RUNNER_ARGS_PATH=cmd/helm-runner/example-args.yaml RUNNER_LOGGER_DEV_MODE=true go run cmd/helm-runner/main.go
+RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml \
+ RUNNER_ARGS_PATH=cmd/helm-runner/example-args.yaml \
+ RUNNER_LOGGER_DEV_MODE=true \
+ RUNNER_COMMAND="install" \
+ go run cmd/helm-runner/main.go
 ```
 
 You can check, if the PostgreSQL Helm release was created:
@@ -34,16 +38,17 @@ postgresql-1607608471   default         1               2020-12-10 14:54:34.8823
 
 The following environment variables can be set:
 
-| Name                                 | Required | Default                  | Description                                                  |
-|--------------------------------------|----------|--------------------------|--------------------------------------------------------------|
-| RUNNER_CONTEXT_PATH                  | yes      |                          | Path to the YAML file with runner context                    |
-| RUNNER_ARGS_PATH                     | yes      |                          | Path to the YAML file with input arguments                   |
-| RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                               |
-| RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                              |
-| RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory               |
-| RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved |
-| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved      |
-| KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                      |
+| Name                                 | Required | Default                  | Description                                                     |
+|--------------------------------------|----------|--------------------------|-----------------------------------------------------------------|
+| RUNNER_CONTEXT_PATH                  | yes      |                          | Path to the YAML file with runner context                       |
+| RUNNER_ARGS_PATH                     | yes      |                          | Path to the YAML file with input arguments                      |
+| RUNNER_COMMAND                       | yes      |                          | Selected Helm Runner's command (currently supported: `install`) |
+| RUNNER_LOGGER_DEV_MODE               | no       | `false`                  | Enable additional log messages                                  |
+| RUNNER_HELM_DRIVER                   | no       | `secrets`                | Set Helm backend storage driver                                 |
+| RUNNER_REPOSITORY_CACHE_PATH         | no       | `/tmp/helm`              | Set the path to the repository cache directory                  |
+| RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH | no       | `/tmp/helm-release.yaml` | Defines path under which the Helm release artifacts is saved    |
+| RUNNER_OUTPUT_ADDITIONAL_FILE_PATH   | no       | `/tmp/additional.yaml`   | Defines path under which the additional output is saved         |
+| KUBECONFIG                           | no       | `~/.kube/config`         | Path to kubeconfig file                                         |
 
 
 

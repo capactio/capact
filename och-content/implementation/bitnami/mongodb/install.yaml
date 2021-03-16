@@ -37,7 +37,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -63,7 +63,7 @@ spec:
             outputs:
               artifacts:
                 - name: mongodb
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
             steps:
               - - name: create-helm-args
                   voltron-action: jinja2.template
@@ -74,7 +74,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "mongodb"
@@ -103,8 +102,8 @@ spec:
                         raw:
                           data: |
 
-              - - name: helm-run
-                  voltron-action: helm.run
+              - - name: helm-install
+                  voltron-action: helm.install
                   voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
                     - name: mongodb
                       from: additional

@@ -54,7 +54,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.database.postgresql
       alias: postgresql
@@ -147,7 +147,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "concourse"
@@ -232,8 +231,8 @@ spec:
                         raw:
                           data: "prefix: user"
 
-              - - name: helm-run
-                  voltron-action: helm.run
+              - - name: helm-install
+                  voltron-action: helm.install
                   voltron-outputTypeInstances:
                     - name: concourse-config
                       from: additional

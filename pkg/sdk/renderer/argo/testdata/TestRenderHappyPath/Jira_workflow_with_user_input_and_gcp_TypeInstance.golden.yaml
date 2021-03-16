@@ -13,7 +13,7 @@ args:
       name: jira-install
       outputs:
         artifacts:
-        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
           name: jira-config
       steps:
       - - arguments:
@@ -41,7 +41,6 @@ args:
             - name: template
               raw:
                 data: |
-                  command: "install"
                   generateName: true
                   chart:
                     name: "jira-software"
@@ -73,8 +72,8 @@ args:
               name: input-parameters
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
-          name: helm-run
-          template: jira-install-helm-run-helm
+          name: helm-install
+          template: jira-install-helm-install-helm
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
@@ -89,13 +88,13 @@ args:
           template: output-database
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
               name: jira-config
           name: output-jira-config
           template: output-jira-config
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
               name: jira-helm-release
           name: output-jira-helm-release
           template: output-jira-helm-release
@@ -107,7 +106,7 @@ args:
       name: jira-install-install-db-postgres-install
       outputs:
         artifacts:
-        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
           name: postgresql
       steps:
       - - arguments:
@@ -117,7 +116,6 @@ args:
             - name: template
               raw:
                 data: |
-                  command: "install"
                   generateName: true
                   chart:
                     name: "postgresql"
@@ -143,17 +141,17 @@ args:
               name: input-parameters
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
-          name: helm-run
-          template: jira-install-install-db-postgres-install-helm-run-helm
+          name: helm-install
+          template: jira-install-install-db-postgres-install-helm-install-helm
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
               name: postgresql
           name: output-postgresql
           template: output-jira-install-install-db-postgresql
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
               name: psql-helm-release
           name: output-psql-helm-release
           template: output-jira-install-install-db-psql-helm-release
@@ -187,12 +185,14 @@ args:
           value: '{{inputs.artifacts.runner-context.path}}'
         - name: RUNNER_ARGS_PATH
           value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
         - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        - name: RUNNER_LOGGER_DEV_MODE
-          value: "true"
         image: gcr.io/projectvoltron/pr/helm-runner:PR-113
         name: ""
         resources: {}
@@ -203,13 +203,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: jira-install-install-db-postgres-install-helm-run-helm
+      name: jira-install-install-db-postgres-install-helm-install-helm
       outputs:
         artifacts:
-        - globalName: jira-install-install-db-postgres-install-helm-run-helm-release
+        - globalName: jira-install-install-db-postgres-install-helm-install-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: jira-install-install-db-postgres-install-helm-run-additional
+        - globalName: jira-install-install-db-postgres-install-helm-install-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -422,12 +422,14 @@ args:
           value: '{{inputs.artifacts.runner-context.path}}'
         - name: RUNNER_ARGS_PATH
           value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
         - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        - name: RUNNER_LOGGER_DEV_MODE
-          value: "true"
         image: gcr.io/projectvoltron/pr/helm-runner:PR-113
         name: ""
         resources: {}
@@ -438,13 +440,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: jira-install-helm-run-helm
+      name: jira-install-helm-install-helm
       outputs:
         artifacts:
-        - globalName: jira-install-helm-run-helm-release
+        - globalName: jira-install-helm-install-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: jira-install-helm-run-additional
+        - globalName: jira-install-helm-install-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -560,12 +562,12 @@ args:
               name: jira-config
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
               name: jira-install-install-db-postgresql
-            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-helm-run-helm-release}}'
-              name: jira-install-install-db-postgres-install-helm-run-helm-release
+            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-helm-install-helm-release}}'
+              name: jira-install-install-db-postgres-install-helm-install-helm-release
             - from: '{{workflow.outputs.artifacts.jira-install-create-db-database}}'
               name: jira-install-create-db-database
-            - from: '{{workflow.outputs.artifacts.jira-install-helm-run-helm-release}}'
-              name: jira-install-helm-run-helm-release
+            - from: '{{workflow.outputs.artifacts.jira-install-helm-install-helm-release}}'
+              name: jira-install-helm-install-helm-release
             - name: payload
               raw:
                 data: |
@@ -582,7 +584,7 @@ args:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-install-db-postgres-install-helm-run-helm-release
+                  - alias: jira-install-install-db-postgres-install-helm-install-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -594,7 +596,7 @@ args:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-helm-run-helm-release
+                  - alias: jira-install-helm-install-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -602,11 +604,11 @@ args:
                     value: null
                   usesRelations:
                   - from: jira-config
-                    to: jira-install-helm-run-helm-release
+                    to: jira-install-helm-install-helm-release
                   - from: jira-config
                     to: jira-install-install-db-postgresql
                   - from: jira-install-install-db-postgresql
-                    to: jira-install-install-db-postgres-install-helm-run-helm-release
+                    to: jira-install-install-db-postgres-install-helm-install-helm-release
                   - from: jira-install-create-db-database
                     to: jira-install-install-db-postgresql
           name: upload-output-type-instances-step
@@ -706,12 +708,12 @@ args:
           path: /upload/typeInstances/jira-config
         - name: jira-install-install-db-postgresql
           path: /upload/typeInstances/jira-install-install-db-postgresql
-        - name: jira-install-install-db-postgres-install-helm-run-helm-release
-          path: /upload/typeInstances/jira-install-install-db-postgres-install-helm-run-helm-release
+        - name: jira-install-install-db-postgres-install-helm-install-helm-release
+          path: /upload/typeInstances/jira-install-install-db-postgres-install-helm-install-helm-release
         - name: jira-install-create-db-database
           path: /upload/typeInstances/jira-install-create-db-database
-        - name: jira-install-helm-run-helm-release
-          path: /upload/typeInstances/jira-install-helm-run-helm-release
+        - name: jira-install-helm-install-helm-release
+          path: /upload/typeInstances/jira-install-helm-install-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

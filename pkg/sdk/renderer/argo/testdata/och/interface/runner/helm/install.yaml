@@ -2,11 +2,11 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.runner.helm
-  name: run
-  path: cap.interface.runner.helm.run
-  displayName: "Run"
-  description: "Run action for Helm Runner"
+  prefix: cap.interface.runner.install
+  name: install
+  path: cap.interface.runner.helm.install
+  displayName: "Install"
+  description: "Install action for Helm Runner"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -24,7 +24,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.runner.helm.run-input",
+                  "name": "cap.type.runner.helm.install-input",
                   "revision": "0.1.0"
                 }
               },

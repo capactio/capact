@@ -47,7 +47,7 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 	}
 
 	var helmCmd helmCommand
-	switch cmdInput.Args.Command {
+	switch r.cfg.Command {
 	case InstallCommandType:
 		renderer := newHelmRenderer(&engine.Engine{})
 		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionConfig, renderer)
@@ -57,7 +57,7 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 
 	out, status, err := helmCmd.Do(ctx, cmdInput)
 	if err != nil {
-		return nil, errors.Wrapf(err, "while running Helm command %q", cmdInput.Args.Command)
+		return nil, errors.Wrapf(err, "while running Helm command %q", r.cfg.Command)
 	}
 
 	err = r.saveOutput(out)

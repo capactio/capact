@@ -11,7 +11,7 @@ args:
       name: postgres-install
       outputs:
         artifacts:
-        - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
           name: postgresql
       steps:
       - - arguments:
@@ -21,7 +21,6 @@ args:
             - name: template
               raw:
                 data: |
-                  command: "install"
                   generateName: true
                   chart:
                     name: "postgresql"
@@ -47,17 +46,17 @@ args:
               name: input-parameters
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
-          name: helm-run
-          template: postgres-install-helm-run-helm
+          name: helm-install
+          template: postgres-install-helm-install-helm
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.additional}}'
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
               name: postgresql
           name: output-postgresql
           template: output-postgresql
       - - arguments:
             artifacts:
-            - from: '{{steps.helm-run.outputs.artifacts.helm-release}}'
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
               name: psql-helm-release
           name: output-psql-helm-release
           template: output-psql-helm-release
@@ -91,12 +90,14 @@ args:
           value: '{{inputs.artifacts.runner-context.path}}'
         - name: RUNNER_ARGS_PATH
           value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
         - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        - name: RUNNER_LOGGER_DEV_MODE
-          value: "true"
         image: gcr.io/projectvoltron/pr/helm-runner:PR-113
         name: ""
         resources: {}
@@ -107,13 +108,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: postgres-install-helm-run-helm
+      name: postgres-install-helm-install-helm
       outputs:
         artifacts:
-        - globalName: postgres-install-helm-run-helm-release
+        - globalName: postgres-install-helm-install-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: postgres-install-helm-run-additional
+        - globalName: postgres-install-helm-install-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -180,8 +181,8 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.postgresql}}'
               name: postgresql
-            - from: '{{workflow.outputs.artifacts.postgres-install-helm-run-helm-release}}'
-              name: postgres-install-helm-run-helm-release
+            - from: '{{workflow.outputs.artifacts.postgres-install-helm-install-helm-release}}'
+              name: postgres-install-helm-install-helm-release
             - name: payload
               raw:
                 data: |
@@ -192,7 +193,7 @@ args:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
-                  - alias: postgres-install-helm-run-helm-release
+                  - alias: postgres-install-helm-install-helm-release
                     attributes: []
                     typeRef:
                       path: cap.type.helm.chart.release
@@ -200,7 +201,7 @@ args:
                     value: null
                   usesRelations:
                   - from: postgresql
-                    to: postgres-install-helm-run-helm-release
+                    to: postgres-install-helm-install-helm-release
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
@@ -278,8 +279,8 @@ args:
         artifacts:
         - name: postgresql
           path: /upload/typeInstances/postgresql
-        - name: postgres-install-helm-run-helm-release
-          path: /upload/typeInstances/postgres-install-helm-run-helm-release
+        - name: postgres-install-helm-install-helm-release
+          path: /upload/typeInstances/postgres-install-helm-install-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

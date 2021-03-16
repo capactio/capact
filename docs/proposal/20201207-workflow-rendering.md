@@ -272,7 +272,7 @@ spec:
             steps:
                   # This step produces Argo artifacts 'additional' and 'helm-release'.
               - - name: helm-run
-                  voltron-action: cap.interface.runner.helm.run
+                  voltron-action: cap.interface.runner.helm.install
                   voltron-outputTypeInstances:
                     # Artifacts mappings to the TypeInstances in .spec.outputTypeInstanceRelations
                     - name: jira-config
