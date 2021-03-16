@@ -48,7 +48,7 @@ func Run(ctx context.Context, opts RunOptions, w io.Writer) error {
 	}
 
 	okCheck := color.New(color.FgGreen).FprintlnFunc()
-	okCheck(w, "Action created successfully")
+	okCheck(w, "Action run successfully")
 
 	return nil
 }

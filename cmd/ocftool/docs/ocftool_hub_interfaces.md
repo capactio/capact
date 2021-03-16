@@ -11,5 +11,6 @@ This command consists of multiple subcommands to interact with Hub server.
 ### SEE ALSO
 
 * [ocftool hub](ocftool_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
+* [ocftool hub interfaces browse](ocftool_hub_interfaces_browse.md)	 - Browse provides the ability to search for OCH Interfaces in interactive mode
 * [ocftool hub interfaces search](ocftool_hub_interfaces_search.md)	 - Search provides the ability to search for OCH Interfaces
 

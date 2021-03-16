@@ -10,6 +10,9 @@ func NewInterfaces() *cobra.Command {
 		Short: "This command consists of multiple subcommands to interact with Hub server.",
 	}
 
-	cmd.AddCommand(NewSearch())
+	cmd.AddCommand(
+		NewSearch(),
+		NewBrowse(),
+	)
 	return cmd
 }
