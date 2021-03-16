@@ -525,7 +525,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-197
         name: ""
         resources: {}
       inputs:
