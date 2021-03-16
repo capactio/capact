@@ -138,6 +138,10 @@ func (t *terraform) run(dryRun bool) error {
 	if dryRun {
 		return t._plan()
 	} else if t.args.Command == ApplyCommand {
+		if err := t._plan(); err != nil {
+			return err
+		}
+
 		return t._apply()
 	} else if t.args.Command == DestroyCommand {
 		return t._destroy()
