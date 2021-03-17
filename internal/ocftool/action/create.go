@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/MakeNowJust/heredoc"
+
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
@@ -141,8 +143,11 @@ func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
 
 	editor := ""
 	prompt := &survey.Editor{
-		Message:       "Please type Action input TypeInstance in YAML format",
-		Default:       "typeInstances:\n",
+		Message: "Please type Action input TypeInstance in YAML format",
+		Default: heredoc.Doc(`
+						typeInstances:
+						  - name: ""
+						    id: ""`),
 		AppendDefault: true,
 
 		HideDefault: true,
