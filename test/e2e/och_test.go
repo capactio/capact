@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 
 	"projectvoltron.dev/voltron/internal/ptr"
-	gqllocalapiv2 "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
@@ -172,12 +172,12 @@ var _ = Describe("GraphQL API", func() {
 			cli := getOCHGraphQLClient()
 
 			// create TypeInstance
-			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapiv2.CreateTypeInstanceInput{
-				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
+			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
+				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 					Path:     "com.voltron.ti",
 					Revision: "0.1.0",
 				},
-				Attributes: []*gqllocalapiv2.AttributeReferenceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
 					{
 						Path:     "com.voltron.attribute1",
 						Revision: "0.1.0",
@@ -193,35 +193,35 @@ var _ = Describe("GraphQL API", func() {
 			typeInstance, err := cli.FindTypeInstance(ctx, createdTypeInstance.ID)
 
 			Expect(err).ToNot(HaveOccurred())
-			rev := &gqllocalapiv2.TypeInstanceResourceVersion{
+			rev := &gqllocalapi.TypeInstanceResourceVersion{
 				ResourceVersion: 1,
-				Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
-					Attributes: []*gqllocalapiv2.AttributeReference{
+				Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
+					Attributes: []*gqllocalapi.AttributeReference{
 						{
 							Path:     "com.voltron.attribute1",
 							Revision: "0.1.0",
 						},
 					},
 				},
-				Spec: &gqllocalapiv2.TypeInstanceResourceVersionSpec{
+				Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
 					Value: map[string]interface{}{
 						"foo": "bar",
 					},
 				},
 			}
-			Expect(typeInstance).To(Equal(&gqllocalapiv2.TypeInstance{
+			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
 				ID: createdTypeInstance.ID,
-				TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
+				TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 					Path:     "com.voltron.ti",
 					Revision: "0.1.0",
 				},
-				Uses:                    []*gqllocalapiv2.TypeInstance{},
-				UsedBy:                  []*gqllocalapiv2.TypeInstance{},
+				Uses:                    []*gqllocalapi.TypeInstance{},
+				UsedBy:                  []*gqllocalapi.TypeInstance{},
 				LatestResourceVersion:   rev,
 				FirstResourceVersion:    rev,
 				PreviousResourceVersion: nil,
 				ResourceVersion:         rev,
-				ResourceVersions:        []*gqllocalapiv2.TypeInstanceResourceVersion{rev},
+				ResourceVersions:        []*gqllocalapi.TypeInstanceResourceVersion{rev},
 			}))
 
 			// check delete TypeInstance
@@ -251,10 +251,10 @@ var _ = Describe("GraphQL API", func() {
 
 			expectedChild := expectedChildTypeInstance(*childTiID)
 			expectedParent := expectedParentTypeInstance(*parentTiID)
-			expectedChild.UsedBy = []*gqllocalapiv2.TypeInstance{expectedParentTypeInstance(*parentTiID)}
-			expectedChild.Uses = []*gqllocalapiv2.TypeInstance{}
-			expectedParent.Uses = []*gqllocalapiv2.TypeInstance{expectedChildTypeInstance(*childTiID)}
-			expectedParent.UsedBy = []*gqllocalapiv2.TypeInstance{}
+			expectedChild.UsedBy = []*gqllocalapi.TypeInstance{expectedParentTypeInstance(*parentTiID)}
+			expectedChild.Uses = []*gqllocalapi.TypeInstance{}
+			expectedParent.Uses = []*gqllocalapi.TypeInstance{expectedChildTypeInstance(*childTiID)}
+			expectedParent.UsedBy = []*gqllocalapi.TypeInstance{}
 
 			assertTypeInstance(ctx, cli, *childTiID, expectedChild)
 			assertTypeInstance(ctx, cli, *parentTiID, expectedParent)
@@ -265,7 +265,7 @@ var _ = Describe("GraphQL API", func() {
 
 type OCHMode string
 
-func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapiv2.TypeInstance) {
+func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
 	actual, err := cli.FindTypeInstance(ctx, ID)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(actual).NotTo(BeNil())
@@ -281,7 +281,7 @@ func attributeFilterInput(path, rev string, rule gqlpublicapi.FilterRule) gqlpub
 	}
 }
 
-func findCreatedTypeInstanceID(alias string, instances []gqllocalapiv2.CreateTypeInstanceOutput) *string {
+func findCreatedTypeInstanceID(alias string, instances []gqllocalapi.CreateTypeInstanceOutput) *string {
 	for _, el := range instances {
 		if el.Alias != alias {
 			continue
@@ -297,16 +297,16 @@ func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
 	Expect(err).ToNot(HaveOccurred())
 }
 
-func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
-	return &gqllocalapiv2.CreateTypeInstancesInput{
-		TypeInstances: []*gqllocalapiv2.CreateTypeInstanceInput{
+func createTypeInstancesInput() *gqllocalapi.CreateTypeInstancesInput {
+	return &gqllocalapi.CreateTypeInstancesInput{
+		TypeInstances: []*gqllocalapi.CreateTypeInstanceInput{
 			{
 				Alias: ptr.String("parent"),
-				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
+				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 					Path:     "com.parent",
 					Revision: "0.1.0",
 				},
-				Attributes: []*gqllocalapiv2.AttributeReferenceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
 					{
 						Path:     "com.attr",
 						Revision: "0.1.0",
@@ -318,11 +318,11 @@ func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
 			},
 			{
 				Alias: ptr.String("child"),
-				TypeRef: &gqllocalapiv2.TypeInstanceTypeReferenceInput{
+				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 					Path:     "com.child",
 					Revision: "0.1.0",
 				},
-				Attributes: []*gqllocalapiv2.AttributeReferenceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
 					{
 						Path:     "com.attr",
 						Revision: "0.1.0",
@@ -333,7 +333,7 @@ func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
 				},
 			},
 		},
-		UsesRelations: []*gqllocalapiv2.TypeInstanceUsesRelationInput{
+		UsesRelations: []*gqllocalapi.TypeInstanceUsesRelationInput{
 			{
 				From: "parent",
 				To:   "child",
@@ -342,27 +342,27 @@ func createTypeInstancesInput() *gqllocalapiv2.CreateTypeInstancesInput {
 	}
 }
 
-func expectedChildTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
-	tiRev := &gqllocalapiv2.TypeInstanceResourceVersion{
+func expectedChildTypeInstance(ID string) *gqllocalapi.TypeInstance {
+	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
 		ResourceVersion: 1,
-		Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
-			Attributes: []*gqllocalapiv2.AttributeReference{
+		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
+			Attributes: []*gqllocalapi.AttributeReference{
 				{
 					Path:     "com.attr",
 					Revision: "0.1.0",
 				},
 			},
 		},
-		Spec: &gqllocalapiv2.TypeInstanceResourceVersionSpec{
+		Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
 			Value: map[string]interface{}{
 				"child": true,
 			},
 		},
 	}
 
-	return &gqllocalapiv2.TypeInstance{
+	return &gqllocalapi.TypeInstance{
 		ID: ID,
-		TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
+		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 			Path:     "com.child",
 			Revision: "0.1.0",
 		},
@@ -370,33 +370,33 @@ func expectedChildTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
 		FirstResourceVersion:    tiRev,
 		PreviousResourceVersion: nil,
 		ResourceVersion:         tiRev,
-		ResourceVersions:        []*gqllocalapiv2.TypeInstanceResourceVersion{tiRev},
+		ResourceVersions:        []*gqllocalapi.TypeInstanceResourceVersion{tiRev},
 		UsedBy:                  nil,
 		Uses:                    nil,
 	}
 }
 
-func expectedParentTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
-	tiRev := &gqllocalapiv2.TypeInstanceResourceVersion{
+func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
+	tiRev := &gqllocalapi.TypeInstanceResourceVersion{
 		ResourceVersion: 1,
-		Metadata: &gqllocalapiv2.TypeInstanceResourceVersionMetadata{
-			Attributes: []*gqllocalapiv2.AttributeReference{
+		Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
+			Attributes: []*gqllocalapi.AttributeReference{
 				{
 					Path:     "com.attr",
 					Revision: "0.1.0",
 				},
 			},
 		},
-		Spec: &gqllocalapiv2.TypeInstanceResourceVersionSpec{
+		Spec: &gqllocalapi.TypeInstanceResourceVersionSpec{
 			Value: map[string]interface{}{
 				"parent": true,
 			},
 		},
 	}
 
-	return &gqllocalapiv2.TypeInstance{
+	return &gqllocalapi.TypeInstance{
 		ID: ID,
-		TypeRef: &gqllocalapiv2.TypeInstanceTypeReference{
+		TypeRef: &gqllocalapi.TypeInstanceTypeReference{
 			Path:     "com.parent",
 			Revision: "0.1.0",
 		},
@@ -404,7 +404,7 @@ func expectedParentTypeInstance(ID string) *gqllocalapiv2.TypeInstance {
 		FirstResourceVersion:    tiRev,
 		PreviousResourceVersion: nil,
 		ResourceVersion:         tiRev,
-		ResourceVersions:        []*gqllocalapiv2.TypeInstanceResourceVersion{tiRev},
+		ResourceVersions:        []*gqllocalapi.TypeInstanceResourceVersion{tiRev},
 		UsedBy:                  nil,
 		Uses:                    nil,
 	}
