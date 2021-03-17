@@ -1,8 +1,9 @@
-generateName: true
+name: "example-release"
+generateName: false
 chart:
   name: "postgresql"
   repo: "https://charts.bitnami.com/bitnami"
-  version: "10.2.6"
+  version: "10.2.5"
 values:
   fullnameOverride: postgresql-server
   postgresqlDatabase: postgres

@@ -1,12 +1,10 @@
 reuseValues: true
 chart:
-  name: "postgresql"
-  repo: "https://charts.bitnami.com/bitnami"
   version: "10.2.6"
 values:
-  fullnameOverride: postgresql-server
-  postgresqlDatabase: postgres
   postgresqlPassword: foo
+  commonAnnotations:
+        upgraded: "true"
 output:
   goTemplate:
     host: '{{ template "postgresql.primary.fullname" . }}'

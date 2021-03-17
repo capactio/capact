@@ -29,11 +29,9 @@ RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml \
  go run cmd/helm-runner/main.go
 ```
 
-You can check, if the PostgreSQL Helm release was created:
+To check if the PostgreSQL Helm release was created, run the command:
 ```bash
-$ helm list
-NAME                    NAMESPACE       REVISION        UPDATED                                 STATUS       CHART                    APP VERSION
-postgresql-1607608471   default         1               2020-12-10 14:54:34.882358554 +0100 CET deployed     postgresql-10.1.3        11.10.0 
+helm list 
 ```
 
 ### Upgrade
@@ -44,17 +42,20 @@ To start the runner Install command, execute:
 ```bash
 RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml \
  RUNNER_ARGS_PATH=cmd/helm-runner/example-upgrade-args.yaml \
- RUNNER_HELM_RELEASE_PATH=./tmp/helm-release.yaml \
+ RUNNER_HELM_RELEASE_PATH=cmd/helm-runner/example-helm-release.yaml \
  RUNNER_LOGGER_DEV_MODE=true \
  RUNNER_COMMAND="upgrade" \
  go run cmd/helm-runner/main.go
 ```
 
-You can check, if the PostgreSQL Helm release was successfully upgraded:
+To verify the PostgreSQL upgrade, run:
 ```bash
-$ helm list
-NAME                    NAMESPACE       REVISION        UPDATED                                 STATUS       CHART                    APP VERSION
-postgresql-1607608471   default         2               2020-12-10 14:54:34.882358554 +0100 CET deployed     postgresql-10.1.3        11.10.0 
+helm list
+```
+
+Observe the incremented value in "Revision" column. Verify `upgraded: "true"` annotation on resources such as StatefulSet:
+```bash
+kubectl get svc postgresql-server -o jsonpath='{.metadata.annotations}'
 ```
 
 ## Configuration
