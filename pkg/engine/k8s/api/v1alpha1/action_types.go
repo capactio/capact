@@ -53,11 +53,11 @@ type ActionSpec struct {
 	// +optional
 	Input *ActionInput `json:"input,omitempty"`
 
-	// AdvancedRendering holds properties related to Action advanced rendering mode.
+	// AdvancedRendering holds properties related to Action advanced rendering mode. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	AdvancedRendering *AdvancedRendering `json:"advancedRendering,omitempty"`
 
-	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine.
+	// RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	RenderedActionOverride *runtime.RawExtension `json:"renderedActionOverride,omitempty"`
@@ -215,15 +215,15 @@ type ActionStatus struct {
 	// +optional
 	Rendering *RenderingStatus `json:"rendering,omitempty"`
 
-	// CreatedBy holds user data which created a given Action.
+	// CreatedBy holds user data which created a given Action. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	CreatedBy *authv1.UserInfo `json:"createdBy,omitempty"`
 
-	// RunBy holds user data which run a given Action.
+	// RunBy holds user data which run a given Action. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	RunBy *authv1.UserInfo `json:"runBy,omitempty"`
 
-	// CanceledBy holds user data which canceled a given Action.
+	// CanceledBy holds user data which canceled a given Action. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	CanceledBy *authv1.UserInfo `json:"canceledBy,omitempty"`
 
@@ -239,7 +239,7 @@ type ActionStatus struct {
 // ActionOutput describes Action output.
 type ActionOutput struct {
 
-	// TypeInstances contains output TypeInstances data.
+	// TypeInstances contains output TypeInstances data. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	TypeInstances *[]OutputTypeInstanceDetails `json:"typeInstances,omitempty"`
 }
@@ -256,7 +256,7 @@ type RenderingStatus struct {
 	// +optional
 	Input *ResolvedActionInput `json:"input,omitempty"`
 
-	// AdvancedRendering describes status related to advanced rendering mode.
+	// AdvancedRendering describes status related to advanced rendering mode. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
 }
