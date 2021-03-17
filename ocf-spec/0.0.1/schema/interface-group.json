@@ -5,7 +5,6 @@
   "required": [
     "ocfVersion",
     "kind",
-    "signature",
     "metadata"
   ],
   "properties": {
@@ -24,7 +23,7 @@
     "signature": {
       "$id": "#/properties/signature",
       "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED",
       "required": [
         "och"
       ],
