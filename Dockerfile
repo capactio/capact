@@ -66,7 +66,7 @@ ENV TERRAFORM_VERSION 0.14.6
 
 WORKDIR /bin
 RUN \
-    wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
+    wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
     unzip terraform.zip && rm terraform.zip
 
 COPY hack/runners/terraform /workspace
