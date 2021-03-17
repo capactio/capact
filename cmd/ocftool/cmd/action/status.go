@@ -196,7 +196,7 @@ func getUploadedTypeInstance(ctx context.Context, actionCli client.ClusterClient
 			Spec interface{} `json:"spec"`
 			ID   string      `json:"id"`
 		}{
-			Spec: typeInstance.Spec,
+			Spec: typeInstance.LatestResourceVersion.Spec,
 			ID:   msg.ID,
 		}
 	}
