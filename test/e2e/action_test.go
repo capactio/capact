@@ -13,7 +13,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"projectvoltron.dev/voltron/internal/ptr"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 

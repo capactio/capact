@@ -9,7 +9,7 @@ directive @relation(
 ) on FIELD_DEFINITION | OBJECT
 
 directive @cypher(statement: String) on FIELD_DEFINITION
-
+directive @index on FIELD_DEFINITION
 directive @id on FIELD_DEFINITION
 
 """
@@ -28,23 +28,49 @@ Version in semantic versioning, e.g. 1.1.0
 scalar Version
 
 type TypeInstance {
-  resourceVersion: Int!
-  metadata: TypeInstanceMetadata!
-    @relation(name: "DESCRIBED_BY", direction: "OUT")
-  spec: TypeInstanceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  id: ID! @id
 
+  """
+  Common properties for all TypeInstances which cannot be changed
+  """
+  typeRef: TypeInstanceTypeReference! @relation(name: "OF_TYPE", direction: "OUT")
   uses: [TypeInstance!]! @relation(name: "USES", direction: "OUT")
   usedBy: [TypeInstance!]! @relation(name: "USES", direction: "IN")
+
+  latestResourceVersion: TypeInstanceResourceVersion
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(tir:TypeInstanceResourceVersion) RETURN tir ORDER BY tir.resourceVersion DESC LIMIT 1"
+    )
+  firstResourceVersion: TypeInstanceResourceVersion
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(tir:TypeInstanceResourceVersion) RETURN tir ORDER BY tir.resourceVersion ASC LIMIT 1"
+    )
+  previousResourceVersion: TypeInstanceResourceVersion
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(tir:TypeInstanceResourceVersion) RETURN tir ORDER BY tir.resourceVersion DESC SKIP 1 LIMIT 1"
+    )
+  resourceVersion(resourceVersion: Int!): TypeInstanceResourceVersion
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(tir:TypeInstanceResourceVersion {resourceVersion: $resourceVersion}) RETURN tir"
+    )
+  resourceVersions: [TypeInstanceResourceVersion!]!
+    @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type TypeInstanceMetadata {
-  id: ID! @id
-  attributes: [AttributeReference!]!
+type TypeInstanceResourceVersion {
+  resourceVersion: Int! @index
+  metadata: TypeInstanceResourceVersionMetadata!
+    @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeInstanceResourceVersionSpec!
+    @relation(name: "SPECIFIED_BY", direction: "OUT")
+}
+
+type TypeInstanceResourceVersionMetadata {
+  attributes: [AttributeReference!]
     @relation(name: "CHARACTERIZED_BY", direction: "OUT")
 }
 
-type TypeInstanceSpec {
-  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+type TypeInstanceResourceVersionSpec {
   value: Any!
     @cypher(
       statement: """
@@ -55,7 +81,7 @@ type TypeInstanceSpec {
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
 
-type TypeReference {
+type TypeInstanceTypeReference {
   path: NodePath!
   revision: Version!
 }
@@ -139,7 +165,7 @@ input TypeRefFilterInput {
   revision: Version
 }
 
-input TypeReferenceInput {
+input TypeInstanceTypeReferenceInput {
   path: NodePath!
   revision: Version!
 }
@@ -149,7 +175,8 @@ input CreateTypeInstanceInput {
   Used to define the relationships, between the created TypeInstances
   """
   alias: String
-  typeRef: TypeReferenceInput!
+
+  typeRef: TypeInstanceTypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
 }
@@ -176,11 +203,24 @@ type CreateTypeInstanceOutput {
   alias: String!
 }
 
+"""
+At least one property needs to be specified.
+"""
 input UpdateTypeInstanceInput {
-  typeRef: TypeReferenceInput
+  """
+  The attributes property is optional. If not provided, previous value is used.
+  """
   attributes: [AttributeReferenceInput!]
+
+  """
+  The value property is optional. If not provided, previous value is used.
+  """
   value: Any
-  resourceVersion: Int!
+}
+
+input UpdateTypeInstancesInput {
+  id: ID!
+  typeInstance: UpdateTypeInstanceInput!
 }
 
 type Query {
@@ -198,9 +238,10 @@ type Query {
         RETURN collect(ex) as excludedAttributes
       }
 
-      MATCH (ti:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)
+      MATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)
       OPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)
-      MATCH (ti)-[:SPECIFIED_BY]->(spec:TypeInstanceSpec)-[:OF_TYPE]->(typeRef:TypeReference)
+      MATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeInstanceTypeReference)
+      MATCH (ti:TypeInstance)-[:CONTAINS]->(tir)
       WHERE
       $filter = {} OR
       (
@@ -219,12 +260,12 @@ type Query {
           OR
           (
             all(inc IN included WHERE
-              (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})
+              (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})
               AND
               (inc.revision IS NULL OR attr.revision = inc.revision)
             )
             AND
-            none(exc IN excludedAttributes WHERE (ti)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata)-[:CHARACTERIZED_BY]->(exc))
+            none(exc IN excludedAttributes WHERE (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(exc))
           )
         )
       )
@@ -236,13 +277,16 @@ type Query {
   typeInstance(id: ID!): TypeInstance
     @cypher(
       statement: """
-      MATCH (this:TypeInstance)-[:DESCRIBED_BY]->(meta:TypeInstanceMetadata {id: $id})
+      MATCH (this:TypeInstance {id: $id})
       RETURN this
       """
     )
 }
 
 type Mutation {
+  """
+  TODO: SV-262
+  """
   createTypeInstances(
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
@@ -252,77 +296,155 @@ type Mutation {
     @cypher(
       statement: """
       WITH apoc.convert.toJson($in.value) as value
-      CREATE (ti: TypeInstance {resourceVersion: 1})
-      CREATE (ti)-[:DESCRIBED_BY]->(metadata: TypeInstanceMetadata {id: apoc.create.uuid()})
-      CREATE (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec {value: value})
-      CREATE (spec)-[:OF_TYPE]->(typeRef: TypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
+      MERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})
+
+      CREATE (ti:TypeInstance {id: apoc.create.uuid()})
+      CREATE (ti)-[:OF_TYPE]->(typeRef)
+
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})
 
       FOREACH (attr in $in.attributes |
-        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+        MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+        CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
       )
 
       RETURN ti
       """
     )
 
+  # Keep in sync with the updateTypeInstances mutation
   updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
     @cypher(
       statement: """
-      MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
-      MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
-      MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
+      MATCH (ti: TypeInstance {id: $id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
 
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the `spec.value` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision
       CALL apoc.do.when(
         $in.value IS NOT NULL,
-        'SET spec.value = apoc.convert.toJson($in.value) RETURN spec',
-        '',
-        {spec:spec, in: $in}
-      ) YIELD value
+        '
+          SET spec.value = apoc.convert.toJson($in.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value
 
-      WITH ti, metadata, spec, typeRef
-      CALL apoc.do.when(
-        $in.typeRef IS NOT NULL,
-        'SET typeRef.path = in.typeRef.path, typeRef.revision = in.typeRef.revision RETURN typeRef',
-        '',
-        {typeRef: typeRef, in: $in}
-      ) YIELD value
+      // Handle the `metadata.attributes` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata)
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
 
-      WITH ti, metadata, spec, typeRef
+      WITH ti, tir, latestRevision, metadata
       CALL apoc.do.when(
         $in.attributes IS NOT NULL,
         '
-          // Remove current attribute references
-          OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(oldAttrRef: AttributeReference) DETACH DELETE oldAttrRef
-          WITH metadata, in, collect(oldAttrRef) as ignored
-
-          // Add new attribute refs
           FOREACH (attr in in.attributes |
-            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
           )
+
           RETURN metadata
         ',
-        '',
-        {metadata: metadata, in: $in}
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, in: $in}
       ) YIELD value
 
-      WITH ti, metadata, spec, typeRef
-      SET ti.resourceVersion = $in.resourceVersion
 
       RETURN ti
       """
     )
-  deleteTypeInstance(id: ID!): ID!
+
+  # Keep in sync with the updateTypeInstance mutation
+  updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
       statement: """
-      MATCH (metadata: TypeInstanceMetadata {id: $id})<-[:DESCRIBED_BY]-(ti: TypeInstance)
-      MATCH (ti)-[:SPECIFIED_BY]->(spec: TypeInstanceSpec)
-      MATCH (spec)-[:OF_TYPE]->(typeRef: TypeReference)
-      OPTIONAL MATCH (metadata)-[:CHARACTERIZED_BY]->(attrRef: AttributeReference)
+      UNWIND $in as item
+      MATCH (ti: TypeInstance {id: item.id})
+      CALL {
+        WITH ti
+        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
+        RETURN latestRevision
+        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
+      }
 
-      DETACH DELETE ti, metadata, spec, typeRef, attrRef
-      RETURN $id
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (ti)-[:CONTAINS]->(tir)
+
+      // Handle the `spec.value` property
+      CREATE (spec: TypeInstanceResourceVersionSpec)
+      CREATE (tir)-[:SPECIFIED_BY]->(spec)
+
+      WITH ti, tir, spec, latestRevision, item
+      CALL apoc.do.when(
+          item.typeInstance.value IS NOT NULL,
+        '
+          SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec
+        ',
+        '
+          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
+          SET spec.value = latestSpec.value RETURN spec
+        ',
+        {spec:spec, latestRevision: latestRevision, item: item}) YIELD value
+
+      // Handle the `metadata.attributes` property
+      CREATE (metadata: TypeInstanceResourceVersionMetadata)
+      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
+
+      WITH ti, tir, latestRevision, metadata, item
+      CALL apoc.do.when(
+        item.typeInstance.attributes IS NOT NULL,
+        '
+          FOREACH (attr in item.typeInstance.attributes |
+            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
+          )
+
+          RETURN metadata
+        ',
+        '
+          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
+          WHERE latestAttrRef IS NOT NULL
+          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
+          FOREACH (attr in latestAttrRefs |
+            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
+          )
+
+          RETURN metadata
+        ',
+        {metadata: metadata, latestRevision: latestRevision, item: item}
+      ) YIELD value
+
+      RETURN ti
       """
     )
+
+  deleteTypeInstance(id: ID!): ID!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

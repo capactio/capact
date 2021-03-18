@@ -13,7 +13,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 

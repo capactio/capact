@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 
 	"github.com/pkg/errors"
 

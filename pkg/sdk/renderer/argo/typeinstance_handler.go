@@ -9,7 +9,7 @@ import (
 
 	wfv1 "github.com/argoproj/argo/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
-	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local-v2"
+	graphqllocal "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )

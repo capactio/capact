@@ -1,41 +1,54 @@
 package local
 
-const typeInstanceFields = `
-	resourceVersion
-	metadata {
+import "fmt"
+
+var typeInstanceWithUsesFields = fmt.Sprintf(`
+	  %s
+	  uses {
+		%s
+	  }
+	  usedBy {
+		%s
+	  }
+`, typeInstanceFields, typeInstanceFields, typeInstanceFields)
+
+var typeInstanceFields = fmt.Sprintf(`
 	  id
-	  attributes {
-	    path
-	    revision
-	  }
-	}
-	spec {
 	  typeRef {
-	    path
-	    revision
+		path
+		revision
 	  }
-	  value
-	}
-	uses {
-		metadata {
-			id
+	
+	  latestResourceVersion {
+		%s
+	  }
+	
+	  firstResourceVersion {
+		%s
+	  }
+	
+	  previousResourceVersion {
+		%s
+	  }
+	
+	  resourceVersions {
+		%s
+	  }
+	
+	  resourceVersion(resourceVersion: 1) {
+		%s
+	  }
+`, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion)
+
+const typeInstanceResourceVersion = `
+	  resourceVersion
+	  metadata {
+		attributes {
+		  path
+		  revision
 		}
-		spec {
-			typeRef {
-				path
-				revision
-			}
-		}
-	}
-	usedBy {
-		metadata {
-			id
-		}
-		spec {
-			typeRef {
-				path
-				revision
-			}
-		}
-	}
+	  }
+	  spec {
+		value
+	  }
 `
