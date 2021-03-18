@@ -231,4 +231,3 @@ func (c *Client) UnlockTypeInstances(ctx context.Context, in *ochlocalgraphql.Un
 
 	return nil
 }
-
