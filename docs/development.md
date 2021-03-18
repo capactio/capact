@@ -126,7 +126,6 @@ You can export the following environment variables to configure the script:
 - To disable kubed installation, use `DISABLE_KUBED_INSTALLATION=true`.
 - To disable `/etc/hosts` update with all Voltron subdomain, use `DISABLE_HOSTS_UPDATE=true`.
 - To disable setting self-signed TLS certificate for `*.voltron.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
-- To enable mocked version of GraphQL Engine OCH API `MOCK_ENGINE_GRAPHQL=true`.
 - To disable Database Populator, use `ENABLE_POPULATOR=false`
 - To use test setup (test policy and populate OCH manifests from `test/och-content`), use `USE_TEST_SETUP=true`.
 - To disable higher resource requests and limits for components, use `INCREASE_RESOURCE_LIMITS=false`.

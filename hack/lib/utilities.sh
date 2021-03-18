@@ -232,7 +232,6 @@ docker::delete_images() {
 #  - VOLTRON_NAMESPACE
 #  - VOLTRON_RELEASE_NAME
 #  - CLUSTER_TYPE
-#  - MOCK_ENGINE_GRAPHQL - if set to true then predifined values are used in engine graphql
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then the OCH manifests are populated from `test/och-content` and a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
@@ -241,7 +240,6 @@ voltron::install_upgrade::charts() {
     readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
     readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
 
-    export MOCK_ENGINE_GRAPHQL=${MOCK_ENGINE_GRAPHQL:-${VOLTRON_MOCK_ENGINE_GRAPHQL}}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${VOLTRON_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${VOLTRON_INCREASE_RESOURCE_LIMITS}}
@@ -305,7 +303,6 @@ voltron::install_upgrade::charts() {
         --namespace="${VOLTRON_NAMESPACE}" \
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
-        --set global.mockEngineGraphQL="${MOCK_ENGINE_GRAPHQL}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
         -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \

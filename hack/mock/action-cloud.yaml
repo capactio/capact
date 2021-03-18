@@ -1,8 +1,0 @@
-apiVersion: core.projectvoltron.dev/v1alpha1
-kind: Action
-metadata:
-  name: "install-jira-cloud"
-  namespace: "gcp-scenario"
-spec:
-  path: "cap.interface.productivity.jira.install"
-  run: false
