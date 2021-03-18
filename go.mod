@@ -68,7 +68,6 @@ require (
 )
 
 replace (
-	//github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible
 	// Remove when the is resolved:
 	// - https://github.com/argoproj/argo-workflows/issues/4772
 	// - we can compile argo without static files
