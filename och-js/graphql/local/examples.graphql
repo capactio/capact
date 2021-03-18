@@ -143,6 +143,7 @@ fragment TypeInstance on TypeInstance {
     path
     revision
   }
+  lockedBy
 
   latestResourceVersion {
     ...TypeInstanceResourceVersion

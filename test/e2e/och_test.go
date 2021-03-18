@@ -559,6 +559,10 @@ func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
 	}
 }
 
+// We cannot write specs using Context and It which are connected with each other
+// see: https://github.com/onsi/ginkgo/issues/246
+// this functions just adds syntax suggar which can be used when we have just one single `It` block
+// with sequential test-cases
 func scenario(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, "[Scenario]: "+format+"\n", args...)
 }
