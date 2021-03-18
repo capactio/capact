@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"projectvoltron.dev/voltron/internal/getter"
-	"projectvoltron.dev/voltron/pkg/runner"
 )
 
 const (
@@ -24,19 +23,23 @@ const (
 	DestroyCommand = "destroy"
 	PlanCommand    = "plan"
 	variablesFile  = "terraform.tfvars"
+	stateFile      = "terraform.tfstate"
 )
 
 type terraform struct {
-	log             *zap.Logger
-	workdir         string
-	tfstateFilepath string
-	args            Arguments
-	_waitCh         chan error
-	runOutput       []byte
+	log       *zap.Logger
+	workdir   string
+	args      Arguments
+	_waitCh   chan error
+	runOutput []byte
 }
 
-func newTerraform(log *zap.Logger, workdir, tfstateFilepath string, args Arguments) *terraform {
-	return &terraform{log: log, workdir: workdir, args: args, tfstateFilepath: tfstateFilepath}
+func newTerraform(log *zap.Logger, workdir string, args Arguments) *terraform {
+	return &terraform{
+		log:     log,
+		workdir: workdir,
+		args:    args,
+	}
 }
 
 func (t *terraform) Start(dryRun bool) error {
@@ -47,20 +50,6 @@ func (t *terraform) Start(dryRun bool) error {
 		err := getter.Download(context.Background(), t.args.Module.Source, t.workdir)
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while downloading module")
-			return
-		}
-
-		if t.tfstateFilepath != "" {
-			err = t.insertTfstate()
-			if err != nil {
-				t._waitCh <- errors.Wrapf(err, "while inserting tfstate into workdir from %s", t.tfstateFilepath)
-				return
-			}
-		}
-
-		err = t.writeVariables()
-		if err != nil {
-			t._waitCh <- errors.Wrapf(err, "while creating variables files %s", variablesFile)
 			return
 		}
 
@@ -164,31 +153,12 @@ func (t *terraform) _destroy() error {
 	return err
 }
 
-func (t *terraform) writeVariables() error {
-	// variables file has to end with a new line
-	variables := t.args.Variables + "\n"
-	t.log.Debug("Writing Terraform variables file", zap.String("variables", variables), zap.String("workdir", t.workdir), zap.String("file", variablesFile))
-
-	return runner.SaveToFile(path.Join(t.workdir, variablesFile), []byte(variables))
-}
-
-func (t *terraform) insertTfstate() error {
-	dstFilepath := path.Join(t.workdir, "terraform.tfstate")
-
-	data, err := ioutil.ReadFile(t.tfstateFilepath)
-	if err != nil {
-		return errors.Wrap(err, "while reading provided tfstate file")
-	}
-
-	if err := runner.SaveToFile(dstFilepath, data); err != nil {
-		return errors.Wrap(err, "while writing tfstate in workdir")
-	}
-
-	return nil
-}
-
 func (t *terraform) tfstate() ([]byte, error) {
 	return ioutil.ReadFile(path.Join(t.workdir, "terraform.tfstate"))
+}
+
+func (t *terraform) variables() ([]byte, error) {
+	return ioutil.ReadFile(path.Join(t.workdir, variablesFile))
 }
 
 func (t *terraform) renderOutput() ([]byte, error) {

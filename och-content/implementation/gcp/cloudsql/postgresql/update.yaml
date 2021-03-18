@@ -136,12 +136,12 @@ spec:
                       - name: in
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
-              - - name: convert-tfstate-yaml-to-json
-                  template: convert-yaml-to-json
-                  arguments:
-                    artifacts:
-                      - name: in
-                        from: "{{inputs.artifacts.tfstate}}"
+              #- - name: convert-tfstate-yaml-to-json
+              #    template: convert-yaml-to-json
+              #    arguments:
+              #      artifacts:
+              #        - name: in
+              #          from: "{{inputs.artifacts.tfstate}}"
 
               - - name: terraform-apply
                   voltron-action: terraform.apply-with-state
@@ -157,7 +157,7 @@ spec:
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: tfstate
-                        from: "{{steps.convert-tfstate-yaml-to-json.outputs.artifacts.out}}"
+                        from: "{{inputs.artifacts.tfstate}}"
                       - name: additional
                         from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
 

@@ -25,10 +25,10 @@ type AdditionalOutput struct {
 
 // Config holds Runner related configuration.
 type Config struct {
-	WorkDir                string `envconfig:"default=/workspace"`
-	TerraformPath          string `envconfig:"default=terraform"`
-	TerraformStateFilepath string `envconfig:"optional"`
-	Output                 OutputConfig
+	WorkDir                   string `envconfig:"default=/workspace"`
+	TerraformPath             string `envconfig:"default=terraform"`
+	StateTypeInstanceFilepath string `envconfig:"optional"`
+	Output                    OutputConfig
 }
 
 type OutputConfig struct {
@@ -42,8 +42,13 @@ type Release struct {
 	Source string `json:"source"`
 }
 
+type StateTypeInstance struct {
+	State     []byte
+	Variables []byte
+}
+
 type Output struct {
 	Release    []byte
 	Additional []byte
-	Tfstate    []byte
+	State      StateTypeInstance
 }

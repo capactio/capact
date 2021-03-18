@@ -22,6 +22,8 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.2
+	github.com/hashicorp/hcl/v2 v2.9.1
+	github.com/hashicorp/terraform v0.14.8
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
@@ -45,19 +47,19 @@ require (
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/vrischmann/envconfig v1.3.0
 	github.com/xeipuuv/gojsonschema v1.2.0
+	github.com/zclconf/go-cty v1.8.1
 	go.uber.org/zap v1.10.0
-	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/oauth2 v0.0.0-20200902213428-5d25da1a8d43
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 // indirect
-	golang.org/x/tools v0.0.0-20200827163409-021d7c6f1ec3 // indirect
-	google.golang.org/api v0.20.0
+	google.golang.org/api v0.34.0
 	google.golang.org/grpc/examples v0.0.0-20210322221411-d26af8e39165 // indirect
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/cli-runtime v0.17.9
-	k8s.io/client-go v0.17.9
+	k8s.io/client-go v10.0.0+incompatible
 	k8s.io/kubectl v0.17.2
 	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
 	rsc.io/letsencrypt v0.0.3 // indirect
@@ -66,7 +68,7 @@ require (
 )
 
 replace (
-	github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible
+	//github.com/Azure/go-autorest => github.com/Azure/go-autorest v13.3.2+incompatible
 	// Remove when the is resolved:
 	// - https://github.com/argoproj/argo-workflows/issues/4772
 	// - we can compile argo without static files
