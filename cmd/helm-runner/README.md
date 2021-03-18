@@ -22,8 +22,8 @@ Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm 
 
 To start the install command, execute:
 ```bash
-RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml \
- RUNNER_ARGS_PATH=cmd/helm-runner/example-install-args.yaml \
+RUNNER_CONTEXT_PATH=cmd/helm-runner/example-input/context.yaml \
+ RUNNER_ARGS_PATH=cmd/helm-runner/example-input/install-args.yaml \
  RUNNER_LOGGER_DEV_MODE=true \
  RUNNER_COMMAND="install" \
  go run cmd/helm-runner/main.go
@@ -40,9 +40,9 @@ Follow the instructions from [Installation](#installation) section first.
 
 To start the runner Install command, execute:
 ```bash
-RUNNER_CONTEXT_PATH=cmd/helm-runner/example-context.yaml \
- RUNNER_ARGS_PATH=cmd/helm-runner/example-upgrade-args.yaml \
- RUNNER_HELM_RELEASE_PATH=cmd/helm-runner/example-helm-release.yaml \
+RUNNER_CONTEXT_PATH=cmd/helm-runner/example-input/context.yaml \
+ RUNNER_ARGS_PATH=cmd/helm-runner/example-input/upgrade-args.yaml \
+ RUNNER_HELM_RELEASE_PATH=cmd/helm-runner/example-input/helm-release.yaml \
  RUNNER_LOGGER_DEV_MODE=true \
  RUNNER_COMMAND="upgrade" \
  go run cmd/helm-runner/main.go
