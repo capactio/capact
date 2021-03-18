@@ -43,7 +43,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.helm
       alias: helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
@@ -65,7 +65,7 @@ spec:
             outputs:
               artifacts:
                 - name: elasticsearch
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
             steps:
               # Here we prepare the input for K8s Secret creation.
               - - name: render-secret-manifest
@@ -104,7 +104,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "elasticsearch"
@@ -180,8 +179,8 @@ spec:
               # To delete this release, you can use `helm uninstall`.
               # The release name is available in elasticsearch-helm-release TypeInstance.
               # Additionally, remove PVCs as they are not remove as a part of helm uninstall.
-              - - name: helm-run
-                  voltron-action: helm.run
+              - - name: helm-install
+                  voltron-action: helm.install
                   voltron-outputTypeInstances:
                     - name: elasticsearch         # Defining the output TypeInstance 'elasticsearch-config'
                       from: additional

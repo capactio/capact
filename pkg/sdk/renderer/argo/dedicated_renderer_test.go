@@ -27,7 +27,7 @@ func TestResolveActionFromImports(t *testing.T) {
 			name:       "missing imports",
 			shouldFail: true,
 			imports:    []*ochpublicapi.ImplementationImport{},
-			actionRef:  "helm.run",
+			actionRef:  "helm.install",
 			reference:  ochpublicapi.InterfaceReference{},
 		},
 		{
@@ -39,15 +39,15 @@ func TestResolveActionFromImports(t *testing.T) {
 					AppVersion:         &appVersion,
 					Methods: []*ochpublicapi.ImplementationImportMethod{
 						{
-							Name:     "run",
+							Name:     "install",
 							Revision: &revision1,
 						},
 					},
 				},
 			},
-			actionRef: "helm.run",
+			actionRef: "helm.install",
 			reference: ochpublicapi.InterfaceReference{
-				Path:     "cap.interface.runner.helm.run",
+				Path:     "cap.interface.runner.helm.install",
 				Revision: revision1,
 			},
 		},

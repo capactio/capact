@@ -31,7 +31,6 @@ spec:
               }
             },
             "args": {
-              "command": "install",
               "generateName": true,
               "chart": {
                 "name": "postgresql",
@@ -107,16 +106,6 @@ spec:
               "chart"
             ],
             "properties": {
-              "command": {
-                "$id": "#/properties/args/properties/command",
-                "type": "string",
-                "enum": [
-                  "install",
-                  "upgrade",
-                  "delete"
-                ],
-                "title": "The command to run for Helm"
-              },
               "name": {
                 "$id": "#/properties/args/properties/name",
                 "type": "string",

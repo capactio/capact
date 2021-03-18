@@ -47,7 +47,7 @@ spec:
       appVersion: 3.x.x
       interfaceGroupPath: cap.interface.runner.helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - alias: argo
       appVersion:
@@ -96,7 +96,7 @@ spec:
             outputs:
               artifacts:
                 - name: confluence-config
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
             steps:
               # If the postgresql TypeInstance was not provided, then create it
               # using the imported 'postgresql.install' Interface.
@@ -141,7 +141,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "confluence-server"
@@ -168,8 +167,8 @@ spec:
 
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
-              - - name: helm-run
-                  voltron-action: helm.run
+              - - name: helm-install
+                  voltron-action: helm.install
                   voltron-outputTypeInstances:
                     - name: confluence-config # Defining the output TypeInstance 'confluence-config'
                       from: additional

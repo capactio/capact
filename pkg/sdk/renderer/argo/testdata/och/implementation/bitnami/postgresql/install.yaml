@@ -30,7 +30,7 @@ spec:
       appVersion:
       interfaceGroupPath: cap.interface.runner.helm
       methods:
-        - name: run
+        - name: install
           revision: 0.1.0
     - alias: jinja2
       appVersion:
@@ -65,7 +65,7 @@ spec:
             outputs:
               artifacts:
                 - name: postgresql
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}"
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
             name: postgres-install
             steps:
               - - voltron-action: jinja2.template
@@ -77,7 +77,6 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "install"
                             generateName: true
                             chart:
                               name: "postgresql"
@@ -100,8 +99,8 @@ spec:
                       from: additional
                     - name: psql-helm-release
                       from: helm-release
-                  voltron-action: helm.run
-                  name: helm-run
+                  voltron-action: helm.install
+                  name: helm-install
                   arguments:
                     artifacts:
                       - name: input-parameters

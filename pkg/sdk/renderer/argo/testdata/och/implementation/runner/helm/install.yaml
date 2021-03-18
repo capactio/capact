@@ -1,14 +1,14 @@
 metadata:
   attributes: []
-  description: Running Helm operations
-  displayName: Run Action for Helm Runner
+  description: Install action for Helm Runner
+  displayName: Install
   documentationURL: https://helm.sh/
   iconURL:
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
-  name: run
-  path: cap.implementation.runner.helm.run
+  name: install
+  path: cap.implementation.runner.helm.install
   prefix: cap.implementation.runner.helm
   supportURL:
 revision: 0.1.0
@@ -26,7 +26,7 @@ spec:
   implements:
     - path: cap.core.interface.runner.generic.run
       revision: 0.1.0
-    - path: cap.interface.runner.helm.run
+    - path: cap.interface.runner.helm.install
       revision: 0.1.0
   imports:
     - alias: argo
@@ -66,15 +66,17 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/helm-runner:PR-113
+              image: gcr.io/projectvoltron/pr/helm-runner:PR-197
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
                 - name: RUNNER_ARGS_PATH
                   value: "{{inputs.artifacts.input-parameters.path}}"
+                - name: RUNNER_LOGGER_DEV_MODE
+                  value: "true"
+                - name: RUNNER_COMMAND
+                  value: "install"
                 - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
                   value: "{{outputs.artifacts.helm-release.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
                   value: "{{outputs.artifacts.additional.path}}"
-                - name: RUNNER_LOGGER_DEV_MODE
-                  value: "true"

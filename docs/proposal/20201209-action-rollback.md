@@ -890,7 +890,6 @@ spec:
             action:
               runnerInterface: helm.install
               args:
-                command: "install"
                 generateName: true
                 chart:
                   name: "postgresql"
