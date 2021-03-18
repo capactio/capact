@@ -51,7 +51,6 @@ query {
 | APP_LOGGER_DEV_MODE             | no       | `false`                          | Enable development mode logging                                                                              |
 | APP_MAX_CONCURRENT_RECONCILES   | no       | `1`                              | Maximum number of concurrent reconcile loops in the controller                                               |
 | APP_MAX_RETRY_FOR_FAILED_ACTION | no       | `15`                             | Maximum number of retries for failed Action reconcile process                                                |
-| APP_MOCK_GRAPHQL                | no       | `false`                          | Set mock responses on the GraphQL server                                                                     |
 | APP_GRAPHQLGATEWAY_ENDPOINT     | no       | `http://voltron-gateway/graphql` | Endpoint of the Voltron Gateway                                                                              |
 | APP_GRAPHQLGATEWAY_USERNAME     | yes      |                                  | Basic auth username used to authenticate at the Voltron Gateway                                              |
 | APP_GRAPHQLGATEWAY_PASSWORD     | yes      |                                  | Basic auth password used to authenticate at the Voltron Gateway                                              |
