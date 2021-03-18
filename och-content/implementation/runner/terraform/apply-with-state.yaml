@@ -34,6 +34,8 @@ spec:
         - name: run
           revision: 0.1.0
 
+  outputTypeInstanceRelations: {}
+
   action:
     runnerInterface: argo.run
     args:

@@ -5,7 +5,7 @@ metadata:
   name: update-input
   prefix: cap.type.terraform.gcp.cloudsql
   displayName: CloudSQL update input
-  description: Defines update input for Terraform provisioned CloudSQL database
+  description: Defines update input for CloudSQL database
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -24,21 +24,14 @@ spec:
             "superuser": {
               "username": "username",
               "password": "password"
-            },
-            "defaultDBName": "default_db"
+            }
           }
-        ],
-        "required": [
-            "superuser"
         ],
         "properties": {
           "superuser": {
             "$id": "#/properties/superuser",
             "type": "object",
             "title": "Defines superuser details",
-            "required": [
-                "password"
-            ],
             "properties": {
               "username": {
                 "$id": "#/properties/superuser/properties/username",
@@ -53,11 +46,6 @@ spec:
               }
             },
             "additionalProperties": false
-          },
-          "defaultDBName": {
-            "$id": "#/properties/defaultDBName",
-            "type": "string",
-            "title": "Defines a different name for the default database that is created"
           }
         },
         "additionalProperties": false
