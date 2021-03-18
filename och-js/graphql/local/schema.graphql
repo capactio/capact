@@ -27,8 +27,15 @@ Version in semantic versioning, e.g. 1.1.0
 """
 scalar Version
 
+"""
+LockOwner defines owner name who locked a given TypeInstance
+"""
+scalar LockOwnerID
+
 type TypeInstance {
   id: ID! @id
+
+  lockedBy: LockOwnerID
 
   """
   Common properties for all TypeInstances which cannot be changed
@@ -221,6 +228,16 @@ input UpdateTypeInstanceInput {
 input UpdateTypeInstancesInput {
   id: ID!
   typeInstance: UpdateTypeInstanceInput!
+}
+
+input LockTypeInstanceInput {
+  ids: [ID!]!
+  ownerID: LockOwnerID!
+}
+
+input UnlockTypeInstanceInput {
+  ids: [ID!]!
+  ownerID: LockOwnerID!
 }
 
 type Query {
@@ -445,6 +462,19 @@ type Mutation {
     )
 
   deleteTypeInstance(id: ID!): ID!
+
+  """
+  Mark given TypeInstances as locked by a given owner.
+  If TypeInstance is already locked, error is returned.
+  """
+  lockTypeInstances(in: LockTypeInstanceInput!): [ID!]!
+
+  """
+  Remove lock from given TypeInstances.
+  If TypeInstance was not locked by a given owner, error is returned.
+  """
+  unlockTypeInstances(in: UnlockTypeInstanceInput!): [ID!]!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
+
