@@ -1,9 +1,7 @@
 package fake
 
 import (
-	"bytes"
 	"context"
-	"encoding/gob"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -195,14 +193,10 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 }
 
 func deepCopy(src interface{}, dst interface{}) error {
-	var mod bytes.Buffer
-	enc := gob.NewEncoder(&mod)
-	dec := gob.NewDecoder(&mod)
-
-	err := enc.Encode(src)
+	data, err := json.Marshal(src)
 	if err != nil {
 		return err
 	}
 
-	return dec.Decode(dst)
+	return json.Unmarshal(data, &dst)
 }
