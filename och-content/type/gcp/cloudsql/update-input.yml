@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: update-input
-  prefix: cap.type.terraform.gcp.cloudsql
+  prefix: cap.type.gcp.cloudsql
   displayName: CloudSQL update input
   description: Defines update input for CloudSQL database
   documentationURL: https://projectvoltron.dev

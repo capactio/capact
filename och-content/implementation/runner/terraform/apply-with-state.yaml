@@ -66,8 +66,7 @@ spec:
                   globalName: tfstate
                   path: "/terraform-state.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/terraform-runner:PR-196
-              imagePullPolicy: Always
+              image: gcr.io/projectvoltron/terraform-runner:PR-196
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
@@ -79,6 +78,8 @@ spec:
                   value: "{{outputs.artifacts.terraform-release.path}}"
                 - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
                   value: "{{outputs.artifacts.additional.path}}"
+                - name: RUNNER_OUTPUT_TFSTATE_FILE_PATH
+                  value: "{{outputs.artifacts.tfstate.path}}"
                 - name: RUNNER_LOGGER_DEV_MODE
                   value: "true"
 

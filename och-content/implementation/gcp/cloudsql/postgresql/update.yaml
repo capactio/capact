@@ -85,8 +85,12 @@ spec:
                         raw:
                           data: |
                             variables: |+
+                              <% if input.superuser.username -%>
                               user_name = "<@ input.superuser.username @>"
-                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+                              <%- endif %>
+                              <% if input.superuser.password -%>
+                              user_password = "<@ input.superuser.password @>"
+                              <%- endif %>
                             command: "apply"
                             module:
                               name: <@ release.name @>
@@ -97,8 +101,8 @@ spec:
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
-                                port: 5432
-                                defaultDBName: postgres
+                                port: <@ postgresql.port @>
+                                defaultDBName: <@ postgresql.defaultDBName @>
                                 superuser:
                                   username: "{{ .username }}"
                                   password: "{{ .password }}"
@@ -129,19 +133,25 @@ spec:
                           data: |
                             prefix: release
 
+              - - name: fill-postgresql-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-release-in-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: postgresql
+
               - - name: convert-gcp-yaml-to-json
                   template: convert-yaml-to-json
                   arguments:
                     artifacts:
                       - name: in
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
-
-              #- - name: convert-tfstate-yaml-to-json
-              #    template: convert-yaml-to-json
-              #    arguments:
-              #      artifacts:
-              #        - name: in
-              #          from: "{{inputs.artifacts.tfstate}}"
 
               - - name: terraform-apply
                   voltron-action: terraform.apply-with-state
@@ -153,7 +163,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-release-in-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-postgresql-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: tfstate
