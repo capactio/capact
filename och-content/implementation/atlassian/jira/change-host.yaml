@@ -1,0 +1,101 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.atlassian.jira
+  name: change-host
+  displayName: "Change host"
+  description: "Change host for Jira installation"
+  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
+  supportURL: https://www.atlassian.com/software/jira
+  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "8.x.x"
+
+  outputTypeInstanceRelations: {} # no new TypeInstances to upload, they are updated in place
+
+  implements:
+    - path: cap.interface.productivity.jira.change-host
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: upgrade
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: jira-install
+        templates:
+          - name: jira-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            reuseValues: true
+                            output:
+                              goTemplate:
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
+                            values:
+                              ingress:
+                                tls:
+                                  - secretName: jira-server-tls-<@ random_word(length=5) @>
+                                    hosts:
+                                      - <@ host @>
+                                hosts:
+                                - host: <@ host @>
+                                  paths: ['/']
+                      - name: input-parameters
+                          from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+
+              - - name: helm-upgrade
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{workflow.outputs.artifacts.jira-helm-release}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
