@@ -83,7 +83,7 @@ spec:
                             prefix: input
                       - name: template
                         raw:
-                          data: |
+                          data: | # TODO add other Terraform variables to the input
                             variables: |+
                               <% if input.superuser.username -%>
                               user_name = "<@ input.superuser.username @>"
