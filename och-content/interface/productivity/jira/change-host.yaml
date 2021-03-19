@@ -40,7 +40,10 @@ spec:
                   "revision": "0.1.0"
                 }
               },
-              "allOf": [ { "$ref": "#/$ocfRefs/hostname" } ],
+              "required": ["host"],
+              "properties": {
+                "host": { "$ref": "#/$ocfRefs/hostname" }
+              }
               "additionalProperties": false
             }
 

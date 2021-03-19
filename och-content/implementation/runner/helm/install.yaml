@@ -64,7 +64,7 @@ spec:
                   globalName: additional
                   path: "/additional.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/helm-runner:dev # TODO: Update image
+              image: docker.io/local/helm-runner:dev # TODO: Update image
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"

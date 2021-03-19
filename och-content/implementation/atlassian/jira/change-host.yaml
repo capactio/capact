@@ -81,7 +81,7 @@ spec:
                                 - host: <@ host @>
                                   paths: ['/']
                       - name: input-parameters
-                          from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
                           data: ""
