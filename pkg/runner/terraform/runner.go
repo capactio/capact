@@ -3,6 +3,7 @@ package terraform
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -146,7 +147,7 @@ func (r *terraformRunner) injectStateTypeInstance() error {
 		return runner.SaveToFile(varsFilepath, []byte("\n"))
 	}
 
-	data, err := os.ReadFile(r.cfg.StateTypeInstanceFilepath)
+	data, err := ioutil.ReadFile(r.cfg.StateTypeInstanceFilepath)
 	if err != nil {
 		return errors.Wrapf(err, "while reading state file %s", r.cfg.StateTypeInstanceFilepath)
 	}
@@ -157,11 +158,11 @@ func (r *terraformRunner) injectStateTypeInstance() error {
 	}
 
 	stateFilepath := path.Join(r.cfg.WorkDir, stateFile)
-	if err := os.WriteFile(stateFilepath, state.State, runner.DefaultFilePermissions); err != nil {
+	if err := runner.SaveToFile(stateFilepath, state.State); err != nil {
 		return errors.Wrapf(err, "while writing state file %s", stateFilepath)
 	}
 
-	if err := os.WriteFile(varsFilepath, state.Variables, runner.DefaultFilePermissions); err != nil {
+	if err := runner.SaveToFile(varsFilepath, state.Variables); err != nil {
 		return errors.Wrapf(err, "while writing vars file %s", varsFilepath)
 	}
 
