@@ -19,28 +19,29 @@ on:
       - "release-0.2"
 
 jobs:
-  entry-tests:
-    name: Lint and test code
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - name: Run linting
-        run: |
-          make test-lint
-      - name: Run unit tests
-        run: make test-unit
-      - name: Check generated files
-        run: |
-          make test-generated
+# Commented to reduce CI build time. Uncomment when going open-source.
+#  entry-tests:
+#    name: Lint and test code
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#      - name: Setup environment
+#        run: |
+#          . ./hack/ci/setup-env.sh
+#      - name: Setup Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ${{env.GO_VERSION}}
+#      - name: Run linting
+#        run: |
+#          make test-lint
+#      - name: Run unit tests
+#        run: make test-unit
+#      - name: Check generated files
+#        run: |
+#          make test-generated
 
   prepare-matrix:
     name: Prepare components build matrix
@@ -49,7 +50,8 @@ jobs:
       matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
       matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
       matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
-      matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
+      # Commented to reduce CI build time. Uncomment when going open-source.
+      #matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
 
     steps:
       - name: Checkout code
@@ -62,8 +64,9 @@ jobs:
         run: echo "::set-output ${TESTS}"
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
-      - id: set-matrix-tool
-        run: echo "::set-output ${TOOLS}"
+      # Commented to reduce CI build time. Uncomment when going open-source.
+      #- id: set-matrix-tool
+      #  run: echo "::set-output ${TOOLS}"
 
   build-app:
     name: Build ${{ matrix.APP }}
@@ -119,6 +122,7 @@ jobs:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
     needs: prepare-matrix
+    if: ${{ needs.prepare-matrix.outputs.matrix-infra != '' }}
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
 
@@ -140,60 +144,61 @@ jobs:
       - run: make build-infra-image-${{ matrix.INFRA }}
       - run: make push-infra-image-${{ matrix.INFRA }}
 
-  build-tools:
-    strategy:
-      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-tool)}}
-    needs: prepare-matrix
-    name: Build ${{ matrix.TOOL }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - run: make build-tool-${{ matrix.tool }}
-
-  integration-tests:
-    name: Integration tests
-    runs-on: ubuntu-latest
-    needs: [ entry-tests, build-app, build-infra, build-tests ]
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - name: Run K8s Controller integration tests
-        run: |
-          make test-k8s-controller
-      - name: Run cross-functional integration tests
-        env:
-          BUILD_IMAGES: "false"
-          ARTIFACTS: "output/"
-          DISABLE_MONITORING_INSTALLATION: "true"
-        run: |
-          make test-integration
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v2
-        if: ${{ always() }}
-        with:
-          name: cluster_dump_${{github.sha}}
-          path: "output"
-          retention-days: 5 # Default 90 days
+# Commented to reduce CI build time. Uncomment when going open-source.
+#  build-tools:
+#    strategy:
+#      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-tool)}}
+#    needs: prepare-matrix
+#    name: Build ${{ matrix.TOOL }}
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#      - name: Setup environment
+#        run: |
+#          . ./hack/ci/setup-env.sh
+#      - name: Setup Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ${{env.GO_VERSION}}
+#      - run: make build-tool-${{ matrix.tool }}
+#
+#  integration-tests:
+#    name: Integration tests
+#    runs-on: ubuntu-latest
+#    needs: [ entry-tests, build-app, build-infra, build-tests ]
+#    steps:
+#      - name: Checkout code
+#        uses: actions/checkout@v2
+#      - name: Setup environment
+#        run: |
+#          . ./hack/ci/setup-env.sh
+#      - name: Setup Go
+#        uses: actions/setup-go@v2
+#        with:
+#          go-version: ${{env.GO_VERSION}}
+#      - name: Run K8s Controller integration tests
+#        run: |
+#          make test-k8s-controller
+#      - name: Run cross-functional integration tests
+#        env:
+#          BUILD_IMAGES: "false"
+#          ARTIFACTS: "output/"
+#          DISABLE_MONITORING_INSTALLATION: "true"
+#        run: |
+#          make test-integration
+#      - name: Upload artifacts
+#        uses: actions/upload-artifact@v2
+#        if: ${{ always() }}
+#        with:
+#          name: cluster_dump_${{github.sha}}
+#          path: "output"
+#          retention-days: 5 # Default 90 days
 
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
-    needs: [ integration-tests, entry-tests ]
+    needs: [ build-app, build-tests, build-infra ]
     if: github.ref == 'refs/heads/master'
 
     steps:

@@ -32,11 +32,35 @@ else
   echo "DOCKER_REPOSITORY=gcr.io/projectvoltron" >> "$GITHUB_ENV"
 fi
 
+function returnInfraMatrixIfNeeded() {
+  git diff --name-only HEAD^ HEAD > changes.txt
+  while IFS= read -r file; do
+    if [[ $file == hack/images/* ]]; then
+      # TODO: jinja2 is a Voltron Action move it to a separate directory or create a new repo for it
+      echo 'INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"},{"INFRA":"jinja2"}]}'
+      break
+    fi
+  done <changes.txt
+
+  rm changes.txt
+}
+
+function returnOCHJSIfNeeded() {
+  git diff --name-only HEAD^ HEAD > changes.txt
+  while IFS= read -r file; do
+    if [[ $file == och-js/* ]]; then
+      echo '{"APP":"och-js"},'
+      break
+    fi
+  done <changes.txt
+
+  rm changes.txt
+}
+
 # TODO: Read components to build in automated way, e.g. from directory structure
-# TODO: jinja2 is a Voltron Action move it to a separate directory or create a new repo for it
-cat <<EOT >> "$GITHUB_ENV"
-APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
+cat <<EOT >>"$GITHUB_ENV"
+APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},$(returnOCHJSIfNeeded){"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
-INFRAS=name=matrix::{"include":[{"INFRA":"json-go-gen"},{"INFRA":"graphql-schema-linter"},{"INFRA":"jinja2"}]}
 TOOLS=name=matrix::{"include":[{"TOOL":"ocftool"}]}
+$(returnInfraMatrixIfNeeded)
 EOT
