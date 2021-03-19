@@ -199,7 +199,7 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [ entry-tests, build-app, build-infra, build-tests ]
+    needs: [ entry-tests, build-app, build-tests ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
