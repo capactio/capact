@@ -15,14 +15,7 @@ interface ContextWithDriver {
   driver: Driver;
 }
 
-interface LockTypeInstancesInput {
-  in: {
-    ids: [string];
-    ownerID: string;
-  };
-}
-
-interface UnlockTypeInstancesInput {
+interface LockingTypeInstanceInput {
   in: {
     ids: [string];
     ownerID: string;
@@ -41,6 +34,7 @@ interface TypeInstanceNode {
   properties: { id: string, lockedBy: string }
 }
 
+// TODO: extract each mutation/query into dedicated file
 export const schema = makeAugmentedSchema({
   typeDefs,
   resolvers: {
@@ -255,13 +249,13 @@ export const schema = makeAugmentedSchema({
           neo4jSession.close();
         }
       },
-      lockTypeInstances: async (_obj, args: LockTypeInstancesInput, context) => {
+      lockTypeInstances: async (_obj, args: LockingTypeInstanceInput, context) => {
         const neo4jSession = context.driver.session();
         try {
 
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              await run(tx, args, `
+              await switchLocking(tx, args, `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = $in.ownerID
@@ -277,13 +271,13 @@ export const schema = makeAugmentedSchema({
           neo4jSession.close();
         }
       },
-      unlockTypeInstances: async (_obj, args: UnlockTypeInstancesInput, context) => {
+      unlockTypeInstances: async (_obj, args: LockingTypeInstanceInput, context) => {
         const neo4jSession = context.driver.session();
         try {
 
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              await run(tx, args, `
+              await switchLocking(tx, args, `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = null
@@ -307,7 +301,7 @@ export const schema = makeAugmentedSchema({
   },
 });
 
-async function run(tx: Transaction, args: LockTypeInstancesInput | UnlockTypeInstancesInput, executeQuery: string) {
+async function switchLocking(tx: Transaction, args: LockingTypeInstanceInput, executeQuery: string) {
   const instanceLockedByOthers = await tx.run(
     `MATCH (ti:TypeInstance)
           WHERE ti.id IN $in.ids 
@@ -346,36 +340,39 @@ async function run(tx: Transaction, args: LockTypeInstancesInput | UnlockTypeIns
     {in: args.in}
   );
 
-  const extractedResult = instanceLockedByOthers.records.map<LockingResult>(
-    record => {
-      return {
-        allIDs: record.get("allIDs"),
-        lockedIDs: record.get("lockedIDs"),
-        lockingProcess: record.get("lockingProcess"),
-      }
-    }
-  );
-
-  const resultRow = extractedResult[0]
-  if (resultRow === undefined) {
+  if (!instanceLockedByOthers.records.length) {
     throw new Error(
       `Internal Server Error, result row is undefined`
     );
   }
 
-  if (!resultRow.lockingProcess.executed) {
-    let errMsg: string[] = []
-    const foundIDs = resultRow.allIDs.map( item =>item.properties.id);
-    const notFoundIDs = args.in.ids.filter(x => !foundIDs.includes(x));
+  const record = instanceLockedByOthers.records[0]
 
+  const resultRow:LockingResult = {
+    allIDs: record.get("allIDs"),
+    lockedIDs: record.get("lockedIDs"),
+    lockingProcess: record.get("lockingProcess"),
+  }
+
+  validateLockingProcess(resultRow, args.in.ids)
+
+}
+
+function validateLockingProcess(result: LockingResult, expIDs: [string]) {
+  if (!result.lockingProcess.executed) {
+    const errMsg: string[] = []
+
+    const foundIDs = result.allIDs.map(item =>item.properties.id);
+    const notFoundIDs = expIDs.filter(x => !foundIDs.includes(x));
     if (notFoundIDs.length !== 0) {
-      errMsg.push(`TypeInstances with IDs ${notFoundIDs.join(", ")} were not found`);
+      errMsg.push(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
     }
 
-    const lockedIDs = resultRow.lockedIDs.map( item =>item.properties.id);
+    const lockedIDs = result.lockedIDs.map(item =>item.properties.id);
     if (lockedIDs.length !== 0) {
-      errMsg.push(`TypeInstances with IDs ${lockedIDs.join(", ")} are locked by other owner`);
+      errMsg.push(`TypeInstances with IDs "${lockedIDs.join('", "')}" are locked by different owner`);
     }
+
     switch (errMsg.length) {
       case 0: break;
       case 1:

@@ -18,7 +18,7 @@ var typeInstanceFields = fmt.Sprintf(`
 		path
 		revision
 	  }
-      lockedBy
+	  lockedBy
 
 	  latestResourceVersion {
 		%s

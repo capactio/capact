@@ -43,7 +43,7 @@ type CreateTypeInstancesInput struct {
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
 }
 
-type LockTypeInstanceInput struct {
+type LockTypeInstancesInput struct {
 	Ids     []string `json:"ids"`
 	OwnerID string   `json:"ownerID"`
 }
@@ -126,7 +126,7 @@ type TypeRefFilterInput struct {
 	Revision *string `json:"revision"`
 }
 
-type UnlockTypeInstanceInput struct {
+type UnlockTypeInstancesInput struct {
 	Ids     []string `json:"ids"`
 	OwnerID string   `json:"ownerID"`
 }

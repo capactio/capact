@@ -289,7 +289,7 @@ var _ = Describe("GraphQL API", func() {
 			lastInstances := createdTIIDs[2:]
 
 			when("Foo tries to locks them")
-			err := localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err := localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     firstTwoInstances,
 				OwnerID: fooOwnerID,
 			})
@@ -310,7 +310,7 @@ var _ = Describe("GraphQL API", func() {
 
 			scenario("id1 and id2 are locked by Foo, id3: not locked")
 			when("Foo tries to locks them")
-			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     createdTIIDs, // lock all 3 instances, when the first two are already locked
 				OwnerID: fooOwnerID,
 			})
@@ -330,7 +330,7 @@ var _ = Describe("GraphQL API", func() {
 			lockingIDs = append(lockingIDs, "123-not-found")
 
 			when("Foo tries to locks id1,id2,id3,id4")
-			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     lockingIDs,
 				OwnerID: fooOwnerID,
 			})
@@ -338,10 +338,10 @@ var _ = Describe("GraphQL API", func() {
 			then("should failed with id4 not found error")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring(heredoc.Doc(`while executing mutation to lock TypeInstances: All attempts fail:
-							#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs 123-not-found were not found`)))
+							#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "123-not-found" were not found`)))
 
 			when("Bar tries to locks id1,id2,id3,id4")
-			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     lockingIDs,
 				OwnerID: barOwnerID,
 			})
@@ -349,7 +349,7 @@ var _ = Describe("GraphQL API", func() {
 			then("should failed with id4 not found and already locked error for id1,id2,id3")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-				#1: graphql: failed to lock TypeInstances: 2 errors occurred: [TypeInstances with IDs 123-not-found were not found, TypeInstances with IDs %s are locked by other owner]`, strings.Join(createdTIIDs, ", "))))
+				#1: graphql: failed to lock TypeInstances: 2 errors occurred: [TypeInstances with IDs "123-not-found" were not found, TypeInstances with IDs "%s" are locked by different owner]`, strings.Join(createdTIIDs, `", "`))))
 
 			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
 			when("Bar tries to locks all of them")
@@ -360,7 +360,7 @@ var _ = Describe("GraphQL API", func() {
 
 			lockingIDs = createdTIIDs
 			lockingIDs = append(lockingIDs, id4.ID)
-			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     lockingIDs,
 				OwnerID: barOwnerID,
 			})
@@ -368,12 +368,12 @@ var _ = Describe("GraphQL API", func() {
 			then("should failed with error id1,id2,id3 already locked by Foo")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by other owner`, strings.Join(createdTIIDs, ", "))))
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
 
 			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
 
 			when("Bar tries to locks all of them")
-			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstanceInput{
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 				Ids:     lockingIDs,
 				OwnerID: barOwnerID,
 			})
@@ -381,7 +381,7 @@ var _ = Describe("GraphQL API", func() {
 			then("should failed with error id1,id2,id3 already locked by Foo")
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by other owner`, strings.Join(createdTIIDs, ", "))))
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
 		})
 	})
 })

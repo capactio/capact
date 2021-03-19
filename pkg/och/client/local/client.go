@@ -196,8 +196,8 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 	return nil
 }
 
-func (c *Client) LockTypeInstances(ctx context.Context, in *ochlocalgraphql.LockTypeInstanceInput) error {
-	query := `mutation($in: LockTypeInstanceInput!) {
+func (c *Client) LockTypeInstances(ctx context.Context, in *ochlocalgraphql.LockTypeInstancesInput) error {
+	query := `mutation($in: LockTypeInstancesInput!) {
 		lockTypeInstances(in: $in)
 	}`
 
@@ -214,8 +214,8 @@ func (c *Client) LockTypeInstances(ctx context.Context, in *ochlocalgraphql.Lock
 	return nil
 }
 
-func (c *Client) UnlockTypeInstances(ctx context.Context, in *ochlocalgraphql.UnlockTypeInstanceInput) error {
-	query := `mutation($in: UnlockTypeInstanceInput!) {
+func (c *Client) UnlockTypeInstances(ctx context.Context, in *ochlocalgraphql.UnlockTypeInstancesInput) error {
+	query := `mutation($in: UnlockTypeInstancesInput!) {
 		unlockTypeInstances(in: $in)
 	}`
 

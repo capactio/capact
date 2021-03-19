@@ -230,12 +230,12 @@ input UpdateTypeInstancesInput {
   typeInstance: UpdateTypeInstanceInput!
 }
 
-input LockTypeInstanceInput {
+input LockTypeInstancesInput {
   ids: [ID!]!
   ownerID: LockOwnerID!
 }
 
-input UnlockTypeInstanceInput {
+input UnlockTypeInstancesInput {
   ids: [ID!]!
   ownerID: LockOwnerID!
 }
@@ -465,15 +465,15 @@ type Mutation {
 
   """
   Mark given TypeInstances as locked by a given owner.
-  If TypeInstance is already locked, error is returned.
+  If at least one TypeInstance is already locked with different OwnerID, an error is returned.
   """
-  lockTypeInstances(in: LockTypeInstanceInput!): [ID!]!
+  lockTypeInstances(in: LockTypeInstancesInput!): [ID!]!
 
   """
   Remove lock from given TypeInstances.
-  If TypeInstance was not locked by a given owner, error is returned.
+  If at least one TypeInstance was not locked by a given owner, an error is returned.
   """
-  unlockTypeInstances(in: UnlockTypeInstanceInput!): [ID!]!
+  unlockTypeInstances(in: UnlockTypeInstancesInput!): [ID!]!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
