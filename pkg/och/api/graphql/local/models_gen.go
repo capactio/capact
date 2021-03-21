@@ -43,8 +43,14 @@ type CreateTypeInstancesInput struct {
 	UsesRelations []*TypeInstanceUsesRelationInput `json:"usesRelations"`
 }
 
+type LockTypeInstancesInput struct {
+	Ids     []string `json:"ids"`
+	OwnerID string   `json:"ownerID"`
+}
+
 type TypeInstance struct {
-	ID string `json:"id"`
+	ID       string  `json:"id"`
+	LockedBy *string `json:"lockedBy"`
 	// Common properties for all TypeInstances which cannot be changed
 	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
@@ -118,6 +124,11 @@ type TypeRefFilterInput struct {
 	Path string `json:"path"`
 	// If not provided, it returns TypeInstances for all revisions of given Type
 	Revision *string `json:"revision"`
+}
+
+type UnlockTypeInstancesInput struct {
+	Ids     []string `json:"ids"`
+	OwnerID string   `json:"ownerID"`
 }
 
 // At least one property needs to be specified.

@@ -195,3 +195,39 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 
 	return nil
 }
+
+func (c *Client) LockTypeInstances(ctx context.Context, in *ochlocalgraphql.LockTypeInstancesInput) error {
+	query := `mutation($in: LockTypeInstancesInput!) {
+		lockTypeInstances(in: $in)
+	}`
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, nil)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return errors.Wrap(err, "while executing mutation to lock TypeInstances")
+	}
+
+	return nil
+}
+
+func (c *Client) UnlockTypeInstances(ctx context.Context, in *ochlocalgraphql.UnlockTypeInstancesInput) error {
+	query := `mutation($in: UnlockTypeInstancesInput!) {
+		unlockTypeInstances(in: $in)
+	}`
+
+	req := graphql.NewRequest(query)
+	req.Var("in", in)
+
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, nil)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return errors.Wrap(err, "while executing mutation to unlock TypeInstances")
+	}
+
+	return nil
+}

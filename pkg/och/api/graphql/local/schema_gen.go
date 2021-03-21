@@ -61,6 +61,8 @@ type ComplexityRoot struct {
 		CreateTypeInstance  func(childComplexity int, in CreateTypeInstanceInput) int
 		CreateTypeInstances func(childComplexity int, in CreateTypeInstancesInput) int
 		DeleteTypeInstance  func(childComplexity int, id string) int
+		LockTypeInstances   func(childComplexity int, in LockTypeInstancesInput) int
+		UnlockTypeInstances func(childComplexity int, in UnlockTypeInstancesInput) int
 		UpdateTypeInstance  func(childComplexity int, id string, in UpdateTypeInstanceInput) int
 		UpdateTypeInstances func(childComplexity int, in []*UpdateTypeInstancesInput) int
 	}
@@ -74,6 +76,7 @@ type ComplexityRoot struct {
 		FirstResourceVersion    func(childComplexity int) int
 		ID                      func(childComplexity int) int
 		LatestResourceVersion   func(childComplexity int) int
+		LockedBy                func(childComplexity int) int
 		PreviousResourceVersion func(childComplexity int) int
 		ResourceVersion         func(childComplexity int, resourceVersion int) int
 		ResourceVersions        func(childComplexity int) int
@@ -130,6 +133,8 @@ type MutationResolver interface {
 	UpdateTypeInstance(ctx context.Context, id string, in UpdateTypeInstanceInput) (*TypeInstance, error)
 	UpdateTypeInstances(ctx context.Context, in []*UpdateTypeInstancesInput) ([]*TypeInstance, error)
 	DeleteTypeInstance(ctx context.Context, id string) (string, error)
+	LockTypeInstances(ctx context.Context, in LockTypeInstancesInput) ([]string, error)
+	UnlockTypeInstances(ctx context.Context, in UnlockTypeInstancesInput) ([]string, error)
 }
 type QueryResolver interface {
 	TypeInstances(ctx context.Context, filter *TypeInstanceFilter) ([]*TypeInstance, error)
@@ -215,6 +220,30 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.DeleteTypeInstance(childComplexity, args["id"].(string)), true
 
+	case "Mutation.lockTypeInstances":
+		if e.complexity.Mutation.LockTypeInstances == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_lockTypeInstances_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.LockTypeInstances(childComplexity, args["in"].(LockTypeInstancesInput)), true
+
+	case "Mutation.unlockTypeInstances":
+		if e.complexity.Mutation.UnlockTypeInstances == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_unlockTypeInstances_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.UnlockTypeInstances(childComplexity, args["in"].(UnlockTypeInstancesInput)), true
+
 	case "Mutation.updateTypeInstance":
 		if e.complexity.Mutation.UpdateTypeInstance == nil {
 			break
@@ -283,6 +312,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeInstance.LatestResourceVersion(childComplexity), true
+
+	case "TypeInstance.lockedBy":
+		if e.complexity.TypeInstance.LockedBy == nil {
+			break
+		}
+
+		return e.complexity.TypeInstance.LockedBy(childComplexity), true
 
 	case "TypeInstance.previousResourceVersion":
 		if e.complexity.TypeInstance.PreviousResourceVersion == nil {
@@ -543,8 +579,15 @@ Version in semantic versioning, e.g. 1.1.0
 """
 scalar Version
 
+"""
+LockOwner defines owner name who locked a given TypeInstance
+"""
+scalar LockOwnerID
+
 type TypeInstance {
   id: ID! @id
+
+  lockedBy: LockOwnerID
 
   """
   Common properties for all TypeInstances which cannot be changed
@@ -737,6 +780,16 @@ input UpdateTypeInstanceInput {
 input UpdateTypeInstancesInput {
   id: ID!
   typeInstance: UpdateTypeInstanceInput!
+}
+
+input LockTypeInstancesInput {
+  ids: [ID!]!
+  ownerID: LockOwnerID!
+}
+
+input UnlockTypeInstancesInput {
+  ids: [ID!]!
+  ownerID: LockOwnerID!
 }
 
 type Query {
@@ -961,9 +1014,22 @@ type Mutation {
     )
 
   deleteTypeInstance(id: ID!): ID!
+
+  """
+  Mark given TypeInstances as locked by a given owner.
+  If at least one TypeInstance is already locked with different OwnerID, an error is returned.
+  """
+  lockTypeInstances(in: LockTypeInstancesInput!): [ID!]!
+
+  """
+  Remove lock from given TypeInstances.
+  If at least one TypeInstance was not locked by a given owner, an error is returned.
+  """
+  unlockTypeInstances(in: UnlockTypeInstancesInput!): [ID!]!
 }
 
 # TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65
+
 `, BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
@@ -1071,6 +1137,36 @@ func (ec *executionContext) field_Mutation_deleteTypeInstance_args(ctx context.C
 		}
 	}
 	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_lockTypeInstances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 LockTypeInstancesInput
+	if tmp, ok := rawArgs["in"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("in"))
+		arg0, err = ec.unmarshalNLockTypeInstancesInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐLockTypeInstancesInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["in"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_unlockTypeInstances_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 UnlockTypeInstancesInput
+	if tmp, ok := rawArgs["in"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("in"))
+		arg0, err = ec.unmarshalNUnlockTypeInstancesInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐUnlockTypeInstancesInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["in"] = arg0
 	return args, nil
 }
 
@@ -1633,6 +1729,90 @@ func (ec *executionContext) _Mutation_deleteTypeInstance(ctx context.Context, fi
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _Mutation_lockTypeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_lockTypeInstances_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().LockTypeInstances(rctx, args["in"].(LockTypeInstancesInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _Mutation_unlockTypeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   true,
+		IsResolver: true,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Mutation_unlockTypeInstances_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().UnlockTypeInstances(rctx, args["in"].(UnlockTypeInstancesInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNID2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_typeInstances(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -1886,6 +2066,38 @@ func (ec *executionContext) _TypeInstance_id(ctx context.Context, field graphql.
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstance_lockedBy(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstance",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LockedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOLockOwnerID2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstance_typeRef(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
@@ -4406,6 +4618,34 @@ func (ec *executionContext) unmarshalInputCreateTypeInstancesInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputLockTypeInstancesInput(ctx context.Context, obj interface{}) (LockTypeInstancesInput, error) {
+	var it LockTypeInstancesInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "ownerID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			it.OwnerID, err = ec.unmarshalNLockOwnerID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputTypeInstanceFilter(ctx context.Context, obj interface{}) (TypeInstanceFilter, error) {
 	var it TypeInstanceFilter
 	var asMap = obj.(map[string]interface{})
@@ -4509,6 +4749,34 @@ func (ec *executionContext) unmarshalInputTypeRefFilterInput(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
 			it.Revision, err = ec.unmarshalOVersion2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUnlockTypeInstancesInput(ctx context.Context, obj interface{}) (UnlockTypeInstancesInput, error) {
+	var it UnlockTypeInstancesInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "ids":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ids"))
+			it.Ids, err = ec.unmarshalNID2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "ownerID":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
+			it.OwnerID, err = ec.unmarshalNLockOwnerID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4686,6 +4954,16 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "lockTypeInstances":
+			out.Values[i] = ec._Mutation_lockTypeInstances(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "unlockTypeInstances":
+			out.Values[i] = ec._Mutation_unlockTypeInstances(ctx, field)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4768,6 +5046,8 @@ func (ec *executionContext) _TypeInstance(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "lockedBy":
+			out.Values[i] = ec._TypeInstance_lockedBy(ctx, field, obj)
 		case "typeRef":
 			out.Values[i] = ec._TypeInstance_typeRef(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5435,6 +5715,36 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNID2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNID2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNID2string(ctx, sel, v[i])
+	}
+
+	return ret
+}
+
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v interface{}) (int, error) {
 	res, err := graphql.UnmarshalInt(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5448,6 +5758,26 @@ func (ec *executionContext) marshalNInt2int(ctx context.Context, sel ast.Selecti
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNLockOwnerID2string(ctx context.Context, v interface{}) (string, error) {
+	res, err := graphql.UnmarshalString(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNLockOwnerID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
+	res := graphql.MarshalString(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
+}
+
+func (ec *executionContext) unmarshalNLockTypeInstancesInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐLockTypeInstancesInput(ctx context.Context, v interface{}) (LockTypeInstancesInput, error) {
+	res, err := ec.unmarshalInputLockTypeInstancesInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNNodePath2string(ctx context.Context, v interface{}) (string, error) {
@@ -5684,6 +6014,11 @@ func (ec *executionContext) unmarshalNTypeInstanceUsesRelationInput2ᚕᚖprojec
 func (ec *executionContext) unmarshalNTypeInstanceUsesRelationInput2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeInstanceUsesRelationInput(ctx context.Context, v interface{}) (*TypeInstanceUsesRelationInput, error) {
 	res, err := ec.unmarshalInputTypeInstanceUsesRelationInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNUnlockTypeInstancesInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐUnlockTypeInstancesInput(ctx context.Context, v interface{}) (UnlockTypeInstancesInput, error) {
+	res, err := ec.unmarshalInputUnlockTypeInstancesInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateTypeInstanceInput2projectvoltronᚗdevᚋvoltronᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐUpdateTypeInstanceInput(ctx context.Context, v interface{}) (UpdateTypeInstanceInput, error) {
@@ -6126,6 +6461,21 @@ func (ec *executionContext) marshalOHTTPRequestMethod2ᚖprojectvoltronᚗdevᚋ
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOLockOwnerID2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOLockOwnerID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

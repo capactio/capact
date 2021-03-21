@@ -4,7 +4,10 @@ package e2e
 
 import (
 	"context"
+	"fmt"
+	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
@@ -167,7 +170,7 @@ var _ = Describe("GraphQL API", func() {
 		})
 	})
 
-	Context("Local OCH v2", func() {
+	Context("Local OCH", func() {
 		It("should create, find and delete TypeInstance", func() {
 			cli := getOCHGraphQLClient()
 
@@ -259,11 +262,157 @@ var _ = Describe("GraphQL API", func() {
 			assertTypeInstance(ctx, cli, *childTiID, expectedChild)
 			assertTypeInstance(ctx, cli, *parentTiID, expectedParent)
 		})
-	})
 
+		It("should lock TypeInstances based on all edge cases", func() {
+			const (
+				fooOwnerID = "namespace/Foo"
+				barOwnerID = "namespace/Bar"
+			)
+			localCli := getOCHGraphQLClient()
+
+			var createdTIIDs []string
+
+			for _, ver := range []string{"id1", "id2", "id3"} {
+				out, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
+				Expect(err).NotTo(HaveOccurred())
+				createdTIIDs = append(createdTIIDs, out.ID)
+			}
+			defer func() {
+				for _, id := range createdTIIDs {
+					_ = localCli.DeleteTypeInstance(ctx, id)
+				}
+
+			}()
+
+			scenario("id1 and id2 are not locked")
+			firstTwoInstances := createdTIIDs[:2]
+			lastInstances := createdTIIDs[2:]
+
+			when("Foo tries to locks them")
+			err := localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     firstTwoInstances,
+				OwnerID: fooOwnerID,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			then("should success")
+			got, err := localCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, instance := range got {
+				if includes(firstTwoInstances, instance.ID) {
+					Expect(instance.LockedBy).NotTo(BeNil())
+					Expect(*instance.LockedBy).To(Equal(fooOwnerID))
+				} else if includes(lastInstances, instance.ID) {
+					Expect(instance.LockedBy).To(BeNil())
+				}
+			}
+
+			scenario("id1 and id2 are locked by Foo, id3: not locked")
+			when("Foo tries to locks them")
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     createdTIIDs, // lock all 3 instances, when the first two are already locked
+				OwnerID: fooOwnerID,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			then("should success")
+			got, err = localCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
+			Expect(err).NotTo(HaveOccurred())
+
+			for _, instance := range got {
+				Expect(instance.LockedBy).NotTo(BeNil())
+				Expect(*instance.LockedBy).To(Equal(fooOwnerID))
+			}
+
+			scenario("id1, id2, id3 are locked by Foo, id4: not found")
+			lockingIDs := createdTIIDs
+			lockingIDs = append(lockingIDs, "123-not-found")
+
+			when("Foo tries to locks id1,id2,id3,id4")
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     lockingIDs,
+				OwnerID: fooOwnerID,
+			})
+
+			then("should failed with id4 not found error")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(heredoc.Doc(`while executing mutation to lock TypeInstances: All attempts fail:
+							#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "123-not-found" were not found`)))
+
+			when("Bar tries to locks id1,id2,id3,id4")
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     lockingIDs,
+				OwnerID: barOwnerID,
+			})
+
+			then("should failed with id4 not found and already locked error for id1,id2,id3")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+				#1: graphql: failed to lock TypeInstances: 2 errors occurred: [TypeInstances with IDs "123-not-found" were not found, TypeInstances with IDs "%s" are locked by different owner]`, strings.Join(createdTIIDs, `", "`))))
+
+			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
+			when("Bar tries to locks all of them")
+			id4, err := localCli.CreateTypeInstance(ctx, typeInstance("id4"))
+			Expect(err).ToNot(HaveOccurred())
+
+			defer localCli.DeleteTypeInstance(ctx, id4.ID)
+
+			lockingIDs = createdTIIDs
+			lockingIDs = append(lockingIDs, id4.ID)
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     lockingIDs,
+				OwnerID: barOwnerID,
+			})
+
+			then("should failed with error id1,id2,id3 already locked by Foo")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
+
+			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
+
+			when("Bar tries to locks all of them")
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     lockingIDs,
+				OwnerID: barOwnerID,
+			})
+
+			then("should failed with error id1,id2,id3 already locked by Foo")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
+		})
+	})
 })
 
-type OCHMode string
+func includes(ids []string, expID string) bool {
+	for _, i := range ids {
+		if i == expID {
+			return true
+		}
+	}
+
+	return false
+}
+
+func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
+	return &gqllocalapi.CreateTypeInstanceInput{
+		TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
+			Path:     "cap.type.sample-v" + ver,
+			Revision: "0.1.0",
+		},
+		Attributes: []*gqllocalapi.AttributeReferenceInput{
+			{
+				Path:     "cap.type.sample-v" + ver,
+				Revision: "0.1.0",
+			},
+		},
+		Value: map[string]interface{}{
+			"sample-v" + ver: true,
+		},
+	}
+}
 
 func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
 	actual, err := cli.FindTypeInstance(ctx, ID)
@@ -408,4 +557,20 @@ func expectedParentTypeInstance(ID string) *gqllocalapi.TypeInstance {
 		UsedBy:                  nil,
 		Uses:                    nil,
 	}
+}
+
+// We cannot write specs using Context and It which are connected with each other
+// see: https://github.com/onsi/ginkgo/issues/246
+// this functions just adds syntax suggar which can be used when we have just one single `It` block
+// with sequential test-cases
+func scenario(format string, args ...interface{}) {
+	fmt.Fprintf(GinkgoWriter, "[Scenario]: "+format+"\n", args...)
+}
+
+func when(format string, args ...interface{}) {
+	fmt.Fprintf(GinkgoWriter, "\t[when]: "+format+"\n", args...)
+}
+
+func then(format string, args ...interface{}) {
+	fmt.Fprintf(GinkgoWriter, "\t[then]: "+format+"\n", args...)
 }
