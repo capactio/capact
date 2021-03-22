@@ -1,6 +1,6 @@
-import { readFileSync } from "fs";
-import { makeAugmentedSchema, neo4jgraphql } from "neo4j-graphql-js";
-import { Driver, Transaction } from "neo4j-driver";
+import {readFileSync} from "fs";
+import {makeAugmentedSchema, neo4jgraphql} from "neo4j-graphql-js";
+import {Driver, Transaction} from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
@@ -32,6 +32,16 @@ interface LockingResult {
 
 interface TypeInstanceNode {
   properties: { id: string, lockedBy: string }
+}
+
+interface UpdateTypeInstanceLockedError {
+	code: 409
+	lockedIDs: [string];
+}
+
+interface UpdateTypeInstanceNotFoundError {
+	code: 404
+	foundIDs: [string]
 }
 
 // TODO: extract each mutation/query into dedicated file
@@ -152,51 +162,25 @@ export const schema = makeAugmentedSchema({
         context,
         resolveInfo
       ) => {
-        const neo4jSession = context.driver.session();
         try {
-          const ids = args.in.map((item) => item.id);
-
-          return await neo4jSession.writeTransaction(
-            async (tx: Transaction) => {
-              const updateTypeInstancesResult = await tx.run(
-                `
-                    OPTIONAL MATCH (ti:TypeInstance)
-                    WHERE ti.id IN $ids 
-                    RETURN ti.id as foundIds`,
-                { ids }
-              );
-
-              const extractedResult = updateTypeInstancesResult.records.map(
-                (record) => record.get("foundIds")
-              );
-              const notFoundIDs = ids.filter(
-                (x) => !extractedResult.includes(x)
-              );
-
-              if (notFoundIDs.length !== 0) {
-                throw new Error(
-                  `TypeInstance with ID(s) "${notFoundIDs.join(
-                    ", "
-                  )}" not found`
-                );
-              }
-              return neo4jgraphql(obj, args, context, resolveInfo);
-            }
-          );
+          return await neo4jgraphql(obj, args, context, resolveInfo);
         } catch (e) {
-          throw new Error(`failed to update TypeInstances": ${e.message}`);
-        } finally {
-          neo4jSession.close();
+          const customErr = tryToExtractCustomError(e)
+          if (customErr !== null) {
+            switch (customErr.code) {
+              case 409:
+                e = Error(`TypeInstances with IDs "${customErr.lockedIDs.join('", "')}" are locked by different owner`);
+                break;
+              case 404:
+                const ids = args.in.map(({id}) => id);
+                const notFoundIDs = ids.filter(x => !customErr.foundIDs.includes(x));
+                e = Error(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
+                break;
+            }
+          }
+
+          throw new Error(`failed to update TypeInstances: ${e.message}`);
         }
-      },
-      updateTypeInstance: async (obj, args, context, resolveInfo) => {
-        const data = await neo4jgraphql(obj, args, context, resolveInfo);
-        if (data === null) {
-          return new Error(
-            `failed to update TypeInstance with ID "${args.id}": TypeInstance not found`
-          );
-        }
-        return data;
       },
       deleteTypeInstance: async (_obj, args, context) => {
         const neo4jSession = context.driver.session();
@@ -381,4 +365,24 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
         throw new Error(`${errMsg.length} errors occurred: [${errMsg.join(", ")}]`)
     }
   }
+}
+
+// In Cypher we throw custom errors, e.g.:
+// 	CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 409, foundIDs: foundIDs}), null)
+//
+// which produce such output:
+//  Failed to invoke procedure `apoc.cypher.doIt`: Caused by: java.lang.RuntimeException: {"lockedIDs":["b0283e96-ce83-451c-9325-0d144b9cea6a"],"code":409}
+//
+// This function tries to extract this error, if not possible, returns `null`.
+function tryToExtractCustomError(gotErr: Error): UpdateTypeInstanceLockedError | UpdateTypeInstanceNotFoundError | null  {
+	const firstOpen =  gotErr.message.indexOf('{');
+	const firstClose =  gotErr.message.lastIndexOf('}');
+	const candidate =  gotErr.message.substring(firstOpen, firstClose + 1);
+
+	try {
+		return JSON.parse(candidate)
+	}
+	catch(e) {/* cannot extract, return generic error */}
+
+	return null;
 }

@@ -82,23 +82,6 @@ query ListTypeInstancesWithUsesAndUsedByProperties {
   }
 }
 
-# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
-mutation UpdateTypeInstance($typeInstanceID: ID!) {
-  updateTypeInstance(
-    id: $typeInstanceID
-    in: {
-      value: { foo: "bar" }
-      typeRef: { path: "cap.type.sample", revision: "0.1.0" }
-      attributes: [
-        { path: "cap.attribute.foo", revision: "0.1.1" }
-        { path: "cap.attribute.bar", revision: "1.0.0" }
-      ]
-    }
-  ) {
-    ...TypeInstance
-  }
-}
-
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
 mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
   updateTypeInstances(
