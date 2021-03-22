@@ -46,7 +46,7 @@ input ActionDetailsInput {
     dryRun: Boolean = false
 
     """
-    Enables advance rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
+    Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
     """
     advancedRendering: Boolean = false
 

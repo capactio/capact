@@ -72,18 +72,21 @@ type TypeInstanceInstrumentation struct {
 	Health  *TypeInstanceInstrumentationHealth  `json:"health"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationHealth struct {
 	URL    *string                                  `json:"url"`
 	Method *HTTPRequestMethod                       `json:"method"`
 	Status *TypeInstanceInstrumentationHealthStatus `json:"status"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationMetrics struct {
 	Endpoint   *string                                        `json:"endpoint"`
 	Regex      *string                                        `json:"regex"`
 	Dashboards []*TypeInstanceInstrumentationMetricsDashboard `json:"dashboards"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationMetricsDashboard struct {
 	URL string `json:"url"`
 }
@@ -229,6 +232,7 @@ func (e HTTPRequestMethod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationHealthStatus string
 
 const (

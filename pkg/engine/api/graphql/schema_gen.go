@@ -639,10 +639,13 @@ input ActionDetailsInput {
     dryRun: Boolean = false
 
     """
-    Enables advance rendering mode for Action
+    Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
     """
     advancedRendering: Boolean = false
 
+    """
+    Used to override the rendered action. CURRENTLY NOT IMPLEMENTED.
+    """
     renderedActionOverride: JSON
 }
 
@@ -712,14 +715,21 @@ type Action {
     dryRun: Boolean!
 
     renderedAction: Any
+
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     renderingAdvancedMode: ActionRenderingAdvancedMode
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     renderedActionOverride: Any
 
     status: ActionStatus
 }
 
 """
-Properties related to Action advanced rendering
+Properties related to Action advanced rendering. CURRENTLY NOT IMPLEMENTED.
 """
 type ActionRenderingAdvancedMode {
     enabled: Boolean!
@@ -739,8 +749,17 @@ type ActionStatus {
     message: String
     runner: RunnerStatus
 
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     createdBy: UserInfo
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     runBy: UserInfo
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     canceledBy: UserInfo
 }
 
@@ -769,6 +788,9 @@ type ActionInput {
 Describes output of an Action
 """
 type ActionOutput {
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     typeInstances: [OutputTypeInstanceDetails!]!
 }
 
@@ -856,6 +878,10 @@ type Mutation {
     runAction(name: String!): Action!
     cancelAction(name: String!): Action!
     updateAction(in: ActionDetailsInput!): Action!
+
+    """
+    CURRENTLY NOT IMPLEMENTED.
+    """
     continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional TypeInstances in each step of workflow render
     deleteAction(name: String!): Action!
 }
