@@ -124,7 +124,7 @@ jobs:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
     needs: prepare-matrix
-    if: ${{ needs.prepare-matrix.outputs.matrix-infra != '' }}
+    if: needs.prepare-matrix.outputs.matrix-infra != ''
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
 
@@ -200,7 +200,7 @@ jobs:
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
-    needs: [ build-app, build-tests, build-infra ]
+    needs: [ build-app, build-tests ]
     if: github.ref == 'refs/heads/master'
 
     steps:
