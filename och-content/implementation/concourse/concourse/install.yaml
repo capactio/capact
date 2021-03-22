@@ -17,7 +17,7 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "8.x.x"
+  appVersion: "7.x.x"
 
   additionalInput:
     typeInstances:
@@ -160,6 +160,8 @@ spec:
                             values:
                               postgresql:
                                 enabled: false
+                              worker:
+                                replicas: 1
                               rbac:
                                 create: false
                               secrets:
