@@ -336,7 +336,6 @@ type Mutation {
       """
     )
 
-  # Keep in sync with the updateTypeInstance mutation
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
       statement: """
@@ -354,7 +353,7 @@ type Mutation {
         WITH collect(ti.id) as foundIDs
         RETURN foundIDs
       }
-      CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 409, foundIDs: foundIDs}), null)
+      CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, foundIDs: foundIDs}), null)
 
       // Check if given TypeInstances are not already locked by others
       WITH *
@@ -428,7 +427,7 @@ type Mutation {
       """
     )
 
-  deleteTypeInstance(id: ID!): ID!
+  deleteTypeInstance(id: ID!, ownerID: LockOwnerID): ID!
 
   """
   Mark given TypeInstances as locked by a given owner.

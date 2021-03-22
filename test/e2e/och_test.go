@@ -518,6 +518,20 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
         				#1: graphql: failed to update TypeInstances: TypeInstances with IDs "%s" are locked by different owner`, createdTIIDs[1])))
+
+			scenario("id3 does not exist")
+			when("try to update them")
+			_, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           "id3",
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should failed with error id3 not found")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(ContainSubstring(heredoc.Doc(`while executing query to update TypeInstances: All attempts fail:
+        			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`)))
 		})
 	})
 })

@@ -1,6 +1,6 @@
-import {readFileSync} from "fs";
-import {makeAugmentedSchema, neo4jgraphql} from "neo4j-graphql-js";
-import {Driver, Transaction} from "neo4j-driver";
+import { readFileSync } from "fs";
+import { makeAugmentedSchema, neo4jgraphql } from "neo4j-graphql-js";
+import { Driver, Transaction } from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
@@ -35,13 +35,13 @@ interface TypeInstanceNode {
 }
 
 interface UpdateTypeInstanceLockedError {
-	code: 409
+	code: 409;
 	lockedIDs: [string];
 }
 
 interface UpdateTypeInstanceNotFoundError {
-	code: 404
-	foundIDs: [string]
+	code: 404;
+	foundIDs: [string];
 }
 
 // TODO: extract each mutation/query into dedicated file
@@ -187,9 +187,24 @@ export const schema = makeAugmentedSchema({
         try {
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              const deleteTypeInstanceResult = await tx.run(
+              await tx.run(
                 `
-                    MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
+                    OPTIONAL MATCH (ti:TypeInstance {id: $id})
+                    
+                    CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
+
+                    // Check if given TypeInstances are not already locked by others
+                    CALL {
+                        WITH ti
+                        WITH ti
+                        WHERE ti.lockedBy IS NOT NULL AND ($ownerID IS NULL OR ti.lockedBy <> $ownerID)
+                        WITH count(ti.id) as lockedIDs
+                        RETURN lockedIDs = 1 as isLocked
+                    }
+                    CALL apoc.util.validate(isLocked, apoc.convert.toJson({code: 409}), null)
+
+                    WITH ti
+                    MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
                     MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
                     MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
                     MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
@@ -214,18 +229,24 @@ export const schema = makeAugmentedSchema({
                     }
               
                     RETURN $id`,
-                { id: args.id }
+                {id: args.id, ownerID: args.ownerID || null}
               );
-
-              if (
-                !deleteTypeInstanceResult.summary.counters.containsUpdates()
-              ) {
-                throw new Error(`TypeInstance not found`);
-              }
               return args.id;
             }
           );
         } catch (e) {
+          const customErr = tryToExtractCustomError(e)
+          if (customErr !== null) {
+            switch (customErr.code) {
+              case 409:
+                e = Error(`TypeInstance is locked by different owner`);
+                break;
+              case 404:
+                e = Error(`TypeInstance was not found`);
+                break;
+            }
+          }
+
           throw new Error(
             `failed to delete TypeInstance with ID "${args.id}": ${e.message}`
           );

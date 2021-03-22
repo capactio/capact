@@ -89,7 +89,6 @@ mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
       {
         id: $typeInstanceID
         typeInstance: {
-          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
           attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
           value: { name: "Luke Skywalker" }
         }
@@ -97,7 +96,6 @@ mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
       {
         id: $secondTypeInstanceID
         typeInstance: {
-          typeRef: { path: "cap.type.sample", revision: "0.1.0" }
           attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
           value: { name: "Darth Vader" }
         }
@@ -114,6 +112,48 @@ mutation UpdateTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
 # Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
 mutation DeleteTypeInstance($typeInstanceID: ID!) {
   deleteTypeInstance(id: $typeInstanceID)
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
+mutation LockTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
+  lockTypeInstances(in: {
+    ids: [$typeInstanceID, $secondTypeInstanceID]
+    ownerID: "namespace/name"
+  })
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4", "secondTypeInstanceID": "5977174e-ae64-4571-aecf-cca9cbac5756"}
+mutation UnlockTypeInstances($typeInstanceID: ID!, $secondTypeInstanceID: ID!) {
+  unlockTypeInstances(in: {
+    ids: [$typeInstanceID, $secondTypeInstanceID]
+    ownerID: "namespace/name"
+  })
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+mutation UpdateLockedTypeInstance($typeInstanceID: ID!) {
+  updateTypeInstances(
+    in: [
+      {
+        id: $typeInstanceID
+        ownerID: "namespace/name"
+        typeInstance: {
+          attributes: [{ path: "cap.attribute.sample", revision: "0.1.0" }]
+          value: { name: "Luke Skywalker" }
+        }
+      }
+    ]
+  ) {
+    id
+    resourceVersions {
+      ...TypeInstanceResourceVersion
+    }
+  }
+}
+
+# Example variables: {"typeInstanceID": "288fe1fa-dea1-42ee-91d2-f2c7e98a9ad4"}
+mutation DeleteLockedTypeInstance($typeInstanceID: ID!) {
+  deleteTypeInstance(id: $typeInstanceID, ownerID: "namespace/name")
 }
 
 #
