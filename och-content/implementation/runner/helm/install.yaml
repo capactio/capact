@@ -61,8 +61,8 @@ spec:
                   globalName: helm-release
                   path: "/helm-release.yaml"
                 - name: additional
-                  globalName: additional
                   path: "/additional.yaml"
+                  optional: true
             container:
               image: gcr.io/projectvoltron/pr/helm-runner:PR-207
               env:
