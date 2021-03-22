@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
+	"projectvoltron.dev/voltron/internal/ptr"
 
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
@@ -46,11 +47,15 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 		return nil, err
 	}
 
+	renderer := newHelmRenderer(&engine.Engine{})
+	outputter := newHelmOutputter(r.log, renderer)
+
 	var helmCmd helmCommand
 	switch r.cfg.Command {
 	case InstallCommandType:
-		renderer := newHelmRenderer(&engine.Engine{})
-		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionConfig, renderer)
+		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionConfig, outputter)
+	case UpgradeCommandType:
+		helmCmd = newUpgrader(r.log, r.cfg.RepositoryCachePath, r.cfg.HelmReleasePath, actionConfig, outputter)
 	default:
 		return nil, errors.New("Unsupported command")
 	}
@@ -86,6 +91,7 @@ func (r *helmRunner) initActionConfig(namespace string) (*action.Configuration, 
 		Insecure:    &r.k8sCfg.Insecure,
 		CAFile:      &r.k8sCfg.CAFile,
 		BearerToken: &r.k8sCfg.BearerToken,
+		Namespace:   ptr.String(namespace),
 	}
 
 	debugLog := func(format string, v ...interface{}) {
