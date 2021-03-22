@@ -52,6 +52,36 @@ spec:
               artifacts:
                 # The input parameters that holds information what should be executed
                 - name: input-parameters
+                - name: helm-release
+                - name: runner-context
+            outputs:
+              artifacts:
+                - name: helm-release
+                  from: "{{steps.helm-upgrade.outputs.artifacts.helm-release}}"
+                - name: additional
+                  from: "{{steps.helm-upgrade.outputs.artifacts.additional}}"
+                  optional: true
+            steps:
+              - - name: helm-upgrade
+                  voltron-updateTypeInstances:
+                    - name: helm-release
+                      from: helm-release
+                  template: helm-upgrade
+                  arguments:
+                    artifacts:
+                      # The input parameters that holds information what should be executed
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.helm-release}}"
+                      - name: runner-context
+                        from: "{{inputs.artifacts.runner-context}}"
+
+
+          - name: helm-upgrade
+            inputs:
+              artifacts:
+                - name: input-parameters
                   path: "/runner-args"
                 - name: helm-release
                   path: "/helm-release.yaml"

@@ -58,6 +58,7 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+                - name: jira-helm-release
             steps:
               - - name: render-helm-args
                   voltron-action: jinja2.template
@@ -91,8 +92,6 @@ spec:
                   voltron-updateTypeInstances:
                     - name: jira-config
                       from: additional
-                    - name: jira-helm-release # TODO: Once implemented, move it to the `helm.upgrade` level
-                      from: helm-release
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -100,7 +99,7 @@ spec:
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
                       - name: helm-release
-                        from: "{{workflow.outputs.artifacts.jira-helm-release}}"
+                        from: "{{inputs.artifacts.jira-helm-release}}"
 
 
 signature:
