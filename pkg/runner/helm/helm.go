@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"go.uber.org/zap"
+	"projectvoltron.dev/voltron/internal/ptr"
 
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
@@ -90,6 +91,7 @@ func (r *helmRunner) initActionConfig(namespace string) (*action.Configuration, 
 		Insecure:    &r.k8sCfg.Insecure,
 		CAFile:      &r.k8sCfg.CAFile,
 		BearerToken: &r.k8sCfg.BearerToken,
+		Namespace:   ptr.String(namespace),
 	}
 
 	debugLog := func(format string, v ...interface{}) {

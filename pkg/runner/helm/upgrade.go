@@ -93,7 +93,7 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 
 	status := Status{
 		Succeeded: true,
-		Message:   fmt.Sprintf("release %q installed successfully in namespace %q", helmRelease.Name, helmRelease.Namespace),
+		Message:   fmt.Sprintf("release %q upgraded successfully in namespace %q", helmRelease.Name, helmRelease.Namespace),
 	}
 
 	return Output{

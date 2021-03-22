@@ -20,7 +20,7 @@ Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm 
 
 ### Installation
 
-To start the install command, execute:
+To start the runner `install` command, run:
 ```bash
 RUNNER_CONTEXT_PATH=cmd/helm-runner/example-input/context.yaml \
  RUNNER_ARGS_PATH=cmd/helm-runner/example-input/install-args.yaml \
@@ -29,16 +29,16 @@ RUNNER_CONTEXT_PATH=cmd/helm-runner/example-input/context.yaml \
  go run cmd/helm-runner/main.go
 ```
 
-To check if the PostgreSQL Helm release was created, run the command:
+To check if the PostgreSQL Helm release was created, run:
 ```bash
 helm list 
 ```
 
 ### Upgrade
 
-Follow the instructions from [Installation](#installation) section first.
+Follow the instructions from the [Installation](#installation) section first.
 
-To start the runner Install command, execute:
+To start the runner `upgrade` command, execute:
 ```bash
 RUNNER_CONTEXT_PATH=cmd/helm-runner/example-input/context.yaml \
  RUNNER_ARGS_PATH=cmd/helm-runner/example-input/upgrade-args.yaml \
@@ -53,7 +53,7 @@ To verify the PostgreSQL upgrade, run:
 helm list
 ```
 
-Observe the incremented value in "Revision" column. Verify `upgraded: "true"` annotation on resources such as StatefulSet:
+Observe the incremented value in "Revision" column. Verify `upgraded: "true"` annotation on resources such as Service:
 ```bash
 kubectl get svc postgresql-server -o jsonpath='{.metadata.annotations}'
 ```
