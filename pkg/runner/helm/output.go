@@ -21,14 +21,14 @@ func newHelmOutputter(log *zap.Logger, renderer renderer) *helmOutputter {
 	return &helmOutputter{log: log, renderer: renderer}
 }
 
-func (o *helmOutputter) ProduceHelmRelease(args Arguments, helmRelease *release.Release) ([]byte, error) {
+func (o *helmOutputter) ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error) {
 	releaseData := ChartRelease{
 		Name:      helmRelease.Name,
 		Namespace: helmRelease.Namespace,
 		Chart: Chart{
 			Name:    helmRelease.Chart.Metadata.Name,
 			Version: helmRelease.Chart.Metadata.Version,
-			Repo:    args.Chart.Repo,
+			Repo:    repository,
 		},
 	}
 

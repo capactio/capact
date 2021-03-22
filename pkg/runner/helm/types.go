@@ -9,7 +9,7 @@ import (
 )
 
 type outputter interface {
-	ProduceHelmRelease(args Arguments, helmRelease *release.Release) ([]byte, error)
+	ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error)
 	ProduceAdditional(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error)
 }
 

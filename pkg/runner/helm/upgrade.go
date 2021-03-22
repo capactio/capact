@@ -81,7 +81,7 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "Helm release is nil")
 	}
 
-	releaseOut, err := i.out.ProduceHelmRelease(in.Args, helmRelease)
+	releaseOut, err := i.out.ProduceHelmRelease(helmChart.Repo, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
