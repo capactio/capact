@@ -42,15 +42,6 @@ function returnInfraMatrixIfNeeded() {
   done <<< "$(gitChanges)"
 }
 
-function returnOCHJSIfNeeded() {
-  while read -r file; do
-    if [[ $file == och-js/* ]]; then
-      echo '{"APP":"och-js"},'
-      break
-    fi
-  done <<< "$(gitChanges)"
-}
-
 function gitChanges() {
   local DIFF
   # See https://github.community/t/check-pushed-file-changes-with-git-diff-tree-in-github-actions/17220/10
@@ -66,10 +57,9 @@ function gitChanges() {
   echo "$DIFF"
 }
 
-
 # TODO: Read components to build in automated way, e.g. from directory structure
 cat <<EOT >>"$GITHUB_ENV"
-APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},$(returnOCHJSIfNeeded){"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
+APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"och-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"cloudsql-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
 TOOLS=name=matrix::{"include":[{"TOOL":"ocftool"}]}
 $(returnInfraMatrixIfNeeded)
