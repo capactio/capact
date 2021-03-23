@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1-experimental
 
-FROM golang:1.15.2-alpine as builder
+FROM golang:1.16.2-alpine as builder
 
 ARG COMPONENT
 ARG SOURCE_PATH="./cmd/$COMPONENT/main.go"

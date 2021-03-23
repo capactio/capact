@@ -4,7 +4,7 @@ echo "Setting up CI environmental variables..."
 export NAME="dev3"
 
 cat <<EOT >> "$GITHUB_ENV"
-GO_VERSION=^1.15.2
+GO_VERSION=^1.16.2
 SKIP_DEPS_INSTALLATION=false
 PROJECT_ID=projectvoltron
 RECREATE_CLUSTER_GCS_BUCKET=projectvoltron_cluster_recreate
