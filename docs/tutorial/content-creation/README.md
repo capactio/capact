@@ -826,9 +826,11 @@ signature:
 
 **Interface**
 
-It accepts an user input defined earlier and two TypeInstaces:
+It accepts a user input defined earlier and two TypeInstaces:
 * postgresql - it's needed to get a database address
 * user - a database user to changes a password
+
+The Interface outputs modified User TypeInstance, to enable future parent workflows to consume updated password.
 
 <details>
   <summary>och-content/interface/database/postgresql/change-password.yaml</summary>
@@ -878,7 +880,11 @@ spec:
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
             }
   output:
-    typeInstances: {}
+    typeInstances:
+      user: # return modified TypeInstance to allow creating parent workflows which use updated values
+        typeRef:
+          path: cap.type.database.postgresql.user
+          revision: 0.1.0
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
@@ -945,6 +951,10 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+            outputs:
+              artifacts:
+                - name: user
+                  from: "{{steps.change-password.outputs.artifacts.user}}"
             steps:
               - - name: render-change-password-script
                   voltron-action: jinja2.template
@@ -997,7 +1007,6 @@ spec:
                   template: change-password
                   voltron-updateTypeInstances: # here you define that artifact from template `change-password` will
                     - name: user               # be used to update TypeInstance
-                      from: user
                   arguments:
                     artifacts:
                       - name: script
@@ -1010,8 +1019,8 @@ spec:
                   path: /script.sh
             container:
               image: postgres:11
-              command: [bash]
-              args: ["/script.sh"]
+              command: ["bash", "-c"]
+              args: ["sleep 1 && chmod +x /script.sh && /script.sh"]
             outputs:
               artifacts:
                 - name: user
