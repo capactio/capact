@@ -1,4 +1,3 @@
-# TODO: Move to interface.atlassian.jira as it's implementation-specific?
 ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
