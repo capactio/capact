@@ -43,8 +43,8 @@ type Release struct {
 }
 
 type StateTypeInstance struct {
-	State     []byte
-	Variables []byte
+	State     []byte `json:"state"`
+	Variables []byte `json:"variables"`
 }
 
 type Output struct {

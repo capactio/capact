@@ -4,8 +4,8 @@ kind: Interface
 metadata:
   prefix: cap.interface.runner.terraform
   name: apply-with-state
-  displayName: "Apply"
-  description: "Apply action for Terraform Runner"
+  displayName: "Apply with existing Terrfarom state"
+  description: "Apply action for Terraform Runner, which respects a given Terraform state"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
