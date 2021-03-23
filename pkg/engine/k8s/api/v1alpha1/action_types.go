@@ -70,6 +70,7 @@ type ActionSpec struct {
 	Run *bool `json:"run,omitempty"`
 
 	// DryRun specifies whether runner should perform only dry-run action without persisting the resource.
+	// For now it only lints the rendered Argo manifests and does not execute any workflow.
 	// +optional
 	// +kubebuilder:default=false
 	DryRun *bool `json:"dryRun,omitempty"`
