@@ -953,7 +953,7 @@ spec:
                       - name: template
                         raw:
                           # Here we prepare a simple script to run the SQL statements to change the user password.
-                          # The sleep at the beginning is required, so the container does not exit too quick.
+                          # The sleep at the beginning is required, so the container does not exit too quickly.
                           # This a limitation of the PNS executor, used for executing the Argo workflows in Voltron.
                           data: |
                             set -e
@@ -1026,9 +1026,9 @@ signature:
 ```
 </details>
 
-> When you have a step in your Implementation, which would execute for less than a second, it's required to add a short sleep (e.g. for one second) to the script
+> **NOTE:** When you have a step in your Implementation, which has a short-living container (exits in less than a second), it is required to add `sleep 1` to the script
 > to ensure Argo will be able to get the output artifacts from the container.
-> It's a known issue with the PNS executor, which Voltron uses running Argo workflows (see. https://github.com/argoproj/argo-workflows/issues/1256).
+> It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Voltron uses for executing Argo workflows.
 > In the future we might consider changing the executor to overcome this problem.
 
 We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
