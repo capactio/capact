@@ -191,9 +191,10 @@ export const schema = makeAugmentedSchema({
                 `
                     OPTIONAL MATCH (ti:TypeInstance {id: $id})
                     
+                    // Check if a given TypeInstance was found
                     CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
 
-                    // Check if given TypeInstances are not already locked by others
+                    // Check if a given TypeInstance is not already locked by a different owner
                     CALL {
                         WITH ti
                         WITH ti
@@ -389,7 +390,7 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
 }
 
 // In Cypher we throw custom errors, e.g.:
-// 	CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 409, foundIDs: foundIDs}), null)
+// 	CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, foundIDs: foundIDs}), null)
 //
 // which produce such output:
 //  Failed to invoke procedure `apoc.cypher.doIt`: Caused by: java.lang.RuntimeException: {"lockedIDs":["b0283e96-ce83-451c-9325-0d144b9cea6a"],"code":409}
