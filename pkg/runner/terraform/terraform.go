@@ -16,7 +16,6 @@ import (
 	"sigs.k8s.io/yaml"
 
 	"projectvoltron.dev/voltron/internal/getter"
-	"projectvoltron.dev/voltron/pkg/runner"
 )
 
 const (
@@ -24,6 +23,7 @@ const (
 	DestroyCommand = "destroy"
 	PlanCommand    = "plan"
 	variablesFile  = "terraform.tfvars"
+	stateFile      = "terraform.tfstate"
 )
 
 type terraform struct {
@@ -35,7 +35,11 @@ type terraform struct {
 }
 
 func newTerraform(log *zap.Logger, workdir string, args Arguments) *terraform {
-	return &terraform{log: log, workdir: workdir, args: args}
+	return &terraform{
+		log:     log,
+		workdir: workdir,
+		args:    args,
+	}
 }
 
 func (t *terraform) Start(dryRun bool) error {
@@ -46,12 +50,6 @@ func (t *terraform) Start(dryRun bool) error {
 		err := getter.Download(context.Background(), t.args.Module.Source, t.workdir)
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while downloading module")
-			return
-		}
-
-		err = t.writeVariables()
-		if err != nil {
-			t._waitCh <- errors.Wrapf(err, "while creating variables files %s", variablesFile)
 			return
 		}
 
@@ -129,6 +127,10 @@ func (t *terraform) run(dryRun bool) error {
 	if dryRun {
 		return t._plan()
 	} else if t.args.Command == ApplyCommand {
+		if err := t._plan(); err != nil {
+			return err
+		}
+
 		return t._apply()
 	} else if t.args.Command == DestroyCommand {
 		return t._destroy()
@@ -151,16 +153,12 @@ func (t *terraform) _destroy() error {
 	return err
 }
 
-func (t *terraform) writeVariables() error {
-	// variables file has to end with a new line
-	variables := t.args.Variables + "\n"
-	t.log.Debug("Writing Terraform variables file", zap.String("variables", variables), zap.String("workdir", t.workdir), zap.String("file", variablesFile))
-
-	return ioutil.WriteFile(path.Join(t.workdir, variablesFile), []byte(variables), runner.DefaultFilePermissions)
-}
-
 func (t *terraform) tfstate() ([]byte, error) {
 	return ioutil.ReadFile(path.Join(t.workdir, "terraform.tfstate"))
+}
+
+func (t *terraform) variables() ([]byte, error) {
+	return ioutil.ReadFile(path.Join(t.workdir, variablesFile))
 }
 
 func (t *terraform) renderOutput() ([]byte, error) {

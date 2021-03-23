@@ -3,7 +3,9 @@ package terraform
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"go.uber.org/zap"
@@ -41,6 +43,16 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 	err = r.setEnvVars(args.Env)
 	if err != nil {
 		return nil, errors.Wrap(err, "while proceeding Environment variables")
+	}
+
+	err = r.injectStateTypeInstance()
+	if err != nil {
+		return nil, errors.Wrap(err, "while splitting state TypeInstance")
+	}
+
+	err = r.mergeInputVariables(args.Variables)
+	if err != nil {
+		return nil, errors.Wrap(err, "while merging variables")
 	}
 
 	r.terraform = newTerraform(r.log, r.cfg.WorkDir, args)
@@ -83,10 +95,20 @@ func (r *terraformRunner) WaitForCompletion(ctx context.Context, in runner.WaitF
 		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while getting terraform.tfstate file")
 	}
 
+	variables, err := r.terraform.variables()
+	if err != nil {
+		return &runner.WaitForCompletionOutput{}, errors.Wrap(err, "while getting terraform.tfvars file")
+	}
+
+	state := StateTypeInstance{
+		State:     tfstate,
+		Variables: variables,
+	}
+
 	output := Output{
 		Release:    release,
 		Additional: additional,
-		Tfstate:    tfstate,
+		State:      state,
 	}
 
 	err = r.saveOutput(output)
@@ -117,6 +139,64 @@ func (r *terraformRunner) setEnvVars(env []string) error {
 	return nil
 }
 
+func (r *terraformRunner) injectStateTypeInstance() error {
+	varsFilepath := path.Join(r.cfg.WorkDir, variablesFile)
+
+	if r.cfg.StateTypeInstanceFilepath == "" {
+		// no statefile was provided, create empty tfvars and return
+		return runner.SaveToFile(varsFilepath, []byte("\n"))
+	}
+
+	data, err := ioutil.ReadFile(r.cfg.StateTypeInstanceFilepath)
+	if err != nil {
+		return errors.Wrapf(err, "while reading state file %s", r.cfg.StateTypeInstanceFilepath)
+	}
+
+	state := &StateTypeInstance{}
+	if err := yaml.Unmarshal(data, state); err != nil {
+		return errors.Wrap(err, "while unmarshaling StateTypeInstance")
+	}
+
+	stateFilepath := path.Join(r.cfg.WorkDir, stateFile)
+	if err := runner.SaveToFile(stateFilepath, state.State); err != nil {
+		return errors.Wrapf(err, "while writing state file %s", stateFilepath)
+	}
+
+	if err := runner.SaveToFile(varsFilepath, state.Variables); err != nil {
+		return errors.Wrapf(err, "while writing vars file %s", varsFilepath)
+	}
+
+	return nil
+}
+
+func (r *terraformRunner) mergeInputVariables(variables string) error {
+	// variables file has to end with a new line
+	variables = variables + "\n"
+	r.log.Debug("Writing Terraform variables file", zap.String("variables", variables), zap.String("workdir", r.cfg.WorkDir), zap.String("file", variablesFile))
+
+	inputTfVarFilepath := "/tmp/input.tfvars"
+
+	err := runner.SaveToFile(inputTfVarFilepath, []byte(variables))
+	if err != nil {
+		return errors.Wrap(err, "while saving input variables to file")
+	}
+
+	workdirTfVarsFilepath := path.Join(r.cfg.WorkDir, variablesFile)
+
+	paths := []string{workdirTfVarsFilepath, inputTfVarFilepath}
+	values, err := LoadVariablesFromFiles(paths...)
+	if err != nil {
+		return errors.Wrap(err, "while loading all variables files")
+	}
+
+	data := MarshalVariables(values)
+	if err := runner.SaveToFile(workdirTfVarsFilepath, data); err != nil {
+		return errors.Wrap(err, "while saving new variables to file")
+	}
+
+	return nil
+}
+
 func (r *terraformRunner) saveOutput(out Output) error {
 	if out.Release != nil {
 		r.log.Debug("Saving terraform release output", zap.String("path", r.cfg.Output.TerraformReleaseFilePath))
@@ -134,12 +214,15 @@ func (r *terraformRunner) saveOutput(out Output) error {
 		}
 	}
 
-	if out.Tfstate != nil {
-		r.log.Debug("Saving tfstate output", zap.String("path", r.cfg.Output.TfstateFilePath))
-		err := runner.SaveToFile(r.cfg.Output.TfstateFilePath, out.Tfstate)
-		if err != nil {
-			return errors.Wrap(err, "while saving tfstate  output")
-		}
+	r.log.Debug("Saving state output", zap.String("path", r.cfg.Output.TfstateFilePath))
+	stateData, err := yaml.Marshal(out.State)
+	if err != nil {
+		return errors.Wrap(err, "while marshaling state")
+	}
+
+	err = runner.SaveToFile(r.cfg.Output.TfstateFilePath, stateData)
+	if err != nil {
+		return errors.Wrap(err, "while saving tfstate output")
 	}
 
 	return nil

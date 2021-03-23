@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.runner.terraform
-  name: apply
-  displayName: "Apply"
-  description: "Apply action for Terraform Runner"
+  name: apply-with-state
+  displayName: "Apply with existing Terrfarom state"
+  description: "Apply action for Terraform Runner, which respects a given Terraform state"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
@@ -30,6 +30,11 @@ spec:
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
             }
     typeInstances:
+      tfstate:
+        typeRef:
+          path: cap.type.terraform.state
+          revision: 0.1.0
+        verbs: ["get", "update"]
       runner-context:
         typeRef:
           path: cap.core.type.runner.generic.context
@@ -37,17 +42,9 @@ spec:
         verbs: ["get"]
   output:
     typeInstances:
-      terraform-release:
-        typeRef:
-          path: cap.type.terraform.release
-          revision: 0.1.0
       additional:
         typeRef:
           path: cap.core.type.generic.value
-          revision: 0.1.0
-      tfstate:
-        typeRef:
-          path: cap.type.terraform.state
           revision: 0.1.0
 
 signature:

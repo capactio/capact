@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: 0.2.0
+revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.gcp.cloudsql.postgresql
-  name: install
-  displayName: Install CloudSQL PostgreSQL database using Terraform
-  description: Action which provisions CloudSQL for PostgreSQL database using Terraform
+  name: update
+  displayName: Update Terraform provisioned CloudSQL PostgreSQL database
+  description: Action which updates Terraform provisioned CloudSQL for PostgreSQL database
   documentationURL: https://cloud.google.com/cloudsql
   supportURL: https://cloud.google.com/cloudsql
   license:
@@ -23,21 +23,10 @@ metadata:
 spec:
   appVersion: "10, 11, 12, 13"
 
-  additionalInput:
-    typeInstances:
-      additional:
-        typeRef:
-          path: cap.core.type.generic.value
-          revision: 0.1.0
-        verbs: ["get"]
-
-  outputTypeInstanceRelations:
-    postgresql:
-      uses:
-        - terraform-release
+  outputTypeInstanceRelations: {} # no new TypeInstances to upload, they are updated in place
 
   implements:
-    - path: cap.interface.database.postgresql.install
+    - path: cap.interface.terraform.gcp.cloudsql.update
       revision: 0.1.0
 
   requires:
@@ -55,7 +44,7 @@ spec:
     - interfaceGroupPath: cap.interface.runner.terraform
       alias: terraform
       methods:
-        - name: apply
+        - name: apply-with-state
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -72,12 +61,15 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: postgres-install
+        entrypoint: postgres-update
         templates:
-          - name: postgres-install
+          - name: postgres-update
             inputs:
               artifacts:
-                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+                - name: input-parameters
+                - name: postgresql
+                - name: terraform-release
+                - name: tfstate
             outputs:
               artifacts:
                 - name: postgresql
@@ -95,22 +87,27 @@ spec:
                             prefix: input
                       - name: template
                         raw:
-                          data: |
+                          data:
+                            | # TODO add other Terraform variables to the input
                             variables: |+
+                              <% if input.superuser.username -%>
                               user_name = "<@ input.superuser.username @>"
-                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+                              <%- endif %>
+                              <% if input.superuser.password -%>
+                              user_password = "<@ input.superuser.password @>"
+                              <%- endif %>
                             command: "apply"
                             module:
-                              name: "cloudsql"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.1.2/cloudsql.tgz"
+                              name: <@ release.name @>
+                              source: <@ release.source @>
                             env:
                             - GOOGLE_PROJECT=<@ gcp.project_id @>
                             - GOOGLE_APPLICATION_CREDENTIALS=/additional
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
-                                port: 5432
-                                defaultDBName: postgres
+                                port: <@ postgresql.port @>
+                                defaultDBName: <@ postgresql.defaultDBName @>
                                 superuser:
                                   username: "{{ .username }}"
                                   password: "{{ .password }}"
@@ -128,6 +125,32 @@ spec:
                           data: |
                             prefix: gcp
 
+              - - name: fill-release-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.terraform-release}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: release
+
+              - - name: fill-postgresql-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-release-in-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: postgresql
+
               - - name: convert-gcp-yaml-to-json
                   template: convert-yaml-to-json
                   arguments:
@@ -136,18 +159,20 @@ spec:
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
               - - name: terraform-apply
-                  voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
-                    - name: terraform-release
-                      from: terraform-release
+                  voltron-action: terraform.apply-with-state
+                  voltron-updateTypeInstances:
                     - name: postgresql
                       from: additional
+                    - name: tfstate
+                      from: tfstate
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-postgresql-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: tfstate
+                        from: "{{inputs.artifacts.tfstate}}"
                       - name: additional
                         from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
 
