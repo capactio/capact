@@ -353,7 +353,7 @@ type Mutation {
         WITH collect(ti.id) as foundIDs
         RETURN foundIDs
       }
-      CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, foundIDs: foundIDs}), null)
+      CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)
 
       // Check if given TypeInstances are not already locked by others
       WITH *
@@ -365,7 +365,7 @@ type Mutation {
           WITH collect(tic.id) as lockedIDs
           RETURN lockedIDs
       }
-      CALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, lockedIDs: lockedIDs}), null)
+      CALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)
 
       UNWIND $in as item
       MATCH (ti: TypeInstance {id: item.id})

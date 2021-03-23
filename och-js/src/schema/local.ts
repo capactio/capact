@@ -34,14 +34,14 @@ interface TypeInstanceNode {
   properties: { id: string, lockedBy: string }
 }
 
-interface UpdateTypeInstanceLockedError {
-	code: 409;
-	lockedIDs: [string];
+interface UpdateTypeInstanceError {
+	code: UpdateTypeInstanceErrorCode;
+	ids: string[];
 }
 
-interface UpdateTypeInstanceNotFoundError {
-	code: 404;
-	foundIDs: [string];
+enum UpdateTypeInstanceErrorCode {
+	Conflict = 409,
+	NotFound = 404,
 }
 
 // TODO: extract each mutation/query into dedicated file
@@ -166,14 +166,14 @@ export const schema = makeAugmentedSchema({
           return await neo4jgraphql(obj, args, context, resolveInfo);
         } catch (e) {
           const customErr = tryToExtractCustomError(e)
-          if (customErr !== null) {
+          if (customErr) {
             switch (customErr.code) {
-              case 409:
-                e = Error(`TypeInstances with IDs "${customErr.lockedIDs.join('", "')}" are locked by different owner`);
+              case UpdateTypeInstanceErrorCode.Conflict:
+                e = Error(`TypeInstances with IDs "${customErr.ids.join('", "')}" are locked by different owner`);
                 break;
-              case 404:
+              case UpdateTypeInstanceErrorCode.NotFound:
                 const ids = args.in.map(({id}) => id);
-                const notFoundIDs = ids.filter(x => !customErr.foundIDs.includes(x));
+                const notFoundIDs = ids.filter(x => !customErr.ids.includes(x));
                 e = Error(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
                 break;
             }
@@ -237,12 +237,12 @@ export const schema = makeAugmentedSchema({
           );
         } catch (e) {
           const customErr = tryToExtractCustomError(e)
-          if (customErr !== null) {
+          if (customErr) {
             switch (customErr.code) {
-              case 409:
+              case UpdateTypeInstanceErrorCode.Conflict:
                 e = Error(`TypeInstance is locked by different owner`);
                 break;
-              case 404:
+              case UpdateTypeInstanceErrorCode.NotFound:
                 e = Error(`TypeInstance was not found`);
                 break;
             }
@@ -396,7 +396,7 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
 //  Failed to invoke procedure `apoc.cypher.doIt`: Caused by: java.lang.RuntimeException: {"lockedIDs":["b0283e96-ce83-451c-9325-0d144b9cea6a"],"code":409}
 //
 // This function tries to extract this error, if not possible, returns `null`.
-function tryToExtractCustomError(gotErr: Error): UpdateTypeInstanceLockedError | UpdateTypeInstanceNotFoundError | null  {
+function tryToExtractCustomError(gotErr: Error): UpdateTypeInstanceError | null  {
 	const firstOpen =  gotErr.message.indexOf('{');
 	const firstClose =  gotErr.message.lastIndexOf('}');
 	const candidate =  gotErr.message.substring(firstOpen, firstClose + 1);
