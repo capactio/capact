@@ -34,7 +34,7 @@ spec:
         typeRef:
           path: cap.core.type.runner.generic.context
           revision: 0.1.0
-        verbs: [ "get" ]
+        verbs: ["get"]
   output:
     typeInstances:
       terraform-release:
@@ -47,7 +47,7 @@ spec:
           revision: 0.1.0
       tfstate:
         typeRef:
-          path: cap.core.type.generic.value
+          path: cap.type.terraform.state
           revision: 0.1.0
 
 signature:
