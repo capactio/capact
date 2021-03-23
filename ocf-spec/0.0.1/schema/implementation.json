@@ -140,7 +140,7 @@
         "appVersion": {
           "$id": "#/properties/spec/properties/appVersion",
           "type": "string",
-          "description": "The supported application versions in SemVer2 format.",
+          "description": "The supported application versions in SemVer2 format. Currently not used for filtering of Implementations.",
           "additionalProperties": false
         },
         "additionalInput": {

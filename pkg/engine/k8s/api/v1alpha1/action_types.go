@@ -74,7 +74,7 @@ type ActionSpec struct {
 	// +kubebuilder:default=false
 	DryRun *bool `json:"dryRun,omitempty"`
 
-	// Cancel specifies whether the Action execution should be canceled.
+	// Cancel specifies whether the Action execution should be canceled. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	// +kubebuilder:default=false
 	Cancel *bool `json:"cancel,omitempty"`

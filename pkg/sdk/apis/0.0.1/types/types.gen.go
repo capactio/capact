@@ -122,7 +122,7 @@ type InterfaceSignature struct {
 
 // A container for the Interface specification definition.
 type InterfaceSpec struct {
-	Abstract *bool  `json:"abstract,omitempty"`// If true, the Interface cannot be implemented.
+	Abstract *bool  `json:"abstract,omitempty"`// If true, the Interface cannot be implemented. CURRENTLY NOT IMPLEMENTED.
 	Input    Input  `json:"input"`             // The input schema for Interface action.
 	Output   Output `json:"output"`            // The output schema for Interface action.
 }
@@ -214,7 +214,7 @@ type ImplementationSpec struct {
 	Action                      Action                                `json:"action"`                     // An explanation about the purpose of this instance.
 	AdditionalInput             *AdditionalInput                      `json:"additionalInput,omitempty"`  // Specifies additional input for a given Implementation
 	AdditionalOutput            *AdditionalOutput                     `json:"additionalOutput,omitempty"` // Specifies additional output for a given Implementation
-	AppVersion                  string                                `json:"appVersion"`                 // The supported application versions in SemVer2 format.
+	AppVersion                  string                                `json:"appVersion"`                 // The supported application versions in SemVer2 format. Currently not used for filtering of; Implementations.
 	Implements                  []Implement                           `json:"implements"`                 // Defines what kind of interfaces this implementation fulfills.
 	Imports                     []Import                              `json:"imports,omitempty"`          // List of external Interfaces that this Implementation requires to be able to execute the; action.
 	OutputTypeInstanceRelations map[string]OutputTypeInstanceRelation `json:"outputTypeInstanceRelations"`// Defines all output TypeInstances to upload with relations between them. It relates to; both optional and required TypeInstances. No TypeInstance name specified here means it; won't be uploaded to OCH after workflow run
@@ -274,7 +274,7 @@ type RequireEntity struct {
 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema.
 }
 
-// RepoMetadata stores metadata about the Open Capability Hub.
+// RepoMetadata stores metadata about the Open Capability Hub. CURRENTLY NOT IMPLEMENTED.
 type RepoMetadata struct {
 	Kind       RepoMetadataKind       `json:"kind"`               
 	Metadata   InterfaceMetadata      `json:"metadata"`           

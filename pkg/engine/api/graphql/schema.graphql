@@ -24,273 +24,284 @@ Full path of a given node, e.g. cap.core.type.platform.kubernetes
 scalar NodePath
 
 type ManifestReference {
-    path: NodePath!
-    revision: Version!
+  path: NodePath!
+  revision: Version!
 }
 
 """
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
 input ActionDetailsInput {
-    name: String!
-    input: ActionInputData
+  name: String!
+  input: ActionInputData
 
-    """
-    Contains reference to the Implementation or Interface manifest
-    """
-    actionRef: ManifestReferenceInput!
+  """
+  Contains reference to the Implementation or Interface manifest
+  """
+  actionRef: ManifestReferenceInput!
 
-    """
-    Specifies whether the Action performs server-side test without actually running the Action
-    """
-    dryRun: Boolean = false
+  """
+  Specifies whether the Action performs server-side test without actually running the Action
+  """
+  dryRun: Boolean = false
 
-    """
-    Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
-    """
-    advancedRendering: Boolean = false
+  """
+  Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
+  """
+  advancedRendering: Boolean = false
 
-    """
-    Used to override the rendered action. CURRENTLY NOT IMPLEMENTED.
-    """
-    renderedActionOverride: JSON
+  """
+  Used to override the rendered action. CURRENTLY NOT IMPLEMENTED.
+  """
+  renderedActionOverride: JSON
 }
 
 input ManifestReferenceInput {
-    """
-    Full path for the manifest
-    """
-    path: NodePath!
+  """
+  Full path for the manifest
+  """
+  path: NodePath!
 
-    """
-    If not provided, latest revision for a given manifest is used
-    """
-    revision: Version
+  """
+  If not provided, latest revision for a given manifest is used
+  """
+  revision: Version
 }
 
 """
 Client input that modifies input of a given Action
 """
 input ActionInputData {
-    """
-    During rendering, it is validated against JSON schema from Interface of the resolved action
-    """
-    parameters: JSON
+  """
+  During rendering, it is validated against JSON schema from Interface of the resolved action
+  """
+  parameters: JSON
 
-    """
-    Required and optional TypeInstances for Action
-    """
-    typeInstances: [InputTypeInstanceData!]
+  """
+  Required and optional TypeInstances for Action
+  """
+  typeInstances: [InputTypeInstanceData!]
 }
 
 """
 Client input for Input TypeInstance
 """
 input InputTypeInstanceData {
-    name: String!
-    id: ID!
+  name: String!
+  id: ID!
 }
 
 """
 Action describes user intention to resolve & execute a given Interface or Implementation.
 """
 type Action {
-    name: String!
-    createdAt: Timestamp!
+  name: String!
+  createdAt: Timestamp!
 
-    input: ActionInput
-    output: ActionOutput
+  input: ActionInput
+  output: ActionOutput
 
-    """
-    Contains reference to the Implementation or Interface manifest
-    """
-    actionRef: ManifestReference!
+  """
+  Contains reference to the Implementation or Interface manifest
+  """
+  actionRef: ManifestReference!
 
-    """
-    Indicates if user approved this Action to run
-    """
-    run: Boolean!
+  """
+  Indicates if user approved this Action to run
+  """
+  run: Boolean!
 
-    """
-    Indicates if user canceled the workflow
-    """
-    cancel: Boolean!
+  """
+  Indicates if user canceled the workflow
+  """
+  cancel: Boolean!
 
-    """
-    Specifies whether the Action performs server-side test without actually running the Action.
-    """
-    dryRun: Boolean!
+  """
+  Specifies whether the Action performs server-side test without actually running the Action.
+  For now it only lints the rendered Argo manifests and does not execute any workflow.
+  """
+  dryRun: Boolean!
 
-    renderedAction: Any
+  renderedAction: Any
 
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    renderingAdvancedMode: ActionRenderingAdvancedMode
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    renderedActionOverride: Any
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  renderingAdvancedMode: ActionRenderingAdvancedMode
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  renderedActionOverride: Any
 
-    status: ActionStatus
+  status: ActionStatus
 }
 
 """
 Properties related to Action advanced rendering. CURRENTLY NOT IMPLEMENTED.
 """
 type ActionRenderingAdvancedMode {
-    enabled: Boolean!
+  enabled: Boolean!
 
-    """
-    Optional TypeInstances for current rendering iteration
-    """
-    typeInstancesForRenderingIteration: [InputTypeInstanceToProvide!]!
+  """
+  Optional TypeInstances for current rendering iteration
+  """
+  typeInstancesForRenderingIteration: [InputTypeInstanceToProvide!]!
 }
 
 """
 Status of the Action
 """
 type ActionStatus {
-    phase: ActionStatusPhase!
-    timestamp: Timestamp!
-    message: String
-    runner: RunnerStatus
+  phase: ActionStatusPhase!
+  timestamp: Timestamp!
+  message: String
+  runner: RunnerStatus
 
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    createdBy: UserInfo
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    runBy: UserInfo
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    canceledBy: UserInfo
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  createdBy: UserInfo
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  runBy: UserInfo
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  canceledBy: UserInfo
 }
 
 """
 Additional Action status from the Runner
 """
 type RunnerStatus {
-    """
-    Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
-    """
-    status: Any
+  """
+  Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
+  """
+  status: Any
 }
 
 """
 Describes input of an Action
 """
 type ActionInput {
-    """
-    Validated against JSON schema from Interface
-    """
-    parameters: Any
-    typeInstances: [InputTypeInstanceDetails!]!
+  """
+  Validated against JSON schema from Interface
+  """
+  parameters: Any
+  typeInstances: [InputTypeInstanceDetails!]!
 }
 
 """
 Describes output of an Action
 """
 type ActionOutput {
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    typeInstances: [OutputTypeInstanceDetails!]!
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  typeInstances: [OutputTypeInstanceDetails!]!
 }
 
 interface TypeInstanceDetails {
-    id: ID!
-    name: String!
-    typeRef: ManifestReference!
+  id: ID!
+  name: String!
+  typeRef: ManifestReference!
 }
 
 """
 Describes input TypeInstance of an Action
 """
 type InputTypeInstanceDetails implements TypeInstanceDetails {
-    id: ID!
-    name: String!
-    typeRef: ManifestReference!
-    optional: Boolean!
+  id: ID!
+  name: String!
+  typeRef: ManifestReference!
+  optional: Boolean!
 }
 
 """
 Describes optional input TypeInstance of advanced rendering iteration
 """
 type InputTypeInstanceToProvide {
-    name: String!
-    typeRef: ManifestReference!
+  name: String!
+  typeRef: ManifestReference!
 }
 
 """
 Describes output TypeInstance of an Action
 """
 type OutputTypeInstanceDetails implements TypeInstanceDetails {
-    id: ID!
-    name: String!
-    typeRef: ManifestReference!
+  id: ID!
+  name: String!
+  typeRef: ManifestReference!
 }
 
 """
 Stores user information
 """
 type UserInfo {
-    username: String!
-    groups: [String!]!
-    extra: Any
+  username: String!
+  groups: [String!]!
+  extra: Any
 }
 
 """
 Set of filters for Action list
 """
 input ActionFilter {
-    phase: ActionStatusPhase
+  phase: ActionStatusPhase
 }
 
 """
 Input used for continuing Action rendering in advanced mode
 """
 input AdvancedModeContinueRenderingInput {
-    """
-    Optional TypeInstances for a given rendering iteration
-    """
-    typeInstances: [InputTypeInstanceData!]
+  """
+  Optional TypeInstances for a given rendering iteration
+  """
+  typeInstances: [InputTypeInstanceData!]
 }
 
 """
 Current phase of the Action
 """
 enum ActionStatusPhase {
-    INITIAL,
-    BEING_RENDERED,
-    ADVANCED_MODE_RENDERING_ITERATION, # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
-    READY_TO_RUN,
-    RUNNING,
-    BEING_CANCELED,
-    CANCELED,
-    SUCCEEDED,
-    FAILED
+  INITIAL
+  BEING_RENDERED
+  ADVANCED_MODE_RENDERING_ITERATION # Advanced mode only: new optional TypeInstances discovered. User can provide input TypeInstances
+  READY_TO_RUN
+  RUNNING
+  BEING_CANCELED
+  CANCELED
+  SUCCEEDED
+  FAILED
 }
 
 type Query {
-    action(name: String!): Action
-    actions(filter: ActionFilter): [Action!]!
+  action(name: String!): Action
+  actions(filter: ActionFilter): [Action!]!
 }
 
 type Mutation {
-    createAction(in: ActionDetailsInput): Action!
-    runAction(name: String!): Action!
-    cancelAction(name: String!): Action!
-    updateAction(in: ActionDetailsInput!): Action!
+  createAction(in: ActionDetailsInput): Action!
+  runAction(name: String!): Action!
 
-    """
-    CURRENTLY NOT IMPLEMENTED.
-    """
-    continueAdvancedRendering(actionName: String!, in: AdvancedModeContinueRenderingInput!): Action! # Advanced mode only: it is used to provide optional TypeInstances in each step of workflow render
-    deleteAction(name: String!): Action!
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  cancelAction(name: String!): Action!
+  updateAction(in: ActionDetailsInput!): Action!
+
+  """
+  CURRENTLY NOT IMPLEMENTED.
+  """
+  continueAdvancedRendering(
+    actionName: String!
+    in: AdvancedModeContinueRenderingInput!
+  ): Action! # Advanced mode only: it is used to provide optional TypeInstances in each step of workflow render
+  """
+  DeleteAction does not remove the resources, which were created or modified by this Action.
+  """
+  deleteAction(name: String!): Action!
 }
 
 # TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58

@@ -96,7 +96,7 @@
           "$id": "#/properties/spec/properties/abstract",
           "type": "boolean",
           "default": false,
-          "description": "If true, the Interface cannot be implemented."
+          "description": "If true, the Interface cannot be implemented. CURRENTLY NOT IMPLEMENTED."
         }
       }
     }

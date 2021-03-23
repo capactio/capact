@@ -86,7 +86,7 @@ spec:
                 type: object
               cancel:
                 default: false
-                description: Cancel specifies whether the Action execution should be canceled.
+                description: Cancel specifies whether the Action execution should be canceled. CURRENTLY NOT IMPLEMENTED.
                 type: boolean
               dryRun:
                 default: false

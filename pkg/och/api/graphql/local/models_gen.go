@@ -67,6 +67,7 @@ type TypeInstanceFilter struct {
 	TypeRef    *TypeRefFilterInput     `json:"typeRef"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentation struct {
 	Metrics *TypeInstanceInstrumentationMetrics `json:"metrics"`
 	Health  *TypeInstanceInstrumentationHealth  `json:"health"`

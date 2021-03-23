@@ -25,6 +25,7 @@ type Action struct {
 	// Indicates if user canceled the workflow
 	Cancel bool `json:"cancel"`
 	// Specifies whether the Action performs server-side test without actually running the Action.
+	// For now it only lints the rendered Argo manifests and does not execute any workflow.
 	DryRun         bool        `json:"dryRun"`
 	RenderedAction interface{} `json:"renderedAction"`
 	// CURRENTLY NOT IMPLEMENTED.

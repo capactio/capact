@@ -645,6 +645,9 @@ type AttributeReference {
   revision: Version!
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 type TypeInstanceInstrumentation {
   metrics: TypeInstanceInstrumentationMetrics
     @relation(name: "MEASURED_BY", direction: "OUT")
