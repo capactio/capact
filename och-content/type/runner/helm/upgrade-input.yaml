@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: install-input
+  name: upgrade-input
   prefix: cap.type.runner.helm
-  displayName: Input parameters for Install action
-  description: Describes input parameters for Install action of the Helm Runner.
+  displayName: Input parameters for Upgrade action
+  description: Describes input parameters for Upgrade action of the Helm Runner.
   documentationURL: https://helm.sh/docs
   supportURL: https://helm.sh
   maintainers:
@@ -22,7 +22,8 @@ spec:
         "title": "The input schema for Helm Runner install operation",
         "examples": [
           {
-            "generateName": true,
+            "reuseValues": true,
+            "resetValues": false,
             "chart": {
               "name": "postgresql",
               "repo": "https://charts.bitnami.com/bitnami",
@@ -47,22 +48,13 @@ spec:
           }
         ],
         "additionalProperties": false,
-        "required": [
-          "chart"
-        ],
+        "required": [],
         "properties": {
-            "name": {
-              "$id": "#/properties/name",
-              "type": "string",
-              "title": "The name of installed release"
-            },
             "chart": {
               "$id": "#/properties/chart",
               "type": "object",
-              "title": "The chart data",
-              "required": [
-                "name"
-              ],
+              "title": "The chart data. If not provided, the ones from existing Helm Release are used.",
+              "required": [],
               "properties": {
                 "name": {
                   "$id": "#/properties/chart/properties/name",
@@ -90,12 +82,18 @@ spec:
               "title": "Prevent hooks from running during install",
               "default": false
             },
-            "generateName": {
-              "$id": "#/properties/generateName",
+            "reuseValues": {
+              "$id": "#/properties/reuseValues",
               "type": "boolean",
-              "title": "Generate release name",
+              "title": "Reuses the last release's values and merge in any overrides during upgrade",
               "default": false
             },
+            "resetValues": {
+               "$id": "#/properties/resetValues",
+               "type": "boolean",
+               "title": "Resets the values to the ones built into the chart during upgrade",
+               "default": false
+             },
             "replace": {
               "$id": "#/properties/replace",
               "type": "boolean",

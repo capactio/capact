@@ -1,0 +1,51 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.productivity.jira
+  name: change-host
+  displayName: "Change host"
+  description: "Change host for Jira installation"
+  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
+  supportURL: https://www.atlassian.com/software/jira
+  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  input:
+    typeInstances:
+      jira-config:
+        typeRef:
+          path: cap.type.productivity.jira.config
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      jira-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+    parameters:
+      input-parameters:
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "hostname": {
+                  "name": "cap.core.type.networking.hostname",
+                  "revision": "0.1.0"
+                }
+              },
+              "required": ["host"],
+              "properties": {
+                "host": { "$ref": "#/$ocfRefs/hostname" }
+              }
+              "additionalProperties": false
+            }
+  output: {}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
