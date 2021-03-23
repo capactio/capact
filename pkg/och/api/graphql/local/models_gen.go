@@ -102,7 +102,8 @@ type TypeInstanceResourceVersionMetadata struct {
 }
 
 type TypeInstanceResourceVersionSpec struct {
-	Value           interface{}                  `json:"value"`
+	Value interface{} `json:"value"`
+	// CURRENTLY NOT IMPLEMENTED
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
 }
 

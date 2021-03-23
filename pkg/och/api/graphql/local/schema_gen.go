@@ -622,6 +622,10 @@ type TypeInstanceResourceVersionSpec {
       RETURN apoc.convert.fromJsonMap(this.value)
       """
     )
+
+  """
+  CURRENTLY NOT IMPLEMENTED
+  """
   instrumentation: TypeInstanceInstrumentation
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
