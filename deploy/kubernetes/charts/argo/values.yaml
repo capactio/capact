@@ -4,7 +4,7 @@ argo:
     image:
       # We need to override it until this bug will be fixed: https://github.com/argoproj/argo/issues/4772
       # Overrides .images.tag if defined.
-      tag: "v2.12.9-disabled-global-art-validation"
+      tag: "v2.12.10-remove-problem-with-static-svr"
       # Overrides .images.namespace if defined.
       namespace: "gcr.io/projectvoltron/argoproj"
 
