@@ -226,6 +226,12 @@ input UpdateTypeInstanceInput {
 }
 
 input UpdateTypeInstancesInput {
+  """
+  Allows you to update TypeInstances which are locked by a given ownerID. If not provided,
+  you can update only those TypeInstances which are not locked.
+  """
+  ownerID: LockOwnerID
+
   id: ID!
   typeInstance: UpdateTypeInstanceInput!
 }
@@ -301,9 +307,6 @@ type Query {
 }
 
 type Mutation {
-  """
-  TODO: SV-262
-  """
   createTypeInstances(
     in: CreateTypeInstancesInput!
   ): [CreateTypeInstanceOutput!]!
@@ -333,74 +336,37 @@ type Mutation {
       """
     )
 
-  # Keep in sync with the updateTypeInstances mutation
-  updateTypeInstance(id: ID!, in: UpdateTypeInstanceInput!): TypeInstance!
-    @cypher(
-      statement: """
-      MATCH (ti: TypeInstance {id: $id})
-      CALL {
-        WITH ti
-        MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)
-        RETURN latestRevision
-        ORDER BY latestRevision.resourceVersion DESC LIMIT 1
-      }
-
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
-      CREATE (ti)-[:CONTAINS]->(tir)
-
-      // Handle the `spec.value` property
-      CREATE (spec: TypeInstanceResourceVersionSpec)
-      CREATE (tir)-[:SPECIFIED_BY]->(spec)
-
-      WITH ti, tir, spec, latestRevision
-      CALL apoc.do.when(
-        $in.value IS NOT NULL,
-        '
-          SET spec.value = apoc.convert.toJson($in.value) RETURN spec
-        ',
-        '
-          MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)
-          SET spec.value = latestSpec.value RETURN spec
-        ',
-        {spec:spec, latestRevision: latestRevision, in: $in}) YIELD value
-
-      // Handle the `metadata.attributes` property
-      CREATE (metadata: TypeInstanceResourceVersionMetadata)
-      CREATE (tir)-[:DESCRIBED_BY]->(metadata)
-
-      WITH ti, tir, latestRevision, metadata
-      CALL apoc.do.when(
-        $in.attributes IS NOT NULL,
-        '
-          FOREACH (attr in in.attributes |
-            MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})
-            CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)
-          )
-
-          RETURN metadata
-        ',
-        '
-          OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)
-          WHERE latestAttrRef IS NOT NULL
-          WITH *, COLLECT(latestAttrRef) AS latestAttrRefs
-          FOREACH (attr in latestAttrRefs |
-            CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)
-          )
-
-          RETURN metadata
-        ',
-        {metadata: metadata, latestRevision: latestRevision, in: $in}
-      ) YIELD value
-
-
-      RETURN ti
-      """
-    )
-
-  # Keep in sync with the updateTypeInstance mutation
   updateTypeInstances(in: [UpdateTypeInstancesInput]!): [TypeInstance!]!
     @cypher(
       statement: """
+      CALL {
+        UNWIND $in AS item
+        RETURN collect(item.id) as allInputIDs
+      }
+
+      // Check if all TypeInstances were found
+      WITH *
+      CALL {
+        WITH allInputIDs
+        MATCH (ti:TypeInstance)
+        WHERE ti.id IN allInputIDs
+        WITH collect(ti.id) as foundIDs
+        RETURN foundIDs
+      }
+      CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)
+
+      // Check if given TypeInstances are not already locked by others
+      WITH *
+      CALL {
+          WITH *
+          UNWIND $in AS item
+          MATCH (tic:TypeInstance {id: item.id})
+          WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)
+          WITH collect(tic.id) as lockedIDs
+          RETURN lockedIDs
+      }
+      CALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)
+
       UNWIND $in as item
       MATCH (ti: TypeInstance {id: item.id})
       CALL {
@@ -461,7 +427,7 @@ type Mutation {
       """
     )
 
-  deleteTypeInstance(id: ID!): ID!
+  deleteTypeInstance(id: ID!, ownerID: LockOwnerID): ID!
 
   """
   Mark given TypeInstances as locked by a given owner.

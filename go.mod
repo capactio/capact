@@ -16,6 +16,7 @@ require (
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/docker v1.4.2-0.20200203170920-46ec8731fbce
 	github.com/fatih/color v1.10.0
+	github.com/gitchander/permutation v0.0.0-20210302120832-6ab79d7de174
 	github.com/go-logr/logr v0.1.0
 	github.com/go-logr/zapr v0.1.0
 	github.com/google/go-cmp v0.5.4 // indirect

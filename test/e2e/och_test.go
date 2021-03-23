@@ -5,6 +5,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	prmt "github.com/gitchander/permutation"
 	"strings"
 
 	"github.com/MakeNowJust/heredoc"
@@ -337,7 +338,7 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with id4 not found error")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring(heredoc.Doc(`while executing mutation to lock TypeInstances: All attempts fail:
+			Expect(err.Error()).To(Equal(heredoc.Doc(`while executing mutation to lock TypeInstances: All attempts fail:
 							#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "123-not-found" were not found`)))
 
 			when("Bar tries to locks id1,id2,id3,id4")
@@ -348,8 +349,8 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with id4 not found and already locked error for id1,id2,id3")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-				#1: graphql: failed to lock TypeInstances: 2 errors occurred: [TypeInstances with IDs "123-not-found" were not found, TypeInstances with IDs "%s" are locked by different owner]`, strings.Join(createdTIIDs, `", "`))))
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+				#1: graphql: failed to lock TypeInstances: 2 errors occurred: \[TypeInstances with IDs "123-not-found" were not found, TypeInstances with IDs %s are locked by different owner\]`, allPermutations(createdTIIDs))))
 
 			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
 			when("Bar tries to locks all of them")
@@ -367,8 +368,8 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id1,id2,id3 already locked by Foo")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
 
 			scenario("id1, id2, id3 are locked by Foo, id4: not locked")
 
@@ -380,8 +381,158 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id1,id2,id3 already locked by Foo")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(ContainSubstring(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
-						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs "%s" are locked by different owner`, strings.Join(createdTIIDs, `", "`))))
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
+						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
+		})
+
+		It("should test update TypeInstances based on all edge cases", func() {
+			const (
+				fooOwnerID = "namespace/Foo"
+				barOwnerID = "namespace/Bar"
+			)
+			localCli := getOCHGraphQLClient()
+
+			var createdTIIDs []string
+
+			for _, ver := range []string{"id1", "id2"} {
+				out, err := localCli.CreateTypeInstance(ctx, typeInstance(ver))
+				Expect(err).NotTo(HaveOccurred())
+				createdTIIDs = append(createdTIIDs, out.ID)
+			}
+			defer func() {
+				for _, id := range createdTIIDs {
+					_ = localCli.DeleteTypeInstance(ctx, id)
+				}
+
+			}()
+
+			scenario("id1 and id2 are not locked")
+			expUpdateTI := &gqllocalapi.UpdateTypeInstanceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
+					{Path: "cap.update.not.locked", Revision: "0.0.1"},
+				},
+			}
+
+			when("try to update them")
+			updatedTI, err := localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           createdTIIDs[0],
+					TypeInstance: expUpdateTI,
+				},
+				{
+					ID:           createdTIIDs[1],
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should success")
+			Expect(err).NotTo(HaveOccurred())
+			for _, instance := range updatedTI {
+				Expect(instance.LatestResourceVersion.Metadata.Attributes).To(HaveLen(1))
+				Expect(instance.LatestResourceVersion.Metadata.Attributes[0]).To(BeEquivalentTo(expUpdateTI.Attributes[0]))
+			}
+
+			scenario("id1 and id2 are locked by Foo")
+			expUpdateTI = &gqllocalapi.UpdateTypeInstanceInput{
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
+					{Path: "cap.update.locked.by.foo", Revision: "0.0.1"},
+				},
+			}
+
+			err = localCli.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
+				Ids:     createdTIIDs,
+				OwnerID: fooOwnerID,
+			})
+			Expect(err).NotTo(HaveOccurred())
+
+			when("update them as Foo owner")
+			updatedTI, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           createdTIIDs[0],
+					OwnerID:      ptr.String(fooOwnerID),
+					TypeInstance: expUpdateTI,
+				},
+				{
+					ID:           createdTIIDs[1],
+					OwnerID:      ptr.String(fooOwnerID),
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should success")
+			Expect(err).NotTo(HaveOccurred())
+			for _, instance := range updatedTI {
+				Expect(instance.LatestResourceVersion.Metadata.Attributes).To(HaveLen(1))
+				Expect(instance.LatestResourceVersion.Metadata.Attributes[0]).To(BeEquivalentTo(expUpdateTI.Attributes[0]))
+			}
+
+			when("update them as Bar owner")
+			_, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           createdTIIDs[0],
+					OwnerID:      ptr.String(barOwnerID),
+					TypeInstance: expUpdateTI,
+				},
+				{
+					ID:           createdTIIDs[1],
+					OwnerID:      ptr.String(barOwnerID),
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should failed with error id1,id2 already locked by different owner")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+        				#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
+
+			when("update them without owner")
+			_, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           createdTIIDs[0],
+					TypeInstance: expUpdateTI,
+				},
+				{
+					ID:           createdTIIDs[1],
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should failed with error id1,id2 already locked by different owner")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+        				#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
+
+			when("update one property with Foo owner, and second without owner")
+			_, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           createdTIIDs[0],
+					OwnerID:      ptr.String(fooOwnerID),
+					TypeInstance: expUpdateTI,
+				},
+				{
+					ID:           createdTIIDs[1],
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should failed with error id2 already locked by different owner")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+        				#1: graphql: failed to update TypeInstances: TypeInstances with IDs "%s" are locked by different owner`, createdTIIDs[1])))
+
+			scenario("id3 does not exist")
+			when("try to update it")
+			_, err = localCli.UpdateTypeInstances(ctx, []gqllocalapi.UpdateTypeInstancesInput{
+				{
+					ID:           "id3",
+					TypeInstance: expUpdateTI,
+				},
+			})
+
+			then("should failed with error id3 not found")
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal(heredoc.Doc(`while executing query to update TypeInstances: All attempts fail:
+        			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`)))
 		})
 	})
 })
@@ -573,4 +724,20 @@ func when(format string, args ...interface{}) {
 
 func then(format string, args ...interface{}) {
 	fmt.Fprintf(GinkgoWriter, "\t[then]: "+format+"\n", args...)
+}
+
+// allPermutations returns all possible permutations in regex format.
+// For such input
+//	a := []string{"alpha", "beta"}
+// returns
+//	("alpha", "beta"|"beta", "alpha")
+//
+// This function allows you to match list of words in any order using regex.
+func allPermutations(in []string) string {
+	p := prmt.New(prmt.StringSlice(in))
+	var opts []string
+	for p.Next() {
+		opts = append(opts, fmt.Sprintf(`"%s"`, strings.Join(in, `", "`)))
+	}
+	return fmt.Sprintf(`(%s)`, strings.Join(opts, "|"))
 }

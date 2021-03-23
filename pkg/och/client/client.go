@@ -27,6 +27,7 @@ type Local interface {
 	DeleteTypeInstance(ctx context.Context, id string) error
 	LockTypeInstances(ctx context.Context, in *ochlocalgraphql.LockTypeInstancesInput) error
 	UnlockTypeInstances(ctx context.Context, in *ochlocalgraphql.UnlockTypeInstancesInput) error
+	UpdateTypeInstances(ctx context.Context, in []ochlocalgraphql.UpdateTypeInstancesInput) ([]ochlocalgraphql.TypeInstance, error)
 }
 
 type Public interface {

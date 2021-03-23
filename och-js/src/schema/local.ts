@@ -34,6 +34,16 @@ interface TypeInstanceNode {
   properties: { id: string, lockedBy: string }
 }
 
+interface UpdateTypeInstanceError {
+	code: UpdateTypeInstanceErrorCode;
+	ids: string[];
+}
+
+enum UpdateTypeInstanceErrorCode {
+	Conflict = 409,
+	NotFound = 404,
+}
+
 // TODO: extract each mutation/query into dedicated file
 export const schema = makeAugmentedSchema({
   typeDefs,
@@ -152,60 +162,50 @@ export const schema = makeAugmentedSchema({
         context,
         resolveInfo
       ) => {
-        const neo4jSession = context.driver.session();
         try {
-          const ids = args.in.map((item) => item.id);
-
-          return await neo4jSession.writeTransaction(
-            async (tx: Transaction) => {
-              const updateTypeInstancesResult = await tx.run(
-                `
-                    OPTIONAL MATCH (ti:TypeInstance)
-                    WHERE ti.id IN $ids 
-                    RETURN ti.id as foundIds`,
-                { ids }
-              );
-
-              const extractedResult = updateTypeInstancesResult.records.map(
-                (record) => record.get("foundIds")
-              );
-              const notFoundIDs = ids.filter(
-                (x) => !extractedResult.includes(x)
-              );
-
-              if (notFoundIDs.length !== 0) {
-                throw new Error(
-                  `TypeInstance with ID(s) "${notFoundIDs.join(
-                    ", "
-                  )}" not found`
-                );
-              }
-              return neo4jgraphql(obj, args, context, resolveInfo);
-            }
-          );
+          return await neo4jgraphql(obj, args, context, resolveInfo);
         } catch (e) {
-          throw new Error(`failed to update TypeInstances": ${e.message}`);
-        } finally {
-          neo4jSession.close();
+          const customErr = tryToExtractCustomError(e)
+          if (customErr) {
+            switch (customErr.code) {
+              case UpdateTypeInstanceErrorCode.Conflict:
+                e = Error(`TypeInstances with IDs "${customErr.ids.join('", "')}" are locked by different owner`);
+                break;
+              case UpdateTypeInstanceErrorCode.NotFound:
+                const ids = args.in.map(({id}) => id);
+                const notFoundIDs = ids.filter(x => !customErr.ids.includes(x));
+                e = Error(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
+                break;
+            }
+          }
+
+          throw new Error(`failed to update TypeInstances: ${e.message}`);
         }
-      },
-      updateTypeInstance: async (obj, args, context, resolveInfo) => {
-        const data = await neo4jgraphql(obj, args, context, resolveInfo);
-        if (data === null) {
-          return new Error(
-            `failed to update TypeInstance with ID "${args.id}": TypeInstance not found`
-          );
-        }
-        return data;
       },
       deleteTypeInstance: async (_obj, args, context) => {
         const neo4jSession = context.driver.session();
         try {
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              const deleteTypeInstanceResult = await tx.run(
+              await tx.run(
                 `
-                    MATCH (ti:TypeInstance {id: $id})-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
+                    OPTIONAL MATCH (ti:TypeInstance {id: $id})
+                    
+                    // Check if a given TypeInstance was found
+                    CALL apoc.util.validate(ti IS NULL, apoc.convert.toJson({code: 404}), null)
+
+                    // Check if a given TypeInstance is not already locked by a different owner
+                    CALL {
+                        WITH ti
+                        WITH ti
+                        WHERE ti.lockedBy IS NOT NULL AND ($ownerID IS NULL OR ti.lockedBy <> $ownerID)
+                        WITH count(ti.id) as lockedIDs
+                        RETURN lockedIDs = 1 as isLocked
+                    }
+                    CALL apoc.util.validate(isLocked, apoc.convert.toJson({code: 409}), null)
+
+                    WITH ti
+                    MATCH (ti)-[:CONTAINS]->(tirs: TypeInstanceResourceVersion)
                     MATCH (ti)-[:OF_TYPE]->(typeRef: TypeInstanceTypeReference)
                     MATCH (metadata:TypeInstanceResourceVersionMetadata)<-[:DESCRIBED_BY]-(tirs)
                     MATCH (tirs)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec)
@@ -230,18 +230,24 @@ export const schema = makeAugmentedSchema({
                     }
               
                     RETURN $id`,
-                { id: args.id }
+                {id: args.id, ownerID: args.ownerID || null}
               );
-
-              if (
-                !deleteTypeInstanceResult.summary.counters.containsUpdates()
-              ) {
-                throw new Error(`TypeInstance not found`);
-              }
               return args.id;
             }
           );
         } catch (e) {
+          const customErr = tryToExtractCustomError(e)
+          if (customErr) {
+            switch (customErr.code) {
+              case UpdateTypeInstanceErrorCode.Conflict:
+                e = Error(`TypeInstance is locked by different owner`);
+                break;
+              case UpdateTypeInstanceErrorCode.NotFound:
+                e = Error(`TypeInstance was not found`);
+                break;
+            }
+          }
+
           throw new Error(
             `failed to delete TypeInstance with ID "${args.id}": ${e.message}`
           );
@@ -381,4 +387,24 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
         throw new Error(`${errMsg.length} errors occurred: [${errMsg.join(", ")}]`)
     }
   }
+}
+
+// In Cypher we throw custom errors, e.g.:
+// 	CALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, foundIDs: foundIDs}), null)
+//
+// which produce such output:
+//  Failed to invoke procedure `apoc.cypher.doIt`: Caused by: java.lang.RuntimeException: {"lockedIDs":["b0283e96-ce83-451c-9325-0d144b9cea6a"],"code":409}
+//
+// This function tries to extract this error, if not possible, returns `null`.
+function tryToExtractCustomError(gotErr: Error): UpdateTypeInstanceError | null  {
+	const firstOpen =  gotErr.message.indexOf('{');
+	const firstClose =  gotErr.message.lastIndexOf('}');
+	const candidate =  gotErr.message.substring(firstOpen, firstClose + 1);
+
+	try {
+		return JSON.parse(candidate)
+	}
+	catch(e) {/* cannot extract, return generic error */}
+
+	return null;
 }
