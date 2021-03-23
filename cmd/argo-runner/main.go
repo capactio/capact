@@ -7,7 +7,7 @@ import (
 	"projectvoltron.dev/voltron/pkg/runner"
 	"projectvoltron.dev/voltron/pkg/runner/argo"
 
-	wfclientset "github.com/argoproj/argo/pkg/client/clientset/versioned"
+	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"

@@ -962,8 +962,12 @@ spec:
                     artifacts:
                       - name: template
                         raw:
+                          # Here we prepare a simple script to run the SQL statements to change the user password.
+                          # The sleep at the beginning is required, so the container does not exit too quickly.
+                          # This a limitation of the PNS executor, used for executing the Argo workflows in Voltron.
                           data: |
                             set -e
+                            sleep 1
                             export PGPASSWORD=<@user.password@>
                             PSQL_CMD="psql -h <@postgresql.host@> -U <@user.name@> <@postgresql.defaultDBName@> -c"
                             ${PSQL_CMD} "ALTER USER <@user.name@> WITH PASSWORD '<@input.password@>'"
@@ -1030,6 +1034,10 @@ signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
 </details>
+
+> **NOTE:** When you have a step in your Implementation, which has a short-living container (exits in less than a second), it is required to add `sleep 1` to the script
+> to ensure Argo will be able to get the output artifacts from the container.
+> It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Voltron uses for executing Argo workflows.
 
 We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
 

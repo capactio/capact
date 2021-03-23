@@ -10,7 +10,7 @@ require (
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/semver/v3 v3.0.3
 	github.com/agnivade/levenshtein v1.1.0 // indirect
-	github.com/argoproj/argo v0.0.0-00010101000000-000000000000
+	github.com/argoproj/argo/v2 v2.12.10
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
@@ -50,8 +50,8 @@ require (
 	golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9
 	golang.org/x/sys v0.0.0-20210309074719-68d13333faf2 // indirect
 	golang.org/x/tools v0.0.0-20200827163409-021d7c6f1ec3 // indirect
-	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/api v0.20.0
+	google.golang.org/grpc/examples v0.0.0-20210322221411-d26af8e39165 // indirect
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.1.2
 	k8s.io/api v0.18.2
@@ -70,7 +70,7 @@ replace (
 	// Remove when the is resolved:
 	// - https://github.com/argoproj/argo-workflows/issues/4772
 	// - we can compile argo without static files
-	github.com/argoproj/argo => github.com/Project-Voltron/argo-workflows v0.0.0-20210311191943-1c5e53f22a95
+	github.com/argoproj/argo/v2 => github.com/Project-Voltron/argo-workflows/v2 v2.12.10-0.20210323093745-be9145c858b1
 	// Remove when the issues are resolved:
 	// https://github.com/graphql-go/graphql/issues/586
 	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
