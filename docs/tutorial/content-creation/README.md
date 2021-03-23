@@ -1029,7 +1029,6 @@ signature:
 > **NOTE:** When you have a step in your Implementation, which has a short-living container (exits in less than a second), it is required to add `sleep 1` to the script
 > to ensure Argo will be able to get the output artifacts from the container.
 > It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Voltron uses for executing Argo workflows.
-> In the future we might consider changing the executor to overcome this problem.
 
 We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
 
