@@ -635,6 +635,7 @@ input ActionDetailsInput {
 
   """
   Specifies whether the Action performs server-side test without actually running the Action
+  For now it only lints the rendered Argo manifests and does not execute any workflow.
   """
   dryRun: Boolean = false
 
@@ -705,7 +706,7 @@ type Action {
   run: Boolean!
 
   """
-  Indicates if user canceled the workflow
+  Indicates if user canceled the workflow. CURRENTLY NOT SUPPORTED.
   """
   cancel: Boolean!
 

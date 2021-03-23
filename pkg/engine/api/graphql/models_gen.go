@@ -22,7 +22,7 @@ type Action struct {
 	ActionRef *ManifestReference `json:"actionRef"`
 	// Indicates if user approved this Action to run
 	Run bool `json:"run"`
-	// Indicates if user canceled the workflow
+	// Indicates if user canceled the workflow. CURRENTLY NOT SUPPORTED.
 	Cancel bool `json:"cancel"`
 	// Specifies whether the Action performs server-side test without actually running the Action.
 	// For now it only lints the rendered Argo manifests and does not execute any workflow.
@@ -42,6 +42,7 @@ type ActionDetailsInput struct {
 	// Contains reference to the Implementation or Interface manifest
 	ActionRef *ManifestReferenceInput `json:"actionRef"`
 	// Specifies whether the Action performs server-side test without actually running the Action
+	// For now it only lints the rendered Argo manifests and does not execute any workflow.
 	DryRun *bool `json:"dryRun"`
 	// Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
 	AdvancedRendering *bool `json:"advancedRendering"`

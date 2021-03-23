@@ -90,7 +90,7 @@ spec:
                 type: boolean
               dryRun:
                 default: false
-                description: DryRun specifies whether runner should perform only dry-run action without persisting the resource.
+                description: DryRun specifies whether runner should perform only dry-run action without persisting the resource. For now it only lints the rendered Argo manifests and does not execute any workflow.
                 type: boolean
               input:
                 description: Input describes Action input.
