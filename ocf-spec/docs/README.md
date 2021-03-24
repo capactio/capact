@@ -4,7 +4,9 @@
 
 Repo: https://github.com/adobe/jsonschema2md
 
-Example: [adobe-jsonschema2md](./adobe-jsonschema2md)
+Example: 
+- their: https://github.com/adobe/jsonschema2md/tree/main/examples/docs
+- our: [adobe-jsonschema2md](./adobe-jsonschema2md)
 
 Command:
 
@@ -18,3 +20,54 @@ Issues:
 - Not all files are generated, but we also do not get any error, e.g. for [interfaces.md](./adobe-jsonschema2md/interface.md) the `interface-properties-spec.md` was not generated. Needs to be investigated further.
 - Information duplication, e.g. [atrribute.md](./adobe-jsonschema2md/attribute.md) has full definition for the `ocfVersion` type, but we also have [attribute-properties-ocfversion.md](./adobe-jsonschema2md/attribute-properties-ocfversion.md) which duplicates this information.
 - The shared metadata is generated as a single .md file. But others files refer to `attribute-properties-ocf-metadata.md` instead of `metadata.md`. Needs to be investigated further.  
+
+### Wetzel
+
+Repo: https://github.com/CesiumGS/wetzel
+
+Example:
+- their: https://github.com/KhronosGroup/glTF/tree/master/specification/2.0#properties-reference
+- our: [wetzel](./wetzel)
+
+Command:
+
+```bash
+wetzel ocf-spec/0.0.1/schema/attribute.json  -l 2 > ./ocf-spec/docs/wetzel/attribute.md
+wetzel ocf-spec/0.0.1/schema/interface.json  -l 2 > ./ocf-spec/docs/wetzel/interface.md
+wetzel ocf-spec/0.0.1/schema/interface-group.json  -l 2 > ./ocf-spec/docs/wetzel/interface-group.md
+wetzel ocf-spec/0.0.1/schema/repo-metadata.json  -l 2 > ./ocf-spec/docs/wetzel/repo-metadata.md
+wetzel ocf-spec/0.0.1/schema/repo-metadata.json  -l 2 > ./ocf-spec/docs/wetzel/repo-metadata.md
+wetzel ocf-spec/0.0.1/schema/type.json  -l 2 > ./ocf-spec/docs/wetzel/type.md
+wetzel ocf-spec/0.0.1/schema/type.json  -l 2 > ./ocf-spec/docs/wetzel/type.md
+wetzel ocf-spec/0.0.1/schema/vendor.json  -l 2 > ./ocf-spec/docs/wetzel/vendor.md
+
+# implementation not supported, error: Error: Unable to find $ref #/definitions/requireEntity
+# wetzel ocf-spec/0.0.1/schema/implementation.json  -l 2 > ./ocf-spec/docs/wetzel/implementation.md
+```
+
+Issues:
+- We need to add title property to our schemas, otherwise it generates is as `WETZEL_WARNING: title not defined.xxx`.
+- Supports only local `$ref`. Doesn't support `http` refs, or even definition reference: `Error: Unable to find $ref #/definitions/requireEntity`
+- Supports the Draft-4, we use Draft-7.
+- Supports single schema at time.`
+
+### Docson
+
+Repo: https://github.com/lbovet/docson
+
+Example:
+- their: https://lbovet.github.io/docson/index.html#/docson/examples/example.json
+- our: ![](./assets/docson.png)
+
+Issues:
+- Package was published 3 years ago.
+- Doesn't support $ref.
+- Support the Draft-4, we use Draft-7.
+- Doesn't generate .md files, serve content in browser.
+- Doesn't have option to see all exposed schemas. You need to use a single URL per schema.
+
+
+### https://github.com/coveooss/json-schema-for-humans
+
+visual tool, support draft-7
+
