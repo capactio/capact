@@ -102,8 +102,27 @@ Example:
 - their: https://coveooss.github.io/json-schema-for-humans/
 - our: [json-schema-for-humans](./json-schema-for-humans/schema_doc.html)
 
+Command:
+
+```bash
+generate-schema-doc ocf-spec/0.0.1/schema/attribute.json
+```
+
 Issues:
 
 - Supports single schema at time.
 - Doesn't generate .md files, serve content in browser.
 - Doesn't have option to see all exposed schemas. You need to use a single URL per schema.
+
+### json-schema-md-doc
+
+Repo: https://github.com/BrianWendt/json-schema-md-doc
+
+Example: 
+- their: https://github.com/BrianWendt/json-schema-md-doc/blob/master/samples/node/schema.md
+- own: [json-schema-md-doc](./json-schema-md-doc)
+
+Issues:
+
+- No CLI option.
+- Not user-friendly format. 
