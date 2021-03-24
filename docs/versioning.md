@@ -34,7 +34,7 @@ comparing Voltron versioning to Kubernetes versioning.
 | OCF Version                    | Resource `apiVersion` |
 | Manifests `revision`           | `resourceVersion`     |
 | TypeInstance `resourceVersion` | `resourceVersion`     |
-| Engine/CLI                     | kubectl               |
+| Engine/CLI                     | `kubectl`             |
 | Go SDK                         | `client-go`           |
 
 ## Diagram
@@ -122,7 +122,7 @@ release and they are read-only.
 
 ## The `appVersion`
 
-> **NOTE:*** The following subsection describes future `appVersion` features, which are not yet implemented.
+> **NOTE:** The following subsection describes future `appVersion` features, which are not yet implemented.
 
 The Implementation manifest contains `appVersion` field, which defines the supported version of the actual application. The `appVersion` field is independent from the revision.
 
@@ -139,19 +139,23 @@ then you have to specify every supported appVersion in the string.
 
 ### Default versions for appVersion in SemVer format
 
-During the submission of the Implementation manifest, if the appVersion is defined in the SemVer format, OCH updates the
+During the submission of the Implementation manifest, if the `appVersion` is defined in the SemVer format, OCH updates the
 following versions:
 
 - `latest` — depending on the OCH configuration, it points to stable or edge version
 - `stable` — points to the Implementation with highest semVer version in range without
-  suffix [starting from the hyphen](https://semver.org/#spec-item-9) (for example, if the range is defined
-  as [“1.0.x - 1.1.0-beta1”], the 1.0.9 is picked as an appVersion)
+  suffix [starting from the hyphen](https://semver.org/#spec-item-9)
+  
+  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.0.9 is picked as an `appVersion`.
+  
 - `edge` — points to the Implementation with highest semVer version in range, even if it contains suffix starting from
-  hyphen (for example, if the range is defined as [“1.0.x - 1.1.0-beta1”], the 1.1.0-beta1 is picked as an appVersion)
+  hyphen
+  
+  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.1.0-beta1 is picked as an `appVersion`.
 
 You can use the versions in Implementation manifest to filter prerequisite Implementations based on the appVersion
-value. For example, if your Implementation depends on a latest stable MySQL version, then you can use the “stable”
-version as the appVersion of MySQL.
+value. For example, if your Implementation depends on the latest stable PostgreSQL version, then you can use the `stable`
+version as the `appVersion` of PostgreSQL.
 
 ### Default versions for appVersion in different format than SemVer
 
@@ -175,7 +179,7 @@ spec:
 ### Conflict prevention
 
 An `appVersion` can be defined as a range. During Implementation manifest submission, the OCH validates whether the
-`appVersion` range doesn’t overlap with the same revision of the Implementation manifest. As noted earlier, the manifest
+`appVersion` range doesn't overlap with the same revision of the Implementation manifest. As noted earlier, the manifest
 `revision` is independent from the `appVersion`.
 
 **Example:**

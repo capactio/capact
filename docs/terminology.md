@@ -3,22 +3,21 @@
 This document lists and explains all terms used through the Voltron documentation.
 
 > There are only two hard things in Computer Science: cache invalidation and naming things.
+> 
 > -- Phil Karlton
 
 ## Table of contents
 
 <!-- toc -->
 
-- [Terminology](#terminology)
-  - [Table of contents](#table-of-contents)
-  - [Common terms](#common-terms)
-    - [Capability](#capability)
-    - [Action](#action)
-    - [Runner](#runner)
-  - [Components](#components)
-  - [Entities](#entities)
+- [Common terms](#common-terms)
+  * [Capability](#capability)
+  * [Action](#action)
+  * [Runner](#runner)
+- [Components](#components)
+- [Entities](#entities)
 
-<!-- toc-stop -->
+<!-- tocstop -->
 
 ## Common terms
 

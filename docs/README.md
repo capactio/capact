@@ -17,8 +17,8 @@ This directory contains the project's documentation.
 **Files**
 
 - [`policy-configuration.md`](./policy-configuration.md) - Documents the Policy configuration for Voltron Engine.
-- [`type-features.md`](./type-features.md) - Describes features for Type entity
-- [`versioning.md`](./versioning.md) - Describes versioning concept for Voltron
+- [`type-features.md`](./type-features.md) - Describes features of the Type entity.
+- [`versioning.md`](./versioning.md) - Describes versioning concept for Voltron.
 
 ## Architecture
 

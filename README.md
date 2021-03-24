@@ -22,9 +22,11 @@ From User perspective, the flow is easy.
 
 1. User navigates to the Voltron App Catalog.
 2. Once User clicks Install button for Jira in the App Catalog, PostgreSQL is configured according to Cluster Admin and User preferences:
+   
    - Cluster Admin can configure Voltron to prefer cloud-based GCP solutions. In this case, if User Installs Jira on cluster, Voltron will provision GCP CloudSQL for PostgreSQL database and use it.
    - If on-premise solutions are preferred, PostgreSQL will be installed on the same Kubernetes cluster with Helm.
    - If User provides an existing PostgreSQL database installation, deployed anywhere, Voltron will use it for Jira installation.
+   
 3. Once the database is configured, Voltron Engine runs the action that deploys Jira on the cluster.
 4. After deploying Jira, the Voltron Engine may run additional actions that install and configure other components, such as the identity provider and load balancer.
 
@@ -32,10 +34,10 @@ From User perspective, the flow is easy.
 
 The section contains useful links for getting started with Voltron.
 
-- **Tutorials:** To learn how to install, use Voltron and develop content for it, follow our [tutorials](./docs/tutorial).
-- **Development:** To run Voltron on your local machine and start contributing to Voltron, read [`development.md`](./docs/development.md) document.
+- **Tutorials:** To learn how to install, use Voltron and develop content for it, follow the [tutorials](./docs/tutorial).
+- **Development:** To run Voltron on your local machine and start contributing to Voltron, read the [`development.md`](./docs/development.md) document.
 
-To read full Voltron documentation, see the [`docs`](./docs) directory.
+To read full Voltron documentation, see the [`README.md`](./docs/README.md) file in the `docs` directory.
 
 ## Project structure
 
@@ -82,7 +84,7 @@ The following Voltron components are in this repository:
 - [CLI](./cmd/ocftool) - A CLI tool for working with OCF Manifests.
 - [Open Capability Hub](./och-js) - Component, which stores OCF Manifests and exposes API to manage them.
 - [DB Populator](./cmd/populator) - Component, which populates OCF Manifests into database.
-- [Open Capability Format specification](./ocf-spec) - Specification, which defines the shape of Voltron entities
+- [Open Capability Format specification](./ocf-spec) - Specification, which defines the shape of Voltron entities.
 
 Check the README files in the component directories, for more details about how to use and develop them.
 
