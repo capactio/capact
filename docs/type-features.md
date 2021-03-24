@@ -10,7 +10,6 @@ The following document describes Type entity features.
   * [Find Types based on prefix of parent nodes](#find-types-based-on-prefix-of-parent-nodes)
   * [The `requires` section in Implementation manifest](#the-requires-section-in-implementation-manifest)
 - [Type composition](#type-composition)
-  * [Usage](#usage)
 
 <!-- tocstop -->
 
@@ -22,7 +21,7 @@ Type can contain additional references to other parent nodes. The connection mea
 
 ![Additional references to parent nodes](./assets/type-additional-refs.svg)
 
-Currently, the feature can brings the following benefits:
+Currently, the feature brings the following benefits:
 - **GraphQL API:** it allows User to find related Types based on a prefix of the parent node.
 - **Implementation manifest:** the `requires` block in Implementation manifest can refer to Types, which has additional references to parent node
 
