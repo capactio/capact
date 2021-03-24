@@ -12,7 +12,7 @@ You need to configure the `gcloud` CLI, so it's able to access `projectvoltron` 
 
 ## Setup access to GKE cluster
 
-We are using the `voltron-dev3` GKE cluster in `europe-north1` region as our long-running Voltron cluster. Set the following environment variables in your shell:
+We are using the `voltron-dev3` GKE cluster in `europe-north1` region for our long-running Voltron cluster. Set the following environment variables in your shell:
 ```bash
 export REGION=europe-north1
 export CLUSTER_NAME=voltron-dev3
