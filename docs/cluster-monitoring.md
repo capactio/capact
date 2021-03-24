@@ -1,5 +1,11 @@
 # Monitoring of long-running GPC cluster
 
+- [Monitoring of long-running GPC cluster](#monitoring-of-long-running-gpc-cluster)
+  - [Prerequisites](#prerequisites)
+  - [Setup access to GKE cluster](#setup-access-to-gke-cluster)
+  - [Check cluster health](#check-cluster-health)
+  - [Remove your IP from the authorized list](#remove-your-ip-from-the-authorized-list)
+
 ## Prerequisites
 
 You need to have the following tools installed on your operating system:
@@ -18,7 +24,7 @@ export REGION=europe-north1
 export CLUSTER_NAME=voltron-dev3
 ```
 
-Get the kubeconfig for long-running Voltron GKE cluster:
+Get the kubeconfig for the long-running Voltron GKE cluster:
 ```
 gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${REGION}
 ```
@@ -50,11 +56,13 @@ Handling connection for 3000
 Handling connection for 3000
 ```
 
+This script will run in the foreground in your shell during the port-forwarding.
+
 Open http://127.0.0.1:3000 and login into Grafana using the credentials printed out in the script.
 
 ## Check cluster health
 
-1. Check the `Kubernetes/Computer Resources/Cluter` dashboard. Check, if the cluster has enough CPU and memory resources, by looking on the CPU and memory requests commitments. Also look on the CPU and memory usage graphs.
+1. Open the `Kubernetes/Computer Resources/Cluter` dashboard. Check, if the cluster has enough CPU and memory resources, by looking on the CPU and memory requests commitments. Also look on the CPU and memory usage graphs.
 2. On the `Kubernetes/Compute Resources/Namespace (Pods)` dashboard check the resource usages for pods in all namespaces. Verify the pods have enough resources and do not experience issues like out of memory kills.
 
 ## Remove your IP from the authorized list
