@@ -8,6 +8,8 @@ You need to have the following tools installed on your operating system:
 - [`jq`](https://stedolan.github.io/jq/download/) - most distributions have this in repositories
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
 
+You need to configure the `gcloud` CLI, so it's able to access `projectvoltron` project on GCP. You can follow [this](https://cloud.google.com/sdk/docs/authorizing) guide to configure it.
+
 ## Setup access to GKE cluster
 
 We are using the `voltron-dev3` GKE cluster in `europe-north1` region as our long-running Voltron cluster. Set the following environment variables in your shell:
