@@ -49,7 +49,35 @@ Issues:
 - We need to add title property to our schemas, otherwise it generates is as `WETZEL_WARNING: title not defined.xxx`.
 - Supports only local `$ref`. Doesn't support `http` refs, or even definition reference: `Error: Unable to find $ref #/definitions/requireEntity`
 - Supports the Draft-4, we use Draft-7.
-- Supports single schema at time.`
+- Supports single schema at time.
+
+### RalfG `jsonschema2md`
+
+Repo: https://github.com/RalfG/jsonschema2md
+
+Example: 
+- their: https://github.com/RalfG/jsonschema2md/tree/master/examples
+- our: [ralfg-jsonschema2md](./ralfg-jsonschema2md) 
+
+Command:
+
+```bash
+jsonschema2md ocf-spec/0.0.1/schema/attribute.json ./ocf-spec/docs/ralfg-jsonschema2md/attribute.md
+jsonschema2md ocf-spec/0.0.1/schema/interface.json ./ocf-spec/docs/ralfg-jsonschema2md/interface.md
+jsonschema2md ocf-spec/0.0.1/schema/interface-group.json ./ocf-spec/docs/ralfg-jsonschema2md/interface-group.md
+jsonschema2md ocf-spec/0.0.1/schema/repo-metadata.json ./ocf-spec/docs/ralfg-jsonschema2md/repo-metadata.md
+jsonschema2md ocf-spec/0.0.1/schema/repo-metadata.json ./ocf-spec/docs/ralfg-jsonschema2md/repo-metadata.md
+jsonschema2md ocf-spec/0.0.1/schema/type.json ./ocf-spec/docs/ralfg-jsonschema2md/type.md
+jsonschema2md ocf-spec/0.0.1/schema/type.json ./ocf-spec/docs/ralfg-jsonschema2md/type.md
+jsonschema2md ocf-spec/0.0.1/schema/vendor.json ./ocf-spec/docs/ralfg-jsonschema2md/vendor.md
+jsonschema2md ocf-spec/0.0.1/schema/implementation.json ./ocf-spec/docs/ralfg-jsonschema2md/implementation.md
+```
+
+Issues:
+- Simple, e.g. doesn't add information is something is required or not.
+- Doesn't support inlining the `$ref` definition.
+- Supports single schema at time.
+- For implementation the `metadata` property was not resolved properly.
 
 ### Docson
 
