@@ -94,8 +94,16 @@ Issues:
 - Doesn't generate .md files, serve content in browser.
 - Doesn't have option to see all exposed schemas. You need to use a single URL per schema.
 
+### json-schema-for-humans
 
-### https://github.com/coveooss/json-schema-for-humans
+Repo: https://github.com/coveooss/json-schema-for-humans
 
-visual tool, support draft-7
+Example: 
+- their: https://coveooss.github.io/json-schema-for-humans/
+- our: [json-schema-for-humans](./json-schema-for-humans/schema_doc.html)
 
+Issues:
+
+- Supports single schema at time.
+- Doesn't generate .md files, serve content in browser.
+- Doesn't have option to see all exposed schemas. You need to use a single URL per schema.
