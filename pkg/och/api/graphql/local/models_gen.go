@@ -67,23 +67,27 @@ type TypeInstanceFilter struct {
 	TypeRef    *TypeRefFilterInput     `json:"typeRef"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentation struct {
 	Metrics *TypeInstanceInstrumentationMetrics `json:"metrics"`
 	Health  *TypeInstanceInstrumentationHealth  `json:"health"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationHealth struct {
 	URL    *string                                  `json:"url"`
 	Method *HTTPRequestMethod                       `json:"method"`
 	Status *TypeInstanceInstrumentationHealthStatus `json:"status"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationMetrics struct {
 	Endpoint   *string                                        `json:"endpoint"`
 	Regex      *string                                        `json:"regex"`
 	Dashboards []*TypeInstanceInstrumentationMetricsDashboard `json:"dashboards"`
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationMetricsDashboard struct {
 	URL string `json:"url"`
 }
@@ -99,7 +103,8 @@ type TypeInstanceResourceVersionMetadata struct {
 }
 
 type TypeInstanceResourceVersionSpec struct {
-	Value           interface{}                  `json:"value"`
+	Value interface{} `json:"value"`
+	// CURRENTLY NOT IMPLEMENTED
 	Instrumentation *TypeInstanceInstrumentation `json:"instrumentation"`
 }
 
@@ -229,6 +234,7 @@ func (e HTTPRequestMethod) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+// CURRENTLY NOT IMPLEMENTED
 type TypeInstanceInstrumentationHealthStatus string
 
 const (

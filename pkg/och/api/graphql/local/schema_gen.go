@@ -622,6 +622,10 @@ type TypeInstanceResourceVersionSpec {
       RETURN apoc.convert.fromJsonMap(this.value)
       """
     )
+
+  """
+  CURRENTLY NOT IMPLEMENTED
+  """
   instrumentation: TypeInstanceInstrumentation
     @relation(name: "INSTRUMENTED_WITH", direction: "OUT")
 }
@@ -641,6 +645,9 @@ type AttributeReference {
   revision: Version!
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 type TypeInstanceInstrumentation {
   metrics: TypeInstanceInstrumentationMetrics
     @relation(name: "MEASURED_BY", direction: "OUT")
@@ -648,6 +655,9 @@ type TypeInstanceInstrumentation {
     @relation(name: "INDICATED_BY", direction: "OUT")
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 type TypeInstanceInstrumentationMetrics {
   endpoint: String
   regex: String # optional regex for scraping metrics
@@ -655,10 +665,16 @@ type TypeInstanceInstrumentationMetrics {
     @relation(name: "ON", direction: "OUT")
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 type TypeInstanceInstrumentationMetricsDashboard {
   url: String!
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 type TypeInstanceInstrumentationHealth {
   url: String
   method: HTTPRequestMethod
@@ -670,6 +686,9 @@ type TypeInstanceInstrumentationHealth {
   status: TypeInstanceInstrumentationHealthStatus
 }
 
+"""
+CURRENTLY NOT IMPLEMENTED
+"""
 enum TypeInstanceInstrumentationHealthStatus {
   UNKNOWN
   READY

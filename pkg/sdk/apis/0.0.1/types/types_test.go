@@ -75,16 +75,6 @@ func TestUnmarshalAndMarshalActionProduceSameResults(t *testing.T) {
 				return &obj, nil
 			},
 		},
-		"TypeInstance": {
-			examplePath: "type-instance.yaml",
-			unmarshalMethod: func(data []byte) (marshaler, error) {
-				obj, err := types.UnmarshalTypeInstance(data)
-				if err != nil {
-					return nil, err
-				}
-				return &obj, nil
-			},
-		},
 		"Vendor": {
 			examplePath: "vendor.yaml",
 			unmarshalMethod: func(data []byte) (marshaler, error) {

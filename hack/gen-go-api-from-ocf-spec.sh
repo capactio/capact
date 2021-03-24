@@ -63,7 +63,6 @@ gen_go_api_from_ocf_specs() {
     --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/attribute.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/type.json" \
-    --src "/local/ocf-spec/${OCF_VERSION}/schema/type-instance.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \
     -o "/local/$OUTPUT" 2> "${REPORT_FILENAME}"
 

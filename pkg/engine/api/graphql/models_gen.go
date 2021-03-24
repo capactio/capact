@@ -22,14 +22,17 @@ type Action struct {
 	ActionRef *ManifestReference `json:"actionRef"`
 	// Indicates if user approved this Action to run
 	Run bool `json:"run"`
-	// Indicates if user canceled the workflow
+	// Indicates if user canceled the workflow. CURRENTLY NOT SUPPORTED.
 	Cancel bool `json:"cancel"`
 	// Specifies whether the Action performs server-side test without actually running the Action.
-	DryRun                 bool                         `json:"dryRun"`
-	RenderedAction         interface{}                  `json:"renderedAction"`
-	RenderingAdvancedMode  *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
-	RenderedActionOverride interface{}                  `json:"renderedActionOverride"`
-	Status                 *ActionStatus                `json:"status"`
+	// For now it only lints the rendered Argo manifests and does not execute any workflow.
+	DryRun         bool        `json:"dryRun"`
+	RenderedAction interface{} `json:"renderedAction"`
+	// CURRENTLY NOT IMPLEMENTED.
+	RenderingAdvancedMode *ActionRenderingAdvancedMode `json:"renderingAdvancedMode"`
+	// CURRENTLY NOT IMPLEMENTED.
+	RenderedActionOverride interface{}   `json:"renderedActionOverride"`
+	Status                 *ActionStatus `json:"status"`
 }
 
 // Client input of Action details, that are used for create and update Action operations (PUT-like operation)
@@ -39,9 +42,11 @@ type ActionDetailsInput struct {
 	// Contains reference to the Implementation or Interface manifest
 	ActionRef *ManifestReferenceInput `json:"actionRef"`
 	// Specifies whether the Action performs server-side test without actually running the Action
+	// For now it only lints the rendered Argo manifests and does not execute any workflow.
 	DryRun *bool `json:"dryRun"`
-	// Enables advance rendering mode for Action
-	AdvancedRendering      *bool `json:"advancedRendering"`
+	// Enables advanced rendering mode for Action. CURRENTLY NOT IMPLEMENTED.
+	AdvancedRendering *bool `json:"advancedRendering"`
+	// Used to override the rendered action. CURRENTLY NOT IMPLEMENTED.
 	RenderedActionOverride *JSON `json:"renderedActionOverride"`
 }
 
@@ -67,10 +72,11 @@ type ActionInputData struct {
 
 // Describes output of an Action
 type ActionOutput struct {
+	// CURRENTLY NOT IMPLEMENTED.
 	TypeInstances []*OutputTypeInstanceDetails `json:"typeInstances"`
 }
 
-// Properties related to Action advanced rendering
+// Properties related to Action advanced rendering. CURRENTLY NOT IMPLEMENTED.
 type ActionRenderingAdvancedMode struct {
 	Enabled bool `json:"enabled"`
 	// Optional TypeInstances for current rendering iteration
@@ -79,13 +85,16 @@ type ActionRenderingAdvancedMode struct {
 
 // Status of the Action
 type ActionStatus struct {
-	Phase      ActionStatusPhase `json:"phase"`
-	Timestamp  Timestamp         `json:"timestamp"`
-	Message    *string           `json:"message"`
-	Runner     *RunnerStatus     `json:"runner"`
-	CreatedBy  *UserInfo         `json:"createdBy"`
-	RunBy      *UserInfo         `json:"runBy"`
-	CanceledBy *UserInfo         `json:"canceledBy"`
+	Phase     ActionStatusPhase `json:"phase"`
+	Timestamp Timestamp         `json:"timestamp"`
+	Message   *string           `json:"message"`
+	Runner    *RunnerStatus     `json:"runner"`
+	// CURRENTLY NOT IMPLEMENTED.
+	CreatedBy *UserInfo `json:"createdBy"`
+	// CURRENTLY NOT IMPLEMENTED.
+	RunBy *UserInfo `json:"runBy"`
+	// CURRENTLY NOT IMPLEMENTED.
+	CanceledBy *UserInfo `json:"canceledBy"`
 }
 
 // Input used for continuing Action rendering in advanced mode

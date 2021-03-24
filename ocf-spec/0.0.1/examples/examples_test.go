@@ -32,9 +32,6 @@ func TestManifestsValid(t *testing.T) {
 		"Attribute should be valid": {
 			manifestPath: "attribute.yaml",
 		},
-		"TypeInstance should be valid": {
-			manifestPath: "type-instance.yaml",
-		},
 		"Type should be valid": {
 			manifestPath: "type.yaml",
 		},

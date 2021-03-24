@@ -1,12 +1,11 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "RepoMetadata stores metadata about the Open Capability Hub.",
+  "description": "RepoMetadata stores metadata about the Open Capability Hub. CURRENTLY NOT IMPLEMENTED.",
   "required": [
     "ocfVersion",
     "kind",
     "revision",
-    "signature",
     "metadata",
     "spec"
   ],
@@ -33,7 +32,7 @@
     "signature": {
       "$id": "#/properties/signature",
       "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest.",
+      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED",
       "required": [
         "och"
       ],
