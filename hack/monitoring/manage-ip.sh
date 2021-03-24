@@ -35,7 +35,7 @@ ip::remove() {
   local removed_ip
   local authorized
 
-  removed_id="$(ip::get)/32"
+  removed_ip="$(ip::get)/32"
   authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --region "${REGION}" --format json \
     | jq -r '.masterAuthorizedNetworksConfig.cidrBlocks | .[]? | .cidrBlock' \
     | grep -v "${removed_ip}" \
