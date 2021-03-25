@@ -291,7 +291,7 @@ The following approach brings the following consequences:
 - Rollback code is as close as possible to the Implementation.
 - Rollback doesn't support user input parameters. All required data for rollback must reside in TypeInstance itself.
 
-In future, the solution may be extended with:
+In the future, the solution may be extended with:
 
 - Custom name definition for rollback Action (to show on UI different labels, such as "Downgrade", "Deprovision" or "
   Uninstall")

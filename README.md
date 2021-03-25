@@ -1,6 +1,6 @@
 # Voltron
 
-A simple way to manage applications and execute day-two operations.
+A simple way to manage applications, infrastructure and execute day-two operations.
 
 ## Overview
 
@@ -20,7 +20,7 @@ To explain Voltron in action, let's focus on Jira installation. Jira requires Po
 
 From User perspective, the flow is easy.
 
-1. User navigates to the Voltron App Catalog.
+1. User navigates to the Voltron Action Catalog.
 2. Once User clicks Install button for Jira in the App Catalog, PostgreSQL is configured according to Cluster Admin and User preferences:
    
    - Cluster Admin can configure Voltron to prefer cloud-based GCP solutions. In this case, if User Installs Jira on cluster, Voltron will provision GCP CloudSQL for PostgreSQL database and use it.

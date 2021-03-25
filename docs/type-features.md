@@ -6,16 +6,19 @@ The following document describes Type entity features.
 
 <!-- toc -->
 
-- [Additional references to parent nodes](#additional-references-to-parent-nodes)
-  * [Find Types based on prefix of parent nodes](#find-types-based-on-prefix-of-parent-nodes)
-  * [The `requires` section in Implementation manifest](#the-requires-section-in-implementation-manifest)
-- [Type composition](#type-composition)
+- [Type features](#type-features)
+  - [Table of contents](#table-of-contents)
+  - [Additional references to parent nodes](#additional-references-to-parent-nodes)
+    - [Find Types based on prefix of parent nodes](#find-types-based-on-prefix-of-parent-nodes)
+    - [The `requires` section in Implementation manifest](#the-requires-section-in-implementation-manifest)
+  - [Type composition](#type-composition)
 
 <!-- tocstop -->
 
 ## Additional references to parent nodes
 
-> **NOTE** This feature is also available for Attribute.
+> **NOTE** This feature is currently not implemented.
+> In the future, this feature will be also available for Attribute.
 
 Type can contain additional references to other parent nodes. The connection means that the Type becomes a child of the referenced parent nodes. In a result, the Type has multiple parents.
 
@@ -26,6 +29,8 @@ Currently, the feature brings the following benefits:
 - **Implementation manifest:** the `requires` block in Implementation manifest can refer to Types, which has additional references to parent node
 
 ### Find Types based on prefix of parent nodes
+
+> **NOTE** This feature is currently not implemented.
 
 1. `cap.type.platform.cloud-foundry` references `cap.core.type.platform` empty node:
 
@@ -41,8 +46,8 @@ Currently, the feature brings the following benefits:
    # (...)
    ```
 
-1. User queries OCH with CLI for all Types with prefix `cap.core.type.platform.*`.
-1. The CLI returns the following output:
+1. User queries OCH for all Types with prefix `cap.core.type.platform.*`.
+1. OCH returns the following Types:
 
    ```yaml
    - name: "cap.core.type.platform.kubernetes"
@@ -51,7 +56,9 @@ Currently, the feature brings the following benefits:
 
 ### The `requires` section in Implementation manifest
 
-Type `cap.type.platform.cloud-foundry` can specify additional reference to `cap.core.type.platform `empty node.
+> **NOTE** This feature is currently not implemented.
+
+Type `cap.type.platform.cloud-foundry` can specify additional reference to `cap.core.type.platform` empty node.
 
 ```yaml
 # Type manifest
@@ -83,11 +90,11 @@ spec:
 
 ## Type composition
 
-> **NOTE** This feature is currently not available, but is planned for future Voltron release.
+> **NOTE** This feature is currently not implemented.
 
 Type entities can be defined in a form of composition of other Types. It gives you an ability to define common Type definitions once and reuse them later.
 
-To enable Content Creator to compose Types in JSON schema, we use, among other things, [built-in JSON Schema combining functionality](http://json-schema.org/understanding-json-schema/reference/combining.html) . Every time we see a reference to external JSON schema, we fetch the type and embed its schema.
+To enable Content Creator to compose Types in JSON schema, we use, among other things, [built-in JSON Schema combining functionality](http://json-schema.org/understanding-json-schema/reference/combining.html). Every time we see a reference to external JSON schema, we fetch the type and embed its schema.
 
 Once Content Creator submits a new Type and there is a reference to other Type, we create edges in the OCH for every single Type reference. It enables us to easily find Types, which are derived from original Types.
 
