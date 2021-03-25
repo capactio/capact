@@ -1,0 +1,13 @@
+aws-for-fluent-bit:
+  cloudWatch:
+    region: eu-west-1
+    logGroupName: /aws/eks/voltron-cluster/logs
+
+  firehose:
+    enabled: false
+
+  kinesis:
+    enabled: false
+
+  elasticsearch:
+    enabled: false

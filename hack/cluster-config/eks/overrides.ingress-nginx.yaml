@@ -1,0 +1,20 @@
+ingress-nginx:
+  controller:
+    resources:
+      requests:
+        cpu: 50m
+        # it needs more memory than should: https://github.com/kubernetes/ingress-nginx/issues/5697
+        memory: 150Mi
+      limits:
+        cpu: 100m
+        memory: 300Mi
+
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+
+tlsCertificate:
+  create: false
+  name: "default-ssl-cert"
+  crt: ""
+  key: ""

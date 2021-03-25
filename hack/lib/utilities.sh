@@ -247,6 +247,7 @@ voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
     readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
     readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
+    readonly EKS_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/eks"
 
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${VOLTRON_USE_TEST_SETUP}}
@@ -259,6 +260,10 @@ voltron::install_upgrade::charts() {
 
     shout "- Applying Voltron CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
+
+    if [[ "$CLUSTER_TYPE" == "EKS" ]]; then
+      voltron::install_upgrade::aws_for_fluent_bit
+    fi
 
     voltron::install_upgrade::neo4j
 
@@ -373,8 +378,10 @@ voltron::install_upgrade::ingress_controller() {
     if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
       readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
       echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
-    else # currently, only KIND needs custom settings
-      readonly INGRESS_CTRL_OVERRIDES=""
+    elif [[ "${CLUSTER_TYPE}" == "EKS" ]]; then
+      readonly INGRESS_CTRL_OVERRIDES="${EKS_CONFIG_DIR}/overrides.ingress-nginx.yaml"
+    else
+      readonly INGRESS_CTRL_OVERRIDES="${}"
     fi
 
     # CUSTOM_NGINX_SET_FLAGS cannot be quoted
@@ -391,6 +398,21 @@ voltron::install_upgrade::ingress_controller() {
     kubectl wait --namespace ingress-nginx \
       --for=condition=ready pod \
       --selector=app.kubernetes.io/component=controller \
+      --timeout=90s
+}
+
+voltron::install_upgrade::aws_for_fluent_bit() {
+    shout "- Installing aws-for-fluent-bit Helm chart [wait: true]..."
+
+    helm upgrade aws-for-fluent-bit "${K8S_DEPLOY_DIR}/charts/aws-for-fluent-bit" \
+        --install \
+        --namespace="kube-system" \
+        --wait
+
+    echo -e "\n- Waiting for aws-for-fluent-bit to be ready...\n"
+    kubectl wait --namespace kube-system \
+      --for=condition=ready pod \
+      --selector=app.kubernetes.io/name=aws-for-fluent-bit \
       --timeout=90s
 }
 

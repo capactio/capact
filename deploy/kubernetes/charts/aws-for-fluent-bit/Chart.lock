@@ -1,0 +1,6 @@
+dependencies:
+- name: aws-for-fluent-bit
+  repository: https://aws.github.io/eks-charts
+  version: 0.1.6
+digest: sha256:926fbf35eb740187b18b7699c02e0ffcfd6aeb99d386723b6ae0ad52851525a8
+generated: "2021-03-25T16:30:01.910824373+01:00"
