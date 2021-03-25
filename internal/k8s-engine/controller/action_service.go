@@ -78,7 +78,7 @@ func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRende
 }
 
 // +kubebuilder:rbac:groups="",resources=serviceaccounts,verbs=create
-// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=rolebindings,verbs=create
+// +kubebuilder:rbac:groups=rbac.authorization.k8s.io,resources=clusterrolebindings,verbs=create
 
 // EnsureWorkflowSAExists creates dedicated ServiceAccount with cluster-admin permissions.
 //
@@ -89,7 +89,7 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 		ObjectMeta: a.objectMetaFromAction(action),
 	}
 
-	binding := &rbacv1.RoleBinding{
+	binding := &rbacv1.ClusterRoleBinding{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Subjects: []rbacv1.Subject{
 			{
