@@ -30,7 +30,7 @@ check_for_unknown_issues() {
   if ! diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"; then
     echo "Error:
     API rules check failed. Reported violations \"${REPORT_FILENAME}\" differ from known violations \"${KNOWN_VIOLATION_FILENAME}\"."
-    
+
     diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"
 
     echo "Please fix API source file if new violation is detected, or update known violations \"${KNOWN_VIOLATION_FILENAME}\" if existing violation is being fixed."
@@ -63,7 +63,6 @@ gen_go_api_from_ocf_specs() {
     --src "/local/ocf-spec/${OCF_VERSION}/schema/repo-metadata.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/attribute.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/type.json" \
-    --src "/local/ocf-spec/${OCF_VERSION}/schema/type-instance.json" \
     --src "/local/ocf-spec/${OCF_VERSION}/schema/vendor.json" \
     -o "/local/$OUTPUT" 2> "${REPORT_FILENAME}"
 

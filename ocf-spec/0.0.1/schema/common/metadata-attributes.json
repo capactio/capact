@@ -2,8 +2,15 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://projectvoltron.dev/schemas/common/metadata-attributes.json",
   "type": "object",
-  "description": "Object that holds Attributes references.",
+  "description": "The Attributes references.",
   "additionalProperties": {
+    "examples": [
+      {
+        "cap.core.attribute.workload.stateless": {
+          "revision": "1.0.1"
+        }
+      }
+    ],
     "description": "The attribute object contains OCF Attributes references. It provides generic categorization for Implementations, Types and TypeInstances. Attributes are used to filter out a specific Implementation.",
     "type": "object",
     "required": [

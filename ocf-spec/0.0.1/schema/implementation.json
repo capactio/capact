@@ -12,22 +12,22 @@
       ],
       "properties": {
         "valueConstraints": {
-          "$id": "#/properties/spec/properties/value",
+          "$id": "#/properties/valueConstraints",
           "type": "object",
-          "description": "Holds the configuration constraints for the given entry. It needs to be valid against the Type JSONSchema."
+          "description": "Holds the configuration constraints for the given entry. It needs to be valid against the Type JSONSchema. CURRENTLY NOT IMPLEMENTED."
         },
         "name": {
-          "$id": "#/properties/spec/properties/name",
+          "$id": "#/properties/name",
           "type": "string",
-          "description": "The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom Type then it MUST be defined as full path to that Type. Custom Type MUST extend the abstract node which is defined as a root prefix for that entry."
+          "description": "The name of the Type. Root prefix can be skipped if it’s a core Type. If it is a custom Type then it MUST be defined as full path to that Type. Custom Type MUST extend the abstract node which is defined as a root prefix for that entry. Support for custom Types is CURRENTLY NOT IMPLEMENTED."
         },
         "alias": {
-          "$id": "#/properties/spec/properties/alias",
+          "$id": "#/properties/alias",
           "type": "string",
           "description": "If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias."
         },
         "revision": {
-          "$id": "#/properties/spec/properties/revision",
+          "$id": "#/properties/revision",
           "type": "string",
           "description": "The exact revision of the given Type."
         }
@@ -65,7 +65,7 @@
     "signature": {
       "$id": "#/properties/signature",
       "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED",
+      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
         "och"
       ],
@@ -146,7 +146,7 @@
         "additionalInput": {
           "$id": "#/properties/spec/properties/additionalInput",
           "type": "object",
-          "description": "Specifies additional input for a given Implementation",
+          "description": "Specifies additional input for a given Implementation.",
           "properties": {
             "typeInstances": {
               "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
@@ -157,7 +157,7 @@
         "additionalOutput": {
           "$id": "#/properties/spec/properties/additionalOutput",
           "type": "object",
-          "description": "Specifies additional output for a given Implementation",
+          "description": "Specifies additional output for a given Implementation.",
           "required": [],
           "properties": {
             "typeInstances": {
@@ -169,7 +169,7 @@
         "outputTypeInstanceRelations": {
           "$id": "#/properties/spec/properties/outputTypeInstanceRelations",
           "type": "object",
-          "description": "Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to OCH after workflow run",
+          "description": "Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to OCH after workflow run.",
           "additionalProperties": {
             "$id": "#/properties/spec/properties/outputTypeInstanceRelations/additionalParameters",
             "type": "object",
@@ -191,7 +191,7 @@
         "implements": {
           "$id": "#/properties/spec/properties/implements",
           "type": "array",
-          "description": "Defines what kind of interfaces this implementation fulfills.",
+          "description": "Defines what kind of Interfaces this Implementation fulfills.",
           "additionalItems": false,
           "items": {
             "$id": "#/properties/spec/properties/implements/items",
@@ -218,7 +218,7 @@
         "requires": {
           "$id": "#/properties/spec/properties/requires",
           "type": "object",
-          "description": "List of the system prerequisites that need to be present on the cluster. There has to be an Instance for every concrete type.",
+          "description": "List of the system prerequisites that need to be present on the cluster.",
           "additionalProperties": {
             "$id": "#/properties/spec/properties/requires/additionalProperties",
             "type": "object",
@@ -227,7 +227,7 @@
               "oneOf": {
                 "$id": "#/properties/spec/properties/requires/additionalProperties/oneOf",
                 "type": "array",
-                "description": "Exactly one of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
+                "description": "Exactly one of the given types MUST have an TypeInstance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
                 "items": {
                   "$ref": "#/definitions/requireEntity"
@@ -236,7 +236,7 @@
               "allOf": {
                 "$id": "#/properties/spec/properties/requires/additionalProperties/allOf",
                 "type": "array",
-                "description": "All of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
+                "description": "All of the given types MUST have an TypeInstance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
                 "items": {
                   "$ref": "#/definitions/requireEntity"
@@ -245,7 +245,7 @@
               "anyOf": {
                 "$id": "#/properties/spec/properties/requires/additionalProperties/anyOf",
                 "type": "array",
-                "description": "Any (one or more) of the given types MUST have an Instance on the cluster. Element on the list MUST resolves to concrete Type.",
+                "description": "Any (one or more) of the given types MUST have an TypeInstance on the cluster. Element on the list MUST resolves to concrete Type.",
                 "additionalItems": false,
                 "items": {
                   "$ref": "#/definitions/requireEntity"
@@ -271,7 +271,7 @@
               "interfaceGroupPath": {
                 "$id": "#/properties/imports/items/0/properties/name",
                 "type": "string",
-                "description": "The name of the Interface Group that contains specific actions that you want to import, for example cap.interfaces.db.mysql"
+                "description": "The name of the InterfaceGroup that contains specific actions that you want to import, for example cap.interfaces.db.mysql"
               },
               "alias": {
                 "$id": "#/properties/imports/items/0/properties/alias",
@@ -281,7 +281,7 @@
               "appVersion": {
                 "$id": "#/properties/imports/items/0/properties/appVersion",
                 "type": "string",
-                "description": "The supported application versions in SemVer2 format.",
+                "description": "The supported application versions in SemVer2 format. CURRENTLY NOT IMPLEMENTED.",
                 "examples": [
                   "5.6.x, 5.7.x"
                 ]
@@ -300,7 +300,7 @@
                     "name": {
                       "$id": "#/properties/imports/items/0/properties/methods/0/name",
                       "type": "string",
-                      "description": "The name of the action for a given Interface group, e.g. install"
+                      "description": "The name of the action for a given InterfaceGroup, e.g. install."
                     },
                     "revision": {
                       "$id": "#/properties/imports/items/0/properties/methods/0/revision",
@@ -320,7 +320,7 @@
         "action": {
           "$id": "#/properties/spec/properties/action",
           "type": "object",
-          "description": "An explanation about the purpose of this instance.",
+          "description": "Definition of an action that should be executed.",
           "required": [
             "args",
             "runnerInterface"
