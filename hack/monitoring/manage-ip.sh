@@ -41,7 +41,7 @@ ip::remove() {
   authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
     | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' \
     | grep -v "${removed_ip}" || true)
-  authorized=$(echo ${authorized} \
+  authorized=$(echo "${authorized}" \
     | tr '\n' ',' \
     | sed 's/,$/\n/')
 
