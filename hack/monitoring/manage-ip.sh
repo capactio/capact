@@ -45,12 +45,13 @@ ip::remove() {
     | tr '\n' ',' \
     | sed 's/,$/\n/')
 
-  echo "Setting authorized networks to ${authorized}..."
 
   if [ -z "${authorized}" ]; then
+    echo "Setting authorized networks to empty list..."
     gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --no-enable-master-authorized-networks
     gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --enable-master-authorized-networks
   else
+    echo "Setting authorized networks to ${authorized}..."
     gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" \
       --enable-master-authorized-networks \
       --master-authorized-networks "${authorized}"
