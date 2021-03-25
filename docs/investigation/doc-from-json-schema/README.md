@@ -231,6 +231,6 @@ generate-schema-doc ocf-spec/0.0.1/schema/attribute.json
 
 ## Decision
 
-Unfortunately, none of the tested solutions fulfil our requirements out-of-the-box and produce human-readable documentation which would improve the UX. As a result, we decided not to implement automated documentation generation. In the future, we will get user feedback and we will come back to this topic and decide if we should invest our time in creating/contributing to a tool which would generate a desired documentation style, or use a hybrid approach where basic documentation is generated and all necessary changes are applied manually.
+Unfortunately, none of the tested solutions fulfill our requirements out-of-the-box and produce human-readable documentation which would improve the UX. As a result, we decided not to implement automated documentation generation. In the future, we will get user feedback, and we will come back to this topic and decide if we should invest our time in creating/contributing to a tool which would generate a desired documentation style, or use a hybrid approach where basic documentation is generated and all necessary changes are applied manually.
 
 For example, the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification) documentation is maintained manually.

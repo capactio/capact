@@ -10,16 +10,16 @@
   ],
   "properties": {
     "name": {
-      "$id": "#/properties/metadata/properties/name",
+      "$id": "#/properties/name",
       "type": "string",
-      "description": "The name of OCF manifest that uniquely identifies this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name.",
+      "description": "The name of OCF manifest. Together with the manifest revision property must uniquely identify this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name.",
       "examples": [
         "config"
       ]
     },
     "prefix": {
-      "$comment": "Value set by user is ignored and this field is always managed by OCH",
-      "$id": "#/properties/metadata/properties/prefix",
+      "$comment": "Value set by user is ignored and this field is always managed by OCH.",
+      "$id": "#/properties/prefix",
       "type": "string",
       "description": "The prefix value is automatically computed and set when storing manifest in OCH.",
       "examples": [
@@ -27,7 +27,7 @@
       ]
     },
     "displayName": {
-      "$id": "#/properties/metadata/properties/displayName",
+      "$id": "#/properties/displayName",
       "type": "string",
       "description": "The name of the OCF manifest to be displayed in graphical clients.",
       "examples": [
@@ -35,12 +35,12 @@
       ]
     },
     "description": {
-      "$id": "#/properties/metadata/properties/description",
+      "$id": "#/properties/description",
       "type": "string",
       "description": "A short description of the OCF manifest. Must be a non-empty string."
     },
     "maintainers": {
-      "$id": "#/properties/metadata/properties/maintainers",
+      "$id": "#/properties/maintainers",
       "type": "array",
       "description": "The list of maintainers with contact information.",
       "examples": [
@@ -60,7 +60,7 @@
       "additionalItems": false,
       "minItems": 1,
       "items": {
-        "$id": "#/properties/metadata/properties/maintainers/items",
+        "$id": "#/properties/maintainers/items",
         "type": "object",
         "description": "Holds contact information.",
         "examples": [
@@ -75,18 +75,18 @@
         ],
         "properties": {
           "email": {
-            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/email",
+            "$id": "#/properties/maintainers/items/anyOf/0/properties/email",
             "format": "email",
             "type": "string",
             "description": "Email address of the person."
           },
           "name": {
-            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/name",
+            "$id": "#/properties/maintainers/items/anyOf/0/properties/name",
             "type": "string",
             "description": "Name of the person."
           },
           "url": {
-            "$id": "#/properties/metadata/properties/maintainers/items/anyOf/0/properties/url",
+            "$id": "#/properties/maintainers/items/anyOf/0/properties/url",
             "format": "iri",
             "type": "string",
             "description": "URL of the person’s site."
@@ -95,7 +95,7 @@
       }
     },
     "documentationURL": {
-      "$id": "#/properties/metadata/properties/documentationURL",
+      "$id": "#/properties/documentationURL",
       "format": "uri",
       "type": "string",
       "description": "Link to documentation page for the OCF manifest.",
@@ -104,7 +104,7 @@
       ]
     },
     "supportURL": {
-      "$id": "#/properties/metadata/properties/supportURL",
+      "$id": "#/properties/supportURL",
       "format": "uri",
       "type": "string",
       "description": "Link to support page for the OCF manifest.",
@@ -113,7 +113,7 @@
       ]
     },
     "iconURL": {
-      "$id": "#/properties/metadata/properties/iconURL",
+      "$id": "#/properties/iconURL",
       "format": "uri",
       "type": "string",
       "description": "The URL to an icon or a data URL containing an icon.",

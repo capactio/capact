@@ -1,7 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://projectvoltron.dev/schemas/attribute.json",
   "type": "object",
-  "description": "Attribute is a primitive, which is used to categorize Implementations. You can use Attributes to find and filter Implementations.",
+  "description": "Attribute is used to categorize Implementations, Types and TypeInstances. For example, you can use `cap.core.attribute.workload.stateful` Attribute to find and filter Stateful Implementations.",
   "required": [
     "ocfVersion",
     "kind",
@@ -31,7 +32,7 @@
     "signature": {
       "$id": "#/properties/signature",
       "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED",
+      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
         "och"
       ],
