@@ -17,12 +17,13 @@ ip::add() {
   local authorized
 
   added_ip="$(ip::get)/32"
-  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --region "${REGION}" --format json \
-    | jq -r '.masterAuthorizedNetworksConfig.cidrBlocks | .[]? | .cidrBlock' \
-    | tr '\n' ',' \
-    | sed 's/,$/\n/' \
-    | xargs printf "%s,%s" "${added_ip}" \
-    | sed 's/,$//g')
+  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
+    | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
+  authorized=$(echo "${authorized}" \
+    | tr ' ' ',' \
+    | sed 's/^,//g;s/ //g')
+  authorized=$(printf "%s,%s" "${authorized}" "${added_ip}" \
+    | sed s/^,//g)
 
   echo "Setting authorized networks to ${authorized}..."
 
@@ -36,9 +37,11 @@ ip::remove() {
   local authorized
 
   removed_ip="$(ip::get)/32"
-  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --region "${REGION}" --format json \
-    | jq -r '.masterAuthorizedNetworksConfig.cidrBlocks | .[]? | .cidrBlock' \
-    | grep -v "${removed_ip}" \
+
+  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
+    | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' \
+    | grep -v "${removed_ip}" || true)
+  authorized=$(echo ${authorized} \
     | tr '\n' ',' \
     | sed 's/,$/\n/')
 

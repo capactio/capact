@@ -1,10 +1,12 @@
-# Monitoring of long-running GPC cluster
+# Monitoring of long-running GCP cluster
 
-- [Monitoring of long-running GPC cluster](#monitoring-of-long-running-gpc-cluster)
-  - [Prerequisites](#prerequisites)
-  - [Setup access to GKE cluster](#setup-access-to-gke-cluster)
-  - [Check cluster health](#check-cluster-health)
-  - [Remove your IP from the authorized list](#remove-your-ip-from-the-authorized-list)
+## Table of contents
+<!-- toc -->
+- [Prerequisites](#prerequisites)
+- [Setup access to GKE cluster](#setup-access-to-gke-cluster)
+- [Check cluster health](#check-cluster-health)
+- [Remove your IP from the authorized list](#remove-your-ip-from-the-authorized-list)
+<!-- tocstop -->
 
 ## Prerequisites
 
@@ -31,13 +33,15 @@ gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${REGION}
 
 This command adds a new context to your local kubeconfig file. The name of the context will be in the format `gke_<project_name>_<region>_<cluster_name>`. Switch to the long-running Voltron cluster context:
 ```bash
-$ kubectl config get-contexts
+kubectl config get-contexts
+```
+```bash
 CURRENT   NAME                                                 CLUSTER                                              AUTHINFO                                             NAMESPACE
           gke_projectvoltron_europe-north1_voltron-dev3        gke_projectvoltron_europe-north1_voltron-dev3        gke_projectvoltron_europe-north1_voltron-dev3        
 *         kind-kind-dev-voltron                                kind-kind-dev-voltron                                kind-kind-dev-voltron
-
-$ kubectl config use-context gke_projectvoltron_europe-north1_voltron-dev3
-Switched to context "gke_projectvoltron_europe-north1_voltron-dev3".
+```
+```bash
+kubectl config use-context gke_projectvoltron_europe-north1_voltron-dev3
 ```
 
 Now run the script to add your public IP address to the authorized control plane networks, so you will be able to make queries to the GKE API server:
@@ -47,7 +51,9 @@ Now run the script to add your public IP address to the authorized control plane
 
 Now execute the following script to get Grafana credentials and setup port forwarding to Grafana:
 ```bash
-$ ./hack/monitoring/grafana-forward.sh 
+./hack/monitoring/grafana-forward.sh 
+```
+```bash
 Username: *****
 Password: *****
 Forwarding from 127.0.0.1:3000 -> 3000
@@ -58,16 +64,16 @@ Handling connection for 3000
 
 This script will run in the foreground in your shell during the port-forwarding.
 
-Open http://127.0.0.1:3000 and login into Grafana using the credentials printed out in the script.
+Open [http://127.0.0.1:3000](http://127.0.0.1:3000) and login into Grafana using the credentials printed out in the script.
 
 ## Check cluster health
 
-1. Open the `Kubernetes/Computer Resources/Cluter` dashboard. Check, if the cluster has enough CPU and memory resources, by looking on the CPU and memory requests commitments. Also look on the CPU and memory usage graphs.
+1. Open the `Kubernetes/Computer Resources/Cluster` dashboard. Check, if the cluster has enough CPU and memory resources, by looking on the CPU and memory requests commitments. Also look on the CPU and memory usage graphs.
 2. On the `Kubernetes/Compute Resources/Namespace (Pods)` dashboard check the resource usages for pods in all namespaces. Verify the pods have enough resources and do not experience issues like out of memory kills.
 
 ## Remove your IP from the authorized list
 
-After you are done, run the following script to remove your IP from the authorized GKE control plane networks:
+Once you are done, run the following script to remove your IP from the authorized GKE control plane networks:
 ```bash
 ./hack/monitoring/manage-ip.sh remove
 ```
