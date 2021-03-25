@@ -38,7 +38,7 @@ Read this document to learn how to develop the project. Please also follow guide
 
 ## Prerequisites
 
-* [Go](https://golang.org/dl/) at least 1.15
+* [Go](https://golang.org/dl/) at least 1.16
 * [Docker](https://www.docker.com/)
 * Make
 
