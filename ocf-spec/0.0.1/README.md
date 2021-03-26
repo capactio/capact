@@ -8,17 +8,23 @@ RepoMetadata stores read-only information about the [Open Capability Hub](../../
 
 The RepoMetadata format is defined in [repo-metadata.json](./schema/repo-metadata.json).
 
-> **NOTE:** Currently, it is not supported by the OCH server.
+> **NOTE:** Currently, the **spec.implementation** and **spec.ocfVersion.supported** properties are not supported by the OCH server.
 
 ### Attribute
 
-Attribute provides an option to categorize [Implementations](#implementation), [Types](#type) and TypeInstances. For example, you can use `cap.core.attribute.workload.stateful` Attribute to find and filter Stateful Implementations.
+Attribute provides an option to categorize [Implementations](#implementation), [Types](#type) and TypeInstances. For example, you can use **cap.core.attribute.workload.stateful** Attribute to find and filter Stateful Implementations.
 
 The Attribute specification is defined in [attribute.json](./schema/attribute.json).
 
 ### Type
 
-Type represents an object, such as database, application, but also a simple primitive data, like an IP address. The Type needs to be described using JSONSchema specification. Type is used in [Interface](#interface) and [Implementation](#implementation) as a description and validation of possible input and output parameters. The core Types are placed in the `core` directory. In the future, core Types will be embedded into the OCH server. The [type-features.md](../../docs/type-features.md) describes all Type entity features.
+Type represents an object, such as database, application, but also a simple primitive data, like an IP address. The Type needs to be described using JSONSchema specification.
+
+Type is used in [Interface](#interface) and [Implementation](#implementation) as a description and validation of possible input and output parameters. The actual object of Type is called TypeInstance.
+
+The core Types are placed in the `core` directory. In the future, core Types will be embedded into the OCH server.
+
+The [type-features.md](../../docs/type-features.md) describes all Type entity features.
 
 The Type specification is defined in [type.json](./schema/type.json).
 
@@ -38,13 +44,13 @@ The InterfaceGroup specification is defined in [interface-group.json](./schema/i
 
 ### Implementation
 
-Implementation holds the definition of an [action](../../docs/terminology.md#action) and its prerequisites (dependencies). It allows you to define different ways on how a given action should be executed. For example, for `postgres.install` Interface, have `aws.postgresql.install` and `gcp.postgresql.install` Implementations. Implementation must implement at least one Interface.
+Implementation holds the definition of an [action](../../docs/terminology.md#action) and its prerequisites (dependencies). It allows you to define different ways on how a given action should be executed. For example, for **postgres.install** Interface, have **aws.postgresql.install** and **gcp.postgresql.install** Implementations. Implementation must implement at least one Interface.
 
 The Implementation specification is defined in [implementation.json](./schema/implementation.json).
 
 ### Vendor
 
-Vendor defines detail about an external OCH server. This will be part of the OCH federation feature.
+Vendor defines details of an external OCH server. This will be part of the OCH federation feature.
 
 The Vendor specification is defined in [vendor.json](./schema/vendor.json).
 

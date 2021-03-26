@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "RepoMetadata stores metadata about the Open Capability Hub. CURRENTLY NOT IMPLEMENTED.",
+  "description": "RepoMetadata stores metadata about the Open Capability Hub.",
   "required": [
     "ocfVersion",
     "kind",
@@ -59,7 +59,7 @@
         "implementation": {
           "$id": "#/properties/spec/properties/implementation",
           "type": "object",
-          "description": "Holds configuration for the OCF Implementation entities.",
+          "description": "Holds configuration for the OCF Implementation entities. CURRENTLY NOT IMPLEMENTED.",
           "examples": [
             {
               "appVersion": {
@@ -137,7 +137,7 @@
             "supported": {
               "$id": "#/properties/spec/properties/ocfVersion/properties/supported",
               "type": "array",
-              "description": "The supported OCF version that OCH is able to serve. In general, the OCH takes the stored version and converts it to the supported one.",
+              "description": "The supported OCF version that OCH is able to serve. In general, the OCH takes the stored version and converts it to the supported one. CURRENTLY NOT IMPLEMENTED.",
               "additionalItems": false,
               "items": {
                 "type": "string"
