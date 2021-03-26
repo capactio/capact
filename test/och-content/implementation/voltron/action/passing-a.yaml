@@ -2,8 +2,8 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.e2e
-  name: type-instance-download
+  prefix: cap.implementation.voltron.action
+  name: passing-a
   license:
     name: "Apache 2.0"
   displayName: Passing Voltron test action
@@ -18,10 +18,12 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.e2e.type-instance-update
+    - path: cap.interface.voltron.action.passing
       revision: 0.1.0
 
-  outputTypeInstanceRelations: {}
+  outputTypeInstanceRelations:
+    testUpload:
+      uses: []
 
   requires:
     cap.core.type.platform:
@@ -44,21 +46,33 @@ spec:
         templates:
           - name: main
             steps:
-              - - name: echo
-                  template: echo
+              - - name: cp
+                  template: cp
+                  arguments:
+                    artifacts:
+                      - name: input
+                        from: "{{workflow.outputs.artifacts.testInput}}"
+                  voltron-outputTypeInstances:
+                    - name: testUpload
+                      from: upload
                   voltron-updateTypeInstances:
-                    - name: updateTestTypeInstance
-                      from: value
-          - name: echo
+                    - name: testUpdate
+                      from: update
+          - name: cp
+            inputs:
+              artifacts:
+                - name: input
+                  path: /input
             outputs:
               artifacts:
-                - name: value
-                  path: /value
+                - name: upload
+                  path: /upload
+                - name: update
+                  path: /update
             container:
               image: alpine:latest
               command: ["sh", "-c"]
-              args: ["echo 'hello: world2' > /value && sleep 1"]
-            
+              args: ["echo 'Implementation A' && cp /input /upload && cp /input /update && sleep 1"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

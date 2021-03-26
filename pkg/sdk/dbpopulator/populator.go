@@ -464,7 +464,9 @@ func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths
 	if err != nil {
 		return true, errors.Wrap(err, "while cleaning old manifests")
 	}
-	return true, nil
+
+	err = warmup(session)
+	return true, err
 }
 
 func populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) error {
@@ -556,6 +558,11 @@ func currentCommit(session neo4j.Session) (string, error) {
 	}
 
 	return commit, errors.Wrap(result.Err(), "while executing neo4j transaction")
+}
+
+func warmup(session neo4j.Session) error {
+	_, err := session.Run("CALL apoc.warmup.run(true, true, true)", map[string]interface{}{})
+	return errors.Wrap(err, "while warming up the data")
 }
 
 func getPrefix(manifestPath string, rootDir string) string {

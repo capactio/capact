@@ -5,7 +5,7 @@ och-public:
 
 engine:
   clusterPolicyRules:
-      cap.interface.voltron.policy.test: # Rules for exact path and revision (looked up in first place)
+      cap.interface.voltron.action.passing: # Rules for exact path and revision (looked up in first place)
         oneOf:
           - implementationConstraints:
               requires:
@@ -18,7 +18,7 @@ engine:
                   path: "cap.type.simple.single-key"
                   revision: "0.1.0"
           - implementationConstraints:
-              path: cap.implementation.voltron.policy.test-a
+              path: cap.implementation.voltron.action.passing-a
       cap.*:
         oneOf:
           - implementationConstraints:

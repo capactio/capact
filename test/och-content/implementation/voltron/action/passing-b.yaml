@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.policy
-  name: test-b
+  prefix: cap.implementation.voltron.action
+  name: passing-b
   license:
     name: "Apache 2.0"
-  displayName: Test Implementation B
-  description: "This Implementation succeeds if the TypeInstance is properly injected."
+  displayName: Passing Voltron test action
+  description: ""
   documentationURL: ""
   maintainers:
     - email: team-dev@projectvoltron.dev
@@ -21,8 +21,12 @@ spec:
   appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.voltron.policy.test
+    - path: cap.interface.voltron.action.passing
       revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    testUpload:
+      uses: []
 
   requires:
     cap.core.type.platform:
@@ -50,21 +54,33 @@ spec:
         templates:
           - name: main
             steps:
-              - - name: pass
-                  template: pass
+              - - name: test
+                  template: test
                   arguments:
                     artifacts:
+                      - name: input
+                        from: "{{workflow.outputs.artifacts.testInput}}"
                       - name: injected
                         from: "{{workflow.outputs.artifacts.injected}}"
-          - name: pass
+                  voltron-outputTypeInstances:
+                    - name: testUpload
+                      from: upload
+
+          - name: test
+            inputs:
+              artifacts:
+                - name: input
+                  path: /input
+                - name: injected
+                  path: /injected
+            outputs:
+              artifacts:
+                - name: upload
+                  path: /upload
             container:
               image: alpine:latest
               command: ["sh", "-c"]
-              args: ["echo 'Implementation B' && echo 'key: true' > /expected.yaml && diff /expected.yaml /tmp/injected.yaml"]
-            inputs:
-              artifacts:
-                - name: injected
-                  path: /tmp/injected.yaml
+              args: ["echo 'Implementation B' && cp /input /upload && echo 'key: true' > /expected && diff /expected /injected && sleep 1"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

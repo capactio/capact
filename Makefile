@@ -66,6 +66,13 @@ push-app-image-%:
 .PHONY: push-apps-images-%
 
 # Test images
+build-test-image-e2e:
+	docker build --build-arg COMPONENT=e2e \
+		--build-arg BUILD_CMD="go test -v -c" \
+		--build-arg SOURCE_PATH="./test/e2e/*_test.go" \
+		--target e2e -t $(DOCKER_REPOSITORY)/e2e-test:$(DOCKER_TAG) .
+.PHONY: build-test-image-e2e
+
 build-test-image-%:
 	$(eval APP := $*)
 	docker build --build-arg COMPONENT=$(APP) \

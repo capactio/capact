@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: InterfaceGroup
 metadata:
   prefix: cap.interface.voltron
-  name: policy
-  displayName: "Voltron E2E Policy test manifests"
-  description: "Manifests used for testing Policy support"
+  name: action
+  displayName: "Voltron E2E actions test manifests"
+  description: "Manifests used for testing Voltron actions"
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
