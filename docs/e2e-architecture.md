@@ -30,11 +30,9 @@ UI does all HTTP requests to [Gateway](#gateway).
 
 ### CLI
 
-CLI is command line tool which makes easier with working the [OCF](#ocf) manifests.
+CLI is command line tool which makes easier with working the [OCF](#ocf) manifests and Actions.
 
-Currently, CLI exposes the following features:
-- validates OCF manifests against the OCF JSON Schemas,
-- signs OCF manifests that are loaded by [OCH](#och). 
+To read the documentation about CLI tool, see the [`docs`](../cmd/ocftool/docs) subdirectory in the `cmd/ocftool` directory.
 
 CLI utilizes [SDK](#sdk).
 

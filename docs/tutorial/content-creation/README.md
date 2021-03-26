@@ -1,21 +1,30 @@
 # OCF Content Creation Guide
 
-- [OCF Content Creation Guide](#ocf-content-creation-guide)
-  - [Prerequisites](#prerequisites)
-  - [Types, Interfaces and Implementations](#types-interfaces-and-implementations)
-  - [Define your Types and Interfaces](#define-your-types-and-interfaces)
-    - [Create the Interface Group manifest](#create-the-interface-group-manifest)
-    - [Create the Interface manifest](#create-the-interface-manifest)
-    - [Create the Type manifests](#create-the-type-manifests)
-  - [Runners](#runners)
-  - [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
-  - [Validate the manifests using ocftool](#validate-the-manifests-using-ocftool)
-  - [Populate the manifests into OCH](#populate-the-manifests-into-och)
-  - [Run your new action](#run-your-new-action)
-    - [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
-    - [View the Action Custom Resource](#view-the-action-custom-resource)
-  - [Update TypeInstance](#update-typeinstance)
-  - [Summary](#summary)
+## Table of contents
+
+<!-- toc -->
+
+- [Introduction](#introduction)
+- [Prerequisites](#prerequisites)
+- [Types, Interfaces and Implementations](#types-interfaces-and-implementations)
+- [Define your Types and Interfaces](#define-your-types-and-interfaces)
+  * [Create the Interface Group manifest](#create-the-interface-group-manifest)
+  * [Create the Interface manifest](#create-the-interface-manifest)
+  * [Create the Type manifests](#create-the-type-manifests)
+- [Runners](#runners)
+- [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
+- [Validate the manifests using ocftool](#validate-the-manifests-using-ocftool)
+- [Populate the manifests into OCH](#populate-the-manifests-into-och)
+- [Run your new action](#run-your-new-action)
+  * [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
+  * [View the Action Custom Resource](#view-the-action-custom-resource)
+- [Update TypeInstance](#update-typeinstance)
+- [Summary](#summary)
+- [Appendix](#appendix)
+
+<!-- tocstop -->
+
+## Introduction
 
 This guide shows the first steps on how to develop OCF content for Voltron. We will show how to:
 - define new **Types** and **Interfaces**,
@@ -1072,3 +1081,7 @@ queries as before. Just change Query Variables:
 ## Summary
 
 In this guide we went through different OCF manifests and their syntax. We created manifests which added a capability to install Confluence server instances. We also showed, how you can test the manifests you are creating and where to check for useful information, when debugging your action.
+
+## Appendix
+
+To learn how to prepare content which uses Terraform Runner, read the [`terraform-manifests.md`](./terraform-manifests.md) document.

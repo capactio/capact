@@ -6,7 +6,6 @@ This tutorial shows the basic concepts of Voltron on the Jira installation examp
 
 <!-- toc -->
 
-- [Introduction](#introduction)
 - [Goal](#goal)
 - [Prerequisites](#prerequisites)
 - [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster)
@@ -21,16 +20,6 @@ This tutorial shows the basic concepts of Voltron on the Jira installation examp
 - [Additional resources](#additional-resources)
 
 <!-- tocstop -->
-
-### Introduction
-
-The key benefit which Voltron brings is interchangeable dependencies. Cluster Admin may configure preferences for resolving the dependencies (e.g. to prefer cloud-based or on-premise solutions). As a result, the end-user is able to easily install applications with multiple dependencies without any knowledge of platform-specific configuration.
-
-Apart from installing applications, Voltron makes it easy to:
-- execute day-two operations (such as upgrade, backup, and restore)
-- run any workflow (to process data, configure the system, run serverless workloads, etc. The possibilities are endless.)
-
-Voltron aims to be a platform-agnostic solution. However, the very first Voltron implementation is based on Kubernetes.
 
 ### Goal
 
@@ -304,7 +293,7 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
 
     ![jira-installation](./assets/jira-installation.png)
 
-🎉 Hurray! You now have your own Jira instance installed. Be productive!
+🎉 Hooray! You now have your own Jira instance installed. Be productive!
 
 #### Clean-up 
 

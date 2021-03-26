@@ -1,7 +1,9 @@
 # Voltron installation
 
-This tutorial shows how to set up a private Google Kubernetes Engine (GKE) cluster with full Voltron installation. All core Voltron components are located in [`deploy/kubernetes/charts`](../../../deploy/kubernetes/charts). Additionally, Voltron uses [Cert Manager](https://github.com/jetstack/cert-manager/) to generate the certificate for the Voltron Gateway domain.
+> **NOTE:** This tutorial guides you through the Voltron installation on managed, production-ready Kubernetes cluster.
+> You can also install Voltron locally. To learn how to do that, see the [Development cluster](../../development.md#development-cluster) section in `development.md` document.
 
+This tutorial shows how to set up a private Google Kubernetes Engine (GKE) cluster with full Voltron installation. All core Voltron components are located in [`deploy/kubernetes/charts`](../../../deploy/kubernetes/charts). Additionally, Voltron uses [Cert Manager](https://github.com/jetstack/cert-manager/) to generate the certificate for the Voltron Gateway domain.
 
 ![overview](assets/overview.svg)
 
