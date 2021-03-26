@@ -6,12 +6,10 @@ The following document describes Type entity features.
 
 <!-- toc -->
 
-- [Type features](#type-features)
-  - [Table of contents](#table-of-contents)
-  - [Additional references to parent nodes](#additional-references-to-parent-nodes)
-    - [Find Types based on prefix of parent nodes](#find-types-based-on-prefix-of-parent-nodes)
-    - [The `requires` section in Implementation manifest](#the-requires-section-in-implementation-manifest)
-  - [Type composition](#type-composition)
+- [Additional references to parent nodes](#additional-references-to-parent-nodes)
+  * [Find Types based on prefix of parent nodes](#find-types-based-on-prefix-of-parent-nodes)
+  * [Requirements section in Implementation manifest](#requirements-section-in-implementation-manifest)
+- [Type composition](#type-composition)
 
 <!-- tocstop -->
 
@@ -26,7 +24,7 @@ Type can contain additional references to other parent nodes. The connection mea
 
 Currently, the feature brings the following benefits:
 - **GraphQL API:** it allows User to find related Types based on a prefix of the parent node.
-- **Implementation manifest:** the `requires` block in Implementation manifest can refer to Types, which has additional references to parent node
+- **Implementation manifest:** the **requires** property in Implementation manifest can refer to Types, which has additional references to parent node
 
 ### Find Types based on prefix of parent nodes
 
@@ -54,7 +52,7 @@ Currently, the feature brings the following benefits:
    - name: "cap.type.platform.cloud-foundry"
    ```
 
-### The `requires` section in Implementation manifest
+### Requirements section in Implementation manifest
 
 > **NOTE** This feature is currently not implemented.
 
@@ -72,7 +70,7 @@ spec:
 # (...)
 ```
 
-In that way, the Type `cap.type.platform.cloud-foundry` can be used in the context of any Type with prefix `cap.type.platform.*`, such as `requires` block:
+In that way, the Type `cap.type.platform.cloud-foundry` can be used in the context of any Type with prefix `cap.type.platform.*`, such as **requires** property:
 
 ```yaml
 # Implementation manifest

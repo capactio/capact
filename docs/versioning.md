@@ -6,21 +6,19 @@ This document describes Voltron versioning strategy.
 
 <!-- toc -->
 
-- [Versioning](#versioning)
-  - [Table of contents](#table-of-contents)
-  - [Overview](#overview)
-  - [Diagram](#diagram)
-  - [OCF Version](#ocf-version)
-    - [Supporting multiple OCF versions in OCH](#supporting-multiple-ocf-versions-in-och)
-    - [Deprecation policy of OCF versions](#deprecation-policy-of-ocf-versions)
-  - [Manifests revision](#manifests-revision)
-  - [TypeInstance `resourceVersion`](#typeinstance-resourceversion)
-  - [Core manifests](#core-manifests)
-  - [The `appVersion`](#the-appversion)
-    - [Default versions for appVersion in SemVer format](#default-versions-for-appversion-in-semver-format)
-    - [Default versions for appVersion in different format than SemVer](#default-versions-for-appversion-in-different-format-than-semver)
-    - [Conflict prevention](#conflict-prevention)
-  - [Engine and CLI versions](#engine-and-cli-versions)
+- [Overview](#overview)
+- [Diagram](#diagram)
+- [OCF Version](#ocf-version)
+  * [Supporting multiple OCF versions in OCH](#supporting-multiple-ocf-versions-in-och)
+  * [Deprecation policy of OCF versions](#deprecation-policy-of-ocf-versions)
+- [Manifests revision](#manifests-revision)
+- [TypeInstance **resourceVersion**](#typeinstance-resourceversion)
+- [Core manifests](#core-manifests)
+- [Application version](#application-version)
+  * [Default application versions in SemVer format](#default-application-versions-in-semver-format)
+  * [Default application versions in different format than SemVer](#default-application-versions-in-different-format-than-semver)
+  * [Conflict prevention](#conflict-prevention)
+- [Engine and CLI versions](#engine-and-cli-versions)
 
 <!-- tocstop -->
 
@@ -28,19 +26,19 @@ This document describes Voltron versioning strategy.
 
 The versioning for OCF and OCH are similar in concept to how Kubernetes implements versioning. Below is a table comparing Voltron versioning to Kubernetes versioning.
 
-| Voltron                        | Kubernetes                |
-| ------------------------------ | ------------------------- |
-| OCH Version                    | Kubernetes Version        |
-| OCF Version                    | Resource `apiVersion`     |
-| Manifests `revision`           | `resourceVersion`         |
-| TypeInstance `resourceVersion` | `resourceVersion`         |
-| Engine                         | `kube-controller-manager` |
-| CLI                            | `kubectl`                 |
-| Go SDK                         | `client-go`               |
+| Voltron                          | Kubernetes                |
+| -------------------------------- | ------------------------- |
+| OCH Version                      | Kubernetes Version        |
+| OCF Version                      | Resource **apiVersion**   |
+| Manifests **revision**           | **resourceVersion**       |
+| TypeInstance **resourceVersion** | **resourceVersion**       |
+| Engine                           | `kube-controller-manager` |
+| CLI                              | `kubectl`                 |
+| Go SDK                           | `client-go`               |
 
 ## Diagram
 
-> **NOTE:** The diagram visualizes future `appVersion` features, which are not yet implemented.
+> **NOTE:** The diagram visualizes future application version features, which are not yet implemented.
 
 The following diagram shows the versioning concept:
 
@@ -99,51 +97,51 @@ The OCF storage version in OCH is never the deprecated one. This way, there won�
 
 ## Manifests revision
 
-Unlike Kubernetes `resourceVersion`, we store all previous revisions of manifests such Type, Implementation, Interface and Attribute. Users can consume them anytime. Manifests can refer to older revisions of the other manifests.
+Unlike Kubernetes **resourceVersion**, we store all previous revisions of manifests such Type, Implementation, Interface and Attribute. Users can consume them anytime. Manifests can refer to older revisions of the other manifests.
 
 **Example:** Implementation implements specific Interface revision. Revision of the Interface is increased once input or output Type changes. Content Creator updates the revision manually.
 
-## TypeInstance `resourceVersion`
+## TypeInstance **resourceVersion**
 
-This is the version of TypeInstance `metadata` and `spec` fields. Unlike Kubernetes, we store historical data for audits and rollback purposes.
+This is the version of TypeInstance **metadata** and **spec** fields. Unlike Kubernetes, we store historical data for audits and rollback purposes.
 
 ## Core manifests
 
 We version core manifests (manifests, which are located under [`core` subdirectory](../och-content/core)) in the same way as the OCF itself. Core entities are strictly tied into the OCH release, and they are read-only.
 
-## The `appVersion`
+## Application version
 
-> **NOTE:** The following subsection describes future `appVersion` features, which are not yet implemented.
+> **NOTE:** The following subsection describes future application version features, which are not yet implemented.
 
-The Implementation manifest contains `appVersion` field, which defines the supported version of the actual application. The `appVersion` field is independent from the revision.
+The Implementation manifest contains the **appVersion** field, which defines the supported version of the actual application. The **appVersion** field is independent from the revision.
 
-The appVersion is an object in the following format:
+The appVersion is a string in the following format:
 
+```yaml
+appVersion: "1.0.x, 1.1.0 - 1.3.0" # String with allowed version ranges
 ```
-appVersion: "1.0.x, 1.1.0 - 1.3.0" # A string with allowed version ranges
-```
 
-It is inspired by the [CNAB dependency version object](https://github.com/cnabio/cnab-spec/blob/master/500-CNAB-dependencies.md). If the appVersion ranges are in SemVer 2 format, you can use ranges using dashes. If the `appVersion` ranges are not in SemVer 2, then you have to specify every supported appVersion in the string.
+It is inspired by the [CNAB dependency version object](https://github.com/cnabio/cnab-spec/blob/master/500-CNAB-dependencies.md). If the **appVersion** ranges are in SemVer 2 format, you can use ranges using dashes. If the **appVersion** ranges are not in SemVer 2, then you have to specify every supported appVersion in the string.
 
-### Default versions for appVersion in SemVer format
+### Default application versions in SemVer format
 
-During the submission of the Implementation manifest, if the `appVersion` is defined in the SemVer format, OCH updates the following versions:
+During the submission of the Implementation manifest, if the **appVersion** field is defined in the SemVer format, OCH updates the following versions:
 
 - `latest` — depending on the OCH configuration, it points to stable or edge version
 - `stable` — points to the Implementation with highest semVer version in range without
   suffix [starting from the hyphen](https://semver.org/#spec-item-9)
   
-  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.0.9 is picked as an `appVersion`.
+  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.0.9 is picked as an **appVersion**.
   
 - `edge` — points to the Implementation with highest semVer version in range, even if it contains suffix starting from the hyphen
   
-  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.1.0-beta1 is picked as an `appVersion`.
+  For example, if the range is defined as `1.0.x - 1.1.0-beta1`, the 1.1.0-beta1 is picked as an **appVersion**.
 
-You can use the versions in Implementation manifest to filter prerequisite Implementations based on the appVersion value. For example, if your Implementation depends on the latest stable PostgreSQL version, then you can use the `stable` version as the `appVersion` of PostgreSQL.
+You can use the versions in Implementation manifest to filter prerequisite Implementations based on the **appVersion** value. For example, if your Implementation depends on the latest stable PostgreSQL version, then you can use the `stable` version as the application version of PostgreSQL.
 
-### Default versions for appVersion in different format than SemVer
+### Default application versions in different format than SemVer
 
-If the application is not versioned using SemVer format, we assume that all possible `appVersion` values are sorted from oldest to newest. This way, the `latest` version is always the newest appVersion value.
+If the application is not versioned using SemVer format, we assume that all possible **appVersion** values are sorted from oldest to newest. This way, the `latest` version is always the newest **appVersion** value.
 
 **Example:**
 
@@ -161,7 +159,7 @@ spec:
 
 ### Conflict prevention
 
-An `appVersion` can be defined as a range. During Implementation manifest submission, the OCH validates whether the `appVersion` range doesn't overlap with the same revision of the Implementation manifest. As noted earlier, the manifest `revision` is independent from the `appVersion`.
+An application version can be defined as a range. During Implementation manifest submission, the OCH validates whether the application version range doesn't overlap with the same revision of the Implementation manifest. As noted earlier, the manifest **revision** property is independent from the **appVersion**.
 
 **Example:**
 
@@ -190,7 +188,7 @@ spec:
   appVersion: "8.0.x"
 ```
 
-3. ...the operation fails as the `appVersion` range overlaps with existing `cap.implementation.database.mysql.install` Implementation manifest.
+3. ...the operation fails as the **appVersion** property range overlaps with existing `cap.implementation.database.mysql.install` Implementation manifest.
 
 ## Engine and CLI versions
 
