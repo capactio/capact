@@ -8,31 +8,32 @@ This document describes the available open-source libraries that are able to gen
 
 - [Motivation](#motivation)
 - [Investigation](#investigation)
-  * [Adobe JSON Schema Markdown Tools](#adobe-json-schema-markdown-tools)
+  * [`adobe/jsonschema2md`](#adobejsonschema2md)
     + [Example](#example)
     + [Generation](#generation)
     + [Pros](#pros)
     + [Cons](#cons)
-  * [Wetzel](#wetzel)
+  * [`CesiumGS/wetzel`](#cesiumgswetzel)
     + [Example](#example-1)
     + [Generation](#generation-1)
     + [Pros](#pros-1)
     + [Cons](#cons-1)
-  * [RalfG `jsonschema2md`](#ralfg-jsonschema2md)
+  * [`RalfG/jsonschema2md`](#ralfgjsonschema2md)
     + [Example](#example-2)
     + [Generation](#generation-2)
     + [Pros](#pros-2)
     + [Cons](#cons-2)
-  * [json-schema-md-doc](#json-schema-md-doc)
+  * [`BrianWendt/json-schema-md-doc`](#brianwendtjson-schema-md-doc)
     + [Example](#example-3)
     + [Cons](#cons-3)
-  * [Docson](#docson)
+  * [`lbovet/docson`](#lbovetdocson)
     + [Example](#example-4)
     + [Cons](#cons-4)
-  * [JSON Schema for Humans](#json-schema-for-humans)
+  * [`coveooss/json-schema-for-humans`](#coveoossjson-schema-for-humans)
     + [Example](#example-5)
     + [Generation](#generation-3)
     + [Cons](#cons-5)
+- [Decision](#decision)
 
 <!-- tocstop -->
 
@@ -46,7 +47,7 @@ Desired documentation style: https://www.asyncapi.com/docs/specifications/2.0.0
 
 This section contains the result of testing different libraries that generate documentation from JSON Schemas.
 
-### Adobe JSON Schema Markdown Tools
+### `adobe/jsonschema2md`
 
 Repository: https://github.com/adobe/jsonschema2md
 
@@ -83,7 +84,7 @@ jsonschema2md -d ocf-spec/0.0.1/schema/ -o docs/investigation/doc-from-json-sche
 - The shared metadata is generated as a single `.md` file, but others files refer to `attribute-properties-ocf-metadata.md` instead of `metadata.md`. Needs to be investigated further.  
 - **[minor]** The `title` property needs to be added, otherwise it generates it as `Untitled schema`.
 
-### Wetzel
+### `CesiumGS/wetzel`
 
 Repository: https://github.com/CesiumGS/wetzel
 
@@ -126,7 +127,7 @@ wetzel ocf-spec/0.0.1/schema/vendor.json  -l 2 > ./docs/investigation/doc-from-j
 - Supports parsing a single schema at a time.
 - **[minor]** The `title` property needs to be added, otherwise it generates it as `WETZEL_WARNING: title not defined.xxx`.
 
-### RalfG `jsonschema2md`
+### `RalfG/jsonschema2md`
 
 Repository: https://github.com/RalfG/jsonschema2md
 
@@ -166,7 +167,7 @@ jsonschema2md ocf-spec/0.0.1/schema/implementation.json ./docs/investigation/doc
 - Supports a single schema at a time.
 - For the Implementation entity, the `metadata` property was not resolved properly.
 
-### json-schema-md-doc
+### `BrianWendt/json-schema-md-doc`
 
 Repository: https://github.com/BrianWendt/json-schema-md-doc
 
@@ -182,7 +183,7 @@ Last update: Jan 26, 2021
 - No CLI.
 - Doesn't generate user-friendly documentation.
 
-### Docson
+### `lbovet/docson`
 
 Repository: https://github.com/lbovet/docson
 
@@ -203,7 +204,7 @@ Last update:  Mar 14, 2020
 - Doesn't generate `.md` files, serves content in a browser. Node.js server is required.
 - Doesn't have an option to see all exposed schemas. You need to use a single URL per schema.
 
-### JSON Schema for Humans
+### `coveooss/json-schema-for-humans`
 
 Repository: https://github.com/coveooss/json-schema-for-humans
 

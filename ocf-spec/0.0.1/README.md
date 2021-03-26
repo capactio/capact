@@ -20,7 +20,7 @@ The Attribute specification is defined in [attribute.json](./schema/attribute.js
 
 Type represents an object, such as database, application, but also a simple primitive data, like an IP address. The Type needs to be described using JSONSchema specification.
 
-Type is used in [Interface](#interface) and [Implementation](#implementation) as a description and validation of possible input and output parameters. The actual object of Type is called TypeInstance.
+Type is used in [Interface](#interface) and [Implementation](#implementation) as a description and validation of possible input and output parameters. The object, which stores JSON value matching JSON schema from Type, is called TypeInstance.
 
 The core Types are placed in the `core` directory. In the future, core Types will be embedded into the OCH server.
 
