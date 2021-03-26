@@ -6,7 +6,7 @@
   "additionalProperties": {
     "$id": "#/additionalParameters",
     "type": "object",
-    "description": "Prefix is an alias of the TypeInstance, used in the Implementation",
+    "description": "Object key is an alias of the TypeInstance, used in the Implementation.",
     "required": [
       "typeRef",
       "verbs"
@@ -17,7 +17,7 @@
       },
       "verbs": {
         "$id": "#/additionalParameters/verbs",
-        "description": "The full list of access rights for a given TypeInstance",
+        "description": "The full list of access rights for a given TypeInstance.",
         "type": "array",
         "items": {
           "type": "string",

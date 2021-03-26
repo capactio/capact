@@ -23,7 +23,7 @@
     "signature": {
       "$id": "#/properties/signature",
       "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED",
+      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
         "och"
       ],
