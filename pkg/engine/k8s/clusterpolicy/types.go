@@ -27,7 +27,7 @@ type Rule struct {
 
 type ImplementationConstraints struct {
 	// Requires refers a specific requirement by path and optional revision.
-	Requires *[]types.TypeRef `json:"requires,omitempty"`
+	Requires *[]TypeRef `json:"requires,omitempty"`
 
 	// Attributes refers a specific Attribute by path and optional revision.
 	Attributes *[]types.AttributeRef `json:"attributes,omitempty"`
@@ -37,6 +37,14 @@ type ImplementationConstraints struct {
 }
 
 type TypeInstanceToInject struct {
-	ID      string        `json:"id"`
-	TypeRef types.TypeRef `json:"typeRef"`
+	ID      string  `json:"id"`
+	TypeRef TypeRef `json:"typeRef"`
+}
+
+// TypeRef specify type by path and optional revision.
+type TypeRef struct {
+	// Path of a given Type.
+	Path string `json:"path"`
+	// Version of the manifest content in the SemVer format.
+	Revision *string `json:"revision"`
 }

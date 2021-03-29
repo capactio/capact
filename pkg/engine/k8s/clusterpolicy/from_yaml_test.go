@@ -54,7 +54,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 				OneOf: []clusterpolicy.Rule{
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Requires: &[]types.TypeRef{
+							Requires: &[]clusterpolicy.TypeRef{
 								{
 									Path: "cap.core.type.platform.kubernetes",
 								},
@@ -67,7 +67,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 				OneOf: []clusterpolicy.Rule{
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Requires: &[]types.TypeRef{
+							Requires: &[]clusterpolicy.TypeRef{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
@@ -87,7 +87,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 							{
 								ID: "sample-uuid",
-								TypeRef: types.TypeRef{
+								TypeRef: clusterpolicy.TypeRef{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},

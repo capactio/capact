@@ -126,7 +126,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 			Alias: ti.ArtifactName,
 			TypeRef: &graphqllocal.TypeInstanceTypeReferenceInput{
 				Path:     ti.TypeInstance.TypeRef.Path,
-				Revision: *ti.TypeInstance.TypeRef.Revision,
+				Revision: ti.TypeInstance.TypeRef.Revision,
 			},
 			Attributes: []*graphqllocal.AttributeReferenceInput{},
 		})
