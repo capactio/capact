@@ -5,3 +5,9 @@ description: Argo chart for Kubernetes
 type: application
 
 version: 0.1.0
+
+dependencies:
+  - name: argo
+    version: "0.16.7"
+    repository: https://argoproj.github.io/argo-helm
+    condition: argo.enabled

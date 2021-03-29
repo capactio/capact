@@ -1,0 +1,6 @@
+dependencies:
+- name: argo
+  repository: https://argoproj.github.io/argo-helm
+  version: 0.16.7
+digest: sha256:c22a4e1cc76f7cd78df5759a23975b2ba770c585d6388155bbe42625a0fecd08
+generated: "2021-03-29T13:59:15.47386+02:00"
