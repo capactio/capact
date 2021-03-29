@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.2.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.gcp.cloudsql.postgresql
+  prefix: cap.implementation.aws.rds.postgresql
   name: install
-  displayName: Install CloudSQL PostgreSQL database using Terraform
-  description: Action which provisions CloudSQL for PostgreSQL database using Terraform
-  documentationURL: https://cloud.google.com/cloudsql
-  supportURL: https://cloud.google.com/cloudsql
+  displayName: Install AWS RDS for PostgreSQL database using Terraform
+  description: Action which provisions AWS RDS for PostgreSQL database using Terraform
+  documentationURL: https://aws.amazon.com/rds/postgresql/
+  supportURL: https://aws.amazon.com/rds/postgresql/
   license:
     name: "Apache 2.0"
   maintainers:
@@ -15,7 +15,7 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   attributes:
-    cap.attribute.cloud.provider.gcp:
+    cap.attribute.cloud.provider.aws:
       revision: 0.1.0
     cap.attribute.infra.iac.terraform:
       revision: 0.1.0

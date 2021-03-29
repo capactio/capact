@@ -23,13 +23,6 @@ metadata:
 spec:
   appVersion: "10, 11, 12, 13"
 
-  additionalOutput:
-    typeInstances:
-      cloudsql-instance:
-        typeRef:
-          path: cap.type.gcp.cloudsql.instance
-          revision: 0.1.0
-
   outputTypeInstanceRelations:
     postgresql:
       uses:
