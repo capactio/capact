@@ -244,7 +244,7 @@ args:
           value: '{{outputs.artifacts.tfstate.path}}'
         - name: RUNNER_LOGGER_DEV_MODE
           value: "true"
-        image: gcr.io/projectvoltron/terraform-runner:a6e2ac4
+        image: gcr.io/projectvoltron/terraform-runner:PR-221
         name: ""
         resources: {}
       inputs:

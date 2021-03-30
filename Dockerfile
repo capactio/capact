@@ -76,9 +76,14 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
 
-ENV TERRAFORM_VERSION 0.14.6
+RUN apk add --no-cache 'git=>2.26' 'openssh=~8.3'
+RUN mkdir /root/.ssh
+RUN chmod 700 /root/.ssh
+RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
 WORKDIR /bin
+
+ENV TERRAFORM_VERSION 0.14.6
 RUN \
     wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
     unzip terraform.zip && rm terraform.zip
