@@ -21,6 +21,14 @@ spec:
     - path: cap.interface.runner.terraform.apply
       revision: 0.1.0
 
+  additionalInput:
+    typeInstances:
+      additional:
+        typeRef:
+          path: cap.core.type.generic.value
+          revision: 0.1.0
+        verbs: ["get"]
+
   requires:
     cap.core.type.platform:
       oneOf:
