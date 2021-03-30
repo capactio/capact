@@ -1,0 +1,97 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.capactio.capact
+  displayName: Capact config
+  description: Defines configuration for Capact
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  maintainers:
+    - email: team-dev@capact.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for MongoDB configuration",
+        "examples": [
+          {
+            "user": {
+              "username": "username",
+              "password": "password"
+            },
+            "rootPassword": "pass",
+            "defaultDBName": "default_db",
+            "host": "host",
+            "port": 27017,
+          }
+        ],
+        "required": [
+            "user",
+            "defaultDBName",
+            "rootPassword",
+            "host",
+            "port"
+        ],
+        "$ocfRefs": {
+          "hostname": {
+            "name": "cap.core.type.networking.hostname",
+            "revision": "0.1.0"
+          }
+          "port": {
+            "name": "cap.core.type.networking.port",
+            "revision": "0.1.0"
+          }
+        },
+        "properties": {
+          "user": {
+            "$id": "#/properties/user",
+            "type": "object",
+            "title": "Defines custom user details",
+            "required": [
+                "username",
+                "password"
+            ],
+            "properties": {
+              "username": {
+                "$id": "#/properties/user/properties/username",
+                "type": "string",
+                "title": "Create the specified custom user.",
+                "default": "postgres"
+              },
+              "password": {
+                "$id": "#/properties/user/properties/password",
+                "type": "string",
+                "title": "Sets the custom user password"
+              }
+            },
+            "additionalProperties": false
+          },
+          "defaultDBName": {
+            "$id": "#/properties/defaultDBName",
+            "type": "string",
+            "title": "Defines a name for the default database that is created"
+          },
+          "rootPassword": {
+            "$id": "#/properties/rootPassword",
+            "type": "string",
+            "title": "Defines a root password"
+          },
+          "host": {
+            "$ref": "#/$ocfRefs/hostname"
+          },
+          "port": {
+            "$ref": "#/$ocfRefs/port"
+          },
+        },
+        "additionalProperties": false
+      }
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

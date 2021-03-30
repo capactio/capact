@@ -1,0 +1,184 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.capactio.capact
+  name: upgrade
+  displayName: "Upgrade Capact"
+  description: "Upgrade Capact Kubernetes installation"
+  documentationURL: https://projectvoltron.dev
+  supportURL: https://projectvoltron.dev
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@capact.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  appVersion: "0.3.x"
+
+  outputTypeInstanceRelations: { } # no new TypeInstances to upload, they are updated in place
+
+  implements:
+    - path: cap.interface.capactio.capact.upgrade
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: upgrade
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: capact-upgrade
+        templates:
+          - name: synchronize-minio-secret
+            container:
+              image: bitnami/kubectl:1.18
+              command: [ annotate ]
+              args: [ "secret -n argo argo-minio kubed.appscode.com/sync="" --overwrite" ]
+          - name: capact-upgrade
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: capact-config
+                - name: capact-helm-release
+                - name: argo-helm-release
+                - name: ingress-nginx-helm-release
+                - name: kubed-helm-release
+                - name: monitoring-helm-release
+                - name: neo4j-helm-release
+            steps:
+#              - - name: apply-crds
+              - - name: neo4j-upgrade
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: "reuseValues: true"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.neo4j-helm-release}}"
+
+              - - name: ingress-upgrade
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: "reuseValues: true"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.ingress-nginx-helm-release}}"
+
+              - - name: argo-upgrade
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: "reuseValues: true"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.argo-helm-release}}"
+
+              - - name: kubed-upgrade
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: "reuseValues: true"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.kubed-helm-release}}"
+
+              - - name: synchronize-minio-secret
+                  template: synchronize-minio-secret
+
+              - - name: monitoring-upgrade # TODO: make it optional? DISABLE_MONITORING_INSTALLATION
+                  voltron-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: "reuseValues: true"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.monitoring-helm-release}}"
+
+              - - name: render-helm-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            reuseValues: true
+                            chart:
+                              name: postgresql
+                              repo: https://charts.bitnami.com/bitnami
+                              version: "10.2.0"
+                            output:
+                              goTemplate:
+                                version: "{{ .Values.image.tag }}"
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
+                            values:
+                              ingress:
+                                tls:
+                                  - secretName: capact-server-tls-<@ random_word(length=5) @>
+                                    hosts:
+                                      - <@ host @>
+                                hosts:
+                                - host: <@ host @>
+                                  paths: ['/']
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+
+              - - name: helm-upgrade
+                  voltron-action: helm.upgrade
+                  voltron-updateTypeInstances:
+                    - name: capact-config
+                      from: additional
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.capact-helm-release}}"
+
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

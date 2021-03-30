@@ -1,0 +1,67 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: post-install-type-instances-job
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "voltron.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: post-install-type-instances-job
+  labels:
+  {{- include "voltron.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+rules:
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: [ "get", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: post-install-type-instances-job
+  labels:
+  {{- include "voltron.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+subjects:
+  - kind: ServiceAccount
+    name: post-install-type-instances-job
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: post-install-type-instances-job
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-install-type-instances-job
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "voltron.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: post-install-type-instances-job
+      containers:
+        - name: job
+          image: {{ .Values.postInstallTypeInstanceJob.image.name }}
+          imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
+          env:
+            # It will be simplified to `voltron-system` a.k.a `capact-system`.
+            - name: RELEASE_NAMESPACES_LOOKUP
+              value: "voltron-system,argo,ingress-nginx,kubed,neo4j"
