@@ -70,7 +70,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 					{
 						ID: "my-uuid",
-						TypeRef: clusterpolicy.TypeRef{
+						TypeRef: types.TypeRefWithOptRevision{
 							Path:     "cap.type.gcp.auth.service-account",
 							Revision: ptr.String("0.1.1"),
 						},
@@ -97,7 +97,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 					{
 						ID: "my-uuid",
-						TypeRef: clusterpolicy.TypeRef{
+						TypeRef: types.TypeRefWithOptRevision{
 							Path:     "cap.type.gcp.auth.service-account",
 							Revision: ptr.String("0.1.1"),
 						},
@@ -129,7 +129,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 					{
 						ID: "my-uuid",
-						TypeRef: clusterpolicy.TypeRef{
+						TypeRef: types.TypeRefWithOptRevision{
 							Path: "cap.type.gcp.auth.service-account",
 						},
 					},

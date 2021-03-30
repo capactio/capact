@@ -20,4 +20,29 @@ To replace the Argo images, we followed these steps:
     docker push gcr.io/projectvoltron/argoproj/argoexec:v2.12.10
     ```
 
-1. Build and push `argoproj/workflow-controller` based on our fork. More info can be found [here](https://github.com/Project-Voltron/argo-workflows/pull/1).
+1. Build and push `argoproj/workflow-controller` based on our fork.
+
+    1. Clone forked version of Argo workflows and checkout to `disable-global-artifacts-validation`:
+        ```bash
+        git clone git@github.com:Project-Voltron/argo-workflows.git
+        cd argo-workflows
+        git checkout disable-global-artifacts-validation
+        ```
+
+    1. Build image:
+        ```
+        make controller-image
+        ```
+        > **NOTE:** If you will have problem with permission check this comment: https://github.com/golang/go/issues/14213#issuecomment-229815144
+    
+    1. Tag image:
+        ```
+        docker tag argoproj/workflow-controller:latest gcr.io/projectvoltron/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        ```
+    
+    1. Push image
+        ```
+        docker push gcr.io/projectvoltron/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        ```
+    
+    > **NOTE:** More info can be found [here](https://github.com/Project-Voltron/argo-workflows/pull/1).

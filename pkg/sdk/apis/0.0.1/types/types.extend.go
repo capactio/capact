@@ -25,3 +25,11 @@ type InputTypeInstanceRef struct {
 	// ID is a unique identifier for the input TypeInstance.
 	ID string `json:"id"`
 }
+
+// TypeRefWithOptRevision specify type by path and optional revision.
+type TypeRefWithOptRevision struct {
+	// Path of a given Type.
+	Path string `json:"path"`
+	// Version of the manifest content in the SemVer format.
+	Revision *string `json:"revision"`
+}
