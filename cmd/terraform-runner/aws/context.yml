@@ -1,5 +1,0 @@
-name: "terraform-example"
-dryRun: false
-timeout: "30m"
-platform:
-  namespace: "default"
