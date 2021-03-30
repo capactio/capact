@@ -19,13 +19,11 @@ variable "tier" {
 variable "user_name" {
   type = string
   description = "Database user name"
-  default = "postgres"
 }
 
 variable "user_password" {
   type = string
   description = "Database user password"
-  default = "voltronpostgres"
   //  can't be sensitive as we need it on output
 }
 
