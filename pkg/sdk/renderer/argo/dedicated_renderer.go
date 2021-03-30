@@ -881,7 +881,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 			TypeInstance: types.OutputTypeInstance{
 				TypeRef: &types.TypeRef{
 					Path:     typeRef.Path,
-					Revision: &typeRef.Revision,
+					Revision: typeRef.Revision,
 				},
 			},
 		})

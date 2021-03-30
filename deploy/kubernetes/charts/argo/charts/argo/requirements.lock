@@ -1,6 +1,0 @@
-dependencies:
-- name: minio
-  repository: https://helm.min.io/
-  version: 8.0.3
-digest: sha256:b08afe692f226fe4a2fbb07bc8d185b5d5a8fb40cec3f23948bd47f7afac441c
-generated: "2020-11-12T11:54:01.511507+01:00"

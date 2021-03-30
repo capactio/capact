@@ -21,7 +21,7 @@ func fixGCPClusterPolicy() clusterpolicy.ClusterPolicy {
 				OneOf: []clusterpolicy.Rule{
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Requires: &[]types.TypeRef{
+							Requires: &[]types.TypeRefWithOptRevision{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
@@ -36,7 +36,7 @@ func fixGCPClusterPolicy() clusterpolicy.ClusterPolicy {
 						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 							{
 								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.TypeRef{
+								TypeRef: types.TypeRefWithOptRevision{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
@@ -88,7 +88,7 @@ func fixClusterPolicyForFallback() clusterpolicy.ClusterPolicy {
 						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 							{
 								ID: "gcp-sa-uuid",
-								TypeRef: types.TypeRef{
+								TypeRef: types.TypeRefWithOptRevision{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
@@ -128,7 +128,7 @@ func fixTerraformPolicy() clusterpolicy.ClusterPolicy {
 						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 							{
 								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.TypeRef{
+								TypeRef: types.TypeRefWithOptRevision{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
