@@ -39,7 +39,7 @@ On the list, you should see the `terraform` bucket, which is created by default.
 
 ## Uploading Terraform modules
 
-In `testdata` directory there is a Terraform module to configure CloudSQL Postgresql instance.
+In the `assets` directory there is a Terraform module to configure CloudSQL Postgresql instance.
 
 1. Create tar directory first:
 

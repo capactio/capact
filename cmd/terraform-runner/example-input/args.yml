@@ -1,7 +1,7 @@
 command: "apply"
 module:
   name: cloudsql
-  source: "./cmd/terraform-runner/testdata/cloudsql.tgz"
+  source: "./cmd/terraform-runner/example-input/cloudsql.tgz"
 variables: |+
   user_name = "voltron"
   user_password = "12-43i213j}"
@@ -16,5 +16,5 @@ output:
     port: 5432
     defaultDBName: postgres
     superuser:
-      username: "voltron"
-      password: "okon"
+      username: "{{ .username }}"
+      password: "{{ .password }}"
