@@ -1,0 +1,25 @@
+# Source
+
+This directory contains source Terraform module which are used in the Implementation manifest in the upper directory.
+
+### Update Terraform content
+
+1. Prepare `tgz` directory with the 
+    
+   ```bash
+    cd ./module && tar -zcvf /tmp/module.tgz . && cd -
+    ```
+
+1. Set environmental variables:
+   ```bash
+   export BUCKET="projectvoltron_terraform"
+   export MANIFEST_PATH="terraform.gcp.cloudsql.postgresql.install"
+   export MANIFEST_REVISION="0.2.0"
+   ```
+   
+1. Upload `tgz` directory to GCS bucket:
+    
+   ```bash
+   gsutil cp /tmp/module.tgz gs://${BUCKET}/${MANIFEST_PATH}/${MANIFEST_REVISION}/module.tgz
+   ```
+

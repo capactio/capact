@@ -204,4 +204,3 @@ output "password" {
   value = var.user_password
   sensitive = false
 }
-

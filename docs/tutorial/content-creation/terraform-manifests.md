@@ -39,18 +39,18 @@ On the list, you should see the `terraform` bucket, which is created by default.
 
 ## Uploading Terraform modules
 
-In the `assets` directory there is a Terraform module to configure CloudSQL Postgresql instance.
+In the `och-content/implementation/gcp/cloudsql/postgresql/source` directory there is a Terraform module to configure CloudSQL Postgresql instance.
 
 1. Create tar directory first:
 
     ```shell
-    cd ./assets/source && tar -zcvf ../cloudsql.tgz . && cd -
+    cd och-content/implementation/gcp/cloudsql/postgresql/source && tar -zcvf /tmp/cloudsql.tgz . && cd -
     ```
 
 1. Upload it to MinIO:
 
     ```shell
-    mc cp ./assets/cloudsql.tgz minio/terraform/cloudsql/cloudsql.tgz
+    mc cp /tmp/cloudsql.tgz minio/terraform/cloudsql/cloudsql.tgz
     ```
 
 1. As the `terraform` bucket has `download` policy set by default, you can access all files with unauthenticated HTTP calls.
