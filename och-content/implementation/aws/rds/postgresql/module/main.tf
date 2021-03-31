@@ -1,7 +1,13 @@
-variable "database_version" {
+variable "engine_version" {
+  type = string
+  default = "11.10"
+  description = "RDS database engine version"
+}
+
+variable "major_engine_version" {
   type = string
   default = "11"
-  description = "PostgreSQL database version"
+  description = "PostgreSQL major engine version"
 }
 
 variable "region" {
@@ -79,10 +85,7 @@ module "vpc" {
     "10.99.0.0/24",
     "10.99.1.0/24",
     "10.99.2.0/24"]
-  private_subnets = [
-    "10.99.3.0/24",
-    "10.99.4.0/24",
-    "10.99.5.0/24"]
+  private_subnets = []
 
   create_database_subnet_group = false
 
@@ -94,7 +97,7 @@ module "security_group" {
   version = "~> 3"
 
   name = local.name
-  description = "Complete PostgreSQL example security group"
+  description = "PostgreSQL security group created by Capact"
   vpc_id = module.vpc.vpc_id
 
   # ingress
@@ -123,10 +126,10 @@ module "db" {
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
   engine = "postgres"
-  engine_version = "11.10"
-  family = "postgres11"
+  engine_version = var.engine_version
+  family = "postgres${var.major_engine_version}"
   # DB parameter group
-  major_engine_version = var.database_version
+  major_engine_version = var.major_engine_version
   # DB option group
   instance_class = var.tier
 
@@ -176,15 +179,6 @@ module "db" {
   ]
 
   tags = local.tags
-  db_option_group_tags = {
-    "Sensitive" = "low"
-  }
-  db_parameter_group_tags = {
-    "Sensitive" = "low"
-  }
-  db_subnet_group_tags = {
-    "Sensitive" = "high"
-  }
 }
 
 output "instance_ip_addr" {
