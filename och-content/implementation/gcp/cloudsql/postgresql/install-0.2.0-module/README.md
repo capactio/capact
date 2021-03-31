@@ -1,13 +1,13 @@
 # Source
 
-This directory contains source Terraform module which are used in the Implementation manifest in the upper directory.
+This directory contains source Terraform module which is used in the `cap.implementation.terraform.gcp.cloudsql.postgresql.install:0.2.0` Implementation manifest.
 
 ### Update Terraform content
 
 1. Prepare `tgz` directory with the 
     
    ```bash
-    cd ./module && tar -zcvf /tmp/module.tgz . && cd -
+    cd ./install-0.2.0-module && tar -zcvf /tmp/module.tgz . && cd -
     ```
 
 1. Set environmental variables:

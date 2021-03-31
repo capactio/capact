@@ -106,7 +106,7 @@ spec:
                                   password: "{{ .Password }}"{% endraw %}
               - - name: cloudsql-run
                   voltron-action: cloudsql.run
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
                     - name: cloudsql-instance
