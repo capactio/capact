@@ -9,7 +9,6 @@ import (
 
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/engine"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
 	"projectvoltron.dev/voltron/pkg/runner"
@@ -47,8 +46,8 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 		return nil, err
 	}
 
-	renderer := newHelmRenderer(&engine.Engine{})
-	outputter := newHelmOutputter(r.log, renderer)
+	renderer := NewRenderer()
+	outputter := NewOutputter(r.log, renderer)
 
 	var helmCmd helmCommand
 	switch r.cfg.Command {

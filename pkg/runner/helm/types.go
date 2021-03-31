@@ -10,7 +10,7 @@ import (
 
 type outputter interface {
 	ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error)
-	ProduceAdditional(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error)
+	ProduceAdditional(args OutputArgs, chrt *chart.Chart, rel *release.Release) ([]byte, error)
 }
 
 // Config holds Runner related configuration.

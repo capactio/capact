@@ -17,7 +17,7 @@ all: generate build-all-images test-ocf-manifests test-unit test-lint
 # Building #
 ############
 
-APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
+APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions initializer
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 

@@ -86,7 +86,7 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
 
-	additionalOut, err := i.out.ProduceAdditional(in.Args, chartData, helmRelease)
+	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while rendering and saving additional output")
 	}

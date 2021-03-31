@@ -6,24 +6,25 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chartutil"
+	"helm.sh/helm/v3/pkg/engine"
 	"helm.sh/helm/v3/pkg/release"
 )
 
 const additionalOutputTemplateName = "additionalOutputTemplate"
 
-type renderEngine interface {
+type RenderEngine interface {
 	Render(*chart.Chart, chartutil.Values) (map[string]string, error)
 }
 
-type helmRenderer struct {
-	renderEngine renderEngine
+type Renderer struct {
+	renderEngine RenderEngine
 }
 
-func newHelmRenderer(renderEngine renderEngine) *helmRenderer {
-	return &helmRenderer{renderEngine: renderEngine}
+func NewRenderer() *Renderer {
+	return &Renderer{renderEngine: &engine.Engine{}}
 }
 
-func (r *helmRenderer) Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error) {
+func (r *Renderer) Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error) {
 	chartData.Templates = append(chartData.Templates, &chart.File{
 		Name: additionalOutputTemplateName,
 		Data: additionalOutputTemplate,
