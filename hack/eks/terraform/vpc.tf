@@ -20,4 +20,6 @@ module "vpc" {
   public_subnet_tags = {
     "kubernetes.io/cluster/${local.eks_cluster_name}" : "shared"
   }
+
+  tags = local.tags
 }

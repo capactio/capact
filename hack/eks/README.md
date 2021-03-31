@@ -2,20 +2,28 @@
 
 This directory stores Terraform modules and scripts for an Capact deployment on Amazon EKS.
 
-## How to
+## Prerequisites
 
-1. Initialize the Terraform module. It's recommended to use remote state file on S3:
-```
-terraform init -backend-config=bucket=voltron-terraform-states -backend-config=key=voltron-eks.tfstate -backend-config=region=eu-west-1
-```
+- S3 bucket for the remote Terraform state file
+- AWS account
+- A domain name for the Capact installation
 
-2. Apply the Terraform module. Terraform needs API server access to finish the configuration, so we have to add our IP to the allowed ones.
-```
-# TODO maybe this can be moved to a terraform local-exec
-terraform apply -var "eks_public_access_cidrs=[\"$(curl 'https://api.ipify.org')/32\"]"
-```
+## Installation
+
+1. Run `install.sh`
+2. Configure the name servers for the Capact Route53 Hosted Zone in your DNS provider.
+3. Register the ALIAS record in the Hosted Zone for the Capact gateway, pointing to the internal load balancer.
+
+## Running Capact actions from the bastion host
+
+The bastion host can access the Capact gateway and has `capectl` preinstalled.
+
+1. SSH to the bastion host
+2. Login the gateway
+3. Run an action
+
+> Domain names for the application ingress are not automatically configured on the Route53 Hosted Zone and must be configured manually by the Capact administrator
 
 ## Limitations
 
-- You have to add the self-signed certificate to the bastion host manually
-- You have to configure the DNS pointing to your application manually
+- You have to configure the DNS entries in the Route53 hosted zone manually

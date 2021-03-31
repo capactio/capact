@@ -95,3 +95,4 @@ nosetests.xml
 /hack/ci/terraform/.terraform.lock.hcl
 /hack/eks/terraform/.terraform
 /hack/eks/terraform/.terraform.lock.hcl
+/hack/eks/config

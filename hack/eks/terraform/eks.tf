@@ -27,9 +27,9 @@ module "eks" {
   vpc_id  = module.vpc.vpc_id
   subnets = concat(module.vpc.private_subnets, module.vpc.public_subnets)
 
-  cluster_enabled_log_types       = var.eks_cluster_enabled_log_types
-  cluster_endpoint_private_access = var.eks_cluster_endpoint_private_access
-  cluster_endpoint_public_access  = var.eks_cluster_endpoint_public_access
+  cluster_enabled_log_types            = var.eks_cluster_enabled_log_types
+  cluster_endpoint_private_access      = var.eks_cluster_endpoint_private_access
+  cluster_endpoint_public_access       = var.eks_cluster_endpoint_public_access
   cluster_endpoint_public_access_cidrs = local.eks_public_access_cidrs
 
   manage_aws_auth = true
@@ -39,13 +39,15 @@ module "eks" {
   ]
   worker_groups = [
     {
-      instance_type    = var.worker_group_instance_type
-      asg_max_size     = var.worker_group_max_size
+      instance_type        = var.worker_group_instance_type
+      asg_max_size         = var.worker_group_max_size
       asg_desired_capacity = var.worker_group_max_size
-      root_volume_type = "gp2"
-      subnets          = local.worker_subnets
+      root_volume_type     = "gp2"
+      subnets              = local.worker_subnets
     }
   ]
+
+  tags = local.tags
 }
 
 resource "aws_security_group_rule" "bastion_eks_cluster_endpoint" {
@@ -56,4 +58,52 @@ resource "aws_security_group_rule" "bastion_eks_cluster_endpoint" {
   to_port                  = 443
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.bastion.id
+}
+
+resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
+  url = module.eks.cluster_oidc_issuer_url
+
+  client_id_list = [
+    "sts.amazonaws.com"
+  ]
+
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"] // Thumbprint of Root CA for EKS OIDC, Valid until 2037
+
+  tags = local.tags
+}
+
+module "cert_manager_irsa" {
+  source                        = "terraform-aws-modules/iam/aws//modules/iam-assumable-role-with-oidc"
+  version                       = "3.6.0"
+  create_role                   = true
+  role_name                     = "${var.namespace}-cert_manager-irsa"
+  provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
+  role_policy_arns              = [aws_iam_policy.cert_manager_policy.arn]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:cert-manager:cert-manager"]
+  tags                          = local.tags
+}
+
+resource "aws_iam_policy" "cert_manager_policy" {
+  name        = "${var.namespace}-cert-manager-policy"
+  path        = "/"
+  description = "Policy, which allows CertManager to create Route53 records"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : "route53:GetChange",
+        "Resource" : "arn:aws:route53:::change/*"
+      },
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "route53:ChangeResourceRecordSets",
+          "route53:ListResourceRecordSets"
+        ],
+        "Resource" : "arn:aws:route53:::hostedzone/${local.route53_zone_id}"
+      },
+    ]
+  })
 }

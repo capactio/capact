@@ -10,6 +10,6 @@ spec:
     server: https://acme-staging-v02.api.letsencrypt.org/directory
     solvers:
       - dns01:
-          route53: #TODO parameterize this based on terraform output
-            region: eu-west-1
-            hostedZoneID: Z0827236UIU0MQ3RH1IG
+          route53:
+            region: {{REGION}}
+            hostedZoneID: {{HOSTED_ZONE_ID}}

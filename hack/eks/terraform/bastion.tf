@@ -6,6 +6,8 @@ module "bastion_key_pair" {
   attributes          = ["ssh", "key"]
   ssh_public_key_path = false
   generate_ssh_key    = true
+
+  tags = local.tags
 }
 
 resource "aws_security_group" "bastion" {
@@ -27,6 +29,8 @@ resource "aws_security_group" "bastion" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = local.tags
 }
 
 module "ec2_bastion" {
@@ -44,4 +48,6 @@ module "ec2_bastion" {
   subnets                     = module.vpc.public_subnets
   security_groups             = [aws_security_group.bastion.id]
   associate_public_ip_address = true
+
+  tags = local.tags
 }

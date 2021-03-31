@@ -31,6 +31,8 @@ argo:
         policy: public
       - name: terraform # For storing input files for Terraform Runner
         policy: download
+    persistence:
+      size: 5Gi
     resources:
       requests:
         memory: 256Mi

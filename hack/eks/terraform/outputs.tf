@@ -20,11 +20,11 @@ output "cert_manager_irsa_role_arn" {
 }
 
 output "bastion_ssh_private_key" {
-  value = module.bastion_key_pair.private_key
+  value     = module.bastion_key_pair.private_key
   sensitive = true
 }
 
 output "eks_kubeconfig" {
-  value = module.eks.kubeconfig
+  value     = module.eks.kubeconfig
   sensitive = true
 }
