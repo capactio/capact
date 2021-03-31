@@ -30,8 +30,9 @@ module "eks" {
   cluster_enabled_log_types       = var.eks_cluster_enabled_log_types
   cluster_endpoint_private_access = var.eks_cluster_endpoint_private_access
   cluster_endpoint_public_access  = var.eks_cluster_endpoint_public_access
+  cluster_endpoint_public_access_cidrs = local.eks_public_access_cidrs
 
-  manage_aws_auth = true # TODO won't work with private cluster endpoint
+  manage_aws_auth = true
 
   workers_additional_policies = [
     aws_iam_policy.eks_worker_write_logs.id
@@ -42,7 +43,7 @@ module "eks" {
       asg_max_size     = var.worker_group_max_size
       asg_desired_capacity = var.worker_group_max_size
       root_volume_type = "gp2"
-      subnets          = module.vpc.private_subnets
+      subnets          = local.worker_subnets
     }
   ]
 }

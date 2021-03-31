@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/99designs/keyring"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 // TODO: current hack to do not play with `.config` directory. Needs to be fixed!
@@ -59,6 +60,14 @@ var keyringConfigDefaults = keyring.Config{
 	KWalletFolder:            "config-vault",
 	KeychainTrustApplication: true,
 	WinCredPrefix:            "config-vault",
+	FileDir:                  "~/.capectl/config-vault",
+	FilePasswordFunc: func(promptMessage string) (string, error) {
+		password := ""
+		err := survey.AskOne(&survey.Password{
+			Message: promptMessage,
+		}, &password)
+		return "", err
+	},
 }
 
 func config() keyring.Config {

@@ -8,6 +8,7 @@ import (
 	configstore "projectvoltron.dev/voltron/internal/ocftool/config"
 
 	"github.com/99designs/keyring"
+	"github.com/AlecAivazis/survey/v2"
 )
 
 type Credentials struct {
@@ -94,6 +95,14 @@ var cfg = keyring.Config{
 	KWalletFolder:            "hub-vault",
 	KeychainTrustApplication: true,
 	WinCredPrefix:            "hub-vault",
+	FileDir:                  "~/.capectl/hub_vault",
+	FilePasswordFunc: func(promptMessage string) (string, error) {
+		password := ""
+		err := survey.AskOne(&survey.Password{
+			Message: promptMessage,
+		}, &password)
+		return "", err
+	},
 }
 
 func config() keyring.Config {
