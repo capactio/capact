@@ -5,7 +5,7 @@ metadata:
   prefix: cap.interface.aws.rds
   name: postgresql
   displayName: "AWS RDS for PostgreSQL"
-  description: Group of Interfaces specific for AWS RDS Implementations
+  description: Group of Interfaces specific for AWS RDS for PostgreSQL
   documentationURL: https://aws.amazon.com/rds/postgresql/
   supportURL: https://aws.amazon.com/rds/postgresql/
   iconURL: https://d1.awsstatic.com/logos/aws-logo-lockups/poweredbyaws/PB_AWS_logo_RGB_stacked.547f032d90171cdea4dd90c258f47373c5573db5.png

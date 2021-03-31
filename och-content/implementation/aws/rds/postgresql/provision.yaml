@@ -3,8 +3,8 @@ revision: 0.2.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.aws.rds.postgresql
-  name: install-advanced
-  displayName: Install AWS RDS for PostgreSQL database using Terraform in advanced mode
+  name: provision
+  displayName: Provision AWS RDS for PostgreSQL database using Terraform in advanced mode
   description: Action which provisions AWS RDS for PostgreSQL database using Terraform for advanced users
   documentationURL: https://aws.amazon.com/rds/postgresql/
   supportURL: https://aws.amazon.com/rds/postgresql/
@@ -95,7 +95,7 @@ spec:
                             command: "apply"
                             module:
                               name: "rds"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.install-advanced/0.1.0/module.tgz"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.provision/0.1.0/module.tgz"
                             env:
                             - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
                             - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>

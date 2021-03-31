@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.aws.rds.postgresql
-  name: install-advanced-input
-  displayName: "Install advanced"
-  description: "Advanced installation for AWS RDS for PostgreSQL"
+  name: provision-input
+  displayName: "Provision"
+  description: "Provisioning of AWS RDS for PostgreSQL"
   documentationURL: https://aws.amazon.com/rds/postgresql/
   supportURL: https://aws.amazon.com/rds/postgresql/
   maintainers:
@@ -23,7 +23,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.aws.rds.postgresql.install-advanced-input",
+                  "name": "cap.type.aws.rds.postgresql.provision-input",
                   "revision": "0.1.0"
                 }
               },

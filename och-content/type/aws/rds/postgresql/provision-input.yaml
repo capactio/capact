@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Type
 metadata:
   prefix: cap.type.aws.rds.postgresql
-  name: install-advanced-input
-  displayName: AWS RDS for PostgreSQL advanced installation input
-  description: Defines input for AWS RDS for PostgreSQL advanced installation
+  name: provision-input
+  displayName: AWS RDS for PostgreSQL provisioning input
+  description: Defines input for AWS RDS for PostgreSQL provisioning
   documentationURL: https://projectvoltron.dev
   supportURL: https://projectvoltron.dev
   maintainers:
