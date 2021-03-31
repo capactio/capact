@@ -275,10 +275,12 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
 	```graphql
     query GetTypeInstance {
       typeInstance(id: "{JIRA_CONFIG_ID}") {
-        spec {
-          value
-          typeRef {
-            path
+        typeRef {
+          path
+        }
+        latestResourceVersion {
+          spec {
+            value
           }
         }
       }
@@ -339,29 +341,25 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
    	Before running the GraphQL mutation, you must replace the **value** parameter with the output from the previous step. 
    
-   ```graphql
+    ```graphql
     mutation CreateTypeInstance {
       createTypeInstance(
         in: {
-          typeRef: { path: "cap.type.gcp.auth.service-account", revision: "0.1.0" }
-          value: {} # Replace the empty object with SA in the JS format
+          typeRef: { path: "cap.type.gcp.auth.service-account", revision: "0.1.0" },
           attributes: [
             { path: "cap.attribute.cloud.provider.gcp", revision: "0.1.0" }
-          ]
+          ],
+          value: {} # Replace the empty object with SA in the JS format
         }
       ) {
-        metadata {
-          id
-        }
-        spec {
-          typeRef {
-            path
-            revision
-          }
+        id
+        typeRef {
+          path
+          revision
         }
       }
     }
-   ```
+    ```
 
 1. Export the TypeInstance UUID:
 

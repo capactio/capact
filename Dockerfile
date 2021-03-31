@@ -68,7 +68,7 @@ LABEL app=$COMPONENT
 
 CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
-FROM alpine:3.12.3  as terraform-runner
+FROM alpine:3.12.3 as terraform-runner
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
