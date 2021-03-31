@@ -30,7 +30,7 @@ variable "user_name" {
 variable "user_password" {
   type = string
   description = "Database user password"
-  //  can't be sensitive as we need it on output
+  sensitive = true
 }
 
 
@@ -60,7 +60,13 @@ resource "random_string" "name" {
 
 locals {
   name = random_string.name.id
-  tags = {}
+  tags = {
+    CapactManaged = true
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 ################################################################################
@@ -77,10 +83,7 @@ module "vpc" {
   enable_dns_hostnames = true
   enable_dns_support = true
 
-  azs = [
-    "${var.region}a",
-    "${var.region}b",
-    "${var.region}c"]
+  azs = data.aws_availability_zones.available.names
   public_subnets = [
     "10.99.0.0/24",
     "10.99.1.0/24",
@@ -137,7 +140,7 @@ module "db" {
 
   allocated_storage = 20
   max_allocated_storage = 100
-  storage_encrypted = false
+  storage_encrypted = true
 
   # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
@@ -165,6 +168,7 @@ module "db" {
   performance_insights_enabled = true
   performance_insights_retention_period = 7
   create_monitoring_role = true
+  monitoring_role_name = local.name
   monitoring_interval = 60
 
   parameters = [
@@ -193,6 +197,6 @@ output "username" {
 
 output "password" {
   description = "The database password"
-  value = var.user_password
-  sensitive = false
+  value = module.db.this_db_instance_password
+  sensitive = true
 }

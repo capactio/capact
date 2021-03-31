@@ -83,7 +83,7 @@ RUN ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
 WORKDIR /bin
 
-ENV TERRAFORM_VERSION 0.14.6
+ENV TERRAFORM_VERSION 0.14.9
 RUN \
     wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
     unzip terraform.zip && rm terraform.zip
