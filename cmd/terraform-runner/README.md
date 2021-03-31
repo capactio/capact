@@ -27,8 +27,8 @@ To get the GCP Service Account you can follow the documentation [here](https://c
 To start the runner type:
 ```bash
 GOOGLE_APPLICATION_CREDENTIALS={full-path-to-gcp-service-account-credentials-json} \
-  RUNNER_ARGS_PATH=cmd/terraform-runner/example-args.yml \
-  RUNNER_CONTEXT_PATH=cmd/terraform-runner/example-context.yml \
+  RUNNER_ARGS_PATH=cmd/terraform-runner/example-input/args.yml \
+  RUNNER_CONTEXT_PATH=cmd/terraform-runner/example-input/context.yml \
   RUNNER_LOGGER_DEV_MODE=true \
   RUNNER_WORKDIR=/tmp/workspace \
   go run cmd/terraform-runner/main.go

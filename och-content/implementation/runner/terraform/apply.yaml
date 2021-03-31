@@ -21,6 +21,14 @@ spec:
     - path: cap.interface.runner.terraform.apply
       revision: 0.1.0
 
+  additionalInput:
+    typeInstances:
+      additional:
+        typeRef:
+          path: cap.core.type.generic.value
+          revision: 0.1.0
+        verbs: ["get"]
+
   requires:
     cap.core.type.platform:
       oneOf:
@@ -68,7 +76,7 @@ spec:
                   globalName: tfstate
                   path: "/terraform-state.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/terraform-runner:PR-196
+              image: gcr.io/projectvoltron/pr/terraform-runner:PR-221
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"

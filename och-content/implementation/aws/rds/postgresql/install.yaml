@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.2.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.gcp.cloudsql.postgresql
+  prefix: cap.implementation.aws.rds.postgresql
   name: install
-  displayName: Install CloudSQL PostgreSQL database using Terraform
-  description: Action which provisions CloudSQL for PostgreSQL database using Terraform
-  documentationURL: https://cloud.google.com/cloudsql
-  supportURL: https://cloud.google.com/cloudsql
+  displayName: Install AWS RDS for PostgreSQL database using Terraform
+  description: Action which provisions AWS RDS for PostgreSQL database using Terraform
+  documentationURL: https://aws.amazon.com/rds/postgresql/
+  supportURL: https://aws.amazon.com/rds/postgresql/
   license:
     name: "Apache 2.0"
   maintainers:
@@ -15,7 +15,7 @@ metadata:
       name: Voltron Dev Team
       url: https://projectvoltron.dev
   attributes:
-    cap.attribute.cloud.provider.gcp:
+    cap.attribute.cloud.provider.aws:
       revision: 0.1.0
     cap.attribute.infra.iac.terraform:
       revision: 0.1.0
@@ -33,10 +33,10 @@ spec:
       revision: 0.1.0
 
   requires:
-    cap.type.gcp.auth:
+    cap.type.aws.auth:
       allOf:
-        - name: service-account
-          alias: gcp-sa
+        - name: credentials
+          alias: aws-credentials
           revision: 0.1.0
     cap.core.type.platform:
       oneOf:
@@ -91,13 +91,15 @@ spec:
                             variables: |+
                               user_name = "<@ input.superuser.username @>"
                               user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+                              region = "eu-west-1"
                             command: "apply"
                             module:
-                              name: "cloudsql"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.2.0/module.tgz"
+                              name: "rds"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.install/0.1.0/module.tgz"
                             env:
-                            - GOOGLE_PROJECT=<@ gcp.project_id @>
-                            - GOOGLE_APPLICATION_CREDENTIALS=/additional
+                            - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
+                            - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
+                            - AWS_DEFAULT_REGION=eu-west-1
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
@@ -107,25 +109,18 @@ spec:
                                   username: "{{ .username }}"
                                   password: "{{ .password }}"
 
-              - - name: fill-gcp-params-in-module-args
+              - - name: fill-aws-params-in-module-args
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         from: "{{steps.create-module-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
                       - name: configuration
                         raw:
                           data: |
-                            prefix: gcp
-
-              - - name: convert-gcp-yaml-to-json
-                  template: convert-yaml-to-json
-                  arguments:
-                    artifacts:
-                      - name: in
-                        from: "{{workflow.outputs.artifacts.gcp-sa}}"
+                            prefix: aws
 
               - - name: terraform-apply
                   voltron-action: terraform.apply
@@ -137,25 +132,10 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-gcp-params-in-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
-                      - name: additional
-                        from: "{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}"
 
-          - name: convert-yaml-to-json
-            inputs:
-              artifacts:
-                - name: in
-                  path: /file
-            container:
-              image: gcr.io/projectvoltron/yq:4 # Original image: mikefarah/yq:4
-              command: ["sh", "-c"]
-              args: ["sleep 1 && yq eval -j -i /file"]
-            outputs:
-              artifacts:
-                - name: out
-                  path: /file
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

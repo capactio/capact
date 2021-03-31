@@ -31,7 +31,7 @@ variable "user_name" {
 variable "user_password" {
   type = string
   description = "Database user password"
-  //  can't be sensitive as we need it on output
+  sensitive = true
 }
 
 terraform {
@@ -81,5 +81,5 @@ output "username" {
 
 output "password" {
   value = google_sql_user.users.password
-  sensitive = false
+  sensitive = true
 }
