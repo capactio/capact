@@ -37,7 +37,7 @@ spec:
           revision: 0.1.0
 
   outputTypeInstanceRelations: {}
-    # Do not upload helm-release, as it will be updated in place
+    # Do not upload helm-release, as it will be updated in place.
     # Do not upload `additional` TypeInstance by default.
     # Upper-level workflows may define it in the outputTypeInstanceRelations.
 

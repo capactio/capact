@@ -163,8 +163,6 @@ spec:
                   voltron-updateTypeInstances:
                     - name: postgresql
                       from: additional
-                    - name: tfstate
-                      from: tfstate
                   arguments:
                     artifacts:
                       - name: input-parameters
