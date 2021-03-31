@@ -57,7 +57,7 @@ spec:
                 - name: env
                   path: /env.yaml
             container:
-              image: lukaszo/velero-runner:latest
+              image: gcr.io/projectvoltron/velero-runner:latest
               env:
                 - name: VELERO_CONFIGPATH
                   value: /env.yaml

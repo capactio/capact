@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
 	"gopkg.in/yaml.v2"
 )
@@ -21,15 +20,15 @@ type Config struct {
 	Name              string `yaml:"name"`
 	Selector          string `yaml:"selector"`
 	IncludeNamespaces string `yaml:"includeNamespaces"`
-	IncludeResources  string `yaml:"inlcudeResources"`
+	IncludeResources  string `yaml:"includeResources"`
 }
 
 func backup(cfg Config) error {
-	if cfg.Selector == "" {
-		return errors.New("Selector is require for backup action")
-	}
-	args := []string{"backup", "create", cfg.Name, "--default-volumes-to-restic", "-l", cfg.Selector, "-w"}
+	args := []string{"backup", "create", cfg.Name, "--default-volumes-to-restic", "-w"}
 
+	if cfg.Selector != "" {
+		args = append(args, fmt.Sprintf("--selector=%s", cfg.Selector))
+	}
 	if cfg.IncludeNamespaces != "" {
 		args = append(args, fmt.Sprintf("--include-namespaces=%s", cfg.IncludeNamespaces))
 	}
