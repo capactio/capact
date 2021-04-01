@@ -350,7 +350,7 @@ To speedup the process we will use `velero` CLI now.
 1. Delete namespaces used by Voltron
 
    ```shell
-   kubectl delete ns neo4j,voltron-system,argo
+   kubectl delete ns neo4j voltron-system argo
    ```
 
 1. Restore Voltron
