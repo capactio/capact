@@ -248,7 +248,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
    mutation RestoreMongoDBBackup {
     createAction(
         in: {
-            name: "backup-mongo",
+            name: "restore-mongo",
             actionRef: {
                 path: "cap.interface.data.backup",
                 revision: "0.1.0",
@@ -268,7 +268,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
    }
  
    mutation Run {
-       runAction(name: "backup-mongo") {
+       runAction(name: "restore-mongo") {
            name
        }
    }
