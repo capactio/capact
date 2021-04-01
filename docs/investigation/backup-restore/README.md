@@ -314,7 +314,7 @@ Velero also allows to set [scheduled job](https://velero.io/docs/v1.5/api-types/
 Velero requires super user powers. Depends on what will be included in a backup it may need to access all namespaces.
 Backup/Restore CRDs are stored in velero namespace. Voltron action needs access to it.
 
-## Voltron restore options:
+## Voltron restore options
 
 Voltron is using following components:
 
