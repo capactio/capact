@@ -332,8 +332,7 @@ Voltron is using following components:
   Velero can restore CRDs but cannot restore Status and OwnerReference. Creating
   custom Restore Plugin is required.
 
-Velero is not a perfect tool to support scenario "clean install and restore". It can not
-overwrite existing objects, so we would need to delete some objects first.
+Velero is not a perfect tool to support scenario "clean install and restore". It cannot overwrite existing objects, so we would need to delete some objects first.
 Such approach will require deleting PVCs and databases(Neo4j and MinIO) during `Restore action`.
 
 Much safer options would be to restore Voltron without installing it first.
