@@ -294,7 +294,7 @@ Velero can be used in 2 ways:
 
 Velero also allows to set [scheduled job](https://velero.io/docs/v1.5/api-types/schedule/#docs) for backups.
 
-## Limitations:
+## Limitations
 
 * Cannot restore only data volumes. It always restores a pod which attached a volume https://github.com/vmware-tanzu/velero/issues/504
 * Cannot do partial restores. It's all or nothing approach https://github.com/vmware-tanzu/velero/issues/904
