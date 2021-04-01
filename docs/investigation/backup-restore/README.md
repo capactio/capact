@@ -415,6 +415,4 @@ but it looks like it still needs some fixes as it doesn't work.
 Most of the storage providers like OpenEBS and all CloudProvides have option to create a snapshot of a volume.
 Most of them support new CSI volume-snapshot API.
 
-Velero also supports(beta feature) volume-snapshots but goes beyond that. For storage providers  which
-don't support snapshots and for other volume types it uses plugins and [restic](https://restic.net/). Besides that
-it allows to backup other K8s objects which is a unique feature in free tools.
+Velero also supports volume-snapshots (as a beta feature) but it goes beyond that. For storage providers which don't support snapshots and for other volume types it uses plugins and [restic](https://restic.net/). Besides that it allows to backup other K8s objects which is a unique feature in free tools.
