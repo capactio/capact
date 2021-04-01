@@ -3,8 +3,8 @@
 This proof of concept shows [Velero](https://velero.io) as a tool used for running backup and restore for workloads deployed by Voltron.
 
 ## Prerequisites
-- Deployed Voltron dev cluster with disabled populator
-- Installed locally [Velero CLI](https://velero.io/docs/v1.5/basic-install/)
+- Voltron development cluster with disabled DB Populator
+- [Velero CLI](https://velero.io/docs/v1.5/basic-install/) installed locally
 
 ## Velero installation
 
