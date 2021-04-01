@@ -1,7 +1,6 @@
 # Backup and Restore actions for Voltron
 
-This proof of concept shows [Velero](https://velero.io) as a tool used for running backup and restore
-for workloads deployed by Voltron.
+This proof of concept shows [Velero](https://velero.io) as a tool used for running backup and restore for workloads deployed by Voltron.
 
 ## Prerequisites
 - Deployed Voltron dev cluster with disabled populator
