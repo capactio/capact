@@ -87,7 +87,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
    To be able to backup and restore Voltron components it needs to use a new persistent storage.
 
    ```shell
-   kubectl delete ns argo,neo4j
+   kubectl delete ns argo neo4j
 
    ENABLE_POPULATOR=false make dev-cluster-update
    ```
