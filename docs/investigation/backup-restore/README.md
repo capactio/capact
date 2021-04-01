@@ -66,10 +66,10 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
 1. Configure it to be a default storage:
 
    ```shell
-   cat <<EOF >sc.yaml
+   cat << EOF >/tmp/sc.yaml
    apiVersion: storage.k8s.io/v1
    kind: StorageClass
-   https://github.com/openebs/lvm-localpv/metadata:
+   metadata:
      name: openebs-lvmpv
    parameters:
      storage: "lvm"
@@ -77,7 +77,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
    provisioner: local.csi.openebs.io
    EOF
 
-   kubectl apply -f sc.yaml
+   kubectl apply -f /tmp/sc.yaml
 
    kubectl patch storageclass standard -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"false"}}}'
    kubectl patch storageclass openebs-lvmpv -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
