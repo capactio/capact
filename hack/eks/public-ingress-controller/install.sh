@@ -14,10 +14,10 @@ helm upgrade public-ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
     --values "${CURRENT_DIR}/values.yml" \
     --wait
 
-echo "\nWaiting for public Ingress Controller to be ready...\n"
+echo -e "\n- Waiting for public Ingress Controller to be ready...\n"
 kubectl wait --namespace public-ingress-nginx \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s
 
-echo "\nPublic ingress controller installed!\n"
+echo -e "\n- Public ingress controller installed!\n"

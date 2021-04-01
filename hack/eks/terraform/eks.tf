@@ -33,6 +33,18 @@ module "eks" {
   cluster_endpoint_public_access_cidrs = local.eks_public_access_cidrs
 
   manage_aws_auth = true
+  map_roles = [{
+    rolearn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ec2_bastion.role}"
+    username = "bastion"
+    groups = ["system:masters"]
+  }]
+  enable_irsa = true
+
+  write_kubeconfig = false
+
+
+  kubeconfig_aws_authenticator_command = "aws"
+  kubeconfig_aws_authenticator_command_args = ["eks", "get-token", "--cluster-name", local.eks_cluster_name]
 
   workers_additional_policies = [
     aws_iam_policy.eks_worker_write_logs.id
@@ -58,18 +70,6 @@ resource "aws_security_group_rule" "bastion_eks_cluster_endpoint" {
   to_port                  = 443
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.bastion.id
-}
-
-resource "aws_iam_openid_connect_provider" "eks_oidc_provider" {
-  url = module.eks.cluster_oidc_issuer_url
-
-  client_id_list = [
-    "sts.amazonaws.com"
-  ]
-
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da2b0ab7280"] // Thumbprint of Root CA for EKS OIDC, Valid until 2037
-
-  tags = local.tags
 }
 
 module "cert_manager_irsa" {

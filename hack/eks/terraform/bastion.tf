@@ -4,7 +4,7 @@ module "bastion_key_pair" {
 
   name                = "${var.namespace}-bastion-key"
   attributes          = ["ssh", "key"]
-  ssh_public_key_path = false
+  ssh_public_key_path = "/tmp/"
   generate_ssh_key    = true
 
   tags = local.tags
