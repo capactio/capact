@@ -35,9 +35,10 @@ type Public interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
 	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
+	ListInterfacesWithLatest(ctx context.Context, filter ochpublicgraphql.InterfaceFilter) ([]*ochpublicgraphql.Interface, error)
 }
 
-func NewClient(endpoint string, httpClient *http.Client) *Client {
+func New(endpoint string, httpClient *http.Client) *Client {
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)
 

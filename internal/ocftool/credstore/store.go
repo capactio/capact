@@ -87,18 +87,25 @@ func ListHubServer() ([]string, error) {
 
 const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
 
-var cfg = keyring.Config{
+var keyringConfigDefaults = keyring.Config{
 	ServiceName:              "hub-vault",
 	LibSecretCollectionName:  "hubvault",
 	KWalletAppID:             "hub-vault",
 	KWalletFolder:            "hub-vault",
 	KeychainTrustApplication: true,
 	WinCredPrefix:            "hub-vault",
+
+	FileDir:                  "~/.capact/keys/",
+	FilePasswordFunc:         fileKeyringPassphrasePrompt,
 }
 
 func config() keyring.Config {
 	if backend := os.Getenv(overrideBackend); backend != "" {
-		cfg.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
+		keyringConfigDefaults.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
-	return cfg
+	return keyringConfigDefaults
+}
+
+func fileKeyringPassphrasePrompt(_ string) (string, error) {
+	return "no-pass", nil
 }

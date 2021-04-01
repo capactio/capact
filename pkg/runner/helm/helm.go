@@ -34,12 +34,7 @@ func newHelmRunner(k8sCfg *rest.Config, cfg Config) *helmRunner {
 }
 
 func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.WaitForCompletionOutput, error) {
-	namespace := in.RunnerCtx.Platform.Namespace
-
-	actionConfig, err := r.initActionConfig(namespace)
-	if err != nil {
-		return nil, err
-	}
+	actionCfgProducer := r.getActionConfigProducer()
 
 	cmdInput, err := r.readCommandData(in)
 	if err != nil {
@@ -52,9 +47,9 @@ func (r *helmRunner) Do(ctx context.Context, in runner.StartInput) (*runner.Wait
 	var helmCmd helmCommand
 	switch r.cfg.Command {
 	case InstallCommandType:
-		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionConfig, outputter)
+		helmCmd = newInstaller(r.log, r.cfg.RepositoryCachePath, actionCfgProducer, outputter)
 	case UpgradeCommandType:
-		helmCmd = newUpgrader(r.log, r.cfg.RepositoryCachePath, r.cfg.HelmReleasePath, actionConfig, outputter)
+		helmCmd = newUpgrader(r.log, r.cfg.RepositoryCachePath, r.cfg.HelmReleasePath, actionCfgProducer, outputter)
 	default:
 		return nil, errors.New("Unsupported command")
 	}
@@ -83,27 +78,31 @@ func (r *helmRunner) InjectLogger(logger *zap.Logger) {
 	r.log = logger
 }
 
-func (r *helmRunner) initActionConfig(namespace string) (*action.Configuration, error) {
-	actionConfig := new(action.Configuration)
-	helmCfg := &genericclioptions.ConfigFlags{
-		APIServer:   &r.k8sCfg.Host,
-		Insecure:    &r.k8sCfg.Insecure,
-		CAFile:      &r.k8sCfg.CAFile,
-		BearerToken: &r.k8sCfg.BearerToken,
-		Namespace:   ptr.String(namespace),
+type actionConfigProducer func (forNamespace string) (*action.Configuration, error)
+
+func (r *helmRunner) getActionConfigProducer() actionConfigProducer {
+	return func (forNamespace string) (*action.Configuration, error) {
+		actionConfig := new(action.Configuration)
+		helmCfg := &genericclioptions.ConfigFlags{
+			APIServer:   &r.k8sCfg.Host,
+			Insecure:    &r.k8sCfg.Insecure,
+			CAFile:      &r.k8sCfg.CAFile,
+			BearerToken: &r.k8sCfg.BearerToken,
+			Namespace:   ptr.String(forNamespace),
+		}
+
+		debugLog := func(format string, v ...interface{}) {
+			r.log.Debug(fmt.Sprintf(format, v...), zap.String("source", "Helm"))
+		}
+
+		err := actionConfig.Init(helmCfg, forNamespace, r.cfg.HelmDriver, debugLog)
+
+		if err != nil {
+			return nil, errors.Wrap(err, "while initializing Helm configuration")
+		}
+
+		return actionConfig, nil
 	}
-
-	debugLog := func(format string, v ...interface{}) {
-		r.log.Debug(fmt.Sprintf(format, v...), zap.String("source", "Helm"))
-	}
-
-	err := actionConfig.Init(helmCfg, namespace, r.cfg.HelmDriver, debugLog)
-
-	if err != nil {
-		return nil, errors.Wrap(err, "while initializing Helm configuration")
-	}
-
-	return actionConfig, nil
 }
 
 func (r *helmRunner) readCommandData(in runner.StartInput) (Input, error) {

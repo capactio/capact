@@ -59,6 +59,9 @@ var keyringConfigDefaults = keyring.Config{
 	KWalletFolder:            "config-vault",
 	KeychainTrustApplication: true,
 	WinCredPrefix:            "config-vault",
+
+	FileDir:                  "~/.capact/keys/",
+	FilePasswordFunc:         fileKeyringPassphrasePrompt,
 }
 
 func config() keyring.Config {
@@ -66,4 +69,8 @@ func config() keyring.Config {
 		keyringConfigDefaults.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
 	return keyringConfigDefaults
+}
+
+func fileKeyringPassphrasePrompt(_ string) (string, error) {
+	return "no-pass", nil
 }

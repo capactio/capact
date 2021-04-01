@@ -20,7 +20,7 @@ metadata:
     "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 rules:
   - apiGroups: [""]
-    resources: ["configmaps"]
+    resources: ["secrets"]
     verbs: [ "get", "list"]
 ---
 kind: ClusterRoleBinding
@@ -30,7 +30,7 @@ metadata:
   labels:
   {{- include "voltron.labels" . | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-upgrade
+    "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 subjects:
   - kind: ServiceAccount

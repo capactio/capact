@@ -102,6 +102,12 @@ func main() {
 
 		ti = append(ti, &gqllocalapi.CreateTypeInstanceInput{
 			Alias: ptr.String(r.Name),
+			Attributes: []*gqllocalapi.AttributeReferenceInput{
+				{
+					Path:     "cap.core.attribute.system.capact-managed",
+					Revision: "0.1.0",
+				},
+			},
 			TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 				Path:     "cap.type.helm.chart.release",
 				Revision: "0.1.0",
@@ -129,6 +135,12 @@ func main() {
 			exitOnError(err, "while unmarshaling bytes")
 			ti = append(ti, &gqllocalapi.CreateTypeInstanceInput{
 				Alias: ptr.String(capactConfigTIName),
+				Attributes: []*gqllocalapi.AttributeReferenceInput{
+					{
+						Path:     "cap.core.attribute.system.capact-managed",
+						Revision: "0.1.0",
+					},
+				},
 				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 					Path:     "cap.type.capactio.capact.config",
 					Revision: "0.1.0",
