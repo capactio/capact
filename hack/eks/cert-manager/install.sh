@@ -27,3 +27,5 @@ sleep 60 # due to webhook not ready, see: https://github.com/jetstack/cert-manag
   sed "s/{{REGION}}/${CAPACT_REGION}/g" \
   | sed "s/{{HOSTED_ZONE_ID}}/${CAPACT_HOSTED_ZONE_ID}/g" \
   | kubectl apply -f -
+
+echo -e "\n- Cert Manager installed!\n"

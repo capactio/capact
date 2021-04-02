@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script installs new and upgrades existing Voltron components on a Amazon EKS cluster
+# This script installs new and upgrades existing Capact components on a Amazon EKS cluster
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.

@@ -8,5 +8,6 @@ locals {
 
   tags = {
     Application = "Capact"
+    "Domain-Name" = var.domain_name
   }
 }

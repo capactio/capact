@@ -42,7 +42,6 @@ module "eks" {
 
   write_kubeconfig = false
 
-
   kubeconfig_aws_authenticator_command = "aws"
   kubeconfig_aws_authenticator_command_args = ["eks", "get-token", "--cluster-name", local.eks_cluster_name]
 
@@ -54,7 +53,7 @@ module "eks" {
       instance_type        = var.worker_group_instance_type
       asg_max_size         = var.worker_group_max_size
       asg_desired_capacity = var.worker_group_max_size
-      root_volume_type     = "gp2"
+      root_volume_type     = "gp3"
       subnets              = local.worker_subnets
     }
   ]

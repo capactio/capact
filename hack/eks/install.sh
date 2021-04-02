@@ -23,8 +23,7 @@ capact::aws::terraform::apply() {
     terraform apply -auto-approve -no-color \
       -var "namespace=${CAPACT_NAME}" \
       -var "region=${CAPACT_REGION}" \
-      -var "domain_name=${CAPACT_DOMAIN_NAME}" \
-      -var "eks_public_access_cidrs=[\"0.0.0.0/0\"]"
+      -var "domain_name=${CAPACT_DOMAIN_NAME}"
 
     readonly tf_output=$(terraform output -json)
 
@@ -156,9 +155,11 @@ export KUBECONFIG="${CONFIG_DIR}/eks_kubeconfig"
 
 CAPACT_HOSTED_ZONE_ID=$(cat "${CONFIG_DIR}/route53_zone_id")
 CERT_MANAGER_ROLE_ARN=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
+CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}"
 
 export CAPACT_HOSTED_ZONE_ID
 export CERT_MANAGER_ROLE_ARN
+export CUSTOM_VOLTRON_SET_FLAGS
 
 capact::aws::install::fluent_bit
 capact::aws::install::capact

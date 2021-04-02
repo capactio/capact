@@ -1,4 +1,19 @@
+# Voltron overrides, which are used on local machine and GKE cluster when INCREASE_RESOURCE_LIMITS=true.
+
 gateway:
-  ingress:
-    annotations:
-      class: "voltron"
+  resources:
+    limits:
+      cpu: 300m
+      memory: 128Mi
+    requests:
+      cpu: 100m
+      memory: 48Mi
+
+och-public:
+  resources:
+    limits:
+      cpu: 400m
+      memory: 512Mi
+    requests:
+      cpu: 200m
+      memory: 128Mi

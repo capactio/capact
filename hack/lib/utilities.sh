@@ -286,9 +286,6 @@ voltron::install_upgrade::charts() {
     if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
       readonly VOLTRON_OVERRIDES="${KIND_CONFIG_DIR}/overrides.voltron.yaml"
       echo -e "- Applying overrides from ${VOLTRON_OVERRIDES}\n"
-    elif [[ "${CLUSTER_TYPE}" == "EKS" ]]; then
-      readonly VOLTRON_OVERRIDES="${EKS_CONFIG_DIR}/overrides.voltron.yaml"
-      echo -e "- Applying overrides from ${VOLTRON_OVERRIDES}\n"
     else
       readonly VOLTRON_OVERRIDES=""
     fi
