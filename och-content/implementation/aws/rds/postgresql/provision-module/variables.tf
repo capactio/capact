@@ -18,7 +18,6 @@ variable "major_engine_version" {
 
 variable "region" {
   type = string
-  default = "eu-west-1"
   description = "AWS region"
 }
 
@@ -41,8 +40,8 @@ variable "user_password" {
 
 variable "ingress_rule_cidr_blocks" {
   description = "CIDR blocks for ingress rule. For public access provide '0.0.0.0/0'."
-  type = list(string)
-  default = []
+  type = string
+  default = ""
 }
 
 variable "res_name" {
@@ -72,7 +71,7 @@ variable "max_allocated_storage" {
 variable "storage_encrypted" {
   description = "Specifies whether the DB instance is encrypted"
   type = bool
-  default = false
+  default = true
 }
 
 variable "multi_az" {

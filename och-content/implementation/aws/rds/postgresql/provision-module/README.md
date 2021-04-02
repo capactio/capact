@@ -1,6 +1,6 @@
 # Source
 
-This directory contains source Terraform module which is used in the `cap.implementation.terraform.aws.rds.postgresql.provision:0.1.0` Implementation manifest.
+This directory contains source Terraform module which is used in the `cap.implementation.terraform.aws.rds.postgresql.provision:0.1.0`  Implementation manifest.
 
 ### Update Terraform content
 

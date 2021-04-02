@@ -66,6 +66,7 @@ spec:
       workflow:
         entrypoint: postgres-install
         templates:
+          # TODO: Use aws.rds.postgresql.provision
           - name: postgres-install
             inputs:
               artifacts:
@@ -92,14 +93,16 @@ spec:
                               user_name = "<@ input.superuser.username @>"
                               user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
                               region = "eu-west-1"
+                              ingress_rule_cidr_blocks = "0.0.0.0/0"
+                              publicly_accessible = true
+                              performance_insights_enabled = true
                             command: "apply"
                             module:
                               name: "rds"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.install/0.1.0/module.tgz"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.-provision/0.1.0/module.tgz"
                             env:
                             - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
                             - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
-                            - AWS_DEFAULT_REGION=eu-west-1
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
