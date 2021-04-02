@@ -1,6 +1,6 @@
 ingress-nginx:
   controller:
-    ingressClass: voltron
+    ingressClass: capact
     resources:
       requests:
         cpu: 50m

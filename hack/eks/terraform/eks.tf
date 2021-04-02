@@ -53,7 +53,7 @@ module "eks" {
       instance_type        = var.worker_group_instance_type
       asg_max_size         = var.worker_group_max_size
       asg_desired_capacity = var.worker_group_max_size
-      root_volume_type     = "gp3"
+      root_volume_type     = "gp2"
       subnets              = local.worker_subnets
     }
   ]

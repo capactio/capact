@@ -134,7 +134,7 @@ capact::aws::register_dnses() {
 
 capact::aws::configure_bastion() {
   # upload kubeconfig
-  ssh -i config/bastion_ssh_private_key ec2-user@"$(cat config/bastion_public_ip)" 'mkdir -p $HOME/.kube'
+  ssh -i config/bastion_ssh_private_key -oStrictHostKeyChecking=accept-new ec2-user@"$(cat config/bastion_public_ip)" 'mkdir -p $HOME/.kube'
   scp -i config/bastion_ssh_private_key config/eks_kubeconfig ec2-user@"$(cat config/bastion_public_ip)":.kube/config
 }
 
@@ -155,7 +155,8 @@ export KUBECONFIG="${CONFIG_DIR}/eks_kubeconfig"
 
 CAPACT_HOSTED_ZONE_ID=$(cat "${CONFIG_DIR}/route53_zone_id")
 CERT_MANAGER_ROLE_ARN=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
-CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}"
+CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}
+ --set gateway.ingress.annotations.class=capact"
 
 export CAPACT_HOSTED_ZONE_ID
 export CERT_MANAGER_ROLE_ARN
