@@ -412,6 +412,8 @@ but it looks like it still needs some fixes as it doesn't work.
 
 ## Summary
 
+Velero was mostly tested locally using MinIO as a backup storage and lvmlocal for persistent storage. To confirm that it works in the cloud it was also tested on the EKS. S3 was used as a backup storage and EBS for persistent volumes. Everything worked as expected.
+
 Most of the storage providers like OpenEBS and all CloudProvides have option to create a snapshot of a volume.
 Most of them support new CSI volume-snapshot API.
 
