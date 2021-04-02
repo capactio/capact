@@ -27,17 +27,6 @@ variable "tier" {
   description = "AWS RDS instance tier"
 }
 
-variable "user_name" {
-  type = string
-  description = "Database user name"
-}
-
-variable "user_password" {
-  type = string
-  description = "Database user password"
-  sensitive = true
-}
-
 variable "ingress_rule_cidr_blocks" {
   description = "CIDR blocks for ingress rule. For public access provide '0.0.0.0/0'."
   type = string
@@ -126,4 +115,16 @@ variable "skip_final_snapshot" {
   description = "Determines whether a final DB snapshot is created before the DB instance is deleted. If true is specified, no DBSnapshot is created. If false is specified, a DB snapshot is created before the DB instance is deleted, using the value from final_snapshot_identifier"
   type = bool
   default = false
+}
+
+
+variable "user_name" {
+  type = string
+  description = "Database user name"
+}
+
+variable "user_password" {
+  type = string
+  description = "Database user password"
+  sensitive = true
 }
