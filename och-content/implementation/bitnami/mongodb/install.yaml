@@ -89,6 +89,16 @@ spec:
                               replicaCount: <@ replicas | default('1') @>
                               arbiter:
                                 enabled: false
+                              affinity:
+                                nodeAffinity:
+                                  preferredDuringSchedulingIgnoredDuringExecution:
+                                  - weight: 1
+                                    preference:
+                                      matchExpressions:
+                                      - key: node.voltron.dev/type
+                                        operator: In
+                                        values:
+                                        - storage
                             output:
                               goTemplate:
                                 host: '{{ include "mongodb.fullname" . }}-headless.{{ .Release.Namespace }}'
