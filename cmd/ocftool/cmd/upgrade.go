@@ -19,7 +19,7 @@ func NewUpgrade() *cobra.Command {
 		Short: "Upgrades Capact",
 		Long:  "Use this command to upgrade the Capact version on a cluster.",
 		Example: heredoc.WithCLIName(`
-			# Upgrade Capact components to newest version
+			# Upgrade Capact components to newest available version
 			<cli> upgrade
 
 			# Upgrade Capact components to 0.1.0 version
@@ -35,7 +35,7 @@ func NewUpgrade() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringVar(&opts.Version, "version", "0.1.0", "Capact version")
+	flags.StringVar(&opts.Version, "version", upgrade.LatestVersionTag, "Capact version")
 	flags.BoolVar(&opts.IncreaseResourceLimits, "increase-resource-limits", true, "Enables higher resource requests and limits for components.")
 	flags.DurationVar(&opts.Timeout, "timeout", 5*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	flags.BoolVarP(&opts.Wait, "wait", "w", false, `Waits for the upgrade process until it finish or the defined "--timeout" occurs.`)

@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/pkg/errors"
+	"helm.sh/helm/v3/pkg/repo"
 	"io"
+	"io/ioutil"
+	"net/http"
+	"sigs.k8s.io/yaml"
 	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
@@ -21,6 +25,8 @@ import (
 )
 
 const (
+	LatestVersionTag = "@latest"
+
 	capactSystemNS = "voltron-system"
 	capactOldName  = "voltron"
 
@@ -30,6 +36,8 @@ const (
 
 	randomSuffixLength = 5
 	pollInterval       = time.Second
+
+	capactioHelmRepoIndexURL = "https://capactio-awesome-charts.storage.googleapis.com/index.yaml"
 )
 
 var actionNotFinishedErr = errors.New("Action still not finished")
@@ -82,7 +90,15 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		return err
 	}
 
-	status.Step("Creating upgrade Action 💾")
+	if opts.Version == LatestVersionTag {
+		ver, err := getLatestVersion()
+		if err != nil {
+			return err
+		}
+		opts.Version = ver
+	}
+
+	status.Step("Creating upgrade Action for %s 💾", opts.Version)
 	var (
 		inputParams = mapToInputParameters(opts)
 		ctxWithNs   = namespace.NewContext(ctx, capactSystemNS)
@@ -265,4 +281,28 @@ func validateTypeInstance(ti *gqllocalapi.TypeInstance) error {
 		return fmt.Errorf("unexpected TypeRef, expected %q, got %q", helmReleaseTypeRefPath, ti.TypeRef.Path)
 	}
 	return nil
+}
+
+// loadIndex loads an index file and does minimal validity checking.
+// Assumption that all charts are versioned in the same way.
+func getLatestVersion() (string, error) {
+	resp, err := http.Get(capactioHelmRepoIndexURL)
+	if err != nil {
+		return "", errors.Wrap(err, "while getting capactio Helm Chart repository index.yaml")
+	}
+	defer resp.Body.Close()
+
+	// TODO(mszostok): read with fixed size, so we will not blow up app if request is malformed
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	i := &repo.IndexFile{}
+	if err := yaml.UnmarshalStrict(data, i); err != nil {
+		return "", err
+	}
+	i.SortEntries()
+
+	return i.Entries[capactOldName][0].Version, nil
 }

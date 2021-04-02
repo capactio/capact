@@ -21,9 +21,40 @@ spec:
           value: |-
             {
               "$schema": "http://json-schema.org/draft-07/schema",
+              "examples": [
+                {
+                  "version": "0.1.0",
+                  "increaseResourceLimit": true,
+                  "override": {
+                      "docker": {
+                        "repository": "docker.io/capact",
+                        "tag": "latest"
+                      }
+                  }
+                }
+              ],
               "properties": {
                 "version": {
                   "type": "string"
+                },
+                "increaseResourceLimits": {
+                  "type": "boolean"
+                },
+                "override": {
+                  "type": "object",
+                  "properties": {
+                    "docker": {
+                      "type": "object",
+                      "properties": {
+                        "repository": {
+                          "type": "string"
+                        },
+                        "tag": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
@@ -32,7 +63,7 @@ spec:
         typeRef:
           path: cap.type.capactio.capact.config
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
       capact-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
@@ -42,27 +73,27 @@ spec:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
       ingress-nginx-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
       kubed-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
       monitoring-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
       neo4j-helm-release:
         typeRef:
           path: cap.type.helm.chart.release
           revision: 0.1.0
-        verbs: ["get", "update"]
+        verbs: [ "get", "update" ]
   output:
     typeInstances:
       capact-config:
