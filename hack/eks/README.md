@@ -77,5 +77,5 @@ capectl hub interfaces search
 
 ## Limitations and bugs
 
-- Before running `terraform destroy` you have to remove all the entries from the Route53 Hosted Zone. In other case destroy will fail.
+- Before running `terraform destroy` you have to remove all the entries from the Route53 Hosted Zone and the Load Balancers created for the LoadBalancer service. In other case destroy will fail.
 - There is [an issue](https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1162), with the EKS module, where `terraform destroy` fails on the resource `module.eks.kubernetes_config_map.aws_auth[0]`. You don't have to worry about this, just confirm all other resources are destroyed and remove the resource manually from the state file using `terraform state rm 'module.eks.kubernetes_config_map.aws_auth[0]'`.
