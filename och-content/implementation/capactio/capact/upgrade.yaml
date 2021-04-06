@@ -123,13 +123,11 @@ spec:
                             reuseValues: true
                             chart:
                               version: "<@ version @>"
-                              repo: "https://capactio-awesome-charts.storage.googleapis.com/"
+                              repo: "https://capactio-awesome-charts.storage.googleapis.com/" # consider to make it configurable
                             values:
                               global:
                                 containerRegistry:
                                   path: <@ override.docker.repository >
-                              global:
-                                containerRegistry:
                                   overrideTag: <@ override.docker.tag >
 
                             <% if increaseResourceLimits %>

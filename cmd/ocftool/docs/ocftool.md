@@ -53,5 +53,6 @@ ocftool [flags]
 * [ocftool hub](ocftool_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
 * [ocftool login](ocftool_login.md)	 - Login to a Hub (Gateway) server
 * [ocftool logout](ocftool_logout.md)	 - Logout from the Hub (Gateway) server
+* [ocftool upgrade](ocftool_upgrade.md)	 - Upgrades Capact
 * [ocftool validate](ocftool_validate.md)	 - Validate OCF manifests
 
