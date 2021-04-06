@@ -46,7 +46,7 @@ var _ = Describe("Action", func() {
 
 	Context("Action execution", func() {
 		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
-			actionPath := "cap.interface.voltron.action.passing"
+			actionPath := "cap.interface.voltron.validation.action.passing"
 			testValue := "Implementation A"
 
 			By("Preparing input Type Instances")
@@ -118,7 +118,7 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: failingActionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.action.failing",
+					Path:     "cap.interface.voltron.validation.action.failing",
 					Revision: ptr.String("0.1.0"),
 				},
 			})

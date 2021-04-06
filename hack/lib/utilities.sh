@@ -302,6 +302,11 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_TEST_SETUP_OVERRIDES=""
     fi
 
+    readonly OCH_MANIFESTS_SOURCE_REPO_URL=${OCH_MANIFESTS_SOURCE_REPO_URL:-CAPACT_OCH_MANIFESTS_SOURCE_REPO_URL}
+    readonly OCH_MANIFESTS_SOURCE_REPO_SSHKEY=${OCH_MANIFESTS_SOURCE_REPO_SSHKEY:-CAPACT_OCH_MANIFESTS_SOURCE_REPO_SSHKEY}
+    readonly OCH_MANIFESTS_SOURCE_REPO_REF=${OCH_MANIFESTS_SOURCE_REPO_REF:-CAPACT_OCH_MANIFESTS_SOURCE_REPO_REF}
+    readonly OCH_MANIFESTS_PATH="${OCH_MANIFESTS_SOURCE_REPO_URL}?sshkey=${OCH_MANIFESTS_SOURCE_REPO_SSHKEY}&ref=${OCH_MANIFESTS_SOURCE_REPO_REF}"
+
     # CUSTOM_VOLTRON_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
     helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
@@ -311,6 +316,7 @@ voltron::install_upgrade::charts() {
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
+        --set och-public.populator.manifestsPath="${OCH_MANIFESTS_PATH}" \
         ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
         -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \
         -f "${VOLTRON_OVERRIDES}" \

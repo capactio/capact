@@ -1,0 +1,22 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.voltron.validation.action
+  name: failing
+  displayName: "Failing Voltron test action"
+  description: ""
+  documentationURL: "https://example.com"
+  supportURL: "https://example.com"
+  iconURL: "https://example.com"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+
+spec:
+  input: {}
+  output: {}
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -1,0 +1,86 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.voltron.validation.action
+  name: passing-b
+  license:
+    name: "Apache 2.0"
+  displayName: Passing Voltron test action
+  description: ""
+  documentationURL: "https://example.com"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  attributes:
+    cap.attribute.policy.most-preferred:
+      revision: 0.1.0
+
+spec:
+  appVersion: "1.x.x"
+
+  implements:
+    - path: cap.interface.voltron.validation.action.passing
+      revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    testUpload:
+      uses: []
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+    cap.type.voltron.validation:
+      allOf:
+        - name: single-key
+          alias: injected
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: main
+        templates:
+          - name: main
+            steps:
+              - - name: test
+                  template: test
+                  arguments:
+                    artifacts:
+                      - name: input
+                        from: "{{workflow.outputs.artifacts.testInput}}"
+                      - name: injected
+                        from: "{{workflow.outputs.artifacts.injected}}"
+                  voltron-outputTypeInstances:
+                    - name: testUpload
+                      from: upload
+
+          - name: test
+            inputs:
+              artifacts:
+                - name: input
+                  path: /input
+                - name: injected
+                  path: /injected
+            outputs:
+              artifacts:
+                - name: upload
+                  path: /upload
+            container:
+              image: alpine:latest
+              command: ["sh", "-c"]
+              args: ["echo 'Implementation B' && cp /input /upload && echo 'key: true' > /expected && diff /expected /injected && sleep 1"]
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
