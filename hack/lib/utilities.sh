@@ -371,14 +371,20 @@ voltron::install_upgrade::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
 
-    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
-      echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
-    elif [[ "${CLUSTER_TYPE}" == "EKS" ]]; then
-      readonly INGRESS_CTRL_OVERRIDES="${EKS_CONFIG_DIR}/overrides.ingress-nginx.yaml"
-    else
-      readonly INGRESS_CTRL_OVERRIDES="${}"
-    fi
+    case "${CLUSTER_CONFIG_DIR}" in
+      KIND)
+        readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
+        echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
+        ;;
+
+      EKS)
+        readonly INGRESS_CTRL_OVERRIDES="${EKS_CONFIG_DIR}/overrides.ingress-nginx.yaml"
+        ;;
+
+      *)
+        readonly INGRESS_CTRL_OVERRIDES="${}"
+        ;;
+    esac
 
     # CUSTOM_NGINX_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086

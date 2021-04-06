@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
-set -eEu
+#
+# This script installs Cert Manager Helm chart.
+#
+
+# standard bash error handling
+set -o nounset # treat unset variables as an error and exit immediately.
+set -o errexit # exit immediately when a command fails.
+set -E         # needs to be set if we want the ERR trap
 
 readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
 
-echo -e "\n- Installing Cert Manager Helm chart...\n"
 #shellcheck disable=SC2140
 helm upgrade cert-manager jetstack/cert-manager \
   --install \
@@ -27,5 +33,3 @@ sleep 60 # due to webhook not ready, see: https://github.com/jetstack/cert-manag
   sed "s/{{REGION}}/${CAPACT_REGION}/g" \
   | sed "s/{{HOSTED_ZONE_ID}}/${CAPACT_HOSTED_ZONE_ID}/g" \
   | kubectl apply -f -
-
-echo -e "\n- Cert Manager installed!\n"

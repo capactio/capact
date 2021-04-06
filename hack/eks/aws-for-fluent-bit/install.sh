@@ -1,11 +1,17 @@
-#!/bin/bash
-set -eEu
+#!/usr/bin/env bash
+#
+# This script installs aws-for-fluent-bit Helm chart.
+#
+
+# standard bash error handling
+set -o nounset # treat unset variables as an error and exit immediately.
+set -o errexit # exit immediately when a command fails.
+set -E         # needs to be set if we want the ERR trap
 
 readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-echo -e "\n- Installing aws-for-fluent-bit Helm chart...\n"
-
 helm repo add eks-charts https://aws.github.io/eks-charts
+helm repo update
 
 helm upgrade aws-for-fluent-bit "eks-charts/aws-for-fluent-bit" \
     --install \
@@ -15,5 +21,3 @@ helm upgrade aws-for-fluent-bit "eks-charts/aws-for-fluent-bit" \
     --set "cloudWatch.logGroupName=/aws/eks/${CAPACT_NAME}/logs" \
     --set "cloudWatch.region=${CAPACT_REGION}" \
     --wait
-
-echo -e "\n- aws-for-fluent-bit installed!\n"
