@@ -10,7 +10,7 @@ metadata:
   description: |-
     Simulates the `cap.interface.voltron.ochtests.install` interface implementation by external vendor.
     This implementation additionally requires the GCP SA and has also the GCP Attribute.
-  documentationURL: "https://example.com"
+  documentationURL: "https://projectvoltron.dev"
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team

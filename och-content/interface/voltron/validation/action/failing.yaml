@@ -6,9 +6,7 @@ metadata:
   name: failing
   displayName: "Failing Voltron test action"
   description: ""
-  documentationURL: "https://example.com"
-  supportURL: "https://example.com"
-  iconURL: "https://example.com"
+  documentationURL: "https://projectvoltron.dev"
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team

@@ -6,9 +6,7 @@ metadata:
   name: install
   displayName: Install v2
   description: ""
-  documentationURL: "https://example.com"
-  supportURL: "https://example.com"
-  iconURL: "https://example.com"
+  documentationURL: "https://projectvoltron.dev"
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team

@@ -8,7 +8,7 @@ metadata:
     name: "Apache 2.0"
   displayName: Passing Voltron test action
   description: ""
-  documentationURL: "https://example.com"
+  documentationURL: "https://projectvoltron.dev"
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
