@@ -19,19 +19,19 @@ spec:
     typeInstances:
       testInput:
         typeRef:
-          path: cap.type.simple.download
+          path: cap.type.voltron.validation.download
           revision: "0.1.0"
         verbs: ["get"]
       testUpdate:
         typeRef:
-          path: cap.type.simple.update
+          path: cap.type.voltron.validation.update
           revision: "0.1.0"
         verbs: ["get", "update"]
   output:
     typeInstances:
       testUpload:
         typeRef:
-          path: cap.type.simple.upload
+          path: cap.type.voltron.validation.upload
           revision: "0.1.0"
 
 signature:

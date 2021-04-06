@@ -155,7 +155,7 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.simple.single-key",
+			Path:     "cap.type.voltron.validation.single-key",
 			Revision: "0.1.0",
 		},
 		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
@@ -173,7 +173,7 @@ func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.simple.download",
+			Path:     "cap.type.voltron.valiation.download",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": testValue},
@@ -189,7 +189,7 @@ func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTy
 func getTypeInstanceInputForUpdate() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.simple.update",
+			Path:     "cap.type.voltron.validation.update",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": "random text to update"},
@@ -280,7 +280,7 @@ func updateClusterPolicyConfigMap(stringToFind, stringToReplace string) func() {
 func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client, testValue string) {
 	uploaded, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
 		TypeRef: &ochlocalgraphql.TypeRefFilterInput{
-			Path:     "cap.type.simple.upload",
+			Path:     "cap.type.voltron.validation.upload",
 			Revision: ptr.String("0.1.0"),
 		},
 	})
