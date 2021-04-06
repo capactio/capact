@@ -85,9 +85,12 @@ spec:
                               username: "<@ superuser.username @>"
                               password: "<@ superuser.password | default(random_word(length=16)) @>"
                             region: "eu-west-1"
+                            tier: "db.t3.micro"
                             ingress_rule_cidr_blocks: "0.0.0.0/0"
                             publicly_accessible: true
                             performance_insights_enabled: true
+                            engine_version: "11.10"
+                            major_engine_version: "11"
 
               - - name: provision
                   voltron-action: rds.provision

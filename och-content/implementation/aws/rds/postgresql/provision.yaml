@@ -181,8 +181,8 @@ spec:
                             output:
                               goTemplate:
                                 host: "{{ .instance_ip_addr }}"
-                                port: 5432
-                                defaultDBName: postgres
+                                port: "{{ .port }}"
+                                defaultDBName: "{{ .defaultDBName }}"
                                 superuser:
                                   username: "{{ .username }}"
                                   password: "{{ .password }}"
