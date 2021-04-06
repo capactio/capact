@@ -173,7 +173,7 @@ func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.voltron.valiation.download",
+			Path:     "cap.type.voltron.validation.download",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": testValue},
