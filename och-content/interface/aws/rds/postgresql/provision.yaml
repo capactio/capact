@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Interface
 metadata:
   prefix: cap.interface.aws.rds.postgresql
-  name: provision-input
+  name: provision
   displayName: "Provision"
   description: "Provisioning of AWS RDS for PostgreSQL"
   documentationURL: https://aws.amazon.com/rds/postgresql/

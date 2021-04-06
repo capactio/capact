@@ -12,7 +12,7 @@ resource "random_string" "name" {
 
 
 locals {
-  name = var.res_name
+  name = var.res_name != "" ?  var.res_name : random_string.name.id
   tags = {
     CapactManaged = true
   }

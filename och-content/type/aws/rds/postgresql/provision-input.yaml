@@ -21,8 +21,10 @@ spec:
         "title": "The schema for Provision parameters",
         "examples": [
           {
-            "user_name": "postgres",
-            "user_password": "password123",
+            "superuser": {
+              "username": "postgres",
+              "password": "password123"
+            },
             "region": "eu-west-1",
             "ingress_rule_cidr_blocks": "0.0.0.0/0",
             "publicly_accessible": true,
@@ -155,15 +157,28 @@ spec:
             "type": "boolean",
             "default": false
           },
-          "user_name": {
-            "id": "#/properties/user_name",
-            "type": "string",
-            "description": "Database user name"
-          },
-          "user_password": {
-            "id": "#/properties/user_password",
-            "type": "string",
-            "description": "Database user password"
+          "superuser": {
+            "$id": "#/properties/superuser",
+            "type": "object",
+            "title": "Defines superuser details",
+            "required": [
+                "username",
+                "password"
+            ],
+            "properties": {
+              "username": {
+                "$id": "#/properties/superuser/properties/username",
+                "type": "string",
+                "title": "Create the specified user with superuser power and a database with the same name.",
+                "default": "postgres"
+              },
+              "password": {
+                "$id": "#/properties/superuser/properties/password",
+                "type": "string",
+                "title": "Sets the superuser password for PostgreSQL"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false

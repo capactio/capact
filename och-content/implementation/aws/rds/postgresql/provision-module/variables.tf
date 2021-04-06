@@ -36,7 +36,7 @@ variable "ingress_rule_cidr_blocks" {
 variable "res_name" {
   type = string
   description = "Name used for the resources"
-  default = random_string.name.id
+  default = ""
 }
 
 variable "publicly_accessible" {
@@ -116,7 +116,6 @@ variable "skip_final_snapshot" {
   type = bool
   default = false
 }
-
 
 variable "user_name" {
   type = string

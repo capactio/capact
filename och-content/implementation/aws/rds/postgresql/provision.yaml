@@ -29,7 +29,7 @@ spec:
         - terraform-release
 
   implements:
-    - path: cap.interface.database.postgresql.install
+    - path: cap.interface.aws.rds.postgresql.provision
       revision: 0.1.0
 
   requires:
@@ -118,7 +118,7 @@ spec:
                               <%- endif %>
 
                               <% if input.publicly_accessible -%>
-                              publicly_accessible = <@ input.publicly_accessible @>
+                              publicly_accessible = <@ input.publicly_accessible | tojson @>
                               <%- endif %>
 
                               <% if input.allocated_storage -%>
@@ -130,15 +130,15 @@ spec:
                               <%- endif %>
 
                               <% if input.storage_encrypted -%>
-                              storage_encrypted = <@ input.storage_encrypted @>
+                              storage_encrypted = <@ input.storage_encrypted | tojson @>
                               <%- endif %>
 
                               <% if input.multi_az -%>
-                              multi_az = <@ input.multi_az @>
+                              multi_az = <@ input.multi_az | tojson @>
                               <%- endif %>
 
                               <% if input.deletion_protection -%>
-                              deletion_protection = <@ input.deletion_protection @>
+                              deletion_protection = <@ input.deletion_protection | tojson @>
                               <%- endif %>
 
                               <% if input.backup_retention_period -%>
@@ -146,7 +146,7 @@ spec:
                               <%- endif %>
 
                               <% if input.performance_insights_enabled -%>
-                              performance_insights_enabled = <@ input.performance_insights_enabled @>
+                              performance_insights_enabled = <@ input.performance_insights_enabled | tojson @>
                               <%- endif %>
 
                               <% if input.performance_insights_retention_period -%>
@@ -158,7 +158,7 @@ spec:
                               <%- endif %>
 
                               <% if input.skip_final_snapshot -%>
-                              skip_final_snapshot = <@ input.skip_final_snapshot @>
+                              skip_final_snapshot = <@ input.skip_final_snapshot | tojson @>
                               <%- endif %>
 
                               <% if input.maintenance_window -%>

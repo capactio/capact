@@ -17,16 +17,11 @@ metadata:
   attributes:
     cap.attribute.cloud.provider.aws:
       revision: 0.1.0
-    cap.attribute.infra.iac.terraform:
-      revision: 0.1.0
 
 spec:
   appVersion: "10, 11, 12, 13"
 
-  outputTypeInstanceRelations:
-    postgresql:
-      uses:
-        - terraform-release
+  outputTypeInstanceRelations: {}
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -36,7 +31,6 @@ spec:
     cap.type.aws.auth:
       allOf:
         - name: credentials
-          alias: aws-credentials
           revision: 0.1.0
     cap.core.type.platform:
       oneOf:
@@ -44,10 +38,10 @@ spec:
           revision: 0.1.0
 
   imports:
-    - interfaceGroupPath: cap.interface.runner.terraform
-      alias: terraform
+    - interfaceGroupPath: cap.interface.aws.rds.postgresql
+      alias: rds
       methods:
-        - name: apply
+        - name: provision
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -66,7 +60,6 @@ spec:
       workflow:
         entrypoint: postgres-install
         templates:
-          # TODO: Use aws.rds.postgresql.provision
           - name: postgres-install
             inputs:
               artifacts:
@@ -74,9 +67,9 @@ spec:
             outputs:
               artifacts:
                 - name: postgresql
-                  from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                  from: "{{steps.provision.outputs.artifacts.postgresql}}"
             steps:
-              - - name: create-module-args
+              - - name: fill-params
                   voltron-action: jinja2.template
                   arguments:
                     artifacts:
@@ -84,60 +77,25 @@ spec:
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
-                          data: |
-                            prefix: input
+                          data: ""
                       - name: template
                         raw:
                           data: |
-                            variables: |+
-                              user_name = "<@ input.superuser.username @>"
-                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
-                              region = "eu-west-1"
-                              ingress_rule_cidr_blocks = "0.0.0.0/0"
-                              publicly_accessible = true
-                              performance_insights_enabled = true
-                            command: "apply"
-                            module:
-                              name: "rds"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.-provision/0.1.0/module.tgz"
-                            env:
-                            - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
-                            - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
-                            output:
-                              goTemplate:
-                                host: "{{ .instance_ip_addr }}"
-                                port: 5432
-                                defaultDBName: postgres
-                                superuser:
-                                  username: "{{ .username }}"
-                                  password: "{{ .password }}"
+                            superuser:
+                              username: "<@ superuser.username @>"
+                              password: "<@ superuser.password | default(random_word(length=16)) @>"
+                            region: "eu-west-1"
+                            ingress_rule_cidr_blocks: "0.0.0.0/0"
+                            publicly_accessible: true
+                            performance_insights_enabled: true
 
-              - - name: fill-aws-params-in-module-args
-                  voltron-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: aws
-
-              - - name: terraform-apply
-                  voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
-                    - name: terraform-release
-                      from: terraform-release
-                    - name: postgresql
-                      from: additional
+              - - name: provision
+                  voltron-action: rds.provision
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}"
-                      - name: runner-context
-                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                        from: "{{steps.fill-params.outputs.artifacts.render}}"
+
 
 
 signature:
