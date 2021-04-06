@@ -19,7 +19,7 @@ metadata:
       revision: 0.1.0
 
 spec:
-  appVersion: "10, 11, 12, 13"
+  appVersion: "10, 11, 12"
 
   outputTypeInstanceRelations: {}
 

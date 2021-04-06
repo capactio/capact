@@ -35,6 +35,10 @@ spec:
         typeRef:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
+      rds-instance:
+        typeRef:
+          path: cap.type.aws.rds.instance
+          revision: 0.1.0
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
