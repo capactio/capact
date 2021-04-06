@@ -204,8 +204,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Setup environment
-        env:
-          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.sha }}"
         run: |
           . ./hack/ci/setup-env.sh
       - name: Setup Go
@@ -220,6 +218,7 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
+          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.sha }}"
         run: |
           make test-integration
       - name: Upload artifacts
