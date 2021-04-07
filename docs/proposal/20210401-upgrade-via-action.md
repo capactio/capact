@@ -39,7 +39,10 @@ Prepare the zero-downtime Voltron Upgrade process via dedicated Action.
 
 ## Proposal - Selected solution
 
-The sections below describe the solutions selected during the engineering team meeting which happened on 2021-04-02. 
+The sections below describe the solutions selected during the engineering team meeting which happened on 2021-04-02. Attendees in alphabetical order by last name: 
+- [Paweł Kosiec](https://github.com/pkosiec)
+- [Łukasz Oleś](https://github.com/lukaszo)
+- [Mateusz Szostok](https://github.com/mszostok)
 
 ### Voltron installation
 
@@ -393,7 +396,7 @@ Features like increasing resource limits can be handled via CLI, and if we migra
     - Helm install/upgrade cannot be executed concurrently. We have only one big step with Helm runner upgrade action.
 
   Pros:
-    - Easy to maintain. For example versioning Helm charts.
+    - Easy to maintain. For example, versioning Helm charts is easier as we need to maintain single **appVersion** and **version** properties.
     - Easy to create TypeInstances as we will have only a single one Helm release.
     - We have a built-in enable/disable components support via Helm dependency [**conditions**](https://helm.sh/docs/chart_best_practices/dependencies/#conditions-and-tags).
     - Easier Action upgrade Interface, as we need to specify only two TypeInstances.
@@ -404,4 +407,4 @@ Features like increasing resource limits can be handled via CLI, and if we migra
 
   Cons:
    - Hard to specify additional values.
-   - Hard to create initial TypeInstance. (Helm Repo URL).
+   - Hard to create initial TypeInstance as the Helm repository URL will be different for each Helm chart.
