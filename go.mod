@@ -12,6 +12,7 @@ require (
 	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/argoproj/argo/v2 v2.0.0-00010101000000-000000000000
 	github.com/avast/retry-go v3.0.0+incompatible
+	github.com/briandowns/spinner v1.12.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/docker/cli v0.0.0-20200130152716-5d0cf8839492
 	github.com/docker/docker v1.4.2-0.20200203170920-46ec8731fbce
@@ -28,6 +29,7 @@ require (
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
+	github.com/mitchellh/mapstructure v1.2.2
 	github.com/nautilus/gateway v0.1.7
 	github.com/nautilus/graphql v0.0.12
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2

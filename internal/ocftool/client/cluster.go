@@ -25,6 +25,7 @@ type ActionClient interface {
 	GetAction(ctx context.Context, name string) (*enginegraphql.Action, error)
 	ListActions(ctx context.Context) ([]*enginegraphql.Action, error)
 	RunAction(ctx context.Context, name string) error
+	DeleteAction(ctx context.Context, name string) error
 }
 
 type TypeInstanceClient interface {
