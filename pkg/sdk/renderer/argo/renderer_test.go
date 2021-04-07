@@ -225,6 +225,8 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policy: fixTerraformPolicy(),
 		},
 		{
+			// TODO: Fix the test case in issue CP-354
+			// Invalid `usesRelations` for TypeInstance upload: `jira-install-install-db-postgresql` doesn't exist
 			name: "Jira with AWS RDS install",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.jira.install",

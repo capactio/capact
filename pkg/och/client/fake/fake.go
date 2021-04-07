@@ -22,7 +22,7 @@ import (
 const manifestsExtension = ".yaml"
 
 type FileSystemClient struct {
-	loadTypeInstances bool
+	loadTypeInstances  bool
 	OCHTypeInstances   map[string]ochlocalgraphql.TypeInstance
 	OCHImplementations []ochpublicgraphql.ImplementationRevision
 	OCHInterfaces      []ochpublicgraphql.InterfaceRevision
@@ -30,7 +30,7 @@ type FileSystemClient struct {
 
 func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient, error) {
 	cli := &FileSystemClient{
-		loadTypeInstances: loadTypeInstances,
+		loadTypeInstances:  loadTypeInstances,
 		OCHImplementations: []ochpublicgraphql.ImplementationRevision{},
 		OCHInterfaces:      []ochpublicgraphql.InterfaceRevision{},
 		OCHTypeInstances:   map[string]ochlocalgraphql.TypeInstance{},
