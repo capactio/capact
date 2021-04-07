@@ -1,5 +1,5 @@
 ocfVersion: 0.0.1
-revision: 0.2.0
+revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.aws.rds.postgresql

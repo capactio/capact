@@ -1,5 +1,5 @@
 ocfVersion: 0.0.1
-revision: 0.2.0
+revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.aws.rds.postgresql
@@ -21,7 +21,8 @@ metadata:
 spec:
   appVersion: "10, 11, 12"
 
-  outputTypeInstanceRelations: {}
+  outputTypeInstanceRelations:
+  # all output TypeInstances are defined to upload on lower level workflows
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -94,6 +95,9 @@ spec:
 
               - - name: provision
                   voltron-action: rds.provision
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
