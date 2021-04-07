@@ -22,23 +22,25 @@ import (
 const manifestsExtension = ".yaml"
 
 type FileSystemClient struct {
+	loadTypeInstances bool
 	OCHTypeInstances   map[string]ochlocalgraphql.TypeInstance
 	OCHImplementations []ochpublicgraphql.ImplementationRevision
 	OCHInterfaces      []ochpublicgraphql.InterfaceRevision
 }
 
-func NewFromLocal(manifestDir string) (*FileSystemClient, error) {
-	store := &FileSystemClient{
+func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient, error) {
+	cli := &FileSystemClient{
+		loadTypeInstances: loadTypeInstances,
 		OCHImplementations: []ochpublicgraphql.ImplementationRevision{},
 		OCHInterfaces:      []ochpublicgraphql.InterfaceRevision{},
 		OCHTypeInstances:   map[string]ochlocalgraphql.TypeInstance{},
 	}
 
-	if err := store.loadManifests(manifestDir); err != nil {
+	if err := cli.loadManifests(manifestDir); err != nil {
 		return nil, errors.Wrap(err, "while loading OCH manifests")
 	}
 
-	return store, nil
+	return cli, nil
 }
 
 func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error) {
@@ -181,7 +183,7 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		s.OCHInterfaces = append(s.OCHInterfaces, iface)
 	}
 
-	if strings.Contains(filepath, "typeinstance") {
+	if s.loadTypeInstances && strings.Contains(filepath, "typeinstance") {
 		ti := ochlocalgraphql.TypeInstance{}
 		if err := json.Unmarshal(jsonData, &ti); err != nil {
 			return err
