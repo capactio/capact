@@ -7,19 +7,19 @@ import (
 	"time"
 
 	"projectvoltron.dev/voltron/internal/gateway/header"
+	"projectvoltron.dev/voltron/internal/healthz"
+	"projectvoltron.dev/voltron/internal/logger"
+	"projectvoltron.dev/voltron/pkg/httputil"
 
 	"github.com/avast/retry-go"
 	"github.com/gorilla/mux"
 	"github.com/nautilus/gateway"
 	"github.com/nautilus/graphql"
 	"github.com/pkg/errors"
+	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
-	"projectvoltron.dev/voltron/internal/healthz"
-	"projectvoltron.dev/voltron/pkg/httputil"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
-
-	"github.com/vrischmann/envconfig"
 )
 
 // Config holds application related configuration.
@@ -30,9 +30,7 @@ type Config struct {
 	// HealthzAddr is the TCP address the health probes endpoint binds to.
 	HealthzAddr string `envconfig:"default=:8082"`
 
-	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
-	// and logging information, etc).
-	LoggerDevMode bool `envconfig:"default=false"`
+	Logger logger.Config
 
 	// Introspection holds configuration parameters related to GraphQL schema introspection.
 	Introspection IntrospectionConfig
@@ -69,14 +67,7 @@ func main() {
 	stop := signals.SetupSignalHandler()
 
 	// setup logger
-	var logCfg zap.Config
-	if cfg.LoggerDevMode {
-		logCfg = zap.NewDevelopmentConfig()
-	} else {
-		logCfg = zap.NewProductionConfig()
-	}
-
-	unnamedLogger, err := logCfg.Build()
+	unnamedLogger, err := logger.New(cfg.Logger)
 	exitOnError(err, "while creating zap logger")
 
 	logger := unnamedLogger.Named(appName)

@@ -20,7 +20,7 @@ spec:
   versions:
   - additionalPrinterColumns:
     - description: Interface/Implementation path of the Action
-      jsonPath: .spec.path
+      jsonPath: .spec.actionRef.path
       name: Path
       type: string
     - description: If the Action is approved to run

@@ -7,31 +7,35 @@ import (
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"sigs.k8s.io/yaml"
-
-	"helm.sh/helm/v3/pkg/action"
 )
 
 type upgrader struct {
-	actionCfg           *action.Configuration
+	actionCfgProducer   actionConfigProducer
 	log                 *zap.Logger
 	out                 outputter
 	repositoryCachePath string
 	helmReleasePath     string
 }
 
-func newUpgrader(log *zap.Logger, repositoryCachePath string, helmReleasePath string, actionCfg *action.Configuration, outputter outputter) *upgrader {
+func newUpgrader(log *zap.Logger, repositoryCachePath string, helmReleasePath string, actionCfgProducer actionConfigProducer, outputter outputter) helmCommand {
 	return &upgrader{
 		log:                 log,
-		actionCfg:           actionCfg,
+		actionCfgProducer:   actionCfgProducer,
 		out:                 outputter,
 		repositoryCachePath: repositoryCachePath,
 		helmReleasePath:     helmReleasePath,
 	}
 }
 
+// Do executes upgrade process.
+//
+// It uses the Helm Release namespace instead of the namespace from the Runner Context.
+// As a result you can execute Action from Namespace A to upgrade Helm chart in Namespace B.
+// TODO: In the future, Namespace usage needs to be revisited and discussed if it is a desired behavior or not.
 func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 	if i.helmReleasePath == "" {
 		return Output{}, Status{}, errors.New("path to Helm Release is required for upgrade")
@@ -42,19 +46,16 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, err
 	}
 
-	if in.Ctx.Platform.Namespace != helmReleaseData.Namespace {
-		return Output{}, Status{}, fmt.Errorf(
-			"namespace from Runner Context (%q) differs with the Helm Release namespace (%q)",
-			in.Ctx.Platform.Namespace,
-			helmReleaseData.Namespace,
-		)
+	actCfg, err := i.actionCfgProducer(helmReleaseData.Namespace)
+	if err != nil {
+		return Output{}, Status{}, errors.Wrap(err, "while creating Helm action config")
 	}
 
-	helmChart := i.mergeHelmChartData(helmReleaseData, in)
+	helmChartRel := i.mergeHelmChartData(helmReleaseData, in)
 
-	upgradeCli := i.initActionUpgradeFromInput(in, helmChart)
+	upgradeCli := i.initActionUpgradeFromInput(actCfg, in, helmChartRel)
 
-	chartPath, err := upgradeCli.ChartPathOptions.LocateChart(helmChart.Name, &cli.EnvSettings{
+	chartPath, err := upgradeCli.ChartPathOptions.LocateChart(helmChartRel.Chart.Name, &cli.EnvSettings{
 		RepositoryCache: i.repositoryCachePath,
 	})
 	if err != nil {
@@ -71,7 +72,7 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "while reading values")
 	}
 
-	helmRelease, err := upgradeCli.Run(helmReleaseData.Name, chartData, values)
+	helmRelease, err := upgradeCli.Run(helmChartRel.Name, chartData, values)
 
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while installing Helm chart")
@@ -81,12 +82,12 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "Helm release is nil")
 	}
 
-	releaseOut, err := i.out.ProduceHelmRelease(helmChart.Repo, helmRelease)
+	releaseOut, err := i.out.ProduceHelmRelease(helmChartRel.Chart.Repo, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
 
-	additionalOut, err := i.out.ProduceAdditional(in.Args, chartData, helmRelease)
+	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while rendering and saving additional output")
 	}
@@ -116,31 +117,28 @@ func (i *upgrader) loadHelmReleaseData(path string) (ChartRelease, error) {
 	return chartRelease, nil
 }
 
-func (i *upgrader) mergeHelmChartData(helmRelease ChartRelease, in Input) Chart {
-	helmChart := helmRelease.Chart
-
+func (i *upgrader) mergeHelmChartData(helmRelease ChartRelease, in Input) ChartRelease {
 	if in.Args.Chart.Name != "" {
-		helmChart.Name = in.Args.Chart.Name
+		helmRelease.Chart.Name = in.Args.Chart.Name
 	}
 
 	if in.Args.Chart.Repo != "" {
-		helmChart.Repo = in.Args.Chart.Repo
+		helmRelease.Chart.Repo = in.Args.Chart.Repo
 	}
 
 	if in.Args.Chart.Version != "" {
-		helmChart.Version = in.Args.Chart.Version
+		helmRelease.Chart.Version = in.Args.Chart.Version
 	}
 
-	return helmChart
+	return helmRelease
 }
 
-func (i *upgrader) initActionUpgradeFromInput(in Input, helmChart Chart) *action.Upgrade {
-	upgradeCli := action.NewUpgrade(i.actionCfg)
+func (i *upgrader) initActionUpgradeFromInput(cfg *action.Configuration, in Input, helmChartRel ChartRelease) *action.Upgrade {
+	upgradeCli := action.NewUpgrade(cfg)
 	upgradeCli.Wait = true
 
 	// context
 	upgradeCli.DryRun = in.Ctx.DryRun
-	upgradeCli.Namespace = in.Ctx.Platform.Namespace
 	upgradeCli.Timeout = in.Ctx.Timeout.Duration()
 
 	// common args
@@ -153,8 +151,9 @@ func (i *upgrader) initActionUpgradeFromInput(in Input, helmChart Chart) *action
 	upgradeCli.ResetValues = in.Args.UpgradeArgs.ResetValues
 
 	// helm chart args
-	upgradeCli.ChartPathOptions.Version = helmChart.Version
-	upgradeCli.ChartPathOptions.RepoURL = helmChart.Repo
+	upgradeCli.ChartPathOptions.Version = helmChartRel.Chart.Version
+	upgradeCli.ChartPathOptions.RepoURL = helmChartRel.Chart.Repo
+	upgradeCli.Namespace = helmChartRel.Namespace
 
 	return upgradeCli
 }

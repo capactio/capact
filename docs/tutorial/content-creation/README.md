@@ -42,7 +42,7 @@ To develop and test the created content, you will need to have a Voltron environ
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
-* [populator](../../../cmd/populator/README.md) - For now, you need to compile it from source
+* [populator](../../../cmd/populator/docs/populator_hub-database.md) - For now, you need to compile it from source
 
 Also, clone the Voltron repository with the current OCF content.
 ```bash
@@ -644,7 +644,7 @@ ENABLE_POPULATOR=false make dev-cluster
 
 This can take a few minutes. We disabled the populator sidecar in OCH public, as we will populate the data from our local repository using the populator.
 
-> You can read more about the populator, how to compile and use it, in this [README](../../../cmd/populator/README.md).
+> You can read more about the populator, how to compile and use it, in this [README](../../../cmd/populator/docs/populator_hub-database.md).
 
 To populate the data, you will need to first set up port-forwarding to the Neo4j database service:
 ```

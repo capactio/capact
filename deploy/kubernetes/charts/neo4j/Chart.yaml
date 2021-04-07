@@ -1,5 +1,5 @@
 apiVersion: v2
-name: neo4j-helm
+name: neo4j
 description: A Helm chart for neo4j for Voltron installation
 
 type: application

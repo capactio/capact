@@ -8,20 +8,20 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type renderer interface {
+type ChartRenderer interface {
 	Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error)
 }
 
-type helmOutputter struct {
+type Outputter struct {
 	log      *zap.Logger
-	renderer renderer
+	renderer ChartRenderer
 }
 
-func newHelmOutputter(log *zap.Logger, renderer renderer) *helmOutputter {
-	return &helmOutputter{log: log, renderer: renderer}
+func NewOutputter(log *zap.Logger, renderer ChartRenderer) *Outputter {
+	return &Outputter{log: log, renderer: renderer}
 }
 
-func (o *helmOutputter) ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error) {
+func (o *Outputter) ProduceHelmRelease(repository string, helmRelease *release.Release) ([]byte, error) {
 	releaseData := ChartRelease{
 		Name:      helmRelease.Name,
 		Namespace: helmRelease.Namespace,
@@ -40,15 +40,16 @@ func (o *helmOutputter) ProduceHelmRelease(repository string, helmRelease *relea
 	return bytes, nil
 }
 
-func (o *helmOutputter) ProduceAdditional(args Arguments, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
-	if args.Output.GoTemplate == nil {
+// TODO: consider to get rid of the chrt arg and use rel.Chart instead.
+func (o *Outputter) ProduceAdditional(args OutputArgs, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
+	if args.GoTemplate == nil {
 		o.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
 	}
 
 	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
 	// but the GoTemplate is defined via YAML, so we need to revert that change
-	artifactTemplate, err := yaml.JSONToYAML(args.Output.GoTemplate)
+	artifactTemplate, err := yaml.JSONToYAML(args.GoTemplate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
 	}
