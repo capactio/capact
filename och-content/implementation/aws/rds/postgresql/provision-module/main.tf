@@ -1,50 +1,3 @@
-variable "engine_version" {
-  type = string
-  default = "11.10"
-  description = "RDS database engine version"
-}
-
-variable "major_engine_version" {
-  type = string
-  default = "11"
-  description = "PostgreSQL major engine version"
-}
-
-variable "region" {
-  type = string
-  default = "eu-west-1"
-  description = "AWS region"
-}
-
-variable "tier" {
-  type = string
-  default = "db.t3.micro"
-  description = "AWS RDS instance tier"
-}
-
-variable "user_name" {
-  type = string
-  description = "Database user name"
-}
-
-variable "user_password" {
-  type = string
-  description = "Database user password"
-  sensitive = true
-}
-
-
-terraform {
-  required_version = ">= 0.12.26"
-
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      version = ">= 2.49"
-    }
-  }
-}
-
 provider "aws" {
   region = var.region
 }
@@ -59,7 +12,7 @@ resource "random_string" "name" {
 
 
 locals {
-  name = random_string.name.id
+  name = var.res_name != "" ?  var.res_name : random_string.name.id
   tags = {
     CapactManaged = true
   }
@@ -82,6 +35,8 @@ module "vpc" {
 
   enable_dns_hostnames = true
   enable_dns_support = true
+
+  enable_nat_gateway = false
 
   azs = data.aws_availability_zones.available.names
   public_subnets = [
@@ -109,8 +64,8 @@ module "security_group" {
       from_port = 5432
       to_port = 5432
       protocol = "tcp"
-      description = "PostgreSQL access from anywhere"
-      cidr_blocks = "0.0.0.0/0"
+      description = "RDS access rule"
+      cidr_blocks = var.ingress_rule_cidr_blocks
     },
   ]
 
@@ -128,19 +83,19 @@ module "db" {
   identifier = local.name
 
   # All available versions: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_PostgreSQL.html#PostgreSQL.Concepts
-  engine = "postgres"
+  engine = var.engine
   engine_version = var.engine_version
-  family = "postgres${var.major_engine_version}"
+  family = "${var.engine}${var.major_engine_version}"
   # DB parameter group
   major_engine_version = var.major_engine_version
   # DB option group
   instance_class = var.tier
 
-  publicly_accessible = true
+  publicly_accessible = var.publicly_accessible
 
-  allocated_storage = 20
-  max_allocated_storage = 100
-  storage_encrypted = true
+  allocated_storage = var.allocated_storage
+  max_allocated_storage = var.max_allocated_storage
+  storage_encrypted = var.storage_encrypted
 
   # NOTE: Do NOT use 'user' as the value for 'username' as it throws:
   # "Error creating DB Instance: InvalidParameterValue: MasterUsername
@@ -150,26 +105,27 @@ module "db" {
   password = var.user_password
   port = 5432
 
-  multi_az = false
+  multi_az = var.multi_az
   subnet_ids = module.vpc.public_subnets
   vpc_security_group_ids = [
     module.security_group.this_security_group_id]
 
-  maintenance_window = "Mon:00:00-Mon:03:00"
-  backup_window = "03:00-06:00"
+  maintenance_window = var.maintenance_window
+  backup_window = var.backup_window
   enabled_cloudwatch_logs_exports = [
     "postgresql",
     "upgrade"]
 
-  backup_retention_period = 0
-  skip_final_snapshot = true
-  deletion_protection = false
+  backup_retention_period = var.backup_retention_period
+  skip_final_snapshot = var.skip_final_snapshot
+  deletion_protection = var.deletion_protection
 
-  performance_insights_enabled = true
-  performance_insights_retention_period = 7
+  performance_insights_enabled = var.performance_insights_enabled
+  performance_insights_retention_period = var.performance_insights_retention_period
+
   create_monitoring_role = true
   monitoring_role_name = local.name
-  monitoring_interval = 60
+  monitoring_interval = var.monitoring_interval
 
   parameters = [
     {
@@ -183,20 +139,4 @@ module "db" {
   ]
 
   tags = local.tags
-}
-
-output "instance_ip_addr" {
-  description = "The address of the RDS instance"
-  value = module.db.this_db_instance_address
-}
-
-output "username" {
-  description = "The master username for the database"
-  value = module.db.this_db_instance_username
-}
-
-output "password" {
-  description = "The database password"
-  value = module.db.this_db_instance_password
-  sensitive = true
 }

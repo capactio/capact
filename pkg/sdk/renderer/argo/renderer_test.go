@@ -29,7 +29,7 @@ import (
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och")
+	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
 	policy := clusterpolicy.NewAllowAll()
@@ -188,7 +188,7 @@ func TestRenderHappyPath(t *testing.T) {
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och")
+	fakeCli, err := fake.NewFromLocal("testdata/och", true)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -223,6 +223,15 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.productivity.jira.install",
 			},
 			policy: fixTerraformPolicy(),
+		},
+		{
+			// TODO: Fix the test case in issue CP-354
+			// Invalid `usesRelations` for TypeInstance upload: `jira-install-install-db-postgresql` doesn't exist
+			name: "Jira with AWS RDS install",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.jira.install",
+			},
+			policy: fixAWSClusterPolicy(),
 		},
 		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
@@ -264,7 +273,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 
 func TestRendererMaxDepth(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och")
+	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
 	policy := clusterpolicy.NewAllowAll()
@@ -295,7 +304,7 @@ func TestRendererMaxDepth(t *testing.T) {
 
 func TestRendererDenyAllPolicy(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och")
+	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
 	policy := clusterpolicy.NewDenyAll()

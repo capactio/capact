@@ -132,7 +132,7 @@ spec:
 
               - - name: terraform-apply
                   voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: terraform-release
                       from: terraform-release
                     - name: postgresql

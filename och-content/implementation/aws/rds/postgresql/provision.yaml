@@ -1,0 +1,264 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.aws.rds.postgresql
+  name: provision
+  displayName: Provision AWS RDS for PostgreSQL database using Terraform in advanced mode
+  description: Action which provisions AWS RDS for PostgreSQL database using Terraform for advanced users
+  documentationURL: https://aws.amazon.com/rds/postgresql/
+  supportURL: https://aws.amazon.com/rds/postgresql/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+      url: https://projectvoltron.dev
+  attributes:
+    cap.attribute.cloud.provider.aws:
+      revision: 0.1.0
+    cap.attribute.infra.iac.terraform:
+      revision: 0.1.0
+
+spec:
+  appVersion: "10, 11, 12, 13"
+
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - terraform-release
+        - rds-instance
+    rds-instance: {}
+
+  implements:
+    - path: cap.interface.aws.rds.postgresql.provision
+      revision: 0.1.0
+
+  requires:
+    cap.type.aws.auth:
+      allOf:
+        - name: credentials
+          alias: aws-credentials
+          revision: 0.1.0
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
+      methods:
+        - name: apply
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: rds-provision
+        templates:
+          - name: rds-provision
+            inputs:
+              artifacts:
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.render-postgresql.outputs.artifacts.render}}"
+                - name: rds-instance
+                  from: "{{steps.render-rds.outputs.artifacts.render}}"
+            steps:
+              - - name: create-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+                      - name: template
+                        raw:
+                          data: |
+                            variables: |+
+                              <% if input.engine -%>
+                              engine = "<@ input.engine @>"
+                              <%- endif %>
+
+                              <% if input.engine_version -%>
+                              engine_version = "<@ input.engine_version @>"
+                              <%- endif %>
+
+                              <% if input.major_engine_version -%>
+                              major_engine_version = "<@ input.major_engine_version @>"
+                              <%- endif %>
+
+                              <% if input.region -%>
+                              region = "<@ input.region @>"
+                              <%- endif %>
+
+                              <% if input.tier -%>
+                              tier = "<@ input.tier @>"
+                              <%- endif %>
+
+                              <% if input.ingress_rule_cidr_blocks -%>
+                              ingress_rule_cidr_blocks = "<@ input.ingress_rule_cidr_blocks @>"
+                              <%- endif %>
+
+                              <% if input.res_name -%>
+                              res_name = "<@ input.res_name @>"
+                              <%- endif %>
+
+                              <% if input.publicly_accessible -%>
+                              publicly_accessible = <@ input.publicly_accessible | tojson @>
+                              <%- endif %>
+
+                              <% if input.allocated_storage -%>
+                              allocated_storage = <@ input.allocated_storage @>
+                              <%- endif %>
+
+                              <% if input.max_allocated_storage -%>
+                              max_allocated_storage = <@ input.max_allocated_storage @>
+                              <%- endif %>
+
+                              <% if input.storage_encrypted -%>
+                              storage_encrypted = <@ input.storage_encrypted | tojson @>
+                              <%- endif %>
+
+                              <% if input.multi_az -%>
+                              multi_az = <@ input.multi_az | tojson @>
+                              <%- endif %>
+
+                              <% if input.deletion_protection -%>
+                              deletion_protection = <@ input.deletion_protection | tojson @>
+                              <%- endif %>
+
+                              <% if input.backup_retention_period -%>
+                              backup_retention_period = <@ input.backup_retention_period @>
+                              <%- endif %>
+
+                              <% if input.performance_insights_enabled -%>
+                              performance_insights_enabled = <@ input.performance_insights_enabled | tojson @>
+                              <%- endif %>
+
+                              <% if input.performance_insights_retention_period -%>
+                              performance_insights_retention_period = <@ input.performance_insights_retention_period @>
+                              <%- endif %>
+
+                              <% if input.monitoring_interval -%>
+                              monitoring_interval = <@ input.monitoring_interval @>
+                              <%- endif %>
+
+                              <% if input.skip_final_snapshot -%>
+                              skip_final_snapshot = <@ input.skip_final_snapshot | tojson @>
+                              <%- endif %>
+
+                              <% if input.maintenance_window -%>
+                              maintenance_window = "<@ input.maintenance_window @>"
+                              <%- endif %>
+
+                              <% if input.backup_window -%>
+                              backup_window = "<@ input.backup_window @>"
+                              <%- endif %>
+
+                              user_name = "<@ input.superuser.username | default('postgres') @>"
+                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+                            command: "apply"
+                            module:
+                              name: "rds"
+                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.rds.postgresql.provision/0.1.0/module.tgz"
+                            env:
+                            - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
+                            - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
+                            output:
+                              goTemplate:
+                                host: "{{ .instance_ip_addr }}"
+                                port: "{{ .port }}"
+                                defaultDBName: "{{ .defaultDBName }}"
+                                superuser:
+                                  username: "{{ .username }}"
+                                  password: "{{ .password }}"
+                                identifier: "{{ .identifier }}"
+                                availability_zone: "{{ .availability_zone }}"
+                                class: "{{ .class }}"
+
+              - - name: fill-aws-params-in-module-args
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: aws
+
+              - - name: terraform-apply
+                  voltron-action: terraform.apply
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: terraform-release
+                      from: terraform-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: render-postgresql
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: postgresql
+                      from: render
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          data: |
+                            host: "<@ host @>"
+                            port: <@ port @>
+                            defaultDBName: "<@ defaultDBName @>"
+                            superuser:
+                              username: "<@ superuser.username @>"
+                              password: "<@ superuser.password @>"
+
+              - - name: render-rds
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: rds-instance
+                      from: render
+                  voltron-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          data: |
+                            identifier: "<@ identifier @>"
+                            availability_zone: "<@ availability_zone @>"
+                            class: "<@ class @>"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

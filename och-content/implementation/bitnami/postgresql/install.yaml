@@ -99,7 +99,7 @@ spec:
 
               - - name: helm-install
                   voltron-action: helm.install
-                  voltron-outputTypeInstances: # The typeInstanceOutput defines which artifacts are output TypeInstances
+                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
                     - name: psql-helm-release

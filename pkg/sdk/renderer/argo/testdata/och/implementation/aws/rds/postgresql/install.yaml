@@ -1,0 +1,127 @@
+metadata:
+  attributes:
+    - metadata:
+        description: Specifies that a given manifest is related to AWS
+        displayName: Amazon Web Services Provider
+        documentationURL: https://projectvoltron.dev
+        iconURL:
+        maintainers:
+          - email: team-dev@projectvoltron.dev
+            name: Voltron Dev Team
+        name: aws
+        path: cap.attribute.cloud.provider.aws
+        prefix: cap.attribute.cloud.provider
+        supportURL:
+      revision: 0.1.0
+      signature:
+        och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+      spec:
+  description: Action which provisions AWS RDS for PostgreSQL database using
+    Terraform
+  displayName: Install AWS RDS for PostgreSQL database using Terraform
+  documentationURL: https://aws.amazon.com/rds/postgresql/
+  iconURL:
+  maintainers:
+    - email: team-dev@projectvoltron.dev
+      name: Voltron Dev Team
+  name: install
+  path: cap.implementation.aws.rds.postgresql.install
+  prefix: cap.implementation.aws.rds.postgresql
+  supportURL: https://aws.amazon.com/rds/postgresql/
+revision: 0.2.0
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+spec:
+  action:
+    args:
+      workflow:
+        entrypoint: postgres-install
+        templates:
+          - inputs:
+              artifacts:
+                - name: input-parameters
+            name: postgres-install
+            outputs:
+              artifacts:
+                - from: "{{steps.provision.outputs.artifacts.postgresql}}"
+                  name: postgresql
+            steps:
+              - - arguments:
+                    artifacts:
+                      - from: "{{inputs.artifacts.input-parameters}}"
+                        name: input-parameters
+                      - name: configuration
+                        raw:
+                          data: ''
+                      - name: template
+                        raw:
+                          data: |
+                            superuser:
+                              username: "<@ superuser.username @>"
+                              password: "<@ superuser.password | default(random_word(length=16)) @>"
+                            region: "eu-west-1"
+                            tier: "db.t3.micro"
+                            ingress_rule_cidr_blocks: "0.0.0.0/0"
+                            publicly_accessible: true
+                            performance_insights_enabled: true
+                            engine_version: "11.10"
+                            major_engine_version: "11"
+                  name: fill-params
+                  voltron-action: jinja2.template
+              - - arguments:
+                    artifacts:
+                      - from: "{{steps.fill-params.outputs.artifacts.render}}"
+                        name: input-parameters
+                  name: provision
+                  voltron-action: rds.provision
+                  voltron-outputTypeInstances:
+                    - from: postgresql
+                      name: postgresql
+    runnerInterface: argo.run
+  additionalInput:
+    typeInstances: []
+  additionalOutput:
+    typeInstances: []
+  appVersion: 10, 11, 12
+  implements:
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
+  imports:
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.templating.jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - alias: rds
+      appVersion:
+      interfaceGroupPath: cap.interface.aws.rds.postgresql
+      methods:
+        - name: provision
+          revision: 0.1.0
+  outputTypeInstanceRelations: []
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - alias:
+          typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+    - allOf:
+        - alias:
+          typeRef:
+            path: cap.type.aws.auth.credentials
+            revision: 0.1.0
+          valueConstraints:
+      anyOf: []
+      oneOf: []
+      prefix: cap.type.aws.auth

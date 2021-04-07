@@ -45,9 +45,67 @@ func fixGCPClusterPolicy() clusterpolicy.ClusterPolicy {
 					},
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func fixAWSClusterPolicy() clusterpolicy.ClusterPolicy {
+	return clusterpolicy.ClusterPolicy{
+		APIVersion: "0.1.0",
+		Rules: clusterpolicy.RulesMap{
+			"cap.*": {
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{},
+					},
+				},
+			},
+			"cap.interface.database.postgresql.install:0.1.0": {
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+							Requires: &[]types.TypeRefWithOptRevision{
+								{
+									Path:     "cap.type.aws.auth.credentials",
+									Revision: ptr.String("0.1.0"),
+								},
+							},
 							Attributes: &[]types.AttributeRef{
 								{
 									Path: "cap.attribute.cloud.provider.aws",
+								},
+							},
+						},
+					},
+				},
+			},
+			"cap.interface.aws.rds.postgresql.provision": {
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+							Requires: &[]types.TypeRefWithOptRevision{
+								{
+									Path:     "cap.type.aws.auth.credentials",
+									Revision: ptr.String("0.1.0"),
+								},
+							},
+							Attributes: &[]types.AttributeRef{
+								{
+									Path: "cap.attribute.cloud.provider.aws",
+								},
+							},
+						},
+						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
+							{
+								ID: "517cf827-233c-4bf1-8fc9-48534424dd58",
+								TypeRef: types.TypeRefWithOptRevision{
+									Path:     "cap.type.aws.auth.credentials",
+									Revision: ptr.String("0.1.0"),
 								},
 							},
 						},
@@ -91,15 +149,6 @@ func fixClusterPolicyForFallback() clusterpolicy.ClusterPolicy {
 								TypeRef: types.TypeRefWithOptRevision{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
-								},
-							},
-						},
-					},
-					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Attributes: &[]types.AttributeRef{
-								{
-									Path: "cap.attribute.cloud.provider.aws",
 								},
 							},
 						},
