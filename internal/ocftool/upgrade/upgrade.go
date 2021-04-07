@@ -60,6 +60,7 @@ type (
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"increaseResourceLimits"`
+		EnableTestSetup        bool   `json:"enableTestSetup"`
 		Override               struct {
 			HelmRepoURL string `json:"helmRepoURL"`
 			Docker      struct {

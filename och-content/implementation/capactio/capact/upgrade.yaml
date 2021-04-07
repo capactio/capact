@@ -104,8 +104,11 @@ spec:
                               <% if override.helmRepoURL %>
                               repo: "<@ override.helmRepoURL @>"
                               <% endif %>
-                            <% if increaseResourceLimits %>
                             values:
+                              engine:
+                                testSetup:
+                                  enabled: <@ enableTestSetup | default('false') @>
+                              <% if increaseResourceLimits %>
                               neo4j:
                                 core:
                                   standalone: true
@@ -116,7 +119,7 @@ spec:
                                     limits:
                                       cpu: 1
                                       memory: 3072Mi
-                            <% endif %>
+                              <% endif %>
 
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"

@@ -25,6 +25,7 @@ spec:
                 {
                   "version": "0.1.0",
                   "increaseResourceLimit": true,
+                  "enableTestSetup": true,
                   "override": {
                     "helmRepoURL": "https://capactio-awesome-charts.storage.googleapis.com",
                     "capact": {
@@ -49,6 +50,10 @@ spec:
                     "$id": "#/properties/increaseResourceLimit",
                     "type": "boolean",
                     "title": "Specifies whether higher resource requests and limits for components should be enabled or not."
+                  },
+                  "enableTestSetup": {
+                    "type": "boolean",
+                    "default": false
                   },
                   "override": {
                     "$id": "#/properties/override",

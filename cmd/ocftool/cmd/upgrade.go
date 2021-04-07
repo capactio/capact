@@ -41,6 +41,7 @@ func NewUpgrade() *cobra.Command {
 	flags.StringVar(&opts.Parameters.Override.Docker.Tag, "override-capact-image-tag", "", "Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.")
 	flags.StringVar(&opts.Parameters.Override.Docker.Repository, "override-capact-image-repo", "", "Allows you to override Docker image repository for Capact components. By default, Docker image repository from Helm chart is used.")
 	flags.BoolVar(&opts.Parameters.IncreaseResourceLimits, "increase-resource-limits", true, "Enables higher resource requests and limits for components.")
+	flags.BoolVar(&opts.Parameters.EnableTestSetup, "enable-test-setup", false, "Enables higher resource requests and limits for components.")
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	flags.BoolVarP(&opts.Wait, "wait", "w", false, `Waits for the upgrade process until it finish or the defined "--timeout" occurs.`)
 

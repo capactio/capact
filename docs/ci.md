@@ -39,27 +39,40 @@ The following secrets are defined:
 
 ###  Pull request
 
-![ci-pr-build](./assets/ci-pr-build.svg)
+<p align="center"><img alt="ci-pr-build" src="./assets/ci-pr-build.svg" /></p>
 
 The job is defined in the [`pr-build.yaml`](../.github/workflows/pr-build.yaml) file. It runs on pull requests created to the `master` branch.
 
-It tests submitted changes, builds the components' Docker images, and pushes them to GCR using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
+Steps:
+
+1. Lint and test submitted code.
+1. Check documentation if the `*.md` files were modified. 
+1. Run integration tests.
+1. Build Docker images for applications, tests and infra tools and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
 
 ###  Master branch
 
-![ci-branch-build](./assets/ci-branch-build.svg)
+> **NOTE:** To reduce the CI build time we disable the `entry-tests`, `build-tools` and `integration-tests` jobs. They will be enabled when the project will be open-sourced.
+
+<p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
 
 The job is defined in the [`.github/workflows/branch-build.yaml`](../.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `master` branch but skips execution for files which do not affect the building process, e.g. documentation, OCH content, etc.
 
-It, once again, tests the source code, builds the components' Docker images, and pushes them to GCR using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
+Steps:
 
-If all steps pass, it updates the existing long-running cluster.
+1. Lint and test code.
+1. Build Docker images for applications, tests and infra tools and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
+1. If [Capact Helm Charts](../deploy/kubernetes/charts) were changed:
+   1. Change **version** in all `Chart.yaml` to the first 7 characters of commit SHA.
+   1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
+1. Update the existing long-running cluster via [CLI](../cmd/ocftool/docs/ocftool_upgrade.md).
+1. If any step failed, send Slack notification.
 
 ###  Recreate a long-running cluster
 
-![ci-recreate-cluster](./assets/ci-recreate-cluster.svg)
+<p align="center"><img alt="ci-recreate-cluster" src="./assets/ci-recreate-cluster.svg" /></p>
 
-The job is defined in the [`.github/workflows/recreate_cluster.yaml`](../.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [gcr.io/projectvoltron](gcr.io/projectvoltron) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
+The job is defined in the [`.github/workflows/recreate_cluster.yaml`](../.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
 
 > **CAUTION:** This job removes the old GKE cluster.
 
@@ -69,7 +82,7 @@ The `recreate` job checks if the certificate exists in the GCS bucket. If it doe
 
 ###  Execute integration tests on a long-running cluster
 
-![ci-integration-tests](./assets/ci-integration-tests.svg)
+<p align="center"><img alt="ci-integration-tests" src="./assets/ci-integration-tests.svg" /></p>
 
 The job is defined in the [`.github/workflows/cluster_integration_tests.yaml`](../.github/workflows/cluster_integration_tests.yaml) file. It runs periodically according to cron defined in the job definition. It executes integration tests using the `helm test` command.
 

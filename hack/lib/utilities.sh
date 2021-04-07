@@ -240,7 +240,7 @@ docker::delete_images() {
 #  - VOLTRON_RELEASE_NAME
 #  - CLUSTER_TYPE
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
-#  - USE_TEST_SETUP - if set to true, then the OCH manifests are populated from `test/och-content` and a test policy is configured
+#  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - OCH_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
 voltron::install_upgrade::charts() {
@@ -301,13 +301,6 @@ voltron::install_upgrade::charts() {
       readonly VOLTRON_RESOURCE_OVERRIDES=""
     fi
 
-    if [ "${USE_TEST_SETUP}" == "true" ]; then
-      readonly VOLTRON_TEST_SETUP_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.voltron.test-setup.yaml"
-      echo -e "- Applying overrides from ${VOLTRON_TEST_SETUP_OVERRIDES}\n"
-    else
-      readonly VOLTRON_TEST_SETUP_OVERRIDES=""
-    fi
-
     if [ -n "${OCH_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
       CUSTOM_VOLTRON_SET_FLAGS="${CUSTOM_VOLTRON_SET_FLAGS:-} \
         --set och-public.populator.manifestsLocation.branch=${OCH_MANIFESTS_SOURCE_REPO_REF}"
@@ -322,6 +315,7 @@ voltron::install_upgrade::charts() {
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
+        --set engine.testSetup.enabled="${USE_TEST_SETUP}" \
         ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
         -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \
         -f "${VOLTRON_OVERRIDES}" \
