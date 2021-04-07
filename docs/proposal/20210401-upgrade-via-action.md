@@ -51,7 +51,7 @@ Helm charts and CRDs are published to the GCS bucket.
 
 ### Voltron Helm charts
 
-External Helm charts are stored as separate charts with one dependency. For example, [`argo`](../../deploy/kubernetes/charts/argo) where `Chart.yaml` is:
+External Helm charts are stored as separate charts with one dependency. As an example, take the [`argo`](../../deploy/kubernetes/charts/argo) chart where the `Chart.yaml` is:
 
 ```yaml
 apiVersion: v2
@@ -84,7 +84,7 @@ Cons:
 | **version** from `Chart.yaml`            | It is the same for all Helm charts (Voltron and all dependencies). It is changed manually for each Voltron release. |
 | **appVersion** from `Chart.yaml`         | It is the same as **version** from `Chart.yaml`                                                                     |
 | **DOCKER_TAG** for Voltron Docker images | It is the same as **version** from `Chart.yaml`                                                                     |
-| **CLI** version                          | It is the same as **version** from `Chart.yaml`                                                                     |
+| CLI version                          | It is the same as **version** from `Chart.yaml`                                                                     |
 | **revision** for upgrade Action          | It is changed manually and independent of the Voltron version. CLI uses the latest one.                             |
 
 ### Voltron upgrade Action
@@ -191,7 +191,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 
     </details>
 
-    In the near future, we will implement a generic solution. For more info, check **Interface supports generic input parameters** from the [Alternatives/ Access installation resources](##access-installation-resources-1) section.
+    In the near future, we will implement a generic solution. For more info, check **Interface supports generic input parameters** from the [Access installation resources](#access-installation-resources-1) section.
 
 1. The long-running cluster is configured with only [test content](../../test/och-content), as we do not have federation support yet. As a result, we will not have access to the upgrade Action manifests. To fix that problem, we decided to merge `test/och-content` into `och-content`. Each manifest will be defined under the `validation` node. Additionally, we will give an option for others to have out-of-the-box manifests, which they can use for their own validation process.
 
@@ -220,7 +220,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 
 #### Notes
 
-Storing additional `values.yaml` files in Helm chart doesn't work. For example, when you use the Helm chart with `values-higher-res-limits.yaml`, it returns this error:
+Applying additional `values.yaml` files directly from Helm chart repository doesn't work. For example, when you use the Helm chart with `values-higher-res-limits.yaml`, it returns this error:
 	
 	```bash
 	helm upgrade neo4j --install --create-namespace --namespace="neo4j" -f values-higher-res-limits.yaml voltron-awesome-charts/neo4j-helm
@@ -254,7 +254,7 @@ Storing additional `values.yaml` files in Helm chart doesn't work. For example, 
 
 The CLI executes the upgrade Action in the following way:
 
-1. Finds the `voltron-config` TypeInstance based on **TypeRef**.
+1. Finds the `voltron-config` TypeInstance based on the **typeRef** property.
 1. Creates input TypeInstances based on the `voltron-config.uses` relation.
 1. Creates input parameters from user input (via CLI flags).
 1. Generates the Action upgrade name.
