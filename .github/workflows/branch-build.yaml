@@ -216,10 +216,10 @@ jobs:
       - name: Get cluster credentials
         run: |
           gcloud config set project ${PROJECT_ID}
-          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}        
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}
       - name: Network enable
         id: network-enable
-        run: | 
+        run: |
           ./hack/ci/add-job-ip.sh
       - name: Install and upgrade existing components
         env:
@@ -250,7 +250,7 @@ jobs:
           SLACK_USERNAME: Voltron CI Notifier
           SLACK_COLOR: 'red'
           SLACK_TITLE: 'Message'
-          SLACK_CHANNEL: 'voltron-core-dev-private'
+          SLACK_CHANNEL: 'capact-dev-private'
           SLACK_MESSAGE: 'Master branch build failed :ahhhhhhhhh:'
           SLACK_ICON_EMOJI: ':this-is-fine:'
           SLACK_FOOTER: "Hopefully it is not an error, it's gorgeous feature"

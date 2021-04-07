@@ -8,7 +8,7 @@ jobs:
     name: Cluster integration tests
     runs-on: ubuntu-latest
 
-    steps:    
+    steps:
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Setup environment
@@ -19,15 +19,15 @@ jobs:
           export_default_credentials: true
           service_account_key: ${{ secrets.GKE_CREDS }}
       - name: Get cluster credentials
-        run: | 
+        run: |
           gcloud config set project ${PROJECT_ID}
-          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}       
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}
       - name: Network enable
         id: network-enable
         run: |
           ./hack/ci/add-job-ip.sh
       - name: Test Voltron release
-        run: | 
+        run: |
           helm test voltron --namespace=voltron-system --timeout="10m" --logs
       - name: Network cleanup
         # The `always()` is needed to always run the step, even if previous ones failed. From docs: "If your if expression does not contain any of the status functions it will automatically result with success()."
@@ -53,7 +53,7 @@ jobs:
           SLACK_USERNAME: Voltron CI Notifier
           SLACK_COLOR: 'red'
           SLACK_TITLE: 'Message'
-          SLACK_CHANNEL: 'voltron-core-dev-private'
+          SLACK_CHANNEL: 'capact-dev-private'
           SLACK_MESSAGE: 'Periodic tests failed :ahhhhhhhhh:'
           SLACK_ICON_EMOJI: ':this-is-fine:'
           SLACK_FOOTER: "Hopefully it is not an error, it's gorgeous feature"
