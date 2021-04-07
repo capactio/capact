@@ -896,8 +896,6 @@ args:
             artifacts:
             - from: '{{workflow.outputs.artifacts.jira-config}}'
               name: jira-config
-            - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgresql}}'
-              name: jira-install-install-db-postgresql
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-provision-rds-instance}}'
               name: jira-install-install-db-postgres-install-provision-rds-instance
             - from: '{{workflow.outputs.artifacts.jira-install-install-db-postgres-install-provision-postgresql}}'
@@ -918,12 +916,6 @@ args:
                     attributes: []
                     typeRef:
                       path: cap.type.productivity.jira.config
-                      revision: 0.1.0
-                    value: null
-                  - alias: jira-install-install-db-postgresql
-                    attributes: []
-                    typeRef:
-                      path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-install-db-postgres-install-provision-rds-instance
@@ -966,7 +958,7 @@ args:
                   - from: jira-config
                     to: jira-install-helm-install-helm-release
                   - from: jira-config
-                    to: jira-install-install-db-postgresql
+                    to: jira-install-install-db-postgres-install-provision-postgresql
                   - from: jira-install-install-db-postgres-install-provision-postgresql
                     to: jira-install-install-db-postgres-install-provision-rds-provision-terraform-apply-terraform-release
                   - from: jira-install-install-db-postgres-install-provision-postgresql
@@ -1024,8 +1016,6 @@ args:
         artifacts:
         - name: jira-config
           path: /upload/typeInstances/jira-config
-        - name: jira-install-install-db-postgresql
-          path: /upload/typeInstances/jira-install-install-db-postgresql
         - name: jira-install-install-db-postgres-install-provision-rds-instance
           path: /upload/typeInstances/jira-install-install-db-postgres-install-provision-rds-instance
         - name: jira-install-install-db-postgres-install-provision-postgresql

@@ -105,9 +105,7 @@ spec:
       methods:
         - name: provision
           revision: 0.1.0
-  outputTypeInstanceRelations:
-    - typeInstanceName: postgresql
-      uses:
+  outputTypeInstanceRelations: []
   requires:
     - allOf: []
       anyOf: []

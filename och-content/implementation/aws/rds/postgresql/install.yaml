@@ -21,7 +21,7 @@ metadata:
 spec:
   appVersion: "10, 11, 12"
 
-  outputTypeInstanceRelations:
+  outputTypeInstanceRelations: {}
   # all output TypeInstances are defined to upload on lower level workflows
 
   implements:
