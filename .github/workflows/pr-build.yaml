@@ -218,7 +218,7 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
-          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.sha }}"
+          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.head_ref }}"
         run: |
           make test-integration
       - name: Upload artifacts
