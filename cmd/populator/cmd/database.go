@@ -10,18 +10,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/docker/cli/cli"
-	"github.com/pkg/errors"
-	"github.com/spf13/cobra"
+	"projectvoltron.dev/voltron/internal/getter"
 	"projectvoltron.dev/voltron/internal/logger"
 	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 
 	"github.com/avast/retry-go"
+	"github.com/docker/cli/cli"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
+	"github.com/pkg/errors"
+	"github.com/spf13/cobra"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
-	"projectvoltron.dev/voltron/internal/getter"
-	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
 )
 
 // TODO: support configuration both via flags and environment variables

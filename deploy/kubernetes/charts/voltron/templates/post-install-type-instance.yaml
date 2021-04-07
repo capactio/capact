@@ -52,7 +52,7 @@ metadata:
     "helm.sh/hook": post-install
     "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
-  backoffLimit: 1
+  backoffLimit: 0
   template:
     spec:
       restartPolicy: Never

@@ -323,8 +323,10 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, instance := range got {
-				Expect(instance.LockedBy).NotTo(BeNil())
-				Expect(*instance.LockedBy).To(Equal(fooOwnerID))
+				if includes(createdTIIDs, instance.ID) {
+					Expect(instance.LockedBy).NotTo(BeNil())
+					Expect(*instance.LockedBy).To(Equal(fooOwnerID))
+				}
 			}
 
 			scenario("id1, id2, id3 are locked by Foo, id4: not found")

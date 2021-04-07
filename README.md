@@ -81,7 +81,7 @@ The following Voltron components are in this repository:
 - [Gateway](./cmd/gateway) - GraphQL Gateway, which consolidates Voltron GraphQL APIs in one endpoint.
 - [Helm runner](./cmd/helm-runner) - Runner, which manages Helm releases.
 - [Engine](./cmd/k8s-engine) - Kubernetes Voltron Engine, which handles Action execution.
-- [CLI](./cmd/ocftool) - A CLI tool  for managing Project Voltron & assist with OCF content.
+- [CLI](./cmd/ocftool) - A CLI tool for managing Project Voltron & assist with OCF content.
 - [Open Capability Hub](./och-js) - Component, which stores OCF Manifests and exposes API to manage them.
 - [Populator](./cmd/populator) - A CLI tool, which e.g. populates OCF Manifests into database.
 - [Open Capability Format specification](./ocf-spec) - Specification, which defines the shape of Voltron entities.

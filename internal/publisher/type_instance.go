@@ -90,7 +90,7 @@ func (i *TypeInstances) PublishVoltronInstallTypeInstances(ctx context.Context) 
 	)
 
 	for _, r := range releases {
-		if i.cfg.HelmReleasesNSLookup.Has(r.Namespace) {
+		if !i.cfg.HelmReleasesNSLookup.Has(r.Namespace) {
 			continue
 		}
 
@@ -157,7 +157,15 @@ func (i *TypeInstances) newListAction() (*action.List, error) {
 		return nil, err
 	}
 
-	return action.NewList(actionConfig), nil
+	actList := action.NewList(actionConfig)
+
+	// We do not wait for all Helm chart to finish before Voltron is deployed
+	// Additionally, this command is executed as a post-install hook, which means that Voltron itself is still
+	// in `pending-install`.
+	actList.All = true
+	actList.SetStateMask()
+
+	return actList, nil
 }
 
 func (i *TypeInstances) produceHelmReleaseTypeInstance(helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
