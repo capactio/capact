@@ -29,6 +29,19 @@ jobs:
       - name: Test Voltron release
         run: |
           helm test voltron --namespace=voltron-system --timeout="10m" --logs
+      - name: Dump cluster info
+        if: ${{ failure() }}
+        env:
+          ARTIFACTS: "output/"
+        run: |
+          ./hack/dump-cluster-info.sh
+      - name: Upload cluster info artifact
+        uses: actions/upload-artifact@v2
+        if: ${{ failure() }}
+        with:
+          name: cluster_dump_${{github.sha}}
+          path: "output"
+          retention-days: 5 # Default 90 days
       - name: Network cleanup
         # The `always()` is needed to always run the step, even if previous ones failed. From docs: "If your if expression does not contain any of the status functions it will automatically result with success()."
         # Without that it will results in: `Evaluating: (success() && (steps.network-enable.outcome == 'success'))`
@@ -38,7 +51,7 @@ jobs:
           IP_ADDED_JOB: "${{ steps.network-enable.outputs.JOB_IP }}"
         run: |
           ./hack/ci/remove-job-ip.sh
-
+          
   slackNotification:
     name: Slack Notification
     runs-on: ubuntu-latest
