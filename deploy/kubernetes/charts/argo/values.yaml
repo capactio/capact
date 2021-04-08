@@ -18,6 +18,8 @@ argo:
       endpoint: argo-minio.argo.svc.cluster.local:9000
 
   minio:
+    securityContext:
+      enabled: false
     service:
       port: 9000
     install: true
