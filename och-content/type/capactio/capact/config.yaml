@@ -1,0 +1,70 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.capactio.capact
+  displayName: Capact config
+  description: Defines configuration for Capact
+  documentationURL: https://capact.dev
+  supportURL: https://capact.dev
+  maintainers:
+    - email: team-dev@capact.dev
+      name: Capact Dev Team
+      url: https://capact.dev
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for Capact configuration",
+        "examples": [
+          {
+            "gateway": {
+              "url": "https://example.org",
+              "username": "username",
+              "password": "password"
+            }
+          }
+        ],
+        "$ocfRefs": {
+          "uri": {
+            "name": "cap.core.type.networking.uri",
+            "revision": "0.1.0"
+          }
+        },
+        "required": [
+          "gateway"
+        ],
+        "properties": {
+          "gateway": {
+            "$id": "#/properties/gateway",
+            "type": "object",
+            "title": "Defines Capact Gateway details",
+            "required": [
+              "url",
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "$id": "#/properties/gateway/properties/username",
+                "type": "string"
+              },
+              "password": {
+                "$id": "#/properties/gateway/properties/password",
+                "type": "string"
+              },
+              "url": {
+                "$id": "#/properties/gateway/properties/url",
+                "$ref": "#/$ocfRefs/uri"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9\

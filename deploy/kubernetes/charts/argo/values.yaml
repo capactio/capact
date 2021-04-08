@@ -37,3 +37,7 @@ argo:
       limits:
         memory: 1Gi
         cpu: 500m
+    DeploymentUpdate:
+      type: RollingUpdate
+      maxUnavailable: 1
+      maxSurge: 1

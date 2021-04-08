@@ -6,12 +6,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/machinebox/graphql"
+	"projectvoltron.dev/voltron/internal/logger"
+	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
+	"projectvoltron.dev/voltron/pkg/och/client/local"
+
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
-	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
 )
 
 type Config struct {
@@ -20,7 +20,7 @@ type Config struct {
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
 	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
 	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
-	LoggerDevMode    bool                         `envconfig:"default=false"`
+	Logger           logger.Config
 }
 
 func main() {
@@ -33,17 +33,10 @@ func main() {
 	exitOnError(err, "while loading configuration")
 
 	// setup logger
-	var logCfg zap.Config
-	if cfg.LoggerDevMode {
-		logCfg = zap.NewDevelopmentConfig()
-	} else {
-		logCfg = zap.NewProductionConfig()
-	}
-
-	logger, err := logCfg.Build()
+	logger, err := logger.New(cfg.Logger)
 	exitOnError(err, "while creating zap logger")
 
-	client := NewOCHLocalClient(cfg.LocalOCHEndpoint)
+	client := local.NewDefaultClient(cfg.LocalOCHEndpoint)
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:
@@ -73,17 +66,6 @@ func main() {
 	if time.Now().Before(minTime) {
 		time.Sleep(time.Second)
 	}
-}
-
-func NewOCHLocalClient(endpoint string) *local.Client {
-	httpClient := httputil.NewClient(
-		30*time.Second,
-		true,
-	)
-	clientOpt := graphql.WithHTTPClient(httpClient)
-	client := graphql.NewClient(endpoint, clientOpt)
-
-	return local.NewClient(client)
 }
 
 func exitOnError(err error, context string) {

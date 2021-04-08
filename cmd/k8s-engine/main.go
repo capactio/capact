@@ -12,22 +12,21 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/healthz"
-	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-
 	"projectvoltron.dev/voltron/internal/graphqlutil"
 	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
 	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 	"projectvoltron.dev/voltron/internal/k8s-engine/validate"
+	"projectvoltron.dev/voltron/internal/logger"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"projectvoltron.dev/voltron/pkg/httputil"
 	ochclient "projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
+	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 )
 
 var (
@@ -55,9 +54,8 @@ type Config struct {
 	MaxConcurrentReconciles int `envconfig:"default=1"`
 	// MaxRetryForFailedAction is the maximum number of concurrent Reconciles which can be run.
 	MaxRetryForFailedAction int `envconfig:"default=15"`
-	// LoggerDevMode sets the logger to use (or not use) development mode (more human-readable output, extra stack traces
-	// and logging information, etc).
-	LoggerDevMode bool `envconfig:"default=false"`
+
+	Logger logger.Config
 
 	GraphQLGateway struct {
 		Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
@@ -79,7 +77,8 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	logger := zap.NewRaw(zap.UseDevMode(cfg.LoggerDevMode))
+	logger, err := logger.New(cfg.Logger)
+	exitOnError(err, "while creating zap logger")
 
 	// setup controller
 	ctrl.SetLogger(zapr.NewLogger(logger))
@@ -143,9 +142,9 @@ func main() {
 }
 
 func getOCHClient(cfg *Config) *ochclient.Client {
-	httpClient := httputil.NewClient(30*time.Second, false,
+	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
-	return ochclient.NewClient(cfg.GraphQLGateway.Endpoint, httpClient)
+	return ochclient.New(cfg.GraphQLGateway.Endpoint, httpClient)
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {

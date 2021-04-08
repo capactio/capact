@@ -13,23 +13,28 @@ import (
 )
 
 type installer struct {
-	actionCfg           *action.Configuration
+	actionCfgProducer   actionConfigProducer
 	log                 *zap.Logger
 	out                 outputter
 	repositoryCachePath string
 }
 
-func newInstaller(log *zap.Logger, repositoryCachePath string, actionCfg *action.Configuration, outputter outputter) *installer {
+func newInstaller(log *zap.Logger, repositoryCachePath string, actionCfgProducer actionConfigProducer, outputter outputter) *installer {
 	return &installer{
 		log:                 log,
-		actionCfg:           actionCfg,
+		actionCfgProducer:   actionCfgProducer,
 		repositoryCachePath: repositoryCachePath,
 		out:                 outputter,
 	}
 }
 
 func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
-	installCli := i.initActionInstallFromInput(in)
+	actCfg, err := i.actionCfgProducer(in.Ctx.Platform.Namespace)
+	if err != nil {
+		return Output{}, Status{}, errors.Wrap(err, "while creating Helm action config")
+	}
+
+	installCli := i.initActionInstallFromInput(actCfg, in)
 
 	name, chartName, err := i.nameAndChart(installCli, in.Args.Name, in.Args.Chart.Name)
 	if err != nil {
@@ -68,7 +73,7 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 		return Output{}, Status{}, errors.Wrap(err, "while saving default output")
 	}
 
-	additionalOut, err := i.out.ProduceAdditional(in.Args, chartData, helmRelease)
+	additionalOut, err := i.out.ProduceAdditional(in.Args.Output, chartData, helmRelease)
 	if err != nil {
 		return Output{}, Status{}, errors.Wrap(err, "while rendering and saving additional output")
 	}
@@ -84,8 +89,8 @@ func (i *installer) Do(_ context.Context, in Input) (Output, Status, error) {
 	}, status, nil
 }
 
-func (i *installer) initActionInstallFromInput(in Input) *action.Install {
-	installCli := action.NewInstall(i.actionCfg)
+func (i *installer) initActionInstallFromInput(cfg *action.Configuration, in Input) *action.Install {
+	installCli := action.NewInstall(cfg)
 	installCli.Wait = true
 
 	// context

@@ -3,6 +3,9 @@ package local
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"projectvoltron.dev/voltron/pkg/httputil"
 
 	"github.com/avast/retry-go"
 	"github.com/machinebox/graphql"
@@ -10,15 +13,30 @@ import (
 	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 )
 
-const retryAttempts = 1
+const (
+	retryAttempts      = 1
+	httpRequestTimeout = 30 * time.Second
+)
 
 // Client used to communicate with the Voltron Local OCH GraphQL APIs
 type Client struct {
 	client *graphql.Client
 }
 
+// NewClient creates a local client with a given graphql custom client instance.
 func NewClient(cli *graphql.Client) *Client {
 	return &Client{client: cli}
+}
+
+// NewDefaultClient creates ready to use client with default values.
+func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
+	httpClient := httputil.NewClient(
+		httpRequestTimeout,
+	)
+	clientOpt := graphql.WithHTTPClient(httpClient)
+	client := graphql.NewClient(endpoint, clientOpt)
+
+	return NewClient(client)
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, error) {

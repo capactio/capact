@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"projectvoltron.dev/voltron/internal/logger"
+
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
@@ -27,7 +29,7 @@ func NewManager(runner Runner, statusReporter StatusReporter) (*Manager, error) 
 		return nil, errors.Wrap(err, "while loading configuration")
 	}
 
-	log, err := getLogger(cfg.LoggerDevMode)
+	log, err := logger.New(cfg.Logger)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating zap logger")
 	}
@@ -142,11 +144,4 @@ func loggerInto(log *zap.Logger, runner interface{}) {
 	if s, ok := runner.(LoggerInjector); ok {
 		s.InjectLogger(log)
 	}
-}
-
-func getLogger(loggerDevMode bool) (*zap.Logger, error) {
-	if loggerDevMode {
-		return zap.NewDevelopment()
-	}
-	return zap.NewProduction()
 }

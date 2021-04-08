@@ -21,3 +21,9 @@ integrationTest:
     name: e2e-test
     pullPolicy: IfNotPresent
   expectedNumberOfRunningPods: 21
+
+postInstallTypeInstanceJob:
+  image:
+    name: populator
+    pullPolicy: IfNotPresent
+  args: ["/app register capact-installation"]

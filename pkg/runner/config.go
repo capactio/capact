@@ -4,14 +4,16 @@ import (
 	"encoding/json"
 	"time"
 
+	"projectvoltron.dev/voltron/internal/logger"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Config holds whole configuration for Manager.
 type Config struct {
-	ContextPath   string
-	ArgsPath      string
-	LoggerDevMode bool `envconfig:"default=false"`
+	ContextPath string
+	ArgsPath    string
+	Logger      logger.Config
 }
 
 type InputData struct {

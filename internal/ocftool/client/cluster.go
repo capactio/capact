@@ -44,7 +44,7 @@ func NewCluster(server string) (ClusterClient, error) {
 
 	endpoint := fmt.Sprintf("%s/graphql", server)
 
-	httpClient := httputil.NewClient(30*time.Second, false,
+	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(creds.Username, creds.Secret))
 
 	gqlClient := graphql.NewClient(endpoint, graphql.WithHTTPClient(httpClient))

@@ -29,7 +29,7 @@ func TestNewClient(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// when
-			gotCli := httputil.NewClient(tc.timeout, tc.skipCertVerification)
+			gotCli := httputil.NewClient(tc.timeout, httputil.WithTLSInsecureSkipVerify(tc.skipCertVerification))
 
 			// then
 			transport := gotCli.Transport.(*http.Transport)
@@ -56,7 +56,7 @@ func TestClientProvidedBasicAuthIsUsedInRequests(t *testing.T) {
 		receivedUser, receivedPass, _ = r.BasicAuth()
 	}))
 
-	cli := httputil.NewClient(30*time.Second, false, httputil.WithBasicAuth(username, password))
+	cli := httputil.NewClient(30*time.Second, httputil.WithBasicAuth(username, password))
 
 	// when
 	resp, err := cli.Get(ts.URL)

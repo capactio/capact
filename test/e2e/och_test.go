@@ -323,6 +323,9 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).NotTo(HaveOccurred())
 
 			for _, instance := range got {
+				if !includes(createdTIIDs, instance.ID) {
+					continue
+				}
 				Expect(instance.LockedBy).NotTo(BeNil())
 				Expect(*instance.LockedBy).To(Equal(fooOwnerID))
 			}
