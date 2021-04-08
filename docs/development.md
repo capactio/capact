@@ -22,6 +22,7 @@ Read this document to learn how to develop the project. Please also follow guide
 - [Build and push Docker images](#build-and-push-docker-images)
   * [All components](#all-components)
   * [Single component](#single-component)
+- [Build binaries](#build-binaries)
 - [Generators](#generators)
   * [Generate Go code from the OCF JSON Schemas](#generate-go-code-from-the-ocf-json-schemas)
   * [Generate K8s resources](#generate-k8s-resources)
@@ -229,6 +230,22 @@ If you want to build and push Docker image for a single component, follow these 
     ```bash
     make push-test-image-e2e
     ```
+
+## Build Binaries
+
+To build the binaries for ocftool, execute:
+
+```bash
+make build-tool-ocftool
+```
+
+To build the binaries for populator, execute:
+
+```bash
+make build-tool-populator
+```
+
+The binaries will be placed under the `bin/` subdirectory in the root of the source tree.
 
 ## Generators
 
