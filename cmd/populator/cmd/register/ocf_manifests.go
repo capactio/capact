@@ -1,4 +1,4 @@
-package cmd
+package register
 
 import (
 	"context"
@@ -25,13 +25,13 @@ import (
 )
 
 // TODO: support configuration both via flags and environment variables
-func NewHubDatabase() *cobra.Command {
+func NewOCFManifests(cliName string) *cobra.Command {
 	return &cobra.Command{
-		Use:   "hub-database [MANIFEST_PATH]",
+		Use:   "ocf-manifests [MANIFEST_PATH]",
 		Short: "Populates locally available manifests into Neo4j database",
 		Example: heredoc.WithCLIName(`
 			APP_JSON_PUBLISH_ADDR=http://{HOST_IP} <cli> .
-		`, CLIName),
+		`, cliName),
 		Args: cli.RequiresMaxArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runDBPopulate(cmd.Context(), args[0])

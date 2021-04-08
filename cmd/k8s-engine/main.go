@@ -142,7 +142,7 @@ func main() {
 }
 
 func getOCHClient(cfg *Config) *ochclient.Client {
-	httpClient := httputil.NewClient(30*time.Second, false,
+	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
 	return ochclient.New(cfg.GraphQLGateway.Endpoint, httpClient)
 }

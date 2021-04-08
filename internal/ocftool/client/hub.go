@@ -23,7 +23,7 @@ func NewHub(server string) (*public.Client, error) {
 		return nil, err
 	}
 
-	httpClient := httputil.NewClient(30*time.Second, false,
+	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(creds.Username, creds.Secret))
 
 	clientOpt := graphql.WithHTTPClient(httpClient)

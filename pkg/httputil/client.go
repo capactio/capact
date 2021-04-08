@@ -6,12 +6,9 @@ import (
 )
 
 // NewClient creates a new http client with a given timeouts
-func NewClient(timeout time.Duration, skipCertVerification bool, opts ...ClientOption) *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig.InsecureSkipVerify = skipCertVerification
-
+func NewClient(timeout time.Duration, opts ...ClientOption) *http.Client {
 	client := &http.Client{
-		Transport: transport,
+		Transport: http.DefaultTransport.(*http.Transport).Clone(),
 		Timeout:   timeout,
 	}
 
@@ -33,6 +30,13 @@ func WithBasicAuth(user, pass string) ClientOption {
 			pass:         pass,
 			RoundTripper: client.Transport,
 		}
+	}
+}
+
+func WithTLSInsecureSkipVerify(skip bool) func(client *http.Client) {
+	return func(client *http.Client) {
+		tr := client.Transport.(*http.Transport)
+		tr.TLSClientConfig.InsecureSkipVerify = skip
 	}
 }
 

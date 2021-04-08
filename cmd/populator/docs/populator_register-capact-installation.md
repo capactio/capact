@@ -1,11 +1,11 @@
-# populator voltron-install-type-instances
+# populator register capact-installation
 
 Produces and uploads TypeInstances which describe Voltron installation.
 
 ## Usage
 
 ```shell
-populator voltron-install-type-instances
+populator register capact-installation
 ```
 
 ## Configuration

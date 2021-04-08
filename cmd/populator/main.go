@@ -6,8 +6,10 @@ import (
 	"projectvoltron.dev/voltron/cmd/populator/cmd"
 )
 
+const CLIName = "populator"
+
 func main() {
-	if err := cmd.NewRoot().Execute(); err != nil {
+	if err := cmd.NewRoot(CLIName).Execute(); err != nil {
 		os.Exit(1)
 	}
 }

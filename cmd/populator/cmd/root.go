@@ -3,14 +3,14 @@ package cmd
 import (
 	"log"
 
+	"projectvoltron.dev/voltron/cmd/populator/cmd/register"
+
 	"github.com/spf13/cobra"
 )
 
-const CLIName = "populator"
-
-func NewRoot() *cobra.Command {
+func NewRoot(cliName string) *cobra.Command {
 	rootCmd := &cobra.Command{
-		Use:          CLIName,
+		Use:          cliName,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
@@ -20,8 +20,7 @@ func NewRoot() *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
-		NewHubDatabase(),
-		NewInstallTypeInstances(),
+		register.NewRegister(cliName),
 	)
 
 	return rootCmd

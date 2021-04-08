@@ -1,4 +1,4 @@
-package publisher
+package installation
 
 import (
 	"os"
@@ -23,6 +23,6 @@ func TestLookupNS_Unmarshal_Success_Set(t *testing.T) {
 
 	// then
 	require.NoError(t, err)
-	assert.True(t, conf.HelmReleasesNSLookup.Has("ns1"))
-	assert.True(t, conf.HelmReleasesNSLookup.Has("ns2"))
+	assert.True(t, conf.HelmReleasesNSLookup.Contains("ns1"))
+	assert.True(t, conf.HelmReleasesNSLookup.Contains("ns2"))
 }

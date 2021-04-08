@@ -58,7 +58,7 @@ func TestE2E(t *testing.T) {
 }
 
 func waitTillServiceEndpointsAreReady() {
-	cli := httputil.NewClient(30*time.Second, true)
+	cli := httputil.NewClient(30*time.Second, httputil.WithTLSInsecureSkipVerify(true))
 
 	for _, endpoint := range cfg.StatusEndpoints {
 		Eventually(func() error {
@@ -90,7 +90,7 @@ func waitTillDataIsPopulated() {
 func getOCHGraphQLClient() *ochclient.Client {
 	httpClient := httputil.NewClient(
 		30*time.Second,
-		true,
+		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
 	return ochclient.New(cfg.Gateway.Endpoint, httpClient)
@@ -99,7 +99,7 @@ func getOCHGraphQLClient() *ochclient.Client {
 func getEngineGraphQLClient() *engineclient.Client {
 	httpClient := httputil.NewClient(
 		60*time.Second,
-		true,
+		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
 	return engineclient.New(cfg.Gateway.Endpoint, httpClient)

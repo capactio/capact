@@ -1,4 +1,4 @@
-# populator hub-database
+# populator register ocf-manifests
 
 Populates the OCF manifests into Neo4j database. It reads manifest from remote or local path, converts them into JSON and uploads to database.
 
@@ -36,14 +36,14 @@ It will create a `populator` binary in a local dir.
 To run it and use local manifests from Voltron repo:
 
 ```shell
-./populator hub-database .
+./populator register ocf-manifests .
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.
 For example command to download manifests from Voltron repo would look like this:
 ```shell
-expoort SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
-./populator hub-database git@github.com:Project-Voltron/go-voltron.git?sshkey=$SSHKEY
+export SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
+./populator register ocf-manifests git@github.com:Project-Voltron/go-voltron.git?sshkey=$SSHKEY
 ```
 
 For better performance populator starts HTTP server to serve manifests converted to JSON files.
@@ -51,7 +51,7 @@ Neo4j needs access to this JSON files. `APP_JSON_PUBLISH_ADDR` environment varia
 so populator can send a correct link to a Neo4j:
 
 ```shell
-APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator hub-database .
+APP_JSON_PUBLISH_ADDR=http://{HOST_IP} ./populator register ocf-manifests .
 ```
 Replace `HOST_IP` with your computer IP
 

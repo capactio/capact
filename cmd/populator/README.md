@@ -21,8 +21,8 @@ go run cmd/populator/main.go
 ```
 
 Check below documents for details how to use the tool: 
-* [populator_hub-database.md](./docs/populator_hub-database.md)	- Populates locally available manifests into Neo4j database.
-* [populator_voltron-install-type-instances.md](./docs/populator_voltron-install-type-instances.md)	- Produces and uploads TypeInstances which describe Voltron installation.
+* [populator_register-ocf-manifests.md](./docs/populator_register-ocf-manifests.md)	- Populates locally available manifests into Neo4j database.
+* [populator_register-capact-installation.md](./docs/populator_register-capact-installation.md)	- Produces and uploads TypeInstances which describe Voltron installation.
 
 ## Development
 

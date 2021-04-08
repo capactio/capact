@@ -59,12 +59,11 @@ spec:
       serviceAccountName: post-install-type-instances-job
       containers:
         - name: job
-          image:  "{{ .Values.global.containerRegistry.path }}/{{ .Values.postInstallTypeInstanceJob.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}" # Try to use the argo-actions::upload or create Action?
+          image:  "{{ .Values.global.containerRegistry.path }}/{{ .Values.postInstallTypeInstanceJob.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
           env:
-            # It will be simplified to `voltron-system` a.k.a `capact-system`.
             - name: HELM_RELEASES_NS_LOOKUP
-              value: "voltron-system,argo,ingress-nginx,kubed,neo4j"
+              value: "voltron-system,argo,ingress-nginx,kubed,neo4j,monitoring"
             - name: HELM_REPOSITORY_PATH
               value: "https://capactio-awesome-charts.storage.googleapis.com"
           command: ["/bin/sh", "-c"]

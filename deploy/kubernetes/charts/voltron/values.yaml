@@ -26,4 +26,4 @@ postInstallTypeInstanceJob:
   image:
     name: populator
     pullPolicy: IfNotPresent
-  args: ["/app voltron-install-type-instances"]
+  args: ["/app register capact-installation"]

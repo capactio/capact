@@ -1,4 +1,4 @@
-package publisher
+package installation
 
 import (
 	"strings"
@@ -7,13 +7,15 @@ import (
 	"projectvoltron.dev/voltron/internal/logger"
 )
 
-// TypeInstancesConfig holds configuration for TypeInstances publisher
+// TypeInstancesConfig holds configuration for CapactRegister
 type TypeInstancesConfig struct {
 	Logger               logger.Config
 	LocalOCHEndpoint     string `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
 	HelmReleasesNSLookup LookupNS
 	VoltronReleaseName   string `envconfig:"default=voltron"`
-	HelmRepositoryPath   string `envconfig:"default=https://capactio-awesome-charts.storage.googleapis.com"`
+	// The `capactio-awesome-charts` bucket name is by design. We do not know if we will have to change our GCP project too,
+	// so it will be easier to have the `capactio-charts` name not taken.
+	HelmRepositoryPath string `envconfig:"default=https://capactio-awesome-charts.storage.googleapis.com"`
 }
 
 type LookupNS map[string]struct{}
@@ -34,7 +36,7 @@ func (m *LookupNS) Unmarshal(s string) error {
 	return nil
 }
 
-func (m LookupNS) Has(ns string) bool {
+func (m LookupNS) Contains(ns string) bool {
 	_, found := m[ns]
 	return found
 }

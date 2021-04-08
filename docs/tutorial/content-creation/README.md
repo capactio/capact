@@ -42,7 +42,7 @@ To develop and test the created content, you will need to have a Voltron environ
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
-* [populator](../../../cmd/populator/docs/populator_hub-database.md) - For now, you need to compile it from source
+* [populator](../../../cmd/populator/docs/populator_register-ocf-manifests.md) - For now, you need to compile it from source
 
 Also, clone the Voltron repository with the current OCF content.
 ```bash
@@ -644,7 +644,7 @@ ENABLE_POPULATOR=false make dev-cluster
 
 This can take a few minutes. We disabled the populator sidecar in OCH public, as we will populate the data from our local repository using the populator.
 
-> You can read more about the populator, how to compile and use it, in this [README](../../../cmd/populator/docs/populator_hub-database.md).
+> You can read more about the populator, how to compile and use it, in this [README](../../../cmd/populator/docs/populator_register-ocf-manifests.md).
 
 To populate the data, you will need to first set up port-forwarding to the Neo4j database service:
 ```
@@ -653,9 +653,9 @@ kubectl port-forward -n neo4j svc/neo4j-neo4j 7474 7687
 
 Then populate the data, with the populator:
 ```
-APP_JSONPUBLISHADDR=<your-local-docker-ip-address> APP_MANIFESTS_PATH=och-content ./populator .
+APP_JSON_PUBLISH_ADDR=<your-local-docker-ip-address> APP_MANIFESTS_PATH=och-content ./populator register ocf-manifests .
 
-APP_JSONPUBLISHADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator .
+APP_JSON_PUBLISH_ADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator register ocf-manifests .
 ```
 
 ## Run your new action

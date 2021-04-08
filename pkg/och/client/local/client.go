@@ -14,9 +14,8 @@ import (
 )
 
 const (
-	retryAttempts        = 1
-	httpRequestTimeout   = 30 * time.Second
-	skipCertVerification = true
+	retryAttempts      = 1
+	httpRequestTimeout = 30 * time.Second
 )
 
 // Client used to communicate with the Voltron Local OCH GraphQL APIs
@@ -30,10 +29,9 @@ func NewClient(cli *graphql.Client) *Client {
 }
 
 // NewDefaultClient creates ready to use client with default values.
-func NewDefaultClient(endpoint string) *Client {
+func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 	httpClient := httputil.NewClient(
 		httpRequestTimeout,
-		skipCertVerification,
 	)
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)

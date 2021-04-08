@@ -1,4 +1,4 @@
-package publisher
+package installation
 
 import (
 	"context"
@@ -35,8 +35,8 @@ var voltronAdditionalOutput = heredoc.Doc(`
 							  password: "{{ .Values.global.gateway.auth.password }}"
 						`)
 
-// TypeInstances provides functionality to produce and upload TypeInstances
-type TypeInstances struct {
+// CapactRegister provides functionality to produce and upload CapactRegister
+type CapactRegister struct {
 	k8sCfg        *rest.Config
 	logger        *zap.Logger
 	localOCHCli   *local.Client
@@ -44,7 +44,7 @@ type TypeInstances struct {
 	helmOutputter *helm.Outputter
 }
 
-func NewTypeInstances() (*TypeInstances, error) {
+func NewCapactRegister() (*CapactRegister, error) {
 	var cfg TypeInstancesConfig
 	err := envconfig.Init(&cfg)
 	if err != nil {
@@ -63,7 +63,7 @@ func NewTypeInstances() (*TypeInstances, error) {
 
 	client := local.NewDefaultClient(cfg.LocalOCHEndpoint)
 
-	return &TypeInstances{
+	return &CapactRegister{
 		k8sCfg:        k8sCfg,
 		logger:        logger,
 		localOCHCli:   client,
@@ -72,9 +72,9 @@ func NewTypeInstances() (*TypeInstances, error) {
 	}, nil
 }
 
-// PublishVoltronInstallTypeInstances produces and uploads TypeInstances which describe Voltron installation.
-func (i *TypeInstances) PublishVoltronInstallTypeInstances(ctx context.Context) error {
-	listAct, err := i.newListAction()
+// RegisterTypeInstances produces and uploads TypeInstances which describe Voltron installation.
+func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
+	listAct, err := i.newHelmListAction()
 	if err != nil {
 		return errors.Wrap(err, "while creating Helm list action")
 	}
@@ -90,7 +90,7 @@ func (i *TypeInstances) PublishVoltronInstallTypeInstances(ctx context.Context) 
 	)
 
 	for _, r := range releases {
-		if !i.cfg.HelmReleasesNSLookup.Has(r.Namespace) {
+		if !i.cfg.HelmReleasesNSLookup.Contains(r.Namespace) {
 			continue
 		}
 
@@ -122,15 +122,16 @@ func (i *TypeInstances) PublishVoltronInstallTypeInstances(ctx context.Context) 
 	return nil
 }
 
-func (i *TypeInstances) createTypeInstancesInput(owner string, ti []*gqllocalapi.CreateTypeInstanceInput) *gqllocalapi.CreateTypeInstancesInput {
+func (i *CapactRegister) createTypeInstancesInput(owner string, ti []*gqllocalapi.CreateTypeInstanceInput) *gqllocalapi.CreateTypeInstancesInput {
 	var rel []*gqllocalapi.TypeInstanceUsesRelationInput
 	for _, item := range ti {
 		if owner != *item.Alias {
-			rel = append(rel, &gqllocalapi.TypeInstanceUsesRelationInput{
-				From: owner,
-				To:   *item.Alias,
-			})
+			continue
 		}
+		rel = append(rel, &gqllocalapi.TypeInstanceUsesRelationInput{
+			From: owner,
+			To:   *item.Alias,
+		})
 	}
 
 	return &gqllocalapi.CreateTypeInstancesInput{
@@ -139,7 +140,7 @@ func (i *TypeInstances) createTypeInstancesInput(owner string, ti []*gqllocalapi
 	}
 }
 
-func (i *TypeInstances) newListAction() (*action.List, error) {
+func (i *CapactRegister) newHelmListAction() (*action.List, error) {
 	actionConfig := new(action.Configuration)
 	helmCfg := &genericclioptions.ConfigFlags{
 		APIServer:   &i.k8sCfg.Host,
@@ -168,14 +169,14 @@ func (i *TypeInstances) newListAction() (*action.List, error) {
 	return actList, nil
 }
 
-func (i *TypeInstances) produceHelmReleaseTypeInstance(helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
+func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
 	releaseOut, err := i.helmOutputter.ProduceHelmRelease(i.cfg.HelmRepositoryPath, helmRelease)
 	if err != nil {
 		return nil, errors.Wrap(err, "while producing Helm release definition")
 	}
 
-	var unmarshaled interface{}
-	err = yaml.Unmarshal(releaseOut, &unmarshaled)
+	var unmarshalled interface{}
+	err = yaml.Unmarshal(releaseOut, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
 	}
@@ -186,11 +187,11 @@ func (i *TypeInstances) produceHelmReleaseTypeInstance(helmRelease *release.Rele
 			Path:     helmReleaseTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshaled,
+		Value: unmarshalled,
 	}, nil
 }
 
-func (i *TypeInstances) produceConfigTypeInstance(ownerName string, helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
+func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
 	tpl, err := yaml.YAMLToJSON([]byte(voltronAdditionalOutput))
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting YAML to JSON")
@@ -204,8 +205,8 @@ func (i *TypeInstances) produceConfigTypeInstance(ownerName string, helmRelease 
 		return nil, errors.Wrap(err, "while producing additional info")
 	}
 
-	var unmarshaled interface{}
-	err = yaml.Unmarshal(data, &unmarshaled)
+	var unmarshalled interface{}
+	err = yaml.Unmarshal(data, &unmarshalled)
 	if err != nil {
 		return nil, errors.Wrap(err, "while unmarshaling bytes")
 	}
@@ -215,6 +216,6 @@ func (i *TypeInstances) produceConfigTypeInstance(ownerName string, helmRelease 
 			Path:     capactTypeRefPath,
 			Revision: "0.1.0",
 		},
-		Value: unmarshaled,
+		Value: unmarshalled,
 	}, nil
 }
