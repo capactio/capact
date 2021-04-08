@@ -42,7 +42,7 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
   export TERRAFORM_STATE_BUCKET=<s3_bucket_for_the_remote_statefile>
   ```
 
-> **NOTE:** You can add flags to the terraform apply, by settings the CAPACT_TERRAFORM_OPTS environment variable, e.g.
+> **NOTE:** You can add flags to the `terraform apply`, by settings the CAPACT_TERRAFORM_OPTS environment variable, e.g.
 >
 > `export CAPACT_TERRAFORM_OPTS="-var worker_group_max_size=4"`
 
