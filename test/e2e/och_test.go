@@ -72,7 +72,7 @@ var _ = Describe("GraphQL API", func() {
 					Path:     interfacePath,
 					Revision: revision,
 				}
-				pathPattern := "cap.implementation.voltron.*"
+				pathPattern := "cap.implementation.voltron.validation.own.*"
 				filter := gqlpublicapi.ImplementationRevisionFilter{
 					PathPattern: ptr.String(pathPattern),
 				}
