@@ -46,7 +46,7 @@ spec:
             - name: APP_JSON_PUBLISH_PORT
               value: "{{ .Values.populator.port }}"
             - name: MANIFESTS_PATH
-              value: "{{ .Values.populator.manifestsPath}}"
+              value: "{{ include "populator.manifestPath" . }}"
             - name: APP_UPDATE_ON_GIT_COMMIT
               value: "{{ .Values.populator.updateOnGitCommit}}"
 

@@ -5,8 +5,9 @@ package e2e
 import (
 	"context"
 	"fmt"
-	prmt "github.com/gitchander/permutation"
 	"strings"
+
+	prmt "github.com/gitchander/permutation"
 
 	"github.com/MakeNowJust/heredoc"
 	. "github.com/onsi/ginkgo"
@@ -31,7 +32,7 @@ var _ = Describe("GraphQL API", func() {
 
 		Describe("should return ImplementationRevision", func() {
 			const (
-				interfacePath  = "cap.interface.voltron.ochtests.install"
+				interfacePath  = "cap.interface.voltron.validation.och.install"
 				latestRevision = "2.0.0"
 				revision       = "1.0.0"
 			)
@@ -71,7 +72,7 @@ var _ = Describe("GraphQL API", func() {
 					Path:     interfacePath,
 					Revision: revision,
 				}
-				pathPattern := "cap.implementation.voltron.*"
+				pathPattern := "cap.implementation.voltron.validation.own.*"
 				filter := gqlpublicapi.ImplementationRevisionFilter{
 					PathPattern: ptr.String(pathPattern),
 				}

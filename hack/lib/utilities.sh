@@ -242,6 +242,7 @@ docker::delete_images() {
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then the OCH manifests are populated from `test/och-content` and a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
+#  - OCH_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
 voltron::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
     readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
@@ -300,6 +301,11 @@ voltron::install_upgrade::charts() {
       echo -e "- Applying overrides from ${VOLTRON_TEST_SETUP_OVERRIDES}\n"
     else
       readonly VOLTRON_TEST_SETUP_OVERRIDES=""
+    fi
+
+    if [ -n "${OCH_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
+      CUSTOM_VOLTRON_SET_FLAGS="${CUSTOM_VOLTRON_SET_FLAGS:-} \
+        --set och-public.populator.manifestsLocation.branch=${OCH_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
     # CUSTOM_VOLTRON_SET_FLAGS cannot be quoted

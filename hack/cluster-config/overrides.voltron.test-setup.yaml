@@ -1,24 +1,19 @@
-och-public:
-  populator:
-    manifestsPath: file:///test
-    updateOnGitCommit: false
-
 engine:
   clusterPolicyRules:
-      cap.interface.voltron.action.passing: # Rules for exact path and revision (looked up in first place)
+      cap.interface.voltron.validation.action.passing: # Rules for exact path and revision (looked up in first place)
         oneOf:
           - implementationConstraints:
               requires:
-                - path: "cap.type.simple.single-key"
+                - path: "cap.type.voltron.validation.single-key"
               attributes:
                 - path: "cap.attribute.policy.most-preferred"
             injectTypeInstances:
               - id: "{typeInstanceUUID}"
                 typeRef:
-                  path: "cap.type.simple.single-key"
+                  path: "cap.type.voltron.validation.single-key"
                   revision: "0.1.0"
           - implementationConstraints:
-              path: cap.implementation.voltron.action.passing-a
+              path: cap.implementation.voltron.validation.action.passing-a
       cap.*:
         oneOf:
           - implementationConstraints:
