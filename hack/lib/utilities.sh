@@ -267,7 +267,11 @@ voltron::install_upgrade::charts() {
 
     voltron::install_upgrade::argo
 
-     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
+    if [ "${CLUSTER_TYPE}" != "KIND" ]; then
+      voltron::install_upgrade::cert_manager
+    fi
+
+    if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping kubed installation cause DISABLE_KUBED_INSTALLATION is set to true."
     else
       voltron::install_upgrade::kubed
@@ -371,7 +375,7 @@ voltron::install_upgrade::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
 
-    case "${CLUSTER_CONFIG_DIR}" in
+    case "${CLUSTER_TYPE}" in
       KIND)
         readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
         echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
@@ -382,7 +386,7 @@ voltron::install_upgrade::ingress_controller() {
         ;;
 
       *)
-        readonly INGRESS_CTRL_OVERRIDES="${}"
+        readonly INGRESS_CTRL_OVERRIDES=""
         ;;
     esac
 
@@ -411,6 +415,25 @@ voltron::install_upgrade::argo() {
         --install \
         --create-namespace \
         --namespace="argo"
+}
+
+voltron::install_upgrade::cert_manager() {
+    shout "- Installing Cert Manager Helm chart..."
+
+    if [ "${CLUSTER_TYPE}" == "EKS" ]; then
+      local -r values_overrides="${EKS_CONFIG_DIR}/overrides.cert-manager.yaml"
+    else
+      local -r values_overrides=""
+    fi
+
+    # CUSTOM_NGINX_SET_FLAGS cannot be quoted
+    # shellcheck disable=SC2086
+    helm upgrade cert-manager "${K8S_DEPLOY_DIR}/charts/cert-manager" \
+        --install \
+        --create-namespace \
+        --namespace="cert-manager" \
+        -f "${values_overrides}" \
+        ${CUSTOM_CERT_MANAGER_SET_FLAGS:-}
 }
 
 voltron::synchronize::minio_secret() {

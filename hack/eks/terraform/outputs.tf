@@ -27,7 +27,7 @@ output "cert_manager_irsa_role_arn" {
 output "bastion_ssh_private_key" {
   value     = module.bastion_key_pair.private_key
   sensitive = true
-  description = "Private SSH key to access the bastion host. The username is ec2-user."
+  description = "Private SSH key to access the bastion host. The username is ubuntu."
 }
 
 output "eks_kubeconfig" {

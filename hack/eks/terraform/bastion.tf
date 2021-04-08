@@ -44,6 +44,11 @@ module "ec2_bastion" {
     capectl_version = var.capectl_version
   }))
 
+  ami_filter = {
+    name = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+  }
+  ami_owners = ["099720109477"]
+
   vpc_id                      = module.vpc.vpc_id
   subnets                     = module.vpc.public_subnets
   security_groups             = [aws_security_group.bastion.id]

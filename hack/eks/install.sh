@@ -21,13 +21,10 @@ readonly CONFIG_DIR="${CURRENT_DIR}/config"
 capact::aws::terraform::apply() {
   shout "Creating infrastructure with Terraform..."
 
-  local -r state_bucket
-  local -r state_key
-  local -r state_region
-
-  state_bucket="${TERRAFORM_STATE_BUCKET}"
-  state_key="${CAPACT_NAME}.tfstate"
-  state_region="${CAPACT_REGION}"
+  local -r state_bucket="${TERRAFORM_STATE_BUCKET}"
+  local -r state_key="${CAPACT_NAME}.tfstate"
+  local -r state_region="${CAPACT_REGION}"
+  local -r terraform_opts="${CAPACT_TERRAFORM_OPTS:-}"
 
   pushd "${CURRENT_DIR}/terraform"
     terraform init \
@@ -35,10 +32,13 @@ capact::aws::terraform::apply() {
       -backend-config="key=${state_key}" \
       -backend-config="region=${state_region}"
 
+    # terraform_opts cannot be quoted
+    # shellcheck disable=SC2086
     terraform apply -no-color \
       -var "namespace=${CAPACT_NAME}" \
       -var "region=${CAPACT_REGION}" \
-      -var "domain_name=${CAPACT_DOMAIN_NAME}"
+      -var "domain_name=${CAPACT_DOMAIN_NAME}" \
+      ${terraform_opts}
 
     local -r tf_output=$(terraform output -json)
 
@@ -53,6 +53,8 @@ capact::aws::terraform::apply() {
     echo "${tf_output}" | jq -r '.route53_zone_id.value' > "$CONFIG_DIR/route53_zone_id"
     echo "${tf_output}" | jq -r '.cert_manager_irsa_role_arn.value' > "${CONFIG_DIR}/cert_manager_role_arn"
   popd
+
+  shout "Infrastructure with created successfully!"
 }
 
 capact::aws::install::fluent_bit() {
@@ -67,16 +69,19 @@ capact::aws::install::capact() {
   shout "Capact deployed successfully!"
 }
 
-capact::aws::install::cert_manager() {
-  shout "Deploying Cert Manager"
-  "${CURRENT_DIR}"/cert-manager/install.sh
-  shout "Cert Manager deployed successfully!"
-}
-
 capact::aws::install::public_ingress_controller() {
   shout "Deploying public ingress controller..."
   "${CURRENT_DIR}"/public-ingress-controller/install.sh
   shout "Public ingress controller deployed successfully!"
+}
+
+capact::aws::create_lets_encrypt_issuer() {
+  shout "Creating Let's Encrypt certificate issuer..."
+  < "${CURRENT_DIR}/cert-manager/cluster-issuer.yaml" \
+    sed "s/{{REGION}}/${CAPACT_REGION}/g" \
+    | sed "s/{{HOSTED_ZONE_ID}}/${CAPACT_HOSTED_ZONE_ID}/g" \
+    | kubectl apply -f -
+  shout "Let's Encrypt certificate issuer created!"
 }
 
 capact::aws::register_dnses() {
@@ -149,15 +154,17 @@ capact::aws::register_dnses() {
 
   aws route53 change-resource-record-sets \
     --hosted-zone-id "${CAPACT_HOSTED_ZONE_ID}" \
-    --change-batch "${changes}"
+    --change-batch "${changes}" \
+    --region "${CAPACT_REGION}" \
+    --output json
 
   shout "Added DNS entries added"
 }
 
 capact::aws::configure_bastion() {
   # upload kubeconfig
-  ssh -i "${CURRENT_DIR}/config/bastion_ssh_private_key" -oStrictHostKeyChecking=accept-new ec2-user@"$(cat "${CURRENT_DIR}"/config/bastion_public_ip)" 'mkdir -p $HOME/.kube'
-  scp -i "${CURRENT_DIR}/config/bastion_ssh_private_key" config/eks_kubeconfig ec2-user@"$(cat "${CURRENT_DIR}"/config/bastion_public_ip)":.kube/config
+  ssh -i "${CURRENT_DIR}/config/bastion_ssh_private_key" -oStrictHostKeyChecking=accept-new ubuntu@"$(cat "${CURRENT_DIR}"/config/bastion_public_ip)" 'mkdir -p $HOME/.kube'
+  scp -i "${CURRENT_DIR}/config/bastion_ssh_private_key" "${CURRENT_DIR}/config/eks_kubeconfig" ubuntu@"$(cat "${CURRENT_DIR}"/config/bastion_public_ip)":.kube/config
 }
 
 main() {
@@ -177,20 +184,22 @@ main() {
   export KUBECONFIG="${CONFIG_DIR}/eks_kubeconfig"
 
   CAPACT_HOSTED_ZONE_ID=$(cat "${CONFIG_DIR}/route53_zone_id")
-  CERT_MANAGER_ROLE_ARN=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
   CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}
    --set gateway.ingress.annotations.class=capact"
 
+  local -r cert_manager_role_arn=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
+  CUSTOM_CERT_MANAGER_SET_FLAGS="--set cert-manager.serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${cert_manager_role_arn}"
+
   export CAPACT_HOSTED_ZONE_ID
-  export CERT_MANAGER_ROLE_ARN
   export CUSTOM_VOLTRON_SET_FLAGS
+  export CUSTOM_CERT_MANAGER_SET_FLAGS 
 
   capact::aws::install::fluent_bit
   capact::aws::install::capact
   capact::aws::install::public_ingress_controller
-  capact::aws::install::cert_manager
   capact::aws::register_dnses
   capact::aws::configure_bastion
+  capact::aws::create_lets_encrypt_issuer
 
   shout "Installation completed.\nKubeconfig and SSH key to the bastion are available in ${CONFIG_DIR} directory"
 }
