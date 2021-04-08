@@ -159,7 +159,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 		},
 	}
 
-	marshaledRunnerCtx, err := yaml.Marshal(runnerCtx)
+	marshalledRunnerCtx, err := yaml.Marshal(runnerCtx)
 	if err != nil {
 		return errors.Wrap(err, "while marshaling runner context")
 	}
@@ -168,7 +168,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	if err != nil {
 		return errors.Wrap(err, "while extracting rendered action from raw form")
 	}
-	marshaledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
+	marshalledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
 	if err != nil {
 		return errors.Wrap(err, "while marshaling runner args")
 	}
@@ -176,8 +176,8 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	secret := &corev1.Secret{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
-			runnerContextSecretKey: marshaledRunnerCtx,
-			runnerArgsSecretKey:    marshaledRunnerArgs,
+			runnerContextSecretKey: marshalledRunnerCtx,
+			runnerArgsSecretKey:    marshalledRunnerArgs,
 		},
 	}
 

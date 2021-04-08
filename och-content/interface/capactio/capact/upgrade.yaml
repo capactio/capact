@@ -6,12 +6,12 @@ metadata:
   name: upgrade
   displayName: "Upgrade"
   description: "Upgrade action for Capact"
-  documentationURL: https://capactio.dev
-  supportURL: https://capactio.dev
+  documentationURL: https://capact.dev
+  supportURL: https://capact.dev
   maintainers:
     - email: team-dev@capact.dev
       name: Capact Dev Team
-      url: https://capactio.dev
+      url: https://capact.dev
 
 spec:
   input:
@@ -41,27 +41,41 @@ spec:
               ],
               "properties": {
                   "version": {
-                    "type": "string"
+                    "$id": "#/properties/version",
+                    "type": "string",
+                    "title": "Specifies the version to which Capact components should be upgrade."
                   },
                   "increaseResourceLimit": {
-                    "type": "boolean"
+                    "$id": "#/properties/increaseResourceLimit",
+                    "type": "boolean",
+                    "title": "Specifies whether higher resource requests and limits for components should be enabled or not."
                   },
                   "override": {
+                    "$id": "#/properties/override",
                     "type": "object",
                     "properties": {
                       "helmRepoURL": {
-                        "type": "string"
+                        "$id": "#/properties/override/properties/helmRepoURL",
+                        "type": "string",
+                        "title": "Specifies Capact Helm chart repository URL."
                       },
                       "capact": {
+                        "$id": "#/properties/override/properties/capact",
                         "type": "object",
                         "properties": {
                           "docker": {
+                            "$id": "#/properties/override/properties/capact/properties/docker",
                             "type": "object",
+                            "title": "Specifies Docker overrides for Capact upgrade.",
                             "properties": {
                               "repository": {
+                                "$id": "#/properties/override/properties/capact/properties/docker/properties/repository",
+                                "title": "Specifies Docker repository override for Capact upgrade.",
                                 "type": "string"
                               },
                               "tag": {
+                                "$id": "#/properties/override/properties/capact/properties/docker/properties/tag",
+                                "title": "Specifies Docker image tag override for Capact upgrade.",
                                 "type": "string"
                               }
                             },

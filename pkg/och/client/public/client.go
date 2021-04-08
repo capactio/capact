@@ -74,7 +74,7 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
-func (c *Client) ListInterfacesWithLatest(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
+func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query ListInterface($interfaceFilter: InterfaceFilter!)  {
 		  interfaces(filter: $interfaceFilter) {
 			%s

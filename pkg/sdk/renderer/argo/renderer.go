@@ -149,12 +149,12 @@ func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, er
 		Spec: *w,
 	}
 	out := map[string]interface{}{}
-	marshaled, err := json.Marshal(renderedWorkflow)
+	marshalled, err := json.Marshal(renderedWorkflow)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = json.Unmarshal(marshaled, &out); err != nil {
+	if err = json.Unmarshal(marshalled, &out); err != nil {
 		return nil, err
 	}
 

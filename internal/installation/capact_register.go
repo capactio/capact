@@ -28,14 +28,15 @@ const (
 	capactTypeRefPath      = "cap.type.capactio.capact.config"
 )
 
-var voltronAdditionalOutput = heredoc.Doc(`
+var capactAdditionalOutput = heredoc.Doc(`
+							version: "{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
 							gateway:
 							  url: "https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}"
 							  username: "{{ .Values.global.gateway.auth.username}}"
 							  password: "{{ .Values.global.gateway.auth.password }}"
 						`)
 
-// CapactRegister provides functionality to produce and upload CapactRegister
+// CapactRegister provides functionality to produce and upload Capact TypeInstances
 type CapactRegister struct {
 	k8sCfg        *rest.Config
 	logger        *zap.Logger
@@ -72,7 +73,7 @@ func NewCapactRegister() (*CapactRegister, error) {
 	}, nil
 }
 
-// RegisterTypeInstances produces and uploads TypeInstances which describe Voltron installation.
+// RegisterTypeInstances produces and uploads TypeInstances which describe Capact installation.
 func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
 	listAct, err := i.newHelmListAction()
 	if err != nil {
@@ -85,7 +86,7 @@ func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
 	}
 
 	var (
-		ownerName = fmt.Sprintf(actionNameFormat, i.cfg.VoltronReleaseName)
+		ownerName = fmt.Sprintf(actionNameFormat, i.cfg.CapactReleaseName)
 		ti        []*gqllocalapi.CreateTypeInstanceInput
 	)
 
@@ -100,7 +101,7 @@ func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
 		}
 		ti = append(ti, helmReleaseTI)
 
-		if r.Name == i.cfg.VoltronReleaseName {
+		if r.Name == i.cfg.CapactReleaseName {
 			configTI, err := i.produceConfigTypeInstance(ownerName, r)
 			if err != nil {
 				return errors.Wrap(err, "while producing config TypeInstance")
@@ -125,7 +126,7 @@ func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
 func (i *CapactRegister) createTypeInstancesInput(owner string, ti []*gqllocalapi.CreateTypeInstanceInput) *gqllocalapi.CreateTypeInstancesInput {
 	var rel []*gqllocalapi.TypeInstanceUsesRelationInput
 	for _, item := range ti {
-		if owner != *item.Alias {
+		if owner == *item.Alias {
 			continue
 		}
 		rel = append(rel, &gqllocalapi.TypeInstanceUsesRelationInput{
@@ -192,7 +193,7 @@ func (i *CapactRegister) produceHelmReleaseTypeInstance(helmRelease *release.Rel
 }
 
 func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease *release.Release) (*gqllocalapi.CreateTypeInstanceInput, error) {
-	tpl, err := yaml.YAMLToJSON([]byte(voltronAdditionalOutput))
+	tpl, err := yaml.YAMLToJSON([]byte(capactAdditionalOutput))
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting YAML to JSON")
 	}

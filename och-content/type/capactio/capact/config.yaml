@@ -21,6 +21,7 @@ spec:
         "title": "The schema for Capact configuration",
         "examples": [
           {
+            "version": "0.1.0",
             "gateway": {
               "url": "https://example.org",
               "username": "username",
@@ -35,13 +36,19 @@ spec:
           }
         },
         "required": [
-          "gateway"
+          "gateway",
+          "version"
         ],
         "properties": {
+          "version": {
+            "$id": "#/properties/version",
+            "type": "string",
+            "title": "Version of the Capact installation."
+          },
           "gateway": {
             "$id": "#/properties/gateway",
             "type": "object",
-            "title": "Defines Capact Gateway details",
+            "title": "Defines Capact Gateway details.",
             "required": [
               "url",
               "username",
@@ -50,15 +57,18 @@ spec:
             "properties": {
               "username": {
                 "$id": "#/properties/gateway/properties/username",
-                "type": "string"
+                "type": "string",
+                "title": "The Capact Gateway username."
               },
               "password": {
                 "$id": "#/properties/gateway/properties/password",
-                "type": "string"
+                "type": "string",
+                "title": "The Capact Gateway password."
               },
               "url": {
                 "$id": "#/properties/gateway/properties/url",
-                "$ref": "#/$ocfRefs/uri"
+                "$ref": "#/$ocfRefs/uri",
+                "title": "The Capact Gateway URL."
               }
             },
             "additionalProperties": false

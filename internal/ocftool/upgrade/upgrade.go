@@ -93,7 +93,7 @@ func New(w io.Writer) (*Upgrade, error) {
 		return nil, errors.Wrap(err, "while creating cluster client")
 	}
 
-	httpClient := httputil.NewClient(30*time.Second, false)
+	httpClient := httputil.NewClient(30 * time.Second)
 
 	return &Upgrade{
 		hubCli:     hubCli,
@@ -153,8 +153,8 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		return nil
 	}
 
-	status.Step("Waiting ≤ %s for '%s/%s' upgrade Action finish 🏁", opts.Timeout, capactSystemNS, act.Name)
-	err = u.waitUntilFinish(ctxWithNs, act.Name, opts.Timeout)
+	status.Step("Waiting ≤ %s for the '%s/%s' Action to finish 🏁", opts.Timeout, capactSystemNS, act.Name)
+	err = u.waitUntilFinished(ctxWithNs, act.Name, opts.Timeout)
 	if err != nil {
 		return err
 	}
@@ -256,7 +256,7 @@ func printMessage(message *string) string {
 	return fmt.Sprintf(".\n Message: %q", *message)
 }
 
-func (u *Upgrade) waitUntilFinish(ctx context.Context, name string, timeout time.Duration) error {
+func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout time.Duration) error {
 	var lastErr error
 	err := wait.Poll(pollInterval, timeout, func() (done bool, err error) {
 		act, err := u.actCli.GetAction(ctx, name)
@@ -330,12 +330,12 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 }
 
 func mapToInputParameters(params InputParameters) (gqlengine.JSON, error) {
-	marshaled, err := json.Marshal(params)
+	marshalled, err := json.Marshal(params)
 	if err != nil {
 		return "", err
 	}
 
-	return gqlengine.JSON(marshaled), nil
+	return gqlengine.JSON(marshalled), nil
 }
 
 func validateTypeInstance(ti *gqllocalapi.TypeInstance) error {

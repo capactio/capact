@@ -35,7 +35,7 @@ type Public interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
 	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
-	ListInterfacesWithLatest(ctx context.Context, filter ochpublicgraphql.InterfaceFilter) ([]*ochpublicgraphql.Interface, error)
+	ListInterfacesWithLatestRevision(ctx context.Context, filter ochpublicgraphql.InterfaceFilter) ([]*ochpublicgraphql.Interface, error)
 }
 
 func New(endpoint string, httpClient *http.Client) *Client {

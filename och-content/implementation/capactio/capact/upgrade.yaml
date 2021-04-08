@@ -6,14 +6,14 @@ metadata:
   name: upgrade
   displayName: "Upgrade Capact"
   description: "Upgrade Capact Kubernetes installation"
-  documentationURL: https://capactio.dev
-  supportURL: https://capactio.dev
+  documentationURL: https://capact.dev
+  supportURL: https://capact.dev
   license:
     name: "Apache 2.0"
   maintainers:
     - email: team-dev@capact.dev
       name: Capact Dev Team
-      url: https://capactio.dev
+      url: https://capact.dev
 
 spec:
   appVersion: "0.3.x"
@@ -163,6 +163,7 @@ spec:
                             <% endif %>
                             output:
                               goTemplate:
+                                version: "{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
                                 gateway:
                                   url: "https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}"
                                   username: "{{ .Values.global.gateway.auth.username}}"
