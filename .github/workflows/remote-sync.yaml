@@ -1,9 +1,7 @@
 on:
-  push:
-    branches:
-      - master
   schedule:
-  - cron: '13 */12 * * *'
+  - cron: '13 * * * *'
+  workflow_dispatch:
 jobs:
   git-sync:
     runs-on: ubuntu-latest
