@@ -46,10 +46,10 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
 >
 > `export CAPACT_TERRAFORM_OPTS="-var worker_group_max_size=4"`
 
-2. Run `./install.sh`. This can take around to 20 minutes to finish.
+2. Run `hack/eks/install.sh`. This can take around to 20 minutes to finish.
 3. Configure the name servers for the Capact Route53 Hosted Zone in your DNS provider. To get the name server for the hosted zone check the [`config/route53_zone_name_servers`](./config/route53_zone_name_servers) file.
   ```bash
-  cat config/route53_zone_name_servers
+  cat hack/eks/config/route53_zone_name_servers
   ```
   ```bash
   {
@@ -64,7 +64,7 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
 
 ## Access API server from the bastion host
 
-The bastion hosts has `kubectl` preinstalled and `kubeconfig` configured to the EKS cluster API server. SSH to the bastion using the following command from the:
+The bastion hosts has `kubectl` preinstalled and `kubeconfig` configured to the EKS cluster API server. SSH to the bastion using the following command from:
 ```bash
 ssh -i hack/eks/config/bastion_ssh_private_key ubuntu@$(cat hack/eks/config/bastion_public_ip)
 ```
@@ -115,7 +115,7 @@ The bastion host can access the Capact gateway and has `capectl` preinstalled.
   helm delete -n public-ingress-nginx public-ingress-nginx
   ```
 
-2. Remove the A entries from the Route53 Hosted Zone from the AWS Console. Only the entries for apex SOA and NS should be left.
+2. Remove the records from the Route53 Hosted Zone from the AWS Console. Only the entries for apex SOA and NS should be left.
 
 3. Deprovision the EKS cluster and VPC.
   ```bash
@@ -131,5 +131,4 @@ The bastion host can access the Capact gateway and has `capectl` preinstalled.
 
 ## Limitations and bugs
 
-- Before running `terraform destroy` you have to remove all the entries from the Route53 Hosted Zone and the Load Balancers created for the LoadBalancer service. In other case destroy will fail.
 - There is [an issue](https://github.com/terraform-aws-modules/terraform-aws-eks/issues/1162), with the EKS module, where `terraform destroy` fails on the resource `module.eks.kubernetes_config_map.aws_auth[0]`. You don't have to worry about this, just remove the resource manually from the state file using `terraform state rm 'module.eks.kubernetes_config_map.aws_auth[0]'` and run `terraform destroy again`
