@@ -124,6 +124,17 @@ spec:
                                     hosts:
                                       - <@ input.host @>
                               host: <@ input.host @>
+                              affinity: <@ input.affinity @>
+                              replicaCount: <@ input.replicas @>
+                              podAntiAffinity: "soft"
+                              # https://docs.rocket.chat/installation/hardware-requirements
+                              resources:
+                                requests:
+                                  memory: "1G"
+                                  cpu: "1"
+                                limits:
+                                  memory: "2G"
+                                  cpu: "2"
                             output:
                               goTemplate:
                                 host: "{{ .Values.host }}"

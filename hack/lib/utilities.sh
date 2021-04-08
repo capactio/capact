@@ -164,12 +164,19 @@ host::install::helm() {
 # Required environments variables for all 'kind' commands:
 #  - KIND_CLUSTER_NAME
 #  - REPO_DIR
+#  - MULTINODE_CLUSTER
 kind::create_cluster() {
     shout "- Creating K8s cluster..."
+    local config
+    if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
+      config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
+    else
+      config="${REPO_DIR}/hack/cluster-config/kind/config.yaml"
+    fi
     kind create cluster \
       --name="${KIND_CLUSTER_NAME}" \
       --image="kindest/node:${KUBERNETES_VERSION}" \
-      --config="${REPO_DIR}/hack/cluster-config/kind/config.yaml" \
+      --config="${config}" \
       --wait=5m
 }
 
