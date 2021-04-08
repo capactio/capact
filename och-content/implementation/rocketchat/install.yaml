@@ -104,6 +104,11 @@ spec:
                               name: "rocketchat"
                               repo: "https://charts.helm.sh/stable"
                             values:
+                              extraEnv:
+                              - name: EXIT_UNHANDLEDPROMISEREJECTION
+                                value: "true"
+                              image:
+                                tag: 3.13.1
                               mongodb:
                                 enabled: false
                               <% set mongo_addr = mongo.host + ':' + mongo.port %>
@@ -131,10 +136,24 @@ spec:
                               resources:
                                 requests:
                                   memory: "1G"
-                                  cpu: "1"
+                                  cpu: "200m"
                                 limits:
                                   memory: "2G"
-                                  cpu: "2"
+                                  cpu: "1"
+                              livenessProbe:
+                                enabled: true
+                                initialDelaySeconds: 60
+                                periodSeconds: 1
+                                timeoutSeconds: 1
+                                failureThreshold: 1
+                                successThreshold: 1
+                              readinessProbe:
+                                enabled: true
+                                initialDelaySeconds: 60
+                                periodSeconds: 1
+                                timeoutSeconds: 1
+                                failureThreshold: 1
+                                successThreshold: 1
                             output:
                               goTemplate:
                                 host: "{{ .Values.host }}"
