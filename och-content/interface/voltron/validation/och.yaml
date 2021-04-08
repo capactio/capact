@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: InterfaceGroup
 metadata:
   prefix: cap.interface.voltron.validation
-  name: ochtests
+  name: och
   displayName: "Voltron E2E OCH Public test manifests"
   description: "Manifests used for testing OCH Public GraphQL calls and filters"
   documentationURL: https://projectvoltron.dev

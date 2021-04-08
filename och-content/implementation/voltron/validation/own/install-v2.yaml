@@ -2,13 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.voltron.validation.ochtests
+  prefix: cap.implementation.voltron.validation.own
   name: install
   license:
     name: "Apache 2.0"
   displayName: "Simulates implementation of own Interface"
   description: |-
-    Simulates the `cap.interface.voltron.ochtests.install` interface implementation done by the same vendor.
+    Simulates the `cap.interface.voltron.validation.och.install` interface Implementation done by the same vendor.
     This implementation requires only the K8s platform.
   documentationURL: "https://projectvoltron.dev"
   maintainers:
@@ -17,13 +17,13 @@ metadata:
       url: https://projectvoltron.dev
 
 spec:
-  appVersion: "1.x.x"
+  appVersion: "2.x.x"
 
   outputTypeInstanceRelations: {}
 
   implements:
-    - path: cap.interface.voltron.validation.ochtests.install
-      revision: 1.0.0
+    - path: cap.interface.voltron.validation.och.install
+      revision: 2.0.0
 
   requires:
     cap.core.type.platform:

@@ -32,7 +32,7 @@ var _ = Describe("GraphQL API", func() {
 
 		Describe("should return ImplementationRevision", func() {
 			const (
-				interfacePath  = "cap.interface.voltron.validation.ochtests.install"
+				interfacePath  = "cap.interface.voltron.validation.och.install"
 				latestRevision = "2.0.0"
 				revision       = "1.0.0"
 			)

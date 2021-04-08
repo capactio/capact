@@ -2,7 +2,7 @@ ocfVersion: 0.0.1
 revision: 1.0.0
 kind: Interface
 metadata:
-  prefix: cap.interface.voltron.validation.ochtests
+  prefix: cap.interface.voltron.validation.och
   name: install
   displayName: Install
   description: ""

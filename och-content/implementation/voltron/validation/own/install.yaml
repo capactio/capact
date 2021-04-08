@@ -2,39 +2,33 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.outsource.validation.ochtests
+  prefix: cap.implementation.voltron.validation.own
   name: install
   license:
     name: "Apache 2.0"
-  displayName: "Simulates implementation done by external vendor"
+  displayName: "Simulates implementation of own Interface"
   description: |-
-    Simulates the `cap.interface.voltron.ochtests.install` interface implementation by external vendor.
-    This implementation additionally requires the GCP SA and has also the GCP Attribute.
+    Simulates the `cap.interface.voltron.och.install` interface implementation done by the same vendor.
+    This implementation requires only the K8s platform.
   documentationURL: "https://projectvoltron.dev"
   maintainers:
     - email: team-dev@projectvoltron.dev
       name: Voltron Dev Team
       url: https://projectvoltron.dev
-  attributes:
-    cap.attribute.cloud.provider.gcp:
-      revision: 0.1.0
+
 spec:
   appVersion: "1.x.x"
 
   outputTypeInstanceRelations: {}
 
   implements:
-    - path: cap.interface.voltron.validation.ochtests.install
+    - path: cap.interface.voltron.validation.och.install
       revision: 1.0.0
 
   requires:
     cap.core.type.platform:
       oneOf:
         - name: kubernetes
-          revision: 0.1.0
-    cap.type.gcp.auth:
-      allOf:
-        - name: service-account
           revision: 0.1.0
 
   imports:
