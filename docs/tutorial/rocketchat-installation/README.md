@@ -9,6 +9,7 @@ This tutorial shows the basic concepts of Voltron on the RocketChat installation
 - [Goal](#goal)
 - [Prerequisites](#prerequisites)
 - [Install all RocketChat components in a Kubernetes cluster](#install-all-rocketchat-components-in-a-kubernetes-cluster)
+- [Validate RocketChat high availability setup](#validate-rocketchat-high-availability-setup)
 - [Clean-up](#clean-up)
 - [Additional resources](#additional-resources)
 
@@ -32,11 +33,12 @@ All actions need to be run from the bastion host. It requires:
 
 * capectl installed
 
-  to build it run
+  To build it, install Go and run:
 
   ```bash
   GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o capectl ./cmd/ocftool/main.go
   ```
+
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 * [`helm`](https://helm.sh/docs/intro/install/) installed.
 * [`jq`](https://stedolan.github.io/jq/) installed.
@@ -136,6 +138,31 @@ All actions need to be run from the bastion host. It requires:
 
 Now, let's validate the high-availability setup for the RocketChat.
 
+#### Non disruptive tests
+
+Here we are simulating maintenance actions which should not disrupt RocketChat. Non disruptive actions for example are:
+
+* Rolling Update of RochetChat.
+* Scheduled Node maintenance where pods are evicted from the node.
+* Rescheduling pod to another node.
+
+1. List RocketChat pods
+
+   ```bash
+   kubectl get pod -l app.kubernetes.io/name=rocketchat
+   ```
+
+2. Delete 2 pods
+
+   Select two random pods and use `kubectl delete` command to delete them.
+   Check that RocketChat is still running.
+
+Delete random RocketChat pods several times and see that there is a zero downtime. Make sure that at least one pod is in *Ready* state.
+
+#### Disruptive tests
+
+Here we are simulating scenario when Kubernetes lost a connection to one of the worker nodes.
+
 1. Make sure that MongoDB and RocketChat pods are running on different nodes.
 
    To list pods and assigned nodes run:
@@ -168,7 +195,7 @@ Now, let's validate the high-availability setup for the RocketChat.
    
 1.  Open the RocketChat site again using provided host during RocketChat installation. It should be still accessible.
 
-    > **NOTE**: Depending on which node will be deleted and to which RocketChat Pod you is connected, it may take up to 30 seconds for Kubernetes to change configuration. During that time RocketChat may not be available.
+    > **NOTE**: Depending on which node will be deleted and to which RocketChat Pod you are connected, it may take up to 30 seconds for Kubernetes to change configuration. During that time RocketChat may not be available.
 
 
 ### Clean-up 
