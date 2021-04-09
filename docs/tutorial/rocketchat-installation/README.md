@@ -136,9 +136,7 @@ All actions need to be run from the bastion host. It requires:
 
 Now, let's validate the high-availability setup for the RocketChat.
 
-1. Preparation
-   
-   Make sure that MongoDB and RocketChat pods are running on different nodes.
+1. Make sure that MongoDB and RocketChat pods are running on different nodes.
 
    To list pods and assigned nodes run:
 
@@ -146,7 +144,7 @@ Now, let's validate the high-availability setup for the RocketChat.
    kubectl get pod -o wide
    ```
 
-   Also make sure that the pod running in the `public-ingress-nginx` namespace is not running on the same nodes as RocketChat.
+1. Make sure that the pod running in the `public-ingress-nginx` namespace is not running on the same nodes as RocketChat.
 
    ```bash
    kubectl -n public-ingress-nginx get pod -o wide
