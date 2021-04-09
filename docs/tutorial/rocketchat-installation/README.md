@@ -150,21 +150,26 @@ Now, let's validate the high-availability setup for the RocketChat.
    kubectl -n public-ingress-nginx get pod -o wide
    ```
 
-1. Terminate one of the worker nodes with running RocketChat
-
-   Get a list of nodes where RocketChat pods are running:
+1. Get a list of nodes where RocketChat pods are running:
 
    ```bash
    kubectl get pod -o go-template --template='{{ range .items}}{{.metadata.name}} - {{ .spec.nodeName }}{{"\n"}}{{end}}'
    ```
 
-   Choose one of them and terminate it in the EKS console. RocketChat should still be running.
+    Choose one of them and note the node name.
+
+1. Terminate the selected worker node from the EKS console.
 
    To terminate note go to the cluster main page. In the *Overview* section click on the selected node. In the **Info** section click a link under **Instance** name. New tab will be opened. From the menu in the top right select **Terminate instance** option
 
-   ![capact-diagram](./assets/nodes.png)
-   ![capact-diagram](./assets/worker.png)
-   ![capact-diagram](./assets/instance.png)
+   ![AWS Dashborad - nodes](./assets/nodes.png)
+   ![AWS Dashboard - worker](./assets/worker.png)
+   ![AWS Dashboard - instance](./assets/instance.png)
+   
+1.  Open the RocketChat site again using provided host during RocketChat installation. It should be still accessible.
+
+    > **NOTE**: Depending on which node will be deleted and to which RocketChat Pod you is connected, it may take up to 30 seconds for Kubernetes to change configuration. During that time RocketChat may not be available.
+
 
 ### Clean-up 
 
