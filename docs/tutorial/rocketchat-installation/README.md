@@ -27,7 +27,7 @@ The diagram below shows the scenario:
 
 ###  Prerequisites
 
-* EKS cluster with a fresh Voltron installation. See the [installation tutorial](../eks-installation/README.md). 
+* Voltron cluster installed, for example on [AWS EKS](../eks-installation/README.md).See also [GCP cluster installation guide](../voltron-installation/README.md).
 
 All actions need to be run from the bastion host. It requires:
 
