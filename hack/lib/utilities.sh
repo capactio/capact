@@ -426,7 +426,7 @@ voltron::install_upgrade::cert_manager() {
       local -r values_overrides=""
     fi
 
-    # CUSTOM_NGINX_SET_FLAGS cannot be quoted
+    # CUSTOM_CERT_MANAGER_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
     helm upgrade cert-manager "${K8S_DEPLOY_DIR}/charts/cert-manager" \
         --install \
