@@ -100,7 +100,7 @@ All actions need to be run from the bastion host. It requires:
 
 1. Make sure to separate workloads
 
-   For a better performance and durability it is better to have MongoDB and RocketChat to be running on a separate nodes. MongoDB is by default configured to be running on nodes with label `node.voltron.dev/type=storage`. We also configured RocketChat affinity to not schedule pods on such nodes.
+   For a better performance and durability, it is better to run MongoDB and RocketChat on separate nodes. MongoDB is by default configured to prefer being run on nodes with label `node.voltron.dev/type=storage`. We also configured RocketChat affinity to not schedule pods on such nodes.
 
    Select any worker node and replace the `<NODE NAME>` with the node name and run:
 
