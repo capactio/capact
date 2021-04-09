@@ -152,12 +152,17 @@ Here we are simulating maintenance actions which should not disrupt RocketChat. 
    kubectl get pod -l app.kubernetes.io/name=rocketchat
    ```
 
-2. Delete 2 pods
+1. Select two random pods from the list above and delete them.
 
-   Select two random pods and use `kubectl delete` command to delete them.
-   Check that RocketChat is still running.
+  Use `kubectl delete` command. For example:
+  
+  ```bash
+   kubectl delete pod rocketchat-1617956008-rocketchat-5b45b74f77-pncck
+   ```
 
-Delete random RocketChat pods several times and see that there is a zero downtime. Make sure that at least one pod is in *Ready* state.
+   > **NOTE:** Make sure that at least one pod is in *Ready* state.
+
+1. Verify if RocketChat is still running without any disruption.
 
 #### Disruptive tests
 
