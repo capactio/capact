@@ -1,0 +1,140 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.capactio.capact
+  name: upgrade
+  displayName: "Upgrade"
+  description: "Upgrade action for Capact"
+  documentationURL: https://capact.dev
+  supportURL: https://capact.dev
+  maintainers:
+    - email: team-dev@capact.dev
+      name: Capact Dev Team
+      url: https://capact.dev
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "examples": [
+                {
+                  "version": "0.1.0",
+                  "increaseResourceLimit": true,
+                  "override": {
+                    "helmRepoURL": "https://capactio-awesome-charts.storage.googleapis.com",
+                    "capact": {
+                      "docker": {
+                        "repository": "docker.io/capact",
+                        "tag": "latest"
+                      }
+                    }
+                  }
+                }
+              ],
+              "required": [
+                "version"
+              ],
+              "properties": {
+                  "version": {
+                    "$id": "#/properties/version",
+                    "type": "string",
+                    "title": "Specifies the version to which Capact components should be upgrade."
+                  },
+                  "increaseResourceLimit": {
+                    "$id": "#/properties/increaseResourceLimit",
+                    "type": "boolean",
+                    "title": "Specifies whether higher resource requests and limits for components should be enabled or not."
+                  },
+                  "override": {
+                    "$id": "#/properties/override",
+                    "type": "object",
+                    "properties": {
+                      "helmRepoURL": {
+                        "$id": "#/properties/override/properties/helmRepoURL",
+                        "type": "string",
+                        "title": "Specifies Capact Helm chart repository URL."
+                      },
+                      "capact": {
+                        "$id": "#/properties/override/properties/capact",
+                        "type": "object",
+                        "properties": {
+                          "docker": {
+                            "$id": "#/properties/override/properties/capact/properties/docker",
+                            "type": "object",
+                            "title": "Specifies Docker overrides for Capact upgrade.",
+                            "properties": {
+                              "repository": {
+                                "$id": "#/properties/override/properties/capact/properties/docker/properties/repository",
+                                "title": "Specifies Docker repository override for Capact upgrade.",
+                                "type": "string"
+                              },
+                              "tag": {
+                                "$id": "#/properties/override/properties/capact/properties/docker/properties/tag",
+                                "title": "Specifies Docker image tag override for Capact upgrade.",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "repository",
+                              "tag"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "docker"
+                        ]
+                      }
+                    }
+                  }
+                }
+            }
+    typeInstances:
+      capact-config:
+        typeRef:
+          path: cap.type.capactio.capact.config
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      capact-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      argo-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      ingress-nginx-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      kubed-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      monitoring-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+      neo4j-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+  output:
+    typeInstances:
+      capact-config:
+        typeRef:
+          path: cap.type.capactio.capact.config
+          revision: 0.1.0
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -52,7 +52,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatest(ctx, gqlpublicapi.InterfaceFilter{
+	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
 		PathPattern: &opts.pathPattern,
 	})
 	if err != nil {

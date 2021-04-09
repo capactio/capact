@@ -61,7 +61,7 @@ func listInterfaces(ctx context.Context, opts searchOptions, w io.Writer) error 
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatest(ctx, gqlpublicapi.InterfaceFilter{
+	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
 		PathPattern: &opts.pathPattern,
 	})
 	if err != nil {

@@ -7,17 +7,19 @@ import (
 
 	"projectvoltron.dev/voltron/internal/ocftool/credstore"
 	"projectvoltron.dev/voltron/pkg/httputil"
+	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"projectvoltron.dev/voltron/pkg/och/client"
 	"projectvoltron.dev/voltron/pkg/och/client/public"
-
-	"github.com/machinebox/graphql"
 )
 
 type Hub interface {
-	ListInterfacesWithLatest(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error)
+	ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error)
+	ListTypeInstances(ctx context.Context, filter *gqllocalapi.TypeInstanceFilter) ([]gqllocalapi.TypeInstance, error)
+	ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...public.GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error)
 }
 
-func NewHub(server string) (*public.Client, error) {
+func NewHub(server string) (Hub, error) {
 	creds, err := credstore.GetHub(server)
 	if err != nil {
 		return nil, err
@@ -26,8 +28,5 @@ func NewHub(server string) (*public.Client, error) {
 	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(creds.Username, creds.Secret))
 
-	clientOpt := graphql.WithHTTPClient(httpClient)
-	client := graphql.NewClient(fmt.Sprintf("%s/graphql", server), clientOpt)
-
-	return public.NewClient(client), nil
+	return client.New(fmt.Sprintf("%s/graphql", server), httpClient), nil
 }

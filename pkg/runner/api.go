@@ -16,7 +16,7 @@ type (
 	}
 
 	StartOutput struct {
-		// Status holds generic status object that is later marshaled to JSON format.
+		// Status holds generic status object that is later marshalled to JSON format.
 		Status interface{}
 	}
 

@@ -12,7 +12,7 @@ type TypeInstancesConfig struct {
 	Logger               logger.Config
 	LocalOCHEndpoint     string `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
 	HelmReleasesNSLookup LookupNS
-	VoltronReleaseName   string `envconfig:"default=voltron"`
+	CapactReleaseName    string `envconfig:"default=voltron"`
 	// The `capactio-awesome-charts` bucket name is by design. We do not know if we will have to change our GCP project too,
 	// so it will be easier to have the `capactio-charts` name not taken.
 	HelmRepositoryPath string `envconfig:"default=https://capactio-awesome-charts.storage.googleapis.com"`

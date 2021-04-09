@@ -61,6 +61,7 @@ func NewRoot() *cobra.Command {
 		NewDocs(),
 		NewLogin(),
 		NewLogout(),
+		NewUpgrade(),
 		hub.NewHub(),
 		config.NewConfig(),
 		action.NewAction(),

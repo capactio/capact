@@ -4,6 +4,7 @@ argo:
     # NOTE: argocli and argoexec was mirrored to our repository
     namespace: "gcr.io/projectvoltron/argoproj"
     tag: v2.12.10
+    pullPolicy: IfNotPresent
 
   controller:
     containerRuntimeExecutor: pns
