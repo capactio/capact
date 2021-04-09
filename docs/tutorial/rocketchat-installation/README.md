@@ -29,7 +29,9 @@ The diagram below shows the scenario:
 
 * Voltron cluster installed, for example on [AWS EKS](../eks-installation/README.md).See also [GCP cluster installation guide](../voltron-installation/README.md).
 
-All actions need to be run from the bastion host. It requires:
+> **NOTE:** For AWS EKS Voltron installation, all operation need to be run from the bastion host.
+
+The following tools are required:
 
 * capectl installed
 
