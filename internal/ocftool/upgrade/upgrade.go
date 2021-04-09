@@ -51,23 +51,9 @@ var ErrActionWithoutStatus = errors.New("Action doesn't have status")
 
 type (
 	Options struct {
-		Timeout time.Duration
-		Wait    bool
-
+		Timeout    time.Duration
+		Wait       bool
 		Parameters InputParameters
-	}
-
-	InputParameters struct {
-		Version                string `json:"version"`
-		IncreaseResourceLimits bool   `json:"increaseResourceLimits"`
-		EnableTestSetup        bool   `json:"enableTestSetup"`
-		Override               struct {
-			HelmRepoURL string `json:"helmRepoURL"`
-			Docker      struct {
-				Tag        string `json:"tag"`
-				Repository string `json:"repository"`
-			} `json:"docker"`
-		} `json:"override"`
 	}
 )
 
@@ -175,6 +161,13 @@ func (u *Upgrade) resolveInputParameters(opts *Options) error {
 		}
 		opts.Parameters.Version = ver
 	}
+
+	if opts.Parameters.IncreaseResourceLimits {
+		opts.Parameters.Override.CapactValues.Gateway.Resources = increasedGatewayResources()
+		opts.Parameters.Override.CapactValues.OCHPublic.Resources = increasedOCHPublicResources()
+		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = increasedNeo4jResources()
+	}
+
 	return nil
 }
 

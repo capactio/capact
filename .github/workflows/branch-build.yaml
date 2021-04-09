@@ -157,6 +157,8 @@ jobs:
         with:
           fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
       - name: Release Helm Charts if were changed
+        env:
+          MASTER_BUILD: "true"
         run: |
           make release-charts
 
@@ -250,6 +252,7 @@ jobs:
             --helm-repo-url @master \
             --override-capact-image-repo ${DOCKER_REPOSITORY} \
             --override-capact-image-tag ${DOCKER_TAG} \
+            --enable-test-setup ${USE_TEST_SETUP} \
             --increase-resource-limits \
             --wait
 

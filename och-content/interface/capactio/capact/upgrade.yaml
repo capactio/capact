@@ -21,82 +21,13 @@ spec:
           value: |-
             {
               "$schema": "http://json-schema.org/draft-07/schema",
-              "examples": [
-                {
-                  "version": "0.1.0",
-                  "increaseResourceLimit": true,
-                  "enableTestSetup": true,
-                  "override": {
-                    "helmRepoURL": "https://capactio-awesome-charts.storage.googleapis.com",
-                    "capact": {
-                      "docker": {
-                        "repository": "docker.io/capact",
-                        "tag": "latest"
-                      }
-                    }
-                  }
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.capactio.capact.upgrade-input",
+                  "revision": "0.1.0"
                 }
-              ],
-              "required": [
-                "version"
-              ],
-              "properties": {
-                  "version": {
-                    "$id": "#/properties/version",
-                    "type": "string",
-                    "title": "Specifies the version to which Capact components should be upgrade."
-                  },
-                  "increaseResourceLimit": {
-                    "$id": "#/properties/increaseResourceLimit",
-                    "type": "boolean",
-                    "title": "Specifies whether higher resource requests and limits for components should be enabled or not."
-                  },
-                  "enableTestSetup": {
-                    "type": "boolean",
-                    "default": false
-                  },
-                  "override": {
-                    "$id": "#/properties/override",
-                    "type": "object",
-                    "properties": {
-                      "helmRepoURL": {
-                        "$id": "#/properties/override/properties/helmRepoURL",
-                        "type": "string",
-                        "title": "Specifies Capact Helm chart repository URL."
-                      },
-                      "capact": {
-                        "$id": "#/properties/override/properties/capact",
-                        "type": "object",
-                        "properties": {
-                          "docker": {
-                            "$id": "#/properties/override/properties/capact/properties/docker",
-                            "type": "object",
-                            "title": "Specifies Docker overrides for Capact upgrade.",
-                            "properties": {
-                              "repository": {
-                                "$id": "#/properties/override/properties/capact/properties/docker/properties/repository",
-                                "title": "Specifies Docker repository override for Capact upgrade.",
-                                "type": "string"
-                              },
-                              "tag": {
-                                "$id": "#/properties/override/properties/capact/properties/docker/properties/tag",
-                                "title": "Specifies Docker image tag override for Capact upgrade.",
-                                "type": "string"
-                              }
-                            },
-                            "required": [
-                              "repository",
-                              "tag"
-                            ]
-                          }
-                        },
-                        "required": [
-                          "docker"
-                        ]
-                      }
-                    }
-                  }
-                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
             }
     typeInstances:
       capact-config:
