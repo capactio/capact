@@ -172,13 +172,7 @@ This guide explains how to deploy Voltron on a cluster using your own domain.
    export GATEWAY_PASSWORD=$(openssl rand -base64 32)
    ```
 
-1. Install Cert Manager
-   
-   ```bash 
-   ./hack/ci/install-cert-manager.sh
-   ```
-
-1. Install all Voltron components (Voltron core, Grafana, Prometheus, Neo4J, NGINX, Argo)
+1. Install all Voltron components (Voltron core, Grafana, Prometheus, Neo4J, NGINX, Argo, Cert Manager)
    
    ```bash
    CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=$DOMAIN --set global.gateway.auth.password=$GATEWAY_PASSWORD" \

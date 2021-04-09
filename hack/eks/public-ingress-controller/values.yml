@@ -1,0 +1,16 @@
+ingress-nginx:
+  controller:
+    ingressClass: nginx
+    resources:
+      requests:
+        cpu: 50m
+        memory: 150Mi
+      limits:
+        cpu: 100m
+        memory: 300Mi
+
+tlsCertificate:
+  create: false
+  name: "default-ssl-cert"
+  crt: ""
+  key: ""

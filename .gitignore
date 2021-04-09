@@ -93,4 +93,6 @@ nosetests.xml
 /hack/ci/terraform/terraform.tfstate.backup
 /hack/ci/terraform/.terraform.tfstate.lock.info
 /hack/ci/terraform/.terraform.lock.hcl
-
+/hack/eks/terraform/.terraform
+/hack/eks/terraform/.terraform.lock.hcl
+/hack/eks/config

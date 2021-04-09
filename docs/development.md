@@ -132,6 +132,8 @@ You can export the following environment variables to configure the script:
 - To override Voltron Helm chart values, use `CUSTOM_VOLTRON_SET_FLAGS` e.g. `CUSTOM_VOLTRON_SET_FLAGS="--set gateway.auth.password=myPass"`.
 - To override Ingress NGINX Helm chart values, use `CUSTOM_NGINX_SET_FLAGS`.
 - To override the Git branch from which the source manifests should be populated, use `OCH_MANIFESTS_SOURCE_REPO_REF`, e.g. `OCH_MANIFESTS_SOURCE_REPO_REF="my-fancy-branch"`
+- To override Cert Manager Helm chart values, use `CUSTOM_CERT_MANAGER_SET_FLAGS`.
+
 
 ### Access Gateway GraphQL Playground
 
