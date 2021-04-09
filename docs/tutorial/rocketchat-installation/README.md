@@ -142,7 +142,7 @@ Now, let's validate the high-availability setup for the RocketChat.
 
 Here we are simulating maintenance actions which should not disrupt RocketChat. Non disruptive actions for example are:
 
-* Rolling Update of RochetChat.
+* Rolling update of RocketChat.
 * Scheduled Node maintenance where pods are evicted from the node.
 * Rescheduling pod to another node.
 
