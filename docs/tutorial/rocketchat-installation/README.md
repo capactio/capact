@@ -126,7 +126,7 @@ All actions need to be run from the bastion host. It requires:
 
 1. Open the RocketChat UI using the **host** value from the previous step.
 
-    ![jira-installation](./assets/rocket-chat.png)
+    ![rocketchat](./assets/rocket-chat.png)
 
 🎉 Hooray! You now have your own RocketChat instance installed. Be productive!
 
