@@ -189,5 +189,4 @@ If you want to learn more about the project, check the [`go-voltron`](https://gi
 Here are some useful links:
 
 - [Tutorial which shows the first steps on how to develop OCF content for Voltron.](../content-creation/README.md)
-- The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
 - [Documentation](../../../docs), which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guideline.
