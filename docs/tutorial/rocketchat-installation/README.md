@@ -133,10 +133,8 @@ All actions need to be run from the bastion host. It requires:
 ### Validate RocketChat high availability setup
 
 > **NOTE**: The following steps are optional. In this tutorial we used AWS EKS Voltron installation and all instructions will be based on this setup.
-Now, let's validate the high-availability setup for the RocketChat 
 
-> **NOTE**: Depending on which node will be deleted and to which RocketChat Pod you connected it may take up to 30 to update Kubernets configuration.
-During that time RocketChat may not be available.
+Now, let's validate the high-availability setup for the RocketChat.
 
 1. Preparation
    
