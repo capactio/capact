@@ -61,6 +61,16 @@ All actions need to be run from the bastion host. It requires:
     capectl login "https://${HOST}" -u graphql -p ${PASSWORD}
     capectl config set-context https://${HOST}
     ```
+
+1. Make sure to separate workloads
+
+   For a better performance and durability, it is better to run MongoDB and RocketChat on separate nodes. MongoDB is by default configured to prefer being run on nodes with label `node.voltron.dev/type=storage`. We will also configure RocketChat affinity to not schedule pods on such nodes.
+
+   Select any worker node and replace the `<NODE NAME>` with the node name and run:
+
+   ```bash
+   kubectl label node <NODE NAME> node.voltron.dev/type=storage
+   ```
    
 1. Create an Action with the `cap.interface.productivity.rocketchat.install` interface:
 
@@ -99,16 +109,6 @@ All actions need to be run from the bastion host. It requires:
    ```
 
    Wait until the Action is in `READY_TO_RUN` state. It means that the Action was processed by the Engine, and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
-
-1. Make sure to separate workloads
-
-   For a better performance and durability, it is better to run MongoDB and RocketChat on separate nodes. MongoDB is by default configured to prefer being run on nodes with label `node.voltron.dev/type=storage`. We also configured RocketChat affinity to not schedule pods on such nodes.
-
-   Select any worker node and replace the `<NODE NAME>` with the node name and run:
-
-   ```bash
-   kubectl label node <NODE NAME> node.voltron.dev/type=storage
-   ```
 
 1. Run the rendered Action:
 
