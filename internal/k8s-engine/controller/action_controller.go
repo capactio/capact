@@ -172,17 +172,17 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
 		msg := fmt.Sprintf("Cannot create runner ServiceAccount: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerInputDataCreated(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot create runner input: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerExecuted(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot execute runner: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	action.Status = r.successStatus(action, v1alpha1.RunningActionPhase, "Kubernetes runner executed. Waiting for finish phase.")
