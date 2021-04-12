@@ -2,7 +2,9 @@ package action
 
 import (
 	"encoding/json"
+	"regexp"
 
+	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -118,15 +120,32 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 	}
 }
 
-func (c *Converter) FilterFromGraphQL(in graphql.ActionFilter) model.ActionFilter {
-	var phase *v1alpha1.ActionPhase
+func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error) {
+	if in == nil {
+		return model.ActionFilter{}, nil
+	}
+
+	var (
+		phase   *v1alpha1.ActionPhase
+		pattern *regexp.Regexp
+	)
 	if in.Phase != nil {
 		phaseValue := c.phaseFromGraphQL(*in.Phase)
 		phase = &phaseValue
 	}
-	return model.ActionFilter{
-		Phase: phase,
+
+	if in.NameRegex != nil {
+		nPattern, err := regexp.Compile(*in.NameRegex)
+		if err != nil {
+			return model.ActionFilter{}, errors.Wrap(err, "while compiling regex")
+		}
+		pattern = nPattern
 	}
+
+	return model.ActionFilter{
+		Phase:     phase,
+		NameRegex: pattern,
+	}, nil
 }
 
 func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput {

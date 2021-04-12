@@ -317,7 +317,6 @@ voltron::install_upgrade::charts() {
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         --set engine.testSetup.enabled="${USE_TEST_SETUP}" \
         ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
-        -f "${VOLTRON_TEST_SETUP_OVERRIDES}" \
         -f "${VOLTRON_OVERRIDES}" \
         -f "${VOLTRON_RESOURCE_OVERRIDES}" \
         --wait

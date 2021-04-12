@@ -241,13 +241,15 @@ jobs:
           CLI_OS=linux make build-tool-ocftool && mv ./bin/ocftool-linux-amd64 ./ocftool
       - name: Log into Capact long-running cluster
         env:
-          USE_TEST_SETUP: "true"
           GATEWAY_PASSWORD: ${{ secrets.LONG_RUNNING_GATEWAY_PASSWORD }}
         run: |
-          ./ocftool login gateway.dev.cluster.projectvoltron.dev -u graphql -p $GATEWAY_PASSWORD
+          ./ocftool login https://gateway.dev.cluster.projectvoltron.dev -u graphql -p $GATEWAY_PASSWORD
       - name: Upgrade Capact long-running cluster
+        env:
+          USE_TEST_SETUP: "true"
         run: |
           ./ocftool upgrade \
+            --action-name-prefix 'capact-upgrade-'
             --version @latest \
             --helm-repo-url @master \
             --override-capact-image-repo ${DOCKER_REPOSITORY} \
@@ -255,6 +257,12 @@ jobs:
             --enable-test-setup ${USE_TEST_SETUP} \
             --increase-resource-limits \
             --wait
+      - name: Clean-up
+        run: |
+          ./ocftool action delete \
+            --name-regex 'capact-upgrade-*' \
+            --namespace 'voltron-system' \
+            --phase 'SUCCEEDED'
 
 
   slackNotification:

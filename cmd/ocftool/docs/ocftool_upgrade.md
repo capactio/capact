@@ -23,6 +23,8 @@ ocftool upgrade --version 0.1.0
 ### Options
 
 ```
+      --action-name-prefix string           Specifies Capact upgrade Action name prefix. (default "capact-upgrade-")
+      --enable-test-setup                   Enables higher resource requests and limits for components.
       --helm-repo-url string                Capact Helm chart repository URL. Use @master tag to select repository which holds master Helm chart versions. (default "https://storage.googleapis.com/capactio-awesome-charts")
   -h, --help                                help for upgrade
       --increase-resource-limits            Enables higher resource requests and limits for components. (default true)

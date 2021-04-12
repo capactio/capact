@@ -23,6 +23,11 @@ Full path of a given node, e.g. cap.core.type.platform.kubernetes
 """
 scalar NodePath
 
+"""
+Regular expression for searching Action by name, e.g. upgrade-*
+"""
+scalar NameRegex
+
 type ManifestReference {
   path: NodePath!
   revision: Version!
@@ -250,6 +255,7 @@ Set of filters for Action list
 """
 input ActionFilter {
   phase: ActionStatusPhase
+  nameRegex: NameRegex
 }
 
 """

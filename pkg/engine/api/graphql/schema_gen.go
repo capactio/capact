@@ -616,6 +616,11 @@ Full path of a given node, e.g. cap.core.type.platform.kubernetes
 """
 scalar NodePath
 
+"""
+Regular expression for searching Action by name, e.g. upgrade-*
+"""
+scalar NameRegex
+
 type ManifestReference {
   path: NodePath!
   revision: Version!
@@ -843,6 +848,7 @@ Set of filters for Action list
 """
 input ActionFilter {
   phase: ActionStatusPhase
+  nameRegex: NameRegex
 }
 
 """
@@ -3977,6 +3983,14 @@ func (ec *executionContext) unmarshalInputActionFilter(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
+		case "nameRegex":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nameRegex"))
+			it.NameRegex, err = ec.unmarshalONameRegex2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5597,6 +5611,21 @@ func (ec *executionContext) marshalOJSON2ᚖprojectvoltronᚗdevᚋvoltronᚋpkg
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalONameRegex2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalONameRegex2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return graphql.MarshalString(*v)
 }
 
 func (ec *executionContext) marshalORunnerStatus2ᚖprojectvoltronᚗdevᚋvoltronᚋpkgᚋengineᚋapiᚋgraphqlᚐRunnerStatus(ctx context.Context, sel ast.SelectionSet, v *RunnerStatus) graphql.Marshaler {

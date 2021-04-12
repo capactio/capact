@@ -12,7 +12,7 @@ import (
 type actionConverter interface {
 	FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate
 	ToGraphQL(in v1alpha1.Action) graphql.Action
-	FilterFromGraphQL(in graphql.ActionFilter) model.ActionFilter
+	FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error)
 	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
 }
 
@@ -54,9 +54,9 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 }
 
 func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
-	var svcFilter model.ActionFilter
-	if filter != nil {
-		svcFilter = r.conv.FilterFromGraphQL(*filter)
+	svcFilter, err := r.conv.FilterFromGraphQL(filter)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting Action filter")
 	}
 
 	items, err := r.svc.List(ctx, svcFilter)

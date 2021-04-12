@@ -1,8 +1,11 @@
 package action_test
 
 import (
+	"regexp"
 	"testing"
 
+	"github.com/stretchr/testify/require"
+	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
 	"github.com/stretchr/testify/assert"
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
 	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
@@ -47,18 +50,29 @@ func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 
 func TestConverter_FilterFromGraphQL_HappyPath(t *testing.T) {
 	// given
-	gqlPhase := graphql.ActionStatusPhaseAdvancedModeRenderingIteration
-	gqlActionFilter := fixGQLActionFilter(&gqlPhase)
+	var (
+		gqlPhase     = graphql.ActionStatusPhaseAdvancedModeRenderingIteration
+		gqlNameRegex = "foo-*"
+	)
+
+	gqlActionFilter := graphql.ActionFilter{
+		Phase:     &gqlPhase,
+		NameRegex: &gqlNameRegex,
+	}
 
 	expectedK8sPhase := v1alpha1.AdvancedModeRenderingIterationActionPhase
-	expectedModelActionFilter := fixModelActionFilter(&expectedK8sPhase)
+	expectedModelActionFilter := model.ActionFilter{
+		Phase:     &expectedK8sPhase,
+		NameRegex: regexp.MustCompile(gqlNameRegex),
+	}
 
 	c := action.NewConverter()
 
 	// when
-	modelActionFilter := c.FilterFromGraphQL(gqlActionFilter)
+	modelActionFilter, err := c.FilterFromGraphQL(&gqlActionFilter)
 
 	// then
+	require.NoError(t, err)
 	assert.Equal(t, expectedModelActionFilter, modelActionFilter)
 }
 

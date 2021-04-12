@@ -51,9 +51,10 @@ var ErrActionWithoutStatus = errors.New("Action doesn't have status")
 
 type (
 	Options struct {
-		Timeout    time.Duration
-		Wait       bool
-		Parameters InputParameters
+		Timeout          time.Duration
+		Wait             bool
+		Parameters       InputParameters
+		ActionNamePrefix string
 	}
 )
 
@@ -119,7 +120,7 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		return err
 	}
 
-	act, err := u.createAction(ctxWithNs, inputParams, inputTI)
+	act, err := u.createAction(ctxWithNs, generateActionName(opts.ActionNamePrefix), inputParams, inputTI)
 	if err != nil {
 		return err
 	}
@@ -183,16 +184,15 @@ func (u *Upgrade) getCapactConfigTypeInstance(ctx context.Context) (gqllocalapi.
 	}
 
 	if len(capactCfg) != 1 {
-		return gqllocalapi.TypeInstance{}, errors.Errorf("Got ")
+		return gqllocalapi.TypeInstance{}, errors.Errorf("Unexpected number of Capact config TypeInstance, expected 1, got %d", len(capactCfg))
 	}
 
 	return capactCfg[0], nil
 }
 
-func (u *Upgrade) createAction(ctx context.Context, inputParams gqlengine.JSON, inputTI []*gqlengine.InputTypeInstanceData) (*gqlengine.Action, error) {
+func (u *Upgrade) createAction(ctx context.Context, name string, inputParams gqlengine.JSON, inputTI []*gqlengine.InputTypeInstanceData) (*gqlengine.Action, error) {
 	act, err := u.actCli.CreateAction(ctx, &gqlengine.ActionDetailsInput{
-		// TODO: should we support server-side GenerateName parameter?
-		Name: generateActionName(),
+		Name: name,
 		Input: &gqlengine.ActionInputData{
 			Parameters:    &inputParams,
 			TypeInstances: inputTI,
@@ -204,8 +204,9 @@ func (u *Upgrade) createAction(ctx context.Context, inputParams gqlengine.JSON, 
 	return act, err
 }
 
-func generateActionName() string {
-	return fmt.Sprintf("capact-upgrade-%s", utilrand.String(randomSuffixLength))
+// TODO: should we support server-side GenerateName parameter?
+func generateActionName(prefix string) string {
+	return fmt.Sprintf("%s%s", prefix, utilrand.String(randomSuffixLength))
 }
 
 func (u *Upgrade) waitUntilReadyToRun(ctx context.Context, name string, timeout time.Duration) error {

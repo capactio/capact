@@ -3,6 +3,7 @@ package action_test
 import (
 	"context"
 	"io/ioutil"
+	"regexp"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -149,6 +150,15 @@ func TestService_List(t *testing.T) {
 			Filter: fixModelActionFilter(&succeededPhase),
 			Expected: []corev1alpha1.Action{
 				action1, action2,
+			},
+		},
+		{
+			Name: "Filter by Action name regex",
+			Filter: model.ActionFilter{
+				NameRegex: regexp.MustCompile(`ba*`),
+			},
+			Expected: []corev1alpha1.Action{
+				action2, action3,
 			},
 		},
 	}

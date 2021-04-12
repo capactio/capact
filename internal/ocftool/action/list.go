@@ -31,7 +31,7 @@ func Search(ctx context.Context, opts SearchOptions, w io.Writer) error {
 	}
 
 	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
-	acts, err := actionCli.ListActions(ctxWithNs)
+	acts, err := actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
 	if err != nil {
 		return err
 	}
