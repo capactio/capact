@@ -104,9 +104,9 @@ spec:
                               name: "rocketchat"
                               repo: "https://charts.helm.sh/stable"
                             values:
-                              extraEnv:
-                              - name: EXIT_UNHANDLEDPROMISEREJECTION
-                                value: "true"
+                              extraEnv: |
+                                - name: EXIT_UNHANDLEDPROMISEREJECTION
+                                  value: "true"
                               image:
                                 tag: 3.13.1
                               mongodb:
