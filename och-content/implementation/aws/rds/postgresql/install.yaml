@@ -21,9 +21,7 @@ metadata:
 spec:
   appVersion: "10, 11, 12"
 
-  outputTypeInstanceRelations:
-    postgresql: {} # TODO: Workaround - Remove this line once the issue CP-354 is resolved
-    # all output TypeInstances are defined to upload on lower level workflows
+  outputTypeInstanceRelations: {}
 
   implements:
     - path: cap.interface.database.postgresql.install
