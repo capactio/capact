@@ -49,7 +49,7 @@ func (f *ActionFilter) Match(item v1alpha1.Action) bool {
 		return false
 	}
 
-	if f.NameRegex != nil && !f.NameRegex.Match([]byte(item.Name)) {
+	if f.NameRegex != nil && !f.NameRegex.MatchString(item.Name) {
 		return false
 	}
 

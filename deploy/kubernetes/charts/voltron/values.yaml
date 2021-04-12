@@ -20,7 +20,6 @@ integrationTest:
   image:
     name: e2e-test
     pullPolicy: IfNotPresent
-  expectedNumberOfRunningPods: 21
 
 postInstallTypeInstanceJob:
   image:
