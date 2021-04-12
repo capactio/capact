@@ -966,7 +966,7 @@ args:
                   - from: jira-install-install-db-postgres-install-provision-rds-provision-terraform-apply-terraform-release
                     to: jira-install-install-db-postgres-install-provision-rds-provision-terraform-apply-tfstate
                   - from: jira-install-create-db-database
-                    to: jira-install-install-db-postgresql
+                    to: jira-install-install-db-postgres-install-provision-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - arguments: {}
