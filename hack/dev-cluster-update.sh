@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script rebuilds Docker images from sources and upgrades Voltron Helm chart installed on cluster.
+# This script rebuilds Docker images from sources and upgrades Capact Helm chart installed on cluster.
 #
 
 # standard bash error handling
@@ -24,9 +24,9 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     export CLUSTER_TYPE="KIND"
-    voltron::update::images_on_kind
+    capact::update::images_on_kind
 
-    voltron::install_upgrade::charts
+    capact::install_upgrade::charts
 
     shout "Development local cluster updated successfully."
 }

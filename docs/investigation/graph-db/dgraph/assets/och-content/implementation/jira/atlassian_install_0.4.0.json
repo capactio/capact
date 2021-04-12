@@ -14,9 +14,9 @@
     "maintainers": [
       {
         "dgraph.type": "Maintainer",
-        "Maintainer.name": "Voltron Dev Team",
-        "Maintainer.email": "team-dev@projectvoltron.dev",
-        "Maintainer.url": "https://projectvoltron.dev"
+        "Maintainer.name": "Capact Dev Team",
+        "Maintainer.email": "team-dev@capact.io",
+        "Maintainer.url": "https://capact.io"
       }
     ]
   },

@@ -25,8 +25,8 @@ type GatewayConfig struct {
 }
 
 type ClusterPolicyConfig struct {
-	Name      string `envconfig:"default=voltron-engine-cluster-policy"`
-	Namespace string `envconfig:"default=voltron-system"`
+	Name      string `envconfig:"default=capact-engine-cluster-policy"`
+	Namespace string `envconfig:"default=capact-system"`
 }
 
 type Config struct {
@@ -36,8 +36,8 @@ type Config struct {
 	PollingTimeout              time.Duration `envconfig:"default=5m"`
 	Gateway                     GatewayConfig
 	ClusterPolicy               ClusterPolicyConfig
-	OCHLocalDeployNamespace     string `envconfig:"default=voltron-system"`
-	OCHLocalDeployName          string `envconfig:"default=voltron-och-local"`
+	OCHLocalDeployNamespace     string `envconfig:"default=capact-system"`
+	OCHLocalDeployName          string `envconfig:"default=capact-och-local"`
 }
 
 var cfg Config

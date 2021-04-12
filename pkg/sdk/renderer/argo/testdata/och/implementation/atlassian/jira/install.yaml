@@ -6,8 +6,8 @@ metadata:
   documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
   iconURL: https://mox.sh/helm/
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: install
   path: cap.implementation.atlassian.jira.install
   prefix: cap.implementation.atlassian.jira
@@ -85,10 +85,10 @@ spec:
                   from: "{{steps.helm-install.outputs.artifacts.additional}}"
             name: jira-install
             steps:
-              - - voltron-action: postgresql.install
+              - - capact-action: postgresql.install
                   name: install-db
-                  voltron-when: postgresql == nil
-                  voltron-outputTypeInstances:
+                  capact-when: postgresql == nil
+                  capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql
                   arguments:
@@ -102,8 +102,8 @@ spec:
                             defaultDBName: jira
 
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database
                       from: database
                   arguments:
@@ -116,7 +116,7 @@ spec:
                             name: jiradb 
                             owner: superuser
 
-              - - voltron-action: jinja2.template
+              - - capact-action: jinja2.template
                   name: create-helm-args
                   arguments:
                     artifacts:
@@ -142,16 +142,16 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: jira-cloud.voltron.local
+                                - host: jira-cloud.capact.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-              - - voltron-outputTypeInstances:
+              - - capact-outputTypeInstances:
                     - name: jira-config
                       from: additional
                     - name: jira-helm-release
                       from: helm-release
-                  voltron-action: helm.install
+                  capact-action: helm.install
                   name: helm-install
                   arguments:
                     artifacts:

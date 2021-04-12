@@ -1,6 +1,6 @@
 # E2E Architecture
 
-The document describes high-level Voltron architecture, all components in the system and interactions between them.
+The document describes high-level Capact architecture, all components in the system and interactions between them.
 
 > **NOTE**: This document showcases architecture for Alpha phase. After Alpha stage the document will be updated to describe the target GA architecture. 
 
@@ -75,7 +75,7 @@ OCH utilizes [SDK](#sdk).
 
 SDK is a Go library with low-level and high-level functions used by [Engine](#engine), [OCH](#och) and [CLI](#cli).
 
-SDK can be used by Users to interact with Voltron components in a programmatic way.
+SDK can be used by Users to interact with Capact components in a programmatic way.
 
 ## Detailed interaction
 

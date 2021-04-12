@@ -6,13 +6,13 @@ metadata:
   name: template
   license:
     name: "Apache 2.0"
-  displayName: Template action for Voltron
+  displayName: Template action for Capact
   description: Templating Jinja files
   documentationURL: https://helm.sh/
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "1.x.x"

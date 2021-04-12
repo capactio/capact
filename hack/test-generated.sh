@@ -13,7 +13,7 @@ readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
-voltron::generate() {
+capact::generate() {
   pushd "$REPO_ROOT_DIR"
   make generate
   popd
@@ -41,7 +41,7 @@ git::detect_dirty_state() {
 }
 
 main() {
-  voltron::generate
+  capact::generate
   git::detect_dirty_state
 }
 

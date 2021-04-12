@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "2.x.x"
@@ -60,7 +60,7 @@ spec:
                 - name: confluence-helm-release
             steps:
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -87,8 +87,8 @@ spec:
                           data: ""
 
               - - name: helm-upgrade
-                  voltron-action: helm.upgrade
-                  voltron-updateTypeInstances:
+                  capact-action: helm.upgrade
+                  capact-updateTypeInstances:
                     - name: confluence-config
                       from: additional
                   arguments:

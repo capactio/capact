@@ -7,7 +7,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 
-	"projectvoltron.dev/voltron/poc/graph-db/grakn/graphql"
+	"capact.io/capact/poc/graph-db/grakn/graphql"
 )
 
 func main() {

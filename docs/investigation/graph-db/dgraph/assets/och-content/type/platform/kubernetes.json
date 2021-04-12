@@ -7,12 +7,12 @@
   "TypeRevision.description": "This Type indicates that a given platform is a Kubernetes installation.",
   "TypeRevision.documentationURL": "https://kubernetes.io/docs",
   "TypeRevision.supportURL": "https://kubernetes.io/",
-  "TypeRevision.iconURL": "https://projectvoltron.dev/favicon.ico",
+  "TypeRevision.iconURL": "https://capact.io/favicon.ico",
   "TypeRevision.maintainers": [
     {
-      "name": "Voltron Dev Team",
-      "email": "team-dev@projectvoltron.dev",
-      "url": "https://projectvoltron.dev"
+      "name": "Capact Dev Team",
+      "email": "team-dev@capact.io",
+      "url": "https://capact.io"
     }
   ],
   "TypeRevision.tags": [
@@ -23,9 +23,9 @@
         "path": "cap.core.tag.system.name",
         "description": "Indication that tagged item is an essential system capability.",
         "displayName": "Baseline Capability",
-        "documentationURL": "https://projectvoltron.dev",
-        "supportURL": "https://projectvoltron.dev/contact",
-        "iconURL": "https://projectvoltron.dev/favicon.ico"
+        "documentationURL": "https://capact.io",
+        "supportURL": "https://capact.io/contact",
+        "iconURL": "https://capact.io/favicon.ico"
       }
     }
   ],

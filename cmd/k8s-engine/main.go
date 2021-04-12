@@ -58,7 +58,7 @@ type Config struct {
 	Logger logger.Config
 
 	GraphQLGateway struct {
-		Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
+		Endpoint string `envconfig:"default=http://capact-gateway/graphql"`
 		Username string
 		Password string
 	}
@@ -93,7 +93,7 @@ func main() {
 		Scheme:                  scheme,
 		LeaderElection:          cfg.EnableLeaderElection,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
-		LeaderElectionID:        "152f0254.projectvoltron.dev",
+		LeaderElectionID:        "152f0254.capact.io",
 		MetricsBindAddress:      cfg.MetricsAddr,
 		HealthProbeBindAddress:  cfg.HealthzAddr,
 	})

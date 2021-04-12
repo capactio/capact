@@ -7,12 +7,12 @@ metadata:
   name: run
   displayName: "Run"
   description: "Run action for GCP CloudSQL"
-  documentationURL: https://projectvoltron.dev
+  documentationURL: https://capact.io
   supportURL: https://cloud.google.com/sql
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 spec:
   input:
     parameters:

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://projectvoltron.dev/schemas/implementation.json",
+  "$id": "https://capact.io/schemas/implementation.json",
   "type": "object",
   "description": "The description of an action and its prerequisites (dependencies). An implementation implements at least one interface.",
   "definitions": {
@@ -81,7 +81,7 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+          "$ref": "https://capact.io/schemas/common/metadata.json"
         },
         {
           "required": [
@@ -89,7 +89,7 @@
           ],
           "properties": {
             "attributes": {
-              "$ref": "https://projectvoltron.dev/schemas/common/metadata-attributes.json"
+              "$ref": "https://capact.io/schemas/common/metadata-attributes.json"
             },
             "license": {
               "$id": "#/properties/metadata/properties/license",
@@ -149,7 +149,7 @@
           "description": "Specifies additional input for a given Implementation.",
           "properties": {
             "typeInstances": {
-              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
+              "$ref": "https://capact.io/schemas/common/input-type-instances.json"
             }
           },
           "additionalProperties": false
@@ -161,7 +161,7 @@
           "required": [],
           "properties": {
             "typeInstances": {
-              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
+              "$ref": "https://capact.io/schemas/common/output-type-instances.json"
             }
           },
           "additionalProperties": false

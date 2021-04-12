@@ -12,9 +12,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "7.11.2-SNAPSHOT"
@@ -60,7 +60,7 @@ spec:
           - name: elasticsearch
             inputs:
               artifacts:
-                # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+                # Capact Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
                 - name: input-parameters
             outputs:
               artifacts:
@@ -69,7 +69,7 @@ spec:
             steps:
               # Here we prepare the input for K8s Secret creation.
               - - name: render-secret-manifest
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -98,7 +98,7 @@ spec:
 
               # Here we prepare the input for the Helm runner.
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -162,7 +162,7 @@ spec:
                           data: ""
 
               - - name: fill-secret-name-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -180,8 +180,8 @@ spec:
               # The release name is available in elasticsearch-helm-release TypeInstance.
               # Additionally, remove PVCs as they are not remove as a part of helm uninstall.
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: elasticsearch         # Defining the output TypeInstance 'elasticsearch-config'
                       from: additional
                     - name: elasticsearch-helm-release   # Defining the output TypeInstance 'elasticsearch-helm-release'

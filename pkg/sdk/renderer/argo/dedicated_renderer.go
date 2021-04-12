@@ -76,7 +76,7 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Work
 
 	r.rootTemplate = &Template{
 		Template: &wfv1.Template{
-			Name: "voltron-root",
+			Name: "capact-root",
 		},
 		Steps: []ParallelSteps{
 			{
@@ -167,7 +167,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 				// whether steps in referenced template are satisfied
 				r.registerTemplateInputArguments(step, availableTypeInstances)
 
-				// 2. Check step with `voltron-when` statements if it can be satisfied by input arguments
+				// 2. Check step with `capact-when` statements if it can be satisfied by input arguments
 				satisfiedArg, err := r.getInputArgWhichSatisfyStep(tpl.Name, step)
 				if err != nil {
 					return err
@@ -187,7 +187,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					availableTypeInstances[argoArtifactRef{step.Name, satisfiedArg}] = artifact.typeInstanceReference
 				}
 
-				// 2.2 Check step with `voltron-when` statements if it can be satisfied by input TypeInstances
+				// 2.2 Check step with `capact-when` statements if it can be satisfied by input TypeInstances
 				if satisfiedArg == "" {
 					satisfiedArg, err = r.getInputTypeInstanceWhichSatisfyStep(step, typeInstances)
 					if err != nil {
@@ -215,10 +215,10 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					return errors.Wrap(err, "while registering updated TypeInstances")
 				}
 
-				// 3. Import and resolve Implementation for `voltron-action`
-				if step.VoltronAction != nil {
-					// 3.1 Expand `voltron-action` alias based on imports section
-					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.VoltronAction)
+				// 3. Import and resolve Implementation for `capact-action`
+				if step.CapactAction != nil {
+					// 3.1 Expand `capact-action` alias based on imports section
+					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.CapactAction)
 					if err != nil {
 						return err
 					}
@@ -229,7 +229,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return err
 					}
 
-					// 3.3 Get all ImplementationRevisions for a given `voltron-action`
+					// 3.3 Get all ImplementationRevisions for a given `capact-action`
 					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
 						return errors.Wrapf(err,
@@ -247,7 +247,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					workflowPrefix := addPrefix(tpl.Name, step.Name)
 
-					// 3.6 Extract workflow from the imported `voltron-action`. Prefix it to avoid artifacts name collision.
+					// 3.6 Extract workflow from the imported `capact-action`. Prefix it to avoid artifacts name collision.
 					importedWorkflow, newArtifactMappings, err := r.UnmarshalWorkflowFromImplementation(workflowPrefix, &implementation)
 					if err != nil {
 						return errors.Wrap(err, "while creating workflow for action step")
@@ -265,7 +265,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 
 					step.Template = importedWorkflow.Entrypoint
-					step.VoltronAction = nil
+					step.CapactAction = nil
 
 					// 3.8 Right now we know the template name, so let's try to register step input arguments
 					r.registerTemplateInputArguments(step, availableTypeInstances)
@@ -291,8 +291,8 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					availableTypeInstances[argoArtifactRef{step.Name, name}] = tiPtr
 				}
 
-				step.VoltronTypeInstanceOutputs = nil
-				step.VoltronTypeInstanceUpdates = nil
+				step.CapactTypeInstanceOutputs = nil
+				step.CapactTypeInstanceUpdates = nil
 
 				// 4. Replace global artifacts names in references, based on previous gathered mappings.
 				for artIdx := range step.Arguments.Artifacts {
@@ -371,9 +371,9 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 					step.Template = addPrefix(prefix, step.Template)
 				}
 
-				typeInstances := make([]TypeInstanceDefinition, 0, len(step.VoltronTypeInstanceOutputs)+len(step.VoltronTypeInstanceUpdates))
-				typeInstances = append(typeInstances, step.VoltronTypeInstanceOutputs...)
-				typeInstances = append(typeInstances, step.VoltronTypeInstanceUpdates...)
+				typeInstances := make([]TypeInstanceDefinition, 0, len(step.CapactTypeInstanceOutputs)+len(step.CapactTypeInstanceUpdates))
+				typeInstances = append(typeInstances, step.CapactTypeInstanceOutputs...)
+				typeInstances = append(typeInstances, step.CapactTypeInstanceUpdates...)
 
 				for _, ti := range typeInstances {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
@@ -680,11 +680,11 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 //        - name: postgresql
 //          optional: true
 //    steps:
-//      - - voltron-when: postgresql == nil						# Check whether this step is satisfied by input arguments.
+//      - - capact-when: postgresql == nil						# Check whether this step is satisfied by input arguments.
 //          name: install-db									# For that we need to have option to check which arguments were passed
 //																# to this step.
 func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, step *WorkflowStep) (string, error) {
-	if step.VoltronWhen == nil {
+	if step.CapactWhen == nil {
 		return "", nil
 	}
 
@@ -698,7 +698,7 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 		params.Set(a.artifact.Name)
 	}
 
-	notSatisfied, err := r.evaluateWhenExpression(params, *step.VoltronWhen)
+	notSatisfied, err := r.evaluateWhenExpression(params, *step.CapactWhen)
 	if err != nil {
 		return "", errors.Wrap(err, "while evaluating OCFWhen")
 	}
@@ -707,12 +707,12 @@ func (r *dedicatedRenderer) getInputArgWhichSatisfyStep(tplOwnerName string, ste
 		return "", nil
 	}
 
-	step.VoltronWhen = nil
+	step.CapactWhen = nil
 	return params.lastAccessed, nil
 }
 
 func (r *dedicatedRenderer) getInputTypeInstanceWhichSatisfyStep(step *WorkflowStep, typeInstances []types.InputTypeInstanceRef) (string, error) {
-	if step.VoltronWhen == nil {
+	if step.CapactWhen == nil {
 		return "", nil
 	}
 
@@ -721,13 +721,13 @@ func (r *dedicatedRenderer) getInputTypeInstanceWhichSatisfyStep(step *WorkflowS
 		params.Set(t.Name)
 	}
 
-	notSatisfied, err := r.evaluateWhenExpression(params, *step.VoltronWhen)
+	notSatisfied, err := r.evaluateWhenExpression(params, *step.CapactWhen)
 	if err != nil {
 		return "", errors.Wrap(err, "while evaluating OCFWhen")
 	}
 
 	// zero value to mark as handled
-	step.VoltronWhen = nil
+	step.CapactWhen = nil
 
 	if notSatisfied == true {
 		return "", nil
@@ -771,7 +771,7 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 	}
 }
 
-// TODO: current limitation: we handle properly only one artifacts `voltron-when: postgres == nil` but not `voltron-when: postgres == nil && jira-config == nil`
+// TODO: current limitation: we handle properly only one artifacts `capact-when: postgres == nil` but not `capact-when: postgres == nil && jira-config == nil`
 func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *WorkflowStep, inputArgName string, reference string) (*WorkflowStep, *Template) {
 	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
 
@@ -857,12 +857,12 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 	for _, item := range impl.Spec.OutputTypeInstanceRelations {
 		name := item.TypeInstanceName
 		if step != nil {
-			// we have to track the renaming based on voltron-outputTypeInstances and prefix it
+			// we have to track the renaming based on capact-outputTypeInstances and prefix it
 			if output := findOutputTypeInstance(step, item.TypeInstanceName); output != nil {
 				name = addPrefix(prefix, output.From)
 				r.tryReplaceTypeInstanceName(output.Name, name)
 			} else {
-				// if the TypeInstance was not defined in voltron-outputTypeInstances, then just prefix it
+				// if the TypeInstance was not defined in capact-outputTypeInstances, then just prefix it
 				name = addPrefix(prefix, item.TypeInstanceName)
 				r.tryReplaceTypeInstanceName(item.TypeInstanceName, name)
 			}
@@ -903,7 +903,7 @@ func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, pr
 }
 
 func (r *dedicatedRenderer) registerUpdatedTypeInstances(step *WorkflowStep, availableTypeInstances map[argoArtifactRef]*string, prefix string) error {
-	for _, update := range step.VoltronTypeInstanceUpdates {
+	for _, update := range step.CapactTypeInstanceUpdates {
 		typeInstance, ok := availableTypeInstances[argoArtifactRef{
 			step: ArgoArtifactNoStep,
 			name: update.Name,

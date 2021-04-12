@@ -1,4 +1,4 @@
-module github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app
+module capact.io/capact/docs/investigation/graph-db/dgraph/app
 
 go 1.15
 

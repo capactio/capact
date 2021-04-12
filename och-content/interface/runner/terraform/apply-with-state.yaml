@@ -6,12 +6,12 @@ metadata:
   name: apply-with-state
   displayName: "Apply with existing Terrfarom state"
   description: "Apply action for Terraform Runner, which respects a given Terraform state"
-  documentationURL: https://projectvoltron.dev
-  supportURL: https://projectvoltron.dev
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   input:

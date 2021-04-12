@@ -22,9 +22,9 @@ func NewRoot() *cobra.Command {
 			heredoc.WithCLIName(`
         <cli> - Collective Capability Manager CLI
 
-        A utility for managing Project Voltron & assist with authoring OCF content
+        A utility for managing Capact & assist with authoring OCF content
 
-        To begin working with Project Voltron using the <cli> CLI, start with:
+        To begin working with Capact using the <cli> CLI, start with:
 
             $ <cli> login
 

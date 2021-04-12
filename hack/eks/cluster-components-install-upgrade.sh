@@ -19,7 +19,7 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE="EKS"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
-    voltron::install_upgrade::charts
+    capact::install_upgrade::charts
 }
 
 main

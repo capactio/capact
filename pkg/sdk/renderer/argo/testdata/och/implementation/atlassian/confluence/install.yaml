@@ -6,8 +6,8 @@ metadata:
   documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/confluence-server
   iconURL: https://mox.sh/helm/
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   prefix: cap.implementation.atlassian.confluence
   name: install
   supportURL: https://mox.sh/helm/
@@ -86,7 +86,7 @@ spec:
         entrypoint: main
         templates:
           - name: main
-            # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+            # Capact Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
             # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
@@ -101,11 +101,11 @@ spec:
               # If the postgresql TypeInstance was not provided, then create it
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
-                  voltron-action: postgresql.install
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.install
+                  capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql
-                  voltron-when: postgresql == nil
+                  capact-when: postgresql == nil
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -117,8 +117,8 @@ spec:
                             defaultDBName: postgres
 
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database # Defining the output TypeInstance 'database'
                       from: database
                   arguments:
@@ -135,7 +135,7 @@ spec:
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be better way to do this.
               - - name: create-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -160,7 +160,7 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: confluence.voltron.local
+                                - host: confluence.capact.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
@@ -168,8 +168,8 @@ spec:
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: confluence-config # Defining the output TypeInstance 'confluence-config'
                       from: additional
                     - name: confluence-helm-release # Defining the output TypeInstance 'confluence-helm-release'

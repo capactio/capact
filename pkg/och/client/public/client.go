@@ -15,7 +15,7 @@ import (
 
 const retryAttempts = 1
 
-// Client used to communicate with the Voltron Public OCH GraphQL APIs
+// Client used to communicate with the Capact Public OCH GraphQL APIs
 type Client struct {
 	client *graphql.Client
 }

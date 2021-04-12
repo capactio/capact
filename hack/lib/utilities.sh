@@ -227,102 +227,102 @@ docker::delete_images() {
 }
 
 #
-# Voltron functions
+# Capact functions
 #
 
-# Installs Voltron charts. If they are already installed, it upgrades them.
+# Installs Capact charts. If they are already installed, it upgrades them.
 #
 # Required envs:
 #  - DOCKER_REPOSITORY
 #  - DOCKER_TAG
 #  - REPO_DIR
-#  - VOLTRON_NAMESPACE
-#  - VOLTRON_RELEASE_NAME
+#  - CAPACT_NAMESPACE
+#  - CAPACT_RELEASE_NAME
 #  - CLUSTER_TYPE
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - OCH_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
-voltron::install_upgrade::charts() {
+capact::install_upgrade::charts() {
     readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
     readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
     readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
     readonly EKS_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/eks"
 
-    export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${VOLTRON_ENABLE_POPULATOR}}
-    export USE_TEST_SETUP=${USE_TEST_SETUP:-${VOLTRON_USE_TEST_SETUP}}
-    export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${VOLTRON_INCREASE_RESOURCE_LIMITS}}
+    export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${CAPACT_ENABLE_POPULATOR}}
+    export USE_TEST_SETUP=${USE_TEST_SETUP:-${CAPACT_USE_TEST_SETUP}}
+    export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${CAPACT_INCREASE_RESOURCE_LIMITS}}
 
     # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
     if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
       shout "Using higher resource requests and limits from ${CLUSTER_CONFIG_DIR}"
     fi
 
-    shout "- Applying Voltron CRDs..."
+    shout "- Applying Capact CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
-    voltron::install_upgrade::neo4j
+    capact::install_upgrade::neo4j
 
-    voltron::install_upgrade::ingress_controller
+    capact::install_upgrade::ingress_controller
 
-    voltron::install_upgrade::argo
+    capact::install_upgrade::argo
 
     if [ "${CLUSTER_TYPE}" != "KIND" ]; then
-      voltron::install_upgrade::cert_manager
+      capact::install_upgrade::cert_manager
     fi
 
     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping kubed installation cause DISABLE_KUBED_INSTALLATION is set to true."
     else
-      voltron::install_upgrade::kubed
-      voltron::synchronize::minio_secret
+      capact::install_upgrade::kubed
+      capact::synchronize::minio_secret
     fi
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
-      voltron::install_upgrade::monitoring
+      capact::install_upgrade::monitoring
     fi
 
-    shout "- Installing Voltron Helm chart from sources [wait: true]..."
+    shout "- Installing Capact Helm chart from sources [wait: true]..."
     echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
 
     if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly VOLTRON_OVERRIDES="${KIND_CONFIG_DIR}/overrides.voltron.yaml"
-      echo -e "- Applying overrides from ${VOLTRON_OVERRIDES}\n"
+      readonly CAPACT_OVERRIDES="${KIND_CONFIG_DIR}/overrides.capact.yaml"
+      echo -e "- Applying overrides from ${CAPACT_OVERRIDES}\n"
     else
-      readonly VOLTRON_OVERRIDES=""
+      readonly CAPACT_OVERRIDES=""
     fi
 
     if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
-      readonly VOLTRON_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.voltron.higher-res-limits.yaml"
-      echo -e "- Applying overrides from ${VOLTRON_RESOURCE_OVERRIDES}\n"
+      readonly CAPACT_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.capact.higher-res-limits.yaml"
+      echo -e "- Applying overrides from ${CAPACT_RESOURCE_OVERRIDES}\n"
     else
-      readonly VOLTRON_RESOURCE_OVERRIDES=""
+      readonly CAPACT_RESOURCE_OVERRIDES=""
     fi
 
     if [ -n "${OCH_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
-      CUSTOM_VOLTRON_SET_FLAGS="${CUSTOM_VOLTRON_SET_FLAGS:-} \
+      CUSTOM_CAPACT_SET_FLAGS="${CUSTOM_CAPACT_SET_FLAGS:-} \
         --set och-public.populator.manifestsLocation.branch=${OCH_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
-    # CUSTOM_VOLTRON_SET_FLAGS cannot be quoted
+    # CUSTOM_CAPACT_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
-    helm upgrade "${VOLTRON_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/voltron" \
+    helm upgrade "${CAPACT_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/capact" \
         --install \
         --create-namespace \
-        --namespace="${VOLTRON_NAMESPACE}" \
+        --namespace="${CAPACT_NAMESPACE}" \
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
         --set och-public.populator.enabled="${ENABLE_POPULATOR}" \
         --set engine.testSetup.enabled="${USE_TEST_SETUP}" \
-        ${CUSTOM_VOLTRON_SET_FLAGS:-}  \
-        -f "${VOLTRON_OVERRIDES}" \
-        -f "${VOLTRON_RESOURCE_OVERRIDES}" \
+        ${CUSTOM_CAPACT_SET_FLAGS:-}  \
+        -f "${CAPACT_OVERRIDES}" \
+        -f "${CAPACT_RESOURCE_OVERRIDES}" \
         --wait
 }
 
-voltron::install_upgrade::monitoring() {
+capact::install_upgrade::monitoring() {
     # not waiting as Helm Charts installation takes additional ~3 minutes. To proceed further we need only monitoring CRDs.
     shout "- Installing monitoring Helm chart [wait: false]..."
     helm upgrade monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
@@ -331,7 +331,7 @@ voltron::install_upgrade::monitoring() {
         --namespace="monitoring"
 }
 
-voltron::install_upgrade::kubed() {
+capact::install_upgrade::kubed() {
     # not waiting as it is not needed.
     shout "- Installing kubed Helm chart [wait: false]..."
     helm upgrade kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
@@ -340,7 +340,7 @@ voltron::install_upgrade::kubed() {
         --namespace="kubed"
 }
 
-voltron::install_upgrade::neo4j() {
+capact::install_upgrade::neo4j() {
     shout "- Installing Neo4j Helm chart..."
 
     if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
@@ -364,7 +364,7 @@ voltron::install_upgrade::neo4j() {
       --timeout=300s
 }
 
-voltron::install_upgrade::ingress_controller() {
+capact::install_upgrade::ingress_controller() {
     # waiting as admission webhooks server is required to be available during further installation steps
     shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
 
@@ -400,7 +400,7 @@ voltron::install_upgrade::ingress_controller() {
       --timeout=90s
 }
 
-voltron::install_upgrade::argo() {
+capact::install_upgrade::argo() {
     # not waiting as other components do not need it during installation
     shout "- Installing Argo Helm chart [wait: false]..."
 
@@ -410,7 +410,7 @@ voltron::install_upgrade::argo() {
         --namespace="argo"
 }
 
-voltron::install_upgrade::cert_manager() {
+capact::install_upgrade::cert_manager() {
     shout "- Installing Cert Manager Helm chart..."
 
     if [ "${CLUSTER_TYPE}" == "EKS" ]; then
@@ -429,18 +429,18 @@ voltron::install_upgrade::cert_manager() {
         ${CUSTOM_CERT_MANAGER_SET_FLAGS:-}
 }
 
-voltron::synchronize::minio_secret() {
+capact::synchronize::minio_secret() {
   echo "Annotating Minio secret to be synchronized across all namespaces..."
   kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync="" --overwrite
 }
 
-# Updates /etc/hosts with all Voltron subdomains.
-host::update::voltron_hosts() {
+# Updates /etc/hosts with all Capact subdomains.
+host::update::capact_hosts() {
   shout "- Updating /etc/hosts..."
-  readonly DOMAIN="voltron.local"
-  readonly VOLTRON_HOSTS=("gateway")
+  readonly DOMAIN="capact.local"
+  readonly CAPACT_HOSTS=("gateway")
 
-  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${VOLTRON_HOSTS[@]}")"
+  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${CAPACT_HOSTS[@]}")"
   HOSTS_FILE="/etc/hosts"
 
   grep -qxF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
@@ -452,7 +452,7 @@ host::update::voltron_hosts() {
 #  - REPO_DIR
 host::install:trust_self_signed_cert() {
   shout "- Trusting self-signed TLS certificate if not already trusted..."
-  CERT_FILE="voltron.local.crt"
+  CERT_FILE="capact.local.crt"
   CERT_PATH="${REPO_DIR}/hack/cluster-config/kind/${CERT_FILE}"
   OS="$(host::os)"
 
@@ -487,18 +487,18 @@ host::install:trust_self_signed_cert() {
 #  - DOCKER_REPOSITORY
 #  - DOCKER_TAG
 #  - REPO_DIR
-voltron::update::images_on_kind() {
+capact::update::images_on_kind() {
     pushd "${REPO_DIR}" || return
 
-    shout "- Building Voltron apps and tests images from sources..."
+    shout "- Building Capact apps and tests images from sources..."
     make build-all-apps-images build-all-tests-images
 
     REFERENCE_FILTER="$DOCKER_REPOSITORY/*:$DOCKER_TAG"
-    shout "- Loading Voltron image into kind cluster... [reference filter: $REFERENCE_FILTER]"
+    shout "- Loading Capact image into kind cluster... [reference filter: $REFERENCE_FILTER]"
     names=$(docker::list_images "$REFERENCE_FILTER")
     kind::load_images "$names"
 
-    shout "- Deleting local Docker Voltron images..."
+    shout "- Deleting local Docker Capact images..."
     docker::delete_images "$names"
 
     popd || return
@@ -509,12 +509,12 @@ voltron::update::images_on_kind() {
 #  - MINIMAL_VERSION
 #  - CURRENT_VERSION
 #
-# usage: env MINIMAL_VERSION=v3.3.4 CURRENT_VERSION=v2.16.9 voltron::version_supported
-voltron::version_supported(){
+# usage: env MINIMAL_VERSION=v3.3.4 CURRENT_VERSION=v2.16.9 capact::version_supported
+capact::version_supported(){
   printf '%s\n%s\n' "$CURRENT_VERSION" "$MINIMAL_VERSION" | sort -rVC
 }
 
-voltron::validate::tools() {
+capact::validate::tools() {
   shout "- Validating tools versions..."
   local current_kind_version
   local current_helm_version
@@ -527,11 +527,11 @@ voltron::validate::tools() {
   echo "Current kind version: $current_kind_version, recommended kind version: $STABLE_KIND_VERSION"
   echo "Current helm version: $current_helm_version, recommended helm version: $STABLE_HELM_VERSION"
 
-  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" voltron::version_supported; then
+  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" capact::version_supported; then
     wrong_versions=true
     echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
   fi
-  if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" voltron::version_supported; then
+  if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" capact::version_supported; then
       wrong_versions=true
       echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"
   fi

@@ -143,9 +143,9 @@ I sorted the problems that I faced during the investigation. The **HARD** catego
 	        "prefix": "cap.implementation.atlassian.jira",
 	        "maintainers": [
 	          {
-	            "Maintainer.name": "Voltron Dev Team",
-	            "Maintainer.email": "team-dev@projectvoltron.dev",
-	            "Maintainer.url": "https://projectvoltron.dev"
+	            "Maintainer.name": "Capact Dev Team",
+	            "Maintainer.email": "team-dev@capact.io",
+	            "Maintainer.url": "https://capact.io"
 	          }
 	        ],
 	        "supportURL": " https://mox.sh/helm"
@@ -172,9 +172,9 @@ I sorted the problems that I faced during the investigation. The **HARD** catego
 	        "displayName": "Install Jira",
 	        "maintainers": [
 	          {
-	            "name": "Voltron Dev Team",
-	            "email": "team-dev@projectvoltron.dev",
-	            "url": "https://projectvoltron.dev"
+	            "name": "Capact Dev Team",
+	            "email": "team-dev@capact.io",
+	            "url": "https://capact.io"
 	          }
 	        ],
 	        "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png"

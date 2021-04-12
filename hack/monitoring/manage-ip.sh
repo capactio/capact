@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-CLUSTER_NAME=${CLUSTER_NAME:-voltron-dev3}
+CLUSTER_NAME=${CLUSTER_NAME:-capact-dev}
 REGION=${REGION:-europe-north1}
 
 usage() {

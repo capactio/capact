@@ -10,9 +10,9 @@ Collective Capability Manager CLI
 
 ocftool - Collective Capability Manager CLI
 
-A utility for managing Project Voltron & assist with authoring OCF content
+A utility for managing Capact & assist with authoring OCF content
 
-To begin working with Project Voltron using the ocftool CLI, start with:
+To begin working with Capact using the ocftool CLI, start with:
 
     $ ocftool login
 

@@ -1,4 +1,4 @@
-# Voltron GraphQL gateway
+# Capact GraphQL gateway
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
@@ -9,20 +9,20 @@
 
 ## Overview
 
-Voltron GraphQL gateway is a component, which aggregates GraphQL APIs from the Voltron Engine and Open Capability Hub.
+Capact GraphQL gateway is a component, which aggregates GraphQL APIs from the Capact Engine and Open Capability Hub.
 
 ## Prerequisites
 
 - [Go](https://golang.org)
-- Running Kubernetes cluster with Voltron installed
+- Running Kubernetes cluster with Capact installed
 
 ## Usage
 
-As Gateway aggregates multiple GraphQL endpoints for Voltron components, an existing Voltron installation is needed. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Voltron Engine:
+As Gateway aggregates multiple GraphQL endpoints for Capact components, an existing Capact installation is needed. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Capact Engine:
 ```
-kubectl port-forward svc/voltron-engine-graphql 3000:80 -n voltron-system
-kubectl port-forward svc/voltron-och-public 3001:80 -n voltron-system
-kubectl port-forward svc/voltron-och-local 3002:80 -n voltron-system
+kubectl port-forward svc/capact-engine-graphql 3000:80 -n capact-system
+kubectl port-forward svc/capact-och-public 3001:80 -n capact-system
+kubectl port-forward svc/capact-och-local 3002:80 -n capact-system
 ```
 
 To run the Gateway, execute:

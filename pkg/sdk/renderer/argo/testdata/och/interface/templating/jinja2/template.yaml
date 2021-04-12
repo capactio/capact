@@ -11,9 +11,9 @@ metadata:
   supportURL: https://jinja.palletsprojects.com/en/2.11.x/
   iconURL: https://raw.githubusercontent.com/pallets/jinja/5f79ba633db0e6f56fc2d13cfc78547495f3d395/artwork/jinjalogo.svg
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   input:

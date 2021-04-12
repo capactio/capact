@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "3.6.x"
@@ -78,9 +78,9 @@ spec:
                   optional: true
             steps:
               - - name: install-db
-                  voltron-when: mongodb == nil # conditional execution
-                  voltron-action: mongodb.install
-                  voltron-outputTypeInstances:
+                  capact-when: mongodb == nil # conditional execution
+                  capact-action: mongodb.install
+                  capact-outputTypeInstances:
                     - name: mongodb
                       from: mongodb
                   arguments:
@@ -93,7 +93,7 @@ spec:
                             defaultDBName: "mongo"
 
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -166,7 +166,7 @@ spec:
                             prefix: mongo
 
               - - name: fill-input-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -179,8 +179,8 @@ spec:
                             prefix: input
 
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: rocketchat-config
                       from: additional
                     - name: rocketchat-helm-release

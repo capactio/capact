@@ -184,14 +184,14 @@ main() {
   export KUBECONFIG="${CONFIG_DIR}/eks_kubeconfig"
 
   CAPACT_HOSTED_ZONE_ID=$(cat "${CONFIG_DIR}/route53_zone_id")
-  CUSTOM_VOLTRON_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}
+  CUSTOM_CAPACT_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}
    --set gateway.ingress.annotations.class=capact"
 
   local -r cert_manager_role_arn=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
   CUSTOM_CERT_MANAGER_SET_FLAGS="--set cert-manager.serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${cert_manager_role_arn}"
 
   export CAPACT_HOSTED_ZONE_ID
-  export CUSTOM_VOLTRON_SET_FLAGS
+  export CUSTOM_CAPACT_SET_FLAGS
   export CUSTOM_CERT_MANAGER_SET_FLAGS 
 
   capact::aws::install::fluent_bit

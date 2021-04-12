@@ -10,7 +10,7 @@
 
 Terraform runner is a [runner](../../docs/runner.md), which downloads and run Terraform modules. Runner is a wrapper for
 the terraform binary. It downloads specified module, runs terraform init and depending on action: apply, destroy or plan.
-After run, it collects the output and converts it into Voltron required format.
+After run, it collects the output and converts it into Capact required format.
 
 ## Prerequisites
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This script provisions testing environment using 'kind'(kubernetes-in-docker)
-# and execute end-to-end Voltron tests.
+# and execute end-to-end Capact tests.
 #
 # It requires Docker to be installed.
 # Dependencies such as kubebuilder can be installed on demand.

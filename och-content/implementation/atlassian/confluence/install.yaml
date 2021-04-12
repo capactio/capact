@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "2.x.x"
@@ -77,7 +77,7 @@ spec:
         entrypoint: main
         templates:
           - name: main
-            # Voltron Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+            # Capact Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
             # It contains the Interface parameters, in our case it is `confluence.install-input`.
             inputs:
               artifacts:
@@ -88,9 +88,9 @@ spec:
               # If the postgresql TypeInstance was not provided, then create it
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
-                  voltron-action: postgresql.install
-                  voltron-when: postgresql == nil
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.install
+                  capact-when: postgresql == nil
+                  capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql
                   arguments:
@@ -104,8 +104,8 @@ spec:
                             defaultDBName: postgres
 
               - - name: create-user
-                  voltron-action: postgresql.create-user
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
                     - name: user
                       from: user
                   arguments:
@@ -118,7 +118,7 @@ spec:
                             name: confluence
 
               - - name: render-create-db-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -135,8 +135,8 @@ spec:
               # Create the database for Confluence in our PostgreSQL instance
               # using the imported 'postgresql.create-db' Interface
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database                  # Defining the output TypeInstance 'database'
                       from: database
                   arguments:
@@ -150,7 +150,7 @@ spec:
               # we use Jinja2 to render the input and fill the required parameters.
               # In the future there might be better way to do this.
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -204,7 +204,7 @@ spec:
                           data: "prefix: db"
 
               - - name: fill-database-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -216,7 +216,7 @@ spec:
                           data: "prefix: database"
 
               - - name: fill-input-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -229,7 +229,7 @@ spec:
                             prefix: input
 
               - - name: fill-user-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -243,8 +243,8 @@ spec:
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
                       from: additional
                     - name: confluence-helm-release   # Defining the output TypeInstance 'confluence-helm-release'

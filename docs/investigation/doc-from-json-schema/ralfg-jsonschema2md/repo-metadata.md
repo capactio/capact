@@ -9,7 +9,7 @@
 - **`revision`** *(string)*: Version of the manifest content in the SemVer format.
 - **`signature`** *(object)*: Ensures the authenticity and integrity of a given manifest.
   - **`och`** *(string)*: The signature signed with the HUB key.
-- **`metadata`**: Refer to *https://projectvoltron.dev/schemas/common/metadata.json*.
+- **`metadata`**: Refer to *https://capact.io/schemas/common/metadata.json*.
 - **`spec`** *(object)*: A container for the RepoMetadata definition. Cannot contain additional properties.
   - **`implementation`** *(object)*: Holds configuration for the OCF Implementation entities. Cannot contain additional properties.
     - **`appVersion`** *(object)*: Defines the configuration for the appVersion field. Cannot contain additional properties.

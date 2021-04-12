@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"log"
-	"projectvoltron.dev/voltron/docs/investigation/workflow-rendering/render"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/docs/investigation/workflow-rendering/render"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 )
 
 type renderInput struct {

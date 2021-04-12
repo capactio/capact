@@ -19,7 +19,7 @@
 
 ## Introduction
 
-The key Voltron feature is dependencies interchangeability. Applications define theirs dependencies by using Interfaces. Depending on Cluster Admin configuration, every time User runs Action, a different Implementation may be picked for a given Interface.
+The key Capact feature is dependencies interchangeability. Applications define theirs dependencies by using Interfaces. Depending on Cluster Admin configuration, every time User runs Action, a different Implementation may be picked for a given Interface.
 
 The Cluster Admin preferences are set via Policy. Currently, there is a single, cluster-wide Policy. This document describes the functionality.
 
@@ -204,19 +204,19 @@ rules: # Configures the following behavior for Engine during rendering Action
 
 ## Configuration
 
-By default, the Policy is stored in Kubernetes ConfigMap named `voltron-engine-cluster-policy` in the `voltron-system`. To view or modify it, use Kubernetes API and tooling. In future we will expose dedicated Engine GraphQL API to make it easier to manage it.
+By default, the Policy is stored in Kubernetes ConfigMap named `capact-engine-cluster-policy` in the `capact-system`. To view or modify it, use Kubernetes API and tooling. In the future, we will expose dedicated Engine GraphQL API to make it easier to manage it.
 
 ### View current Policy
 
 To view current Policy rules, use the following command:
 
 ```bash
-kubectl get configmap -n voltron-system voltron-engine-cluster-policy -oyaml
+kubectl get configmap -n capact-system capact-engine-cluster-policy -oyaml
 ```
 
 ### Modify Policy
 
-While you can use `kubectl` to edit the ConfigMap with Policy directly, its content will be overriden every time you uppgrade Voltron installation. Thus, it is recommended to update the Policy during Voltron installation or upgrade. This guide shows how to do it.
+While you can use `kubectl` to edit the ConfigMap with Policy directly, its content will be overridden every time you upgrade Capact installation. Thus, it is recommended to update the Policy during Capact installation or upgrade. This guide shows how to do it.
 
 1. Prepare a `cluster-policy.overrides.yaml` file with the following content:
 
@@ -236,19 +236,19 @@ While you can use `kubectl` to edit the ConfigMap with Policy directly, its cont
 
 2. Pass the `cluster-policy.overrides.yaml` as Helm chart values override with the `-f /path/to/cluster-policy.overrides.yaml` parameter.
 
-   1. During Voltron chart installation:
+   1. During Capact chart installation:
    
    ```bash
-   helm install voltron ./charts/voltron --create-namespace -n voltron-system -f /path/to/cluster-policy.overrides.yaml
+   helm install capact ./charts/capact --create-namespace -n capact-system -f /path/to/cluster-policy.overrides.yaml
    ```
 
-   1. During Voltron chart upgrade:
+   1. During Capact chart upgrade:
 
    ```bash
-   helm upgrade voltron ./charts/voltron -n voltron-system -f /path/to/cluster-policy.overrides.yaml
+   helm upgrade capact ./charts/capact -n capact-system -f /path/to/cluster-policy.overrides.yaml
    ```
 
-To read more about Voltron installation and upgrade, see the [`README.md`](../deploy/kubernetes/charts/argo/charts/argo/README.md) document of the Voltron deployment.
+To read more about Capact installation and upgrade, see the [`README.md`](../deploy/kubernetes/charts/argo/charts/argo/README.md) document of the Capact deployment.
 
 ### Reloading policy by Engine
 

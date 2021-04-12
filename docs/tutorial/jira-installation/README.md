@@ -1,6 +1,6 @@
 # Jira installation
 
-This tutorial shows the basic concepts of Voltron on the Jira installation example.
+This tutorial shows the basic concepts of Capact on the Jira installation example.
 
 ###  Table of Contents
 
@@ -23,9 +23,9 @@ This tutorial shows the basic concepts of Voltron on the Jira installation examp
 
 ### Goal
 
-This instruction will guide you through the installation of Jira on a Kubernetes cluster using Voltron. 
+This instruction will guide you through the installation of Jira on a Kubernetes cluster using Capact. 
 
-Jira depends on the PostgreSQL database. Depending on the cluster configuration, with the Voltron project, you can install Jira with a managed Cloud SQL database or a locally deployed PostgreSQL Helm chart.
+Jira depends on the PostgreSQL database. Depending on the cluster configuration, with the Capact project, you can install Jira with a managed Cloud SQL database or a locally deployed PostgreSQL Helm chart.
 
 The diagrams below show possible scenarios:
 
@@ -41,12 +41,12 @@ The diagrams below show possible scenarios:
 
 * [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0) installed.
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
-* GKE cluster with a fresh Voltron installation. See the [installation tutorial](../voltron-installation/README.md). 
+* GKE cluster with a fresh Capact installation. See the [installation tutorial](../capact-installation/README.md). 
 * For the scenario with Cloud SQL, Access to Google Cloud Platform.  
 
 ### Install all Jira components in a Kubernetes cluster
 
-By default, the Voltron Engine [cluster policy](../../../deploy/kubernetes/charts/voltron/charts/engine/values.yaml) prefers Kubernetes solutions. 
+By default, the Capact Engine [cluster policy](../../../deploy/kubernetes/charts/capact/charts/engine/values.yaml) prefers Kubernetes solutions. 
 
 ```yaml
 apiVersion: 0.1.0 # Defines syntax version for policy
@@ -77,7 +77,7 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     To obtain the Gateway URL and authorization information, run:
     
     ```bash
-    helm get notes -n voltron-system voltron    
+    helm get notes -n capact-system capact    
     ```
    
    Navigate to the GraphQL console and add the required `Authorization` header based on the received response.
@@ -401,7 +401,7 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 1. Update the cluster policy ConfigMap:
 
    ```bash
-   kubectl create configmap -n voltron-system voltron-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
+   kubectl create configmap -n capact-system capact-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
    ``` 
 
 1. Create a Kubernetes Namespace:
@@ -413,7 +413,7 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
 1. Install Jira with the new cluster policy:
 
-   The cluster policy was updated to prefer GCP solutions for the PostgreSQL Interface. As a result, during the render process, the Voltron Engine will select a Cloud SQL Implementation which is available in our OCH server.
+   The cluster policy was updated to prefer GCP solutions for the PostgreSQL Interface. As a result, during the render process, the Capact Engine will select a Cloud SQL Implementation which is available in our OCH server.
    
    Repeat the steps from [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster) in the `gcp-scenario` Namespace. Start with the 4th step, and remember to update the Namespace value in the GraphQL **HTTP HEADERS** section.
 
@@ -431,11 +431,11 @@ kubectl delete action jira-instance -n $NAMESPACE
 
 ### Behind the scenes
 
-The following section extends the tutorial with additional topics, to let you dive even deeper into the Voltron concepts.
+The following section extends the tutorial with additional topics, to let you dive even deeper into the Capact concepts.
 
 #### OCF manifests
 
-A user consumes content stored in Open Capability Hub (OCH). The content is defined using Open Capability Format (OCF) manifests. The OCF specification defines the shape of manifests that Voltron understands, such as Interface or Implementation.
+A user consumes content stored in Open Capability Hub (OCH). The content is defined using Open Capability Format (OCF) manifests. The OCF specification defines the shape of manifests that Capact understands, such as Interface or Implementation.
 
 To see all the manifest that OCH stores, navigate to the [OCH content structure](../../../och-content).
 
@@ -464,7 +464,7 @@ If you want to learn more about the project, check the [`go-voltron`](https://gi
 
 Here are some useful links:
 
-- [Tutorial which shows the first steps on how to develop OCF content for Voltron.](../content-creation/README.md)
+- [Tutorial which shows the first steps on how to develop OCF content for Capact.](../content-creation/README.md)
 - The [OCF Draft v0.0.1](https://docs.google.com/document/d/1ud7xL3bXxEXtVPE8daA_DHYacKHMkn_jx6s7eaVT-NA/edit?usp=drive_web&ouid=115672498843496061020) document. 
-- [Documentation](../../../docs), which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guideline.
+- [Documentation](../../../docs), which contains various investigations, enhancement proposals, tutorials, Capact architecture and development guideline.
 - Google Drive folder with the [initial draft concepts](https://drive.google.com/drive/u/1/folders/1SBpIR0QUn9Rp68w6N3G-hqXdi1HfZQsn).

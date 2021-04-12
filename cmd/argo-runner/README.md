@@ -8,7 +8,7 @@
 
 ## Overview
 
-Argo runner is a [runner](../../docs/runner.md), which executes Argo workflows. It is used as a built-in runner for Voltron Kubernetes implementation.
+Argo runner is a [runner](../../docs/runner.md), which executes Argo workflows. It is used as a built-in runner for Capact Kubernetes implementation.
 
 ## Prerequisites
 

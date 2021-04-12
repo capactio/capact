@@ -3,22 +3,19 @@ revision: 0.0.1
 kind: Vendor
 metadata:
   prefix: cap.vendor
-  name: voltron
-  description: Project Voltron OCH
-  displayName: Project Voltron OCH
-  documentationURL: https://examples.com/docs
-  supportURL: https://example.com/online-support
-  iconURL: https://examples.com/favicon.ico
+  name: capact
+  description: Capact OCH
+  displayName: Capact OCH
+  documentationURL: https://capact.io/docs
+  supportURL: https://capact.io
+  iconURL: https://capact.io/favicon.ico
   maintainers:
-    - email: foo@example.com
-      name: Foo Bar
-      url: https://examples.com/foo/bar
-    - email: foo@example.com
-      name: Foo Bar
-      url: https://examples.com/foo/bar
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 spec:
   federation:
-    uri: https://och.projectvoltron.dev
+    uri: https://och.capact.io
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

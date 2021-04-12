@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	grakn "projectvoltron.dev/voltron/poc/graph-db/grakn/go-grakn/gograkn/session"
-	"projectvoltron.dev/voltron/poc/graph-db/grakn/graphql"
+	grakn "capact.io/capact/poc/graph-db/grakn/go-grakn/gograkn/session"
+	"capact.io/capact/poc/graph-db/grakn/graphql"
 )
 
 type MyResolver struct {

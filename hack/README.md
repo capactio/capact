@@ -1,6 +1,6 @@
 # Hack directory
 
-This package contains various scripts that are used by Voltron developers.
+This package contains various scripts that are used by Capact developers.
 
 ## Purpose
 

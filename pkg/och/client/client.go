@@ -12,7 +12,7 @@ import (
 	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
 
-// Client used to communicate with the Voltron OCH GraphQL APIs
+// Client used to communicate with the Capact OCH GraphQL APIs
 type Client struct {
 	Local
 	Public

@@ -7,16 +7,16 @@
     "documentationURL": "https://github.com/javimox/helm-charts/tree/master/charts/jira-software",
     "iconURL": "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png",
     "name": "install",
-    "prefix": "cap.implementation.voltron.jira",
-    "path": "cap.implementation.voltron.jira.install",
+    "prefix": "cap.implementation.capact.jira",
+    "path": "cap.implementation.capact.jira.install",
     "supportURL": " https://mox.sh/helm",
     "tags": [],
     "maintainers": [
       {
         "dgraph.type": "Maintainer",
-        "Maintainer.name": "Voltron Dev Team",
-        "Maintainer.email": "team-dev@projectvoltron.dev",
-        "Maintainer.url": "https://projectvoltron.dev"
+        "Maintainer.name": "Capact Dev Team",
+        "Maintainer.email": "team-dev@capact.io",
+        "Maintainer.url": "https://capact.io"
       }
     ]
   },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://projectvoltron.dev/schemas/common/type-ref.json",
+  "$id": "https://capact.io/schemas/common/type-ref.json",
   "type": "object",
   "description": "The full path to a given Type.",
   "required": [

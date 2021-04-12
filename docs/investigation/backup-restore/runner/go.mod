@@ -1,4 +1,4 @@
-module projectvoltron.com/velero-runner
+module capact.io/capact/velero-runner
 
 go 1.16
 

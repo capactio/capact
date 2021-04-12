@@ -8,7 +8,7 @@ latestResourceVersion:
   spec:
     value:
       type: service_account
-      project_id: projectvoltron
+      project_id: fake
       private_key_id: fake
       private_key: fake
       client_email: fake

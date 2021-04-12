@@ -161,8 +161,8 @@ func (i *CapactRegister) newHelmListAction() (*action.List, error) {
 
 	actList := action.NewList(actionConfig)
 
-	// We do not wait for all Helm chart to finish before Voltron is deployed
-	// Additionally, this command is executed as a post-install hook, which means that Voltron itself is still
+	// We do not wait for all Helm chart to finish before Capact is deployed
+	// Additionally, this command is executed as a post-install hook, which means that Capact itself is still
 	// in `pending-install`.
 	actList.All = true
 	actList.SetStateMask()

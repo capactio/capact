@@ -18,7 +18,7 @@ argo-actions is intended to be run as an Argo Workflow step which downloads, upl
 
 To run it locally you need to enable port forwarding for Local OCH:
 ```bash
-kubectl -n voltron-system port-forward svc/voltron-och-local --address 0.0.0.0 8888:80
+kubectl -n capact-system port-forward svc/capact-och-local --address 0.0.0.0 8888:80
 ```
 
 For downloading at least one Type Instance needs to exist. Passing structs using environment variables looks like this: {field1,field2}. For example APP_DOWNLOAD_CONFIG="{ID,path}"
@@ -34,7 +34,7 @@ The following environment variables can be set:
 | Name                     | Required | Default                                         | Description                                            |
 |--------------------------|----------|-------------------------------------------------|--------------------------------------------------------|
 | APP_ACTION               | yes      |                                                 | Defines action to perform |
-| APP_LOCAL_OCH_ENDPOINT   | no       | https://voltron-och-local.voltron.local/graphql | Defines local OCH Endpoint |
+| APP_LOCAL_OCH_ENDPOINT   | no       | http://capact-och-local.capact-system/graphql   | Defines local OCH Endpoint |
 | APP_DOWNLOAD_CONFIG      | no       |                                                 | For download action defines Type Instances to download |
 | APP_LOGGER_DEV_MODE      | no       | `false`                                         | Enable additional log messages            |
 

@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	wfManagedByLabelKey = "runner.projectvoltron.dev/created-by"
+	wfManagedByLabelKey = "runner.capact.io/created-by"
 	runnerName          = "argo-runner"
 )
 

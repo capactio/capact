@@ -6,15 +6,15 @@
     "prefix": "cap.interface.productivity",
     "displayName": "Jira",
     "description": "Jira Application",
-    "documentationURL": "https://projectvoltron.dev",
-    "supportURL": "https://projectvoltron.dev/contact",
-    "iconURL": "https://projectvoltron.dev/favicon.ico",
+    "documentationURL": "https://capact.io",
+    "supportURL": "https://capact.io/contact",
+    "iconURL": "https://capact.io/favicon.ico",
     "maintainers": [
       {
         "dgraph.type": "Maintainer",
-        "Maintainer.name": "Voltron Dev Team",
-        "Maintainer.email": "team-dev@projectvoltron.dev",
-        "Maintainer.url": "https://projectvoltron.dev"
+        "Maintainer.name": "Capact Dev Team",
+        "Maintainer.email": "team-dev@capact.io",
+        "Maintainer.url": "https://capact.io"
       }
     ]
   },

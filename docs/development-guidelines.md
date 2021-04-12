@@ -5,7 +5,7 @@ In order to contribute to this project, please follow all listed guidelines in t
 ## Architecture
 
 Our architecture leans on [12factor.net](https://www.12factor.net/) principles and is designed to be platform agnostic. 
-There should be strong separation between generic Voltron business logic and platform-specific implementation, such as Kubernetes, CloudFoundry, OpenShift, and similar.  
+There should be strong separation between generic Capact business logic and platform-specific implementation, such as Kubernetes, CloudFoundry, OpenShift, and similar.  
 
 ## Development tools
 
@@ -35,7 +35,7 @@ Thanks to BDD approach the integration tests are more readable and describes bet
 
 ## Logging
 
-In the Voltron project, we use the structured logging concept. 
+In the Capact project, we use the structured logging concept. 
 
 With structured logging, we associate a *constant* log message with some variable key-value pairs. For instance, suppose we wanted to log that we were starting HTTP server for a given application. In the Go standard library logger, you would write:
 

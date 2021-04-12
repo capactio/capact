@@ -2,8 +2,8 @@ metadata:
   description: Simulate infinite loop
   displayName: Infinite loop
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: loop
   path: cap.implementation.infinite.render.loop
   prefix: cap.implementation.infinite.render
@@ -38,7 +38,7 @@ spec:
         templates:
           - name: jira-install
             steps:
-              - - voltron-action: infinite.loop
+              - - capact-action: infinite.loop
                   name: install-db
                   arguments:
                     artifacts:

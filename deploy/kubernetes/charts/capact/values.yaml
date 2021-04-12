@@ -1,0 +1,28 @@
+# Default values for Capact.
+global:
+  containerRegistry:
+    path: gcr.io/projectvoltron
+    # Overrides the image tag for all Capact component. Default is the sub-chart appVersion.
+    overrideTag: "latest"
+  domainName: "dev.cluster.projectvoltron.dev"
+
+  database:
+    endpoint: bolt://neo4j-neo4j.neo4j:7687
+    username: neo4j
+    password: okon
+
+  gateway:
+    auth:
+      username: graphql
+      password: t0p_s3cr3t
+
+integrationTest:
+  image:
+    name: e2e-test
+    pullPolicy: IfNotPresent
+
+postInstallTypeInstanceJob:
+  image:
+    name: populator
+    pullPolicy: IfNotPresent
+  args: ["/app register capact-installation"]

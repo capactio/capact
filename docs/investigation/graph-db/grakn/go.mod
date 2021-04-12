@@ -1,4 +1,4 @@
-module projectvoltron.dev/voltron/poc/graph-db/grakn
+module capact.io/capact/poc/graph-db/grakn
 
 go 1.15
 
