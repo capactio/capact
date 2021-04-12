@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ocftool"
 	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
+	"projectvoltron.dev/voltron/internal/ocftool/printer"
 	"projectvoltron.dev/voltron/internal/ptr"
 	gqlengine "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"projectvoltron.dev/voltron/pkg/httputil"
@@ -92,7 +92,7 @@ func New(w io.Writer) (*Upgrade, error) {
 }
 
 func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
-	status := ocftool.NewStatusPrinter(u.writer, "Upgrading Capact on cluster...")
+	status := printer.NewStatus(u.writer, "Upgrading Capact on cluster...")
 	defer func() {
 		status.End(err == nil)
 	}()

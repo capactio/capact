@@ -26,21 +26,18 @@ readonly charts=(
 )
 
 # shellcheck source=./hack/lib/utilities.sh
-source "${CURRENT_DIR}/lib/utilities.sh" || {
-  echo 'Cannot load CI utilities.'
-  exit 1
-}
+source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
 setChartVersionToCommitSHA() {
   readonly version="${GITHUB_SHA:0:7}"
 
   for chart in "${charts[@]}"; do
-    sed -i.bak "s/^\(\s*version\s*:\s*\).*/\1 ${version}/" "${DEPLOY_CHARTS_DIR}/${chart}/Chart.yaml"
+    sed -i.bak "/^version: / s/$/-${version}/" "${DEPLOY_CHARTS_DIR}/${chart}/Chart.yaml"
   done
 }
 
 function wereChartsModifed() {
-  readonly DIFF=$(git diff HEAD^ HEAD -- ${DEPLOY_CHARTS_DIR})
+  readonly DIFF=$(git diff HEAD^ HEAD -- "${DEPLOY_CHARTS_DIR}")
   if [ "${DIFF:-}" = "" ]; then
     return 1
   fi
@@ -63,8 +60,8 @@ main() {
 
   readonly CAPACTIO_REPO_URL=https://storage.googleapis.com/${CAPACTIO_BUCKET}
 
-  mkdir -p ${CR_PACKAGE_PATH}
-  pushd ${CR_PACKAGE_PATH}
+  mkdir -p "${CR_PACKAGE_PATH}"
+  pushd "${CR_PACKAGE_PATH}"
 
   # Copy old index
   gsutil cp gs://${CAPACTIO_BUCKET}/index.yaml .
@@ -88,7 +85,7 @@ main() {
   gsutil setmeta -h "Cache-Control: no-cache, no-store" gs://"${CAPACTIO_BUCKET}"/index.yaml
 
   popd
-  rm -rf ${CR_PACKAGE_PATH}
+  rm -rf "${CR_PACKAGE_PATH}"
 }
 
 main

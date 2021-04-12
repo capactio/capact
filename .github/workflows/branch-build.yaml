@@ -156,6 +156,10 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCS_CREDS }}
+          export_default_credentials: true
       - name: Release Helm Charts if were changed
         env:
           MASTER_BUILD: "true"
@@ -219,6 +223,9 @@ jobs:
     needs: [ release-helm-chart, build-app, build-tests ]
     if: github.ref == 'refs/heads/master'
 
+    env:
+      CAPACT_FILE_PASSPHRASE: "no-pass"
+      CAPACT_CREDENTIALS_STORE_BACKEND: "file"
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -238,18 +245,18 @@ jobs:
             ${{ runner.os }}-go-
       - name: Build ocftool for linux
         run: |
-          CLI_OS=linux make build-tool-ocftool && mv ./bin/ocftool-linux-amd64 ./ocftool
+          CLI_OS=linux make build-tool-ocftool && mv ./bin/ocftool-linux-amd64 ./capact
       - name: Log into Capact long-running cluster
         env:
           GATEWAY_PASSWORD: ${{ secrets.LONG_RUNNING_GATEWAY_PASSWORD }}
         run: |
-          ./ocftool login https://gateway.dev.cluster.projectvoltron.dev -u graphql -p $GATEWAY_PASSWORD
+          ./capact login https://gateway.dev.cluster.projectvoltron.dev -u graphql -p $GATEWAY_PASSWORD
       - name: Upgrade Capact long-running cluster
         env:
           USE_TEST_SETUP: "true"
         run: |
-          ./ocftool upgrade \
-            --action-name-prefix 'capact-upgrade-'
+          ./capact upgrade \
+            --action-name-prefix 'capact-upgrade-' \
             --version @latest \
             --helm-repo-url @master \
             --override-capact-image-repo ${DOCKER_REPOSITORY} \
@@ -259,7 +266,7 @@ jobs:
             --wait
       - name: Clean-up
         run: |
-          ./ocftool action delete \
+          ./capact action delete \
             --name-regex 'capact-upgrade-*' \
             --namespace 'voltron-system' \
             --phase 'SUCCEEDED'

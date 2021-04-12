@@ -29,11 +29,13 @@ All sensitive data is stored in [GitHub secrets](https://docs.github.com/en/free
 
 The following secrets are defined:
 
-| Secret name       | Description                                                                                                                                                                                           |
-|-------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCR_CREDS**     | Holds credentials which allow CI jobs to push Docker images to our GCR. Has all roles that are defined [here](https://cloud.google.com/container-registry/docs/access-control#permissions_and_roles). |
-| **GKE_CREDS**     | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `roles/container.admin` role.                                                                             |
-| **GIT_CRYPT_KEY** | Holds a symmetric key used to decrypt files encrypted with [git crypt](https://github.com/AGWA/git-crypt).                                                                                            |
+| Secret name                       | Description                                                                                                                                                                                           |
+|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **GCR_CREDS**                     | Holds credentials which allow CI jobs to push Docker images to our GCR. Has all roles that are defined [here](https://cloud.google.com/container-registry/docs/access-control#permissions_and_roles). |
+| **GCS_CREDS**                     | Holds credentials which allow CI jobs to manage GCS bucket. Has the `roles/storage.objectAdmin` role.                                                                                                 |
+| **LONG_RUNNING_GATEWAY_PASSWORD** | Holds the Gateway password for the long-running cluster.                                                                                                                                                  |
+| **GKE_CREDS**                     | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `roles/container.admin` role.                                                                             |
+| **GIT_CRYPT_KEY**                 | Holds a symmetric key used to decrypt files encrypted with [git crypt](https://github.com/AGWA/git-crypt).                                                                                            |
 
 ##  Pipelines
 
@@ -63,7 +65,7 @@ Steps:
 1. Lint and test code.
 1. Build Docker images for applications, tests and infra tools and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
 1. If [Capact Helm Charts](../deploy/kubernetes/charts) were changed:
-   1. Change **version** in all `Chart.yaml` to the first 7 characters of commit SHA.
+   1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
 1. Update the existing long-running cluster via [CLI](../cmd/ocftool/docs/ocftool_upgrade.md).
 1. If any step failed, send Slack notification.

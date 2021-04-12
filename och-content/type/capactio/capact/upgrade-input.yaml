@@ -84,16 +84,61 @@ spec:
             }
           }
         ],
+        "definitions":{
+          "resources":{
+            "type":"object",
+            "description":"Specifies Kubernetes resources.",
+            "properties":{
+              "limits":{
+                "$id":"#/properties/resources/properties/limits",
+                "type":"object",
+                "description":"Specifies resources limits.",
+                "properties":{
+                  "cpu":{
+                    "$id":"#/properties/resources/properties/limits/properties/cpu",
+                    "type":"string",
+                    "description":"Specifies CPU limit."
+                  },
+                  "memory":{
+                    "$id":"#/properties/resources/properties/limits/properties/memory",
+                    "type":"string",
+                    "description":"Specifies memory limit."
+                  }
+                },
+                "additionalProperties":false
+              },
+              "requests":{
+                "$id":"#/properties/resources/properties/requests",
+                "type":"object",
+                "description":"Specifies resources requests.",
+                "properties":{
+                  "cpu":{
+                    "$id":"#/properties/resources/properties/requests/properties/cpu",
+                    "type":"string",
+                    "description":"Specifies CPU request."
+                  },
+                  "memory":{
+                    "$id":"#/properties/resources/properties/requests/properties/memory",
+                    "type":"string",
+                    "description":"Specifies memory request."
+                  }
+                },
+                "additionalProperties":false
+              }
+            },
+            "additionalProperties":false
+          }
+        },
         "required":[
           "version"
         ],
         "properties":{
-          "version": {
-            "$id": "#/properties/version",
-            "type": "string",
-            "title": "Specifies the version to which Capact components should be upgrade."
+          "version":{
+            "$id":"#/properties/version",
+            "type":"string",
+            "title":"Specifies the version to which Capact components should be upgrade."
           },
-          "override": {
+          "override":{
             "$id":"#/properties/override",
             "capactValues":{
               "$id":"#/properties/override/properties/capactValues",
@@ -185,49 +230,8 @@ spec:
                   "type":"object",
                   "description":"Specifies overrides for Capact Gateway component.",
                   "properties":{
-                    "resources":{
-                      "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources",
-                      "type":"object",
-                      "description":"Specifies Gateway resources.",
-                      "properties":{
-                        "limits":{
-                          "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/limits",
-                          "type":"object",
-                          "description":"Specifies Gateway resources limits.",
-                          "properties":{
-                            "cpu":{
-                              "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/limits/properties/cpu",
-                              "type":"string",
-                              "description":"Specifies Gateway CPU limit."
-                            },
-                            "memory":{
-                              "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/limits/properties/memory",
-                              "type":"string",
-                              "description":"Specifies Gateway memory limit."
-                            }
-                          },
-                          "additionalProperties":false
-                        },
-                        "requests":{
-                          "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/requests",
-                          "type":"object",
-                          "description":"Specifies Gateway resources requests.",
-                          "properties":{
-                            "cpu":{
-                              "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/requests/properties/cpu",
-                              "type":"string",
-                              "description":"Specifies Gateway CPU request."
-                            },
-                            "memory":{
-                              "$id":"#/properties/override/properties/capactValues/properties/gateway/properties/resources/properties/requests/properties/memory",
-                              "type":"string",
-                              "description":"Specifies Gateway memory request."
-                            }
-                          },
-                          "additionalProperties":false
-                        }
-                      },
-                      "additionalProperties":false
+                    "resources": {
+                      "$ref": "#/definitions/resources"
                     }
                   },
                   "additionalProperties":false
@@ -237,52 +241,29 @@ spec:
                   "type":"object",
                   "description":"Specifies override for Capact OCH Public component.",
                   "properties":{
-                    "resources":{
-                      "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources",
-                      "type":"object",
-                      "description":"Specifies OCH Public resources.",
-                      "properties":{
-                        "limits":{
-                          "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/limits",
-                          "type":"object",
-                          "description":"Specifies OCH Public resources limits.",
-                          "properties":{
-                            "cpu":{
-                              "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/limits/properties/cpu",
-                              "type":"string",
-                              "description":"Specifies OCH Public CPU limit."
-                            },
-                            "memory":{
-                              "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/limits/properties/memory",
-                              "type":"string",
-                              "description":"Specifies OCH Public memory limit."
-                            }
-                          },
-                          "additionalProperties":false
-                        },
-                        "requests":{
-                          "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/requests",
-                          "type":"object",
-                          "description":"Specifies OCH Public resources requests.",
-                          "properties":{
-                            "cpu":{
-                              "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/requests/properties/cpu",
-                              "type":"string",
-                              "description":"Specifies OCH Public CPU request."
-                            },
-                            "memory":{
-                              "$id":"#/properties/override/properties/capactValues/properties/och-public/properties/resources/properties/requests/properties/memory",
-                              "type":"string",
-                              "description":"Specifies OCH Public memory request."
-                            }
-                          },
-                          "additionalProperties":false
-                        }
-                      },
-                      "additionalProperties":false
+                    "resources": {
+                      "$ref": "#/definitions/resources"
                     }
                   },
                   "additionalProperties":false
+                }
+              },
+              "additionalProperties":true
+            },
+            "neo4jValues":{
+              "$id":"#/properties/override/properties/capactValues",
+              "type":"object",
+              "description":"Specifies overrides for Neo4j component.",
+              "properties":{
+                "neo4j":{
+                  "type":"object",
+                  "properties":{
+                    "core":{
+                      "resources": {
+                        "$ref": "#/definitions/resources"
+                      }
+                    }
+                  }
                 }
               },
               "additionalProperties":true
