@@ -199,7 +199,7 @@ func (i *CapactRegister) produceConfigTypeInstance(ownerName string, helmRelease
 	}
 
 	args := helm.OutputArgs{
-		GoTemplate: tpl,
+		GoTemplate: string(tpl),
 	}
 	data, err := i.helmOutputter.ProduceAdditional(args, helmRelease.Chart, helmRelease)
 	if err != nil {

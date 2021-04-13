@@ -42,14 +42,14 @@ func (o *Outputter) ProduceHelmRelease(repository string, helmRelease *release.R
 
 // TODO: consider to get rid of the chrt arg and use rel.Chart instead.
 func (o *Outputter) ProduceAdditional(args OutputArgs, chrt *chart.Chart, rel *release.Release) ([]byte, error) {
-	if args.GoTemplate == nil {
+	if args.GoTemplate == "" {
 		o.log.Debug("No additional output to render and save. skipping...")
 		return nil, nil
 	}
 
 	// yaml.Unmarshal converts YAML to JSON then uses JSON to unmarshal into an object
 	// but the GoTemplate is defined via YAML, so we need to revert that change
-	artifactTemplate, err := yaml.JSONToYAML(args.GoTemplate)
+	artifactTemplate, err := yaml.JSONToYAML([]byte(args.GoTemplate))
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting GoTemplate property from JSON to YAML")
 	}

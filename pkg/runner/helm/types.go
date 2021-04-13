@@ -1,8 +1,6 @@
 package helm
 
 import (
-	"encoding/json"
-
 	"capact.io/capact/pkg/runner"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
@@ -59,7 +57,7 @@ type UpgradeArgs struct {
 }
 
 type OutputArgs struct {
-	GoTemplate json.RawMessage `json:"goTemplate"`
+	GoTemplate string `json:"goTemplate"`
 }
 
 type Chart struct {

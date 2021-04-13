@@ -25,6 +25,8 @@ spec:
         "title": "The schema for MongoDB configuration",
         "examples": [
           {
+            "name": "name",
+            "replicaCount": 1,
             "user": {
               "username": "username",
               "password": "password"
@@ -37,6 +39,8 @@ spec:
         ],
         "required": [
             "user",
+            "name",
+            "replicaCount",
             "defaultDBName",
             "rootPassword",
             "host",
@@ -92,6 +96,16 @@ spec:
           "port": {
             "$ref": "#/$ocfRefs/port"
           },
+          "name": {
+            "$id": "#/properties/name",
+            "type": "string",
+            "title": "Name of the cluster"
+          },
+          "replicaCount": {
+            "$id": "#/properties/replicaCount",
+            "type": "integer",
+            "title": "Number of replicas"
+          }
         },
         "additionalProperties": false
       }
