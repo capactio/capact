@@ -144,7 +144,7 @@ func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alph
 		return nil, errors.Wrap(err, errContext)
 	}
 
-	if filter.AllowAll() {
+	if filter.AllAllowed() {
 		return itemList.Items, nil
 	}
 

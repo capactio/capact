@@ -29,7 +29,7 @@ type ActionFilter struct {
 	NameRegex *regexp.Regexp
 }
 
-func (f *ActionFilter) AllowAll() bool {
+func (f *ActionFilter) AllAllowed() bool {
 	return f == nil || (f.Phase == nil && f.NameRegex == nil)
 }
 

@@ -204,7 +204,6 @@ func (u *Upgrade) createAction(ctx context.Context, name string, inputParams gql
 	return act, err
 }
 
-// TODO: should we support server-side GenerateName parameter?
 func generateActionName(prefix string) string {
 	return fmt.Sprintf("%s%s", prefix, utilrand.String(randomSuffixLength))
 }

@@ -1,2 +1,2 @@
-// This package should be replaced with viper like library ASAP.
+// This package should be replaced with a Viper-like library ASAP.
 package config

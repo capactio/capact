@@ -12,7 +12,7 @@ ocftool action delete [ACTION_NAME...] [flags]
 # Deletes the foo Action in the default namespace
 ocftool action delete foo
 
-# Deletes all Actions with upgrade- prefix in the foo namespace
+# Deletes all Actions with 'upgrade-' prefix in the foo namespace
 ocftool action delete --name-regex='upgrade-*' --namespace=foo
 
 ```

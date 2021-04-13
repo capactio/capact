@@ -21,7 +21,7 @@ func NewDelete() *cobra.Command {
 		# Deletes the foo Action in the default namespace
 		<cli> action delete foo
 		
-		# Deletes all Actions with upgrade- prefix in the foo namespace
+		# Deletes all Actions with 'upgrade-' prefix in the foo namespace
 		<cli> action delete --name-regex='upgrade-*' --namespace=foo
 		`, ocftool.CLIName),
 		RunE: func(cmd *cobra.Command, args []string) error {

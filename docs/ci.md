@@ -50,11 +50,11 @@ Steps:
 1. Lint and test submitted code.
 1. Check documentation if the `*.md` files were modified. 
 1. Run integration tests.
-1. Build Docker images for applications, tests and infra tools and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
 
 ###  Master branch
 
-> **NOTE:** To reduce the CI build time we disable the `entry-tests`, `build-tools` and `integration-tests` jobs. They will be enabled when the project will be open-sourced.
+> **NOTE:** To reduce the CI build time, we disable the `entry-tests`, `build-tools` and `integration-tests` jobs. They will be enabled when the project is open-sourced.
 
 <p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
 
@@ -63,12 +63,13 @@ The job is defined in the [`.github/workflows/branch-build.yaml`](../.github/wor
 Steps:
 
 1. Lint and test code.
-1. Build Docker images for applications, tests and infra tools and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
 1. If [Capact Helm Charts](../deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
 1. Update the existing long-running cluster via [CLI](../cmd/ocftool/docs/ocftool_upgrade.md).
-1. If any step failed, send Slack notification.
+1. Delete all Actions which are in the `SUCCEEDED` phase and whose names have the `capact-upgrade-` prefix. 
+1. If any step failed, send a Slack notification.
 
 ###  Recreate a long-running cluster
 

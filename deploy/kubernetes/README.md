@@ -81,7 +81,7 @@ To upgrade Voltron installation, do the following steps:
    ./bin/ocftool-{OS}-amd64 login {CLUSTER_GATEWAY_URL} -u {GATEWAY_USERNAME} -p {GATEWAY_PASSWORD}
    ```
    
-3. Trigger cluster upgrade
+3. Trigger cluster upgrade:
 
    ```bash
    # {OS} - same as in the first step
