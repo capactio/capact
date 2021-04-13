@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
-	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )
 

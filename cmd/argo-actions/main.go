@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/logger"
-	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	"capact.io/capact/internal/logger"
+	argoactions "capact.io/capact/pkg/argo-actions"
+	"capact.io/capact/pkg/och/client/local"
 
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"

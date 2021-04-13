@@ -1,4 +1,4 @@
-module projectvoltron.dev/voltron
+module capact.io/capact
 
 go 1.16
 

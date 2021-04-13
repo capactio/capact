@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"projectvoltron.dev/voltron/cmd/populator/cmd"
+	"capact.io/capact/cmd/populator/cmd"
 )
 
 const CLIName = "populator"

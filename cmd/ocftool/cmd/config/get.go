@@ -4,10 +4,10 @@ import (
 	"io"
 	"os"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ocftool/credstore"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"

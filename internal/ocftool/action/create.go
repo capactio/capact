@@ -9,11 +9,11 @@ import (
 
 	"github.com/MakeNowJust/heredoc"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ptr"
-	gqlengine "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ptr"
+	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/docker/pkg/namesgenerator"

@@ -1,7 +1,7 @@
 package config
 
 import (
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
+	"capact.io/capact/internal/ocftool/credstore"
 
 	"github.com/99designs/keyring"
 )

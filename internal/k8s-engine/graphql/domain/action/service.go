@@ -8,13 +8,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
+	"capact.io/capact/internal/k8s-engine/graphql/model"
 
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

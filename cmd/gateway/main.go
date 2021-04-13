@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/gateway/header"
-	"projectvoltron.dev/voltron/internal/healthz"
-	"projectvoltron.dev/voltron/internal/logger"
-	"projectvoltron.dev/voltron/pkg/httputil"
+	"capact.io/capact/internal/gateway/header"
+	"capact.io/capact/internal/healthz"
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/pkg/httputil"
 
 	"github.com/avast/retry-go"
 	"github.com/gorilla/mux"

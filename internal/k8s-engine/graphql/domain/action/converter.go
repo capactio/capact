@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 	"regexp"
 
+	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 const ParametersSecretDataKey = "parameters.json"

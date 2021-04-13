@@ -5,7 +5,7 @@ import (
 	"io"
 	"strconv"
 
-	"projectvoltron.dev/voltron/internal/graphqlutil"
+	"capact.io/capact/internal/graphqlutil"
 
 	"log"
 )

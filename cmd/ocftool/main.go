@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd"
+	"capact.io/capact/cmd/ocftool/cmd"
 )
 
 func main() {

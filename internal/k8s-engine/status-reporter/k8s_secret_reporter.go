@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 
+	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
-	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 

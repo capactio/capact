@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
+	"capact.io/capact/internal/ocftool/credstore"
+	"capact.io/capact/pkg/httputil"
+	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/och/client"
+	"capact.io/capact/pkg/och/client/public"
 )
 
 type Hub interface {

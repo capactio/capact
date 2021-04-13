@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
+	"capact.io/capact/internal/ocftool"
 
 	"github.com/fatih/color"
 )

@@ -1,9 +1,9 @@
 package argo
 
 import (
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 func fixGCPClusterPolicy() clusterpolicy.ClusterPolicy {

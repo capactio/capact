@@ -4,12 +4,12 @@ import (
 	"regexp"
 	"testing"
 
+	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {

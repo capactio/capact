@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	header_forwarder "projectvoltron.dev/voltron/internal/gateway/header"
+	header_forwarder "capact.io/capact/internal/gateway/header"
 
 	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"

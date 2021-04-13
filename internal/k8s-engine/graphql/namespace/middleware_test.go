@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
 )
 
 func TestMiddleware_Handle(t *testing.T) {

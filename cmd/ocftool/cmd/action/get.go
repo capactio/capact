@@ -3,8 +3,8 @@ package action
 import (
 	"os"
 
+	"capact.io/capact/internal/ocftool/action"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/internal/ocftool/action"
 )
 
 // TODO (platten): It would be good to merge this together with search. Kind of how you can do `kubectl get pod` or `kubectl get po PODNAME`

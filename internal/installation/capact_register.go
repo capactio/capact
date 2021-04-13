@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"projectvoltron.dev/voltron/internal/logger"
-	"projectvoltron.dev/voltron/internal/ptr"
-	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
-	"projectvoltron.dev/voltron/pkg/runner/helm"
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/internal/ptr"
+	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/runner/helm"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"

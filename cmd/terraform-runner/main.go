@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"projectvoltron.dev/voltron/pkg/runner"
-	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
-	"projectvoltron.dev/voltron/pkg/runner/terraform"
+	"capact.io/capact/pkg/runner"
+	statusreporter "capact.io/capact/pkg/runner/status-reporter"
+	"capact.io/capact/pkg/runner/terraform"
 
 	"github.com/vrischmann/envconfig"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"

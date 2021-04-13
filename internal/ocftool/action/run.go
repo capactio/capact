@@ -4,9 +4,9 @@ import (
 	"context"
 	"io"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"

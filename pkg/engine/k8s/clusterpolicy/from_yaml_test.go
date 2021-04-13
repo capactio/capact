@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"testing"
 
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
 
 func TestFromYAMLBytes_Valid(t *testing.T) {

@@ -3,9 +3,9 @@ package model
 import (
 	"regexp"
 
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 // ActionToCreateOrUpdate holds data to create or update all Action details.

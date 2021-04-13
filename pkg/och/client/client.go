@@ -4,12 +4,12 @@ import (
 	"context"
 	"net/http"
 
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
 
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/och/client/public"
 	"github.com/machinebox/graphql"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
 
 // Client used to communicate with the Capact OCH GraphQL APIs

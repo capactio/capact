@@ -3,7 +3,7 @@ package statusreporter
 import (
 	"context"
 
-	"projectvoltron.dev/voltron/pkg/runner"
+	"capact.io/capact/pkg/runner"
 )
 
 var _ runner.StatusReporter = &NoopReporter{}

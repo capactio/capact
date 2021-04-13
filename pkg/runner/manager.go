@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"projectvoltron.dev/voltron/internal/logger"
+	"capact.io/capact/internal/logger"
 
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"

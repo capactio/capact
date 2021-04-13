@@ -1,8 +1,8 @@
 package argo
 
 import (
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type RendererOption func(*dedicatedRenderer)

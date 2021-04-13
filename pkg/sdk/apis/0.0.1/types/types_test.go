@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"sigs.k8s.io/yaml"
 
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type marshaler interface {

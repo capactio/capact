@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/api/graphql"
 )
 
 func TestTimestampUnmarshalGQL(t *testing.T) {

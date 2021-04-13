@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"projectvoltron.dev/voltron/cmd/populator/cmd/register"
+	"capact.io/capact/cmd/populator/cmd/register"
 
 	"github.com/spf13/cobra"
 )

@@ -1,9 +1,9 @@
 package graphql
 
 import (
+	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	"capact.io/capact/pkg/engine/api/graphql"
 	"go.uber.org/zap"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
