@@ -1,0 +1,276 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: upgrade-input
+  prefix: cap.type.capactio.capact
+  displayName: Capact upgrade input
+  description: Defines configuration for Capact upgrade action
+  documentationURL: https://capact.dev
+  supportURL: https://capact.dev
+  maintainers:
+    - email: team-dev@capact.dev
+      name: Capact Dev Team
+      url: https://capact.dev
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema":"http://json-schema.org/draft-07/schema",
+        "type":"object",
+        "examples":[
+          {
+            "version":"0.1.1",
+            "override":{
+              "capactValues":{
+                "global":{
+                  "containerRegistry":{
+                    "path":"gcr.io/projectvoltron",
+                    "overrideTag":"latest"
+                  },
+                  "domainName":"dev.cluster.projectvoltron.dev",
+                  "database":{
+                    "endpoint":"bolt://neo4j-neo4j.neo4j:7687",
+                    "username":"neo4j",
+                    "password":"okon"
+                  },
+                  "gateway":{
+                    "auth":{
+                      "username":"graphql",
+                      "password":"t0p_s3cr3t"
+                    }
+                  }
+                },
+                "gateway":{
+                  "resources":{
+                    "limits":{
+                      "cpu":"300m",
+                      "memory":"128Mi"
+                    },
+                    "requests":{
+                      "cpu":"100m",
+                      "memory":"48Mi"
+                    }
+                  }
+                },
+                "och-public":{
+                  "resources":{
+                    "limits":{
+                      "cpu":"400m",
+                      "memory":"512Mi"
+                    },
+                    "requests":{
+                      "cpu":"200m",
+                      "memory":"128Mi"
+                    }
+                  }
+                },
+                "integrationTest":{
+                  "image":{
+                    "name":"e2e-test",
+                    "pullPolicy":"IfNotPresent"
+                  }
+                },
+                "postInstallTypeInstanceJob":{
+                  "image":{
+                    "name":"populator",
+                    "pullPolicy":"IfNotPresent"
+                  },
+                  "args":[
+                    "/app register capact-installation"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "definitions":{
+          "resources":{
+            "type":"object",
+            "description":"Specifies Kubernetes resources.",
+            "properties":{
+              "limits":{
+                "$id":"#/properties/resources/properties/limits",
+                "type":"object",
+                "description":"Specifies resources limits.",
+                "properties":{
+                  "cpu":{
+                    "$id":"#/properties/resources/properties/limits/properties/cpu",
+                    "type":"string",
+                    "description":"Specifies CPU limit."
+                  },
+                  "memory":{
+                    "$id":"#/properties/resources/properties/limits/properties/memory",
+                    "type":"string",
+                    "description":"Specifies memory limit."
+                  }
+                },
+                "additionalProperties":false
+              },
+              "requests":{
+                "$id":"#/properties/resources/properties/requests",
+                "type":"object",
+                "description":"Specifies resources requests.",
+                "properties":{
+                  "cpu":{
+                    "$id":"#/properties/resources/properties/requests/properties/cpu",
+                    "type":"string",
+                    "description":"Specifies CPU request."
+                  },
+                  "memory":{
+                    "$id":"#/properties/resources/properties/requests/properties/memory",
+                    "type":"string",
+                    "description":"Specifies memory request."
+                  }
+                },
+                "additionalProperties":false
+              }
+            },
+            "additionalProperties":false
+          }
+        },
+        "required":[
+          "version"
+        ],
+        "properties":{
+          "version":{
+            "$id":"#/properties/version",
+            "type":"string",
+            "title":"Specifies the version to which Capact components should be upgrade."
+          },
+          "override":{
+            "$id":"#/properties/override",
+            "capactValues":{
+              "$id":"#/properties/override/properties/capactValues",
+              "type":"object",
+              "description":"Specifies overrides for Capact.",
+              "properties":{
+                "global":{
+                  "$id":"#/properties/override/properties/capactValues/properties/global",
+                  "type":"object",
+                  "description":"Specifies override for global values for Capact Helm chart.",
+                  "properties":{
+                    "containerRegistry":{
+                      "$id":"#/properties/override/properties/capactValues/properties/global/properties/containerRegistry",
+                      "type":"object",
+                      "description":"Specifies container registry for Capact Docker images.",
+                      "properties":{
+                        "path":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/containerRegistry/properties/path",
+                          "type":"string",
+                          "description":"Specifies container registry path."
+                        },
+                        "overrideTag":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/containerRegistry/properties/overrideTag",
+                          "type":"string",
+                          "description":"Specifies override for Docker images tag."
+                        }
+                      },
+                      "additionalProperties":false
+                    },
+                    "domainName":{
+                      "$id":"#/properties/override/properties/capactValues/properties/global/properties/domainName",
+                      "type":"string",
+                      "description":"Specifies Capact domain name."
+                    },
+                    "database":{
+                      "$id":"#/properties/override/properties/capactValues/properties/global/properties/database",
+                      "type":"object",
+                      "description":"Specifies Graph database connection.",
+                      "properties":{
+                        "endpoint":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/database/properties/endpoint",
+                          "type":"string",
+                          "description":"Graph database endopoint."
+                        },
+                        "username":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/database/properties/username",
+                          "type":"string",
+                          "description":"Specifies database username."
+                        },
+                        "password":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/database/properties/password",
+                          "type":"string",
+                          "description":"Specifies database password."
+                        }
+                      },
+                      "additionalProperties":false
+                    },
+                    "gateway":{
+                      "$id":"#/properties/override/properties/capactValues/properties/global/properties/gateway",
+                      "type":"object",
+                      "description":"Specifies overrides for Capact Gateway component.",
+                      "properties":{
+                        "auth":{
+                          "$id":"#/properties/override/properties/capactValues/properties/global/properties/gateway/properties/auth",
+                          "type":"object",
+                          "description":"Specifies Gateway authorization.",
+                          "properties":{
+                            "username":{
+                              "$id":"#/properties/override/properties/capactValues/properties/global/properties/gateway/properties/auth/properties/username",
+                              "type":"string",
+                              "description":"Specifies Gateway username."
+                            },
+                            "password":{
+                              "$id":"#/properties/override/properties/capactValues/properties/global/properties/gateway/properties/auth/properties/password",
+                              "type":"string",
+                              "description":"Specifies Gateway password."
+                            }
+                          },
+                          "additionalProperties":false
+                        }
+                      },
+                      "additionalProperties":false
+                    }
+                  },
+                  "additionalProperties":false
+                },
+                "gateway":{
+                  "$id":"#/properties/override/properties/capactValues/properties/gateway",
+                  "type":"object",
+                  "description":"Specifies overrides for Capact Gateway component.",
+                  "properties":{
+                    "resources": {
+                      "$ref": "#/definitions/resources"
+                    }
+                  },
+                  "additionalProperties":false
+                },
+                "och-public":{
+                  "$id":"#/properties/override/properties/capactValues/properties/och-public",
+                  "type":"object",
+                  "description":"Specifies override for Capact OCH Public component.",
+                  "properties":{
+                    "resources": {
+                      "$ref": "#/definitions/resources"
+                    }
+                  },
+                  "additionalProperties":false
+                }
+              },
+              "additionalProperties":true
+            },
+            "neo4jValues":{
+              "$id":"#/properties/override/properties/capactValues",
+              "type":"object",
+              "description":"Specifies overrides for Neo4j component.",
+              "properties":{
+                "neo4j":{
+                  "type":"object",
+                  "properties":{
+                    "core":{
+                      "resources": {
+                        "$ref": "#/definitions/resources"
+                      }
+                    }
+                  }
+                }
+              },
+              "additionalProperties":true
+            }
+          }
+        },
+        "additionalProperties":true
+      }
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9\

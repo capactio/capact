@@ -23,7 +23,7 @@ type ClusterClient interface {
 type ActionClient interface {
 	CreateAction(ctx context.Context, in *enginegraphql.ActionDetailsInput) (*enginegraphql.Action, error)
 	GetAction(ctx context.Context, name string) (*enginegraphql.Action, error)
-	ListActions(ctx context.Context) ([]*enginegraphql.Action, error)
+	ListActions(ctx context.Context, filter *enginegraphql.ActionFilter) ([]*enginegraphql.Action, error)
 	RunAction(ctx context.Context, name string) error
 	DeleteAction(ctx context.Context, name string) error
 }

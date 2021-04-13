@@ -17,7 +17,7 @@ To begin working with Project Voltron using the ocftool CLI, start with:
     $ ocftool login
 
 NOTE: If you would like to use 'pass' for credential storage, be sure to
-      set CAPECTL_CREDENTIALS_STORE_BACKEND to 'pass' in your shell's env variables.
+      set CAPACT_CREDENTIALS_STORE_BACKEND to 'pass' in your shell's env variables.
 
       In order to watch follow the progress of the workflow execution, it is required
       to have 'kubectl' configured with the default context set to the same cluster where

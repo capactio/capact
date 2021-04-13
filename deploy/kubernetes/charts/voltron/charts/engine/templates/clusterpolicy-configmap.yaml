@@ -9,5 +9,7 @@ data:
     apiVersion: 0.1.0
 
     rules:
+      {{- if .Values.testSetup.enabled }}
+      {{- toYaml .Values.testSetup.clusterPolicyRules | nindent 8 }}
+      {{- end }}
       {{- toYaml .Values.clusterPolicyRules | nindent 8 }}
-

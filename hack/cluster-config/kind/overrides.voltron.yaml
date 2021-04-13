@@ -1,5 +1,2 @@
 global:
   domainName: "voltron.local"
-
-integrationTest:
-  expectedNumberOfRunningPods: 11

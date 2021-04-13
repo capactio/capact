@@ -144,16 +144,17 @@ func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alph
 		return nil, errors.Wrap(err, errContext)
 	}
 
-	if filter.Phase == nil {
+	if filter.AllAllowed() {
 		return itemList.Items, nil
 	}
 
 	// field selectors for CRDs are not supported (apart from name and namespace)
-	log.Info("Filtering Actions", zap.String("status.phase", string(*filter.Phase)))
+	// Regex filter is also not supported on server side.
+	log.Info("Filtering Actions", filter.ZapFields()...)
 
 	var filteredItems []v1alpha1.Action
 	for _, item := range itemList.Items {
-		if item.Status.Phase != *filter.Phase {
+		if !filter.Match(item) {
 			continue
 		}
 

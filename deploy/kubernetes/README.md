@@ -67,18 +67,30 @@ To install Voltron, run the following steps:
 
 To upgrade Voltron installation, do the following steps:
 
-1. Upgrade Voltron Custom Resource Definitions:
-    
+1. Build CLI:
+
    ```bash
-   kubectl apply -f ./crds
-   ``` 
+   # {OS} - possible values: linux, darwin, windows
+   CLI_OS={OS} make build-tool-ocftool
+   ```
 
-1. Upgrade Voltron Helm chart:
-    
-    ```bash
-    helm upgrade voltron ./charts/voltron -n voltron-system 
-    ```
+2. Log into the cluster:
 
+   ```bash
+   # {OS} - same as in the first step
+   ./bin/ocftool-{OS}-amd64 login {CLUSTER_GATEWAY_URL} -u {GATEWAY_USERNAME} -p {GATEWAY_PASSWORD}
+   ```
+   
+3. Trigger cluster upgrade:
+
+   ```bash
+   # {OS} - same as in the first step
+   # Upgrade Capact components to the newest available version
+   ./bin/ocftool-{OS}-amd64 upgrade
+   ```
+   
+   >**NOTE:** To check possible configuration options, run: `./bin/ocftool-{OS}-amd64 upgrade --help`
+                 
 ## Uninstall
 
 To uninstall Voltron, follow the steps:

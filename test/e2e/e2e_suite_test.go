@@ -31,8 +31,6 @@ type ClusterPolicyConfig struct {
 
 type Config struct {
 	StatusEndpoints []string
-	// total number of pods that should be scheduled
-	ExpectedNumberOfRunningPods int           `envconfig:"default=25"`
 	IgnoredPodsNames            []string      `envconfig:"optional"`
 	PollingInterval             time.Duration `envconfig:"default=2s"`
 	PollingTimeout              time.Duration `envconfig:"default=5m"`

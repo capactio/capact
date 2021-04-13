@@ -52,7 +52,8 @@ type ActionDetailsInput struct {
 
 // Set of filters for Action list
 type ActionFilter struct {
-	Phase *ActionStatusPhase `json:"phase"`
+	Phase     *ActionStatusPhase `json:"phase"`
+	NameRegex *string            `json:"nameRegex"`
 }
 
 // Describes input of an Action

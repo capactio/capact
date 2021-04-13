@@ -11,8 +11,9 @@ import (
 	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/kubectl/pkg/util/podutils"
-	"k8s.io/utils/strings"
+	k8sstrings "k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
+	"strings"
 )
 
 var _ = Describe("Cluster check", func() {
@@ -25,20 +26,14 @@ var _ = Describe("Cluster check", func() {
 	})
 
 	Describe("Voltron cluster health", func() {
-		Context("Services status endpoint", func() {
-			It("should be available", func() {
-				waitTillServiceEndpointsAreReady()
-			})
-		})
-
 		Context("Pods in cluster", func() {
-			It("should be in running phase  (ignored kube-system and default)", func() {
+			It("should be in running phase (ignored kube-system and default)", func() {
 				k8sCfg, err := config.GetConfig()
 				Expect(err).ToNot(HaveOccurred())
 
 				clientset, err := kubernetes.NewForConfig(k8sCfg)
 				Expect(err).ToNot(HaveOccurred())
-				Eventually(func() (int, error) {
+				Eventually(func() error {
 					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
 						FieldSelector: fields.AndSelectors(
 							fields.OneTermNotEqualSelector("metadata.namespace", "kube-system"),
@@ -46,29 +41,26 @@ var _ = Describe("Cluster check", func() {
 						).String(),
 					})
 					if err != nil {
-						return 0, err
+						return err
 					}
 
-					atLeastOneNotReady := false
-					numberOfRunningPods := 0
+					var notReadyPods []string
 					for idx := range pods.Items {
-						podName := strings.JoinQualifiedName(pods.Items[idx].Namespace, pods.Items[idx].Name)
+						podName := k8sstrings.JoinQualifiedName(pods.Items[idx].Namespace, pods.Items[idx].Name)
 						if _, skip := ignoredPodsNames[podName]; skip {
 							continue
 						}
 
 						running := podRunningAndReadyOrFinished(&pods.Items[idx])
 						if !running {
-							atLeastOneNotReady = true
-						} else {
-							numberOfRunningPods++
+							notReadyPods = append(notReadyPods, podName)
 						}
 					}
-					if atLeastOneNotReady {
-						return 0, errors.New("detected not running pod(s)")
+					if len(notReadyPods) > 0 {
+						return errors.Errorf("detected not running pod(s): %s", strings.Join(notReadyPods, ", "))
 					}
-					return numberOfRunningPods, nil
-				}, cfg.PollingTimeout, cfg.PollingInterval).Should(Equal(cfg.ExpectedNumberOfRunningPods), "Got unexpected number of Pods in cluster")
+					return nil
+				}, cfg.PollingTimeout, cfg.PollingInterval).ShouldNot(HaveOccurred())
 			})
 		})
 	})

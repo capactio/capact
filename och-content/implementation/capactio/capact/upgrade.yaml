@@ -104,18 +104,9 @@ spec:
                               <% if override.helmRepoURL %>
                               repo: "<@ override.helmRepoURL @>"
                               <% endif %>
-                            <% if increaseResourceLimits %>
-                            values:
-                              neo4j:
-                                core:
-                                  standalone: true
-                                  resources:
-                                    requests:
-                                      cpu: 500m
-                                      memory: 1768Mi
-                                    limits:
-                                      cpu: 1
-                                      memory: 3072Mi
+
+                            <% if override.neo4jValues %>
+                            values: <@ override.neo4jValues @>
                             <% endif %>
 
                       - name: input-parameters
@@ -136,31 +127,11 @@ spec:
                               <% if override.helmRepoURL %>
                               repo: "<@ override.helmRepoURL @>"
                               <% endif %>
-                            values:
-                              global:
-                                containerRegistry:
-                                  path: <@ override.docker.repository @>
-                                  overrideTag: <@ override.docker.tag @>
 
-                            <% if increaseResourceLimits %>
-                              gateway:
-                                resources:
-                                  limits:
-                                    cpu: 300m
-                                    memory: 128Mi
-                                  requests:
-                                    cpu: 100m
-                                    memory: 48Mi
-
-                              och-public:
-                                resources:
-                                  limits:
-                                    cpu: 400m
-                                    memory: 512Mi
-                                  requests:
-                                    cpu: 200m
-                                    memory: 128Mi
+                            <% if override.capactValues %>
+                            values: <@ override.capactValues @>
                             <% endif %>
+
                             output:
                               goTemplate:
                                 version: "{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"

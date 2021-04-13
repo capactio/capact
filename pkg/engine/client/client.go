@@ -35,8 +35,8 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 		}
 	}`, actionFields))
 
-	req.Var("in", in)
 	enrichWithNamespace(ctx, req)
+	req.Var("in", in)
 
 	var resp struct {
 		Action enginegraphql.Action `json:"createAction"`
@@ -54,8 +54,9 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 			%s
 		}
 	}`, actionFields))
-	req.Var("name", name)
+
 	enrichWithNamespace(ctx, req)
+	req.Var("name", name)
 
 	var resp struct {
 		Action *enginegraphql.Action `json:"action"`
@@ -67,13 +68,15 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 	return resp.Action, nil
 }
 
-func (c *Client) ListActions(ctx context.Context) ([]*enginegraphql.Action, error) {
-	req := graphql.NewRequest(fmt.Sprintf(`{
-		actions {
+func (c *Client) ListActions(ctx context.Context, filter *enginegraphql.ActionFilter) ([]*enginegraphql.Action, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`query($filter: ActionFilter) {
+		actions(filter: $filter) {
 			%s
 		}
 	}`, actionFields))
+
 	enrichWithNamespace(ctx, req)
+	req.Var("filter", filter)
 
 	var resp struct {
 		Actions []*enginegraphql.Action `json:"actions"`
@@ -93,9 +96,10 @@ func (c *Client) RunAction(ctx context.Context, name string) error {
 			%s
 		}
 	}`, actionFields))
-	enrichWithNamespace(ctx, req)
 
+	enrichWithNamespace(ctx, req)
 	req.Var("name", name)
+
 	var resp struct {
 		Action enginegraphql.Action `json:"runAction"`
 	}
@@ -114,8 +118,9 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 			%s
 		}
 	}`, actionFields))
-	req.Var("name", name)
+
 	enrichWithNamespace(ctx, req)
+	req.Var("name", name)
 
 	var resp struct {
 		Action enginegraphql.Action `json:"deleteAction"`

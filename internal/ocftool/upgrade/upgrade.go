@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ocftool"
 	"projectvoltron.dev/voltron/internal/ocftool/client"
 	"projectvoltron.dev/voltron/internal/ocftool/config"
+	"projectvoltron.dev/voltron/internal/ocftool/printer"
 	"projectvoltron.dev/voltron/internal/ptr"
 	gqlengine "projectvoltron.dev/voltron/pkg/engine/api/graphql"
 	"projectvoltron.dev/voltron/pkg/httputil"
@@ -51,22 +51,10 @@ var ErrActionWithoutStatus = errors.New("Action doesn't have status")
 
 type (
 	Options struct {
-		Timeout time.Duration
-		Wait    bool
-
-		Parameters InputParameters
-	}
-
-	InputParameters struct {
-		Version                string `json:"version"`
-		IncreaseResourceLimits bool   `json:"increaseResourceLimits"`
-		Override               struct {
-			HelmRepoURL string `json:"helmRepoURL"`
-			Docker      struct {
-				Tag        string `json:"tag"`
-				Repository string `json:"repository"`
-			} `json:"docker"`
-		} `json:"override"`
+		Timeout          time.Duration
+		Wait             bool
+		Parameters       InputParameters
+		ActionNamePrefix string
 	}
 )
 
@@ -104,7 +92,7 @@ func New(w io.Writer) (*Upgrade, error) {
 }
 
 func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
-	status := ocftool.NewStatusPrinter(u.writer, "Upgrading Capact on cluster...")
+	status := printer.NewStatus(u.writer, "Upgrading Capact on cluster...")
 	defer func() {
 		status.End(err == nil)
 	}()
@@ -132,7 +120,7 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		return err
 	}
 
-	act, err := u.createAction(ctxWithNs, inputParams, inputTI)
+	act, err := u.createAction(ctxWithNs, generateActionName(opts.ActionNamePrefix), inputParams, inputTI)
 	if err != nil {
 		return err
 	}
@@ -174,6 +162,13 @@ func (u *Upgrade) resolveInputParameters(opts *Options) error {
 		}
 		opts.Parameters.Version = ver
 	}
+
+	if opts.Parameters.IncreaseResourceLimits {
+		opts.Parameters.Override.CapactValues.Gateway.Resources = increasedGatewayResources()
+		opts.Parameters.Override.CapactValues.OCHPublic.Resources = increasedOCHPublicResources()
+		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = increasedNeo4jResources()
+	}
+
 	return nil
 }
 
@@ -189,16 +184,15 @@ func (u *Upgrade) getCapactConfigTypeInstance(ctx context.Context) (gqllocalapi.
 	}
 
 	if len(capactCfg) != 1 {
-		return gqllocalapi.TypeInstance{}, errors.Errorf("Got ")
+		return gqllocalapi.TypeInstance{}, errors.Errorf("Unexpected number of Capact config TypeInstance, expected 1, got %d", len(capactCfg))
 	}
 
 	return capactCfg[0], nil
 }
 
-func (u *Upgrade) createAction(ctx context.Context, inputParams gqlengine.JSON, inputTI []*gqlengine.InputTypeInstanceData) (*gqlengine.Action, error) {
+func (u *Upgrade) createAction(ctx context.Context, name string, inputParams gqlengine.JSON, inputTI []*gqlengine.InputTypeInstanceData) (*gqlengine.Action, error) {
 	act, err := u.actCli.CreateAction(ctx, &gqlengine.ActionDetailsInput{
-		// TODO: should we support server-side GenerateName parameter?
-		Name: generateActionName(),
+		Name: name,
 		Input: &gqlengine.ActionInputData{
 			Parameters:    &inputParams,
 			TypeInstances: inputTI,
@@ -210,8 +204,8 @@ func (u *Upgrade) createAction(ctx context.Context, inputParams gqlengine.JSON, 
 	return act, err
 }
 
-func generateActionName() string {
-	return fmt.Sprintf("capact-upgrade-%s", utilrand.String(randomSuffixLength))
+func generateActionName(prefix string) string {
+	return fmt.Sprintf("%s%s", prefix, utilrand.String(randomSuffixLength))
 }
 
 func (u *Upgrade) waitUntilReadyToRun(ctx context.Context, name string, timeout time.Duration) error {

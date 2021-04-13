@@ -407,12 +407,6 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 	}
 }
 
-func fixGQLActionFilter(phase *graphql.ActionStatusPhase) graphql.ActionFilter {
-	return graphql.ActionFilter{
-		Phase: phase,
-	}
-}
-
 func fixModelActionFilter(phase *v1alpha1.ActionPhase) model.ActionFilter {
 	return model.ActionFilter{
 		Phase: phase,

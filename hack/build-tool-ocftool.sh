@@ -11,8 +11,8 @@ set -E         # needs to be set if we want the ERR trap
 readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
 
-ARCHs="amd64"
-OSes="linux darwin windows"
+ARCHs=${CLI_ARCH:-"amd64"}
+OSes=${CLI_OS:-"linux darwin windows"}
 
 main () {
   for ARCH in $ARCHs; do

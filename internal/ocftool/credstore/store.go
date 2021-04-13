@@ -3,12 +3,8 @@ package credstore
 import (
 	b64 "encoding/base64"
 	"encoding/json"
-	"os"
-
-	configstore "projectvoltron.dev/voltron/internal/ocftool/config"
 
 	"github.com/99designs/keyring"
-	"github.com/AlecAivazis/survey/v2"
 )
 
 type Credentials struct {
@@ -17,7 +13,7 @@ type Credentials struct {
 }
 
 func GetHub(serverURL string) (*Credentials, error) {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(Config(CredStoreName))
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +32,7 @@ func GetHub(serverURL string) (*Credentials, error) {
 }
 
 func AddHub(serverURL string, creds Credentials) error {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(Config(CredStoreName))
 	if err != nil {
 		return err
 	}
@@ -53,7 +49,7 @@ func AddHub(serverURL string, creds Credentials) error {
 }
 
 func DeleteHub(serverURL string) error {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(Config(CredStoreName))
 	if err != nil {
 		return err
 	}
@@ -62,7 +58,7 @@ func DeleteHub(serverURL string) error {
 }
 
 func ListHubServer() ([]string, error) {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(Config(CredStoreName))
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +70,7 @@ func ListHubServer() ([]string, error) {
 
 	var out []string
 	for _, k := range keys {
-		if k == configstore.StoreName {
+		if k == ConfigStoreName {
 			continue
 		}
 		dec, err := b64.StdEncoding.DecodeString(k)
@@ -84,30 +80,4 @@ func ListHubServer() ([]string, error) {
 		out = append(out, string(dec))
 	}
 	return out, nil
-}
-
-const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
-
-var cfg = keyring.Config{
-	ServiceName:              "hub-vault",
-	LibSecretCollectionName:  "hubvault",
-	KWalletAppID:             "hub-vault",
-	KWalletFolder:            "hub-vault",
-	KeychainTrustApplication: true,
-	WinCredPrefix:            "hub-vault",
-	FileDir:                  "~/.capectl/hub_vault",
-	FilePasswordFunc: func(promptMessage string) (string, error) {
-		password := ""
-		err := survey.AskOne(&survey.Password{
-			Message: promptMessage,
-		}, &password)
-		return "", err
-	},
-}
-
-func config() keyring.Config {
-	if backend := os.Getenv(overrideBackend); backend != "" {
-		cfg.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
-	}
-	return cfg
 }

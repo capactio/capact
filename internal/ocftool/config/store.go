@@ -1,17 +1,13 @@
 package config
 
 import (
-	"os"
+	"projectvoltron.dev/voltron/internal/ocftool/credstore"
 
 	"github.com/99designs/keyring"
-	"github.com/AlecAivazis/survey/v2"
 )
 
-// TODO: current hack to do not play with `.config` directory. Needs to be fixed!
-const StoreName = "voltron-config"
-
 func SetAsDefaultContext(server string, override bool) error {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(credstore.Config(credstore.ConfigStoreName))
 	if err != nil {
 		return err
 	}
@@ -22,7 +18,7 @@ func SetAsDefaultContext(server string, override bool) error {
 	}
 	if currentServer == "" || override {
 		return ks.Set(keyring.Item{
-			Key:  StoreName,
+			Key:  credstore.ConfigStoreName,
 			Data: []byte(server),
 		})
 	}
@@ -31,7 +27,7 @@ func SetAsDefaultContext(server string, override bool) error {
 }
 
 func GetDefaultContext() (string, error) {
-	ks, err := keyring.Open(config())
+	ks, err := keyring.Open(credstore.Config(credstore.ConfigStoreName))
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +36,7 @@ func GetDefaultContext() (string, error) {
 }
 
 func getDefaultContext(ks keyring.Keyring) (string, error) {
-	item, err := ks.Get(StoreName)
+	item, err := ks.Get(credstore.ConfigStoreName)
 	switch {
 	case err == nil:
 		return string(item.Data), nil
@@ -49,30 +45,4 @@ func getDefaultContext(ks keyring.Keyring) (string, error) {
 	default:
 		return "", err
 	}
-}
-
-const overrideBackend = "CAPECTL_CREDENTIALS_STORE_BACKEND"
-
-var keyringConfigDefaults = keyring.Config{
-	ServiceName:              "config-vault",
-	LibSecretCollectionName:  "configvault",
-	KWalletAppID:             "config-vault",
-	KWalletFolder:            "config-vault",
-	KeychainTrustApplication: true,
-	WinCredPrefix:            "config-vault",
-	FileDir:                  "~/.capectl/config-vault",
-	FilePasswordFunc: func(promptMessage string) (string, error) {
-		password := ""
-		err := survey.AskOne(&survey.Password{
-			Message: promptMessage,
-		}, &password)
-		return "", err
-	},
-}
-
-func config() keyring.Config {
-	if backend := os.Getenv(overrideBackend); backend != "" {
-		keyringConfigDefaults.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
-	}
-	return keyringConfigDefaults
 }

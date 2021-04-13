@@ -127,7 +127,7 @@ You can export the following environment variables to configure the script:
 - To disable `/etc/hosts` update with all Voltron subdomain, use `DISABLE_HOSTS_UPDATE=true`.
 - To disable setting self-signed TLS certificate for `*.voltron.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
 - To disable Database Populator, use `ENABLE_POPULATOR=false`
-- To use test setup (test policy and populate OCH manifests from `test/och-content`), use `USE_TEST_SETUP=true`.
+- To enable test setup, use `USE_TEST_SETUP=true`.
 - To disable higher resource requests and limits for components, use `INCREASE_RESOURCE_LIMITS=false`.
 - To override Voltron Helm chart values, use `CUSTOM_VOLTRON_SET_FLAGS` e.g. `CUSTOM_VOLTRON_SET_FLAGS="--set gateway.auth.password=myPass"`.
 - To override Ingress NGINX Helm chart values, use `CUSTOM_NGINX_SET_FLAGS`.
