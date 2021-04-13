@@ -101,17 +101,17 @@ clusterPolicyRules:
 testSetup:
   enabled: false
   clusterPolicyRules:
-      cap.interface.voltron.validation.action.passing: # Rules for exact path and revision (looked up in first place)
+      cap.interface.capactio.capact.validation.action.passing: # Rules for exact path and revision (looked up in first place)
         oneOf:
           - implementationConstraints:
               requires:
-                - path: "cap.type.voltron.validation.single-key"
+                - path: "cap.type.capactio.capact.validation.single-key"
               attributes:
                 - path: "cap.attribute.policy.most-preferred"
             injectTypeInstances:
               - id: "{typeInstanceUUID}"
                 typeRef:
-                  path: "cap.type.voltron.validation.single-key"
+                  path: "cap.type.capactio.capact.validation.single-key"
                   revision: "0.1.0"
           - implementationConstraints:
-              path: cap.implementation.voltron.validation.action.passing-a
+              path: cap.implementation.capactio.capact.validation.action.passing-a

@@ -3,7 +3,7 @@ provider "google" {
 }
 
 variable "cluster_name" {
-  default = "voltron-dev1"
+  default = "capact-dev1"
   type    = string
 }
 

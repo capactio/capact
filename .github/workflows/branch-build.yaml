@@ -268,7 +268,7 @@ jobs:
         run: |
           ./capact action delete \
             --name-regex 'capact-upgrade-*' \
-            --namespace 'voltron-system' \
+            --namespace 'capact-system' \
             --phase 'SUCCEEDED'
 
 
