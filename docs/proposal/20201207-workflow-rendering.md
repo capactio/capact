@@ -4,7 +4,7 @@ Created on 2020-12-22 by Damian Czaja ([@trojan295](https://github.com/trojan295
 
 ## Overview
 
-This document shows how we can render the workflow in Voltron Engine.
+This document shows how we can render the workflow in Capact Engine.
 
 <!-- toc -->
 
@@ -24,10 +24,10 @@ This document shows how we can render the workflow in Voltron Engine.
 
 ## Motivation
 
-Voltron must, bases on the available OCF Manifests, be able to render a complete workflow, which can be executed by [runners](../../docs/runner.md). For now, we do not have a proposal, for how the rendering will be done and what kind of syntax will be used to describe the workflow.
+Capact must, bases on the available OCF Manifests, be able to render a complete workflow, which can be executed by [runners](../../docs/runner.md). For now, we do not have a proposal, for how the rendering will be done and what kind of syntax will be used to describe the workflow.
 
 Besides providing a syntax to define a workflow, in many cases, Content Creators would like to call other Interfaces, which are already available in OCH. For example - they are creating a workflow to provision WordPress and they need a PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Action.
-Voltron must have an option, to allow Content Creators to reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
+Capact must have an option, to allow Content Creators to reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
 
 Content Creator should be able to:
 - reference an Interface to be called in an Action workflow,
@@ -36,7 +36,7 @@ Content Creator should be able to:
 - conditionally call an Interface,
 - define, which workflow artifacts are TypeInstances.
 
-Voltron Engine must be able to:
+Capact Engine must be able to:
 - merge called Interfaces into the Action workflow.
 
 For now, we want to base on the Argo workflow syntax and only extend it, to support our additional use cases. In the future, we might revisit this and change the syntax, so it is more user-friendly and can support also non-Argo runners.
@@ -56,7 +56,7 @@ For now, we want to base on the Argo workflow syntax and only extend it, to supp
 
 To reference the Interface, which has to be called, the following extensions to the Argo workflow is proposed:
 
-- `.spec.action.args.workflow.entrypoint.templates[].steps[][].voltron-action` - defines the Interface to be called. It must be a reference to a method imported in `.spec.imports`. If this is set, the Content Creator does not have to provide a `template` field in this step.
+- `.spec.action.args.workflow.entrypoint.templates[].steps[][].capact-action` - defines the Interface to be called. It must be a reference to a method imported in `.spec.imports`. If this is set, the Content Creator does not have to provide a `template` field in this step.
 
 ```yaml
 kind: Implementation
@@ -77,7 +77,7 @@ spec:
           - name: jira-install
             steps:
               - - name: install-db
-                  voltron-action: postgres.install
+                  capact-action: postgres.install
 ```
 
 ### How to use and pass user input parameters to Interfaces
@@ -85,7 +85,7 @@ spec:
 Interfaces need input parameters and Content Creators must have a way to use and also pass them to the Interfaces, they call.
 We have to somehow inject the input-parameters into the workflow, so the Content Creator can reference them.
 
-We propose, that the input parameters will be injected into the workflow as a local artifact named `input-parameters`. Fixing the artifact name, allows Voltron Engine to populate the proper artifact and also defines a standard, on how to pass input parameters to Interfaces called by the Content Creator.
+We propose, that the input parameters will be injected into the workflow as a local artifact named `input-parameters`. Fixing the artifact name, allows Capact Engine to populate the proper artifact and also defines a standard, on how to pass input parameters to Interfaces called by the Content Creator.
 
 ```yaml
 kind: Implementation
@@ -103,7 +103,7 @@ spec:
                 - name: input-parameters
 ```
 
-During the rendering phase, the Voltron Engine will inject the `input-parameters` artifact as raw data:
+During the rendering phase, the Capact Engine will inject the `input-parameters` artifact as raw data:
 
 ```yaml
   arguments:
@@ -138,7 +138,7 @@ spec:
               - - name: generate-db-params
                   [...]
               - - name: install-db
-                  voltron-action: postgresql.install
+                  capact-action: postgresql.install
                   arguments:
                     artifacts:
                         # Input parameters passed to the called Interface.
@@ -192,7 +192,7 @@ spec:
           - name: jira-install
             steps:
               - - name: install-db
-                  voltron-action: postgresql.install
+                  capact-action: postgresql.install
               - - name: install-jira
                   template: install-jira
                   arguments:
@@ -205,11 +205,11 @@ The Interface `postgresql.install` has a output TypeInstance called `postgresql`
 
 ### How to conditionally call an Interface
 
-Content Creators might make their Actions self-sufficient and create the dependent TypeInstances in it, or allow the Voltron User to provide existing TypeInstances for the Action. To support this case, we need an option to conditionally call an Interface.
+Content Creators might make their Actions self-sufficient and create the dependent TypeInstances in it, or allow the Capact User to provide existing TypeInstances for the Action. To support this case, we need an option to conditionally call an Interface.
 
-We decided to introduce a directive `voltron-when` to support this. Argo conditionals are evaluated during workflow execution and we need to evaluate the conditions during render-time, to do not resolve Interfaces to Implementations, and to include unnecessary workflow steps.
+We decided to introduce a directive `capact-when` to support this. Argo conditionals are evaluated during workflow execution, and we need to evaluate the conditions during render-time, to do not resolve Interfaces to Implementations, and to include unnecessary workflow steps.
 
-Only input TypeInstances can be used in the condition syntax. If the Content Creator defined an additional input TypeInstance `postgresql`, then he can make conditions based on it, for example, `voltron-when: postgresql == nil`.
+Only input TypeInstances can be used in the condition syntax. If the Content Creator defined an additional input TypeInstance `postgresql`, then he can make conditions based on it, for example, `capact-when: postgresql == nil`.
 
 For the actual implementation aspect, we propose to use the [Expr](https://github.com/antonmedv/expr) library to evaluate the condition expressions. It is used in Argo for the `depends` directive.
 In the [rendering proof-of-concept](../investigation/workflow-rendering) the library [govaluate](https://github.com/Knetic/govaluate) was used, but it looks no longer maintained, based on GitHub activity.
@@ -236,19 +236,19 @@ spec:
             steps:
                   # Execute this step only if the postgresql TypeInstance was not provided.
               - - name: install-db
-                  voltron-when: postgresql == nil
-                  voltron-action: postgresql.install
+                  capact-when: postgresql == nil
+                  capact-action: postgresql.install
 ```
 
 ### How to define, which workflow artifacts are TypeInstances
 
 We need a way for the Content Creator to say, that an artifact created in the Argo workflow is a TypeInstance and is supposed to be uploaded to OCH. The workflow could use some intermediate artifacts just for handling the data flow between workflow steps. Currently, there is no way to identify the TypeInstance artifacts in the workflow.
 
-We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.outputTypeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `voltron-outputTypeInstances`.
+We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.outputTypeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `capact-outputTypeInstances`.
 
-The `voltron-outputTypeInstances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood, it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to OCH. This also allows us to track the TypeInstances produced in a workflow.
+The `capact-outputTypeInstances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood, it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to OCH. This also allows us to track the TypeInstances produced in a workflow.
 
-The `voltron-outputTypeInstances` is a list of mappings between the output TypeInstance and Argo global artifacts:
+The `capact-outputTypeInstances` is a list of mappings between the output TypeInstance and Argo global artifacts:
 ```yaml
 name: {output-type-instance-name}
 from: {argo-global-artifact-reference}
@@ -272,8 +272,8 @@ spec:
             steps:
                   # This step produces Argo artifacts 'additional' and 'helm-release'.
               - - name: helm-run
-                  voltron-action: cap.interface.runner.helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: cap.interface.runner.helm.install
+                  capact-outputTypeInstances:
                     # Artifacts mappings to the TypeInstances in .spec.outputTypeInstanceRelations
                     - name: jira-config
                       from: additional
@@ -291,13 +291,13 @@ The proposed algorithm for including a nested workflow from a called Interface i
 
 ## Example manifests with new directives
 
-To see example manifests, with the new workflow directives check the link below. Note that these are manifests used for the PoC and the `voltron-action` contains there the full `ManifestReference`, instead of a reference to `imports` from the Implementation. This was done only to simplify the PoC.
+To see example manifests, with the new workflow directives check the link below. Note that these are manifests used for the PoC and the `capact-action` contains there the full `ManifestReference`, instead of a reference to `imports` from the Implementation. This was done only to simplify the PoC.
 
-- [PostgreSQL install](../investigation/workflow-rendering/manifests/implementations/postgres-install.yaml) - uses `voltron-outputTypeInstances` and `voltron-action`,
-- [JIRA install](../investigation/workflow-rendering/manifests/implementations/jira-install.yaml) - uses `voltron-outputTypeInstances`, `voltron-when` and `voltron-action`.
+- [PostgreSQL install](../investigation/workflow-rendering/manifests/implementations/postgres-install.yaml) - uses `capact-outputTypeInstances` and `capact-action`,
+- [JIRA install](../investigation/workflow-rendering/manifests/implementations/jira-install.yaml) - uses `capact-outputTypeInstances`, `capact-when` and `capact-action`.
 
 ## Consequences
 
 - The workflow syntax highly depend on the Argo workflow syntax
-- Add `voltron-outputTypeInstances`, `voltron-when`, `voltron-action` directives to the workflow syntax. We will need to copy-paste the Go structs, which describe Argo workflow elements and extends them.
+- Add `capact-outputTypeInstances`, `capact-when`, `capact-action` directives to the workflow syntax. We will need to copy-paste the Go structs, which describe Argo workflow elements and extends them.
 - Argo has currently (2020.12.20) a bug, which must be fixed before the proposed rendering algorithm can work. Github ticket for this issue is [here](https://github.com/argoproj/argo/issues/4772).

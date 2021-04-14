@@ -6,8 +6,8 @@ metadata:
   documentationURL: https://github.com/bitnami/charts
   iconURL: https://bitnami.com
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: install
   path: cap.implementation.bitnami.postgresql.install
   prefix: cap.implementation.bitnami.postgresql
@@ -68,7 +68,7 @@ spec:
                   from: "{{steps.helm-install.outputs.artifacts.additional}}"
             name: postgres-install
             steps:
-              - - voltron-action: jinja2.template
+              - - capact-action: jinja2.template
                   name: create-helm-args
                   arguments:
                     artifacts:
@@ -94,12 +94,12 @@ spec:
                                 superuser:
                                   username: '{{ template "postgresql.username" . }}'
                                   password: '{{ template "postgresql.password" . }}'{% endraw %}
-              - - voltron-outputTypeInstances:
+              - - capact-outputTypeInstances:
                     - name: postgresql
                       from: additional
                     - name: psql-helm-release
                       from: helm-release
-                  voltron-action: helm.install
+                  capact-action: helm.install
                   name: helm-install
                   arguments:
                     artifacts:

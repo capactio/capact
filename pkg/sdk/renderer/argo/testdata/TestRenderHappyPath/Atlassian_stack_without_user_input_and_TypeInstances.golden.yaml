@@ -1,7 +1,7 @@
 args:
   workflow:
     arguments: {}
-    entrypoint: voltron-root
+    entrypoint: capact-root
     templates:
     - arguments: {}
       inputs:
@@ -296,7 +296,7 @@ args:
                     ingress:
                       enabled: true
                       hosts:
-                      - host: jira-cloud.voltron.local
+                      - host: jira-cloud.capact.local
                         paths: ['/']
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
@@ -735,7 +735,7 @@ args:
                     ingress:
                       enabled: true
                       hosts:
-                      - host: confluence.voltron.local
+                      - host: confluence.capact.local
                         paths: ['/']
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
@@ -1075,7 +1075,7 @@ args:
     - arguments: {}
       inputs: {}
       metadata: {}
-      name: voltron-root
+      name: capact-root
       outputs: {}
       steps:
       - - arguments: {}

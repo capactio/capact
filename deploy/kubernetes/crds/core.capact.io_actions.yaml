@@ -1,0 +1,378 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.5.0
+  creationTimestamp: null
+  name: actions.core.capact.io
+spec:
+  group: core.capact.io
+  names:
+    kind: Action
+    listKind: ActionList
+    plural: actions
+    shortNames:
+    - ac
+    singular: action
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Interface/Implementation path of the Action
+      jsonPath: .spec.actionRef.path
+      name: Path
+      type: string
+    - description: If the Action is approved to run
+      jsonPath: .spec.run
+      name: Run
+      type: boolean
+    - description: Status of the Action
+      jsonPath: .status.phase
+      name: Status
+      type: string
+    - description: When the Action was created
+      format: date-time
+      jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Action describes user intention to resolve & execute a given Interface or Implementation.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: ActionSpec contains configuration properties for a given Action to execute.
+            properties:
+              actionRef:
+                description: ActionRef contains data sufficient to resolve Implementation or Interface manifest. Currently only Interface reference is supported.
+                properties:
+                  path:
+                    description: Path is full path for the manifest.
+                    minLength: 3
+                    type: string
+                  revision:
+                    description: Revision is a semantic version of the manifest. If not provided, the latest revision is used.
+                    type: string
+                required:
+                - path
+                type: object
+              advancedRendering:
+                description: AdvancedRendering holds properties related to Action advanced rendering mode. CURRENTLY NOT IMPLEMENTED.
+                properties:
+                  enabled:
+                    default: false
+                    description: Enabled specifies if the advanced rendering mode is enabled.
+                    type: boolean
+                  renderingIteration:
+                    description: RenderingIteration holds properties for rendering iteration in advanced rendering mode.
+                    properties:
+                      approvedIterationName:
+                        description: ApprovedIterationName specifies the name of rendering iteration, which has been approved by user. Iteration approval is the user intention to continue rendering using the provided ActionInput.typeInstances in the Action input. User may or may not add additional optional TypeInstances to the list and continue Action rendering.
+                        type: string
+                    required:
+                    - approvedIterationName
+                    type: object
+                required:
+                - enabled
+                type: object
+              cancel:
+                default: false
+                description: Cancel specifies whether the Action execution should be canceled. CURRENTLY NOT IMPLEMENTED.
+                type: boolean
+              dryRun:
+                default: false
+                description: DryRun specifies whether runner should perform only dry-run action without persisting the resource. For now it only lints the rendered Argo manifests and does not execute any workflow.
+                type: boolean
+              input:
+                description: Input describes Action input.
+                properties:
+                  parameters:
+                    description: Parameters holds details about Action input parameters.
+                    properties:
+                      secretRef:
+                        description: "SecretRef stores reference to Secret in the same namespace the Action CR is created. \n Required field: - Secret.Data[\"parameters.json\"] - input parameters data in JSON format \n Restricted field: - Secret.Data[\"args.yaml\"] - used by Engine, stores runner rendered arguments - Secret.Data[\"context.yaml\"] - used by Engine, stores runner context - Secret.Data[\"status\"] - stores the runner status \n TODO: this should be changed to an object which contains both the Secret name and key name under which the input is stored."
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                    required:
+                    - secretRef
+                    type: object
+                  typeInstances:
+                    description: TypeInstances contains input TypeInstances passed for Action rendering. It contains both required and optional input TypeInstances.
+                    items:
+                      description: InputTypeInstance holds input TypeInstance reference.
+                      properties:
+                        id:
+                          description: ID is a unique identifier for the input TypeInstance.
+                          type: string
+                        name:
+                          description: Name refers to input TypeInstance name used in rendered Action. Name is not unique as there may be multiple TypeInstances with the same name on different levels of Action workflow.
+                          type: string
+                      required:
+                      - id
+                      - name
+                      type: object
+                    type: array
+                type: object
+              renderedActionOverride:
+                description: RenderedActionOverride contains optional rendered Action that overrides the one rendered by Engine. CURRENTLY NOT IMPLEMENTED.
+                type: object
+                x-kubernetes-preserve-unknown-fields: true
+              run:
+                default: false
+                description: Run specifies whether the Action is approved to be executed. Engine won't execute fully rendered Action until the field is set to `true`. If the Action is not fully rendered, and this field is set to `true`, Engine executes a given Action instantly after it is resolved.
+                type: boolean
+            type: object
+          status:
+            description: ActionStatus defines the observed state of Action.
+            properties:
+              canceledBy:
+                description: CanceledBy holds user data which canceled a given Action. CURRENTLY NOT IMPLEMENTED.
+                properties:
+                  extra:
+                    additionalProperties:
+                      description: ExtraValue masks the value so protobuf can generate
+                      items:
+                        type: string
+                      type: array
+                    description: Any additional information provided by the authenticator.
+                    type: object
+                  groups:
+                    description: The names of groups this user is a part of.
+                    items:
+                      type: string
+                    type: array
+                  uid:
+                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    type: string
+                  username:
+                    description: The name that uniquely identifies this user among all active users.
+                    type: string
+                type: object
+              createdBy:
+                description: CreatedBy holds user data which created a given Action. CURRENTLY NOT IMPLEMENTED.
+                properties:
+                  extra:
+                    additionalProperties:
+                      description: ExtraValue masks the value so protobuf can generate
+                      items:
+                        type: string
+                      type: array
+                    description: Any additional information provided by the authenticator.
+                    type: object
+                  groups:
+                    description: The names of groups this user is a part of.
+                    items:
+                      type: string
+                    type: array
+                  uid:
+                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    type: string
+                  username:
+                    description: The name that uniquely identifies this user among all active users.
+                    type: string
+                type: object
+              lastTransitionTime:
+                description: Last time the condition transitioned from one status to another.
+                format: date-time
+                type: string
+              message:
+                description: Message provides a readable description of the Action phase.
+                type: string
+              observedGeneration:
+                description: ObservedGeneration reflects the generation of the most recently observed Action.
+                format: int64
+                type: integer
+              output:
+                description: Output describes Action output.
+                properties:
+                  typeInstances:
+                    description: TypeInstances contains output TypeInstances data. CURRENTLY NOT IMPLEMENTED.
+                    items:
+                      description: OutputTypeInstanceDetails describes the output TypeInstance.
+                      properties:
+                        id:
+                          description: ID is a unique identifier of the TypeInstance.
+                          type: string
+                        name:
+                          description: Name refers to TypeInstance name.
+                          type: string
+                        typeReference:
+                          description: TypeRef contains data needed to resolve Type manifest.
+                          properties:
+                            path:
+                              description: Path is full path for the manifest.
+                              minLength: 3
+                              type: string
+                            revision:
+                              description: Revision is a semantic version of the manifest. If not provided, the latest revision is used.
+                              type: string
+                          required:
+                          - path
+                          type: object
+                      required:
+                      - id
+                      - name
+                      - typeReference
+                      type: object
+                    type: array
+                type: object
+              phase:
+                default: Initial
+                description: ActionPhase describes in which state is the Action to execute.
+                enum:
+                - Initial
+                - BeingRendered
+                - AdvancedModeRenderingIteration
+                - ReadyToRun
+                - Running
+                - BeingCanceled
+                - Canceled
+                - Succeeded
+                - Failed
+                type: string
+              rendering:
+                description: Rendering describes rendering status.
+                properties:
+                  action:
+                    description: Action contains partially or fully rendered Action to be executed.
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                  advancedRendering:
+                    description: AdvancedRendering describes status related to advanced rendering mode. CURRENTLY NOT IMPLEMENTED.
+                    properties:
+                      renderingIteration:
+                        description: RenderingIteration describes status related to current rendering iteration.
+                        properties:
+                          currentIterationName:
+                            description: CurrentIterationName contains name of current iteration in advanced rendering.
+                            type: string
+                          inputTypeInstancesToProvide:
+                            description: InputTypeInstancesToProvide describes which input TypeInstances might be provided in a given rendering iteration.
+                            items:
+                              description: InputTypeInstanceToProvide describes optional input TypeInstance for advanced rendering mode iteration.
+                              properties:
+                                name:
+                                  description: Name refers to TypeInstance name.
+                                  type: string
+                                typeReference:
+                                  description: TypeRef contains data needed to resolve Type manifest.
+                                  properties:
+                                    path:
+                                      description: Path is full path for the manifest.
+                                      minLength: 3
+                                      type: string
+                                    revision:
+                                      description: Revision is a semantic version of the manifest. If not provided, the latest revision is used.
+                                      type: string
+                                  required:
+                                  - path
+                                  type: object
+                              required:
+                              - name
+                              - typeReference
+                              type: object
+                            type: array
+                        required:
+                        - currentIterationName
+                        type: object
+                    type: object
+                  input:
+                    description: Input contains resolved details of Action input.
+                    properties:
+                      parameters:
+                        description: Parameters holds value of the User input parameters.
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
+                      typeInstances:
+                        description: TypeInstances contains input TypeInstances passed for Action rendering. It contains both required and optional input TypeInstances.
+                        items:
+                          description: InputTypeInstanceDetails describes input TypeInstance.
+                          properties:
+                            id:
+                              description: ID is a unique identifier of the TypeInstance.
+                              type: string
+                            name:
+                              description: Name refers to TypeInstance name.
+                              type: string
+                            optional:
+                              default: false
+                              description: Optional highlights that the input TypeInstance is optional.
+                              type: boolean
+                            typeReference:
+                              description: TypeRef contains data needed to resolve Type manifest.
+                              properties:
+                                path:
+                                  description: Path is full path for the manifest.
+                                  minLength: 3
+                                  type: string
+                                revision:
+                                  description: Revision is a semantic version of the manifest. If not provided, the latest revision is used.
+                                  type: string
+                              required:
+                              - path
+                              type: object
+                          required:
+                          - id
+                          - name
+                          - typeReference
+                          type: object
+                        type: array
+                    type: object
+                type: object
+              runBy:
+                description: RunBy holds user data which run a given Action. CURRENTLY NOT IMPLEMENTED.
+                properties:
+                  extra:
+                    additionalProperties:
+                      description: ExtraValue masks the value so protobuf can generate
+                      items:
+                        type: string
+                      type: array
+                    description: Any additional information provided by the authenticator.
+                    type: object
+                  groups:
+                    description: The names of groups this user is a part of.
+                    items:
+                      type: string
+                    type: array
+                  uid:
+                    description: A unique value that identifies this user across time. If this user is deleted and another user by the same name is added, they will have different UIDs.
+                    type: string
+                  username:
+                    description: The name that uniquely identifies this user among all active users.
+                    type: string
+                type: object
+              runner:
+                description: Runner holds data related to Runner that runs the Action.
+                properties:
+                  status:
+                    description: Status contains reference to resource with arbitrary Runner status data.
+                    type: object
+                    x-kubernetes-preserve-unknown-fields: true
+                type: object
+            required:
+            - phase
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

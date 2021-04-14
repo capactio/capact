@@ -6,7 +6,7 @@ ARG COMPONENT
 ARG SOURCE_PATH="./cmd/$COMPONENT/main.go"
 ARG BUILD_CMD="go build"
 
-WORKDIR /projectvoltron.dev/voltron
+WORKDIR /capact.io/capact
 
 # Use experimental frontend syntax to cache dependencies.
 COPY go.mod go.sum ./

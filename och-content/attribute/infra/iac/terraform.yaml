@@ -6,11 +6,11 @@ metadata:
   name: terraform
   displayName: Terraform
   description: Specifies that a given manifest is related to Terraform.
-  documentationURL: https://projectvoltron.dev
+  documentationURL: https://capact.io
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

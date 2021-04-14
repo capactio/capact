@@ -1,4 +1,4 @@
-# Voltron Open Capability Hub
+# Capact Open Capability Hub
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)

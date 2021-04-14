@@ -70,10 +70,10 @@ spec:
                   arguments:
                     parameters:
                      - name: crdURL
-                       value: https://storage.googleapis.com/capactio-master-charts/crds/core.projectvoltron.dev_actions.yaml
+                       value: https://storage.googleapis.com/capactio-master-charts/crds/core.capact.io_actions.yaml
 
                 - name: gen-global-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -92,7 +92,7 @@ spec:
                           data: ""
 
                 - name: gen-neo4j-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -115,7 +115,7 @@ spec:
                         raw:
                           data: ""
                 - name: gen-capact-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -146,7 +146,7 @@ spec:
                           data: ""
 
               - - name: neo4j-upgrade
-                  voltron-action: helm.upgrade
+                  capact-action: helm.upgrade
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -167,7 +167,7 @@ spec:
                         value: '300s'
 
               - - name: ingress-upgrade
-                  voltron-action: helm.upgrade
+                  capact-action: helm.upgrade
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -188,7 +188,7 @@ spec:
                         value: '90s'
 
               - - name: argo-upgrade
-                  voltron-action: helm.upgrade
+                  capact-action: helm.upgrade
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -199,7 +199,7 @@ spec:
                         from: "{{inputs.artifacts.argo-helm-release}}"
 
               - - name: kubed-upgrade
-                  voltron-action: helm.upgrade
+                  capact-action: helm.upgrade
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -212,7 +212,7 @@ spec:
                   template: synchronize-minio-secret
 
               - - name: monitoring-upgrade
-                  voltron-action: helm.upgrade
+                  capact-action: helm.upgrade
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -223,8 +223,8 @@ spec:
                         from: "{{inputs.artifacts.monitoring-helm-release}}"
 
               - - name: capact-upgrade
-                  voltron-action: helm.upgrade
-                  voltron-updateTypeInstances:
+                  capact-action: helm.upgrade
+                  capact-updateTypeInstances:
                     - name: capact-config
                       from: additional
                   arguments:

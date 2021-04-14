@@ -13,7 +13,7 @@ import os
 import sys
 from optparse import Option, OptionParser
 
-import jinja2cli.voltron as voltron
+import jinja2cli.capact as capact
 
 sys.path.insert(0, os.getcwd())
 
@@ -230,7 +230,7 @@ def render(template_path, data, extensions, filters, strict=False):
     if strict:
         env.undefined = StrictUndefined
     else:
-        env.undefined = voltron.Undefined
+        env.undefined = capact.Undefined
 
     # Add environ global
     env.globals["environ"] = lambda key: force_text(os.environ.get(key))
@@ -243,7 +243,7 @@ def render(template_path, data, extensions, filters, strict=False):
         filter = import_string(filter)
         env.filters[filter.__name__] = filter
 
-    for vf in voltron.ALL:
+    for vf in capact.ALL:
         env.globals[vf.__name__] = vf
 
     return env.get_template(os.path.basename(template_path)).render(data)

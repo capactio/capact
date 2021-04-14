@@ -14,7 +14,7 @@
 
 | Property                  | Type     | Required | Nullable       | Defined by                                                                                                                                                                                                     |
 | :------------------------ | :------- | :------- | :------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [attributes](#attributes) | `object` | Optional | cannot be null | [Untitled schema](implementation-properties-metadata-allof-1-properties-attributes.md "https://projectvoltron.dev/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes") |
+| [attributes](#attributes) | `object` | Optional | cannot be null | [Untitled schema](implementation-properties-metadata-allof-1-properties-attributes.md "https://capact.io/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes") |
 | [license](#license)       | Merged   | Required | cannot be null | [Untitled schema](implementation-properties-metadata-allof-1-properties-license.md "#/properties/metadata/properties/license#/properties/metadata/allOf/1/properties/license")                                 |
 
 ## attributes
@@ -29,7 +29,7 @@ Object that holds Attributes references.
 
 *   cannot be null
 
-*   defined in: [Untitled schema](implementation-properties-metadata-allof-1-properties-attributes.md "https://projectvoltron.dev/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes")
+*   defined in: [Untitled schema](implementation-properties-metadata-allof-1-properties-attributes.md "https://capact.io/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes")
 
 ## license
 

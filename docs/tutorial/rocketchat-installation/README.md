@@ -1,6 +1,6 @@
 # RocketChat installation
 
-This tutorial shows the basic concepts of Voltron on the RocketChat installation example.
+This tutorial shows the basic concepts of Capact on the RocketChat installation example.
 
 ###  Table of Contents
 
@@ -17,7 +17,7 @@ This tutorial shows the basic concepts of Voltron on the RocketChat installation
 
 ### Goal
 
-This instruction will guide you through the installation of RocketChat on a Kubernetes cluster using Voltron. 
+This instruction will guide you through the installation of RocketChat on a Kubernetes cluster using Capact. 
 
 RocketChat depends on the MongoDB database.
 
@@ -27,9 +27,9 @@ The diagram below shows the scenario:
 
 ###  Prerequisites
 
-* Voltron cluster installed, for example on [AWS EKS](../eks-installation/README.md).See also [GCP cluster installation guide](../voltron-installation/README.md).
+* Capact cluster installed, for example on [AWS EKS](../eks-installation/README.md).See also [GCP cluster installation guide](../capact-installation/README.md).
 
-> **NOTE:** For AWS EKS Voltron installation, all operation need to be run from the bastion host.
+> **NOTE:** For AWS EKS Capact installation, all operation need to be run from the bastion host.
 
 The following tools are required:
 
@@ -53,8 +53,8 @@ The following tools are required:
     To obtain the Gateway URL and password run:
     
     ```bash
-    HOST=`kubectl -n voltron-system get ingress voltron-gateway -o go-template --template="{{ (index .spec.rules 0).host }}"`
-    PASSWORD=`helm -n voltron-system get values voltron --all -o json | jq .global.gateway.auth.password -r`
+    HOST=`kubectl -n capact-system get ingress capact-gateway -o go-template --template="{{ (index .spec.rules 0).host }}"`
+    PASSWORD=`helm -n capact-system get values capact --all -o json | jq .global.gateway.auth.password -r`
     ```
 
     then configure `capectl`
@@ -66,12 +66,12 @@ The following tools are required:
 
 1. Make sure to separate workloads
 
-   For a better performance and durability, it is recommended to run MongoDB and RocketChat on separate nodes. MongoDB is by default configured to prefer being run on nodes with label `node.voltron.dev/type=storage`. We will also configure RocketChat affinity to not schedule pods on such nodes.
+   For a better performance and durability, it is recommended to run MongoDB and RocketChat on separate nodes. MongoDB is by default configured to prefer being run on nodes with label `node.capact.io/type=storage`. We will also configure RocketChat affinity to not schedule pods on such nodes.
 
    Select any worker node and replace the `<NODE NAME>` with the node name and run:
 
    ```bash
-   kubectl label node <NODE NAME> node.voltron.dev/type=storage
+   kubectl label node <NODE NAME> node.capact.io/type=storage
    ```
    
 1. Create an Action with the `cap.interface.productivity.rocketchat.install` interface:
@@ -97,7 +97,7 @@ The following tools are required:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: node.voltron.dev/type
+              - key: node.capact.io/type
                 operator: NotIn
                 values:
                 - storage
@@ -136,7 +136,7 @@ The following tools are required:
 
 ### Validate RocketChat high availability setup
 
-> **NOTE**: The following steps are optional. In this tutorial we used AWS EKS Voltron installation and all instructions will be based on this setup.
+> **NOTE**: The following steps are optional. In this tutorial we used AWS EKS Capact installation and all instructions will be based on this setup.
 
 Now, let's validate the high-availability setup for the RocketChat.
 
@@ -222,5 +222,5 @@ If you want to learn more about the project, check the [`go-voltron`](https://gi
 
 Here are some useful links:
 
-- [Tutorial which shows the first steps on how to develop OCF content for Voltron.](../content-creation/README.md)
-- [Documentation](../../../docs), which contains various investigations, enhancement proposals, tutorials, Voltron architecture and development guideline.
+- [Tutorial which shows the first steps on how to develop OCF content for Capact.](../content-creation/README.md)
+- [Documentation](../../../docs), which contains various investigations, enhancement proposals, tutorials, Capact architecture and development guideline.

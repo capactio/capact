@@ -4,7 +4,7 @@ Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszosto
 
 ##  Overview
 
-This document describes the approach for handling the TypeInstances (artifacts) between different Voltron components.
+This document describes the approach for handling the TypeInstances (artifacts) between different Capact components.
 
 <!-- toc -->
 
@@ -38,7 +38,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 ##  Motivation
 
-The Voltron project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions.
+The Capact project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions.
 
 All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local OCH.
 
@@ -162,7 +162,7 @@ We also need to take into account that the Action developer should be able to ha
 
 ####  Suggested solution
 
-Introduce the new property `input.additionalInput.typeInstances` and template language that can be used by Action workflow developers. The Voltron Engine needs to handle optional TypeInstances and render the final manifest based on the template syntax.
+Introduce the new property `input.additionalInput.typeInstances` and template language that can be used by Action workflow developers. The Capact Engine needs to handle optional TypeInstances and render the final manifest based on the template syntax.
 
 <details> <summary>Example</summary>
 
@@ -550,11 +550,11 @@ spec:
 
 Actors
 
--	Voltron Engine
+-	Capact Engine
 
 ####  Suggested solution
 
-If Action requires input TypeInstance, the Voltron Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
+If Action requires input TypeInstance, the Capact Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
 
 The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 
@@ -632,7 +632,7 @@ Actors
 
 ####  Suggested solution
 
-The Voltron Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Interface contains multiple output TypeInstances, or the Action developer wants to upload additional TypeInstances. To solve that problem, the Action developer needs to describe the relations between output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section. In that way, the Voltron Engine can add a step that can upload artifacts automatically.
+The Capact Engine could automatically add a step at the end of the Workflow to uploads all TypeInstances specified under `spec.output`. Unfortunately, it gets complicated when the Interface contains multiple output TypeInstances, or the Action developer wants to upload additional TypeInstances. To solve that problem, the Action developer needs to describe the relations between output TypeInstances as described in [this](#additional-output-typeinstances-and-relations-between-them) section. In that way, the Capact Engine can add a step that can upload artifacts automatically.
 
 To update TypeInstance in a workflow, the workflow output artifact name should match the workflow input artifact. The upload step overwrites TypeInstance using PUT-like operation with a proper `resourceVersion`. If there is a conflict, the workflow fails and can be retried.
 
@@ -761,7 +761,7 @@ spec:
               - name: "mysql-config"
 ```
 
-This solution was rejected as we found out that we can do it also automatically. Additional, it is similar to the populate and deletes TypeInstance actions which are also automatically injected by Voltron Engine.
+This solution was rejected as we found out that we can do it also automatically. Additionally, it is similar to the populating and deleting TypeInstance actions which are also automatically injected by Capact Engine.
 
 </details>
 
@@ -769,11 +769,11 @@ This solution was rejected as we found out that we can do it also automatically.
 
 Actors
 
--	Voltron Engine
+-	Capact Engine
 
 ####  Suggested solution
 
-Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Voltron Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` verb. In the same way, we can handle the deletion of the TypeInstances. The Voltron Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have a `delete` verb.
+Based on the suggestion from [this section](#populate-an-action-with-the-input-typeinstances). The Capact Engine adds an initial download step to the Workflow to download all TypeInstances specified under `spec.input` which have `read` verb. In the same way, we can handle the deletion of the TypeInstances. The Capact Engine adds a step at the end of the Workflow to delete all TypeInstances specified under `spec.input` which have a `delete` verb.
 
 <details> <summary>Example</summary>
 

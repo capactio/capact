@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "8.x.x"
@@ -62,7 +62,7 @@ spec:
                   from: "{{steps.create-db.outputs.artifacts.database}}"
             steps:
               - - name: render-create-db-script
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -86,7 +86,7 @@ spec:
                           data: ""
 
               - - name: fill-params-in-create-db-script
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -99,7 +99,7 @@ spec:
 
               - - name: create-db
                   template: create-psql-db
-                  voltron-outputTypeInstances:
+                  capact-outputTypeInstances:
                     - name: database
                       from: database
                   arguments:

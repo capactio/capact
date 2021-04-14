@@ -1,6 +1,6 @@
 apiVersion: v2
 name: cert-manager
-description: A Helm chart for CertManager for Voltron installation
+description: A Helm chart for CertManager for Capact installation
 
 type: application
 

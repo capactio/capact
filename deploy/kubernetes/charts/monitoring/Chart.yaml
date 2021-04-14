@@ -1,6 +1,6 @@
 apiVersion: v2
 name: monitoring
-description: A Helm chart for Voltron monitoring stack
+description: A Helm chart for Capact monitoring stack
 
 type: application
 

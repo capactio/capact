@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/pkg/errors"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"sigs.k8s.io/yaml"
 )
 

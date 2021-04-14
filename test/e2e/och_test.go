@@ -32,7 +32,7 @@ var _ = Describe("GraphQL API", func() {
 
 		Describe("should return ImplementationRevision", func() {
 			const (
-				interfacePath  = "cap.interface.voltron.validation.och.install"
+				interfacePath  = "cap.interface.capactio.capact.validation.och.install"
 				latestRevision = "2.0.0"
 				revision       = "1.0.0"
 			)
@@ -72,7 +72,7 @@ var _ = Describe("GraphQL API", func() {
 					Path:     interfacePath,
 					Revision: revision,
 				}
-				pathPattern := "cap.implementation.voltron.validation.own.*"
+				pathPattern := "cap.implementation.capactio.capact.validation.own.*"
 				filter := gqlpublicapi.ImplementationRevisionFilter{
 					PathPattern: ptr.String(pathPattern),
 				}
@@ -179,12 +179,12 @@ var _ = Describe("GraphQL API", func() {
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
 				TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
-					Path:     "com.voltron.ti",
+					Path:     "cap.type.capactio.capact.ti",
 					Revision: "0.1.0",
 				},
 				Attributes: []*gqllocalapi.AttributeReferenceInput{
 					{
-						Path:     "com.voltron.attribute1",
+						Path:     "cap.type.capactio.capact.attribute1",
 						Revision: "0.1.0",
 					},
 				},
@@ -203,7 +203,7 @@ var _ = Describe("GraphQL API", func() {
 				Metadata: &gqllocalapi.TypeInstanceResourceVersionMetadata{
 					Attributes: []*gqllocalapi.AttributeReference{
 						{
-							Path:     "com.voltron.attribute1",
+							Path:     "cap.type.capactio.capact.attribute1",
 							Revision: "0.1.0",
 						},
 					},
@@ -217,7 +217,7 @@ var _ = Describe("GraphQL API", func() {
 			Expect(typeInstance).To(Equal(&gqllocalapi.TypeInstance{
 				ID: createdTypeInstance.ID,
 				TypeRef: &gqllocalapi.TypeInstanceTypeReference{
-					Path:     "com.voltron.ti",
+					Path:     "cap.type.capactio.capact.ti",
 					Revision: "0.1.0",
 				},
 				Uses:                    []*gqllocalapi.TypeInstance{},

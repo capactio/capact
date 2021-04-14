@@ -1,6 +1,6 @@
-# Installing Voltron on Kubernetes
+# Installing Capact on Kubernetes
 
-Read this document to learn how to manage Voltron installation on Kubernetes.
+Read this document to learn how to manage Capact installation on Kubernetes.
 
 ## Prerequisites
 
@@ -11,9 +11,9 @@ Before you begin, make sure you have the following tools installed:
 
 ## Install
 
-To install Voltron, run the following steps:
+To install Capact, run the following steps:
 
-1. Install Voltron Custom Resource Definitions:
+1. Install Capact Custom Resource Definitions:
     
    ```bash
    kubectl apply -f ./crds
@@ -52,20 +52,20 @@ To install Voltron, run the following steps:
     ```
    
     > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
-    Installed Voltron components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
+    Installed Capact components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
     For more information check [instrumentation](../../docs/development.md#instrumentation) section.
 
-1. Install Voltron Helm chart:
+1. Install Capact Helm chart:
     
     ```bash
-    helm install voltron ./charts/voltron --create-namespace -n voltron-system
+    helm install capact ./charts/capact --create-namespace -n capact-system
     ```
 
 ## Upgrade
 
-> **NOTE:** Migration to a new major version of Voltron release may require manual actions. Before upgrading to a new major version, read the release instructions.
+> **NOTE:** Migration to a new major version of Capact release may require manual actions. Before upgrading to a new major version, read the release instructions.
 
-To upgrade Voltron installation, do the following steps:
+To upgrade Capact installation, do the following steps:
 
 1. Build CLI:
 
@@ -93,16 +93,16 @@ To upgrade Voltron installation, do the following steps:
                  
 ## Uninstall
 
-To uninstall Voltron, follow the steps:
+To uninstall Capact, follow the steps:
 
-1. Uninstall Voltron Helm chart:
+1. Uninstall Capact Helm chart:
     
     ```bash
-    helm uninstall voltron -n voltron-system
+    helm uninstall capact -n capact-system
     ```
 
-1. Delete all Voltron Custom Resource Definitions:
+1. Delete all Capact Custom Resource Definitions:
     
    ```bash
-   kubectl delete crd actions.core.projectvoltron.dev
+   kubectl delete crd actions.core.capact.io
    ``` 

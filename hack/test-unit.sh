@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script executes unit tests against whole Voltron codebase.
+# This script executes unit tests against whole Capact codebase.
 #
 # It requires Go to be installed.
 

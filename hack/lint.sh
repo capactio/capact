@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This scripts runs linters to ensure the correctness of the Voltron Go codebase.
+# This scripts runs linters to ensure the correctness of the Capact Go codebase.
 #
 # Golangci-lint dependencies can be installed on-demand.
 

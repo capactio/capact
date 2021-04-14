@@ -1,7 +1,7 @@
 # Untitled object in undefined Schema
 
 ```txt
-https://projectvoltron.dev/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes
+https://capact.io/schemas/common/metadata-attributes.json#/properties/metadata/allOf/1/properties/attributes
 ```
 
 Object that holds Attributes references.
@@ -14,7 +14,7 @@ Object that holds Attributes references.
 
 | Property              | Type     | Required | Nullable       | Defined by                                                                                                                                                |
 | :-------------------- | :------- | :------- | :------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Additional Properties | `object` | Optional | cannot be null | [Untitled schema](metadata-attributes-additionalproperties.md "https://projectvoltron.dev/schemas/common/metadata-attributes.json#/additionalProperties") |
+| Additional Properties | `object` | Optional | cannot be null | [Untitled schema](metadata-attributes-additionalproperties.md "https://capact.io/schemas/common/metadata-attributes.json#/additionalProperties") |
 
 ## Additional Properties
 
@@ -28,4 +28,4 @@ The attribute object contains OCF Attributes references. It provides generic cat
 
 *   cannot be null
 
-*   defined in: [Untitled schema](metadata-attributes-additionalproperties.md "https://projectvoltron.dev/schemas/common/metadata-attributes.json#/additionalProperties")
+*   defined in: [Untitled schema](metadata-attributes-additionalproperties.md "https://capact.io/schemas/common/metadata-attributes.json#/additionalProperties")

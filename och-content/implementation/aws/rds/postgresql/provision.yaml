@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
   attributes:
     cap.attribute.cloud.provider.aws:
       revision: 0.1.0
@@ -80,7 +80,7 @@ spec:
                   from: "{{steps.render-rds.outputs.artifacts.render}}"
             steps:
               - - name: create-module-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -195,7 +195,7 @@ spec:
                                 class: "{{ .class }}"
 
               - - name: fill-aws-params-in-module-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -208,8 +208,8 @@ spec:
                             prefix: aws
 
               - - name: terraform-apply
-                  voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-action: terraform.apply
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: terraform-release
                       from: terraform-release
                   arguments:
@@ -220,10 +220,10 @@ spec:
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
               - - name: render-postgresql
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: render
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -242,10 +242,10 @@ spec:
                               password: "<@ superuser.password @>"
 
               - - name: render-rds
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: rds-instance
                       from: render
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters

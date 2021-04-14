@@ -1,0 +1,16 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Attribute
+metadata:
+  prefix: cap.attribute.capactio.capact.validation.policy
+  name: most-preferred
+  displayName: Most preferred
+  description: Specifies that a given Implementation is most preferred
+  documentationURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

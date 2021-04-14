@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script installs new and upgrades existing Voltron components on a cluster.
+# This script installs new and upgrades existing Capact components on a cluster.
 #
 
 # standard bash error handling
@@ -20,7 +20,7 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
-    voltron::install_upgrade::charts
+    capact::install_upgrade::charts
 }
 
 main

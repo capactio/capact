@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://projectvoltron.dev/schemas/common/json-schema-type.json",
+  "$id": "https://capact.io/schemas/common/json-schema-type.json",
   "type": "object",
   "description": "The JSONSchema definition.",
   "properties": {

@@ -44,7 +44,7 @@
       }
     },
     "metadata": {
-      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+      "$ref": "https://capact.io/schemas/common/metadata.json"
     },
     "spec": {
       "$id": "#/properties/spec",
@@ -69,14 +69,14 @@
                 "description": "The input parameters for a given Action.",
                 "properties": {
                   "jsonSchema": {
-                    "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+                    "$ref": "https://capact.io/schemas/common/json-schema-type.json"
                   }
                 },
                 "additionalProperties": false
               }
             },
             "typeInstances": {
-              "$ref": "https://projectvoltron.dev/schemas/common/input-type-instances.json"
+              "$ref": "https://capact.io/schemas/common/input-type-instances.json"
             }
           }
         },
@@ -87,7 +87,7 @@
           "required": [],
           "properties": {
             "typeInstances": {
-              "$ref": "https://projectvoltron.dev/schemas/common/output-type-instances.json"
+              "$ref": "https://capact.io/schemas/common/output-type-instances.json"
             }
           },
           "additionalProperties": false

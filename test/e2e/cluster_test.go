@@ -25,7 +25,7 @@ var _ = Describe("Cluster check", func() {
 		}
 	})
 
-	Describe("Voltron cluster health", func() {
+	Describe("Capact cluster health", func() {
 		Context("Pods in cluster", func() {
 			It("should be in running phase (ignored kube-system and default)", func() {
 				k8sCfg, err := config.GetConfig()

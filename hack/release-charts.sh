@@ -22,7 +22,7 @@ readonly charts=(
   "kubed"
   "monitoring"
   "neo4j"
-  "voltron"
+  "capact"
 )
 
 # shellcheck source=./hack/lib/utilities.sh

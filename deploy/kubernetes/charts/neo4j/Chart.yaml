@@ -1,6 +1,6 @@
 apiVersion: v2
 name: neo4j
-description: A Helm chart for neo4j for Voltron installation
+description: A Helm chart for neo4j for Capact installation
 
 type: application
 

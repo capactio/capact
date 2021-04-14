@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "7.7.0-jdk11"
@@ -94,8 +94,8 @@ spec:
                   optional: true
             steps:
               - - name: install-db
-                  voltron-when: postgresql == nil # conditional execution
-                  voltron-action: postgresql.install
+                  capact-when: postgresql == nil # conditional execution
+                  capact-action: postgresql.install
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -104,25 +104,25 @@ spec:
                             superuser:
                               username: superuser
                             defaultDBName: postgres
-                  voltron-outputTypeInstances:
+                  capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql
 
               - - name: install-elasticsearch
-                  voltron-when: elasticsearch == nil # conditional execution
-                  voltron-action: elasticsearch.install
+                  capact-when: elasticsearch == nil # conditional execution
+                  capact-action: elasticsearch.install
                   arguments:
                     artifacts:
                       - name: input-parameters
                         raw:
                           data: |
                             replicas: 1
-                  voltron-outputTypeInstances:
+                  capact-outputTypeInstances:
                     - name: elasticsearch
                       from: elasticsearch
 
               - - name: render-create-db-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -137,8 +137,8 @@ spec:
                           data: |
 
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database
                       from: database
                   arguments:
@@ -149,7 +149,7 @@ spec:
                         from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -193,7 +193,7 @@ spec:
                           data: "prefix: installdb"
 
               - - name: fill-elasticsearch-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -205,7 +205,7 @@ spec:
                           data: "prefix: elastic"
 
               - - name: fill-createdb-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -217,7 +217,7 @@ spec:
                           data: "prefix: createdb"
 
               - - name: fill-input-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -230,8 +230,8 @@ spec:
                             prefix: input
 
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: bitbucket-config
                       from: additional
                     - name: bitbucket-helm-release

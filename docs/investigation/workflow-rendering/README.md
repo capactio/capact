@@ -2,7 +2,7 @@
 
 ## Overview
 
-This proof of concept shows a way to render an Argo workflow from a Voltron Action CR. It supports conditional execution, based on provided TypeInstances and allows us to reference other Interfaces.
+This proof of concept shows a way to render an Argo workflow from a Capact Action CR. It supports conditional execution, based on provided TypeInstances and allows us to reference other Interfaces.
 
 ```
 .

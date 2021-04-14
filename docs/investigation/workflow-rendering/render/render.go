@@ -11,8 +11,8 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	apiv1 "k8s.io/api/core/v1"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type Workflow struct {
@@ -36,9 +36,9 @@ type WorkflowStep struct {
 	Template  string         `json:"template,omitempty"`
 	Arguments wfv1.Arguments `json:"arguments,omitempty"`
 
-	VoltronWhen                *string                  `json:"voltron-when,omitempty"`
-	VoltronAction              *string                  `json:"voltron-action,omitempty"`
-	VoltronTypeInstanceOutputs []TypeInstanceDefinition `json:"voltron-outputTypeInstances,omitempty"`
+	CapactWhen                *string                  `json:"capact-when,omitempty"`
+	CapactAction              *string                  `json:"capact-action,omitempty"`
+	CapactTypeInstanceOutputs []TypeInstanceDefinition `json:"capact-outputTypeInstances,omitempty"`
 }
 
 type TypeInstanceDefinition struct {
@@ -139,11 +139,11 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 				for i := range parallelSteps {
 					step := parallelSteps[i]
 
-					if step.VoltronAction != nil {
+					if step.CapactAction != nil {
 						// Get Implementation for action
-						actionRef := resolveActionPathFromImports(importsCollection, *step.VoltronAction)
+						actionRef := resolveActionPathFromImports(importsCollection, *step.CapactAction)
 						if actionRef == "" {
-							return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.VoltronAction)
+							return nil, errors.Errorf("could not find full path in Implementation imports for action %q", *step.CapactAction)
 						}
 
 						implementation := r.ManifestStore.GetImplementationForInterface(actionRef, GetImplementationForInterfaceInput{Policies: policies})
@@ -169,7 +169,7 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 						// TODO(impl-issue): this should be changed to be fully rendered or associated with a proper Implementation metadata
 						r.RenderedWorkflow.Templates = append(r.RenderedWorkflow.Templates, importedWorkflow.Templates...)
 						step.Template = importedWorkflow.Entrypoint
-						step.VoltronAction = nil
+						step.CapactAction = nil
 					}
 
 					// Replace global artifacts names in references, based on previous gathered mappings.
@@ -192,8 +192,8 @@ func (r *Renderer) Render(ref v1alpha1.ManifestReference, parameters map[string]
 	return r.RenderedWorkflow, nil
 }
 
-func resolveActionPathFromImports(imports []types.Import, voltronAction string) string {
-	action := strings.SplitN(voltronAction, ".", 2)
+func resolveActionPathFromImports(imports []types.Import, capactAction string) string {
+	action := strings.SplitN(capactAction, ".", 2)
 	alias, name := action[0], action[1]
 	for _, i := range imports {
 		if *i.Alias == alias {
@@ -240,7 +240,7 @@ func (r *Renderer) renderFunc(prefix string,
 			for sIdx := range parallelSteps {
 				step := parallelSteps[sIdx]
 
-				for _, ti := range step.VoltronTypeInstanceOutputs {
+				for _, ti := range step.CapactTypeInstanceOutputs {
 					tiStep, template, artifactMappings := r.getOutputTypeInstanceTemplate(step, ti, prefix)
 					workflow.Templates = append(workflow.Templates, template)
 					tmpl.Steps = append(tmpl.Steps, ParallelSteps{&tiStep})
@@ -250,7 +250,7 @@ func (r *Renderer) renderFunc(prefix string,
 					}
 				}
 
-				step.VoltronTypeInstanceOutputs = nil
+				step.CapactTypeInstanceOutputs = nil
 			}
 		}
 	}
@@ -284,15 +284,15 @@ func (r *Renderer) removeConditionalActionSteps(instances []*v1alpha1.InputTypeI
 			for i := range parallelSteps {
 				step := parallelSteps[i]
 
-				if step.VoltronWhen != nil {
-					if result, err := r.evaluateWhenExpression(instances, *step.VoltronWhen); err != nil {
+				if step.CapactWhen != nil {
+					if result, err := r.evaluateWhenExpression(instances, *step.CapactWhen); err != nil {
 						return errors.Wrap(err, "while evaluating OCFWhen")
 					} else if result == false {
 						continue
 					}
 				}
 
-				step.VoltronWhen = nil
+				step.CapactWhen = nil
 
 				newParallelSteps = append(newParallelSteps, step)
 			}
@@ -335,7 +335,7 @@ func (r *Renderer) findActionSteps() []actionStepRef {
 		for _, parallelSteps := range tmpl.Steps {
 			for i := range parallelSteps {
 				step := parallelSteps[i]
-				if step.VoltronAction != nil {
+				if step.CapactAction != nil {
 					actionStepsRef = append(actionStepsRef, actionStepRef{
 						Path: tmpl.Name,
 						Step: step,

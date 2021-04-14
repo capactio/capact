@@ -1,4 +1,4 @@
-#  Voltron CI and CD
+#  Capact CI and CD
 
 This document describes jobs created to automate the process of testing, building, and deploying newly merged functionality.
 

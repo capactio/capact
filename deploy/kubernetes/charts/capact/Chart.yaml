@@ -1,0 +1,29 @@
+apiVersion: v2
+name: capact
+description: A top-level umbrella chart that exposes the global configurations for Capact components
+
+type: application
+
+# This is the chart version. This version number should be incremented each time you make changes
+# to the chart and its templates, including the app version.
+# Versions are expected to follow Semantic Versioning (https://semver.org/)
+version: 0.1.0
+
+# This is the version number of the application being deployed. This version number should be
+# incremented each time you make changes to the application. Versions are not expected to
+# follow Semantic Versioning. They should reflect the version the application is using.
+appVersion: 0.0.1
+
+dependencies:
+- name: engine
+  version: "0.0.1"
+  repository: "file://charts/engine"
+- name: gateway
+  version: "0.0.1"
+  repository: "file://charts/gateway"
+- name: och-local
+  version: "0.0.1"
+  repository: "file://charts/och-local"
+- name: och-public
+  version: "0.0.1"
+  repository: "file://charts/och-public"

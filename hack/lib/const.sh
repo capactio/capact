@@ -18,10 +18,10 @@ readonly STABLE_GQLGEN_VERSION=v0.13.0
 # Kubernetes installation
 #
 
-readonly VOLTRON_NAMESPACE="voltron-system"
-readonly VOLTRON_RELEASE_NAME="voltron"
-readonly KIND_DEV_CLUSTER_NAME="kind-dev-voltron"
-readonly KIND_CI_CLUSTER_NAME="kind-ci-voltron"
+readonly CAPACT_NAMESPACE="capact-system"
+readonly CAPACT_RELEASE_NAME="capact"
+readonly KIND_DEV_CLUSTER_NAME="kind-dev-capact"
+readonly KIND_CI_CLUSTER_NAME="kind-ci-capact"
 
 #
 # OCF
@@ -40,11 +40,11 @@ readonly GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION="0.1.0"
 # Development
 #
 
-readonly VOLTRON_ENABLE_POPULATOR="true"
-readonly VOLTRON_USE_TEST_SETUP="false"
+readonly CAPACT_ENABLE_POPULATOR="true"
+readonly CAPACT_USE_TEST_SETUP="false"
 
 #
 # Cluster Configuration
 #
 
-readonly VOLTRON_INCREASE_RESOURCE_LIMITS="true"
+readonly CAPACT_INCREASE_RESOURCE_LIMITS="true"

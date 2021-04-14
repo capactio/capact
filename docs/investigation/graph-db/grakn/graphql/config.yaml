@@ -20,7 +20,7 @@ resolver:
 struct_tag: json
 
 autobind:
-  - "projectvoltron.dev/voltron/poc/graph-db/grakn/graphql"
+  - "capact.io/capact/poc/graph-db/grakn/graphql"
 
 # Uncomment and regenerate the schema
 #models:

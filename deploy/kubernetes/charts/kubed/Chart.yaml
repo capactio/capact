@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kubed
-description: A Helm chart for kubed for Voltron installation
+description: A Helm chart for kubed for Capact installation
 
 type: application
 

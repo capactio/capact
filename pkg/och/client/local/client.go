@@ -18,7 +18,7 @@ const (
 	httpRequestTimeout = 30 * time.Second
 )
 
-// Client used to communicate with the Voltron Local OCH GraphQL APIs
+// Client used to communicate with the Capact Local OCH GraphQL APIs
 type Client struct {
 	client *graphql.Client
 }

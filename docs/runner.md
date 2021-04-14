@@ -90,11 +90,11 @@ The following diagram visualizes how Engine runs an Action using built-in Argo W
 
 ![](./assets/runner-arch.svg)
 
-1. Voltron Engine watches the Action custom resources. Once the Action is rendered and a user approved it, Engine executes it.
+1. Capact Engine watches the Action custom resources. Once the Action is rendered and a user approved it, Engine executes it.
 
-2. Voltron Engine creates a Kubernetes Secret with the [input data](#input-data).
+2. Capact Engine creates a Kubernetes Secret with the [input data](#input-data).
 
-3. Voltron Engine creates a Kubernetes Job with the Argo Workflow Runner, and mounts the Secret from the 2nd step as the volume.
+3. Capact Engine creates a Kubernetes Job with the Argo Workflow Runner, and mounts the Secret from the 2nd step as the volume.
 
 4. Argo Workflow Runner reads the input data from the filesystem and based on it creates the Argo Workflow custom resource.
 
@@ -120,7 +120,7 @@ platform:                    # Specifies platform-specific values. Currently, on
   namespace: "k8s-ns-name"      # Specifies the Kubernetes Namespace where Action is executed. The runner must create all Kubernetes resources in this Namespace.
   serviceAccountName: "sa-name" # Specifies the Kubernetes ServiceAccount. The runner must use it to create all Kubernetes resources.        
   ownerRef: # Specifies owner reference details (Action Custom Resource controller)
-    apiVersion: core.projectvoltron.dev/v1alpha1 # Specifies the owner resource apiVersion
+    apiVersion: core.capact.io/v1alpha1 # Specifies the owner resource apiVersion
     kind: Action # Specifies the owner resource kind
     blockOwnerDeletion: true # The owner cannot be deleted before the referenced object
     controller: true # Specifies whether the reference points to the managing controller

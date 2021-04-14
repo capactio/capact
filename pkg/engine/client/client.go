@@ -12,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// Client used to communicate with the Voltron Engine GraphQL API
+// Client used to communicate with the Capact Engine GraphQL API
 type Client struct {
 	client *graphql.Client
 }

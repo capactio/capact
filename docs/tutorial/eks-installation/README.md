@@ -1,6 +1,6 @@
 # Capact EKS deployment
 
-This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (Amazon EKS) cluster with full Voltron installation using Terraform.
+This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (Amazon EKS) cluster with full Capact installation using Terraform.
 
 <!-- toc -->
 
@@ -53,7 +53,7 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
   ```
   ```bash
   {
-    "aws-1.cluster.projectvoltron.dev": [
+    "aws-1.cluster.capact.dev": [
       "ns-1260.awsdns-29.org",
       "ns-1586.awsdns-06.co.uk",
       "ns-444.awsdns-55.com",
@@ -88,13 +88,13 @@ The bastion host can access the Capact gateway and has `capectl` preinstalled.
 2. Get the address and credentials to the Capact gateway:
   ```bash
   # get the gateway address
-  kubectl -n voltron-system get ingress voltron-gateway -ojsonpath='{.spec.rules[0].host}'
+  kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}'
 
   # get the gateway username
-  kubectl -n voltron-system get deployment voltron-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}'
+  kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}'
 
   # get the gateway password
-  kubectl -n voltron-system get deployment voltron-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}'
+  kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}'
   ```
 
 3. Login the gateway:

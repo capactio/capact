@@ -6,12 +6,12 @@ metadata:
   prefix: cap.type.database.postgresql
   displayName: PostgreSQL user
   description: Defines PostgreSQL user
-  documentationURL: https://projectvoltron.dev
-  supportURL: https://projectvoltron.dev
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 spec:
   jsonSchema:
     value: |-

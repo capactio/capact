@@ -9,8 +9,8 @@ metadata:
   documentationURL: https://cloud.google.com/cloudsql
   supportURL: https://cloud.google.com/cloudsql
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: install
   path: cap.implementation.gcp.cloudsql.postgresql.install
   prefix: cap.implementation.gcp.cloudsql.postgresql
@@ -73,7 +73,7 @@ spec:
                   from: "{{steps.cloudsql-run.outputs.artifacts.additional}}"
             steps:
               - - name: create-cloudsql-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -105,8 +105,8 @@ spec:
                                   username: "{{ .Username }}"
                                   password: "{{ .Password }}"{% endraw %}
               - - name: cloudsql-run
-                  voltron-action: cloudsql.run
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-action: cloudsql.run
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
                     - name: cloudsql-instance

@@ -13,9 +13,9 @@
 - **`spec`** *(object)*: A container for the Implementation specification definition. Cannot contain additional properties.
   - **`appVersion`** *(string)*: The supported application versions in SemVer2 format. Cannot contain additional properties.
   - **`additionalInput`** *(object)*: Specifies additional input for a given Implementation. Cannot contain additional properties.
-    - **`typeInstances`**: Refer to *https://projectvoltron.dev/schemas/common/input-type-instances.json*.
+    - **`typeInstances`**: Refer to *https://capact.io/schemas/common/input-type-instances.json*.
   - **`additionalOutput`** *(object)*: Specifies additional output for a given Implementation. Cannot contain additional properties.
-    - **`typeInstances`**: Refer to *https://projectvoltron.dev/schemas/common/output-type-instances.json*.
+    - **`typeInstances`**: Refer to *https://capact.io/schemas/common/output-type-instances.json*.
   - **`outputTypeInstanceRelations`** *(object)*: Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to OCH after workflow run. Can contain additional properties.
   - **`implements`** *(array)*: Defines what kind of interfaces this implementation fulfills.
     - **Items** *(object)*: Cannot contain additional properties.

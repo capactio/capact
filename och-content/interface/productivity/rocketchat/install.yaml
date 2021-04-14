@@ -10,9 +10,9 @@ metadata:
   supportURL: https://rocket.chat/
   iconURL: https://528977-1685022-raikfcquaxqncofqfm.stackpathdns.com/assets/img/header/logo.svg
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   input:

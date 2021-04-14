@@ -1,6 +1,6 @@
 # Terminology
 
-This document lists and explains all terms used through the Voltron documentation.
+This document lists and explains all terms used through the Capact documentation.
 
 > There are only two hard things in Computer Science: cache invalidation and naming things.
 > 

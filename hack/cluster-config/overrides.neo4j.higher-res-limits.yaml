@@ -1,4 +1,4 @@
-# Voltron overrides, which are used on local machine and GKE cluster when INCREASE_RESOURCE_LIMITS=true.
+# Capact overrides, which are used on local machine and GKE cluster when INCREASE_RESOURCE_LIMITS=true.
 
 neo4j:
   core:

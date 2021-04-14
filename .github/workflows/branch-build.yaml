@@ -268,7 +268,7 @@ jobs:
         run: |
           ./capact action delete \
             --name-regex 'capact-upgrade-*' \
-            --namespace 'voltron-system' \
+            --namespace 'capact-system' \
             --phase 'SUCCEEDED'
 
 
@@ -283,7 +283,7 @@ jobs:
         if: ${{ always() && needs.update-cluster.result != 'success' }}
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_USERNAME: Voltron CI Notifier
+          SLACK_USERNAME: Capact CI Notifier
           SLACK_COLOR: 'red'
           SLACK_TITLE: 'Message'
           SLACK_CHANNEL: 'capact-dev-private'

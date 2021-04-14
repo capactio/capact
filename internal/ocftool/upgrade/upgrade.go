@@ -30,8 +30,7 @@ import (
 const (
 	LatestVersionTag = "@latest"
 
-	capactSystemNS = "voltron-system"
-	capactOldName  = "voltron"
+	capactSystemNS = "capact-system"
 	capactName     = "capact"
 
 	capactioHelmRepoMaster    = "https://storage.googleapis.com/capactio-master-charts"
@@ -310,11 +309,6 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 			return nil, err
 		}
 
-		// TODO: remove after rebranding
-		if unpacked.Name == capactOldName {
-			unpacked.Name = capactName
-		}
-
 		inputTI = append(inputTI, &gqlengine.InputTypeInstanceData{
 			Name: fmt.Sprintf("%s-helm-release", unpacked.Name),
 			ID:   ti.ID,
@@ -363,7 +357,7 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 	// them via Created time.
 	if repoURL == capactioHelmRepoMaster {
 		sortFn = func(in *repo.IndexFile) {
-			sort.Sort(ByCreatedTime(in.Entries[capactOldName]))
+			sort.Sort(ByCreatedTime(in.Entries[capactName]))
 		}
 	}
 
@@ -384,7 +378,7 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 	}
 	sortFn(i)
 
-	return i.Entries[capactOldName][0].Version, nil
+	return i.Entries[capactName][0].Version, nil
 }
 
 type ByCreatedTime repo.ChartVersions

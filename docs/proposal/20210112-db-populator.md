@@ -59,9 +59,9 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
      supportURL: https://www.atlassian.com/software/jira
      iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
      maintainers:
-       - email: team-dev@projectvoltron.dev
-         name: Voltron Dev Team
-         url: https://projectvoltron.dev
+       - email: team-dev@capact.io
+         name: Capact Dev Team
+         url: https://capact.io
    signature:
      och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
    ```
@@ -80,14 +80,14 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
        "description": "Jira Application",
        "maintainers": [
          {
-           "name": "Voltron Dev Team",
-           "email": "team-dev@projectvoltron.dev",
-           "url": "https://projectvoltron.dev"
+           "name": "Capact Dev Team",
+           "email": "team-dev@capact.io",
+           "url": "https://capact.io"
          }
        ],
-       "documentationURL": "https://projectvoltron.dev",
-       "supportURL": "https://projectvoltron.dev/contact",
-       "iconURL": "https://projectvoltron.dev/favicon.ico"
+       "documentationURL": "https://capact.io",
+       "supportURL": "https://capact.io/contact",
+       "iconURL": "https://capact.io/favicon.ico"
      },
      "signature": {
        "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"

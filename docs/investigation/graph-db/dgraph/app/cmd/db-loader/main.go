@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/internal"
-	"github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/internal/client"
+	"capact.io/capact/docs/investigation/graph-db/dgraph/app/internal"
+	"capact.io/capact/docs/investigation/graph-db/dgraph/app/internal/client"
 
 	"github.com/dgraph-io/dgo/v200/protos/api"
 )

@@ -5,13 +5,13 @@ This document describes how to prepare content which uses Terraform Runner.
 ## Prerequisites
 
 - [MinIO client](https://min.io/download)
-- [Voltron development cluster](../../development.md#development-cluster)
+- [Capact development cluster](../../development.md#development-cluster)
     
     > **NOTE:** Use `ENABLE_POPULATOR=false` environmental variable, as you will manually upload your OCF manifests into OCH.
 
 ## MinIO access configuration
 
-One of Voltron components is [Minio](https://min.io), which is an object store. It can be used for storing modules.
+One of Capact components is [Minio](https://min.io), which is an object store. It can be used for storing modules.
 Terraform Runner internally uses [go-getter](https://github.com/hashicorp/go-getter) so different sources are supported.
 
 To use Minio to upload modules, enable port forward:
@@ -60,9 +60,9 @@ As you port-forwarded in-cluster MinIO installation, you can check that by using
     wget http://localhost:9000/terraform/cloudsql/cloudsql.tgz
     ````
 
-## Preparing Voltron manifests
+## Preparing Capact manifests
 
-To use the module, you need to prepare Voltron manifests - InterfaceGroup, Interface, Implementation and Types.
+To use the module, you need to prepare Capact manifests - InterfaceGroup, Interface, Implementation and Types.
 
 In this example, we have them all already defined for PostgreSQL installation. To create your own manifests, you can base on them:
 - [InterfaceGroup](../../och-content/interface/database/postgresql.yaml)

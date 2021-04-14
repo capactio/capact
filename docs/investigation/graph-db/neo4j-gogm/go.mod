@@ -1,4 +1,4 @@
-module projectvoltron.dev/voltron/poc/graph-db/neo4j-gogm
+module capactio/capact/poc/graph-db/neo4j-gogm
 
 go 1.15
 

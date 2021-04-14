@@ -2,7 +2,7 @@
 # or (if missing) calculated from current usage.
 kube-prometheus-stack:
   commonLabels:
-    voltron.dev/scrape-metrics: "true"
+    capact.io/scrape-metrics: "true"
 
   # Deploy a Prometheus instance
   prometheus:
@@ -11,7 +11,7 @@ kube-prometheus-stack:
     prometheusSpec:
       serviceMonitorSelector:
         matchLabels:
-          voltron.dev/scrape-metrics: "true"
+          capact.io/scrape-metrics: "true"
       resources:
         requests:
           cpu: 50m

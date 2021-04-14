@@ -1,7 +1,7 @@
 # Untitled object in undefined Schema
 
 ```txt
-https://projectvoltron.dev/schemas/implementation.json
+https://capact.io/schemas/implementation.json
 ```
 
 The description of an action and its prerequisites (dependencies). An implementation implements at least one interface.
@@ -140,7 +140,7 @@ A container for the Implementation specification definition.
 Reference this group by using
 
 ```json
-{"$ref":"https://projectvoltron.dev/schemas/implementation.json#/definitions/requireEntity"}
+{"$ref":"https://capact.io/schemas/implementation.json#/definitions/requireEntity"}
 ```
 
 | Property                              | Type     | Required | Nullable       | Defined by                                                                                                                                                                             |

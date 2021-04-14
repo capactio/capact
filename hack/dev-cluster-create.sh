@@ -23,7 +23,7 @@ main() {
 
     export REPO_DIR=$REPO_ROOT_DIR
 
-    voltron::validate::tools
+    capact::validate::tools
 
     export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
@@ -32,14 +32,14 @@ main() {
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
     export CLUSTER_TYPE="KIND"
-    voltron::update::images_on_kind
+    capact::update::images_on_kind
 
-    voltron::install_upgrade::charts
+    capact::install_upgrade::charts
 
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
       shout "Skipping updating /etc/hosts cause DISABLE_HOSTS_UPDATE is set to true."
     else
-      host::update::voltron_hosts
+      host::update::capact_hosts
     fi
 
     if [[ "${DISABLE_ADDING_TRUSTED_CERT:-"false"}" == "true" ]]; then

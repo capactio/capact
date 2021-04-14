@@ -19,7 +19,7 @@ type Config struct {
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
 	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
-	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
+	LocalOCHEndpoint string                       `envconfig:"default=http://capact-och-local.capact-system/graphql"`
 	Logger           logger.Config
 }
 
