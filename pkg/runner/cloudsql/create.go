@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/runner"
+	"capact.io/capact/pkg/runner"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"

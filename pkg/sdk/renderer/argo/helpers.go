@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
 )
 
 func interfaceRefToOCH(in types.InterfaceRef) ochpublicgraphql.InterfaceReference {

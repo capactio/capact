@@ -1,7 +1,7 @@
 package clusterpolicy
 
 import (
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type ClusterPolicy struct {

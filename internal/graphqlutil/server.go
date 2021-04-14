@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
 
-	"projectvoltron.dev/voltron/pkg/httputil"
+	"capact.io/capact/pkg/httputil"
 )
 
 func NewHTTPServer(log *zap.Logger, execSchema graphql.ExecutableSchema, addr, name string) httputil.StartableServer {

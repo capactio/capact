@@ -17,7 +17,7 @@ struct_tag: json
 # graphql. These normally come from the db or a remote api.
 models:
   Timestamp:
-    model: "projectvoltron.dev/voltron/pkg/engine/api/graphql.Timestamp"
+    model: "capact.io/capact/pkg/engine/api/graphql.Timestamp"
   JSON:
-    model: "projectvoltron.dev/voltron/pkg/engine/api/graphql.JSON"
+    model: "capact.io/capact/pkg/engine/api/graphql.JSON"
 

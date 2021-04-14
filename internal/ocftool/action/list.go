@@ -6,10 +6,10 @@ import (
 	"io"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	gqlengine "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
+	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/olekukonko/tablewriter"
 )

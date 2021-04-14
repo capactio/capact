@@ -3,10 +3,10 @@ package config
 import (
 	"fmt"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ocftool/credstore"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"

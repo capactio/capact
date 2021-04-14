@@ -3,8 +3,8 @@ package public
 import (
 	"sort"
 
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"github.com/Masterminds/semver/v3"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsOptions) []gqlpublicapi.ImplementationRevision {

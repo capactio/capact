@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/graphqlutil"
+	"capact.io/capact/internal/graphqlutil"
 )
 
 type Timestamp struct {

@@ -12,10 +12,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
-	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/iosafety"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	engineclient "capact.io/capact/pkg/engine/client"
+	"capact.io/capact/pkg/httputil"
+	"capact.io/capact/pkg/iosafety"
+	ochclient "capact.io/capact/pkg/och/client"
 )
 
 type GatewayConfig struct {

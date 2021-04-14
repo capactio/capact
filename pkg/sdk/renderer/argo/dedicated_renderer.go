@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"strings"
 
-	"projectvoltron.dev/voltron/internal/ptr"
+	"capact.io/capact/internal/ptr"
 
-	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"github.com/Knetic/govaluate"
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"

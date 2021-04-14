@@ -3,9 +3,9 @@ package public
 import (
 	"testing"
 
+	"capact.io/capact/internal/ptr"
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"github.com/stretchr/testify/assert"
-	"projectvoltron.dev/voltron/internal/ptr"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 func TestImplementationAttributeFilters(t *testing.T) {

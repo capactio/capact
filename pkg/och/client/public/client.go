@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"github.com/avast/retry-go"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"

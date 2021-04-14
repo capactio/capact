@@ -3,7 +3,7 @@ package action
 import (
 	"os"
 
-	"projectvoltron.dev/voltron/internal/ocftool/action"
+	"capact.io/capact/internal/ocftool/action"
 
 	"github.com/spf13/cobra"
 )

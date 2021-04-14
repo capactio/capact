@@ -477,7 +477,7 @@ paragraph.
 #### New `Rollback` Custom Resource
 
 ```yaml
-apiVersion: core.projectvoltron.dev/v1alpha1
+apiVersion: core.capact.io/v1alpha1
 kind: Rollback
 metadata:
   name: "jira-uninstall"

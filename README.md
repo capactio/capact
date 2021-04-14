@@ -75,7 +75,8 @@ The repository has the following structure:
 
 ## Components
 
-The following Capact components are in this repository:
+The following Capact components reside in this repository:
+
 - [Argo runner](./cmd/argo-runner) - Runner, which executes Argo workflows.
 - [CloudSQL runner](./cmd/cloudsql-runner) - Runner, which manages Google CloudSQL instances.
 - [Gateway](./cmd/gateway) - GraphQL Gateway, which consolidates Capact GraphQL APIs in one endpoint.

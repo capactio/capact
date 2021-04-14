@@ -4,11 +4,11 @@ import (
 	"log"
 	"strings"
 
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/action"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/config"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub"
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/cmd/ocftool/cmd/action"
+	"capact.io/capact/cmd/ocftool/cmd/config"
+	"capact.io/capact/cmd/ocftool/cmd/hub"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/spf13/cobra"

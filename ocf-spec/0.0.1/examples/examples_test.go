@@ -5,8 +5,8 @@ package examples
 import (
 	"testing"
 
-	"projectvoltron.dev/voltron/internal/ocftool/schema"
-	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+	"capact.io/capact/internal/ocftool/schema"
+	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/stretchr/testify/require"
 )

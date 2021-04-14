@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
-	"projectvoltron.dev/voltron/internal/ocftool/upgrade"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool/upgrade"
 
 	"github.com/spf13/cobra"
 )

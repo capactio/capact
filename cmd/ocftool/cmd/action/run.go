@@ -3,8 +3,8 @@ package action
 import (
 	"os"
 
+	"capact.io/capact/internal/ocftool/action"
 	"github.com/spf13/cobra"
-	"projectvoltron.dev/voltron/internal/ocftool/action"
 )
 
 func NewRun() *cobra.Command {

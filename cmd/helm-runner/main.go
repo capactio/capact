@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"projectvoltron.dev/voltron/pkg/runner"
-	"projectvoltron.dev/voltron/pkg/runner/helm"
-	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
+	"capact.io/capact/pkg/runner"
+	"capact.io/capact/pkg/runner/helm"
+	statusreporter "capact.io/capact/pkg/runner/status-reporter"
 
 	"github.com/vrischmann/envconfig"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"

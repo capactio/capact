@@ -13,13 +13,13 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"projectvoltron.dev/voltron/internal/ptr"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	"capact.io/capact/internal/ptr"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	ochclient "capact.io/capact/pkg/och/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	engine "projectvoltron.dev/voltron/pkg/engine/client"
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
+	engine "capact.io/capact/pkg/engine/client"
 )
 
 const clusterPolicyConfigMapKey = "cluster-policy.yaml"

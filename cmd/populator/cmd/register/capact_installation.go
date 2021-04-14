@@ -4,8 +4,8 @@ import (
 	"github.com/docker/cli/cli"
 	"github.com/spf13/cobra"
 
-	"projectvoltron.dev/voltron/internal/installation"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/installation"
+	"capact.io/capact/internal/ocftool/heredoc"
 )
 
 // TODO: support configuration both via flags and environment variables

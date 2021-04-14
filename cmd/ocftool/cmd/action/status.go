@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"io"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/argoproj/argo/v2/cmd/argo/commands"
 	argocli "github.com/argoproj/argo/v2/cmd/argo/commands/client"

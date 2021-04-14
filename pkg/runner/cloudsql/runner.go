@@ -3,7 +3,7 @@ package cloudsql
 import (
 	"context"
 
-	"projectvoltron.dev/voltron/pkg/runner"
+	"capact.io/capact/pkg/runner"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

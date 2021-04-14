@@ -3,9 +3,9 @@ package helm
 import (
 	"context"
 
+	"capact.io/capact/pkg/runner"
 	"go.uber.org/zap"
 	"k8s.io/client-go/rest"
-	"projectvoltron.dev/voltron/pkg/runner"
 )
 
 var _ runner.Runner = &runnerAdapter{}

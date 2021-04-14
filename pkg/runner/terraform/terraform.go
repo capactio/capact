@@ -15,7 +15,7 @@ import (
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
 
-	"projectvoltron.dev/voltron/internal/getter"
+	"capact.io/capact/internal/getter"
 )
 
 const (

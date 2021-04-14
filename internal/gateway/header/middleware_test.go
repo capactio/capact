@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"capact.io/capact/internal/gateway/header"
 	"github.com/stretchr/testify/require"
-	"projectvoltron.dev/voltron/internal/gateway/header"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"

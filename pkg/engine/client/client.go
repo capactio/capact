@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"

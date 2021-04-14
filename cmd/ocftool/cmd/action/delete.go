@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/action"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/action"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/spf13/cobra"
 )

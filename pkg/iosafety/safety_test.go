@@ -4,7 +4,7 @@ import (
 	"io"
 	"testing"
 
-	"projectvoltron.dev/voltron/pkg/iosafety"
+	"capact.io/capact/pkg/iosafety"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

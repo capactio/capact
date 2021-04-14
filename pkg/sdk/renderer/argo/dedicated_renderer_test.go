@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"gotest.tools/assert"
-	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 func TestResolveActionFromImports(t *testing.T) {

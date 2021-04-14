@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer"
 
 	"github.com/pkg/errors"
 )

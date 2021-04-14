@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	"projectvoltron.dev/voltron/pkg/runner"
-	"projectvoltron.dev/voltron/pkg/runner/cloudsql"
-	statusreporter "projectvoltron.dev/voltron/pkg/runner/status-reporter"
+	"capact.io/capact/pkg/runner"
+	"capact.io/capact/pkg/runner/cloudsql"
+	statusreporter "capact.io/capact/pkg/runner/status-reporter"
 
 	"github.com/vrischmann/envconfig"
 	"google.golang.org/api/option"

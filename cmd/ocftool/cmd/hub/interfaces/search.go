@@ -7,11 +7,11 @@ import (
 	"os"
 	"strings"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ocftool/heredoc"
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"github.com/hokaccha/go-prettyjson"
 	"github.com/olekukonko/tablewriter"

@@ -13,11 +13,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"projectvoltron.dev/voltron/internal/ptr"
-	gqllocalapi "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
+	"capact.io/capact/internal/ptr"
+	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	ochclient "capact.io/capact/pkg/och/client"
+	"capact.io/capact/pkg/och/client/public"
 )
 
 var _ = Describe("GraphQL API", func() {

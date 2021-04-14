@@ -3,8 +3,8 @@ package installation
 import (
 	"strings"
 
+	"capact.io/capact/internal/logger"
 	"github.com/vrischmann/envconfig"
-	"projectvoltron.dev/voltron/internal/logger"
 )
 
 // TypeInstancesConfig holds configuration for CapactRegister
