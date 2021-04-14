@@ -378,7 +378,16 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 	}
 	sortFn(i)
 
-	return i.Entries[capactName][0].Version, nil
+	capactEntry, ok := i.Entries[capactName]
+	if !ok {
+		return "", fmt.Errorf("no entry %q in Helm Chart repository index.yaml", capactName)
+	}
+
+	if len(capactEntry) == 0 {
+		return "", fmt.Errorf("no Chart versions for entry %q in Helm Chart repository index.yaml", capactName)
+	}
+
+	return capactEntry[0].Version, nil
 }
 
 type ByCreatedTime repo.ChartVersions
