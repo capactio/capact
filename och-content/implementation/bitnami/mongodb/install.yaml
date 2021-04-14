@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.bitnami.mongodb
-  name: install
-  displayName: Install MongoDB database
-  description: Action which installs MongoDB database via Helm chart
+  name: install-advanced
+  displayName: Install production-ready MongoDB database
+  description: Action which installs MongoDB database via Helm chart with production ready parameters
   documentationURL: https://github.com/bitnami/charts
   supportURL: https://bitnami.com
   license:
@@ -59,7 +59,7 @@ spec:
           - name: mongo-install
             inputs:
               artifacts:
-                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+                - name: input-parameters
             outputs:
               artifacts:
                 - name: mongodb
@@ -80,16 +80,118 @@ spec:
                               repo: "https://charts.bitnami.com/bitnami"
                               version: 10.3.1
                             values:
+                              image:
+                                registry: <@ image.registry | default('docker.io') @>
+                                repository: <@ image.registry | default('bitnami/mongodb') @>
+                                tag:  <@ image.registry | default('4.4.2-debian-10-r27') @>
+                                pullSecrets: <@ image.registry | default([]) @>
+                                pullPolicy: <@ input.image.pullPollicy | default("IfNotPresent") @>
+
+                              architecture: <@ architecture | default('replicaset') @>
+                              auth:
+                                username: <@ auth.username | default('mongo') @>
+                                password: <@ auth.password | default(random_word(length=16)) @>
+                                database: <@ auth.database | default('mongo') @>
+                                rootPassword: <@ auth.rootPassword | default(random_word(length=16)) @>
+                                existingSecret: <@ auth.existingSecret | default('') @>
+
+                              replicaSetName: <@ useStatefulSet | default('rs0') @>
+                              replicaSetHostnames: <@ replicaSetHostnames | default(true) @>
+                              directoryPerDB: <@ directoryPerDB | default(false) @>
+                              systemLogVerbosity: <@ systemLogVerbosity | default(0) @>
+                              disableSystemLog: <@ disableSystemLog | default(false) @>
+                              disableJavascript: <@ disableJavascript | default(false) @>
+                              configuration: <@ configuration | default({}) @>
+                              existingConfigmap: <@ configuration | default('') @>
+                              initdbScripts: <@ initdbScripts | default({}) @>
+                              initdbScriptsConfigMap: <@ initdbScriptsConfigMap | default('') @>
+
+                              extraFlags: <@ extraFlags | default([]) @>
+                              extraEnvVars: <@ extraEnvVars | default([]) @>
+                              extraEnvVarsCM: <@ extraEnvVarsCM | default('') @>
+                              extraEnvVarsSecret: @< extraEnvVarsSecret | default('') @>
+
+                              tls:
+                                enabled: <@ tls.enabled | default(false) @>
+                                caCert: "<@ tls.caCert | default('') @>"
+                                caKey: "<@ tls.caKey | default('') @>"
+
+                              replicaCount: <@ replicas | default(3) @>
+                              labels: <@ labels | default({}) @>
+                              annotations: <@ annotations | default({}) @>
+                              podManagementPolicy: <@ podManagementPolicy | default('OrderedReady') @>
+                              strategyType: <@ strategyType | default('RollingUpdate') @>
+                              podLabels: <@ podLabels | default({}) @>
+                              podAnnotations: <@ podAnnotations | default({}) @>
+                              priorityClassName: <@ priorityClassName | default('') @>
+                              podAffinityPreset: <@ podAffinityPreset | default('') @>
+                              podAntiAffinityPreset: <@ podAntiAffinityPreset | default('soft') @>
+                              nodeAffinityPreset:
+                                type: <@ nodeAffinityPreset.type | default('') @>
+                                key: <@ nodeAffinityPreset.key | default('') @>
+                                values: <@ nodeAffinityPreset.values | default([]) @>
+                              affinity: <@ affinity | default({}) @>
+                              nodeSelector: <@ nodeSelector | default({}) @>
+                              tolerations: <@ tolerations | default([]) @>
+
+                              resources:
+                                limits:
+                                  cpu: <@ resources.limits.cpu | default('1') @>
+                                  memory: <@ resources.limits.memory | default('1Gi') @>
+                                requests:
+                                  cpu: <@ resources.requests.cpu | default('500m') @>
+                                  memory: <@ resources.requests.memory | default('1Gi') @>
+
+                              livenessProbe:
+                                enabled: <@ livenessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ livenessProbe.initialDelaySeconds | default(60) @>
+                                periodSeconds: <@ livenessProbe.periodSeconds | default(15) @>
+                                timeoutSeconds: <@ livenessProbe.timeoutSeconds | default(5) @>
+                                failureThreshold: <@ livenessProbe.failureThreshold | default(1) @>
+                                successThreshold: <@ livenessProbe.successThreshold | default(1) @>
+                              
+                              readinessProbe:
+                                enabled: <@ livenessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ livenessProbe.initialDelaySeconds | default(60) @>
+                                periodSeconds: <@ livenessProbe.periodSeconds | default(15) @>
+                                timeoutSeconds: <@ livenessProbe.timeoutSeconds | default(5) @>
+                                failureThreshold: <@ livenessProbe.failureThreshold | default(1) @>
+                                successThreshold: <@ livenessProbe.successThreshold | default(1) @>
+
+                              initContainers: <@ initContainers | default({}) @>
+                              sidecars: <@ sidecars | default({}) @>
+                              extraVolumeMounts: <@ extraVolumeMounts | default({}) @>
+                              extraVolumes <@ extraVolumes | default({}) @>
+
+                              externalAccess:
+                                enabled: <@ externalAccess.enabled | default(false) @>
+                                autoDiscovery:
+                                  enabled: <@ externalAccess.autoDiscovery.enabled | default(false) @>
+                                service:
+                                  type: <@ externalAccess.service.type | default('LoadBalancer') @>
+                                  port: <@ externalAccess.service.port | default(27017) @>
+                                  loadBalancerIPs: <@ externalAccess.service.loadBalancerIPs | default([]) @>
+                                  loadBalancerSourceRanges: <@ externalAccess.service.loadBalancerSourceRanges | default([]) @>
+                                  domain: <@ externalAccess.service.domain | default('') @>
+                                  nodePorts: <@ externalAccess.service.nodePorts | default([]) @>
+                                  annotations: <@ externalAccess.service.annotations | default({}) @>
+
+                              perisistence:
+                                enabled: <@ persistence.enabled | default(true) @>
+                                storageClass: <@ persistence.storageClass | default('null') @>
+                                accessMode: <@ persistence.accessMode | default('ReadWriteOnce') @>
+                                size: <@ persistence.size | default('8Gi') @>
+
                               volumePermissions:
                                 enabled: true
-                              auth:
-                                username: <@ user.username | default('mongo') @>
-                                password: <@ user.password | default(random_word(length=16)) @>
-                                database: <@ defaultDBName | default('mongo') @>
-                                rootPassword: <@ rootPassword | default(random_word(length=16)) @>
-                              architecture: replicaset
-                              replicaCount: <@ replicas | default('1') @>
+
+                              pdb:
+                                create: <@ pdb.create | default(true) @>
+                                minAvailable: <@ pdb.minAvailable | default(1) @>
+                                maxUnavailable: <@ pdb.maxUnavailable | default('null') @>
+
                               arbiter:
+<<<<<<< HEAD
                                 enabled: false
                               affinity:
                                 nodeAffinity:
@@ -101,8 +203,23 @@ spec:
                                         operator: In
                                         values:
                                         - storage
+=======
+                                enabled: <@ arbiter.enabled | default(false) @>
+                                resources:
+                                  limits:
+                                    cpu: <@ arbiter.resources.limits.cpu | default('500m') @>
+                                    memory: <@ arbiter.resources.limits.memory | default('1Gi') @>
+                                  requests:
+                                    cpu: <@ arbiter.resources.requests.cpu | default('100m') @>
+                                    memory: <@ arbiter.resources.requests.memory | default('512Mi') @>
+
+                              # this does not work in chart version 10.3.1
+                              metrics:
+                                enabled: <@ metrics.enabled | default(false) @>
+
+>>>>>>> 22fd373... add parameters
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 replicas:
                                 {{- range $i := until (int .Values.replicaCount) }}
                                   - '{{ include "mongodb.fullname" $ }}-{{ $i }}.{{ include "mongodb.fullname" $ }}-headless.{{ $.Release.Namespace }}.svc:{{ $.Values.service.port }}'
