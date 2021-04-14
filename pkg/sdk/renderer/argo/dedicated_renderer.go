@@ -592,7 +592,7 @@ outer:
 	for i := range iface.Spec.Output.TypeInstances {
 		ti := iface.Spec.Output.TypeInstances[i]
 
-		for _, tiOutput := range step.VoltronTypeInstanceOutputs {
+		for _, tiOutput := range step.CapactTypeInstanceOutputs {
 			if tiOutput.Name != ti.Name {
 				continue
 			}
