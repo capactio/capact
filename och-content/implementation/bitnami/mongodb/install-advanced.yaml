@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.bitnami.mongodb
-  name: install-production
+  name: install-advanced
   displayName: Install production-ready MongoDB database
   description: Action which installs MongoDB database via Helm chart with production ready parameters
   documentationURL: https://github.com/bitnami/charts
@@ -80,26 +80,57 @@ spec:
                               repo: "https://charts.bitnami.com/bitnami"
                               version: 10.3.1
                             values:
-                              volumePermissions:
-                                enabled: true
+                              architecture: replicaset
                               auth:
                                 username: <@ user.username | default('mongo') @>
                                 password: <@ user.password | default(random_word(length=16)) @>
                                 database: <@ defaultDBName | default('mongo') @>
                                 rootPassword: <@ rootPassword | default(random_word(length=16)) @>
-                              architecture: replicaset
+                              tls:
+                                enabled: <@ tls.enabled | default('false') @>
+                                caCert: "<@ tls.caCert | default('') @>"
+                                caKey: "<@ tls.caKey | default('') @>"
                               replicaCount: <@ replicas | default('3') @>
-                              arbiter:
-                                enabled: false
+
+                              resources:
+                                limits:
+                                  cpu: <@ resources.limits.cpu | default('1') @>
+                                  memory: <@ resources.limits.memory | default('1Gi') @>
+                                requests:
+                                  cpu: <@ resources.requests.cpu | default('500m') @>
+                                  memory: <@ resources.requests.memory | default('1Gi') @>
+
+                              perisistence:
+                                enabled: <@ persistence.enabled | default('true') @>
+                                storageClass: <@ persistence.storageClass | default('null') @>
+                                accessMode: <@ persistence.accessMode | default('ReadWriteOnce') @>
+                                size: <@ persistence.size | default('8Gi') @>
+
+                              volumePermissions:
+                                enabled: true
+
                               pdb:
-                                create: true
-                                minAvailable: 1
+                                create: <@ pdb.create | default('true') @>
+                                minAvailable: <@ pdb.minAvailable | default('1') @>
+                                maxUnavailable: <@ pdb.maxUnavailable | default('null') @>
+
+                              arbiter:
+                                enabled: <@ arbiter.enabled | default('false') @>
+                                resources:
+                                  limits:
+                                    cpu: <@ arbiter.resources.limits.cpu | default('500m') @>
+                                    memory: <@ arbiter.resources.limits.memory | default('1Gi') @>
+                                  requests:
+                                    cpu: <@ arbiter.resources.requests.cpu | default('100m') @>
+                                    memory: <@ arbiter.resources.requests.memory | default('512Mi') @>
+
                             output:
                               goTemplate: |
                                 replicas:
                                 {{- range $i := until (int .Values.replicaCount) }}
                                   - '{{ include "mongodb.fullname" $ }}-{{ $i }}.{{ include "mongodb.fullname" $ }}-headless.{{ $.Release.Namespace }}.svc:{{ $.Values.service.port }}'
                                 {{- end }}
+                                replicaSetName: '{{ .Values.replicaSetName }}'
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'
                                 user:

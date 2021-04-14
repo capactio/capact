@@ -103,8 +103,11 @@ spec:
                                         - storage
                             output:
                               goTemplate:
-                                host: '{{ include "mongodb.fullname" . }}-headless.{{ .Release.Namespace }}'
-                                port: '{{ .Values.service.port }}'
+                                replicas:
+                                {{- range $i := until (int .Values.replicaCount) }}
+                                  - '{{ include "mongodb.fullname" $ }}-{{ $i }}.{{ include "mongodb.fullname" $ }}-headless.{{ $.Release.Namespace }}.svc:{{ $.Values.service.port }}'
+                                {{- end }}
+                                replicaSetName: '{{ .Values.replicaSetName }}'
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'
                                 user:
