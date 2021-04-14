@@ -98,7 +98,7 @@ spec:
                               goTemplate: |
                                 replicas:
                                 {{- range $i := until (int .Values.replicaCount) }}
-                                  - '{{ include "mongodb.fullname" $ }}-{{ $i }}:{{ $.Values.service.port }}'
+                                  - '{{ include "mongodb.fullname" $ }}-{{ $i }}.{{ include "mongodb.fullname" $ }}-headless.{{ $.Release.Namespace }}.svc:{{ $.Values.service.port }}'
                                 {{- end }}
                                 defaultDBName: '{{ .Values.auth.database }}'
                                 rootPassword: '{{ .Values.auth.rootPassword }}'
