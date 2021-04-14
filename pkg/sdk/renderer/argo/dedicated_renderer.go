@@ -588,26 +588,24 @@ func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, 
 		return
 	}
 
+outer:
 	for i := range iface.Spec.Output.TypeInstances {
 		ti := iface.Spec.Output.TypeInstances[i]
 
-		added := false
-
 		for _, tiOutput := range step.VoltronTypeInstanceOutputs {
-			if tiOutput.Name == ti.Name {
-				if ptr, ok := stepOutputTypeInstances[tiOutput.From]; ok {
-					step.typeInstanceOutputs[ti.Name] = ptr
-					added = true
-					break
-				}
+			if tiOutput.Name != ti.Name {
+				continue
+			}
+
+			if ptr, ok := stepOutputTypeInstances[tiOutput.From]; ok {
+				step.typeInstanceOutputs[ti.Name] = ptr
+				continue outer
 			}
 		}
 
-		if !added {
-			newName := addPrefix(prefix, ti.Name)
-			newNamePtr := r.addTypeInstanceName(newName)
-			step.typeInstanceOutputs[ti.Name] = newNamePtr
-		}
+		newName := addPrefix(prefix, ti.Name)
+		newNamePtr := r.addTypeInstanceName(newName)
+		step.typeInstanceOutputs[ti.Name] = newNamePtr
 	}
 }
 
