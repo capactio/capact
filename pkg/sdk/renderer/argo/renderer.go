@@ -120,7 +120,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 9. Render rootWorkflow templates
-	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
+	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
 	}
