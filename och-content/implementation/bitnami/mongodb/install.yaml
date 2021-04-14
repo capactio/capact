@@ -101,22 +101,22 @@ spec:
                               systemLogVerbosity: <@ systemLogVerbosity | default(0) @>
                               disableSystemLog: <@ disableSystemLog | default(false) @>
                               disableJavascript: <@ disableJavascript | default(false) @>
-                              configuration: <@ configuration | default({}) @>
-                              existingConfigmap: <@ configuration | default('') @>
+                              configuration: <@ configuration | default('') @>
+                              existingConfigmap: <@ existingConfigMap | default('') @>
                               initdbScripts: <@ initdbScripts | default({}) @>
                               initdbScriptsConfigMap: <@ initdbScriptsConfigMap | default('') @>
 
                               extraFlags: <@ extraFlags | default([]) @>
                               extraEnvVars: <@ extraEnvVars | default([]) @>
                               extraEnvVarsCM: <@ extraEnvVarsCM | default('') @>
-                              extraEnvVarsSecret: @< extraEnvVarsSecret | default('') @>
+                              extraEnvVarsSecret: <@ extraEnvVarsSecret | default('') @>
 
                               tls:
                                 enabled: <@ tls.enabled | default(false) @>
                                 caCert: "<@ tls.caCert | default('') @>"
                                 caKey: "<@ tls.caKey | default('') @>"
 
-                              replicaCount: <@ replicas | default(3) @>
+                              replicaCount: <@ replicaCount | default(3) @>
                               labels: <@ labels | default({}) @>
                               annotations: <@ annotations | default({}) @>
                               podManagementPolicy: <@ podManagementPolicy | default('OrderedReady') @>
@@ -124,10 +124,10 @@ spec:
                               podLabels: <@ podLabels | default({}) @>
                               podAnnotations: <@ podAnnotations | default({}) @>
                               priorityClassName: <@ priorityClassName | default('') @>
-                              podAffinityPreset: <@ podAffinityPreset | default('') @>
+                              podAffinityPreset: "<@ podAffinityPreset | default('') @>"
                               podAntiAffinityPreset: <@ podAntiAffinityPreset | default('soft') @>
                               nodeAffinityPreset:
-                                type: <@ nodeAffinityPreset.type | default('') @>
+                                type: "<@ nodeAffinityPreset.type | default('') @>"
                                 key: <@ nodeAffinityPreset.key | default('') @>
                                 values: <@ nodeAffinityPreset.values | default([]) @>
                               affinity: <@ affinity | default({}) @>
@@ -160,8 +160,8 @@ spec:
 
                               initContainers: <@ initContainers | default({}) @>
                               sidecars: <@ sidecars | default({}) @>
-                              extraVolumeMounts: <@ extraVolumeMounts | default({}) @>
-                              extraVolumes <@ extraVolumes | default({}) @>
+                              extraVolumeMounts: <@ extraVolumeMounts | default([]) @>
+                              extraVolumes: <@ extraVolumes | default([]) @>
 
                               externalAccess:
                                 enabled: <@ externalAccess.enabled | default(false) @>
@@ -213,8 +213,8 @@ spec:
                                     cpu: <@ arbiter.resources.requests.cpu | default('100m') @>
                                     memory: <@ arbiter.resources.requests.memory | default('512Mi') @>
 
-                              # this does not work in chart version 10.3.1
                               metrics:
+                                # this does not work in chart version 10.3.1
                                 enabled: <@ metrics.enabled | default(false) @>
 
 >>>>>>> 22fd373... add parameters

@@ -22,7 +22,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for MongoDB configuration",
+        "title": "The schema for MongoDB Helm chart installation",
         "examples": [
           {
             "user": {
@@ -33,17 +33,11 @@ spec:
             "defaultDBName": "default_db"
           }
         ],
-        "required": [
-            "user"
-        ],
         "properties": {
           "user": {
             "$id": "#/properties/user",
             "type": "object",
             "title": "Defines custom user details",
-            "required": [
-                "password"
-            ],
             "properties": {
               "username": {
                 "$id": "#/properties/user/properties/username",
@@ -64,8 +58,8 @@ spec:
             "type": "string",
             "title": "Defines a root password"
           },
-          "replicas": {
-            "$id": "#/properties/replicas",
+          "replicaCount": {
+            "$id": "#/properties/replicaCount",
             "type": "integer",
             "title": "Defines replicas number",
             "default": 1,
@@ -76,6 +70,228 @@ spec:
             "type": "string",
             "title": "Defines a name for the default database that is created",
             "default": "mongo"
+          },
+          "tls": {
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/tls/properties/enabled",
+                "type": "boolean",
+                "title": "Enable MongoDB® TLS support between nodes in the cluster as well as between mongo clients and nodes"
+              },
+              "caCert": {
+                "$id": "#/properties/tls/properties/caCert",
+                "type": "string",
+                "title": "Custom CA certificated (base64 encoded)"
+              },
+              "caKey": {
+                "$id": "#/properties/tls/properties/caKey",
+                "type": "string",
+                "title": "CA certificate private key (base64 encoded)"
+              }
+            },
+            "additionalProperties": false
+          },
+          "resources": {
+            "properties": {
+              "requests": {
+                "properties": {
+                  "memory": {
+                    "$id": "#/properties/resources/properties/requests/properties/memory",
+                    "type": "string",
+                    "title": "Kubernetes memory request for a MongoDB pod"
+                  },
+                  "cpu": {
+                    "$id": "#/properties/resources/properties/requests/properties/cpu",
+                    "type": "string",
+                    "title": "Kubernetes cpu request for a MongoDB pod"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "limits": {
+                "properties": {
+                  "memory": {
+                    "$id": "#/properties/resources/properties/limits/properties/memory",
+                    "type": "string",
+                    "title": "Kubernetes memory limit for a MongoDB pod"
+                  },
+                  "cpu": {
+                    "$id": "#/properties/resources/properties/limits/properties/cpu",
+                    "type": "string",
+                    "title": "Kubernetes cpu limit for a MongoDB pod"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "persistance": {
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/persistance/properties/enabled",
+                "type": "boolean",
+                "title": "Enable MongoDB data persistence using PVC"
+              },
+              "storageClass": {
+                "$id": "#/properties/persistance/properties/storageClass",
+                "type": "string",
+                "title": "PVC Storage Class for MongoDB data volume"
+              },
+              "accessMode": {
+                "$id": "#/properties/persistance/properties/accessMode",
+                "type": "string",
+                "title": "PVC Access Mode for MongoDB data volume"
+              }
+            },
+            "additionalProperties": false
+          },
+          "pdb": {
+            "properties": {
+              "create": {
+                "$id": "#/properties/pdb/properties/create",
+                "type": "boolean",
+                "title": "Enable/disable a Pod Disruption Budget creation for MongoDB pod(s)"
+              },
+              "minAvailable": {
+                "$id": "#/properties/pdb/properties/minAvailable",
+                "type": "integer",
+                "title": "Minimum number of MongoDB pods that should remain scheduled"
+              },
+              "maxUnavailable": {
+                "$id": "#/properties/pdb/properties/maxUnavailable",
+                "type": "integer",
+                "title": "Maximum number of MongoDB pods that may be made unavailable"
+              }
+            },
+            "additionalProperties": false
+          },
+          "arbiter": {
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/arbiter/properties/enabled",
+                "type": "boolean",
+                "title": "Enable deploying the arbiter"
+              }
+            },
+            "additionalProperties": false
+          },
+          "image": {
+            "type": "object"
+          },
+          "architecture": {
+            "type": "string"
+          },
+          "replicaSetName": {
+            "type": "string"
+          },
+          "replicaSetHostnames": {
+            "type": "boolean"
+          },
+          "directoryPerDB": {
+            "type": "boolean"
+          },
+          "systemLogVerbosity": {
+            "type": "integer"
+          },
+          "disableSystemLog": {
+            "type": "boolean"
+          },
+          "disableJavascript": {
+            "type": "boolean"
+          },
+          "configuration": {
+            "type": "string"
+          },
+          "existingConfigmap": {
+            "type": "string"
+          },
+          "initdbScripts": {
+            "type": "object"
+          },
+          "initdbScriptsConfigMap": {
+            "type": "string"
+          },
+          "extraFlags": {
+            "type": "array"
+          },
+          "extraEnvVars": {
+            "type": "array"
+          },
+          "extraEnvVarsCM": {
+            "type": "string"
+          },
+          "extraEnvVarsSecret": {
+            "type": "string"
+          },
+          "labels": {
+            "type": "object"
+          },
+          "annotations": {
+            "type": "object"
+          },
+          "podManagementPolicy": {
+            "type": "string"
+          },
+          "strategyType": {
+            "type": "string"
+          },
+          "podLabels": {
+            "type": "object"
+          },
+          "podAnnotations": {
+            "type": "object"
+          },
+          "priorityClassName": {
+            "type": "string"
+          },
+          "podAffinityPreset": {
+            "type": "string"
+          },
+          "podAntiAffinityPreset": {
+            "type": "string"
+          },
+          "nodeAffinityPreset": {
+            "type": "object"
+          },
+          "affinity": {
+            "type": "object"
+          },
+          "nodeSelector": {
+            "type": "object"
+          },
+          "tolerations": {
+            "type": "object"
+          },
+          "livenessProbe": {
+            "type": "object"
+          },
+          "readinessProbe": {
+            "type": "object"
+          },
+          "initContainers": {
+            "type": "object"
+          },
+          "sidecars": {
+            "type": "object"
+          },
+          "extraVolumeMounts": {
+            "type": "array"
+          },
+          "extraVolumes": {
+            "type": "array"
+          },
+          "externalAccess": {
+            "type": "object"
+          },
+          "volumePermissions": {
+            "type": "object"
+          },
+          "metrics": {
+            "type": "object"
+          },
+          "perisistence": {
+            "type": "object"
           }
         },
         "additionalProperties": false
