@@ -21,6 +21,7 @@ metadata:
 spec:
   appVersion: "10, 11, 12"
 
+  # All output TypeInstances to upload are defined on lower level workflows.
   outputTypeInstanceRelations: {}
 
   implements:
@@ -101,8 +102,6 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{steps.fill-params.outputs.artifacts.render}}"
-
-
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
