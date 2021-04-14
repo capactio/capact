@@ -3,7 +3,7 @@ provider "google" {
 }
 
 variable "cluster_name" {
-  default = "capact-dev1"
+  default = "capact-dev"
   type    = string
 }
 
@@ -18,7 +18,7 @@ variable "region" {
 }
 
 variable "node_pool_name" {
-  default = "dev1-node-pool"
+  default = "dev-node-pool"
   type    = string
 }
 
@@ -28,7 +28,7 @@ variable "google_compute_network_name" {
 }
 
 variable "google_compute_subnetwork_name" {
-  default = "dev1-subnetwork"
+  default = "dev-subnetwork"
   type    = string
 }
 
@@ -38,7 +38,7 @@ variable "google_compute_subnetwork_ip_cidr_range" {
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_name1" {
-  default = "gke-dev1-pods" 
+  default = "gke-dev-pods"
   type    = string
 }
 
@@ -48,7 +48,7 @@ variable "google_compute_subnetwork_secondary_ip_range_cidr1" {
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_name2" {
-  default = "gke-dev1-services" 
+  default = "gke-dev-services"
   type    = string
 }
 

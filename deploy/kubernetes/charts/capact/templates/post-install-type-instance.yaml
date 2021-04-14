@@ -64,6 +64,8 @@ spec:
           env:
             - name: HELM_RELEASES_NS_LOOKUP
               value: "{{ .Release.Namespace }},argo,ingress-nginx,kubed,neo4j,monitoring"
+            - name: HELM_REPOSITORY_PATH
+              value: "https://capactio-awesome-charts.storage.googleapis.com"
             - name: CAPACT_RELEASE_NAME
               value: "capact"
             - name: LOCAL_OCH_ENDPOINT

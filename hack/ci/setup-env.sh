@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "Setting up CI environmental variables..."
-export NAME="dev3"
+export NAME="dev"
 
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.16.2
