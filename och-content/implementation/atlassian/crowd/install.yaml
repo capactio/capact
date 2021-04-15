@@ -32,6 +32,7 @@ spec:
         - crowd-helm-release
         - postgresql
         - database
+        - user
 
   implements:
     - path: cap.interface.productivity.crowd.install
@@ -60,6 +61,8 @@ spec:
         - name: install
           revision: 0.1.0
         - name: create-db
+          revision: 0.1.0
+        - name: create-user
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
@@ -95,6 +98,20 @@ spec:
                               username: superuser
                             defaultDBName: postgres
 
+              - - name: create-user
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
+                    - name: user
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: user-input
+                        raw:
+                          data: |
+                            name: crowd
+
               - - name: render-create-db-args
                   capact-action: jinja2.template
                   arguments:
@@ -103,9 +120,9 @@ spec:
                         raw:
                           data: |
                             name: crowd
-                            owner: "<@ superuser.username @>"
+                            owner: "<@ name @>"
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
                       - name: configuration
                         raw:
                           data: |
@@ -141,9 +158,9 @@ spec:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: <@ db.host @>
-                                user: <@ db.superuser.username @>
-                                password: <@ db.superuser.password @>
+                                host: <@ postgres.host @>
+                                user: <@ user.name @>
+                                password: <@ user.password @>
                                 database: <@ db.name @>
                               ingress:
                                 enabled: <@ input.ingress.enabled | default(true | tojson) @>
@@ -299,26 +316,13 @@ spec:
                                 ## Memory / Heap Size (JVM_MAXIMUM_MEMORY) Mandatory, see @Notes above
                                 JVM_MAXIMUM_MEMORY: <@ input.jvmMaximumMemory | default("1024m") @>
                                 <% if input.envVars -%>
-                                  <% for key, value in input.envVars.items() %>
-                                      <@ key @>: <@ value|string @>
-                                  <% endfor %>
+                                <% for key, value in input.envVars.items() %>
+                                <@ key @>: <@ value|string @>
+                                <% endfor %>
                                 <%- endif %>
 
                               ## Additional container environment variables
                               extraEnv: <@ input.extraEnv | default("-XX:MaxMetaspaceSize=512m") @>
-
-                      - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-                      - name: configuration
-                        raw:
-                          data: ""
-
-              - - name: fill-input-params-in-helm-args
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
@@ -326,18 +330,44 @@ spec:
                           data: |
                             prefix: input
 
+              - - name: fill-postgresql-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: postgres
+
               - - name: fill-db-params-in-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-postgresql-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
                       - name: configuration
                         raw:
                           data: |
                             prefix: db
+
+              - - name: fill-user-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-db-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: user
 
               - - name: helm-install
                   capact-action: helm.install
@@ -349,7 +379,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-db-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-user-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
