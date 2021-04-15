@@ -20,9 +20,9 @@ You need to configure the `gcloud` CLI, so it's able to access `projectvoltron` 
 
 ## Setup access to GKE cluster
 
-We are using the `capact-dev` GKE cluster in `europe-north1` region for our long-running Capact cluster. Set the following environment variables in your shell:
+We are using the `capact-dev` GKE cluster in `europe-west3` region for our long-running Capact cluster. Set the following environment variables in your shell:
 ```bash
-export REGION=europe-north1
+export REGION=europe-west3
 export CLUSTER_NAME=capact-dev
 ```
 
@@ -37,11 +37,11 @@ kubectl config get-contexts
 ```
 ```bash
 CURRENT   NAME                                                 CLUSTER                                              AUTHINFO                                             NAMESPACE
-          gke_projectvoltron_europe-north1_capact-dev        gke_projectvoltron_europe-north1_capact-dev        gke_projectvoltron_europe-north1_capact-dev        
+          gke_projectvoltron_europe-west3_capact-dev        gke_projectvoltron_europe-west3_capact-dev        gke_projectvoltron_europe-west3_capact-dev        
 *         kind-kind-dev-capact                                kind-kind-dev-capact                                kind-kind-dev-capact
 ```
 ```bash
-kubectl config use-context gke_projectvoltron_europe-north1_capact-dev
+kubectl config use-context gke_projectvoltron_europe-west3_capact-dev
 ```
 
 Now run the script to add your public IP address to the authorized control plane networks, so you will be able to make queries to the GKE API server:
