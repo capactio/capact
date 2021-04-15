@@ -148,7 +148,7 @@ spec:
                                 runAsNonRoot: <@ input.containerSecurityContext.runAsNonRoot | default(true) @>
 
                               resources:
-                                limits: <@ input.resources.limits | default({}) @>
+                                limits:
                                   memory: <@ input.resources.limits.memory | default("2G") @>
                                   cpu: <@ input.resources.limits.cpu | default("2") @>
                                 requests:
