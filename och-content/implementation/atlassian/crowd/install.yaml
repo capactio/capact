@@ -146,7 +146,7 @@ spec:
                                 password: <@ superuser.password @>
                                 database: <@ name @>
                               ingress:
-                                enabled: true
+                                enabled: <@ input.ingress.enabled | default(true) @>
                                 annotations:
                                   acmechallengetype: http01
                                   cert-manager.io/cluster-issuer: letsencrypt
@@ -159,6 +159,144 @@ spec:
                                 hosts:
                                 - host: <@ input.host @>
                                   paths: ['/']
+
+                            image:
+                              repository: <@ input.image.repository | default("atlassian/crowd") @>
+                              tag: <@ input.image.tag | default("4.2.3") @>
+                              pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
+                              pullSecrets: <@ input.image.pullSecrets | default({}) @>
+
+                            ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                            serviceAccount:
+                              create: <@ input.serviceAccount.create | default(true) @> # modified
+                              annotations: <@ input.serviceAccount.annotations | default({}) @>
+                              name: <@ input.serviceAccount.name | default("") @>
+
+                            ## ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podsecuritycontext-v1-core
+                            podSecurityContext:
+                              fsGroup: <@ input.podSecurityContext.fsGroup | default(2004) @>
+
+                            ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+                            securityContext:
+                              capabilities:
+                                   drop: <@ input.securityContext.capabilities.drop | default(["ALL"]) @>
+                              readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(true) @>
+                              runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(true) @>
+                              runAsUser: <@ input.securityContext.runAsUser | default(1000) @>
+
+                            ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+                            service:
+                              type: <@ input.service.type | default("ClusterIP") @>
+                              ## The port for Tomcat/Crowd to listen on
+                              port: <@ input.service.port | default(8095) @>
+                              ## HTTPS Port, in case ATL_TOMCAT_SCHEME is set to 'https'
+                              httpsPort: <@ input.service.httpsPort | default(null) @>
+                              loadBalancerIP: <@ input.service.loadBalancerIP | default(null) @>
+                              ## Use nodePorts to requets some specific ports when usin NodePort
+                              ## nodePorts:
+                              ##   http: <to set explicitly, choose port between 30000-32767>
+                              ##   https: <to set explicitly, choose port between 30000-32767>
+                              ##
+                              nodePorts:
+                                http: <@ input.service.nodePorts.http | default(null) @>
+                                https: <@ input.service.nodePorts.https | default(null) @>
+
+                            ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+                            ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+                            resources:
+                              requests:
+                                memory: <@ input.resources.requests.memory | default("1G") @>
+                                cpu: <@ input.resources.requests.cpu | default("500m") @>
+                              limits:
+                                memory: <@ input.resources.limits.memory | default("2G") @>
+                                cpu: <@ input.resources.limits.cpu | default("1") @>
+
+                            ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+                            replicaCount: <@ input.replicas | default(3) @>
+
+                            ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+                            nodeSelector: <@ input.nodeSelector | default({}) @>
+
+                            ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+                            tolerations: <@ input.tolerations | default([]) @>
+                            ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+                            affinity: <@ input.affinity | default({}) @>
+                            ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+                            podAnnotations: <@ input.podAnnotations | default({}) @>
+
+                            ## Persistent Volume Claim
+                            ## Crowd Home directory
+                            ## https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+                            persistence:
+                              enabled: <@ input.persistence.enabled | default(true) @>
+                              annotations: <@ input.persistence.annotations | default({}) @>
+                              ## existingClaim needs the existing PVC name
+                              existingClaim: <@ input.persistence.existingClaim | default("") @>
+                              accessMode: <@ input.persistence.accessMode | default("ReadWriteOnce") @>
+                              size: <@ input.persistence.size | default("10Gi") @>
+
+                              # If defined, storageClassName: <storageClass>
+                              ## If set to "-", storageClassName: "", which disables dynamic provisioning
+                              ## If undefined (the default) or set to nil, no storageClassName spec is
+                              ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+                              ##   GKE, AWS & OpenStack)
+                              ##
+                              storageClass: <@ input.persistence.storageClass | default(null) @>
+
+                            # Additional volume mounts
+                            extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
+
+                            # Additional volumes
+                            extraVolumes: <@ input.extraVolumes | default([]) @>
+
+                            ## Use an alternate scheduler, e.g. "stork".
+                            ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+                            schedulerName: <@ input.schedulerName | default("") @>
+
+                            ## Container Probes
+                            ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+                            ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+                            readinessProbe:
+                              enabled: <@ input.readinessProbe.enabled | default(true) @>
+                              initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(300) @>
+                              periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
+                              timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(10) @>
+                              failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
+                              successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
+                            livenessProbe:
+                              enabled: <@ input.livenessProbe.enabled | default(true) @>
+                              initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(480) @>
+                              periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
+                              timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(10) @>
+                              failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
+                              successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
+
+                            ## Crowd specific configurations
+                            ## https://hub.docker.com/r/atlassian/crowd
+                            ## crowd/secrets/cas
+                            caCerts: <@ input.caCerts | default({}) @>
+
+                            initContainerImages:
+                              # used keytool if 'caCerts' is enabled
+                              jdk: <@ input.initContainerImages.jdk | default("adoptopenjdk:11-jdk-hotspot") @>
+
+                            ## Environment Variables that will be injected in the ConfigMap
+                            ## Default values unless otherwise stated
+                            envVars:
+                              ## Memory / Heap Size (JVM_MINIMUM_MEMORY) Mandatory, see @Notes above
+                              JVM_MINIMUM_MEMORY: <@ input.jvmMinimumMemory | default("1024m") @>
+                              ## Memory / Heap Size (JVM_MAXIMUM_MEMORY) Mandatory, see @Notes above
+                              JVM_MAXIMUM_MEMORY: <@ input.jvmMaximumMemory | default("1024m") @>
+                              <% if input.envVars -%>
+                                <% for key, value in input.envVars.items() %>
+                                    <@ key @>: <@ value|string @>
+                                <% endfor %>
+                              <%- endif %>
+                              <@ input.envVars | default() @>
+
+                            ## Additional container environment variables
+                            extraEnv: <@ input.extraEnv | default("-XX:MaxMetaspaceSize=512m") @>
+
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: configuration
