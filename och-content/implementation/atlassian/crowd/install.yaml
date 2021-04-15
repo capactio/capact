@@ -195,8 +195,6 @@ spec:
 
                               ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
                               securityContext:
-                                capabilities:
-                                     drop: <@ input.securityContext.capabilities.drop | default(["ALL"]) @>
                                 readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(true | tojson) @>
                                 runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(true | tojson) @>
                                 runAsUser: <@ input.securityContext.runAsUser | default(1000) @>
