@@ -86,9 +86,11 @@ spec:
                                 tag: <@ input.image.tag | default("4.4.2-debian-10-r27") @>
                                 pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
                                 debug: <@ input.image.debug | default(false) @>
+
                               clusterDomain: <@ input.clusterDomain | default("cluster.local") @>
                               architecture: <@ input.architecture | default("replicaset") @>
                               useStatefulSet: <@ input.useStatefulSet | default(false) @>
+
                               auth:
                                 enabled: <@ input.auth.enabled | default(true) @>
                                 username: <@ input.auth.username | default("mongo") @>
@@ -96,13 +98,17 @@ spec:
                                 password: <@ input.auth.password | default(random_word(length=16)) @>
                                 rootPassword: <@ input.auth.rootPassword | default(random_word(length=16)) @>
                                 replicaSetKey: <@ input.auth.replicaSetKey | default("") @>
+
                               tls:
                                 enabled: <@ input.tls.enabled | default(false) @>
+                                caCert: "<@ input.tls.caCert | default(null) @>"
+                                caKey: "<@ input.tls.caKey | default(null) @>"
                                 image:
                                   registry: <@ input.tls.image.registry | default("docker.io") @>
                                   repository: <@ input.tls.image.repository | default("bitnami/nginx") @>
                                   tag: <@ input.tls.image.tag | default("1.19.5-debian-10-r19") @>
                                   pullPolicy: <@ input.tls.image.pullPolicy | default("IfNotPresent") @>
+
                               replicaSetName: <@ input.replicaSetName | default("rs0") @>
                               replicaSetHostnames: <@ input.replicaSetHostnames | default(true) @>
                               enableIPv6: <@ input.enableIPv6 | default(false) @>
@@ -124,22 +130,31 @@ spec:
                                 type: <@ input.nodeAffinityPreset.type | default("") @>
                                 key: <@ input.nodeAffinityPreset.key | default("") @>
                                 values: <@ input.nodeAffinityPreset.values | default([]) @>
+
                               affinity: <@ input.affinity | default({}) @>
                               nodeSelector: <@ input.nodeSelector | default({}) @>
                               tolerations: <@ input.tolerations | default([]) @>
                               podLabels: <@ input.podLabels | default({}) @>
                               podAnnotations: <@ input.podAnnotations | default({}) @>
+
                               podSecurityContext:
                                 enabled: <@ input.podSecurityContext.enabled | default(true) @>
                                 fsGroup: <@ input.podSecurityContext.fsGroup | default(1001) @>
                                 sysctls: <@ input.podSecurityContext.sysctls | default([]) @>
+
                               containerSecurityContext:
                                 enabled: <@ input.containerSecurityContext.enabled | default(true) @>
                                 runAsUser: <@ input.containerSecurityContext.runAsUser | default(1001) @>
                                 runAsNonRoot: <@ input.containerSecurityContext.runAsNonRoot | default(true) @>
+
                               resources:
                                 limits: <@ input.resources.limits | default({}) @>
-                                requests: <@ input.resources.requests | default({}) @>
+                                  memory: <@ input.resources.limits.memory | default("2G") @>
+                                  cpu: <@ input.resources.limits.cpu | default("2") @>
+                                requests:
+                                  memory: <@ input.resources.requests.memory | default("2G") @>
+                                  cpu: <@ input.resources.requests.cpu | default("500m") @>
+
                               livenessProbe:
                                 enabled: <@ input.livenessProbe.enabled | default(true) @>
                                 initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(30) @>
@@ -147,6 +162,7 @@ spec:
                                 timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(5) @>
                                 failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
                                 successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
+
                               readinessProbe:
                                 enabled: <@ input.readinessProbe.enabled | default(true) @>
                                 initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(5) @>
@@ -154,15 +170,18 @@ spec:
                                 timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(5) @>
                                 failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
                                 successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
+
                               customLivenessProbe: <@ input.customLivenessProbe | default({}) @>
                               customReadinessProbe: <@ input.customReadinessProbe | default({}) @>
                               initContainers: <@ input.initContainers | default({}) @>
                               sidecars: <@ input.sidecars | default({}) @>
                               extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
                               extraVolumes: <@ input.extraVolumes | default([]) @>
+
                               pdb:
-                                create: <@ input.pdb.create | default(false) @>
+                                create: <@ input.pdb.create | default(true) @>
                                 minAvailable: <@ input.pdb.minAvailable | default(1) @>
+
                               persistence:
                                 enabled: <@ input.persistence.enabled | default(true) @>
                                 accessModes: <@ input.persistence.accessModes | default(["ReadWriteOnce"]) @>
@@ -172,6 +191,7 @@ spec:
                                 subPath: <@ input.persistence.subPath | default("") @>
                                 volumeClaimTemplates:
                                   selector: <@ input.persistence.volumeClaimTemplates.selector | default(null) @>
+
                               service:
                                 type: <@ input.service.type | default("ClusterIP") @>
                                 port: <@ input.service.port | default(27017) @>
@@ -180,6 +200,7 @@ spec:
                                 externalIPs: <@ input.service.externalIPs | default([]) @>
                                 loadBalancerSourceRanges: <@ input.service.loadBalancerSourceRanges | default([]) @>
                                 annotations: <@ input.service.annotations | default({}) @>
+
                               externalAccess:
                                 enabled: <@ input.externalAccess.enabled | default(false) @>
                                 autoDiscovery:
@@ -200,6 +221,7 @@ spec:
                                   loadBalancerSourceRanges: <@ input.externalAccess.service.loadBalancerSourceRanges | default([]) @>
                                   nodePorts: <@ input.externalAccess.service.nodePorts | default([]) @>
                                   annotations: <@ input.externalAccess.service.annotations | default({}) @>
+
                               arbiter:
                                 enabled: <@ input.arbiter.enabled | default(false) @>
                                 configuration: <@ input.arbiter.configuration | default("") @>
@@ -249,8 +271,9 @@ spec:
                                 extraVolumeMounts: <@ input.arbiter.extraVolumeMounts | default([]) @>
                                 extraVolumes: <@ input.arbiter.extraVolumes | default([]) @>
                                 pdb:
-                                  create: <@ input.arbiter.pdb.create | default(true) @>
+                                  create: <@ input.arbiter.pdb.create | default(false) @>
                                   minAvailable: <@ input.arbiter.pdb.minAvailable | default(1) @>
+
                               serviceAccount:
                                 create: <@ input.serviceAccount.create | default(true) @>
                               rbac:
@@ -268,6 +291,7 @@ spec:
                                   requests: <@ input.volumePermissions.resources.requests | default({}) @>
                                 securityContext:
                                   runAsUser: <@ input.volumePermissions.securityContext.runAsUser | default(0) @>
+
                               metrics:
                                 enabled: <@ input.metrics.enabled | default(false) @>
                                 image:
