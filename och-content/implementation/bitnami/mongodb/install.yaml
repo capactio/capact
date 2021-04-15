@@ -128,7 +128,7 @@ spec:
                               podAntiAffinityPreset: <@ input.podAntiAffinityPreset | default("soft") @>
                               nodeAffinityPreset:
                                 type: <@ input.nodeAffinityPreset.type | default("") @>
-                                key: <@ input.nodeAffinityPreset.key | default("") @>
+                                key: "<@ input.nodeAffinityPreset.key | default("") @>"
                                 values: <@ input.nodeAffinityPreset.values | default([]) @>
 
                               affinity: <@ input.affinity | default({}) @>
@@ -229,11 +229,11 @@ spec:
                                 extraEnvVars: <@ input.arbiter.extraEnvVars | default([]) @>
                                 annotations: <@ input.arbiter.annotations | default({}) @>
                                 labels: <@ input.arbiter.labels | default({}) @>
-                                podAffinityPreset: <@ input.arbiter.podAffinityPreset | default("") @>
-                                podAntiAffinityPreset: <@ input.arbiter.podAntiAffinityPreset | default("soft") @>
+                                podAffinityPreset: "<@ input.arbiter.podAffinityPreset | default("") @>"
+                                podAntiAffinityPreset: "<@ input.arbiter.podAntiAffinityPreset | default("soft") @>"
                                 nodeAffinityPreset:
                                   type: <@ input.arbiter.nodeAffinityPreset.type | default("") @>
-                                  key: <@ input.arbiter.nodeAffinityPreset.key | default("") @>
+                                  key: "<@ input.arbiter.nodeAffinityPreset.key | default("") @>"
                                   values: <@ input.arbiter.nodeAffinityPreset.values | default([]) @>
                                 affinity: <@ input.arbiter.affinity | default({}) @>
                                 nodeSelector: <@ input.arbiter.nodeSelector | default({}) @>
