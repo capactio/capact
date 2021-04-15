@@ -305,10 +305,6 @@ spec:
                                   limits: <@ input.metrics.resources.limits | default({}) @>
                                   requests: <@ input.metrics.resources.requests | default({}) @>
                                 service:
-                                  annotations:
-                                    prometheus.io/scrape: <@ input.metrics.service.annotations.prometheus.io/scrape | default("true") @>
-                                    prometheus.io/port: <@ input.metrics.service.annotations.prometheus.io/port | default("{{ .Values.metrics.service.port }}") @>
-                                    prometheus.io/path: <@ input.metrics.service.annotations.prometheus.io/path | default("/metrics") @>
                                   type: <@ input.metrics.service.type | default("ClusterIP") @>
                                   port: <@ input.metrics.service.port | default(9216) @>
                                 livenessProbe:
