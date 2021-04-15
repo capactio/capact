@@ -191,19 +191,6 @@ spec:
                                 maxUnavailable: <@ pdb.maxUnavailable | default('null') @>
 
                               arbiter:
-<<<<<<< HEAD
-                                enabled: false
-                              affinity:
-                                nodeAffinity:
-                                  preferredDuringSchedulingIgnoredDuringExecution:
-                                  - weight: 1
-                                    preference:
-                                      matchExpressions:
-                                      - key: node.capact.io/type
-                                        operator: In
-                                        values:
-                                        - storage
-=======
                                 enabled: <@ arbiter.enabled | default(false) @>
                                 resources:
                                   limits:
@@ -217,7 +204,6 @@ spec:
                                 # this does not work in chart version 10.3.1
                                 enabled: <@ metrics.enabled | default(false) @>
 
->>>>>>> 22fd373... add parameters
                             output:
                               goTemplate: |
                                 replicas:
