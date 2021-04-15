@@ -124,7 +124,7 @@ spec:
                               replicaCount: <@ input.replicaCount | default(3) @>
                               strategyType: <@ input.strategyType | default("RollingUpdate") @>
                               podManagementPolicy: <@ input.podManagementPolicy | default("OrderedReady") @>
-                              podAffinityPreset: <@ input.podAffinityPreset | default("") @>
+                              podAffinityPreset: "<@ input.podAffinityPreset | default("") @>"
                               podAntiAffinityPreset: <@ input.podAntiAffinityPreset | default("soft") @>
                               nodeAffinityPreset:
                                 type: <@ input.nodeAffinityPreset.type | default("") @>
