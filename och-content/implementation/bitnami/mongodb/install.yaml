@@ -125,9 +125,9 @@ spec:
                               strategyType: <@ input.strategyType | default("RollingUpdate") @>
                               podManagementPolicy: <@ input.podManagementPolicy | default("OrderedReady") @>
                               podAffinityPreset: "<@ input.podAffinityPreset | default("") @>"
-                              podAntiAffinityPreset: <@ input.podAntiAffinityPreset | default("soft") @>
+                              podAntiAffinityPreset: "<@ input.podAntiAffinityPreset | default("soft") @>"
                               nodeAffinityPreset:
-                                type: <@ input.nodeAffinityPreset.type | default("") @>
+                                type: "<@ input.nodeAffinityPreset.type | default("") @>"
                                 key: "<@ input.nodeAffinityPreset.key | default("") @>"
                                 values: <@ input.nodeAffinityPreset.values | default([]) @>
 
@@ -232,7 +232,7 @@ spec:
                                 podAffinityPreset: "<@ input.arbiter.podAffinityPreset | default("") @>"
                                 podAntiAffinityPreset: "<@ input.arbiter.podAntiAffinityPreset | default("soft") @>"
                                 nodeAffinityPreset:
-                                  type: <@ input.arbiter.nodeAffinityPreset.type | default("") @>
+                                  type: "<@ input.arbiter.nodeAffinityPreset.type | default("") @>"
                                   key: "<@ input.arbiter.nodeAffinityPreset.key | default("") @>"
                                   values: <@ input.arbiter.nodeAffinityPreset.values | default([]) @>
                                 affinity: <@ input.arbiter.affinity | default({}) @>
