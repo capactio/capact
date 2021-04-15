@@ -97,7 +97,7 @@ spec:
                                 database: <@ input.auth.database | default("mongo") @>
                                 password: <@ input.auth.password | default(random_word(length=16)) @>
                                 rootPassword: <@ input.auth.rootPassword | default(random_word(length=16)) @>
-                                replicaSetKey: <@ input.auth.replicaSetKey | default("") @>
+                                replicaSetKey: "<@ input.auth.replicaSetKey | default("") @>"
 
                               tls:
                                 enabled: <@ input.tls.enabled | default(false) @>
@@ -115,7 +115,7 @@ spec:
                               directoryPerDB: <@ input.directoryPerDB | default(false) @>
                               systemLogVerbosity: <@ input.systemLogVerbosity | default(0) @>
                               disableSystemLog: <@ input.disableSystemLog | default(false) @>
-                              configuration: <@ input.configuration | default("") @>
+                              configuration: "<@ input.configuration | default("") @>"
                               initdbScripts: <@ input.initdbScripts | default({}) @>
                               extraFlags: <@ input.extraFlags | default([]) @>
                               extraEnvVars: <@ input.extraEnvVars | default([]) @>
@@ -224,7 +224,7 @@ spec:
 
                               arbiter:
                                 enabled: <@ input.arbiter.enabled | default(false) @>
-                                configuration: <@ input.arbiter.configuration | default("") @>
+                                configuration: "<@ input.arbiter.configuration | default("") @>"
                                 extraFlags: <@ input.arbiter.extraFlags | default([]) @>
                                 extraEnvVars: <@ input.arbiter.extraEnvVars | default([]) @>
                                 annotations: <@ input.arbiter.annotations | default({}) @>
