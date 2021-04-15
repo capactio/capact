@@ -141,12 +141,12 @@ spec:
                               postgresql:
                                 enabled: false
                               databaseConnection:
-                                host: <@ host @>
-                                user: <@ superuser.username @>
-                                password: <@ superuser.password @>
-                                database: <@ name @>
+                                host: <@ db.host @>
+                                user: <@ db.superuser.username @>
+                                password: <@ db.superuser.password @>
+                                database: <@ db.name @>
                               ingress:
-                                enabled: <@ input.ingress.enabled | default(true) | tojson @>
+                                enabled: <@ input.ingress.enabled | default(true | tojson) @>
                                 annotations:
                                   acmechallengetype: http01
                                   cert-manager.io/cluster-issuer: letsencrypt
@@ -168,7 +168,7 @@ spec:
 
                               ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
                               serviceAccount:
-                                create: <@ input.serviceAccount.create | default(true) | tojson @> # modified
+                                create: <@ input.serviceAccount.create | default(true | tojson) @> # modified
                                 annotations: <@ input.serviceAccount.annotations | default({}) @>
                                 name: <@ input.serviceAccount.name | default("") @>
 
@@ -180,8 +180,8 @@ spec:
                               securityContext:
                                 capabilities:
                                      drop: <@ input.securityContext.capabilities.drop | default(["ALL"]) @>
-                                readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(true) | tojson @>
-                                runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(true) | tojson @>
+                                readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(true | tojson) @>
+                                runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(true | tojson) @>
                                 runAsUser: <@ input.securityContext.runAsUser | default(1000) @>
 
                               ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
@@ -190,16 +190,16 @@ spec:
                                 ## The port for Tomcat/Crowd to listen on
                                 port: <@ input.service.port | default(8095) @>
                                 ## HTTPS Port, in case ATL_TOMCAT_SCHEME is set to 'https'
-                                httpsPort: <@ input.service.httpsPort | default(~) @>
-                                loadBalancerIP: <@ input.service.loadBalancerIP | default(~) @>
+                                httpsPort: <@ input.service.httpsPort | default(None | tojson) @>
+                                loadBalancerIP: <@ input.service.loadBalancerIP | default(None | tojson) @>
                                 ## Use nodePorts to requets some specific ports when usin NodePort
                                 ## nodePorts:
                                 ##   http: <to set explicitly, choose port between 30000-32767>
                                 ##   https: <to set explicitly, choose port between 30000-32767>
                                 ##
                                 nodePorts:
-                                  http: <@ input.service.nodePorts.http | default(~) @>
-                                  https: <@ input.service.nodePorts.https | default(~) @>
+                                  http: <@ input.service.nodePorts.http | default(None | tojson) @>
+                                  https: <@ input.service.nodePorts.https | default(None | tojson) @>
 
                               ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
                               ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
@@ -228,7 +228,7 @@ spec:
                               ## Crowd Home directory
                               ## https://kubernetes.io/docs/concepts/storage/persistent-volumes/
                               persistence:
-                                enabled: <@ input.persistence.enabled | default(true) | tojson @>
+                                enabled: <@ input.persistence.enabled | default(true | tojson) @>
                                 annotations: <@ input.persistence.annotations | default({}) @>
                                 ## existingClaim needs the existing PVC name
                                 existingClaim: <@ input.persistence.existingClaim | default("") @>
@@ -241,7 +241,7 @@ spec:
                                 ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
                                 ##   GKE, AWS & OpenStack)
                                 ##
-                                storageClass: <@ input.persistence.storageClass | default(~) @>
+                                storageClass: <@ input.persistence.storageClass | default(None | tojson) @>
 
                               # Additional volume mounts
                               extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
@@ -256,20 +256,29 @@ spec:
                               ## Container Probes
                               ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
                               ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+                              <% if input.readinessProbe.enabled -%>
                               readinessProbe:
-                                enabled: <@ input.readinessProbe.enabled | default(true) | tojson @>
+                                httpGet:
+                                  path: /status
+                                  port: http
                                 initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(300) @>
                                 periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
                                 successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
+                              <%- endif %>
+
+                              <% if input.livenessProbe.enabled -%>
                               livenessProbe:
-                                enabled: <@ input.livenessProbe.enabled | default(true) | tojson @>
+                                httpGet:
+                                  path: /status
+                                  port: http
                                 initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(480) @>
                                 periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
                                 successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
+                              <%- endif %>
 
                               ## Crowd specific configurations
                               ## https://hub.docker.com/r/atlassian/crowd
@@ -292,7 +301,6 @@ spec:
                                       <@ key @>: <@ value|string @>
                                   <% endfor %>
                                 <%- endif %>
-                                <@ input.envVars | default() @>
 
                               ## Additional container environment variables
                               extraEnv: <@ input.extraEnv | default("-XX:MaxMetaspaceSize=512m") @>
@@ -303,30 +311,31 @@ spec:
                         raw:
                           data: ""
 
-              - - name: fill-params-in-helm-args
+              - - name: fill-input-params-in-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{steps.create-db.outputs.artifacts.database}}"
-                      - name: configuration
-                        raw:
-                          data: ""
-
-              - - name: fill-input-params-in-helm-args
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.fill-params-in-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
                           data: |
                             prefix: input
+
+              - - name: fill-db-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: db
 
               - - name: helm-install
                   capact-action: helm.install
@@ -338,7 +347,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-db-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
