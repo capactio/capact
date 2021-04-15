@@ -458,6 +458,17 @@ In the future, we plan to extend the `ocftool` with additional features, such as
 - manifests submission,
 - signing manifests.
 
+
+### Clustered Jira Setup
+
+Jira can be deployed in a clustered version. Such setup requires shared storage.
+When running Capact locally, NFS server can be used.
+Check out Ganesha Server [README](https://github.com/kubernetes-sigs/nfs-ganesha-server-and-external-provisioner) file to see how to install NFS server.
+When running on AWS, NFS also can be used or EFS(Elastic File Storage). Checkout [EFS CSI driver](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html) guide to see how to deploy it.
+
+When shared storage is available then set StorageClass for `sharedHome` variable.
+
+
 ###  Additional resources
 
 If you want to learn more about the project, check the [`go-voltron`](https://github.com/Project-Voltron/go-voltron) repository.
