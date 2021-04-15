@@ -46,7 +46,7 @@ jobs:
       - name: Delete old cluster
         env:
           OLD_CLUSTER_NAME: ${{ github.event.inputs.oldClusterToDelete }}
-        if: github.event.inputs.oldClusterToDelete == ''
+        if: github.event.inputs.oldClusterToDelete != ''
         run: |
           gcloud config set project ${PROJECT_ID}
           cd hack/ci/terraform
