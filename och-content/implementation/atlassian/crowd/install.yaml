@@ -256,7 +256,8 @@ spec:
                               ## Container Probes
                               ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
                               ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
-                              <% if input.readinessProbe.enabled -%>
+                              <% set readinessProbeEnabled = input.readinessProbe.enabled | default(true) %>
+                              <% if readinessProbeEnabled -%>
                               readinessProbe:
                                 httpGet:
                                   path: /status
@@ -268,7 +269,8 @@ spec:
                                 successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
                               <%- endif %>
 
-                              <% if input.livenessProbe.enabled -%>
+                              <% set livenessProbeEnabled = input.livenessProbe.enabled | default(true) %>
+                              <% if livenessProbeEnabled -%>
                               livenessProbe:
                                 httpGet:
                                   path: /status
