@@ -189,8 +189,6 @@ spec:
                                 annotations: <@ input.persistence.annotations | default({}) @>
                                 mountPath: <@ input.persistence.mountPath | default("/bitnami/mongodb") @>
                                 subPath: <@ input.persistence.subPath | default("") @>
-                                volumeClaimTemplates:
-                                  selector: <@ input.persistence.volumeClaimTemplates.selector | default(null) @>
 
                               service:
                                 type: <@ input.service.type | default("ClusterIP") @>
