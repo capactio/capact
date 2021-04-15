@@ -275,7 +275,7 @@ spec:
                               <% if readinessProbeEnabled -%>
                               readinessProbe:
                                 httpGet:
-                                  path: /status
+                                  path: /crowd/status
                                   port: http
                                 initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(300) @>
                                 periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
@@ -288,7 +288,7 @@ spec:
                               <% if livenessProbeEnabled -%>
                               livenessProbe:
                                 httpGet:
-                                  path: /status
+                                  path: /crowd/status
                                   port: http
                                 initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(480) @>
                                 periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
