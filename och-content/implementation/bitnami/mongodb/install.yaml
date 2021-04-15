@@ -81,129 +81,235 @@ spec:
                               version: 10.3.1
                             values:
                               image:
-                                registry: <@ image.registry | default('docker.io') @>
-                                repository: <@ image.registry | default('bitnami/mongodb') @>
-                                tag:  <@ image.registry | default('4.4.2-debian-10-r27') @>
-                                pullSecrets: <@ image.registry | default([]) @>
-                                pullPolicy: <@ input.image.pullPollicy | default("IfNotPresent") @>
-
-                              architecture: <@ architecture | default('replicaset') @>
+                                registry: <@ input.image.registry | default("docker.io") @>
+                                repository: <@ input.image.repository | default("bitnami/mongodb") @>
+                                tag: <@ input.image.tag | default("4.4.2-debian-10-r27") @>
+                                pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
+                                debug: <@ input.image.debug | default(false) @>
+                              clusterDomain: <@ input.clusterDomain | default("cluster.local") @>
+                              architecture: <@ input.architecture | default("replicaset") @>
+                              useStatefulSet: <@ input.useStatefulSet | default(false) @>
                               auth:
-                                username: <@ auth.username | default('mongo') @>
-                                password: <@ auth.password | default(random_word(length=16)) @>
-                                database: <@ auth.database | default('mongo') @>
-                                rootPassword: <@ auth.rootPassword | default(random_word(length=16)) @>
-                                existingSecret: <@ auth.existingSecret | default('') @>
-
-                              replicaSetName: <@ useStatefulSet | default('rs0') @>
-                              replicaSetHostnames: <@ replicaSetHostnames | default(true) @>
-                              directoryPerDB: <@ directoryPerDB | default(false) @>
-                              systemLogVerbosity: <@ systemLogVerbosity | default(0) @>
-                              disableSystemLog: <@ disableSystemLog | default(false) @>
-                              disableJavascript: <@ disableJavascript | default(false) @>
-                              configuration: <@ configuration | default('') @>
-                              existingConfigmap: <@ existingConfigMap | default('') @>
-                              initdbScripts: <@ initdbScripts | default({}) @>
-                              initdbScriptsConfigMap: <@ initdbScriptsConfigMap | default('') @>
-
-                              extraFlags: <@ extraFlags | default([]) @>
-                              extraEnvVars: <@ extraEnvVars | default([]) @>
-                              extraEnvVarsCM: <@ extraEnvVarsCM | default('') @>
-                              extraEnvVarsSecret: <@ extraEnvVarsSecret | default('') @>
-
+                                enabled: <@ input.auth.enabled | default(true) @>
+                                username: <@ input.auth.username | default("mongo") @>
+                                database: <@ input.auth.database | default("mongo") @>
+                                password: <@ input.auth.password | default(random_word(length=16)) @>
+                                rootPassword: <@ input.auth.rootPassword | default(random_word(length=16)) @>
+                                replicaSetKey: <@ input.auth.replicaSetKey | default("") @>
                               tls:
-                                enabled: <@ tls.enabled | default(false) @>
-                                caCert: "<@ tls.caCert | default('') @>"
-                                caKey: "<@ tls.caKey | default('') @>"
-
-                              replicaCount: <@ replicaCount | default(3) @>
-                              labels: <@ labels | default({}) @>
-                              annotations: <@ annotations | default({}) @>
-                              podManagementPolicy: <@ podManagementPolicy | default('OrderedReady') @>
-                              strategyType: <@ strategyType | default('RollingUpdate') @>
-                              podLabels: <@ podLabels | default({}) @>
-                              podAnnotations: <@ podAnnotations | default({}) @>
-                              priorityClassName: <@ priorityClassName | default('') @>
-                              podAffinityPreset: "<@ podAffinityPreset | default('') @>"
-                              podAntiAffinityPreset: <@ podAntiAffinityPreset | default('soft') @>
+                                enabled: <@ input.tls.enabled | default(false) @>
+                                image:
+                                  registry: <@ input.tls.image.registry | default("docker.io") @>
+                                  repository: <@ input.tls.image.repository | default("bitnami/nginx") @>
+                                  tag: <@ input.tls.image.tag | default("1.19.5-debian-10-r19") @>
+                                  pullPolicy: <@ input.tls.image.pullPolicy | default("IfNotPresent") @>
+                              replicaSetName: <@ input.replicaSetName | default("rs0") @>
+                              replicaSetHostnames: <@ input.replicaSetHostnames | default(true) @>
+                              enableIPv6: <@ input.enableIPv6 | default(false) @>
+                              directoryPerDB: <@ input.directoryPerDB | default(false) @>
+                              systemLogVerbosity: <@ input.systemLogVerbosity | default(0) @>
+                              disableSystemLog: <@ input.disableSystemLog | default(false) @>
+                              configuration: <@ input.configuration | default("") @>
+                              initdbScripts: <@ input.initdbScripts | default({}) @>
+                              extraFlags: <@ input.extraFlags | default([]) @>
+                              extraEnvVars: <@ input.extraEnvVars | default([]) @>
+                              annotations: <@ input.annotations | default({}) @>
+                              labels: <@ input.labels | default({}) @>
+                              replicaCount: <@ input.replicaCount | default(3) @>
+                              strategyType: <@ input.strategyType | default("RollingUpdate") @>
+                              podManagementPolicy: <@ input.podManagementPolicy | default("OrderedReady") @>
+                              podAffinityPreset: <@ input.podAffinityPreset | default("") @>
+                              podAntiAffinityPreset: <@ input.podAntiAffinityPreset | default("soft") @>
                               nodeAffinityPreset:
-                                type: "<@ nodeAffinityPreset.type | default('') @>"
-                                key: <@ nodeAffinityPreset.key | default('') @>
-                                values: <@ nodeAffinityPreset.values | default([]) @>
-                              affinity: <@ affinity | default({}) @>
-                              nodeSelector: <@ nodeSelector | default({}) @>
-                              tolerations: <@ tolerations | default([]) @>
-
+                                type: <@ input.nodeAffinityPreset.type | default("") @>
+                                key: <@ input.nodeAffinityPreset.key | default("") @>
+                                values: <@ input.nodeAffinityPreset.values | default([]) @>
+                              affinity: <@ input.affinity | default({}) @>
+                              nodeSelector: <@ input.nodeSelector | default({}) @>
+                              tolerations: <@ input.tolerations | default([]) @>
+                              podLabels: <@ input.podLabels | default({}) @>
+                              podAnnotations: <@ input.podAnnotations | default({}) @>
+                              podSecurityContext:
+                                enabled: <@ input.podSecurityContext.enabled | default(true) @>
+                                fsGroup: <@ input.podSecurityContext.fsGroup | default(1001) @>
+                                sysctls: <@ input.podSecurityContext.sysctls | default([]) @>
+                              containerSecurityContext:
+                                enabled: <@ input.containerSecurityContext.enabled | default(true) @>
+                                runAsUser: <@ input.containerSecurityContext.runAsUser | default(1001) @>
+                                runAsNonRoot: <@ input.containerSecurityContext.runAsNonRoot | default(true) @>
                               resources:
-                                limits:
-                                  cpu: <@ resources.limits.cpu | default('1') @>
-                                  memory: <@ resources.limits.memory | default('1Gi') @>
-                                requests:
-                                  cpu: <@ resources.requests.cpu | default('500m') @>
-                                  memory: <@ resources.requests.memory | default('1Gi') @>
-
+                                limits: <@ input.resources.limits | default({}) @>
+                                requests: <@ input.resources.requests | default({}) @>
                               livenessProbe:
-                                enabled: <@ livenessProbe.enabled | default(true) @>
-                                initialDelaySeconds: <@ livenessProbe.initialDelaySeconds | default(60) @>
-                                periodSeconds: <@ livenessProbe.periodSeconds | default(15) @>
-                                timeoutSeconds: <@ livenessProbe.timeoutSeconds | default(5) @>
-                                failureThreshold: <@ livenessProbe.failureThreshold | default(1) @>
-                                successThreshold: <@ livenessProbe.successThreshold | default(1) @>
-                              
+                                enabled: <@ input.livenessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ input.livenessProbe.periodSeconds | default(10) @>
+                                timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(5) @>
+                                failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
+                                successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
                               readinessProbe:
-                                enabled: <@ livenessProbe.enabled | default(true) @>
-                                initialDelaySeconds: <@ livenessProbe.initialDelaySeconds | default(60) @>
-                                periodSeconds: <@ livenessProbe.periodSeconds | default(15) @>
-                                timeoutSeconds: <@ livenessProbe.timeoutSeconds | default(5) @>
-                                failureThreshold: <@ livenessProbe.failureThreshold | default(1) @>
-                                successThreshold: <@ livenessProbe.successThreshold | default(1) @>
-
-                              initContainers: <@ initContainers | default({}) @>
-                              sidecars: <@ sidecars | default({}) @>
-                              extraVolumeMounts: <@ extraVolumeMounts | default([]) @>
-                              extraVolumes: <@ extraVolumes | default([]) @>
-
-                              externalAccess:
-                                enabled: <@ externalAccess.enabled | default(false) @>
-                                autoDiscovery:
-                                  enabled: <@ externalAccess.autoDiscovery.enabled | default(false) @>
-                                service:
-                                  type: <@ externalAccess.service.type | default('LoadBalancer') @>
-                                  port: <@ externalAccess.service.port | default(27017) @>
-                                  loadBalancerIPs: <@ externalAccess.service.loadBalancerIPs | default([]) @>
-                                  loadBalancerSourceRanges: <@ externalAccess.service.loadBalancerSourceRanges | default([]) @>
-                                  domain: <@ externalAccess.service.domain | default('') @>
-                                  nodePorts: <@ externalAccess.service.nodePorts | default([]) @>
-                                  annotations: <@ externalAccess.service.annotations | default({}) @>
-
-                              perisistence:
-                                enabled: <@ persistence.enabled | default(true) @>
-                                storageClass: <@ persistence.storageClass | default('null') @>
-                                accessMode: <@ persistence.accessMode | default('ReadWriteOnce') @>
-                                size: <@ persistence.size | default('8Gi') @>
-
-                              volumePermissions:
-                                enabled: true
-
+                                enabled: <@ input.readinessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(5) @>
+                                periodSeconds: <@ input.readinessProbe.periodSeconds | default(10) @>
+                                timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(5) @>
+                                failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
+                                successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
+                              customLivenessProbe: <@ input.customLivenessProbe | default({}) @>
+                              customReadinessProbe: <@ input.customReadinessProbe | default({}) @>
+                              initContainers: <@ input.initContainers | default({}) @>
+                              sidecars: <@ input.sidecars | default({}) @>
+                              extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
+                              extraVolumes: <@ input.extraVolumes | default([]) @>
                               pdb:
-                                create: <@ pdb.create | default(true) @>
-                                minAvailable: <@ pdb.minAvailable | default(1) @>
-                                maxUnavailable: <@ pdb.maxUnavailable | default('null') @>
-
+                                create: <@ input.pdb.create | default(false) @>
+                                minAvailable: <@ input.pdb.minAvailable | default(1) @>
+                              persistence:
+                                enabled: <@ input.persistence.enabled | default(true) @>
+                                accessModes: <@ input.persistence.accessModes | default(["ReadWriteOnce"]) @>
+                                size: <@ input.persistence.size | default("8Gi") @>
+                                annotations: <@ input.persistence.annotations | default({}) @>
+                                mountPath: <@ input.persistence.mountPath | default("/bitnami/mongodb") @>
+                                subPath: <@ input.persistence.subPath | default("") @>
+                                volumeClaimTemplates:
+                                  selector: <@ input.persistence.volumeClaimTemplates.selector | default(null) @>
+                              service:
+                                type: <@ input.service.type | default("ClusterIP") @>
+                                port: <@ input.service.port | default(27017) @>
+                                portName: <@ input.service.portName | default("mongodb") @>
+                                nodePort: <@ input.service.nodePort | default("") @>
+                                externalIPs: <@ input.service.externalIPs | default([]) @>
+                                loadBalancerSourceRanges: <@ input.service.loadBalancerSourceRanges | default([]) @>
+                                annotations: <@ input.service.annotations | default({}) @>
+                              externalAccess:
+                                enabled: <@ input.externalAccess.enabled | default(false) @>
+                                autoDiscovery:
+                                  enabled: <@ input.externalAccess.autoDiscovery.enabled | default(false) @>
+                                  image:
+                                    registry: <@ input.externalAccess.autoDiscovery.image.registry | default("docker.io") @>
+                                    repository: <@ input.externalAccess.autoDiscovery.image.repository | default("bitnami/kubectl") @>
+                                    tag: <@ input.externalAccess.autoDiscovery.image.tag | default("1.18.13-debian-10-r5") @>
+                                    pullPolicy: <@ input.externalAccess.autoDiscovery.image.pullPolicy | default("IfNotPresent") @>
+                                    pullSecrets: <@ input.externalAccess.autoDiscovery.image.pullSecrets | default([]) @>
+                                  resources:
+                                    limits: <@ input.externalAccess.autoDiscovery.resources.limits | default({}) @>
+                                    requests: <@ input.externalAccess.autoDiscovery.resources.requests | default({}) @>
+                                service:
+                                  type: <@ input.externalAccess.service.type | default("LoadBalancer") @>
+                                  port: <@ input.externalAccess.service.port | default(27017) @>
+                                  loadBalancerIPs: <@ input.externalAccess.service.loadBalancerIPs | default([]) @>
+                                  loadBalancerSourceRanges: <@ input.externalAccess.service.loadBalancerSourceRanges | default([]) @>
+                                  nodePorts: <@ input.externalAccess.service.nodePorts | default([]) @>
+                                  annotations: <@ input.externalAccess.service.annotations | default({}) @>
                               arbiter:
-                                enabled: <@ arbiter.enabled | default(false) @>
+                                enabled: <@ input.arbiter.enabled | default(false) @>
+                                configuration: <@ input.arbiter.configuration | default("") @>
+                                extraFlags: <@ input.arbiter.extraFlags | default([]) @>
+                                extraEnvVars: <@ input.arbiter.extraEnvVars | default([]) @>
+                                annotations: <@ input.arbiter.annotations | default({}) @>
+                                labels: <@ input.arbiter.labels | default({}) @>
+                                podAffinityPreset: <@ input.arbiter.podAffinityPreset | default("") @>
+                                podAntiAffinityPreset: <@ input.arbiter.podAntiAffinityPreset | default("soft") @>
+                                nodeAffinityPreset:
+                                  type: <@ input.arbiter.nodeAffinityPreset.type | default("") @>
+                                  key: <@ input.arbiter.nodeAffinityPreset.key | default("") @>
+                                  values: <@ input.arbiter.nodeAffinityPreset.values | default([]) @>
+                                affinity: <@ input.arbiter.affinity | default({}) @>
+                                nodeSelector: <@ input.arbiter.nodeSelector | default({}) @>
+                                tolerations: <@ input.arbiter.tolerations | default([]) @>
+                                podLabels: <@ input.arbiter.podLabels | default({}) @>
+                                podAnnotations: <@ input.arbiter.podAnnotations | default({}) @>
+                                podSecurityContext:
+                                  enabled: <@ input.arbiter.podSecurityContext.enabled | default(true) @>
+                                  fsGroup: <@ input.arbiter.podSecurityContext.fsGroup | default(1001) @>
+                                  sysctls: <@ input.arbiter.podSecurityContext.sysctls | default([]) @>
+                                containerSecurityContext:
+                                  enabled: <@ input.arbiter.containerSecurityContext.enabled | default(true) @>
+                                  runAsUser: <@ input.arbiter.containerSecurityContext.runAsUser | default(1001) @>
                                 resources:
-                                  limits:
-                                    cpu: <@ arbiter.resources.limits.cpu | default('500m') @>
-                                    memory: <@ arbiter.resources.limits.memory | default('1Gi') @>
-                                  requests:
-                                    cpu: <@ arbiter.resources.requests.cpu | default('100m') @>
-                                    memory: <@ arbiter.resources.requests.memory | default('512Mi') @>
-
+                                  limits: <@ input.arbiter.resources.limits | default({}) @>
+                                  requests: <@ input.arbiter.resources.requests | default({}) @>
+                                livenessProbe:
+                                  enabled: <@ input.arbiter.livenessProbe.enabled | default(true) @>
+                                  initialDelaySeconds: <@ input.arbiter.livenessProbe.initialDelaySeconds | default(30) @>
+                                  periodSeconds: <@ input.arbiter.livenessProbe.periodSeconds | default(10) @>
+                                  timeoutSeconds: <@ input.arbiter.livenessProbe.timeoutSeconds | default(5) @>
+                                  failureThreshold: <@ input.arbiter.livenessProbe.failureThreshold | default(6) @>
+                                  successThreshold: <@ input.arbiter.livenessProbe.successThreshold | default(1) @>
+                                readinessProbe:
+                                  enabled: <@ input.arbiter.readinessProbe.enabled | default(true) @>
+                                  initialDelaySeconds: <@ input.arbiter.readinessProbe.initialDelaySeconds | default(5) @>
+                                  periodSeconds: <@ input.arbiter.readinessProbe.periodSeconds | default(10) @>
+                                  timeoutSeconds: <@ input.arbiter.readinessProbe.timeoutSeconds | default(5) @>
+                                  failureThreshold: <@ input.arbiter.readinessProbe.failureThreshold | default(6) @>
+                                  successThreshold: <@ input.arbiter.readinessProbe.successThreshold | default(1) @>
+                                customLivenessProbe: <@ input.arbiter.customLivenessProbe | default({}) @>
+                                customReadinessProbe: <@ input.arbiter.customReadinessProbe | default({}) @>
+                                initContainers: <@ input.arbiter.initContainers | default({}) @>
+                                sidecars: <@ input.arbiter.sidecars | default({}) @>
+                                extraVolumeMounts: <@ input.arbiter.extraVolumeMounts | default([]) @>
+                                extraVolumes: <@ input.arbiter.extraVolumes | default([]) @>
+                                pdb:
+                                  create: <@ input.arbiter.pdb.create | default(true) @>
+                                  minAvailable: <@ input.arbiter.pdb.minAvailable | default(1) @>
+                              serviceAccount:
+                                create: <@ input.serviceAccount.create | default(true) @>
+                              rbac:
+                                create: <@ input.rbac.create | default(false) @>
+                              volumePermissions:
+                                enabled: <@ input.volumePermissions.enabled | default(false) @>
+                                image:
+                                  registry: <@ input.volumePermissions.image.registry | default("docker.io") @>
+                                  repository: <@ input.volumePermissions.image.repository | default("bitnami/minideb") @>
+                                  tag: <@ input.volumePermissions.image.tag | default("buster") @>
+                                  pullPolicy: <@ input.volumePermissions.image.pullPolicy | default("Always") @>
+                                  pullSecrets: <@ input.volumePermissions.image.pullSecrets | default([]) @>
+                                resources:
+                                  limits: <@ input.volumePermissions.resources.limits | default({}) @>
+                                  requests: <@ input.volumePermissions.resources.requests | default({}) @>
+                                securityContext:
+                                  runAsUser: <@ input.volumePermissions.securityContext.runAsUser | default(0) @>
                               metrics:
-                                # this does not work in chart version 10.3.1
-                                enabled: <@ metrics.enabled | default(false) @>
-
+                                enabled: <@ input.metrics.enabled | default(false) @>
+                                image:
+                                  registry: <@ input.metrics.image.registry | default("docker.io") @>
+                                  repository: <@ input.metrics.image.repository | default("bitnami/mongodb-exporter") @>
+                                  tag: <@ input.metrics.image.tag | default("0.20.1-debian-10-r11") @>
+                                  pullPolicy: <@ input.metrics.image.pullPolicy | default("IfNotPresent") @>
+                                extraFlags: <@ input.metrics.extraFlags | default("") @>
+                                extraUri: <@ input.metrics.extraUri | default("") @>
+                                resources:
+                                  limits: <@ input.metrics.resources.limits | default({}) @>
+                                  requests: <@ input.metrics.resources.requests | default({}) @>
+                                service:
+                                  annotations:
+                                    prometheus.io/scrape: <@ input.metrics.service.annotations.prometheus.io/scrape | default("true") @>
+                                    prometheus.io/port: <@ input.metrics.service.annotations.prometheus.io/port | default("{{ .Values.metrics.service.port }}") @>
+                                    prometheus.io/path: <@ input.metrics.service.annotations.prometheus.io/path | default("/metrics") @>
+                                  type: <@ input.metrics.service.type | default("ClusterIP") @>
+                                  port: <@ input.metrics.service.port | default(9216) @>
+                                livenessProbe:
+                                  enabled: <@ input.metrics.livenessProbe.enabled | default(true) @>
+                                  initialDelaySeconds: <@ input.metrics.livenessProbe.initialDelaySeconds | default(15) @>
+                                  periodSeconds: <@ input.metrics.livenessProbe.periodSeconds | default(5) @>
+                                  timeoutSeconds: <@ input.metrics.livenessProbe.timeoutSeconds | default(5) @>
+                                  failureThreshold: <@ input.metrics.livenessProbe.failureThreshold | default(3) @>
+                                  successThreshold: <@ input.metrics.livenessProbe.successThreshold | default(1) @>
+                                readinessProbe:
+                                  enabled: <@ input.metrics.readinessProbe.enabled | default(true) @>
+                                  initialDelaySeconds: <@ input.metrics.readinessProbe.initialDelaySeconds | default(5) @>
+                                  periodSeconds: <@ input.metrics.readinessProbe.periodSeconds | default(5) @>
+                                  timeoutSeconds: <@ input.metrics.readinessProbe.timeoutSeconds | default(1) @>
+                                  failureThreshold: <@ input.metrics.readinessProbe.failureThreshold | default(3) @>
+                                  successThreshold: <@ input.metrics.readinessProbe.successThreshold | default(1) @>
+                                serviceMonitor:
+                                  enabled: <@ input.metrics.serviceMonitor.enabled | default(false) @>
+                                  interval: <@ input.metrics.serviceMonitor.interval | default("30s") @>
+                                  additionalLabels: <@ input.metrics.serviceMonitor.additionalLabels | default({}) @>
+                                prometheusRule:
+                                  enabled: <@ input.metrics.prometheusRule.enabled | default(false) @>
+                                  additionalLabels: <@ input.metrics.prometheusRule.additionalLabels | default({}) @>
+                                  rules: <@ input.metrics.prometheusRule.rules | default({}) @>
+                             
                             output:
                               goTemplate: |
                                 replicas:
