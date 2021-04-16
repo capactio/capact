@@ -1,0 +1,133 @@
+ingress:
+  enabled: true
+
+image:
+  repository: "atlassian/crowd"
+  tag: "4.2.3"
+  pullPolicy: "IfNotPresent"
+  pullSecrets: {}
+
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+## ref: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podsecuritycontext-v1-core
+podSecurityContext:
+  fsGroup: 2004
+
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+securityContext:
+  readOnlyRootFilesystem: false
+  runAsNonRoot: false
+  runAsUser: 2004
+
+## ref: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  type: "ClusterIP"
+  ## The port for Tomcat/Crowd to listen on
+  port: 8095
+  ## HTTPS Port, in case ATL_TOMCAT_SCHEME is set to 'https'
+  httpsPort: null
+  loadBalancerIP: null
+  ## Use nodePorts to requets some specific ports when usin NodePort
+  ## nodePorts:
+  ##   http: <to set explicitly, choose port between 30000-32767>
+  ##   https: <to set explicitly, choose port between 30000-32767>
+  ##
+  nodePorts:
+    http: null
+    https: null
+
+## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+  requests:
+    memory: "1G"
+    cpu: "500m"
+  limits:
+    memory: "2G"
+    cpu: "1"
+
+## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+replicaCount: 3
+
+## ref: https://kubernetes.io/docs/user-guide/node-selection/
+nodeSelector: {}
+
+## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+
+## Persistent Volume Claim
+## Crowd Home directory
+## https://kubernetes.io/docs/concepts/storage/persistent-volumes/
+persistence:
+  enabled: true
+  annotations: {}
+  ## existingClaim needs the existing PVC name
+  existingClaim: ""
+  accessMode: "ReadWriteOnce"
+  size: "10Gi"
+
+  # If defined, storageClassName: <storageClass>
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined (the default) or set to nil, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ##
+  storageClass: null
+
+# Additional volume mounts
+extraVolumeMounts: []
+
+# Additional volumes
+extraVolumes: []
+
+## Use an alternate scheduler, e.g. "stork".
+## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
+schedulerName: ""
+
+## Container Probes
+## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 6
+  successThreshold: 1
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 60
+  periodSeconds: 30
+  timeoutSeconds: 10
+  failureThreshold: 6
+  successThreshold: 1
+
+## Crowd specific configurations
+## https://hub.docker.com/r/atlassian/crowd
+## crowd/secrets/cas
+caCerts: {}
+
+initContainerImages:
+  # used keytool if 'caCerts' is enabled
+  jdk: "adoptopenjdk:11-jdk-hotspot"
+
+## Memory / Heap Size (JVM_MINIMUM_MEMORY) Mandatory, see @Notes above
+jvmMinimumMemory: "1024m"
+## Memory / Heap Size (JVM_MAXIMUM_MEMORY) Mandatory, see @Notes above
+jvmMaximumMemory: "1024m"
+
+## Environment Variables that will be injected in the ConfigMap
+## Default values unless otherwise stated
+envVars: {}
+
+## Additional container environment variables
+extraEnv: "-XX:MaxMetaspaceSize=512m"
