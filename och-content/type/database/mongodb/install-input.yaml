@@ -126,20 +126,20 @@ spec:
             },
             "additionalProperties": false
           },
-          "persistance": {
+          "persistence": {
             "properties": {
               "enabled": {
-                "$id": "#/properties/persistance/properties/enabled",
+                "$id": "#/properties/persistence/properties/enabled",
                 "type": "boolean",
                 "title": "Enable MongoDB data persistence using PVC"
               },
               "storageClass": {
-                "$id": "#/properties/persistance/properties/storageClass",
+                "$id": "#/properties/persistence/properties/storageClass",
                 "type": "string",
                 "title": "PVC Storage Class for MongoDB data volume"
               },
               "accessMode": {
-                "$id": "#/properties/persistance/properties/accessMode",
+                "$id": "#/properties/persistence/properties/accessMode",
                 "type": "string",
                 "title": "PVC Access Mode for MongoDB data volume"
               }
