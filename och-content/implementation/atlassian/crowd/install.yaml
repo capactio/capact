@@ -169,6 +169,8 @@ spec:
                                   cert-manager.io/cluster-issuer: letsencrypt
                                   kubernetes.io/ingress.class: nginx
                                   kubernetes.io/tls-acme: "true"
+                                  nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+                                  nginx.ingress.kubernetes.io/affinity: "cookie"
                                 tls:
                                   - secretName: crowd-server-tls-<@ random_word(length=5) @>
                                     hosts:
@@ -195,9 +197,9 @@ spec:
 
                               ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
                               securityContext:
-                                readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(true | tojson) @>
-                                runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(true | tojson) @>
-                                runAsUser: <@ input.securityContext.runAsUser | default(1000) @>
+                                readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(false | tojson) @>
+                                runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(false | tojson) @>
+                                runAsUser: <@ input.securityContext.runAsUser | default(2004) @>
 
                               ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
                               service:
@@ -277,7 +279,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(300) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(60) @>
                                 periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
@@ -290,7 +292,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(480) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(60) @>
                                 periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
@@ -316,7 +318,7 @@ spec:
                                 <% if input.envVars -%>
                                 <% for key, value in input.envVars.items() %>
                                 <@ key @>: <@ value|string @>
-                                <% endfor %>
+                                <%- endfor %>
                                 <%- endif %>
 
                               ## Additional container environment variables
