@@ -4,7 +4,7 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.bitnami.mongodb
   name: install
-  displayName: Install production-ready MongoDB database
+  displayName: Install MongoDB database
   description: Action which installs MongoDB database via Helm chart
   documentationURL: https://github.com/bitnami/charts
   supportURL: https://bitnami.com
