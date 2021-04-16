@@ -20,9 +20,9 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Atlassian Crowd configuration",
+        "title": "The schema for Atlassian Crowd installation",
         "required": [
-            "host"
+          "host"
         ],
         "$ocfRefs": {
           "hostname": {
@@ -30,13 +30,530 @@ spec:
             "revision": "0.1.0"
           }
         },
+        "default": {},
+        "examples": [
+          {
+            "host": "crowd.capact.local",
+            "ingress": {
+              "enabled": true
+            },
+            "image": {
+              "pullPolicy": "IfNotPresent"
+            },
+            "resources": {
+              "requests": {
+                "memory": "1G",
+                "cpu": "500m"
+              },
+              "limits": {
+                "memory": "2G",
+                "cpu": "1"
+              }
+            },
+            "replicaCount": 2,
+            "readinessProbe": {
+              "enabled": false
+            },
+            "livenessProbe": {
+              "enabled": true,
+              "initialDelaySeconds": 60,
+              "periodSeconds": 30,
+              "timeoutSeconds": 10,
+              "failureThreshold": 6,
+              "successThreshold": 1
+            },
+            "envVars": {
+              "FOO": "BAR"
+            }
+          }
+        ],
         "properties": {
           "host": {
             "$ref": "#/$ocfRefs/hostname"
+          },
+          "ingress": {
+            "$id": "#/properties/ingress",
+            "type": "object",
+            "title": "The ingress configuration",
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/ingress/properties/enabled",
+                "type": "boolean",
+                "title": "Specifies if ingress is enabled",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "image": {
+            "$id": "#/properties/image",
+            "type": "object",
+            "title": "The image configuration",
+            "required": [],
+            "properties": {
+              "repository": {
+                "$id": "#/properties/image/properties/repository",
+                "type": "string",
+                "title": "The image repository",
+                "default": "atlassian/crowd"
+              },
+              "tag": {
+                "$id": "#/properties/image/properties/tag",
+                "type": "string",
+                "title": "The image tag",
+                "default": "4.2.3"
+              },
+              "pullPolicy": {
+                "$id": "#/properties/image/properties/pullPolicy",
+                "type": "string",
+                "title": "The image pullPolicy",
+                "default": "IfNotPresent"
+              },
+              "pullSecrets": {
+                "$id": "#/properties/image/properties/pullSecrets",
+                "type": "object",
+                "title": "The image pull secrets",
+                "default": {},
+                "required": [],
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "serviceAccount": {
+            "$id": "#/properties/serviceAccount",
+            "type": "object",
+            "title": "The Service Account configuration",
+            "description": "Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+            "required": [],
+            "properties": {
+              "create": {
+                "$id": "#/properties/serviceAccount/properties/create",
+                "type": "boolean",
+                "title": "Specifies if the ServiceAccount should be created",
+                "default": true
+              },
+              "annotations": {
+                "$id": "#/properties/serviceAccount/properties/annotations",
+                "type": "object",
+                "title": "Annotations for the ServiceAccount",
+                "default": {},
+                "additionalProperties": false
+              },
+              "name": {
+                "$id": "#/properties/serviceAccount/properties/name",
+                "type": "string",
+                "title": "The ServiceAccount name",
+                "default": ""
+              }
+            },
+            "additionalProperties": false
+          },
+          "podSecurityContext": {
+            "$id": "#/properties/podSecurityContext",
+            "type": "object",
+            "title": "The podSecurityContext configuration",
+            "description": "Reference: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podsecuritycontext-v1-core",
+            "properties": {
+              "fsGroup": {
+                "$id": "#/properties/podSecurityContext/properties/fsGroup",
+                "type": "integer",
+                "title": "The file system group ID",
+                "default": 2004
+              }
+            },
+            "additionalProperties": false
+          },
+          "securityContext": {
+            "$id": "#/properties/securityContext",
+            "type": "object",
+            "title": "The Pod security context configuration",
+            "properties": {
+              "readOnlyRootFilesystem": {
+                "$id": "#/properties/securityContext/properties/readOnlyRootFilesystem",
+                "type": "boolean",
+                "title": "Specifies if the root file system is read only",
+                "default": false
+              },
+              "runAsNonRoot": {
+                "$id": "#/properties/securityContext/properties/runAsNonRoot",
+                "type": "boolean",
+                "title": "Specifies if the container is ran as root",
+                "default": false
+              },
+              "runAsUser": {
+                "$id": "#/properties/securityContext/properties/runAsUser",
+                "type": "integer",
+                "title": "User ID for running the container",
+                "default": 2004
+              }
+            },
+            "additionalProperties": false
+          },
+          "service": {
+            "$id": "#/properties/service",
+            "type": "object",
+            "title": "The service configuration",
+            "description": "Reference: https://kubernetes.io/docs/concepts/services-networking/service/",
+            "properties": {
+              "type": {
+                "$id": "#/properties/service/properties/type",
+                "type": "string",
+                "title": "The service type",
+                "default": "ClusterIP"
+              },
+              "port": {
+                "$id": "#/properties/service/properties/port",
+                "type": "integer",
+                "title": "The port for Tomcat/Crowd to listen on",
+                "default": 8095
+              },
+              "httpsPort": {
+                "$id": "#/properties/service/properties/httpsPort",
+                "type": "null",
+                "title": "HTTPS Port, in case ATL_TOMCAT_SCHEME is set to 'https'",
+                "default": null
+              },
+              "loadBalancerIP": {
+                "$id": "#/properties/service/properties/loadBalancerIP",
+                "type": "null",
+                "title": "The service load balancer IP",
+                "default": null
+              },
+              "nodePorts": {
+                "$id": "#/properties/service/properties/nodePorts",
+                "type": "object",
+                "title": "Use nodePorts to requets some specific ports when usin NodePort",
+                "properties": {
+                  "http": {
+                    "$id": "#/properties/service/properties/nodePorts/properties/http",
+                    "type": "null",
+                    "title": "The node port for HTTP",
+                    "default": null
+                  },
+                  "https": {
+                    "$id": "#/properties/service/properties/nodePorts/properties/https",
+                    "type": "null",
+                    "title": "The node port for HTTPS",
+                    "default": null
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "resources": {
+            "$id": "#/properties/resources",
+            "type": "object",
+            "title": "The resources configuration",
+            "description": "Reference: https://kubernetes.io/docs/user-guide/compute-resources/"
+          },
+          "properties": {
+            "requests": {
+              "$id": "#/properties/resources/properties/requests",
+              "type": "object",
+              "title": "The resource requests",
+              "properties": {
+                "memory": {
+                  "$id": "#/properties/resources/properties/requests/properties/memory",
+                  "type": "string",
+                  "title": "The memory configuration",
+                  "default": "1G"
+                },
+                "cpu": {
+                  "$id": "#/properties/resources/properties/requests/properties/cpu",
+                  "type": "string",
+                  "title": "The cpu configuration",
+                  "default": "500m"
+                }
+              },
+              "additionalProperties": false
+            },
+            "limits": {
+              "$id": "#/properties/resources/properties/limits",
+              "type": "object",
+              "title": "The resource limits",
+              "properties": {
+                "memory": {
+                  "$id": "#/properties/resources/properties/limits/properties/memory",
+                  "type": "string",
+                  "title": "The memory configuration",
+                  "default": "2G"
+                },
+                "cpu": {
+                  "$id": "#/properties/resources/properties/limits/properties/cpu",
+                  "type": "string",
+                  "title": "The cpu configuration",
+                  "default": "1"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "replicaCount": {
+          "$id": "#/properties/replicaCount",
+          "type": "integer",
+          "title": "The number of replicas",
+          "description": "Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
+          "default": 3
+        },
+        "nodeSelector": {
+          "$id": "#/properties/nodeSelector",
+          "type": "object",
+          "title": "The node selector",
+          "description": "Reference: https://kubernetes.io/docs/user-guide/node-selection/",
+          "default": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        "tolerations": {
+          "$id": "#/properties/tolerations",
+          "type": "array",
+          "title": "The Pod tolerations",
+          "description": "Reference: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "$id": "#/properties/tolerations/items"
           }
         },
-        "additionalProperties": true
+        "affinity": {
+          "$id": "#/properties/affinity",
+          "type": "object",
+          "title": "The Pod affinity",
+          "description": "Reference: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity",
+          "default": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        "podAnnotations": {
+          "$id": "#/properties/podAnnotations",
+          "type": "object",
+          "title": "The Pod annotations",
+          "description": "Reference: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+          "default": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        "persistence": {
+          "$id": "#/properties/persistence",
+          "type": "object",
+          "title": "The persistence configuration",
+          "description": "Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/",
+          "properties": {
+            "enabled": {
+              "$id": "#/properties/persistence/properties/enabled",
+              "type": "boolean",
+              "title": "Specifies if the persistence is enabled",
+              "default": true
+            },
+            "annotations": {
+              "$id": "#/properties/persistence/properties/annotations",
+              "type": "object",
+              "title": "The annotations for Persistent Volume Claim",
+              "default": {},
+              "required": [],
+              "additionalProperties": false
+            },
+            "existingClaim": {
+              "$id": "#/properties/persistence/properties/existingClaim",
+              "type": "string",
+              "title": "Reuse existing PersistentVolumeClaim by name",
+              "default": ""
+            },
+            "accessMode": {
+              "$id": "#/properties/persistence/properties/accessMode",
+              "type": "string",
+              "title": "Access mode of the Claim",
+              "default": "ReadWriteOnce"
+            },
+            "size": {
+              "$id": "#/properties/persistence/properties/size",
+              "type": "string",
+              "title": "Size of the Claim",
+              "default": "10Gi"
+            },
+            "storageClass": {
+              "$id": "#/properties/persistence/properties/storageClass",
+              "type": "null",
+              "title": "The storageClass configuration",
+              "description": "If defined, storageClassName: <storageClass>. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If undefined (the default) or set to nil, no storageClassName spec is set, choosing the default provisioner. (gp2 on AWS, standard on GKE, AWS & OpenStack)",
+              "default": null
+            }
+          },
+          "additionalProperties": false
+        },
+        "extraVolumeMounts": {
+          "$id": "#/properties/extraVolumeMounts",
+          "type": "array",
+          "title": "Additional volume mounts",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "$id": "#/properties/extraVolumeMounts/items"
+          }
+        },
+        "extraVolumes": {
+          "$id": "#/properties/extraVolumes",
+          "type": "array",
+          "title": "The additional volumes",
+          "default": [],
+          "additionalItems": true,
+          "items": {
+            "$id": "#/properties/extraVolumes/items"
+          }
+        },
+        "schedulerName": {
+          "$id": "#/properties/schedulerName",
+          "type": "string",
+          "title": "Scheduler name to use alternate scheduler",
+          "description": "Reference: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/",
+          "default": ""
+        },
+        "readinessProbe": {
+          "$id": "#/properties/readinessProbe",
+          "type": "object",
+          "title": "Container readiness probe",
+          "description": "Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes",
+          "properties": {
+            "enabled": {
+              "$id": "#/properties/readinessProbe/properties/enabled",
+              "type": "boolean",
+              "title": "Specifies if the probe is enabled",
+              "default": true
+            },
+            "initialDelaySeconds": {
+              "$id": "#/properties/readinessProbe/properties/initialDelaySeconds",
+              "type": "integer",
+              "title": "Initial delay seconds",
+              "default": 60
+            },
+            "periodSeconds": {
+              "$id": "#/properties/readinessProbe/properties/periodSeconds",
+              "type": "integer",
+              "title": "Period seconds",
+              "default": 30
+            },
+            "timeoutSeconds": {
+              "$id": "#/properties/readinessProbe/properties/timeoutSeconds",
+              "type": "integer",
+              "title": "Timeout seconds",
+              "default": 10
+            },
+            "failureThreshold": {
+              "$id": "#/properties/readinessProbe/properties/failureThreshold",
+              "type": "integer",
+              "title": "Failure threshold",
+              "default": 6
+            },
+            "successThreshold": {
+              "$id": "#/properties/readinessProbe/properties/successThreshold",
+              "type": "integer",
+              "title": "Success threshold",
+              "default": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "livenessProbe": {
+          "$id": "#/properties/livenessProbe",
+          "type": "object",
+          "title": "Container liveness probe",
+          "description": "Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes",
+          "properties": {
+            "enabled": {
+              "$id": "#/properties/livenessProbe/properties/enabled",
+              "type": "boolean",
+              "title": "Specifies if the probe is enabled",
+              "default": true
+            },
+            "initialDelaySeconds": {
+              "$id": "#/properties/livenessProbe/properties/initialDelaySeconds",
+              "type": "integer",
+              "title": "Initial delay seconds",
+              "default": 60
+            },
+            "periodSeconds": {
+              "$id": "#/properties/livenessProbe/properties/periodSeconds",
+              "type": "integer",
+              "title": "Period seconds",
+              "default": 30
+            },
+            "timeoutSeconds": {
+              "$id": "#/properties/livenessProbe/properties/timeoutSeconds",
+              "type": "integer",
+              "title": "Timeout seconds",
+              "default": 10
+            },
+            "failureThreshold": {
+              "$id": "#/properties/livenessProbe/properties/failureThreshold",
+              "type": "integer",
+              "title": "Failure threshold",
+              "default": 6
+            },
+            "successThreshold": {
+              "$id": "#/properties/livenessProbe/properties/successThreshold",
+              "type": "integer",
+              "title": "Success threshold",
+              "default": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "caCerts": {
+          "$id": "#/properties/caCerts",
+          "type": "object",
+          "title": "CA certificates",
+          "description": "Reference: https://hub.docker.com/r/atlassian/crowd",
+          "default": {},
+          "required": [],
+          "additionalProperties": false
+        },
+        "initContainerImages": {
+          "$id": "#/properties/initContainerImages",
+          "type": "object",
+          "title": "The initContainers for Pod",
+          "properties": {
+            "jdk": {
+              "$id": "#/properties/initContainerImages/properties/jdk",
+              "type": "string",
+              "title": "Used keytool if 'caCerts' is enabled",
+              "default": "adoptopenjdk:11-jdk-hotspot"
+            }
+          },
+          "additionalProperties": false
+        },
+        "jvmMinimumMemory": {
+          "$id": "#/properties/jvmMinimumMemory",
+          "type": "string",
+          "title": "Memory / Heap Size (JVM_MINIMUM_MEMORY) Mandatory, see @Notes above",
+          "default": "1024m"
+        },
+        "jvmMaximumMemory": {
+          "$id": "#/properties/jvmMaximumMemory",
+          "type": "string",
+          "title": "Memory / Heap Size (JVM_MAXIMUM_MEMORY) Mandatory, see @Notes above",
+          "default": "1024m"
+        },
+        "envVars": {
+          "$id": "#/properties/envVars",
+          "type": "object",
+          "title": "Environment Variables that will be injected in the ConfigMap",
+          "default": {},
+          "additionalProperties": false
+        },
+        "extraEnv": {
+          "$id": "#/properties/extraEnv",
+          "type": "string",
+          "title": "Additional container environment variables",
+          "default": "-XX:MaxMetaspaceSize=512m"
+        },
+        "additionalProperties": false
       }
+
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
