@@ -55,14 +55,12 @@
     "ingress": {
       "$id": "#/properties/ingress",
       "type": "object",
-      "title": "The ingress schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The ingress configuration",
       "properties": {
         "enabled": {
           "$id": "#/properties/ingress/properties/enabled",
           "type": "boolean",
-          "title": "The enabled schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Specifies if ingress is enabled",
           "default": true
         }
       },
@@ -71,36 +69,31 @@
     "image": {
       "$id": "#/properties/image",
       "type": "object",
-      "title": "The image schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The image configuration",
       "required": [],
       "properties": {
         "repository": {
           "$id": "#/properties/image/properties/repository",
           "type": "string",
-          "title": "The repository schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The image repository",
           "default": "atlassian/crowd"
         },
         "tag": {
           "$id": "#/properties/image/properties/tag",
           "type": "string",
-          "title": "The tag schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The image tag",
           "default": "4.2.3"
         },
         "pullPolicy": {
           "$id": "#/properties/image/properties/pullPolicy",
           "type": "string",
-          "title": "The pullPolicy schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The image pullPolicy",
           "default": "IfNotPresent"
         },
         "pullSecrets": {
           "$id": "#/properties/image/properties/pullSecrets",
           "type": "object",
-          "title": "The pullSecrets schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The image pull secrets",
           "default": {},
           "required": [],
           "additionalProperties": false
@@ -111,30 +104,27 @@
     "serviceAccount": {
       "$id": "#/properties/serviceAccount",
       "type": "object",
-      "title": "The serviceAccount schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The Service Account configuration",
+      "description": "Reference: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
       "required": [],
       "properties": {
         "create": {
           "$id": "#/properties/serviceAccount/properties/create",
           "type": "boolean",
-          "title": "The create schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Specifies if the ServiceAccount should be created",
           "default": true
         },
         "annotations": {
           "$id": "#/properties/serviceAccount/properties/annotations",
           "type": "object",
-          "title": "The annotations schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Annotations for the ServiceAccount",
           "default": {},
           "additionalProperties": false
         },
         "name": {
           "$id": "#/properties/serviceAccount/properties/name",
           "type": "string",
-          "title": "The name schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The ServiceAccount name",
           "default": ""
         }
       },
@@ -143,14 +133,13 @@
     "podSecurityContext": {
       "$id": "#/properties/podSecurityContext",
       "type": "object",
-      "title": "The podSecurityContext schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The podSecurityContext configuration",
+      "description": "Reference: https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#podsecuritycontext-v1-core",
       "properties": {
         "fsGroup": {
           "$id": "#/properties/podSecurityContext/properties/fsGroup",
           "type": "integer",
-          "title": "The fsGroup schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The file system group ID",
           "default": 2004
         }
       },
@@ -159,28 +148,24 @@
     "securityContext": {
       "$id": "#/properties/securityContext",
       "type": "object",
-      "title": "The securityContext schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The Pod security context configuration",
       "properties": {
         "readOnlyRootFilesystem": {
           "$id": "#/properties/securityContext/properties/readOnlyRootFilesystem",
           "type": "boolean",
-          "title": "The readOnlyRootFilesystem schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Specifies if the root file system is read only",
           "default": false
         },
         "runAsNonRoot": {
           "$id": "#/properties/securityContext/properties/runAsNonRoot",
           "type": "boolean",
-          "title": "The runAsNonRoot schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Specifies if the container is ran as root",
           "default": false
         },
         "runAsUser": {
           "$id": "#/properties/securityContext/properties/runAsUser",
           "type": "integer",
-          "title": "The runAsUser schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "User ID for running the container",
           "default": 2004
         }
       },
@@ -189,55 +174,48 @@
     "service": {
       "$id": "#/properties/service",
       "type": "object",
-      "title": "The service schema",
-      "description": "An explanation about the purpose of this instance.",
+      "title": "The service configuration",
+      "description": "Reference: https://kubernetes.io/docs/concepts/services-networking/service/",
       "properties": {
         "type": {
           "$id": "#/properties/service/properties/type",
           "type": "string",
-          "title": "The type schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The service type",
           "default": "ClusterIP"
         },
         "port": {
           "$id": "#/properties/service/properties/port",
           "type": "integer",
-          "title": "The port schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The port for Tomcat/Crowd to listen on",
           "default": 8095
         },
         "httpsPort": {
           "$id": "#/properties/service/properties/httpsPort",
           "type": "null",
-          "title": "The httpsPort schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "HTTPS Port, in case ATL_TOMCAT_SCHEME is set to 'https'",
           "default": null
         },
         "loadBalancerIP": {
           "$id": "#/properties/service/properties/loadBalancerIP",
           "type": "null",
-          "title": "The loadBalancerIP schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "The service load balancer IP",
           "default": null
         },
         "nodePorts": {
           "$id": "#/properties/service/properties/nodePorts",
           "type": "object",
-          "title": "The nodePorts schema",
-          "description": "An explanation about the purpose of this instance.",
+          "title": "Use nodePorts to requets some specific ports when usin NodePort",
           "properties": {
             "http": {
               "$id": "#/properties/service/properties/nodePorts/properties/http",
               "type": "null",
-              "title": "The http schema",
-              "description": "An explanation about the purpose of this instance.",
+              "title": "The node port for HTTP",
               "default": null
             },
             "https": {
               "$id": "#/properties/service/properties/nodePorts/properties/https",
               "type": "null",
-              "title": "The https schema",
-              "description": "An explanation about the purpose of this instance.",
+              "title": "The node port for HTTPS",
               "default": null
             }
           },
@@ -249,32 +227,25 @@
     "resources": {
       "$id": "#/properties/resources",
       "type": "object",
-      "title": "The resources schema",
-      "description": "An explanation about the purpose of this instance.",
-      "limits": {
-        "memory": "2G",
-        "cpu": "1"
-      }
+      "title": "The resources configuration",
+      "description": "Reference: https://kubernetes.io/docs/user-guide/compute-resources/"
     },
     "properties": {
       "requests": {
         "$id": "#/properties/resources/properties/requests",
         "type": "object",
-        "title": "The requests schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "The resource requests",
         "properties": {
           "memory": {
             "$id": "#/properties/resources/properties/requests/properties/memory",
             "type": "string",
-            "title": "The memory schema",
-            "description": "An explanation about the purpose of this instance.",
+            "title": "The memory configuration",
             "default": "1G"
           },
           "cpu": {
             "$id": "#/properties/resources/properties/requests/properties/cpu",
             "type": "string",
-            "title": "The cpu schema",
-            "description": "An explanation about the purpose of this instance.",
+            "title": "The cpu configuration",
             "default": "500m"
           }
         },
@@ -283,21 +254,18 @@
       "limits": {
         "$id": "#/properties/resources/properties/limits",
         "type": "object",
-        "title": "The limits schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "The resource limits",
         "properties": {
           "memory": {
             "$id": "#/properties/resources/properties/limits/properties/memory",
             "type": "string",
-            "title": "The memory schema",
-            "description": "An explanation about the purpose of this instance.",
+            "title": "The memory configuration",
             "default": "2G"
           },
           "cpu": {
             "$id": "#/properties/resources/properties/limits/properties/cpu",
             "type": "string",
-            "title": "The cpu schema",
-            "description": "An explanation about the purpose of this instance.",
+            "title": "The cpu configuration",
             "default": "1"
           }
         },
@@ -309,15 +277,15 @@
   "replicaCount": {
     "$id": "#/properties/replicaCount",
     "type": "integer",
-    "title": "The replicaCount schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The number of replicas",
+    "description": "Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
     "default": 3
   },
   "nodeSelector": {
     "$id": "#/properties/nodeSelector",
     "type": "object",
-    "title": "The nodeSelector schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The node selector",
+    "description": "Reference: https://kubernetes.io/docs/user-guide/node-selection/",
     "default": {},
     "required": [],
     "additionalProperties": false
@@ -325,8 +293,8 @@
   "tolerations": {
     "$id": "#/properties/tolerations",
     "type": "array",
-    "title": "The tolerations schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The Pod tolerations",
+    "description": "Reference: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/",
     "default": [],
     "additionalItems": true,
     "items": {
@@ -336,8 +304,8 @@
   "affinity": {
     "$id": "#/properties/affinity",
     "type": "object",
-    "title": "The affinity schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The Pod affinity",
+    "description": "Reference: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity",
     "default": {},
     "required": [],
     "additionalProperties": false
@@ -345,8 +313,8 @@
   "podAnnotations": {
     "$id": "#/properties/podAnnotations",
     "type": "object",
-    "title": "The podAnnotations schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The Pod annotations",
+    "description": "Reference: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
     "default": {},
     "required": [],
     "additionalProperties": false
@@ -354,21 +322,19 @@
   "persistence": {
     "$id": "#/properties/persistence",
     "type": "object",
-    "title": "The persistence schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The persistence configuration",
+    "description": "Reference: https://kubernetes.io/docs/concepts/storage/persistent-volumes/",
     "properties": {
       "enabled": {
         "$id": "#/properties/persistence/properties/enabled",
         "type": "boolean",
-        "title": "The enabled schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Specifies if the persistence is enabled",
         "default": true
       },
       "annotations": {
         "$id": "#/properties/persistence/properties/annotations",
         "type": "object",
-        "title": "The annotations schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "The annotations for Persistent Volume Claim",
         "default": {},
         "required": [],
         "additionalProperties": false
@@ -376,29 +342,26 @@
       "existingClaim": {
         "$id": "#/properties/persistence/properties/existingClaim",
         "type": "string",
-        "title": "The existingClaim schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Reuse existing PersistentVolumeClaim by name",
         "default": ""
       },
       "accessMode": {
         "$id": "#/properties/persistence/properties/accessMode",
         "type": "string",
-        "title": "The accessMode schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Access mode of the Claim",
         "default": "ReadWriteOnce"
       },
       "size": {
         "$id": "#/properties/persistence/properties/size",
         "type": "string",
-        "title": "The size schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Size of the Claim",
         "default": "10Gi"
       },
       "storageClass": {
         "$id": "#/properties/persistence/properties/storageClass",
         "type": "null",
-        "title": "The storageClass schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "The storageClass configuration",
+        "description": "If defined, storageClassName: <storageClass>. If set to \"-\", storageClassName: \"\", which disables dynamic provisioning. If undefined (the default) or set to nil, no storageClassName spec is set, choosing the default provisioner. (gp2 on AWS, standard on GKE, AWS & OpenStack)",
         "default": null
       }
     },
@@ -407,8 +370,7 @@
   "extraVolumeMounts": {
     "$id": "#/properties/extraVolumeMounts",
     "type": "array",
-    "title": "The extraVolumeMounts schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Additional volume mounts",
     "default": [],
     "additionalItems": true,
     "items": {
@@ -418,8 +380,7 @@
   "extraVolumes": {
     "$id": "#/properties/extraVolumes",
     "type": "array",
-    "title": "The extraVolumes schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The additional volumes",
     "default": [],
     "additionalItems": true,
     "items": {
@@ -429,56 +390,50 @@
   "schedulerName": {
     "$id": "#/properties/schedulerName",
     "type": "string",
-    "title": "The schedulerName schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Scheduler name to use alternate scheduler",
+    "description": "Reference: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/",
     "default": ""
   },
   "readinessProbe": {
     "$id": "#/properties/readinessProbe",
     "type": "object",
-    "title": "The readinessProbe schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Container readiness probe",
+    "description": "Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes",
     "properties": {
       "enabled": {
         "$id": "#/properties/readinessProbe/properties/enabled",
         "type": "boolean",
-        "title": "The enabled schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Specifies if the probe is enabled",
         "default": true
       },
       "initialDelaySeconds": {
         "$id": "#/properties/readinessProbe/properties/initialDelaySeconds",
         "type": "integer",
-        "title": "The initialDelaySeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Initial delay seconds",
         "default": 60
       },
       "periodSeconds": {
         "$id": "#/properties/readinessProbe/properties/periodSeconds",
         "type": "integer",
-        "title": "The periodSeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Period seconds",
         "default": 30
       },
       "timeoutSeconds": {
         "$id": "#/properties/readinessProbe/properties/timeoutSeconds",
         "type": "integer",
-        "title": "The timeoutSeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Timeout seconds",
         "default": 10
       },
       "failureThreshold": {
         "$id": "#/properties/readinessProbe/properties/failureThreshold",
         "type": "integer",
-        "title": "The failureThreshold schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Failure threshold",
         "default": 6
       },
       "successThreshold": {
         "$id": "#/properties/readinessProbe/properties/successThreshold",
         "type": "integer",
-        "title": "The successThreshold schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Success threshold",
         "default": 1
       }
     },
@@ -487,49 +442,43 @@
   "livenessProbe": {
     "$id": "#/properties/livenessProbe",
     "type": "object",
-    "title": "The livenessProbe schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Container liveness probe",
+    "description": "Reference: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes",
     "properties": {
       "enabled": {
         "$id": "#/properties/livenessProbe/properties/enabled",
         "type": "boolean",
-        "title": "The enabled schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Specifies if the probe is enabled",
         "default": true
       },
       "initialDelaySeconds": {
         "$id": "#/properties/livenessProbe/properties/initialDelaySeconds",
         "type": "integer",
-        "title": "The initialDelaySeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Initial delay seconds",
         "default": 60
       },
       "periodSeconds": {
         "$id": "#/properties/livenessProbe/properties/periodSeconds",
         "type": "integer",
-        "title": "The periodSeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Period seconds",
         "default": 30
       },
       "timeoutSeconds": {
         "$id": "#/properties/livenessProbe/properties/timeoutSeconds",
         "type": "integer",
-        "title": "The timeoutSeconds schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Timeout seconds",
         "default": 10
       },
       "failureThreshold": {
         "$id": "#/properties/livenessProbe/properties/failureThreshold",
         "type": "integer",
-        "title": "The failureThreshold schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Failure threshold",
         "default": 6
       },
       "successThreshold": {
         "$id": "#/properties/livenessProbe/properties/successThreshold",
         "type": "integer",
-        "title": "The successThreshold schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Success threshold",
         "default": 1
       }
     },
@@ -538,8 +487,8 @@
   "caCerts": {
     "$id": "#/properties/caCerts",
     "type": "object",
-    "title": "The caCerts schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "CA certificates",
+    "description": "Reference: https://hub.docker.com/r/atlassian/crowd",
     "default": {},
     "required": [],
     "additionalProperties": false
@@ -547,14 +496,12 @@
   "initContainerImages": {
     "$id": "#/properties/initContainerImages",
     "type": "object",
-    "title": "The initContainerImages schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "The initContainers for Pod",
     "properties": {
       "jdk": {
         "$id": "#/properties/initContainerImages/properties/jdk",
         "type": "string",
-        "title": "The jdk schema",
-        "description": "An explanation about the purpose of this instance.",
+        "title": "Used keytool if 'caCerts' is enabled",
         "default": "adoptopenjdk:11-jdk-hotspot"
       }
     },
@@ -563,30 +510,26 @@
   "jvmMinimumMemory": {
     "$id": "#/properties/jvmMinimumMemory",
     "type": "string",
-    "title": "The jvmMinimumMemory schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Memory / Heap Size (JVM_MINIMUM_MEMORY) Mandatory, see @Notes above",
     "default": "1024m"
   },
   "jvmMaximumMemory": {
     "$id": "#/properties/jvmMaximumMemory",
     "type": "string",
-    "title": "The jvmMaximumMemory schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Memory / Heap Size (JVM_MAXIMUM_MEMORY) Mandatory, see @Notes above",
     "default": "1024m"
   },
   "envVars": {
     "$id": "#/properties/envVars",
     "type": "object",
-    "title": "The envVars schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Environment Variables that will be injected in the ConfigMap",
     "default": {},
     "additionalProperties": false
   },
   "extraEnv": {
     "$id": "#/properties/extraEnv",
     "type": "string",
-    "title": "The extraEnv schema",
-    "description": "An explanation about the purpose of this instance.",
+    "title": "Additional container environment variables",
     "default": "-XX:MaxMetaspaceSize=512m"
   },
   "additionalProperties": false
