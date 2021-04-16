@@ -3,9 +3,9 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.bitnami.mongodb
-  name: install-advanced
+  name: install
   displayName: Install production-ready MongoDB database
-  description: Action which installs MongoDB database via Helm chart with production ready parameters
+  description: Action which installs MongoDB database via Helm chart
   documentationURL: https://github.com/bitnami/charts
   supportURL: https://bitnami.com
   license:
@@ -59,7 +59,7 @@ spec:
           - name: mongo-install
             inputs:
               artifacts:
-                - name: input-parameters
+                - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
             outputs:
               artifacts:
                 - name: mongodb

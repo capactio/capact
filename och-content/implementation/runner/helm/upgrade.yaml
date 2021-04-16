@@ -36,8 +36,7 @@ spec:
         - name: run
           revision: 0.1.0
 
-  outputTypeInstanceRelations:
-    {}
+  outputTypeInstanceRelations: {}
     # Do not upload helm-release, as it will be updated in place.
     # Do not upload `additional` TypeInstance by default.
     # Upper-level workflows may define it in the outputTypeInstanceRelations.
@@ -95,8 +94,7 @@ spec:
                   path: "/additional.yaml"
                   optional: true
             container:
-              image: gcr.io/projectvoltron/helm-runner:cp-325-production-mongodb
-              imagePullPolicy: Always
+              image: gcr.io/projectvoltron/pr/helm-runner:PR-242
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"
