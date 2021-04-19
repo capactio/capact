@@ -69,7 +69,7 @@ spec:
                           data: |
                             reuseValues: true
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:

@@ -151,7 +151,7 @@ spec:
                               name: "jira-software"
                               repo: "https://helm.mox.sh"
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:

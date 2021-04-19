@@ -133,7 +133,7 @@ spec:
                             <% endif %>
 
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
                                 gateway:
                                   url: "https://{{ .Values.gateway.ingress.host}}.{{ .Values.global.domainName }}"

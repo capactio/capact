@@ -160,7 +160,7 @@ spec:
                               name: "bitbucket"
                               repo: "https://atlassian-labs.github.io/data-center-helm-charts"
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ .Values.ingress.host }}"
                             values:

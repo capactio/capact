@@ -155,7 +155,7 @@ spec:
                                 failureThreshold: 1
                                 successThreshold: 1
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 host: "{{ .Values.host }}"
                                 version: "{{ .Values.image.tag }}"
                       - name: input-parameters

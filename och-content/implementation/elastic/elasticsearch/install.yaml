@@ -110,7 +110,7 @@ spec:
                               repo: "https://helm.elastic.co"
                               version: "7.11.1"
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.imageTag }}"
                               <% if host %>
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
