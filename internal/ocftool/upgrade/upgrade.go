@@ -19,6 +19,7 @@ import (
 	"capact.io/capact/pkg/httputil"
 	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
 
+	"github.com/avast/retry-go"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/repo"
@@ -48,12 +49,18 @@ const (
 var ErrActionNotFinished = errors.New("Action still not finished")
 var ErrActionWithoutStatus = errors.New("Action doesn't have status")
 
+func NewErrAnotherUpgradeIsRunning(actionName string) error {
+	return errors.Errorf("Another upgrade action %s is currently running", actionName)
+}
+
 type (
 	Options struct {
 		Timeout          time.Duration
 		Wait             bool
 		Parameters       InputParameters
 		ActionNamePrefix string
+
+		MaxQueueTime time.Duration
 	}
 )
 
@@ -96,6 +103,13 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		status.End(err == nil)
 	}()
 
+	ctxWithNs := namespace.NewContext(ctx, capactSystemNS)
+
+	status.Step("Waiting for other upgrade actions to complete...")
+	if err := u.waitForOtherUpgradesToComplete(ctxWithNs, opts); err != nil {
+		return errors.Wrap(err, "while waiting for other upgrade actions to complete")
+	}
+
 	status.Step("Getting Capact config 📜")
 	capactCfg, err := u.getCapactConfigTypeInstance(ctx)
 	if err != nil {
@@ -107,7 +121,6 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 	}
 
 	status.Step("Creating upgrade Action for %s 💾", opts.Parameters.Version)
-	ctxWithNs := namespace.NewContext(ctx, capactSystemNS)
 
 	inputParams, err := mapToInputParameters(opts.Parameters)
 	if err != nil {
@@ -147,6 +160,45 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 	}
 
 	return nil
+}
+
+func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts Options) error {
+	retryDelay := 5 * time.Second
+	attempts := uint(opts.MaxQueueTime / retryDelay)
+
+	err := retry.Do(func() error {
+		actions, err := u.getRunningUpgradeActions(ctxWithNs, opts.ActionNamePrefix)
+		if err != nil {
+			return errors.Wrap(err, "while getting running upgrade actions")
+		}
+
+		if len(actions) > 0 {
+			return NewErrAnotherUpgradeIsRunning(actions[0].Name)
+		}
+
+		return nil
+	}, retry.Attempts(attempts), retry.Delay(retryDelay))
+
+	return errors.Wrap(err, "Timeout waiting for another upgrade action to finish.")
+}
+
+func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context, actionPrefix string) ([]*gqlengine.Action, error) {
+	actions, err := u.actCli.ListActions(nsCtx, &gqlengine.ActionFilter{
+		NameRegex: &actionPrefix,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "while listing existing upgrade actions")
+	}
+
+	runningActions := []*gqlengine.Action{}
+	for i := range actions {
+		action := actions[i]
+		if action.Status.Phase == gqlengine.ActionStatusPhaseRunning {
+			runningActions = append(runningActions, action)
+		}
+	}
+
+	return runningActions, nil
 }
 
 func (u *Upgrade) resolveInputParameters(opts *Options) error {
