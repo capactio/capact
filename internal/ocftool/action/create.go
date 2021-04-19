@@ -3,11 +3,10 @@ package action
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"math/rand"
 	"strings"
 	"time"
-
-	"github.com/MakeNowJust/heredoc"
 
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	"capact.io/capact/internal/ocftool/client"
@@ -16,16 +15,41 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
 type CreateOptions struct {
-	InterfacePath string
-	ActionName    string `survey:"name"`
-	Namespace     string
-	DryRun        bool
+	InterfacePath      string
+	ActionName         string `survey:"name"`
+	Namespace          string
+	DryRun             bool
+	Interactive        bool
+	ParametersFilePath string
+}
+
+func (c *CreateOptions) SetDefaults() {
+	rand.Seed(time.Now().UnixNano())
+
+	// must be a DNS-1123 subdomain
+	if c.ActionName == "" {
+		c.ActionName = strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1)
+	}
+}
+
+func (c *CreateOptions) Validate() error {
+	if c.Interactive {
+		if c.Namespace == "" {
+			return errors.New("must provide namespace when not running interactively")
+		}
+		if c.ActionName == "" {
+			return errors.New("must provide Action name when not running interactively")
+		}
+	}
+	return nil
 }
 
 type CreateOutput struct {
@@ -34,24 +58,54 @@ type CreateOutput struct {
 }
 
 func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput, error) {
-	rand.Seed(time.Now().UnixNano())
+	opts.SetDefaults()
 
-	// must be a DNS-1123 subdomain
-	defaultActionName := strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1)
-	qs := []*survey.Question{
-		actionNameQuestion(defaultActionName),
-	}
-	if opts.Namespace == "" {
-		qs = append(qs, namespaceQuestion())
-	}
-
-	if err := survey.Ask(qs, &opts); err != nil {
+	if err := opts.Validate(); err != nil {
 		return nil, err
 	}
 
-	input, err := askForInputParams()
-	if err != nil {
-		return nil, err
+	inputData := &gqlengine.ActionInputData{}
+
+	if opts.Interactive {
+		qs := []*survey.Question{
+			actionNameQuestion(opts.ActionName),
+		}
+
+		if opts.Namespace == "" {
+			qs = append(qs, namespaceQuestion())
+		}
+
+		if err := survey.Ask(qs, &opts); err != nil {
+			return nil, err
+		}
+
+		if opts.ParametersFilePath == "" {
+			gqlJSON, err := askForInputParameters()
+			if err != nil {
+				return nil, err
+			}
+			inputData.Parameters = gqlJSON
+		}
+
+		ti, err := askForInputTypeInstances()
+		if err != nil {
+			return nil, err
+		}
+		inputData.TypeInstances = ti
+	}
+
+	if opts.ParametersFilePath != "" {
+		rawInput, err := ioutil.ReadFile(opts.ParametersFilePath)
+		if err != nil {
+			return nil, err
+		}
+		converted, err := yaml.YAMLToJSON(rawInput)
+		if err != nil {
+			return nil, err
+		}
+
+		gqlJSON := gqlengine.JSON(converted)
+		inputData.Parameters = &gqlJSON
 	}
 
 	server, err := config.GetDefaultContext()
@@ -67,7 +121,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
 	act, err := actionCli.CreateAction(ctxWithNs, &gqlengine.ActionDetailsInput{
 		Name:  opts.ActionName,
-		Input: input,
+		Input: inputData,
 		ActionRef: &gqlengine.ManifestReferenceInput{
 			Path: opts.InterfacePath,
 		},
@@ -83,23 +137,6 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 	return &CreateOutput{
 		Action:    act,
 		Namespace: opts.Namespace,
-	}, nil
-}
-
-func askForInputParams() (*gqlengine.ActionInputData, error) {
-	gqlJSON, err := askForInputParameters()
-	if err != nil {
-		return nil, err
-	}
-
-	ti, err := askForInputTypeInstances()
-	if err != nil {
-		return nil, err
-	}
-
-	return &gqlengine.ActionInputData{
-		Parameters:    gqlJSON,
-		TypeInstances: ti,
 	}, nil
 }
 

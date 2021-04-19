@@ -22,6 +22,9 @@ func NewCreate() *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "", "Kubernetes namespace where the Action is to be created")
+	flags.StringVar(&opts.ActionName, "name", "", "The Action name")
+	flags.StringVar(&opts.ParametersFilePath, "parameters-from-file", "", "The Action input parameters in YAML format")
+	flags.BoolVar(&opts.Interactive, "interactive", false, "Toggle interactive prompting in the terminal")
 	flags.BoolVarP(&opts.DryRun, "dry-run", "", false, "Specifies whether the Action performs server-side test without actually running the Action")
 	// TODO: add support for creating an action directly from an implementation
 	return cmd

@@ -164,33 +164,144 @@ spec:
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ .Values.ingress.host }}"
                             values:
+                              replicaCount: <@ input.replicaCount | default(1) @>
+                              image:
+                                repository: <@ input.image.repository | default("atlassian/bitbucket-server") @>
+                                pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
+                                tag: <@ input.image.tag | default("") @>
+                              serviceAccount:
+                                name: <@ input.serviceAccount.name | default("") @>
+                                create: <@ input.serviceAccount.create | default(true) @>
+                                imagePullSecrets: <@ input.serviceAccount.imagePullSecrets | default([]) @>
+                                clusterRole:
+                                  name: <@ input.serviceAccount.clusterRole.name | default("") @>
+                                  create: <@ input.serviceAccount.clusterRole.create | default(true) @>
+                                clusterRoleBinding:
+                                  name: <@ input.serviceAccount.clusterRoleBinding.name | default("") @>
+                                  create: <@ input.serviceAccount.clusterRoleBinding.create | default(true) @>
+                              database:
+                                url: jdbc:postgresql://<@ installdb.host @>:<@ installdb.port @>/<@ createdb.name @>
+                                driver: org.postgresql.Driver
+                                credentials:
+                                  secretName: <@ input.database.credentials.secretName | default("") @>
+                                  usernameSecretKey: <@ input.database.credentials.usernameSecretKey | default("username") @>
+                                  passwordSecretKey: <@ input.database.credentials.passwordSecretKey | default("password") @>
+
                               bitbucket:
+                                service:
+                                  port: <@ input.bitbucket.service.port | default(80) @>
+                                  type: <@ input.bitbucket.service.type | default("ClusterIP") @>
+                                securityContext:
+                                  enabled: <@ input.bitbucket.securityContext.enabled | default(true) @>
+                                  gid: <@ input.bitbucket.securityContext.gid | default("2003") @>
+                                ports:
+                                  http: <@ input.bitbucket.ports.http | default(7990) @>
+                                  ssh: <@ input.bitbucket.ports.ssh | default(7999) @>
+                                  hazelcast: <@ input.bitbucket.ports.hazelcast | default(5701) @>
+                                license:
+                                  secretName: <@ input.bitbucket.license.secretName | default("") @>
+                                  secretKey: <@ input.bitbucket.license.secretKey | default("license-key") @>
+                                sysadminCredentials:
+                                  secretName: <@ input.bitbucket.sysadminCredentials.secretName | default("") @>
+                                  usernameSecretKey: <@ input.bitbucket.sysadminCredentials.usernameSecretKey | default("username") @>
+                                  passwordSecretKey: <@ input.bitbucket.sysadminCredentials.passwordSecretKey | default("password") @>
+                                  displayNameSecretKey: <@ input.bitbucket.sysadminCredentials.displayNameSecretKey | default("displayName") @>
+                                  emailAddressSecretKey: <@ input.bitbucket.sysadminCredentials.emailAddressSecretKey | default("emailAddress") @>
+                                clustering:
+                                  enabled: <@ input.bitbucket.clustering.enabled | default(false) @>
+
+                                elasticSearch:
+                                  baseUrl: http://<@ elastic.host @>:<@ elastic.port @>
+                                  credentials:
+                                    secretName: <@ elastic.basicAuthSecretName @>
+                                    usernameSecreyKey: <@ input.bitbucket.elasticSearch.credentials.usernameSecreyKey | default("username") @>
+                                    passwordSecretKey: <@ input.bitbucket.elasticSearch.credentials.passwordSecretKey | default("password") @>
+                                resources:
+                                  jvm:
+                                    maxHeap: <@ input.bitbucket.resources.jvm.maxHeap | default("1g") @>
+                                    minHeap: <@ input.bitbucket.resources.jvm.minHeap | default("1g") @>
+                                  <% if input.bitbucket.resources.container %>
+                                  container: <@ input.bitbucket.resources.container @>
+                                  <% else %>
+                                  container:
+                                    limits:
+                                      cpu: "4"
+                                      memory: "2G"
+                                    requests:
+                                      cpu: "4"
+                                      memory: "2G"
+                                  <% endif %>
+                                additionalLibraries: <@ input.bitbucket.additionalLibraries | default([]) @>
+                                additionalBundledPlugins: <@ input.bitbucket.additionalBundledPlugins | default([]) @>
+                                additionalVolumeMounts: <@ input.bitbucket.additionalVolumeMounts | default([]) @>
                                 additionalEnvironmentVariables:
                                 - name: JDBC_USER
                                   value: <@ installdb.superuser.username @>
                                 - name: JDBC_PASSWORD
                                   value: <@ installdb.superuser.password @>
-                                elasticSearch:
-                                  baseUrl: http://<@ elastic.host @>:<@ elastic.port @>
-                                  credentials:
-                                    secretName: <@ elastic.basicAuthSecretName @>
-                              database:
-                                url: jdbc:postgresql://<@ installdb.host @>:<@ installdb.port @>/<@ createdb.name @>
-                                driver: org.postgresql.Driver
                               ingress:
-                                create: true
-                                nginx: true
-                                host: <@ input.host @>
+                                create: <@ input.ingress.create | default(true) @>
+                                nginx: <@ input.ingress.nginx | default(true) @>
+                                host: <@ input.ingress.host | default("") @>
+                                https: <@ input.ingress.https | default(true) @>
+                                <% if input.ingress.create is not defined or input.ingress.create-%>
                                 tlsSecretName: bitbucket-server-tls-<@ random_word(length=5) @>
                                 annotations:
                                   acmechallengetype: http01
                                   cert-manager.io/cluster-issuer: letsencrypt
                                   kubernetes.io/tls-acme: "true"
+                                <%- endif %>
+                              fluentd:
+                                enabled: <@ input.fluentd.enabled | default(false) @>
+                                imageName: <@ input.fluentd.imageName | default("fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2") @>
+                                elasticsearch:
+                                  hostname: <@ input.fluentd.elasticsearch.hostname | default("") @>
+                              podAnnotations: <@ input.podAnnotations | default({}) @>
+                              volumes:
+                                localHome:
+                                  persistentVolumeClaim:
+                                    create: <@ input.volumes.localHome.persistentVolumeClaim.create | default(false) @>
+                                    storageClassName: <@ input.volumes.localHome.persistentVolumeClaim.storageClassName | default("") @>
+                                    resources:
+                                      requests:
+                                        storage: <@ input.volumes.localHome.persistentVolumeClaim.resources.requests.storage | default("1Gi") @>
+                                  customVolume: <@ input.volumes.localHome.customVolume | default({}) @>
+                                  mountPath: <@ input.volumes.localHome.mountPath | default("/var/atlassian/application-data/bitbucket") @>
+                                sharedHome:
+                                  persistentVolume:
+                                    create: <@ input.volumes.sharedHome.persistentVolume.create | default(false) @>
+                                    mountOptions: <@ input.volumes.sharedHome.persistentVolume.mountOptions | default([]) @>
+                                    nfs:
+                                      server: <@ input.volumes.sharedHome.persistentVolume.nfs.server | default("") @>
+                                      path: <@ input.volumes.sharedHome.persistentVolume.nfs.path | default("") @>
+                                  persistentVolumeClaim:
+                                    create: <@ input.volumes.sharedHome.persistentVolumeClaim.create | default(false) @>
+                                    storageClassName: <@ input.volumes.sharedHome.persistentVolumeClaim.storageClassName | default("") @>
+                                    volumeName: <@ input.volumes.sharedHome.persistentVolumeClaim.volumeName | default("") @>
+                                    resources:
+                                      requests:
+                                        storage: <@ input.volumes.sharedHome.persistentVolumeClaim.resources.requests.storage | default("1Gi") @>
+                                  customVolume: <@ input.volumes.sharedHome.customVolume | default({}) @>
+                                  mountPath: <@ input.volumes.sharedHome.mountPath | default("/var/atlassian/application-data/shared-home") @>
+                                  subPath: <@ input.volumes.sharedHome.subPath | default("") @>
+                                  nfsPermissionFixer:
+                                    enabled: <@ input.volumes.sharedHome.nfsPermissionFixer.enabled | default(false) @>
+                                    mountPath: <@ input.volumes.sharedHome.nfsPermissionFixer.mountPath | default("/shared-home") @>
+                                    command: <@ input.volumes.sharedHome.nfsPermissionFixer.command | default([]]) @>
+                                additional: <@ input.volumes.additional | default([]) @>
+                              nodeSelector: <@ input.nodeSelector | default({}) @>
+                              tolerations: <@ input.tolerations | default([]) @>
+                              affinity: <@ input.affinity | default({}) @>
+                              additionalContainers: <@ input.additionalContainers | default([]) @>
+                              additionalInitContainers: <@ input.additionalInitContainers | default([]) @>
+                              additionalLabels: <@ input.additionalLabels | default({}) @>
+                              additionalFiles: <@ input.additionalFiles | default([]) @>
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
-                          data: "prefix: installdb"
+                          data: |
+                            prefix: input
 
               - - name: fill-elasticsearch-params-in-helm-args
                   capact-action: jinja2.template
@@ -223,11 +334,10 @@ spec:
                       - name: template
                         from: "{{steps.fill-createdb-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: configuration
                         raw:
-                          data: |
-                            prefix: input
+                          data: "prefix: installdb"
 
               - - name: helm-install
                   capact-action: helm.install
