@@ -50,7 +50,7 @@ spec:
                 "cpu": "1"
               }
             },
-            "replicaCount": 2,
+            "replicaCount": 1,
             "readinessProbe": {
               "enabled": false
             },
@@ -298,7 +298,7 @@ spec:
           "type": "integer",
           "title": "The number of replicas",
           "description": "Reference: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/",
-          "default": 3
+          "default": 1
         },
         "nodeSelector": {
           "$id": "#/properties/nodeSelector",

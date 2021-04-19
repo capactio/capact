@@ -229,7 +229,7 @@ spec:
                                   cpu: <@ input.resources.limits.cpu | default("1") @>
 
                               ## ref: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
-                              replicaCount: <@ input.replicaCount | default(3) @>
+                              replicaCount: <@ input.replicaCount | default(1) @>
 
                               ## ref: https://kubernetes.io/docs/user-guide/node-selection/
                               nodeSelector: <@ input.nodeSelector | default({}) @>
