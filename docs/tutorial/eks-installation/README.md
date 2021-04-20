@@ -74,18 +74,18 @@ Now you should be able to query the API server:
 kubectl get nodes
 ```
 
-## Using capact CLI from the bastion host
+## Use Capact CLI from the bastion host
 
 The bastion host can access the Capact gateway and has `capectl` preinstalled.
 
-> **NOTE**: The current version of the released capectl does not support Gateway API. You have to build it from source and upload to the bastion
+> **NOTE**: The current version of the released capectl does not support Gateway API. You have to build it from the source and upload to the bastion host.
 
 1. SSH to the bastion host:
   ```bash
   ssh -i hack/eks/config/bastion_ssh_private_key ubuntu@$(cat hack/eks/config/bastion_public_ip)
   ```
 
-2. Get the address and credentials to the Capact gateway:
+2. Get the address and credentials to the Capact Gateway:
   ```bash
   # get the gateway address
   kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}'
@@ -97,15 +97,47 @@ The bastion host can access the Capact gateway and has `capectl` preinstalled.
   kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}'
   ```
 
-3. Login the gateway:
+3. Login to the cluster:
   ```bash
   capectl login <gateway-address>
   ```
 
-4. Verify, if you can query the Capact Gateway and list all interfaces in the OCH:
+4. Verify, if you can query the Capact Gateway and list all Interfaces in the OCH:
   ```bash
   capectl hub interfaces search
   ```
+
+## Connect to Capact Gateway from local machine
+
+Only the bastion host can access the Capact Gateway. To be able to connect to the Gateway, you need to proxy your traffic.
+
+1. Open SSH tunnel:
+   ```bash
+   ssh -f -M -N -S /tmp/gateway.${CAPACT_DOMAIN_NAME}.sock -i hack/eks/config/bastion_ssh_private_key ubuntu@$(cat hack/eks/config/bastion_public_ip) -L 127.0.0.1:8081:gateway.${CAPACT_DOMAIN_NAME}:443
+   ``` 
+
+2. Add new entry to `/etc/hosts`:
+   ```bash
+   export LINE_TO_APPEND="127.0.0.1 gateway.${CAPACT_DOMAIN_NAME}"
+   export HOSTS_FILE="/etc/hosts"
+   
+   grep -qxF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
+   ```
+
+3. Test connection:
+   
+   1. Using Capact CLI 
+   ```bash
+   capact login https://gateway.${CAPACT_DOMAIN_NAME}:8081 -u <user> -p <pass>
+   ```
+
+   2. Using Browser. Navigate to Gateway GraphQL Playground `https://gateway.${CAPACT_DOMAIN_NAME}:8081/graphql`.
+
+4. When you are done, can close the connection:
+
+   ```bash
+   ssh -S /tmp/gateway.${CAPACT_DOMAIN_NAME}.sock -O exit $(cat hack/eks/config/bastion_public_ip)
+   ``` 
 
 ## Cleanup
 
