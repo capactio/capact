@@ -149,10 +149,10 @@ spec:
 
                               resources:
                                 limits:
-                                  memory: <@ input.resources.limits.memory | default("2G") @>
+                                  memory: <@ input.resources.limits.memory | default("2Gi") @>
                                   cpu: <@ input.resources.limits.cpu | default("2") @>
                                 requests:
-                                  memory: <@ input.resources.requests.memory | default("2G") @>
+                                  memory: <@ input.resources.requests.memory | default("2Gi") @>
                                   cpu: <@ input.resources.requests.cpu | default("500m") @>
 
                               livenessProbe:
