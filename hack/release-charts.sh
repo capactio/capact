@@ -8,8 +8,10 @@ set -o nounset
 set -o errexit
 set -o pipefail
 
-readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
 readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
@@ -37,7 +39,8 @@ setChartVersionToCommitSHA() {
 }
 
 function wereChartsModifed() {
-  readonly DIFF=$(git diff HEAD^ HEAD -- "${DEPLOY_CHARTS_DIR}")
+  DIFF=$(git diff HEAD^ HEAD -- "${DEPLOY_CHARTS_DIR}")
+  readonly DIFF
   if [ "${DIFF:-}" = "" ]; then
     return 1
   fi
