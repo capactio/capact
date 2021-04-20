@@ -129,65 +129,10 @@ spec:
                 },
                 "type": "object"
               },
-              "elasticSearch": {
-                "$id": "#/properties/bitbucket/properties/elasticSearch",
-                "additionalProperties": true,
-                "default": {},
-                "properties": {
-                  "baseUrl": {
-                    "$id": "#/properties/bitbucket/properties/elasticSearch/properties/baseUrl",
-                    "default": "",
-                    "description": "The base URL of the external ElasticSearch instance to be used. If this is defined, then Bitbucket will disable its internal ElasticSearch instance.",
-                    "type": "string"
-                  },
-                  "credentials": {
-                    "$id": "#/properties/bitbucket/properties/elasticSearch/properties/credentials",
-                    "additionalProperties": true,
-                    "default": {},
-                    "properties": {
-                      "passwordSecretKey": {
-                        "$id": "#/properties/bitbucket/properties/elasticSearch/properties/credentials/properties/passwordSecretKey",
-                        "default": "password",
-                        "description": "The key in the the Kubernetes Secret that contains the ElasticSearch password.",
-                        "type": "string"
-                      },
-                      "secretName": {
-                        "$id": "#/properties/bitbucket/properties/elasticSearch/properties/credentials/properties/secretName",
-                        "default": "",
-                        "description": "The name of the Kubernetes Secret that contains the ElasticSearch credentials.",
-                        "type": "string"
-                      },
-                      "usernameSecreyKey": {
-                        "$id": "#/properties/bitbucket/properties/elasticSearch/properties/credentials/properties/usernameSecreyKey",
-                        "default": "username",
-                        "description": "The key in the the Kubernetes Secret that contains the ElasticSearch username.",
-                        "type": "string"
-                      }
-                    },
-                    "type": "object"
-                  }
-                },
-                "type": "object"
-              },
-              "license": {
+              "licenseKeyInBase64": {
                 "$id": "#/properties/bitbucket/properties/license",
-                "additionalProperties": true,
-                "default": {},
-                "properties": {
-                  "secretKey": {
-                    "$id": "#/properties/bitbucket/properties/license/properties/secretKey",
-                    "default": "license-key",
-                    "description": "The key in the Kubernetes Secret which contains the Bitbucket license key",
-                    "type": "string"
-                  },
-                  "secretName": {
-                    "$id": "#/properties/bitbucket/properties/license/properties/secretName",
-                    "default": "",
-                    "description": "The name of the Kubernetes Secret which contains the Bitbucket license key. If specified, then the license will be automatically populated during Bitbucket setup. Otherwise, it will need to be provided via the browser after initial startup.",
-                    "type": "string"
-                  }
-                },
-                "type": "object"
+                "description": "Base64 encoded Bitbucket license key. If specified, then the license will be automatically populated during Bitbucket setup. Otherwise, it will need to be provided via the browser after initial startup.",
+                "type": "string"
               },
               "ports": {
                 "$id": "#/properties/bitbucket/properties/ports",
@@ -300,37 +245,37 @@ spec:
               },
               "sysadminCredentials": {
                 "$id": "#/properties/bitbucket/properties/sysadminCredentials",
-                "additionalProperties": true,
+                "additionalProperties": false,
                 "default": {},
+                "required": [
+                  "displayName",
+                  "emailAddress",
+                  "password",
+                  "username"
+                ],
                 "properties": {
-                  "displayNameSecretKey": {
-                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/displayNameSecretKey",
+                  "displayName": {
+                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/displayName",
                     "default": "displayName",
-                    "description": "The key in the Kubernetes Secret which contains the sysadmin display name",
+                    "description": "The sysadmin display name",
                     "type": "string"
                   },
-                  "emailAddressSecretKey": {
-                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/emailAddressSecretKey",
+                  "emailAddress": {
+                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/emailAddress",
                     "default": "emailAddress",
-                    "description": "The key in the Kubernetes Secret which contains the sysadmin email address",
+                    "description": "The sysadmin email address",
                     "type": "string"
                   },
-                  "passwordSecretKey": {
-                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/passwordSecretKey",
+                  "password": {
+                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/password",
                     "default": "password",
-                    "description": "The key in the Kubernetes Secret which contains the sysadmin password",
+                    "description": "The sysadmin password",
                     "type": "string"
                   },
-                  "secretName": {
-                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/secretName",
-                    "default": "",
-                    "description": "The name of the Kubernetes Secret which contains the Bitbucket sysadmin credentials If specified, then these will be automatically populated during Bitbucket setup. Otherwise, they will need to be provided via the browser after initial startup.",
-                    "type": "string"
-                  },
-                  "usernameSecretKey": {
-                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/usernameSecretKey",
+                  "username": {
+                    "$id": "#/properties/bitbucket/properties/sysadminCredentials/properties/username",
                     "default": "username",
-                    "description": "The key in the Kubernetes Secret which contains the sysadmin username",
+                    "description": "The sysadmin username",
                     "type": "string"
                   }
                 },
@@ -645,7 +590,7 @@ spec:
                       "command": {
                         "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer/properties/command",
                         "default": [],
-                        "description": "By default, the fixer will change the group ownership of the volume's root directory to match the Bitbucket container's GID (2003), and then ensures the directory is group-writeable. If this is not the desired behaviour, command used can be specified here.",
+                        "description": "By default, the fixer will change the group ownership of the volume's root directory to match the Bitbucket container's GID (2003), and then ensures the directory is group-writeable. If this is not the desired behavior, command used can be specified here.",
                         "type": "array"
                       },
                       "enabled": {
@@ -676,9 +621,9 @@ spec:
                       },
                       "mountOptions": {
                         "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolume/properties/mountOptions",
-                        "additionalItems": true,
+                        "additionalItems": true,Additional
                         "default": [],
-                        "description": "Addtional options used when mounting the volume",
+                        "description": "Additional options used when mounting the volume",
                         "items": {
                           "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolume/properties/mountOptions/items"
                         },

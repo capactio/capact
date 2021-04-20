@@ -84,6 +84,7 @@ spec:
       workflow:
         entrypoint: bitbucket-install
         templates:
+
           - name: bitbucket-install
             inputs:
               artifacts:
@@ -93,6 +94,65 @@ spec:
                 - name: elasticsearch
                   optional: true
             steps:
+              - - name: create-license-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            <% if input.bitbucket.licenseKeyInBase64 %>
+                            apiVersion: v1
+                            kind: Secret
+                            metadata:
+                              generateName: bitbucket-license-
+                            data:
+                              license-key: <@ input.bitbucket.licenseKeyInBase64 @>
+                            <% endif %>
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+              - - name: create-license-secret
+                  template: kubectl-create
+                  arguments:
+                    artifacts:
+                      - name: manifest
+                        from: "{{steps.create-license-args.outputs.artifacts.render}}"
+
+              - - name: create-sysadmin-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            <% if input.bitbucket.sysadminCredentials %>
+                            apiVersion: v1
+                            kind: Secret
+                            metadata:
+                              generateName: sysadmin-credentials-
+                            stringData:
+                              username: <@ input.bitbucket.sysadminCredentials.username @>
+                              password: <@ input.bitbucket.sysadminCredentials.password @>
+                              displayName: <@ input.bitbucket.sysadminCredentials.displayName @>
+                              emailAddress: <@ input.bitbucket.sysadminCredentials.emailAddress @>
+                            <% endif %>
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+              - - name: create-sysadmin-secret
+                  template: kubectl-create
+                  arguments:
+                    artifacts:
+                      - name: manifest
+                        from: "{{steps.create-sysadmin-args.outputs.artifacts.render}}"
+
               - - name: install-db
                   capact-when: postgresql == nil # conditional execution
                   capact-action: postgresql.install
@@ -163,12 +223,15 @@ spec:
                               goTemplate:
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ .Values.ingress.host }}"
+
                             values:
                               replicaCount: <@ input.replicaCount | default(1) @>
+
                               image:
                                 repository: <@ input.image.repository | default("atlassian/bitbucket-server") @>
                                 pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
                                 tag: <@ input.image.tag | default("") @>
+
                               serviceAccount:
                                 name: <@ input.serviceAccount.name | default("") @>
                                 create: <@ input.serviceAccount.create | default(true) @>
@@ -179,6 +242,7 @@ spec:
                                 clusterRoleBinding:
                                   name: <@ input.serviceAccount.clusterRoleBinding.name | default("") @>
                                   create: <@ input.serviceAccount.clusterRoleBinding.create | default(true) @>
+
                               database:
                                 url: jdbc:postgresql://<@ installdb.host @>:<@ installdb.port @>/<@ createdb.name @>
                                 driver: org.postgresql.Driver
@@ -199,14 +263,14 @@ spec:
                                   ssh: <@ input.bitbucket.ports.ssh | default(7999) @>
                                   hazelcast: <@ input.bitbucket.ports.hazelcast | default(5701) @>
                                 license:
-                                  secretName: <@ input.bitbucket.license.secretName | default("") @>
-                                  secretKey: <@ input.bitbucket.license.secretKey | default("license-key") @>
+                                  secretName: <@ optionalLicense.metadata.name @>
+                                  secretKey: "license-key"
                                 sysadminCredentials:
-                                  secretName: <@ input.bitbucket.sysadminCredentials.secretName | default("") @>
-                                  usernameSecretKey: <@ input.bitbucket.sysadminCredentials.usernameSecretKey | default("username") @>
-                                  passwordSecretKey: <@ input.bitbucket.sysadminCredentials.passwordSecretKey | default("password") @>
-                                  displayNameSecretKey: <@ input.bitbucket.sysadminCredentials.displayNameSecretKey | default("displayName") @>
-                                  emailAddressSecretKey: <@ input.bitbucket.sysadminCredentials.emailAddressSecretKey | default("emailAddress") @>
+                                  secretName: <@ optionalSysadmin.metadata.name @>
+                                  usernameSecretKey: "username"
+                                  passwordSecretKey: "password"
+                                  displayNameSecretKey: "displayName"
+                                  emailAddressSecretKey: "emailAddress"
                                 clustering:
                                   enabled: <@ input.bitbucket.clustering.enabled | default(false) @>
 
@@ -214,8 +278,9 @@ spec:
                                   baseUrl: http://<@ elastic.host @>:<@ elastic.port @>
                                   credentials:
                                     secretName: <@ elastic.basicAuthSecretName @>
-                                    usernameSecreyKey: <@ input.bitbucket.elasticSearch.credentials.usernameSecreyKey | default("username") @>
-                                    passwordSecretKey: <@ input.bitbucket.elasticSearch.credentials.passwordSecretKey | default("password") @>
+                                    usernameSecreyKey: "username"
+                                    passwordSecretKey: "password"
+
                                 resources:
                                   jvm:
                                     maxHeap: <@ input.bitbucket.resources.jvm.maxHeap | default("1g") @>
@@ -228,9 +293,10 @@ spec:
                                       cpu: "4"
                                       memory: "2G"
                                     requests:
-                                      cpu: "4"
+                                      cpu: "1"
                                       memory: "2G"
                                   <% endif %>
+
                                 additionalLibraries: <@ input.bitbucket.additionalLibraries | default([]) @>
                                 additionalBundledPlugins: <@ input.bitbucket.additionalBundledPlugins | default([]) @>
                                 additionalVolumeMounts: <@ input.bitbucket.additionalVolumeMounts | default([]) @>
@@ -239,24 +305,31 @@ spec:
                                   value: <@ installdb.superuser.username @>
                                 - name: JDBC_PASSWORD
                                   value: <@ installdb.superuser.password @>
+
+                              <% set ingressCreate = input.ingress.create | default(true) %>
                               ingress:
-                                create: <@ input.ingress.create | default(true) @>
+                                create: <@ingressCreate @>
                                 nginx: <@ input.ingress.nginx | default(true) @>
                                 host: <@ input.ingress.host | default("") @>
                                 https: <@ input.ingress.https | default(true) @>
-                                <% if input.ingress.create is not defined or input.ingress.create-%>
+                                <% if ingressCreate -%>
                                 tlsSecretName: bitbucket-server-tls-<@ random_word(length=5) @>
                                 annotations:
                                   acmechallengetype: http01
                                   cert-manager.io/cluster-issuer: letsencrypt
                                   kubernetes.io/tls-acme: "true"
+                                  nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+                                  nginx.ingress.kubernetes.io/affinity: "cookie"
                                 <%- endif %>
+
                               fluentd:
                                 enabled: <@ input.fluentd.enabled | default(false) @>
                                 imageName: <@ input.fluentd.imageName | default("fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2") @>
                                 elasticsearch:
                                   hostname: <@ input.fluentd.elasticsearch.hostname | default("") @>
+
                               podAnnotations: <@ input.podAnnotations | default({}) @>
+
                               volumes:
                                 localHome:
                                   persistentVolumeClaim:
@@ -287,8 +360,9 @@ spec:
                                   nfsPermissionFixer:
                                     enabled: <@ input.volumes.sharedHome.nfsPermissionFixer.enabled | default(false) @>
                                     mountPath: <@ input.volumes.sharedHome.nfsPermissionFixer.mountPath | default("/shared-home") @>
-                                    command: <@ input.volumes.sharedHome.nfsPermissionFixer.command | default([]]) @>
+                                    command: <@ input.volumes.sharedHome.nfsPermissionFixer.command | default([]) @>
                                 additional: <@ input.volumes.additional | default([]) @>
+
                               nodeSelector: <@ input.nodeSelector | default({}) @>
                               tolerations: <@ input.tolerations | default([]) @>
                               affinity: <@ input.affinity | default({}) @>
@@ -296,6 +370,7 @@ spec:
                               additionalInitContainers: <@ input.additionalInitContainers | default([]) @>
                               additionalLabels: <@ input.additionalLabels | default({}) @>
                               additionalFiles: <@ input.additionalFiles | default([]) @>
+
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
@@ -315,12 +390,36 @@ spec:
                         raw:
                           data: "prefix: elastic"
 
-              - - name: fill-createdb-params-in-helm-args
+              - - name: fill-license-params-in-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         from: "{{steps.fill-elasticsearch-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-license-secret.outputs.artifacts.manifest}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: optionalLicense"
+
+              - - name: fill-sysadmin-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-license-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-sysadmin-secret.outputs.artifacts.manifest}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: optionalSysadmin"
+
+              - - name: fill-createdb-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-sysadmin-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-db.outputs.artifacts.database}}"
                       - name: configuration
@@ -352,6 +451,39 @@ spec:
                         from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
+
+          # You can always run custom images, we use the kubectl image to create a K8s resources
+          # it will use the same serviceAccount as `helm install`
+          - name: kubectl-create
+            inputs:
+              artifacts:
+                - name: manifest
+                  path: "/in/manifest.yaml"
+            outputs:
+              artifacts:
+                - name: manifest
+                  path: "/tmp/manifest.yaml"
+            script:
+              image: bitnami/kubectl:1.18
+              command: [ bash ]
+              source: |
+                # Checking if manifest is not empty
+                if grep -q '[^[:space:]]' "{{inputs.artifacts.manifest.path}}"; then
+
+                echo "Creating Kubernetes resource..."
+                kubectl create -f {{inputs.artifacts.manifest.path}} --output=yaml > {{outputs.artifacts.manifest.path}}
+
+                else
+
+                echo "Creating empty data as the input manifest is empty..."
+                cat > "{{outputs.artifacts.manifest.path}}" <<-'EOF'
+                metadata:
+                  name: ""
+                EOF
+
+                fi
+                # Known bug with PNS executor, which doesn't work when pod exists too early.
+                sleep 1
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

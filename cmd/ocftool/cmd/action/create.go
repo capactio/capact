@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"capact.io/capact/internal/ocftool/action"
+
+	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -22,9 +24,13 @@ func NewCreate() *cobra.Command {
 	}
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "", "Kubernetes namespace where the Action is to be created")
-	flags.StringVar(&opts.ActionName, "name", "", "The Action name")
+	flags.StringVar(&opts.ActionName, "name", "", "The Action name. By default, a random name is generated.")
 	flags.StringVar(&opts.ParametersFilePath, "parameters-from-file", "", "The Action input parameters in YAML format")
-	flags.BoolVar(&opts.Interactive, "interactive", false, "Toggle interactive prompting in the terminal")
+	flags.StringVar(&opts.TypeInstancesFilePath, "type-instances-from-file", "", heredoc.Doc(`The Action input TypeInstances in YAML format. Example:
+						typeInstances:
+						  - name: "config"
+						    id: "ABCD-1234-EFGH-4567"`))
+	flags.BoolVar(&opts.Interactive, "interactive", true, "Toggle interactive prompting in the terminal")
 	flags.BoolVarP(&opts.DryRun, "dry-run", "", false, "Specifies whether the Action performs server-side test without actually running the Action")
 	// TODO: add support for creating an action directly from an implementation
 	return cmd
