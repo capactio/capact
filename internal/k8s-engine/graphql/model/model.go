@@ -25,12 +25,13 @@ func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
 
 // ActionFilter defines filtering options for Actions
 type ActionFilter struct {
-	Phase     *v1alpha1.ActionPhase
-	NameRegex *regexp.Regexp
+	Phase        *v1alpha1.ActionPhase
+	NameRegex    *regexp.Regexp
+	InterfaceRef *v1alpha1.ManifestReference
 }
 
 func (f *ActionFilter) AllAllowed() bool {
-	return f == nil || (f.Phase == nil && f.NameRegex == nil)
+	return f == nil || (f.Phase == nil && f.NameRegex == nil && f.InterfaceRef == nil)
 }
 
 func (f *ActionFilter) ZapFields() []zap.Field {
@@ -51,6 +52,16 @@ func (f *ActionFilter) Match(item v1alpha1.Action) bool {
 
 	if f.NameRegex != nil && !f.NameRegex.MatchString(item.Name) {
 		return false
+	}
+
+	if f.InterfaceRef != nil {
+		if f.InterfaceRef.Path != item.Spec.ActionRef.Path {
+			return false
+		}
+
+		if f.InterfaceRef.Revision != nil && f.InterfaceRef.Revision != item.Spec.ActionRef.Revision {
+			return false
+		}
 	}
 
 	return true

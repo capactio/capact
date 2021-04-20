@@ -165,9 +165,12 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts Options) error {
 	retryDelay := 5 * time.Second
 	attempts := uint(opts.MaxQueueTime / retryDelay)
+	if attempts == 0 {
+		attempts = 1
+	}
 
 	err := retry.Do(func() error {
-		actions, err := u.getRunningUpgradeActions(ctxWithNs, opts.ActionNamePrefix)
+		actions, err := u.getRunningUpgradeActions(ctxWithNs)
 		if err != nil {
 			return errors.Wrap(err, "while getting running upgrade actions")
 		}
@@ -182,9 +185,11 @@ func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts
 	return errors.Wrap(err, "Timeout waiting for another upgrade action to finish.")
 }
 
-func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context, actionPrefix string) ([]*gqlengine.Action, error) {
+func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.Action, error) {
 	actions, err := u.actCli.ListActions(nsCtx, &gqlengine.ActionFilter{
-		NameRegex: &actionPrefix,
+		InterfaceRef: &gqlengine.ManifestReferenceInput{
+			Path: capactUpgradeInterfacePath,
+		},
 	})
 	if err != nil {
 		return nil, errors.Wrap(err, "while listing existing upgrade actions")

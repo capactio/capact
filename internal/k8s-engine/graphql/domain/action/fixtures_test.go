@@ -254,21 +254,25 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 	}
 }
 
-func fixK8sActionMinimal(name, namespace string, phase v1alpha1.ActionPhase) v1alpha1.Action {
+func fixK8sActionMinimal(name, namespace string, phase v1alpha1.ActionPhase, actionRef v1alpha1.ManifestReference) v1alpha1.Action {
 	return v1alpha1.Action{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		Spec: v1alpha1.ActionSpec{
-			ActionRef: v1alpha1.ManifestReference{
-				Path:     "foo.bar",
-				Revision: ptr.String("0.1.0"),
-			},
+			ActionRef: actionRef,
 		},
 		Status: v1alpha1.ActionStatus{
 			Phase: phase,
 		},
+	}
+}
+
+func fixManifestReference(path string) v1alpha1.ManifestReference {
+	return v1alpha1.ManifestReference{
+		Path:     v1alpha1.NodePath(path),
+		Revision: nil,
 	}
 }
 

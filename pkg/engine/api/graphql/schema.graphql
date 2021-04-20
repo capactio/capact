@@ -256,6 +256,7 @@ Set of filters for Action list
 input ActionFilter {
   phase: ActionStatusPhase
   nameRegex: NameRegex
+  interfaceRef: ManifestReferenceInput
 }
 
 """
