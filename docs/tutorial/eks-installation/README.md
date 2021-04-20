@@ -128,12 +128,12 @@ Only the bastion host can access the Capact Gateway. To be able to connect to th
    
    1. Using Capact CLI 
    ```bash
-   capact login https://gateway.${CAPACT_DOMAIN_NAME}:8081 -u <user> -p <pass>
+   capact login https://gateway.${CAPACT_DOMAIN_NAME}:8081 -u {user} -p {password}
    ```
 
    2. Using Browser. Navigate to Gateway GraphQL Playground `https://gateway.${CAPACT_DOMAIN_NAME}:8081/graphql`.
 
-4. When you are done, can close the connection:
+4. When you are done, close the connection:
 
    ```bash
    ssh -S /tmp/gateway.${CAPACT_DOMAIN_NAME}.sock -O exit $(cat hack/eks/config/bastion_public_ip)
