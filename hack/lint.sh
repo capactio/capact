@@ -73,7 +73,7 @@ dockerfile::run_checks() {
 }
 
 shellcheck::files_to_check() {
-  pushd "$ROOT_PATH" > /dev/null
+  pushd "$REPO_ROOT_DIR" > /dev/null
   paths=$(find . \( -path ./och-js/node_modules -o -path ./hack/eks/terraform/.terraform -o -path ./tmp \) -prune -false -o -name '*.sh')
   popd > /dev/null
 
