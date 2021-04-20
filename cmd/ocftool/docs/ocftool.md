@@ -49,6 +49,7 @@ ocftool [flags]
 ### SEE ALSO
 
 * [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with target Actions
+* [ocftool completion](ocftool_completion.md)	 - Generate shell completion scripts
 * [ocftool config](ocftool_config.md)	 - Manage configuration
 * [ocftool hub](ocftool_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
 * [ocftool login](ocftool_login.md)	 - Login to a Hub (Gateway) server
