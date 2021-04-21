@@ -164,10 +164,7 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 
 func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts Options) error {
 	retryDelay := 5 * time.Second
-	attempts := uint(opts.MaxQueueTime / retryDelay)
-	if attempts == 0 {
-		attempts = 1
-	}
+	attempts := uint(opts.MaxQueueTime/retryDelay) + 1
 
 	err := retry.Do(func() error {
 		actions, err := u.getRunningUpgradeActions(ctxWithNs)
