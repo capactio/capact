@@ -84,3 +84,51 @@ resource "kubernetes_service_account" "efs_csi_driver_ctrl_sa" {
     }
   }
 }
+
+module "efs_security_group" {
+  source = "terraform-aws-modules/security-group/aws"
+  version = "~> 3"
+
+  name = "${var.namespace}-efs-security-group"
+  description = "Security group for EFS"
+  vpc_id = module.vpc.vpc_id
+
+  ingress_with_cidr_blocks = [
+    {
+      from_port = 2049
+      to_port = 2049
+      protocol = "tcp"
+      description = "EFS access rule"
+      cidr_blocks = module.vpc.vpc_cidr_block
+    },
+  ]
+
+  tags = local.tags
+}
+
+resource "aws_efs_file_system" "eks_efs" {
+  count = var.efs_enabled ? 1 : 0
+  performance_mode = "generalPurpose"
+  tags = local.tags
+}
+
+resource "aws_efs_mount_target" "eks_efs_mount" {
+  for_each = local.efs_mounts
+
+  subnet_id = each.value
+  file_system_id = aws_efs_file_system.eks_efs[0].id
+  security_groups = [module.efs_security_group.this_security_group_id]
+}
+
+resource "kubernetes_storage_class" "efs_storage_class" {
+  count = var.efs_enabled ? 1 : 0
+  metadata {
+    name = "efs-sc"
+  }
+  storage_provisioner = "efs.csi.aws.com"
+  parameters = {
+    provisioningMode: "efs-ap"
+    fileSystemId: aws_efs_file_system.eks_efs[count.index].id
+    directoryPerms: "700"
+  }
+}
