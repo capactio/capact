@@ -90,7 +90,6 @@ RUN wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terra
 COPY hack/runners/terraform /workspace
 
 WORKDIR /workspace
-
 RUN /bin/terraform init && \
     rm /workspace/providers.tf
 

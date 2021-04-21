@@ -11,9 +11,9 @@ import (
 const (
 	// TODO: current hack to do not play with `.config` directory. Needs to be fixed!
 	// defined here to avoid import cycle
-	ConfigStoreName = "capact-config"
+	ConfigStoreName = "capactconfig"
 
-	CredStoreName   = "capact-hub"
+	CredStoreName   = "capacthub"
 	OverrideBackend = "CAPACT_CREDENTIALS_STORE_BACKEND"
 	// #nosec G101
 	FileBackendPassphrase = "CAPACT_FILE_PASSPHRASE"

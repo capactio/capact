@@ -849,6 +849,7 @@ Set of filters for Action list
 input ActionFilter {
   phase: ActionStatusPhase
   nameRegex: NameRegex
+  interfaceRef: ManifestReferenceInput
 }
 
 """
@@ -3991,6 +3992,14 @@ func (ec *executionContext) unmarshalInputActionFilter(ctx context.Context, obj 
 			if err != nil {
 				return it, err
 			}
+		case "interfaceRef":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("interfaceRef"))
+			it.InterfaceRef, err = ec.unmarshalOManifestReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReferenceInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5611,6 +5620,14 @@ func (ec *executionContext) marshalOJSON2ᚖcapactᚗioᚋcapactᚋpkgᚋengine�
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOManifestReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐManifestReferenceInput(ctx context.Context, v interface{}) (*ManifestReferenceInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputManifestReferenceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalONameRegex2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

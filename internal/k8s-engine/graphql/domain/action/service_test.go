@@ -127,10 +127,11 @@ func TestService_List(t *testing.T) {
 	const ns = "namespace"
 
 	succeededPhase := corev1alpha1.SucceededActionPhase
+	manifestRef := fixManifestReference("foo.bar")
 
-	action1 := fixK8sActionMinimal("foo", ns, succeededPhase)
-	action2 := fixK8sActionMinimal("bar", ns, succeededPhase)
-	action3 := fixK8sActionMinimal("baz", ns, corev1alpha1.FailedActionPhase)
+	action1 := fixK8sActionMinimal("foo", ns, succeededPhase, manifestRef)
+	action2 := fixK8sActionMinimal("bar", ns, succeededPhase, fixManifestReference("foo.notbar"))
+	action3 := fixK8sActionMinimal("baz", ns, corev1alpha1.FailedActionPhase, manifestRef)
 
 	testCases := []struct {
 		Name   string
@@ -159,6 +160,15 @@ func TestService_List(t *testing.T) {
 			},
 			Expected: []corev1alpha1.Action{
 				action2, action3,
+			},
+		},
+		{
+			Name: "Filter by InterfaceRef",
+			Filter: model.ActionFilter{
+				InterfaceRef: &manifestRef,
+			},
+			Expected: []corev1alpha1.Action{
+				action1, action3,
 			},
 		},
 	}
@@ -216,7 +226,7 @@ func TestService_CancelByName(t *testing.T) {
 	)
 
 	t.Run("Success", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Run = ptr.Bool(true)
 
 		svc, k8sCli := newServiceWithFakeClient(t, &inputAction)
@@ -240,7 +250,7 @@ func TestService_CancelByName(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
 
@@ -255,7 +265,7 @@ func TestService_CancelByName(t *testing.T) {
 	})
 
 	t.Run("Already Canceled", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -278,7 +288,7 @@ func TestService_RunByName(t *testing.T) {
 	)
 
 	t.Run("Success", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase, fixManifestReference("foo.bar"))
 
 		svc, k8sCli := newServiceWithFakeClient(t, &inputAction)
 
@@ -301,7 +311,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Error - Already Cancelled", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -317,7 +327,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Error - Not ready to run", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Status.Phase = corev1alpha1.BeingRenderedActionPhase
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -333,7 +343,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Already Run", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Run = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -465,7 +475,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 		})
 
 		t.Run("Error - Advanced rendering disabled", func(t *testing.T) {
-			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase)
+			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase, fixManifestReference("foo.bar"))
 			inputAction.Spec.AdvancedRendering = &corev1alpha1.AdvancedRendering{
 				Enabled: false,
 			}
@@ -483,7 +493,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 		})
 
 		t.Run("Error - Action not continuable", func(t *testing.T) {
-			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 			inputAction.Spec.AdvancedRendering = &corev1alpha1.AdvancedRendering{
 				Enabled: true,
 			}

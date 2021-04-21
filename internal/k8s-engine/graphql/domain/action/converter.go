@@ -126,9 +126,11 @@ func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFil
 	}
 
 	var (
-		phase   *v1alpha1.ActionPhase
-		pattern *regexp.Regexp
+		phase        *v1alpha1.ActionPhase
+		pattern      *regexp.Regexp
+		interfaceRef *v1alpha1.ManifestReference
 	)
+
 	if in.Phase != nil {
 		phaseValue := c.phaseFromGraphQL(*in.Phase)
 		phase = &phaseValue
@@ -142,9 +144,17 @@ func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFil
 		pattern = nPattern
 	}
 
+	if in.InterfaceRef != nil {
+		interfaceRef = &v1alpha1.ManifestReference{
+			Path:     v1alpha1.NodePath(in.InterfaceRef.Path),
+			Revision: in.InterfaceRef.Revision,
+		}
+	}
+
 	return model.ActionFilter{
-		Phase:     phase,
-		NameRegex: pattern,
+		Phase:        phase,
+		NameRegex:    pattern,
+		InterfaceRef: interfaceRef,
 	}, nil
 }
 

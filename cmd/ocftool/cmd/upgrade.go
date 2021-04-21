@@ -45,6 +45,7 @@ func NewUpgrade() *cobra.Command {
 	flags.StringVar(&opts.ActionNamePrefix, "action-name-prefix", "capact-upgrade-", "Specifies Capact upgrade Action name prefix.")
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	flags.BoolVarP(&opts.Wait, "wait", "w", false, `Waits for the upgrade process until it finish or the defined "--timeout" occurs.`)
+	flags.DurationVar(&opts.MaxQueueTime, "max-queue-time", 10*time.Minute, `Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 
 	return cmd
 }

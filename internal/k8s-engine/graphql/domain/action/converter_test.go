@@ -58,12 +58,20 @@ func TestConverter_FilterFromGraphQL_HappyPath(t *testing.T) {
 	gqlActionFilter := graphql.ActionFilter{
 		Phase:     &gqlPhase,
 		NameRegex: &gqlNameRegex,
+		InterfaceRef: &graphql.ManifestReferenceInput{
+			Path:     "cap.interface.test",
+			Revision: nil,
+		},
 	}
 
 	expectedK8sPhase := v1alpha1.AdvancedModeRenderingIterationActionPhase
 	expectedModelActionFilter := model.ActionFilter{
 		Phase:     &expectedK8sPhase,
 		NameRegex: regexp.MustCompile(gqlNameRegex),
+		InterfaceRef: &v1alpha1.ManifestReference{
+			Path:     "cap.interface.test",
+			Revision: nil,
+		},
 	}
 
 	c := action.NewConverter()
