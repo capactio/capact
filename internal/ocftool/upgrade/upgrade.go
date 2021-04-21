@@ -213,9 +213,10 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 	runningActions := []*gqlengine.Action{}
 	for i := range actions {
 		action := actions[i]
-		if action.Status.Phase == gqlengine.ActionStatusPhaseRunning {
-			runningActions = append(runningActions, action)
+		if action.Status.Phase != gqlengine.ActionStatusPhaseRunning {
+			continue
 		}
+		runningActions = append(runningActions, action)
 	}
 
 	return runningActions, nil
