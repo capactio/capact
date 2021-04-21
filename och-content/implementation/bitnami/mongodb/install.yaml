@@ -97,7 +97,7 @@ spec:
                                 database: <@ input.auth.database | default("mongo") @>
                                 password: <@ input.auth.password | default(random_word(length=16)) @>
                                 rootPassword: <@ input.auth.rootPassword | default(random_word(length=16)) @>
-                                replicaSetKey: "<@ input.auth.replicaSetKey | default("") @>"
+                                replicaSetKey: "<@ input.auth.replicaSetKey | default(random_word(length=16)) @>"
 
                               tls:
                                 enabled: <@ input.tls.enabled | default(false) @>
