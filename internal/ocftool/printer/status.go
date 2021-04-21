@@ -48,9 +48,9 @@ func (s *Status) End(success bool) {
 
 	var finalMsg string
 	if success {
-		finalMsg = fmt.Sprintf(" %s %s", color.GreenString("✓"), s.stage)
+		finalMsg = fmt.Sprintf(" %s %s\n", color.GreenString("✓"), s.stage)
 	} else {
-		finalMsg = fmt.Sprintf(" %s %s", color.RedString("✗"), s.stage)
+		finalMsg = fmt.Sprintf(" %s %s\n", color.RedString("✗"), s.stage)
 	}
 
 	s.spinner.Stop(finalMsg)
