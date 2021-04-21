@@ -38,6 +38,7 @@ spec:
         - database
         - elasticsearch
         - postgresql
+        - user
 
   implements:
     - path: cap.interface.productivity.bitbucket.install
