@@ -163,8 +163,21 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 }
 
 func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts Options) error {
-	retryDelay := 5 * time.Second
-	attempts := uint(opts.MaxQueueTime/retryDelay) + 1
+	var (
+		attempts   uint
+		ctx        context.Context
+		retryDelay = 5 * time.Second
+	)
+
+	if opts.MaxQueueTime == 0 {
+		attempts = 1
+		ctx = ctxWithNs
+	} else {
+		attempts = 1e6
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctxWithNs, opts.MaxQueueTime)
+		defer cancel()
+	}
 
 	err := retry.Do(func() error {
 		actions, err := u.getRunningUpgradeActions(ctxWithNs)
@@ -177,7 +190,12 @@ func (u *Upgrade) waitForOtherUpgradesToComplete(ctxWithNs context.Context, opts
 		}
 
 		return nil
-	}, retry.Attempts(attempts), retry.Delay(retryDelay))
+	}, retry.Delay(retryDelay),
+		retry.Attempts(attempts),
+		retry.Context(ctx),
+		retry.DelayType(retry.FixedDelay),
+		retry.LastErrorOnly(true),
+	)
 
 	return errors.Wrap(err, "Timeout waiting for another upgrade action to finish.")
 }
