@@ -54,7 +54,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		qs = append(qs, namespaceQuestion())
 	}
 
-	if err := survey.Ask(qs, &c); err != nil {
+	if err := survey.Ask(qs, c); err != nil {
 		return err
 	}
 

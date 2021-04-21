@@ -67,6 +67,8 @@ spec:
           revision: 0.1.0
         - name: create-db
           revision: 0.1.0
+        - name: create-user
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.templating.jinja2
       alias: jinja2
       methods:
@@ -168,18 +170,19 @@ spec:
                     - name: postgresql
                       from: postgresql
 
-              - - name: install-elasticsearch
-                  capact-when: elasticsearch == nil # conditional execution
-                  capact-action: elasticsearch.install
+              - - name: create-user
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
+                    - name: user
+                      from: user
                   arguments:
                     artifacts:
-                      - name: input-parameters
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: user-input
                         raw:
                           data: |
-                            replicas: 1
-                  capact-outputTypeInstances:
-                    - name: elasticsearch
-                      from: elasticsearch
+                            name: bitbucket
 
               - - name: render-create-db-args
                   capact-action: jinja2.template
@@ -189,9 +192,9 @@ spec:
                         raw:
                           data: |
                             name: bitbucketdb
-                            owner: "<@ superuser.username @>"
+                            owner: "<@ name @>"
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
                       - name: configuration
                         raw:
                           data: |
@@ -208,7 +211,20 @@ spec:
                       - name: database-input
                         from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
-              - - name: render-helm-args
+              - - name: install-elasticsearch
+                  capact-when: elasticsearch == nil # conditional execution
+                  capact-action: elasticsearch.install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            replicas: 1
+                  capact-outputTypeInstances:
+                    - name: elasticsearch
+                      from: elasticsearch
+
+              - - name: render-bitbucket-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -302,9 +318,9 @@ spec:
                                 additionalVolumeMounts: <@ input.bitbucket.additionalVolumeMounts | default([]) @>
                                 additionalEnvironmentVariables:
                                 - name: JDBC_USER
-                                  value: <@ installdb.superuser.username @>
+                                  value: <@ user.name @>
                                 - name: JDBC_PASSWORD
-                                  value: <@ installdb.superuser.password @>
+                                  value: <@ user.password @>
 
                               <% set ingressCreate = input.ingress.create | default(true) %>
                               ingress:
@@ -378,12 +394,50 @@ spec:
                           data: |
                             prefix: input
 
+              - - name: fill-installdb-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.render-bitbucket-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: installdb
+
+              - - name: fill-createdb-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-installdb-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: "prefix: createdb"
+
+              - - name: fill-user-params-in-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-createdb-params-in-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: user
+
               - - name: fill-elasticsearch-params-in-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-user-params-in-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.install-elasticsearch.outputs.artifacts.elasticsearch}}"
                       - name: configuration
@@ -414,30 +468,6 @@ spec:
                         raw:
                           data: "prefix: optionalSysadmin"
 
-              - - name: fill-createdb-params-in-helm-args
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.fill-sysadmin-params-in-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.create-db.outputs.artifacts.database}}"
-                      - name: configuration
-                        raw:
-                          data: "prefix: createdb"
-
-              - - name: fill-input-params-in-helm-args
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.fill-createdb-params-in-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-                      - name: configuration
-                        raw:
-                          data: "prefix: installdb"
-
               - - name: helm-install
                   capact-action: helm.install
                   capact-outputTypeInstances:
@@ -448,7 +478,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-input-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-sysadmin-params-in-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
