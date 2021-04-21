@@ -40,6 +40,7 @@ capact::aws::terraform::apply() {
       -var "namespace=${CAPACT_NAME}" \
       -var "region=${CAPACT_REGION}" \
       -var "domain_name=${CAPACT_DOMAIN_NAME}" \
+      -var "efs_enabled=${EKS_EFS_ENABLED}" \
       ${terraform_opts}
 
     local -r tf_output=$(terraform output -json)
@@ -62,6 +63,12 @@ capact::aws::terraform::apply() {
 capact::aws::install::fluent_bit() {
   shout "Deploying aws-for-fluent-bit..."
   "${CURRENT_DIR}"/aws-for-fluent-bit/install.sh
+  shout "aws-for-fluent-bit deployed successfully!"
+}
+
+capact::aws::install::efs_csi_driver() {
+  shout "Deploying AWS EFS CSI driver..."
+  "${CURRENT_DIR}"/aws-efs-csi-driver/install.sh
   shout "aws-for-fluent-bit deployed successfully!"
 }
 
@@ -180,6 +187,7 @@ main() {
   export CAPACT_DOMAIN_NAME="${CAPACT_DOMAIN_NAME}"
   export DOCKER_TAG="${CAPACT_DOCKER_TAG}"
   export DOCKER_REPOSITORY="${CAPACT_DOCKER_REPOSITORY:-gcr.io/projectvoltron}"
+  export EKS_EFS_ENABLED="${EKS_EFS_ENABLED:-false}"
 
   capact::aws::terraform::apply
 
@@ -197,6 +205,11 @@ main() {
   export CUSTOM_CERT_MANAGER_SET_FLAGS
 
   capact::aws::install::fluent_bit
+
+  if [[ "${EKS_EFS_ENABLED}" == "true" ]]; then
+      capact::aws::install::efs_csi_driver
+  fi
+
   capact::aws::install::capact
   capact::aws::install::public_ingress_controller
   capact::aws::register_dnses

@@ -85,3 +85,8 @@ variable "capectl_version" {
   default = "v0.2.1"
   description = "Version of the capectl binary, installed on the bastion host"
 }
+
+variable "efs_enabled" {
+  default = false
+  description = "Enables EFS storage configuration for EKS cluster"
+}
