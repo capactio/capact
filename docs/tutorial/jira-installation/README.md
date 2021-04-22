@@ -479,7 +479,7 @@ When shared storage is available then set StorageClass for `sharedHome` variable
        container:
          requests:
            memory: "8G"
-	   cpu: 4
+           cpu: 4
    ```
 
 1. Health check for Cluster Scheduler fails
