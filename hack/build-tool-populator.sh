@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script build the ocftool CLI.
+# This script build the populator CLI.
 #
 
 # standard bash error handling
@@ -19,10 +19,10 @@ OSes=${CLI_OS:-"linux darwin windows"}
 main () {
   for ARCH in $ARCHs; do
     for OS in $OSes; do
-      echo "- Building ocftool binary [OS: ${OS} ARCH: ${ARCH}]..."
-      binary="bin/ocftool-$OS-$ARCH"
+      echo "- Building populator binary [OS: ${OS} ARCH: ${ARCH}]..."
+      binary="bin/populator-$OS-$ARCH"
 
-      GOOS=$OS GOARCH=$ARCH go build -ldflags "-s -w" -o "$binary" "${REPO_ROOT_DIR}/cmd/ocftool/main.go"
+      GOOS=$OS GOARCH=$ARCH go build -ldflags "-s -w" -o "$binary" "${REPO_ROOT_DIR}/cmd/populator/main.go"
     done
   done
 }
