@@ -648,7 +648,7 @@ spec:
                     "properties": {
                       "command": {
                         "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer/properties/command",
-                        "description": "By default, the fixer will change the group ownership of the volume's root directory to match the Jira container's GID (2001), and then ensures the directory is group-writeable. If this is not the desired behaviour, command used can be specified here.",
+                        "description": "By default, the fixer will change the group ownership of the volume's root directory to match the Jira container's GID (2001), and then ensures the directory is group-writeable. If this is not the desired behavior, command used can be specified here.",
                         "type": "null"
                       },
                       "enabled": {
