@@ -113,9 +113,9 @@ resource "aws_efs_file_system" "eks_efs" {
 }
 
 resource "aws_efs_mount_target" "eks_efs_mount" {
-  for_each = var.efs_enabled ? toset(local.worker_subnets) : []
+  count = var.efs_enabled ? var.az_count : 0
 
-  subnet_id = module.vpc.private_subnets[index(local.worker_subnets, each.value)]
+  subnet_id = module.vpc.private_subnets[count.index]
   file_system_id = aws_efs_file_system.eks_efs[0].id
   security_groups = [module.efs_security_group.this_security_group_id]
 }

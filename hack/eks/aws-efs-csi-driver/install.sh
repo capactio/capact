@@ -17,7 +17,7 @@ helm repo update
 helm upgrade aws-efs-csi-driver aws-efs-csi-driver/aws-efs-csi-driver \
     --install \
     --namespace="kube-system" \
-    --version v0.1.6 \
+    --version 1.2.2 \
     --set "serviceAccount.controller.create=false" \
     --set "serviceAccount.controller.name=efs-csi-controller-sa" \
     --wait
