@@ -20,22 +20,833 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Jira configuration",
-        "required": [
-            "host"
-        ],
-        "$ocfRefs": {
-          "hostname": {
-            "name": "cap.core.type.networking.hostname",
-            "revision": "0.1.0"
-          }
-        },
+        "title": "The schema for Confluence configuration",
         "properties": {
-          "host": {
-            "$ref": "#/$ocfRefs/hostname"
+          "additionalContainers": {
+            "$id": "#/properties/additionalContainers",
+            "default": [],
+            "description": "Additional container definitions that will be added to all Confluence pods",
+            "items": {
+              "$id": "#/properties/additionalContainers/items"
+            },
+            "title": "The additionalContainers schema",
+            "type": "array"
+          },
+          "additionalFiles": {
+            "$id": "#/properties/additionalFiles",
+            "default": [],
+            "description": "Additional existing ConfigMaps and Secrets not managed by Helm that should be mounted into server container configMap and secret are two available types (camelCase is important!) mountPath is a destination directory in a container and key is file name name references existing ConfigMap or secret name. VolumeMount and Volumes are added with this name + index position, for example custom-config-0, keystore-2",
+            "items": {
+              "$id": "#/properties/additionalFiles/items"
+            },
+            "title": "The additionalFiles schema",
+            "type": "array"
+          },
+          "additionalInitContainers": {
+            "$id": "#/properties/additionalInitContainers",
+            "default": [],
+            "description": "Additional initContainer definitions that will be added to all Confluence pods",
+            "items": {
+              "$id": "#/properties/additionalInitContainers/items"
+            },
+            "title": "The additionalInitContainers schema",
+            "type": "array"
+          },
+          "additionalLabels": {
+            "$id": "#/properties/additionalLabels",
+            "default": {},
+            "description": "Additional labels that should be applied to all resources",
+            "title": "The additionalLabels schema",
+            "type": "object"
+          },
+          "affinity": {
+            "$id": "#/properties/affinity",
+            "default": {},
+            "description": "Standard Kubernetes affinities that will be applied to all Confluence pods",
+            "title": "The affinity schema",
+            "type": "object"
+          },
+          "confluence": {
+            "$id": "#/properties/confluence",
+            "default": {},
+            "properties": {
+              "accessLog": {
+                "$id": "#/properties/confluence/properties/accessLog",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/confluence/properties/accessLog/properties/enabled",
+                    "default": true,
+                    "description": "True if access logging should be enabled.",
+                    "title": "The enabled schema",
+                    "type": "boolean"
+                  },
+                  "localHomeSubPath": {
+                    "$id": "#/properties/confluence/properties/accessLog/properties/localHomeSubPath",
+                    "default": "logs",
+                    "description": "The subdirectory within the local-home volume where access logs should be stored.",
+                    "title": "The localHomeSubPath schema",
+                    "type": "string"
+                  },
+                  "mountPath": {
+                    "$id": "#/properties/confluence/properties/accessLog/properties/mountPath",
+                    "default": "/opt/atlassian/confluence/logs",
+                    "description": "The path within the Confluence container where the local-home volume should be mounted in order to capture access logs.",
+                    "title": "The mountPath schema",
+                    "type": "string"
+                  }
+                },
+                "title": "The accessLog schema",
+                "type": "object"
+              },
+              "additionalBundledPlugins": {
+                "$id": "#/properties/confluence/properties/additionalBundledPlugins",
+                "default": [],
+                "description": "Specifies a list of additional Confluence plugins that should be added to the Confluence container. These are specified in the same manner as the additionalLibraries field, but the files will be loaded as bundled plugins rather than as libraries.",
+                "items": {
+                  "$id": "#/properties/confluence/properties/additionalBundledPlugins/items"
+                },
+                "title": "The additionalBundledPlugins schema",
+                "type": "array"
+              },
+              "additionalEnvironmentVariables": {
+                "$id": "#/properties/confluence/properties/additionalEnvironmentVariables",
+                "default": [],
+                "description": "Defines any additional environment variables to be passed to the Confluence container. See https://hub.docker.com/r/atlassian/confluence-server for supported variables.",
+                "items": {
+                  "$id": "#/properties/confluence/properties/additionalEnvironmentVariables/items"
+                },
+                "title": "The additionalEnvironmentVariables schema",
+                "type": "array"
+              },
+              "additionalJvmArgs": {
+                "$id": "#/properties/confluence/properties/additionalJvmArgs",
+                "default": [],
+                "description": "Specifies a list of additional arguments that can be passed to the Confluence JVM, e.g. system properties",
+                "items": {
+                  "$id": "#/properties/confluence/properties/additionalJvmArgs/items"
+                },
+                "title": "The additionalJvmArgs schema",
+                "type": "array"
+              },
+              "additionalLibraries": {
+                "$id": "#/properties/confluence/properties/additionalLibraries",
+                "default": [],
+                "description": "Specifies a list of additional Java libraries that should be added to the Confluence container. Each item in the list should specify the name of the volume which contain the library, as well as the name of the library file within that volume's root directory. Optionally, a subDirectory field can be included to specify which directory in the volume contains the library file.",
+                "items": {
+                  "$id": "#/properties/confluence/properties/additionalLibraries/items"
+                },
+                "title": "The additionalLibraries schema",
+                "type": "array"
+              },
+              "additionalVolumeMounts": {
+                "$id": "#/properties/confluence/properties/additionalVolumeMounts",
+                "default": [],
+                "description": "Defines any additional volumes mounts for the Confluence container. These can refer to existing volumes, or new volumes can be defined in volumes.additional.",
+                "items": {
+                  "$id": "#/properties/confluence/properties/additionalVolumeMounts/items"
+                },
+                "title": "The additionalVolumeMounts schema",
+                "type": "array"
+              },
+              "clustering": {
+                "$id": "#/properties/confluence/properties/clustering",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/confluence/properties/clustering/properties/enabled",
+                    "default": false,
+                    "description": "Set to true if Data Center clustering should be enabled This will automatically configure cluster peer discovery between cluster nodes.",
+                    "title": "The enabled schema",
+                    "type": "boolean"
+                  },
+                  "usePodNameAsClusterNodeName": {
+                    "$id": "#/properties/confluence/properties/clustering/properties/usePodNameAsClusterNodeName",
+                    "default": true,
+                    "description": "Set to true if the Kubernetes pod name should be used as the end-user-visible name of the Data Center cluster node.",
+                    "title": "The usePodNameAsClusterNodeName schema",
+                    "type": "boolean"
+                  }
+                },
+                "title": "The clustering schema",
+                "type": "object"
+              },
+              "licenseKeyInBase64": {
+                "$id": "#/properties/confluence/properties/license",
+                "description": "Base64 encoded Confluence license key. If specified, then the license will be automatically populated during Confluence setup. Otherwise, it will need to be provided via the browser after initial startup.",
+                "type": "string"
+              },
+              "ports": {
+                "$id": "#/properties/confluence/properties/ports",
+                "default": {},
+                "properties": {
+                  "hazelcast": {
+                    "$id": "#/properties/confluence/properties/ports/properties/hazelcast",
+                    "default": 5701,
+                    "description": "The port on which the Confluence container listens for Hazelcast traffic",
+                    "title": "The hazelcast schema",
+                    "type": "integer"
+                  },
+                  "http": {
+                    "$id": "#/properties/confluence/properties/ports/properties/http",
+                    "default": 8090,
+                    "description": "The port on which the Confluence container listens for HTTP traffic",
+                    "title": "The http schema",
+                    "type": "integer"
+                  }
+                },
+                "title": "The ports schema",
+                "type": "object"
+              },
+              "readinessProbe": {
+                "$id": "#/properties/confluence/properties/readinessProbe",
+                "default": {},
+                "properties": {
+                  "failureThreshold": {
+                    "$id": "#/properties/confluence/properties/readinessProbe/properties/failureThreshold",
+                    "default": 30,
+                    "description": "The number of consecutive failures of the Confluence container readiness probe before the pod fails readiness checks",
+                    "title": "The failureThreshold schema",
+                    "type": "integer"
+                  },
+                  "initialDelaySeconds": {
+                    "$id": "#/properties/confluence/properties/readinessProbe/properties/initialDelaySeconds",
+                    "default": 10,
+                    "description": "The initial delay (in seconds) for the Confluence container readiness probe, after which the probe will start running",
+                    "title": "The initialDelaySeconds schema",
+                    "type": "integer"
+                  },
+                  "periodSeconds": {
+                    "$id": "#/properties/confluence/properties/readinessProbe/properties/periodSeconds",
+                    "default": 10,
+                    "description": "How often (in seconds) the Confluence container readiness robe will run",
+                    "title": "The periodSeconds schema",
+                    "type": "integer"
+                  }
+                },
+                "title": "The readinessProbe schema",
+                "type": "object"
+              },
+              "resources": {
+                "$id": "#/properties/confluence/properties/resources",
+                "default": {},
+                "properties": {
+                  "container": {
+                    "$id": "#/properties/confluence/properties/resources/properties/container",
+                    "default": {},
+                    "description": "Specifies the standard Kubernetes resource requests and/or limits for the Confluence container. It is important that if the memory resources are specified here, they must allow for the size of the Confluence JVM. That means the maximum heap size, the reserved code cache size, plus other JVM overheads, must be accommodated. Allowing for (maxHeap+codeCache)*1.5 would be an example.",
+                    "title": "The container schema",
+                    "type": "object"
+                  },
+                  "jvm": {
+                    "$id": "#/properties/confluence/properties/resources/properties/jvm",
+                    "default": {},
+                    "properties": {
+                      "maxHeap": {
+                        "$id": "#/properties/confluence/properties/resources/properties/jvm/properties/maxHeap",
+                        "default": "1g",
+                        "description": "The maximum amount of heap memory that will be used by the Confluence JVM",
+                        "title": "The maxHeap schema",
+                        "type": "string"
+                      },
+                      "minHeap": {
+                        "$id": "#/properties/confluence/properties/resources/properties/jvm/properties/minHeap",
+                        "default": "1g",
+                        "description": "The minimum amount of heap memory that will be used by the Confluence JVM",
+                        "title": "The minHeap schema",
+                        "type": "string"
+                      },
+                      "reservedCodeCache": {
+                        "$id": "#/properties/confluence/properties/resources/properties/jvm/properties/reservedCodeCache",
+                        "default": "512m",
+                        "description": "The memory reserved for the Confluence JVM code cache",
+                        "title": "The reservedCodeCache schema",
+                        "type": "string"
+                      }
+                    },
+                    "title": "The jvm schema",
+                    "type": "object"
+                  }
+                },
+                "title": "The resources schema",
+                "type": "object"
+              },
+              "securityContext": {
+                "$id": "#/properties/confluence/properties/securityContext",
+                "default": {
+                  "enabled": true,
+                  "gid": "2002"
+                },
+                "description": "Enable or disable security context in StatefulSet template spec. Enabled by default with UID 2002. -- Disable when deploying to OpenShift, unless anyuid policy is attached to a service account",
+                "properties": {
+                  "default": {
+                    "enabled": true,
+                    "gid": "2002"
+                  },
+                  "description": "Enable or disable security context in StatefulSet template spec. Enabled by default with UID 2002. -- Disable when deploying to OpenShift, unless anyuid policy is attached to a service account",
+                  "enabled": {
+                    "$id": "#/properties/confluence/properties/securityContext/properties/enabled",
+                    "default": false,
+                    "title": "The enabled schema",
+                    "type": "boolean"
+                  },
+                  "gid": {
+                    "$id": "#/properties/confluence/properties/securityContext/properties/gid",
+                    "default": "2002",
+                    "description": "The GID used by the Confluence docker image",
+                    "title": "The gid schema",
+                    "type": "string"
+                  }
+                },
+                "title": "The securityContext schema",
+                "type": "object"
+              },
+              "service": {
+                "$id": "#/properties/confluence/properties/service",
+                "default": {},
+                "properties": {
+                  "contextPath": {
+                    "$id": "#/properties/confluence/properties/service/properties/contextPath",
+                    "default": null,
+                    "description": "The Tomcat context path that Confluence will use. The ATL_TOMCAT_CONTEXTPATH will be set automatically",
+                    "title": "The contextPath schema",
+                    "type": "null"
+                  },
+                  "port": {
+                    "$id": "#/properties/confluence/properties/service/properties/port",
+                    "default": 80,
+                    "description": "The port on which the Confluence Kubernetes service will listen",
+                    "title": "The port schema",
+                    "type": "integer"
+                  },
+                  "type": {
+                    "$id": "#/properties/confluence/properties/service/properties/type",
+                    "default": "ClusterIP",
+                    "description": "The type of Kubernetes service to use for Confluence",
+                    "title": "The type schema",
+                    "type": "string"
+                  }
+                },
+                "title": "The service schema",
+                "type": "object"
+              },
+              "umask": {
+                "$id": "#/properties/confluence/properties/umask",
+                "default": "0022",
+                "description": "The umask used by the Confluence process when it creates new files. Default is 0022, which makes the new files read/writeable by the Confluence user, and readable by everyone else.",
+                "title": "The umask schema",
+                "type": "string"
+              }
+            },
+            "title": "The confluence schema",
+            "type": "object"
+          },
+          "database": {
+            "$id": "#/properties/database",
+            "default": {},
+            "properties": {
+              "credentials": {
+                "$id": "#/properties/database/properties/credentials",
+                "default": {},
+                "properties": {
+                  "passwordSecretKey": {
+                    "$id": "#/properties/database/properties/credentials/properties/passwordSecretKey",
+                    "default": "password",
+                    "description": "The key in the Secret used to store the database login password",
+                    "title": "The passwordSecretKey schema",
+                    "type": "string"
+                  },
+                  "secretName": {
+                    "$id": "#/properties/database/properties/credentials/properties/secretName",
+                    "default": null,
+                    "description": "The name of the Kubernetes Secret that contains the database login credentials. If specified, then the credentials will be automatically populated during Confluence setup. Otherwise, they will need to be provided via the browser after initial startup.",
+                    "title": "The secretName schema",
+                    "type": "null"
+                  },
+                  "usernameSecretKey": {
+                    "$id": "#/properties/database/properties/credentials/properties/usernameSecretKey",
+                    "default": "username",
+                    "description": "The key in the Secret used to store the database login username",
+                    "title": "The usernameSecretKey schema",
+                    "type": "string"
+                  }
+                },
+                "title": "The credentials schema",
+                "type": "object"
+              },
+              "type": {
+                "$id": "#/properties/database/properties/type",
+                "default": null,
+                "description": "The type of database being used. Valid values include 'postgresql', 'mysql', 'oracle', 'mssql'. If not specified, then it will need to be provided via browser during initial startup.",
+                "title": "The type schema",
+                "type": "null"
+              },
+              "url": {
+                "$id": "#/properties/database/properties/url",
+                "default": null,
+                "description": "The JDBC URL of the database to be used by Confluence, e.g. jdbc:postgresql://host:port/database If not specified, then it will need to be provided via browser during initial startup.",
+                "title": "The url schema",
+                "type": "null"
+              }
+            },
+            "title": "The database schema",
+            "type": "object"
+          },
+          "fluentd": {
+            "$id": "#/properties/fluentd",
+            "default": {},
+            "properties": {
+              "elasticsearch": {
+                "$id": "#/properties/fluentd/properties/elasticsearch",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/fluentd/properties/elasticsearch/properties/enabled",
+                    "default": true,
+                    "description": "True if fluentd should send all log events to an elasticsearch service.",
+                    "title": "The enabled schema",
+                    "type": "boolean"
+                  },
+                  "hostname": {
+                    "$id": "#/properties/fluentd/properties/elasticsearch/properties/hostname",
+                    "default": "elasticsearch",
+                    "description": "The hostname of the Elasticsearch service that fluentd should send logs to.",
+                    "title": "The hostname schema",
+                    "type": "string"
+                  },
+                  "indexNamePrefix": {
+                    "$id": "#/properties/fluentd/properties/elasticsearch/properties/indexNamePrefix",
+                    "default": "confluence",
+                    "description": "The prefix of the elasticsearch index name that will be used",
+                    "title": "The indexNamePrefix schema",
+                    "type": "string"
+                  }
+                },
+                "title": "The elasticsearch schema",
+                "type": "object"
+              },
+              "enabled": {
+                "$id": "#/properties/fluentd/properties/enabled",
+                "default": false,
+                "description": "True if the fluentd sidecar should be added to each pod",
+                "title": "The enabled schema",
+                "type": "boolean"
+              },
+              "httpPort": {
+                "$id": "#/properties/fluentd/properties/httpPort",
+                "default": 9880,
+                "description": "The port on which the fluentd sidecar will listen",
+                "title": "The httpPort schema",
+                "type": "integer"
+              },
+              "imageName": {
+                "$id": "#/properties/fluentd/properties/imageName",
+                "default": "fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2",
+                "description": "The name of the image containing the fluentd sidecar",
+                "title": "The imageName schema",
+                "type": "string"
+              }
+            },
+            "title": "The fluentd schema",
+            "type": "object"
+          },
+          "image": {
+            "$id": "#/properties/image",
+            "default": {},
+            "properties": {
+              "pullPolicy": {
+                "$id": "#/properties/image/properties/pullPolicy",
+                "default": "IfNotPresent",
+                "description": "",
+                "title": "The pullPolicy schema",
+                "type": "string"
+              },
+              "repository": {
+                "$id": "#/properties/image/properties/repository",
+                "default": "atlassian/confluence-server",
+                "description": "",
+                "title": "The repository schema",
+                "type": "string"
+              },
+              "tag": {
+                "$id": "#/properties/image/properties/tag",
+                "default": null,
+                "description": "The docker image tag to be used. Defaults to the Chart appVersion.",
+                "title": "The tag schema",
+                "type": "null"
+              }
+            },
+            "title": "The image schema",
+            "type": "object"
+          },
+          "ingress": {
+            "$id": "#/properties/ingress",
+            "default": {},
+            "properties": {
+              "annotations": {
+                "$id": "#/properties/ingress/properties/annotations",
+                "default": {},
+                "description": "The custom annotations that should be applied to the Ingress.",
+                "title": "The annotations schema",
+                "type": "object"
+              },
+              "create": {
+                "$id": "#/properties/ingress/properties/create",
+                "default": false,
+                "description": "True if an Ingress should be created.",
+                "title": "The create schema",
+                "type": "boolean"
+              },
+              "host": {
+                "$id": "#/properties/ingress/properties/host",
+                "default": null,
+                "description": "The fully-qualified hostname of the Ingress.",
+                "title": "The host schema",
+                "type": "null"
+              },
+              "https": {
+                "$id": "#/properties/ingress/properties/https",
+                "default": true,
+                "description": "True if the browser communicates with the application over HTTPS.",
+                "title": "The https schema",
+                "type": "boolean"
+              },
+              "nginx": {
+                "$id": "#/properties/ingress/properties/nginx",
+                "default": true,
+                "description": "True if the created Ingress is to use the Kubernetes ingress-nginx controller. This will populate the Ingress with annotations for that controller. Set to false if a different controller is to be used, in which case the annotations need to be specified.",
+                "title": "The nginx schema",
+                "type": "boolean"
+              },
+              "tlsSecretName": {
+                "$id": "#/properties/ingress/properties/tlsSecretName",
+                "default": null,
+                "description": "Secret that contains a TLS private key and certificate. Optional if Ingress Controller is configured to use one secret for all ingresses",
+                "title": "The tlsSecretName schema",
+                "type": "null"
+              }
+            },
+            "title": "The ingress schema",
+            "type": "object"
+          },
+          "nodeSelector": {
+            "$id": "#/properties/nodeSelector",
+            "default": {},
+            "description": "Standard Kubernetes node-selectors that will be applied to all Confluence pods",
+            "title": "The nodeSelector schema",
+            "type": "object"
+          },
+          "podAnnotations": {
+            "$id": "#/properties/podAnnotations",
+            "default": {},
+            "description": "Specify additional annotations to be added to all Confluence pods",
+            "title": "The podAnnotations schema",
+            "type": "object"
+          },
+          "replicaCount": {
+            "$id": "#/properties/replicaCount",
+            "default": 1,
+            "description": "The initial number of pods that should be started at deployment of each of Confluence. Note that because Confluence requires initial manual configuration after the first pod is deployed, and before scaling up to additional pods, this should always be kept as 1.",
+            "title": "The replicaCount schema",
+            "type": "integer"
+          },
+          "serviceAccount": {
+            "$id": "#/properties/serviceAccount",
+            "default": {},
+            "properties": {
+              "clusterRole": {
+                "$id": "#/properties/serviceAccount/properties/clusterRole",
+                "default": {},
+                "properties": {
+                  "create": {
+                    "$id": "#/properties/serviceAccount/properties/clusterRole/properties/create",
+                    "default": true,
+                    "description": "true if a ClusterRole should be created, or false if it already exists",
+                    "title": "The create schema",
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "$id": "#/properties/serviceAccount/properties/clusterRole/properties/name",
+                    "default": null,
+                    "description": "Specifies the name of the ClusterRole that will be created if the \"serviceAccount.clusterRole.create\" flag is set. If not specified, a name will be auto-generated.",
+                    "title": "The name schema",
+                    "type": "null"
+                  }
+                },
+                "title": "The clusterRole schema",
+                "type": "object"
+              },
+              "clusterRoleBinding": {
+                "$id": "#/properties/serviceAccount/properties/clusterRoleBinding",
+                "default": {},
+                "properties": {
+                  "create": {
+                    "$id": "#/properties/serviceAccount/properties/clusterRoleBinding/properties/create",
+                    "default": true,
+                    "description": "true if a ClusterRoleBinding should be created, or false if it already exists",
+                    "title": "The create schema",
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "$id": "#/properties/serviceAccount/properties/clusterRoleBinding/properties/name",
+                    "default": null,
+                    "description": "Specifies the name of the ClusterRoleBinding that will be created if the \"serviceAccount.clusterRoleBinding.create\" flag is set If not specified, a name will be auto-generated.",
+                    "title": "The name schema",
+                    "type": "null"
+                  }
+                },
+                "title": "The clusterRoleBinding schema",
+                "type": "object"
+              },
+              "create": {
+                "$id": "#/properties/serviceAccount/properties/create",
+                "default": true,
+                "description": "true if a ServiceAccount should be created, or false if it already exists",
+                "title": "The create schema",
+                "type": "boolean"
+              },
+              "imagePullSecrets": {
+                "$id": "#/properties/serviceAccount/properties/imagePullSecrets",
+                "default": [],
+                "description": "The list of image pull secrets that should be added to the created ServiceAccount",
+                "items": {
+                  "$id": "#/properties/serviceAccount/properties/imagePullSecrets/items"
+                },
+                "title": "The imagePullSecrets schema",
+                "type": "array"
+              },
+              "name": {
+                "$id": "#/properties/serviceAccount/properties/name",
+                "default": null,
+                "description": "Specifies the name of the ServiceAccount to be used by the pods. If not specified, but the the \"serviceAccount.create\" flag is set, then the ServiceAccount name will be auto-generated, otherwise the 'default' ServiceAccount will be used.",
+                "title": "The name schema",
+                "type": "null"
+              }
+            },
+            "title": "The serviceAccount schema",
+            "type": "object"
+          },
+          "tolerations": {
+            "$id": "#/properties/tolerations",
+            "default": [],
+            "description": "Standard Kubernetes tolerations that will be applied to all Confluence pods",
+            "items": {
+              "$id": "#/properties/tolerations/items"
+            },
+            "title": "The tolerations schema",
+            "type": "array"
+          },
+          "volumes": {
+            "$id": "#/properties/volumes",
+            "default": {},
+            "properties": {
+              "additional": {
+                "$id": "#/properties/volumes/properties/additional",
+                "default": [],
+                "description": "Defines additional volumes that should be applied to all Confluence pods. Note that this will not create any corresponding volume mounts; those needs to be defined in confluence.additionalVolumeMounts",
+                "items": {
+                  "$id": "#/properties/volumes/properties/additional/items"
+                },
+                "title": "The additional schema",
+                "type": "array"
+              },
+              "localHome": {
+                "$id": "#/properties/volumes/properties/localHome",
+                "default": {},
+                "properties": {
+                  "customVolume": {
+                    "$id": "#/properties/volumes/properties/localHome/properties/customVolume",
+                    "default": {},
+                    "description": "When persistentVolumeClaim.create is false, then this value can be used to define a standard Kubernetes volume which will be used for the local-home volumes. If not defined, then defaults to an emptyDir volume.",
+                    "title": "The customVolume schema",
+                    "type": "object"
+                  },
+                  "mountPath": {
+                    "$id": "#/properties/volumes/properties/localHome/properties/mountPath",
+                    "default": "/var/atlassian/application-data/confluence",
+                    "description": "The path within the Confluence container which the local-home volume should be mounted.",
+                    "title": "The mountPath schema",
+                    "type": "string"
+                  },
+                  "persistentVolumeClaim": {
+                    "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim",
+                    "default": {},
+                    "properties": {
+                      "create": {
+                        "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim/properties/create",
+                        "default": false,
+                        "description": "If true, then a PersistentVolumeClaim will be created for each local-home volume.",
+                        "title": "The create schema",
+                        "type": "boolean"
+                      },
+                      "resources": {
+                        "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim/properties/resources",
+                        "default": {
+                          "requests": {
+                            "storage": "1Gi"
+                          }
+                        },
+                        "description": "Specifies the standard Kubernetes resource requests and/or limits for the local-home volume claims.",
+                        "properties": {
+                          "default": {
+                            "requests": {
+                              "storage": "1Gi"
+                            }
+                          },
+                          "description": "Specifies the standard Kubernetes resource requests and/or limits for the local-home volume claims.",
+                          "requests": {
+                            "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim/properties/resources/properties/requests",
+                            "default": {},
+                            "properties": {
+                              "storage": {
+                                "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim/properties/resources/properties/requests/properties/storage",
+                                "default": "",
+                                "title": "The storage schema",
+                                "type": "string"
+                              }
+                            },
+                            "title": "The requests schema",
+                            "type": "object"
+                          }
+                        },
+                        "title": "The resources schema",
+                        "type": "object"
+                      },
+                      "storageClassName": {
+                        "$id": "#/properties/volumes/properties/localHome/properties/persistentVolumeClaim/properties/storageClassName",
+                        "default": null,
+                        "description": "Specifies the name of the storage class that should be used for the local-home volume claim.",
+                        "title": "The storageClassName schema",
+                        "type": "null"
+                      }
+                    },
+                    "title": "The persistentVolumeClaim schema",
+                    "type": "object"
+                  }
+                },
+                "title": "The localHome schema",
+                "type": "object"
+              },
+              "sharedHome": {
+                "$id": "#/properties/volumes/properties/sharedHome",
+                "default": {},
+                "properties": {
+                  "customVolume": {
+                    "$id": "#/properties/volumes/properties/sharedHome/properties/customVolume",
+                    "default": {},
+                    "description": "When persistentVolumeClaim.create is false, then this value can be used to define a standard Kubernetes volume which will be used for the shared-home volume. If not defined, then defaults to an emptyDir (i.e. unshared) volume.",
+                    "title": "The customVolume schema",
+                    "type": "object"
+                  },
+                  "mountPath": {
+                    "$id": "#/properties/volumes/properties/sharedHome/properties/mountPath",
+                    "default": "/var/atlassian/application-data/shared-home",
+                    "description": "Specifies the path in the Confluence container to which the shared-home volume will be mounted.",
+                    "title": "The mountPath schema",
+                    "type": "string"
+                  },
+                  "nfsPermissionFixer": {
+                    "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer",
+                    "default": {},
+                    "properties": {
+                      "command": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer/properties/command",
+                        "default": null,
+                        "description": "By default, the fixer will change the group ownership of the volume's root directory to match the Confluence container's GID (2002), and then ensures the directory is group-writeable. If this is not the desired behavior, command used can be specified here.",
+                        "title": "The command schema",
+                        "type": "null"
+                      },
+                      "enabled": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer/properties/enabled",
+                        "default": false,
+                        "description": "If enabled, this will alter the shared-home volume's root directory so that Confluence can write to it. This is a workaround for a Kubernetes bug affecting NFS volumes: https://github.com/kubernetes/examples/issues/260",
+                        "title": "The enabled schema",
+                        "type": "boolean"
+                      },
+                      "mountPath": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/nfsPermissionFixer/properties/mountPath",
+                        "default": "/shared-home",
+                        "description": "The path in the initContainer where the shared-home volume will be mounted",
+                        "title": "The mountPath schema",
+                        "type": "string"
+                      }
+                    },
+                    "title": "The nfsPermissionFixer schema",
+                    "type": "object"
+                  },
+                  "persistentVolumeClaim": {
+                    "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim",
+                    "default": {},
+                    "properties": {
+                      "create": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim/properties/create",
+                        "default": false,
+                        "description": "If true, then a PersistentVolumeClaim will be created for the shared-home volume.",
+                        "title": "The create schema",
+                        "type": "boolean"
+                      },
+                      "resources": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim/properties/resources",
+                        "default": {
+                          "requests": {
+                            "storage": "1Gi"
+                          }
+                        },
+                        "description": "Specifies the standard Kubernetes resource requests and/or limits for the shared-home volume claims.",
+                        "properties": {
+                          "default": {
+                            "requests": {
+                              "storage": "1Gi"
+                            }
+                          },
+                          "description": "Specifies the standard Kubernetes resource requests and/or limits for the shared-home volume claims.",
+                          "requests": {
+                            "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim/properties/resources/properties/requests",
+                            "default": {},
+                            "properties": {
+                              "storage": {
+                                "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim/properties/resources/properties/requests/properties/storage",
+                                "default": "",
+                                "title": "The storage schema",
+                                "type": "string"
+                              }
+                            },
+                            "title": "The requests schema",
+                            "type": "object"
+                          }
+                        },
+                        "title": "The resources schema",
+                        "type": "object"
+                      },
+                      "storageClassName": {
+                        "$id": "#/properties/volumes/properties/sharedHome/properties/persistentVolumeClaim/properties/storageClassName",
+                        "default": null,
+                        "description": "Specifies the name of the storage class that should be used for the shared-home volume claim.",
+                        "title": "The storageClassName schema",
+                        "type": "null"
+                      }
+                    },
+                    "title": "The persistentVolumeClaim schema",
+                    "type": "object"
+                  },
+                  "subPath": {
+                    "$id": "#/properties/volumes/properties/sharedHome/properties/subPath",
+                    "default": null,
+                    "description": "Specifies the sub-directory of the shared-home volume which will be mounted in to the Confluence container.",
+                    "title": "The subPath schema",
+                    "type": "null"
+                  }
+                },
+                "title": "The sharedHome schema",
+                "type": "object"
+              }
+            },
+            "title": "The volumes schema",
+            "type": "object"
           }
         },
-        "additionalProperties": true
+        "title": "The root schema",
+        "type": "object"
       }
 
 signature:
