@@ -262,7 +262,7 @@ spec:
                                   container:
                                     limits:
                                       cpu: "4"
-                                      memory: "2G"
+                                      memory: "8G"
                                     requests:
                                       cpu: "1"
                                       memory: "2G"
