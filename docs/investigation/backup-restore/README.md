@@ -1,9 +1,9 @@
-# Backup and Restore actions for Voltron
+# Backup and Restore actions for Capact
 
-This proof of concept shows [Velero](https://velero.io) as a tool used for running backup and restore for workloads deployed by Voltron.
+This proof of concept shows [Velero](https://velero.io) as a tool used for running backup and restore for workloads deployed by Capact.
 
 ## Prerequisites
-- Voltron development cluster with disabled DB Populator
+- Capact development cluster with disabled DB Populator
 - [Velero CLI](https://velero.io/docs/v1.5/basic-install/) installed locally
 
 ## Velero installation
@@ -46,7 +46,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
 1. Create LVM Volume Group inside docker container
 
    ```shell
-   docker exec -it kind-dev-voltron-control-plane bash
+   docker exec -it kind-dev-capact-control-plane bash
    apt update
    apt install lvm2
    modprobe dm-snapshot
@@ -83,8 +83,8 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
    kubectl patch storageclass openebs-lvmpv -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
    ```
 
-1. Recreate Voltron to use new storage.
-   To be able to backup and restore Voltron components it needs to use a new persistent storage.
+1. Recreate Capact to use new storage.
+   To be able to backup and restore Capact components it needs to use a new persistent storage.
 
    ```shell
    kubectl delete ns argo neo4j
@@ -136,7 +136,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
          dryRun: false,
          advancedRendering: false,
          input: {
-           parameters: "{\"host\":\"rocket.voltron.local\"}"
+           parameters: "{\"host\":\"rocket.capact.local\"}"
          }
       }
     ) {
@@ -290,7 +290,7 @@ Velero can be used in 2 ways:
 1. Backup only some k8s objects
 
    Same as above but skipping volumes. This can be used to backup for example CRDs only.
-   For example to backup Voltron actions.
+   For example to backup Capact actions.
 
 Velero also allows to set [scheduled job](https://velero.io/docs/v1.5/api-types/schedule/#docs) for backups.
 
@@ -312,13 +312,13 @@ Velero also allows to set [scheduled job](https://velero.io/docs/v1.5/api-types/
 ## Security concerns
 
 Velero requires super user powers. Depends on what will be included in a backup it may need to access all namespaces.
-Backup/Restore CRDs are stored in velero namespace. Voltron action needs access to it.
+Backup/Restore CRDs are stored in velero namespace. Capact action needs access to it.
 
-## Voltron restore options
+## Capact restore options
 
-Voltron is using following components:
+Capact is using following components:
 
-- Voltron engine and OCH API 
+- Capact engine and OCH API 
 
   Stateless applications which don't need backups.
 - Neo4j
@@ -327,7 +327,7 @@ Voltron is using following components:
 - Argo and MinIO
 
   MinIO stores data on Persistent Volumes. Backup and Restore work properly.
-- Voltron Actions
+- Capact Actions
 
   Velero can restore CRDs but cannot restore Status and OwnerReference. Creating
   custom Restore Plugin is required.
@@ -335,7 +335,7 @@ Voltron is using following components:
 Velero is not a perfect tool to support scenario "clean install and restore". It cannot overwrite existing objects, so we would need to delete some objects first.
 Such approach will require deleting PVCs and databases(Neo4j and MinIO) during `Restore action`.
 
-Much safer options would be to restore Voltron without installing it first.
+Much safer options would be to restore Capact without installing it first.
 
 ### Backup and Restore
 
@@ -344,19 +344,19 @@ To speedup the process we will use `velero` CLI now.
 1. Create a backup
 
    ```shell
-   velero create backup voltron --include-namespaces=neo4j,argo,voltron-system --default-volumes-to-restic
+   velero create backup capact --include-namespaces=neo4j,argo,capact-system --default-volumes-to-restic
    ```
 
-1. Delete namespaces used by Voltron
+1. Delete namespaces used by Capact
 
    ```shell
-   kubectl delete ns neo4j voltron-system argo
+   kubectl delete ns neo4j capact-system argo
    ```
 
-1. Restore Voltron
+1. Restore Capact
 
    ```shell
-   velero restore create  --from-backup voltron
+   velero restore create  --from-backup capact
    ```
 
 1. Verify

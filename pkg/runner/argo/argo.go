@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"projectvoltron.dev/voltron/pkg/runner"
+	"capact.io/capact/pkg/runner"
 
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
 	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	wfManagedByLabelKey = "runner.projectvoltron.dev/created-by"
+	wfManagedByLabelKey = "runner.capact.io/created-by"
 	runnerName          = "argo-runner"
 )
 

@@ -1,0 +1,17 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: InterfaceGroup
+metadata:
+  prefix: cap.interface.capactio.capact.validation
+  name: action
+  displayName: "Capact E2E actions test manifests"
+  description: "Manifests used for testing Capact actions"
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

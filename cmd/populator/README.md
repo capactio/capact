@@ -7,7 +7,7 @@
 
 ## Overview
 
-The populator is a command-line tool, which helps to populate various Voltron content.
+The populator is a command-line tool, which helps to populate various Capact content.
 
 ## Prerequisites
 
@@ -22,7 +22,7 @@ go run cmd/populator/main.go
 
 Check below documents for details how to use the tool: 
 * [populator_register-ocf-manifests.md](./docs/populator_register-ocf-manifests.md)	- Populates locally available manifests into Neo4j database.
-* [populator_register-capact-installation.md](./docs/populator_register-capact-installation.md)	- Produces and uploads TypeInstances which describe Voltron installation.
+* [populator_register-capact-installation.md](./docs/populator_register-capact-installation.md)	- Produces and uploads TypeInstances which describe Capact installation.
 
 ## Development
 

@@ -4,22 +4,22 @@ _A container for the OCF metadata definitions._
 
 Type: `object`
 
-<i id="#https://projectvoltron.dev/schemas/common/metadata.json">path: #https://projectvoltron.dev/schemas/common/metadata.json</i>
+<i id="#https://capact.io/schemas/common/metadata.json">path: #https://capact.io/schemas/common/metadata.json</i>
 
 &#36;schema: [http://json-schema.org/draft-07/schema#](http://json-schema.org/draft-07/schema#)
 
-<b id="httpsprojectvoltron.devschemascommonmetadata.json">&#36;id: https://projectvoltron.dev/schemas/common/metadata.json</b>
+<b id="httpscapact.ioschemascommonmetadata.json">&#36;id: https://capact.io/schemas/common/metadata.json</b>
 
 **_Properties_**
 
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/name">name</b> `required`
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/name">name</b> `required`
 	 - _The name of OCF manifest that uniquely identifies this object within the entity sub-tree. Must be a non-empty string. We recommend using a CLI-friendly name._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/name">path: ##/properties/metadata/properties/name</i>
 	 - <b id="propertiesmetadatapropertiesname">&#36;id: #/properties/metadata/properties/name</b>
 	 - Example values: 
 		 1. _"config"_
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/prefix">prefix</b>
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/prefix">prefix</b>
 	 - _The prefix value is automatically computed and set when storing manifest in OCH._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/prefix">path: ##/properties/metadata/properties/prefix</i>
@@ -27,19 +27,19 @@ Type: `object`
 	 - **Comment**<br/>_Value set by user is ignored and this field is always managed by OCH_
 	 - Example values: 
 		 1. _"cap.type.database.mysql"_
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/displayName">displayName</b>
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/displayName">displayName</b>
 	 - _The name of the OCF manifest to be displayed in graphical clients._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/displayName">path: ##/properties/metadata/properties/displayName</i>
 	 - <b id="propertiesmetadatapropertiesdisplayname">&#36;id: #/properties/metadata/properties/displayName</b>
 	 - Example values: 
 		 1. _"MySQL Config"_
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/description">description</b> `required`
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/description">description</b> `required`
 	 - _A short description of the OCF manifest. Must be a non-empty string._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/description">path: ##/properties/metadata/properties/description</i>
 	 - <b id="propertiesmetadatapropertiesdescription">&#36;id: #/properties/metadata/properties/description</b>
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/maintainers">maintainers</b> `required`
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/maintainers">maintainers</b> `required`
 	 - _The list of maintainers with contact information._
 	 - Type: `array`
 	 - <i id="##/properties/metadata/properties/maintainers">path: ##/properties/metadata/properties/maintainers</i>
@@ -73,7 +73,7 @@ Type: `object`
 				 - <i id="##/properties/metadata/properties/maintainers/items/anyOf/0/properties/url">path: ##/properties/metadata/properties/maintainers/items/anyOf/0/properties/url</i>
 				 - <b id="propertiesmetadatapropertiesmaintainersitemsanyof0propertiesurl">&#36;id: #/properties/metadata/properties/maintainers/items/anyOf/0/properties/url</b>
 				 - String format must be a "iri"
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/documentationURL">documentationURL</b>
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/documentationURL">documentationURL</b>
 	 - _Link to documentation page for the OCF manifest._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/documentationURL">path: ##/properties/metadata/properties/documentationURL</i>
@@ -81,7 +81,7 @@ Type: `object`
 	 - Example values: 
 		 1. _"https://example.com/docs"_
 	 - String format must be a "uri"
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/supportURL">supportURL</b>
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/supportURL">supportURL</b>
 	 - _Link to support page for the OCF manifest._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/supportURL">path: ##/properties/metadata/properties/supportURL</i>
@@ -89,7 +89,7 @@ Type: `object`
 	 - Example values: 
 		 1. _"https://example.com/online-support"_
 	 - String format must be a "uri"
- - <b id="#https://projectvoltron.dev/schemas/common/metadata.json/properties/iconURL">iconURL</b>
+ - <b id="#https://capact.io/schemas/common/metadata.json/properties/iconURL">iconURL</b>
 	 - _The URL to an icon or a data URL containing an icon._
 	 - Type: `string`
 	 - <i id="##/properties/metadata/properties/iconURL">path: ##/properties/metadata/properties/iconURL</i>

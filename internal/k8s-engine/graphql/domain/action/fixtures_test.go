@@ -7,14 +7,14 @@ import (
 
 	v1 "k8s.io/api/authentication/v1"
 
+	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 func fixGQLAction(t *testing.T, name string) graphql.Action {
@@ -254,21 +254,25 @@ func fixK8sAction(t *testing.T, name, namespace string) v1alpha1.Action {
 	}
 }
 
-func fixK8sActionMinimal(name, namespace string, phase v1alpha1.ActionPhase) v1alpha1.Action {
+func fixK8sActionMinimal(name, namespace string, phase v1alpha1.ActionPhase, actionRef v1alpha1.ManifestReference) v1alpha1.Action {
 	return v1alpha1.Action{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
 			Namespace: namespace,
 		},
 		Spec: v1alpha1.ActionSpec{
-			ActionRef: v1alpha1.ManifestReference{
-				Path:     "foo.bar",
-				Revision: ptr.String("0.1.0"),
-			},
+			ActionRef: actionRef,
 		},
 		Status: v1alpha1.ActionStatus{
 			Phase: phase,
 		},
+	}
+}
+
+func fixManifestReference(path string) v1alpha1.ManifestReference {
+	return v1alpha1.ManifestReference{
+		Path:     v1alpha1.NodePath(path),
+		Revision: nil,
 	}
 }
 
@@ -404,12 +408,6 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				"parameters.json": `{"param":"one"}`,
 			},
 		},
-	}
-}
-
-func fixGQLActionFilter(phase *graphql.ActionStatusPhase) graphql.ActionFilter {
-	return graphql.ActionFilter{
-		Phase: phase,
 	}
 }
 

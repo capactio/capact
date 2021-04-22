@@ -14,10 +14,21 @@ on:
       - "deploy/**"
       - "!**.md"
       - "och-content/**"
+      - "Dockerfile"
     branches:
       - "master"
 
 jobs:
+  cancel-previous-workflows:
+    name: Cancel previous workflows
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+
   entry-tests:
     name: Lint and test code
     runs-on: ubuntu-latest

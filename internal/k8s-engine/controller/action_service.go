@@ -9,22 +9,22 @@ import (
 
 	"go.uber.org/zap"
 
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 
+	graphqldomain "capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/runner"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	"github.com/pkg/errors"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	graphqldomain "projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
-	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/runner"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/yaml"
 )
@@ -159,7 +159,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 		},
 	}
 
-	marshaledRunnerCtx, err := yaml.Marshal(runnerCtx)
+	marshalledRunnerCtx, err := yaml.Marshal(runnerCtx)
 	if err != nil {
 		return errors.Wrap(err, "while marshaling runner context")
 	}
@@ -168,7 +168,7 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	if err != nil {
 		return errors.Wrap(err, "while extracting rendered action from raw form")
 	}
-	marshaledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
+	marshalledRunnerArgs, err := yaml.Marshal(renderedAction.Args)
 	if err != nil {
 		return errors.Wrap(err, "while marshaling runner args")
 	}
@@ -176,8 +176,8 @@ func (a *ActionService) EnsureRunnerInputDataCreated(ctx context.Context, saName
 	secret := &corev1.Secret{
 		ObjectMeta: a.objectMetaFromAction(action),
 		Data: map[string][]byte{
-			runnerContextSecretKey: marshaledRunnerCtx,
-			runnerArgsSecretKey:    marshaledRunnerArgs,
+			runnerContextSecretKey: marshalledRunnerCtx,
+			runnerArgsSecretKey:    marshalledRunnerArgs,
 		},
 	}
 

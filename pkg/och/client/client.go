@@ -4,15 +4,15 @@ import (
 	"context"
 	"net/http"
 
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
 
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/och/client/public"
 	"github.com/machinebox/graphql"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
 )
 
-// Client used to communicate with the Voltron OCH GraphQL APIs
+// Client used to communicate with the Capact OCH GraphQL APIs
 type Client struct {
 	Local
 	Public
@@ -35,6 +35,7 @@ type Public interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (string, error)
 	FindInterfaceRevision(ctx context.Context, ref ochpublicgraphql.InterfaceReference) (*ochpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref ochpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]ochpublicgraphql.ImplementationRevision, error)
+	ListInterfacesWithLatestRevision(ctx context.Context, filter ochpublicgraphql.InterfaceFilter) ([]*ochpublicgraphql.Interface, error)
 }
 
 func New(endpoint string, httpClient *http.Client) *Client {

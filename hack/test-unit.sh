@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script executes unit tests against whole Voltron codebase.
+# This script executes unit tests against whole Capact codebase.
 #
 # It requires Go to be installed.
 
@@ -9,13 +9,15 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-readonly ROOT_PATH=${CURRENT_DIR}/..
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
-pushd "${ROOT_PATH}" >/dev/null
+pushd "${REPO_ROOT_DIR}" >/dev/null
 
 # Exit handler. This function is called anytime an EXIT signal is received.
 # This function should never be explicitly called.
@@ -52,7 +54,7 @@ function test::unit() {
   shout "? go test"
 
   # Check if tests passed
-  if ! go test -race -coverprofile="${ROOT_PATH}/coverage.txt" ./...;
+  if ! go test -race -coverprofile="${REPO_ROOT_DIR}/coverage.txt" ./...;
  then
     echo -e "${RED}✗ go test\n${NC}"
     exit 1

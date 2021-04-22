@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/logger"
+	"capact.io/capact/internal/logger"
 
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

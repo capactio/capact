@@ -3,13 +3,13 @@ package client_test
 import (
 	"testing"
 
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/och/client"
 	"github.com/stretchr/testify/assert"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client"
 
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 // ListImplementationRevisionForInterface tested in pkg/sdk/renderer/argo

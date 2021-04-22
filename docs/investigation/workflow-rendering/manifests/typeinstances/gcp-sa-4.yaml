@@ -9,7 +9,7 @@ spec:
     revision: 0.1.0
   value: # Replace with proper data
     type: "service_account"
-    project_id: "projectvoltron"
+    project_id: "fake"
     private_key_id: "fake"
     private_key: "fake"
     client_email: "fake"

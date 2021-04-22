@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"strings"
 
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"github.com/avast/retry-go"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
@@ -15,7 +15,7 @@ import (
 
 const retryAttempts = 1
 
-// Client used to communicate with the Voltron Public OCH GraphQL APIs
+// Client used to communicate with the Capact Public OCH GraphQL APIs
 type Client struct {
 	client *graphql.Client
 }
@@ -74,7 +74,7 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
-func (c *Client) ListInterfacesWithLatest(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
+func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query ListInterface($interfaceFilter: InterfaceFilter!)  {
 		  interfaces(filter: $interfaceFilter) {
 			%s

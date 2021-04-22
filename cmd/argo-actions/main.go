@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/logger"
-	argoactions "projectvoltron.dev/voltron/pkg/argo-actions"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	"capact.io/capact/internal/logger"
+	argoactions "capact.io/capact/pkg/argo-actions"
+	"capact.io/capact/pkg/och/client/local"
 
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ type Config struct {
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
 	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
-	LocalOCHEndpoint string                       `envconfig:"default=http://voltron-och-local.voltron-system/graphql"`
+	LocalOCHEndpoint string                       `envconfig:"default=http://capact-och-local.capact-system/graphql"`
 	Logger           logger.Config
 }
 

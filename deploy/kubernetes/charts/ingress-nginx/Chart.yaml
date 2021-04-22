@@ -1,6 +1,6 @@
 apiVersion: v2
 name: ingress-controller
-description: A Helm chart for Nginx Ingress Controller for Voltron installation
+description: A Helm chart for Nginx Ingress Controller for Capact installation
 
 type: application
 

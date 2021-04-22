@@ -48,12 +48,12 @@
       "type": "object",
       "allOf": [
         {
-          "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+          "$ref": "https://capact.io/schemas/common/metadata.json"
         },
         {
           "properties": {
             "attributes": {
-              "$ref": "https://projectvoltron.dev/schemas/common/metadata-attributes.json"
+              "$ref": "https://capact.io/schemas/common/metadata-attributes.json"
             }
           }
         }
@@ -69,7 +69,7 @@
       "additionalProperties": false,
       "properties": {
         "jsonSchema": {
-          "$ref": "https://projectvoltron.dev/schemas/common/json-schema-type.json"
+          "$ref": "https://capact.io/schemas/common/json-schema-type.json"
         },
         "additionalRefs": {
           "$id": "#/properties/spec/properties/additionalRefs",

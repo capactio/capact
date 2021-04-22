@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This script provisions testing environment using 'kind'(kubernetes-in-docker)
-# and execute end-to-end Voltron tests.
+# and execute end-to-end Capact tests.
 #
 # It requires Docker to be installed.
 # Dependencies such as Helm v3 and kind can be installed on demand.
@@ -11,9 +11,12 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
-readonly TMP_DIR=$(mktemp -d)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+TMP_DIR=$(mktemp -d)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
+readonly TMP_DIR
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
@@ -43,9 +46,9 @@ cleanup() {
 
 trap cleanup EXIT
 
-voltron::test::execute() {
+capact::test::execute() {
     shout "- Executing e2e test..."
-    helm test ${VOLTRON_RELEASE_NAME} --namespace=${VOLTRON_NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
+    helm test ${CAPACT_RELEASE_NAME} --namespace=${CAPACT_NAMESPACE} --timeout=${HELM_TEST_TIMEOUT} --logs
 }
 
 main() {
@@ -75,15 +78,15 @@ main() {
     if [[ "${BUILD_IMAGES:-"true"}" == "true" ]]; then
       export DOCKER_TAG=$RANDOM
       export DOCKER_REPOSITORY="local"
-      voltron::update::images_on_kind
+      capact::update::images_on_kind
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
     export CLUSTER_TYPE="KIND"
     export USE_TEST_SETUP="true"
-    voltron::install_upgrade::charts
+    capact::install_upgrade::charts
 
-    voltron::test::execute
+    capact::test::execute
     # Test completed successfully. We do not have to dump cluster info
     DUMP_CLUSTER_INFO=false
     shout "Integration test completed successfully."

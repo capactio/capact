@@ -3,8 +3,14 @@ package action_test
 import (
 	"context"
 	"io/ioutil"
+	"regexp"
 	"testing"
 
+	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ptr"
+	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,11 +18,6 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ptr"
-	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake" //nolint:staticcheck
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -126,10 +127,11 @@ func TestService_List(t *testing.T) {
 	const ns = "namespace"
 
 	succeededPhase := corev1alpha1.SucceededActionPhase
+	manifestRef := fixManifestReference("foo.bar")
 
-	action1 := fixK8sActionMinimal("foo", ns, succeededPhase)
-	action2 := fixK8sActionMinimal("bar", ns, succeededPhase)
-	action3 := fixK8sActionMinimal("baz", ns, corev1alpha1.FailedActionPhase)
+	action1 := fixK8sActionMinimal("foo", ns, succeededPhase, manifestRef)
+	action2 := fixK8sActionMinimal("bar", ns, succeededPhase, fixManifestReference("foo.notbar"))
+	action3 := fixK8sActionMinimal("baz", ns, corev1alpha1.FailedActionPhase, manifestRef)
 
 	testCases := []struct {
 		Name   string
@@ -149,6 +151,24 @@ func TestService_List(t *testing.T) {
 			Filter: fixModelActionFilter(&succeededPhase),
 			Expected: []corev1alpha1.Action{
 				action1, action2,
+			},
+		},
+		{
+			Name: "Filter by Action name regex",
+			Filter: model.ActionFilter{
+				NameRegex: regexp.MustCompile(`ba*`),
+			},
+			Expected: []corev1alpha1.Action{
+				action2, action3,
+			},
+		},
+		{
+			Name: "Filter by InterfaceRef",
+			Filter: model.ActionFilter{
+				InterfaceRef: &manifestRef,
+			},
+			Expected: []corev1alpha1.Action{
+				action1, action3,
 			},
 		},
 	}
@@ -206,7 +226,7 @@ func TestService_CancelByName(t *testing.T) {
 	)
 
 	t.Run("Success", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Run = ptr.Bool(true)
 
 		svc, k8sCli := newServiceWithFakeClient(t, &inputAction)
@@ -230,7 +250,7 @@ func TestService_CancelByName(t *testing.T) {
 	})
 
 	t.Run("Error", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
 
@@ -245,7 +265,7 @@ func TestService_CancelByName(t *testing.T) {
 	})
 
 	t.Run("Already Canceled", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -268,7 +288,7 @@ func TestService_RunByName(t *testing.T) {
 	)
 
 	t.Run("Success", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase, fixManifestReference("foo.bar"))
 
 		svc, k8sCli := newServiceWithFakeClient(t, &inputAction)
 
@@ -291,7 +311,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Error - Already Cancelled", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Cancel = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -307,7 +327,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Error - Not ready to run", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Status.Phase = corev1alpha1.BeingRenderedActionPhase
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -323,7 +343,7 @@ func TestService_RunByName(t *testing.T) {
 	})
 
 	t.Run("Already Run", func(t *testing.T) {
-		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase)
+		inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.RunningActionPhase, fixManifestReference("foo.bar"))
 		inputAction.Spec.Run = ptr.Bool(true)
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -455,7 +475,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 		})
 
 		t.Run("Error - Advanced rendering disabled", func(t *testing.T) {
-			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase)
+			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.ReadyToRunActionPhase, fixManifestReference("foo.bar"))
 			inputAction.Spec.AdvancedRendering = &corev1alpha1.AdvancedRendering{
 				Enabled: false,
 			}
@@ -473,7 +493,7 @@ func TestService_ContinueAdvancedRendering(t *testing.T) {
 		})
 
 		t.Run("Error - Action not continuable", func(t *testing.T) {
-			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase)
+			inputAction := fixK8sActionMinimal(name, ns, corev1alpha1.InitialActionPhase, fixManifestReference("foo.bar"))
 			inputAction.Spec.AdvancedRendering = &corev1alpha1.AdvancedRendering{
 				Enabled: true,
 			}

@@ -1,7 +1,7 @@
 # Untitled object in undefined Schema
 
 ```txt
-https://projectvoltron.dev/schemas/implementation.json#/definitions/requireEntity
+https://capact.io/schemas/implementation.json#/definitions/requireEntity
 ```
 
 

@@ -26,17 +26,17 @@
 
 ## Introduction
 
-This guide shows the first steps on how to develop OCF content for Voltron. We will show how to:
+This guide shows the first steps on how to develop OCF content for Capact. We will show how to:
 - define new **Types** and **Interfaces**,
 - create **Implementation** for the **Interfaces**,
 - use other **Interfaces** in your **Implementations**,
-- test the new manifests on a local development Voltron cluster
+- test the new manifests on a local development Capact cluster
 
 As an example, we will create OCF manifests to deploy Confluence with a PostgreSQL database.
 
 ## Prerequisites
 
-To develop and test the created content, you will need to have a Voltron environment. To set up a local environment, install the following prerequisites:
+To develop and test the created content, you will need to have a Capact environment. To set up a local environment, install the following prerequisites:
 
 * [Docker](https://docs.docker.com/engine/install/)
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
@@ -44,27 +44,27 @@ To develop and test the created content, you will need to have a Voltron environ
 * [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
 * [populator](../../../cmd/populator/docs/populator_register-ocf-manifests.md) - For now, you need to compile it from source
 
-Also, clone the Voltron repository with the current OCF content.
+Also, clone the Capact repository with the current OCF content.
 ```bash
 git clone https://github.com/Project-Voltron/go-voltron.git
 ```
 
 Some other materials worth reading before are:
-- [JIRA installation tutorial](../jira-installation/README.md) - Learn how to execute actions in Voltron.
-- [Argo Workflows documentation](https://argoproj.github.io/argo-workflows/) - Voltron action syntax is based on Argo workflows, so it's highly recommended you understand what is Argo and how to create Argo workflows.
-- [Voltron runners](../../runner.md) - Understand, what are Voltron runners.
+- [JIRA installation tutorial](../jira-installation/README.md) - Learn how to execute actions in Capact.
+- [Argo Workflows documentation](https://argoproj.github.io/argo-workflows/) - Capact action syntax is based on Argo workflows, so it's highly recommended you understand what is Argo and how to create Argo workflows.
+- [Capact runners](../../runner.md) - Understand, what are Capact runners.
 - [ocftool](../../../cmd/ocftool/docs/ocftool.md) - Learn how to validate your manifests syntax.
 
 ## Types, Interfaces and Implementations
 
-If you have some software development experience, concepts like types and interfaces should be familiar to you. In Voltron, **Types** represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
+If you have some software development experience, concepts like types and interfaces should be familiar to you. In Capact, **Types** represent different objects in the environment. These could be database or application instances, servers, but also more abstract things, like an IP address or hostname.
 An actual object of a **Type** is called a **TypeInstance**.
 
 **Interfaces** are operations, which can be executed on certain **Types**. Let's say we have a **Type** called `postgresql.config`, which represents a PostgreSQL database instance. We could have an **Interface** `postgresql.install`, which will provision a PostgreSQL instance and create a **TypeInstance** of `postgresql.config`.
 
 **Interfaces** can be grouped into **InterfaceGroups**. **InterfaceGroups** are used to logically group the **Interfaces**. This is mostly used for presentation purposes, like to show the user all **Interfaces**, which operate on PostgreSQL instances. So if you have two **Interfaces**: `postgresql.install` and `postgresql.uninstall`, you can group them into `postgresql` InterfaceGroup.
 
-Of course, there are multiple ways to create a PostgreSQL instance: you can create it on a public cloud or on-premise, and you could deploy it as a virtual machine or as a Kubernetes StatefulSet. To cover these scenarios, Voltron allows defining multiple **Implementations** of some **Interfaces**. For example:
+Of course, there are multiple ways to create a PostgreSQL instance: you can create it on a public cloud or on-premise, and you could deploy it as a virtual machine or as a Kubernetes StatefulSet. To cover these scenarios, Capact allows defining multiple **Implementations** of some **Interfaces**. For example:
 - `aws.postgresql.install` **Implementation** of the `postgresql.install` **Interface** will deploy AWS RDS instances, whereas
 - `bitnami.postgresql.install` **Implementation** will deploys a PostgreSQL Helm chart on Kubernetes.
 
@@ -287,7 +287,7 @@ signature:
 
 The **Type** values are described using [JSON Schema](https://json-schema.org/).
 
-> Currently the **Type** manifests are not used in Voltron to validate the data of the inputs and outputs. Validation of the data will be added later on, although
+> Currently the **Type** manifests are not used in Capact to validate the data of the inputs and outputs. Validation of the data will be added later on, although
 > it is still useful to define the **Types** to document the schema of the data.
 
 ## Runners
@@ -307,7 +307,7 @@ You can read more about runners in [this document](../../runner.md).
 > The syntax used to describe the workflows in **Implementations** is based on [Argo](https://argoproj.github.io/argo/).
 > It's highly recommended you read their documentation and understand what is Argo and how to create Argo workflows, before writing OCF Implementations.
 
-After we defined the **Interfaces** and the **Types**, we can write an **Implementation** of `confluence.install`. Our **Implementation** will use a PostgreSQL database, which will be provided by another **Interface**, which is already available in Voltron. We also allow users to provide his own PostgreSQL instance **TypeInstance**.
+After we defined the **Interfaces** and the **Types**, we can write an **Implementation** of `confluence.install`. Our **Implementation** will use a PostgreSQL database, which will be provided by another **Interface**, which is already available in Capact. We also allow users to provide his own PostgreSQL instance **TypeInstance**.
 
 Create a file `och-content/implementation/atlassian/confluence/install.yaml` with the following content:
 
@@ -356,7 +356,7 @@ spec:
   
   # We specify which TypeInstances are uploaded to OCH as TypeInstances, along with theirs relations.
   # We can specify here both required and optional output TypeInstances for a given manifest.
-  # You can also specify TypeInstances, which are defined in voltron-outputTypeInstances in steps, to create proper relations.
+  # You can also specify TypeInstances, which are defined in capact-outputTypeInstances in steps, to create proper relations.
   # If a given Argo artifact is not mentioned here, it won't be created in OCH as TypeInstance.
   outputTypeInstanceRelations:
       confluence-config:
@@ -381,7 +381,7 @@ spec:
           revision: 0.1.0
 
   # In this section we need to import all Interfaces, we will use in our Implementation.
-  # These can be Voltron runner or other actions.
+  # These can be Capact runner or other actions.
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -417,12 +417,12 @@ spec:
           - name: main
             inputs:
               artifacts:
-                # Voltron Engine injects the 'input-parameters' artifacts into the workflow entrypoint.
+                # Capact Engine injects the 'input-parameters' artifacts into the workflow entrypoint.
                 # It contains the Interface parameters, in our case it is `confluence.install-input`.
                 - name: input-parameters
                 # You need to specify all optional TypeInstances that can be consumed by the workflow.
                 # Later, the user or other workflow can inject own TypeInstance which fulfills schema for this TypeInstance.
-                # You as a Workflow developer, can refer to them in the `voltron-when` statements.
+                # You as a Workflow developer, can refer to them in the `capact-when` statements.
                 - name: postgresql # Same name as defined under the `additionalInput.typeInstances` property.
                   optional: true
             # Under `outputs`, you need to specify all outputs defined under Interface that this workflow implements.
@@ -436,9 +436,9 @@ spec:
               # using the imported 'postgresql.install' Interface.
               # Otherwise, it is replaced with the "mock" step emitting the input argument which satisfied this step as a step output.
               - - name: install-db
-                  voltron-action: postgresql.install
-                  voltron-when: postgresql == nil
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.install
+                  capact-when: postgresql == nil
+                  capact-outputTypeInstances:
                     - name: postgresql                # We have to define the output TypeInstance 'postgresql' from this step
                       from: postgresql
                   arguments:
@@ -454,8 +454,8 @@ spec:
               # Create the user for Confluence in our PostgreSQL instance
               # using the imported 'postgresql.create-user' Interface
               - - name: create-user
-                  voltron-action: postgresql.create-user
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
                     - name: user
                       from: user
                   arguments:
@@ -473,8 +473,8 @@ spec:
               # Create the database for Confluence in our PostgreSQL instance
               # using the imported 'postgresql.create-db' Interface
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database                  # Defining the output TypeInstance 'database'
                       from: database
                   arguments:
@@ -493,7 +493,7 @@ spec:
 
               # In this step only <@ host @> variable will be rendered
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -518,7 +518,7 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: confluence.voltron.local
+                                - host: confluence.capact.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
@@ -528,7 +528,7 @@ spec:
 
               # In this step variables with the prefix "db" will be rendered
               - - name: fill-db-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -541,7 +541,7 @@ spec:
 
               # In this step variables with the prefix "user" will be rendered
               - - name: fill-user-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -555,8 +555,8 @@ spec:
               # Execute the Helm runner, with the input parameters created in the previous step.
               # This will create the Helm chart and deploy our Confluence instance
               - - name: helm-run
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
                       from: additional
                     - name: confluence-helm-release   # Defining the output TypeInstance 'confluence-helm-release'
@@ -579,30 +579,29 @@ Let's take a look on the **Implementation** YAML. **Implementation** has the fol
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `appVersion`                  | Application versions, which this **Implementation** supports.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `additionalInput`             | Additional input for the **Implementation**, compared to the **Interface**. In our case, here we define the `postgresql.config`, as our **Implementation** uses a PostgreSQL instance for Confluence.                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `additionalOutput`            | This section defines any additional **TypeInstances**, which are created in this **Implementation**, compared to the **Interface**. In our **Implementation**, we create a database in the database instance with the `postgresql.create-db` **Interface**, which outputs an `postgresql.database` **TypeInstance**. We have to write this down in `additionalOutput`, so Voltron will resolve this **TypeInstance** metadata for uploading it to OCH.                                                                                                                                                                                      |
-| `outputTypeInstanceRelations` | Specifies all output TypeInstances to upload to OCH with theirs relationships between them. Only the TypeInstances created in this Implementation have to be mentioned here. If a TypeInstances in created in another action and brought into the context with `voltron-outputTypeInstances`, then it should not be defined here.                                                                                                                                                                                                                                                                                                                                                                                               |
+| `additionalOutput`            | This section defines any additional **TypeInstances**, which are created in this **Implementation**, compared to the **Interface**. In our **Implementation**, we create a database in the database instance with the `postgresql.create-db` **Interface**, which outputs an `postgresql.database` **TypeInstance**. We have to write this down in `additionalOutput`, so Capact will resolve this **TypeInstance** metadata for uploading it to OCH.                                                                                                                                                                                      |
+| `outputTypeInstanceRelations` | Specifies all output TypeInstances to upload to OCH with theirs relationships between them. Only the TypeInstances created in this Implementation have to be mentioned here. If a TypeInstances in created in another action and brought into the context with `capact-outputTypeInstances`, then it should not be defined here.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `implements`                  | Defines which **Interfaces** are implemented by this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `requires`                    | List of system prerequisites that need to be present in the environment managed by Voltron to use this **Implementation**. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means we need a Kubernetes cluster. Requirement items can specify `alias` and be used inside workflow under `{{workflow.outputs.artifacts.{alias}}}`, where `{alias-name}` is the alias. A TypeInstance with alias is injected into the workflow based on Policy configuration. To learn more, see the [TypeInstance Injection](../../policy-configuration.md#typeinstance-injection) paragraph in Policy Configuration document. |
+| `requires`                    | List of system prerequisites that need to be present in the environment managed by Capact to use this **Implementation**. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means we need a Kubernetes cluster. Requirement items can specify `alias` and be used inside workflow under `{{workflow.outputs.artifacts.{alias}}}`, where `{alias-name}` is the alias. A TypeInstance with alias is injected into the workflow based on Policy configuration. To learn more, see the [TypeInstance Injection](../../policy-configuration.md#typeinstance-injection) paragraph in Policy Configuration document. |
 | `imports`                     | Here we define all other **Interfaces**, we use in our **Implementation**. We can then refer to them as `'<alias>.<method-name>'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `action`                      | Holds information about the actions that is executed. In the case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 > You can notice, that `confluence-config` (which is the `additional` output TypeInstance from `helm.install`) is defined in the `outputTypeInstanceRelations`, although it was created in `helm.install`. The `additional` from `helm.install` is specially, because `helm.install` does not know the Type of TypeInstances, so it's not defined in `helm.install` Implementation, but must be defined in the caller Implementation. In the future, we will improve the syntax, so it will be more clear, which TypeInstances need a separate entry in `outputTypeInstanceRelations` and which don't.
 
-The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with a few extensions introduced by Voltron. These extensions are:
+The workflow syntax is based on [Argo](`https://argoproj.github.io/argo/`), with a few extensions introduced by Capact. These extensions are:
 
-| Property                                          | Description                                                                                                                                                                                                                                                                                                           |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.templates.steps[][].voltron-when`               | Allows for conditional execution of a step, based on an expression with an input workflow artifacts arguments. You can make assertions on artifacts defined under `inputs.arguments.artifacts` for a given template. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md). |
-| `.templates.steps[][].voltron-action`             | Allows to import another **Interface**. In our example, we use this to provision PostgreSQL with `postgresql.install` **Interface**.                                                                                                                                                                                  |
-| `.templates.steps[][].voltron-outputTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations**. The `from` property must match the name of the output from the called Action. You can then use it in the Implementations `outputTypeInstanceRelations`, when defining relations between TypeInstances. |
-
-| `.templates.steps[][].voltron-updateTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations** and will be used to update existing TypeInstance. The `from` property must match the name of the output from the called Action.                                                                         |
+| Property                                         | Description                                                                                                                                                                                                                                                                                                                                            |
+| -------------------------------------------------| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.templates.steps[][].capact-when`               | Allows for conditional execution of a step, based on an expression with an input workflow artifacts arguments. You can make assertions on artifacts defined under `inputs.arguments.artifacts` for a given template. It supports the syntax defined here: [antonmedv/expr](https://github.com/antonmedv/expr/blob/master/docs/Language-Definition.md). |
+| `.templates.steps[][].capact-action`             | Allows to import another **Interface**. In our example, we use this to provision PostgreSQL with `postgresql.install` **Interface**.                                                                                                                                                                                                                   |
+| `.templates.steps[][].capact-outputTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations**. The `from` property must match the name of the output from the called Action. You can then use it in the Implementations `outputTypeInstanceRelations`, when defining relations between TypeInstances.                            |
+| `.templates.steps[][].capact-updateTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations** and will be used to update existing TypeInstance. The `from` property must match the name of the output from the called Action.                                                                                                    |
 
 Let's go through the **Implementation** and try to understand, what is happening in each step of the action. Our Confluence installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no **TypeInstance** for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` **Interface** to create an PostgreSQL instance.
 
 > The `input-parameters` for `postgresql.install` are hardcoded in this example. In a real workflow, they should be generated or taken from the `input-parameters` for this **Implementation**.
 
-In the next step we are creating a database for the Confluence server. If you look at the **Interface** definition of [`cap.interface.database.postgresql.create-db`](och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` **TypeInstance** of **Type** [`cap.type.database.postgresql.config`](och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](och-content/type/database/postgresql/database-input.yaml), and outputs a `database` **TypeInstance** of **Type** [`cap.type.database.postgresql.database`](och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the **Interface** via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented **Interface** in the `voltron-outputTypeInstances` field.
+In the next step we are creating a database for the Confluence server. If you look at the **Interface** definition of [`cap.interface.database.postgresql.create-db`](och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` **TypeInstance** of **Type** [`cap.type.database.postgresql.config`](och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](och-content/type/database/postgresql/database-input.yaml), and outputs a `database` **TypeInstance** of **Type** [`cap.type.database.postgresql.database`](och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the **Interface** via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented **Interface** in the `capact-outputTypeInstances` field.
 
 The `render-helm-args`, `fill-db-params-in-helm-args` and `fill-user-params-in-helm-args` steps are used to prepare the input parameters for the `helm.install` **Interface**. Jinja template engine is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` **TypeInstances**. Those steps don't create any **TypeInstances** and serve only the purpose of creating the input parameters for the Helm runner.
 You can check the schema of the Helm runner args in the [Type manifest](../../../och-content/type/runner/helm/run-input.yaml).
@@ -613,7 +612,7 @@ You can check the schema of the Helm runner args in the [Type manifest](../../..
 
 The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` **TypeInstances**. The `confluence-config` **TypeInstance** data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
 
-Note the `runner-context` argument, which provided the context for the runner. Voltron Engine injects a global artifact `workflow.outputs.artifacts.runner-context` into the workflow, so if you use a runner, which needs the runner context, you can to do it using:
+Note the `runner-context` argument, which provided the context for the runner. Capact Engine injects a global artifact `workflow.outputs.artifacts.runner-context` into the workflow, so if you use a runner, which needs the runner context, you can to do it using:
 ```yaml
 arguments:
   artifacts:
@@ -637,7 +636,7 @@ You can read more about the `ocftool` [here](../../../cmd/ocftool/README.md).
 
 ## Populate the manifests into OCH
 
-After we have the manifests ready, we can start our local Voltron environment. In the root of the cloned `go-voltron` repository run:
+After we have the manifests ready, we can start our local Capact environment. In the root of the cloned `go-voltron` repository run:
 ```
 ENABLE_POPULATOR=false make dev-cluster
 ```
@@ -660,7 +659,7 @@ APP_JSON_PUBLISH_ADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator
 
 ## Run your new action
 
-Now we will create the action, to trigger the Confluence installation. Open https://gateway.voltron.local/ in your browser.
+Now we will create the action, to trigger the Confluence installation. Open https://gateway.capact.local/ in your browser.
 Then copy the following queries, variables and HTTP headers to the GraphQL playground:
 
 <details>
@@ -734,7 +733,7 @@ mutation DeleteAction($actionName: String!) {
 
 ![graphql-playground](./assets/graphql-playground.png)
 
-Execute the `CreateAction` mutation. This will create the Action resource in Voltron. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
+Execute the `CreateAction` mutation. This will create the Action resource in Capact. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
 
 After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be executed in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.
 
@@ -752,14 +751,14 @@ Now you can access the Argo UI with your browser by opening http://127.0.0.1:274
 
 ### View the Action Custom Resource
 
-You can get useful information about your action using `kubectl`. You can check the `actions.core.projectvoltron.dev` custom resource to get information about your action:
+You can get useful information about your action using `kubectl`. You can check the `actions.core.capact.io` custom resource to get information about your action:
 ```bash
-$ kubectl describe actions.core.projectvoltron.dev install-confluence
+$ kubectl describe actions.core.capact.io install-confluence
 Name:         install-confluence
 Namespace:    default
 Labels:       <none>
 Annotations:  <none>
-API Version:  core.projectvoltron.dev/v1alpha1
+API Version:  core.capact.io/v1alpha1
 [...]
 Status:
   Last Transition Time:  2021-02-08T17:17:27Z
@@ -773,7 +772,7 @@ Events:
   Warning  Render runner action  2s (x15 over 2m58s)  action-controller  while resolving Implementation for Action: while rendering Action: No implementation found for "cap.interface.productivity.confluence.install"
 ```
 
-In the case above, we can see that the action rendering is failing, because the Voltron Engine is not able to find the `cap.interface.productivity.confluence.install` **Implementation** in OCH.
+In the case above, we can see that the action rendering is failing, because the Capact Engine is not able to find the `cap.interface.productivity.confluence.install` **Implementation** in OCH.
 
 ## Update TypeInstance
 
@@ -797,12 +796,12 @@ metadata:
   prefix: cap.type.database.postgresql
   displayName: PostgreSQL change password input
   description: Defines PostgreSQL change password input
-  documentationURL: https://projectvoltron.dev
-  supportURL: https://projectvoltron.dev
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 spec:
   jsonSchema:
     value: |-
@@ -857,9 +856,9 @@ metadata:
   supportURL: https://www.postgresql.org/
   iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   input:
@@ -919,9 +918,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "8.x.x"
@@ -966,14 +965,14 @@ spec:
                   from: "{{steps.change-password.outputs.artifacts.user}}"
             steps:
               - - name: render-change-password-script
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         raw:
                           # Here we prepare a simple script to run the SQL statements to change the user password.
                           # The sleep at the beginning is required, so the container does not exit too quickly.
-                          # This a limitation of the PNS executor, used for executing the Argo workflows in Voltron.
+                          # This a limitation of the PNS executor, used for executing the Argo workflows in Capact.
                           data: |
                             set -e
                             sleep 1
@@ -993,7 +992,7 @@ spec:
                           data: "prefix: postgresql"
 
               - - name: fill-params-from-user
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -1005,7 +1004,7 @@ spec:
                           data: "prefix: user"
 
               - - name: fill-params-from-user-input
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -1018,7 +1017,7 @@ spec:
 
               - - name: change-password
                   template: change-password
-                  voltron-updateTypeInstances: # here you define that artifact from template `change-password` will
+                  capact-updateTypeInstances: # here you define that artifact from template `change-password` will
                     - name: user               # be used to update TypeInstance
                   arguments:
                     artifacts:
@@ -1046,7 +1045,7 @@ signature:
 
 > **NOTE:** When you have a step in your Implementation, which has a short-living container (exits in less than a second), it is required to add `sleep 1` to the script
 > to ensure Argo will be able to get the output artifacts from the container.
-> It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Voltron uses for executing Argo workflows.
+> It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Capact uses for executing Argo workflows.
 
 We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
 

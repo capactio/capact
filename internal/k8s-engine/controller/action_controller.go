@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -61,8 +61,8 @@ func NewActionReconciler(log logr.Logger, svc actionService, maxRetriesForAction
 	}
 }
 
-// +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=core.projectvoltron.dev,resources=actions/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core.capact.io,resources=actions,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=core.capact.io,resources=actions/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
@@ -172,17 +172,17 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
 		msg := fmt.Sprintf("Cannot create runner ServiceAccount: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerInputDataCreated(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot create runner input: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	if err := r.svc.EnsureRunnerExecuted(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot execute runner: %s", err)
-		return r.handleRetry(ctx, action, v1alpha1.RunningActionPhase, msg)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
 	action.Status = r.successStatus(action, v1alpha1.RunningActionPhase, "Kubernetes runner executed. Waiting for finish phase.")

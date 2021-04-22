@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	ochpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer"
 
 	"github.com/pkg/errors"
 )
@@ -120,7 +120,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 9. Render rootWorkflow templates
-	err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
+	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
 	}
@@ -149,12 +149,12 @@ func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, er
 		Spec: *w,
 	}
 	out := map[string]interface{}{}
-	marshaled, err := json.Marshal(renderedWorkflow)
+	marshalled, err := json.Marshal(renderedWorkflow)
 	if err != nil {
 		return nil, err
 	}
 
-	if err = json.Unmarshal(marshaled, &out); err != nil {
+	if err = json.Unmarshal(marshalled, &out); err != nil {
 		return nil, err
 	}
 

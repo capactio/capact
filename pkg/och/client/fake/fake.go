@@ -11,9 +11,9 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/och/client/public"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"

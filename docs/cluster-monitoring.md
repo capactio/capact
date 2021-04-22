@@ -20,28 +20,28 @@ You need to configure the `gcloud` CLI, so it's able to access `projectvoltron` 
 
 ## Setup access to GKE cluster
 
-We are using the `voltron-dev3` GKE cluster in `europe-north1` region for our long-running Voltron cluster. Set the following environment variables in your shell:
+We are using the `capact-dev` GKE cluster in `europe-west3` region for our long-running Capact cluster. Set the following environment variables in your shell:
 ```bash
-export REGION=europe-north1
-export CLUSTER_NAME=voltron-dev3
+export REGION=europe-west3
+export CLUSTER_NAME=capact-dev
 ```
 
-Get the kubeconfig for the long-running Voltron GKE cluster:
+Get the kubeconfig for the long-running Capact GKE cluster:
 ```
 gcloud container clusters get-credentials ${CLUSTER_NAME} --region ${REGION}
 ```
 
-This command adds a new context to your local kubeconfig file. The name of the context will be in the format `gke_<project_name>_<region>_<cluster_name>`. Switch to the long-running Voltron cluster context:
+This command adds a new context to your local kubeconfig file. The name of the context will be in the format `gke_<project_name>_<region>_<cluster_name>`. Switch to the long-running Capact cluster context:
 ```bash
 kubectl config get-contexts
 ```
 ```bash
 CURRENT   NAME                                                 CLUSTER                                              AUTHINFO                                             NAMESPACE
-          gke_projectvoltron_europe-north1_voltron-dev3        gke_projectvoltron_europe-north1_voltron-dev3        gke_projectvoltron_europe-north1_voltron-dev3        
-*         kind-kind-dev-voltron                                kind-kind-dev-voltron                                kind-kind-dev-voltron
+          gke_projectvoltron_europe-west3_capact-dev        gke_projectvoltron_europe-west3_capact-dev        gke_projectvoltron_europe-west3_capact-dev        
+*         kind-kind-dev-capact                                kind-kind-dev-capact                                kind-kind-dev-capact
 ```
 ```bash
-kubectl config use-context gke_projectvoltron_europe-north1_voltron-dev3
+kubectl config use-context gke_projectvoltron_europe-west3_capact-dev
 ```
 
 Now run the script to add your public IP address to the authorized control plane networks, so you will be able to make queries to the GKE API server:

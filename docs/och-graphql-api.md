@@ -28,7 +28,7 @@ To see full GraphQL schema, open the [`schema.graphql`](../och-js/graphql/local/
 
 To run sample GraphQL queries and mutations for Public or Local OCH, follow the steps:
 
-1. Open the Voltron Gateway GraphQL Playground.
+1. Open the Capact Gateway GraphQL Playground.
 
    To see how to access the Gateway on development cluster, read the [Access Gateway GraphQL Playground](./development.md#access-gateway-graphql-playground) section in development guide.
 

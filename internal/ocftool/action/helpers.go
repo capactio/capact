@@ -3,13 +3,15 @@ package action
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"strings"
-
-	"sigs.k8s.io/yaml"
+	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/hokaccha/go-prettyjson"
 	"k8s.io/apimachinery/pkg/util/validation"
+	"sigs.k8s.io/yaml"
 )
 
 func isDNSSubdomain(val interface{}) error {
@@ -48,7 +50,7 @@ func namespaceQuestion() *survey.Question {
 		Name: "namespace",
 		Prompt: &survey.Input{
 			Message: "Please type Action namespace: ",
-			Default: "default",
+			Default: DefaultNamespace,
 		},
 		Validate: survey.ComposeValidators(survey.Required),
 	}
@@ -82,4 +84,10 @@ func printYAML(in interface{}, w io.Writer) error {
 	}
 	_, err = w.Write(out)
 	return err
+}
+
+// generateDNSName returns a DNS-1123 subdomain compliant random name
+func generateDNSName() string {
+	rand.Seed(time.Now().UnixNano())
+	return strings.Replace(namesgenerator.GetRandomName(0), "_", "-", 1)
 }

@@ -4,8 +4,8 @@ metadata:
   description: Running GCP CloudSQL operations
   documentationURL: https://cloud.google.com/sdk/gcloud/reference/sql
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: run
   path: cap.implementation.runner.cloudsql.run
   prefix: cap.implementation.runner.cloudsql

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/httputil"
+	"capact.io/capact/pkg/httputil"
 
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
 	"github.com/avast/retry-go"
 	"github.com/machinebox/graphql"
 	"github.com/pkg/errors"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 	httpRequestTimeout = 30 * time.Second
 )
 
-// Client used to communicate with the Voltron Local OCH GraphQL APIs
+// Client used to communicate with the Capact Local OCH GraphQL APIs
 type Client struct {
 	client *graphql.Client
 }

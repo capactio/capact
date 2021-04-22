@@ -1,7 +1,7 @@
 # Untitled schema Schema
 
 ```txt
-https://projectvoltron.dev/schemas/implementation.json#/definitions
+https://capact.io/schemas/implementation.json#/definitions
 ```
 
 

@@ -7,15 +7,15 @@ import (
 	"testing"
 	"time"
 
-	"projectvoltron.dev/voltron/pkg/och/client/fake"
+	"capact.io/capact/pkg/och/client/fake"
 
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/och/client"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/golden"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
-	"projectvoltron.dev/voltron/pkg/och/client"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
 	"sigs.k8s.io/yaml"
 )
 

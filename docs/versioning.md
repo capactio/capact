@@ -1,6 +1,6 @@
 # Versioning
 
-This document describes Voltron versioning strategy.
+This document describes Capact versioning strategy.
 
 ## Table of contents
 
@@ -24,9 +24,9 @@ This document describes Voltron versioning strategy.
 
 ## Overview
 
-The versioning for OCF and OCH are similar in concept to how Kubernetes implements versioning. Below is a table comparing Voltron versioning to Kubernetes versioning.
+The versioning for OCF and OCH are similar in concept to how Kubernetes implements versioning. Below is a table comparing Capact versioning to Kubernetes versioning.
 
-| Voltron                          | Kubernetes                |
+| Capact                          | Kubernetes                |
 | -------------------------------- | ------------------------- |
 | OCH Version                      | Kubernetes Version        |
 | OCF Version                      | Resource **apiVersion**   |
@@ -79,7 +79,7 @@ The manifest version stored in OCH is 0.2.0. However, using a different API endp
 
 The deprecation policy is very similar to the [Kubernetes deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/). The only change is that we will use [Semantic Versioning](https://semver.org/) for versioning OCF. There are multiple reasons to use SemVer 2 for OCF versioning:
 
-- Unification of versioning across all Project Voltron components.
+- Unification of versioning across all Project Capact components.
 - Clear way to represent new features without breaking changes. You can easily see that there is a new OCF feature that you can use. In Kubernetes API versioning, a new non-breaking feature doesn’t change the version, e.g. `v1`.
 - Unification with other projects in the open source community, such as OAM, CNAB, CloudEvents, AsyncAPI.
 

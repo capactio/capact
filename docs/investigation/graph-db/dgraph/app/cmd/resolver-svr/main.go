@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/internal/client"
+	"capact.io/capact/docs/investigation/graph-db/dgraph/app/internal/client"
 
 	"github.com/dgraph-io/dgo/v200"
 	"github.com/gorilla/mux"
@@ -148,10 +148,10 @@ func (h *ImplHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // go test  -bench=. -benchmem -cpu 1 -benchtime 5s ./cmd/resolver-svr/...
 //   goos: darwin
 //   goarch: amd64
-//   pkg: github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr
+//   pkg: capact.io/capact/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr
 //   BenchmarkRemoveTypePrefixesFromJSONKeys            15492            403021 ns/op          139093 B/op        200 allocs/op
 //   PASS
-//   ok      github.com/Project-Voltron/voltron/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr      10.420s
+//   ok      capact.io/capact/docs/investigation/graph-db/dgraph/app/cmd/resolver-svr      10.420s
 func removeTypePrefixesFromJSONKeys(in string) string {
 	out := findJsonKeys.ReplaceAllStringFunc(in, func(match string) string {
 		idx := strings.LastIndex(match, ".")

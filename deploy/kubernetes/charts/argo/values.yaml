@@ -4,6 +4,7 @@ argo:
     # NOTE: argocli and argoexec was mirrored to our repository
     namespace: "gcr.io/projectvoltron/argoproj"
     tag: v2.12.10
+    pullPolicy: IfNotPresent
 
   controller:
     containerRuntimeExecutor: pns
@@ -30,6 +31,8 @@ argo:
         policy: public
       - name: terraform # For storing input files for Terraform Runner
         policy: download
+    persistence:
+      size: 5Gi
     resources:
       requests:
         memory: 256Mi

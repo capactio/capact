@@ -1,4 +1,4 @@
-module projectvoltron.dev/voltron/docs/investigation/workflow-rendering
+module capact.io/capact/docs/investigation/workflow-rendering
 
 go 1.15
 
@@ -12,10 +12,10 @@ require (
 	k8s.io/api v0.20.1
 	k8s.io/apimachinery v0.20.1
 	k8s.io/client-go v0.20.1 // indirect
-	projectvoltron.dev/voltron v0.1.0
+	capact.io/capact v0.1.0
 	sigs.k8s.io/yaml v1.2.0
 )
 
-replace projectvoltron.dev/voltron => ../../..
+replace capact.io/capact => ../../..
 
 replace sigs.k8s.io/controller-runtime => sigs.k8s.io/controller-runtime v0.5.11

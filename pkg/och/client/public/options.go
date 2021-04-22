@@ -1,6 +1,6 @@
 package public
 
-import gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+import gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 type ListImplementationRevisionsOptions struct {
 	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string

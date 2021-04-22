@@ -1,8 +1,11 @@
 package model
 
 import (
+	"regexp"
+
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"go.uber.org/zap"
 	v1 "k8s.io/api/core/v1"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 )
 
 // ActionToCreateOrUpdate holds data to create or update all Action details.
@@ -22,7 +25,46 @@ func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
 
 // ActionFilter defines filtering options for Actions
 type ActionFilter struct {
-	Phase *v1alpha1.ActionPhase
+	Phase        *v1alpha1.ActionPhase
+	NameRegex    *regexp.Regexp
+	InterfaceRef *v1alpha1.ManifestReference
+}
+
+func (f *ActionFilter) AllAllowed() bool {
+	return f == nil || (f.Phase == nil && f.NameRegex == nil && f.InterfaceRef == nil)
+}
+
+func (f *ActionFilter) ZapFields() []zap.Field {
+	var out []zap.Field
+	if f.Phase != nil {
+		out = append(out, zap.String("status.phase", string(*f.Phase)))
+	}
+	if f.NameRegex != nil {
+		out = append(out, zap.String("metadata.name", f.NameRegex.String()))
+	}
+	return out
+}
+
+func (f *ActionFilter) Match(item v1alpha1.Action) bool {
+	if f.Phase != nil && *f.Phase != item.Status.Phase {
+		return false
+	}
+
+	if f.NameRegex != nil && !f.NameRegex.MatchString(item.Name) {
+		return false
+	}
+
+	if f.InterfaceRef != nil {
+		if f.InterfaceRef.Path != item.Spec.ActionRef.Path {
+			return false
+		}
+
+		if f.InterfaceRef.Revision != nil && f.InterfaceRef.Revision != item.Spec.ActionRef.Revision {
+			return false
+		}
+	}
+
+	return true
 }
 
 // Input used for continuing Action rendering in advanced mode

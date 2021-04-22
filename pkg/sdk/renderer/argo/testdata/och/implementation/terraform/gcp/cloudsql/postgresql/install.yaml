@@ -12,9 +12,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
   attributes:
     - metadata:
         path: cap.attribute.cloud.provider.gcp
@@ -79,7 +79,7 @@ spec:
                   from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
             steps:
               - - name: create-module-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -111,7 +111,7 @@ spec:
                                   password: "{{ .password }}"
 
               - - name: fill-gcp-params-in-module-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -131,8 +131,8 @@ spec:
                         from: "{{workflow.outputs.artifacts.gcp-sa}}"
 
               - - name: terraform-apply
-                  voltron-action: terraform.apply
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-action: terraform.apply
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: terraform-release
                       from: terraform-release
                     - name: postgresql

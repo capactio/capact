@@ -2,7 +2,7 @@ const convert = require('@openapi-contrib/json-schema-to-openapi-schema');
 
 const schema = {
         "$schema": "http://json-schema.org/draft-07/schema",
-        "$id": "https://projectvoltron.dev/schemas/implementation.json",
+        "$id": "https://capact.io/schemas/implementation.json",
         "type": "object",
         "title": "The OCF Type manifest schema",
         "description": "Primitive, that holds the JSONSchema which describes that Type. It’s also used for validation. There are core and custom Types. Type can be also a composition of other Types.",

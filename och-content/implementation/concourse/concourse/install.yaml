@@ -12,9 +12,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "7.x.x"
@@ -85,9 +85,9 @@ spec:
                   optional: true
             steps:
               - - name: install-db
-                  voltron-when: postgresql == nil # conditional execution
-                  voltron-action: postgresql.install
-                  voltron-outputTypeInstances:
+                  capact-when: postgresql == nil # conditional execution
+                  capact-action: postgresql.install
+                  capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql
                   arguments:
@@ -100,8 +100,8 @@ spec:
                             defaultDBName: postgres
 
               - - name: create-user
-                  voltron-action: postgresql.create-user
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
                     - name: user
                       from: user
                   arguments:
@@ -114,7 +114,7 @@ spec:
                             name: concourse
 
               - - name: render-create-db-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -129,8 +129,8 @@ spec:
                           data: |
 
               - - name: create-db
-                  voltron-action: postgresql.create-db
-                  voltron-outputTypeInstances:
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
                     - name: database
                       from: database
                   arguments:
@@ -141,7 +141,7 @@ spec:
                         from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
               - - name: render-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -197,7 +197,7 @@ spec:
                           data: "prefix: db"
 
               - - name: fill-database-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -209,7 +209,7 @@ spec:
                           data: "prefix: database"
 
               - - name: fill-input-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -222,7 +222,7 @@ spec:
                             prefix: input
 
               - - name: fill-user-params-in-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -234,8 +234,8 @@ spec:
                           data: "prefix: user"
 
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances:
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
                     - name: concourse-config
                       from: additional
                     - name: concourse-helm-release

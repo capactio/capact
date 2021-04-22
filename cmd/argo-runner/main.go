@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	statusreporter "projectvoltron.dev/voltron/internal/k8s-engine/status-reporter"
-	"projectvoltron.dev/voltron/pkg/runner"
-	"projectvoltron.dev/voltron/pkg/runner/argo"
+	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
+	"capact.io/capact/pkg/runner"
+	"capact.io/capact/pkg/runner/argo"
 
 	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"

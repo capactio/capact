@@ -7,9 +7,9 @@ metadata:
   displayName: Velero backup 
   description: Action which runs velero backup and restore
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
   license:
     name: "Apache 2.0"
 

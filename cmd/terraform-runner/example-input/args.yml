@@ -3,7 +3,7 @@ module:
   name: cloudsql
   source: "./cmd/terraform-runner/example-input/cloudsql.tgz"
 variables: |+
-  user_name = "voltron"
+  user_name = "capact"
   user_password = "12-43i213j}"
 env:
   # TODO this looks like a bug. google_sql_database_instance.settings.provider is optional and when missing

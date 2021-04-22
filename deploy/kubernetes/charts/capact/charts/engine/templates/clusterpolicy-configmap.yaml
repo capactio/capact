@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "engine.fullname" . }}-cluster-policy
+  labels:
+  {{- include "engine.labels" . | nindent 4 }}
+data:
+  cluster-policy.yaml: |
+    apiVersion: 0.1.0
+
+    rules:
+      {{- if .Values.testSetup.enabled }}
+      {{- toYaml .Values.testSetup.clusterPolicyRules | nindent 8 }}
+      {{- end }}
+      {{- toYaml .Values.clusterPolicyRules | nindent 8 }}

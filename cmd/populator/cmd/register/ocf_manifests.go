@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/getter"
-	"projectvoltron.dev/voltron/internal/logger"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
-	"projectvoltron.dev/voltron/pkg/sdk/dbpopulator"
+	"capact.io/capact/internal/getter"
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/internal/ocftool/heredoc"
+	"capact.io/capact/pkg/sdk/dbpopulator"
 
 	"github.com/avast/retry-go"
 	"github.com/docker/cli/cli"

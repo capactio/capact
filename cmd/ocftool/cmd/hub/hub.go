@@ -1,8 +1,8 @@
 package hub
 
 import (
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub/implementations"
-	"projectvoltron.dev/voltron/cmd/ocftool/cmd/hub/interfaces"
+	"capact.io/capact/cmd/ocftool/cmd/hub/implementations"
+	"capact.io/capact/cmd/ocftool/cmd/hub/interfaces"
 
 	"github.com/spf13/cobra"
 )

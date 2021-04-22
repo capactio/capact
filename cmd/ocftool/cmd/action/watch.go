@@ -1,8 +1,8 @@
 package action
 
 import (
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/heredoc"
 
 	"github.com/argoproj/argo/v2/cmd/argo/commands"
 	"github.com/argoproj/argo/v2/cmd/argo/commands/client"

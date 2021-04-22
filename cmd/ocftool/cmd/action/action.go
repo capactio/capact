@@ -13,6 +13,7 @@ func NewAction() *cobra.Command {
 
 	och.AddCommand(
 		NewCreate(),
+		NewDelete(),
 		NewRun(),
 		NewGet(),
 		NewSearch(),

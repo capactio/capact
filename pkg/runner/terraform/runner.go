@@ -10,8 +10,8 @@ import (
 
 	"go.uber.org/zap"
 
+	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
-	"projectvoltron.dev/voltron/pkg/runner"
 	"sigs.k8s.io/yaml"
 )
 

@@ -12,10 +12,10 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	"github.com/vrischmann/envconfig"
-	engineclient "projectvoltron.dev/voltron/pkg/engine/client"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	"projectvoltron.dev/voltron/pkg/iosafety"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	engineclient "capact.io/capact/pkg/engine/client"
+	"capact.io/capact/pkg/httputil"
+	"capact.io/capact/pkg/iosafety"
+	ochclient "capact.io/capact/pkg/och/client"
 )
 
 type GatewayConfig struct {
@@ -25,21 +25,19 @@ type GatewayConfig struct {
 }
 
 type ClusterPolicyConfig struct {
-	Name      string `envconfig:"default=voltron-engine-cluster-policy"`
-	Namespace string `envconfig:"default=voltron-system"`
+	Name      string `envconfig:"default=capact-engine-cluster-policy"`
+	Namespace string `envconfig:"default=capact-system"`
 }
 
 type Config struct {
 	StatusEndpoints []string
-	// total number of pods that should be scheduled
-	ExpectedNumberOfRunningPods int           `envconfig:"default=25"`
 	IgnoredPodsNames            []string      `envconfig:"optional"`
 	PollingInterval             time.Duration `envconfig:"default=2s"`
 	PollingTimeout              time.Duration `envconfig:"default=5m"`
 	Gateway                     GatewayConfig
 	ClusterPolicy               ClusterPolicyConfig
-	OCHLocalDeployNamespace     string `envconfig:"default=voltron-system"`
-	OCHLocalDeployName          string `envconfig:"default=voltron-och-local"`
+	OCHLocalDeployNamespace     string `envconfig:"default=capact-system"`
+	OCHLocalDeployName          string `envconfig:"default=capact-och-local"`
 }
 
 var cfg Config

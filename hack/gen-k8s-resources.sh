@@ -10,11 +10,14 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+TMP_DIR=$(mktemp -d)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
+readonly TMP_DIR
 readonly K8S_DEPLOY_DIR="${REPO_ROOT_DIR}/deploy/kubernetes"
-readonly UMBRELLA_CHART="${K8S_DEPLOY_DIR}/charts/voltron"
-readonly TMP_DIR=$(mktemp -d)
+readonly UMBRELLA_CHART="${K8S_DEPLOY_DIR}/charts/capact"
 
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
 

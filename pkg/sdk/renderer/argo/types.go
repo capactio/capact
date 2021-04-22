@@ -21,10 +21,10 @@ type ParallelSteps []*WorkflowStep
 
 type WorkflowStep struct {
 	*wfv1.WorkflowStep
-	VoltronWhen                *string                  `json:"voltron-when,omitempty"`
-	VoltronAction              *string                  `json:"voltron-action,omitempty"`
-	VoltronTypeInstanceOutputs []TypeInstanceDefinition `json:"voltron-outputTypeInstances,omitempty"`
-	VoltronTypeInstanceUpdates []TypeInstanceDefinition `json:"voltron-updateTypeInstances,omitempty"`
+	CapactWhen                *string                  `json:"capact-when,omitempty"`
+	CapactAction              *string                  `json:"capact-action,omitempty"`
+	CapactTypeInstanceOutputs []TypeInstanceDefinition `json:"capact-outputTypeInstances,omitempty"`
+	CapactTypeInstanceUpdates []TypeInstanceDefinition `json:"capact-updateTypeInstances,omitempty"`
 
 	// internal fields
 	typeInstanceOutputs map[string]*string

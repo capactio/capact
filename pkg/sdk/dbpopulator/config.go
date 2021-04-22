@@ -1,6 +1,6 @@
 package dbpopulator
 
-import "projectvoltron.dev/voltron/internal/logger"
+import "capact.io/capact/internal/logger"
 
 // Config holds application related configuration.
 type Config struct {

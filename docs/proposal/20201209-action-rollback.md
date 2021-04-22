@@ -45,7 +45,7 @@ Created on 2020-12-09 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec/))
 
 ## Motivation
 
-Voltron makes it easy to execute arbitrary Actions in a form of Argo workflows, which can modify cluster state, run
+Capact makes it easy to execute arbitrary Actions in a form of Argo workflows, which can modify cluster state, run
 external workloads and output TypeInstances. However, a User should be able to rollback any run Action. For example, to
 have a complete application lifecycle implemented using Workflow, there should be an ability to uninstall Application.
 
@@ -477,7 +477,7 @@ paragraph.
 #### New `Rollback` Custom Resource
 
 ```yaml
-apiVersion: core.projectvoltron.dev/v1alpha1
+apiVersion: core.capact.io/v1alpha1
 kind: Rollback
 metadata:
   name: "jira-uninstall"

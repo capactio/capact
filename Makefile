@@ -184,3 +184,11 @@ dev-cluster-delete:
 fix-lint-issues:
 	LINT_FORCE_FIX=true ./hack/lint.sh
 .PHONY: fix-lint
+
+#############
+# Releasing #
+#############
+
+release-charts:
+	./hack/release-charts.sh
+.PHONY: release-charts

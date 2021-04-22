@@ -1,12 +1,15 @@
 package action_test
 
 import (
+	"regexp"
 	"testing"
 
+	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/domain/action"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
@@ -47,18 +50,37 @@ func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 
 func TestConverter_FilterFromGraphQL_HappyPath(t *testing.T) {
 	// given
-	gqlPhase := graphql.ActionStatusPhaseAdvancedModeRenderingIteration
-	gqlActionFilter := fixGQLActionFilter(&gqlPhase)
+	var (
+		gqlPhase     = graphql.ActionStatusPhaseAdvancedModeRenderingIteration
+		gqlNameRegex = "foo-*"
+	)
+
+	gqlActionFilter := graphql.ActionFilter{
+		Phase:     &gqlPhase,
+		NameRegex: &gqlNameRegex,
+		InterfaceRef: &graphql.ManifestReferenceInput{
+			Path:     "cap.interface.test",
+			Revision: nil,
+		},
+	}
 
 	expectedK8sPhase := v1alpha1.AdvancedModeRenderingIterationActionPhase
-	expectedModelActionFilter := fixModelActionFilter(&expectedK8sPhase)
+	expectedModelActionFilter := model.ActionFilter{
+		Phase:     &expectedK8sPhase,
+		NameRegex: regexp.MustCompile(gqlNameRegex),
+		InterfaceRef: &v1alpha1.ManifestReference{
+			Path:     "cap.interface.test",
+			Revision: nil,
+		},
+	}
 
 	c := action.NewConverter()
 
 	// when
-	modelActionFilter := c.FilterFromGraphQL(gqlActionFilter)
+	modelActionFilter, err := c.FilterFromGraphQL(&gqlActionFilter)
 
 	// then
+	require.NoError(t, err)
 	assert.Equal(t, expectedModelActionFilter, modelActionFilter)
 }
 

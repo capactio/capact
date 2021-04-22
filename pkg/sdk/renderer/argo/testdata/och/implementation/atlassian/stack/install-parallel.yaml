@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "8.x.x"
@@ -69,7 +69,7 @@ spec:
                 - name: input-parameters
             steps:
               - - name: install-shared-db
-                  voltron-action: postgresql.install
+                  capact-action: postgresql.install
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -105,7 +105,7 @@ spec:
                 - name: postgresql
             steps:
               - - name: extract-jira-host
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -115,7 +115,7 @@ spec:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
               - - name: jira-install
-                  voltron-action: jira.install
+                  capact-action: jira.install
                   arguments:
                     artifacts:
                       - name: postgresql
@@ -130,7 +130,7 @@ spec:
                 - name: postgresql
             steps:
               - - name: extract-confluence-host
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
@@ -140,7 +140,7 @@ spec:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
               - - name: confluence-install
-                  voltron-action: confluence.install
+                  capact-action: confluence.install
                   arguments:
                     artifacts:
                       - name: postgresql

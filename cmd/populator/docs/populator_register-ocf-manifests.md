@@ -5,7 +5,7 @@ Populates the OCF manifests into Neo4j database. It reads manifest from remote o
 ## Prerequisites
 
 - [Go](https://golang.org)
-- Running Kubernetes cluster with Voltron installed
+- Running Kubernetes cluster with Capact installed
 
 ## Usage
 
@@ -22,7 +22,7 @@ To build the binary run:
 go build -ldflags "-s -w" -o populator ./cmd/populator/main.go
 ```
 
-To be able to use it locally when Voltron is running in a Kubernetes cluster, two ports need to
+To be able to use it locally when Capact is running in a Kubernetes cluster, two ports need to
 be forwarded:
 
 ```shell
@@ -33,14 +33,14 @@ kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
 
 It will create a `populator` binary in a local dir.
 
-To run it and use local manifests from Voltron repo:
+To run it and use local manifests from Capact repo:
 
 ```shell
 ./populator register ocf-manifests .
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.
-For example command to download manifests from Voltron repo would look like this:
+For example command to download manifests from Capact repo would look like this:
 ```shell
 export SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
 ./populator register ocf-manifests git@github.com:Project-Voltron/go-voltron.git?sshkey=$SSHKEY

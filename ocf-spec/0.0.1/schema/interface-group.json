@@ -35,7 +35,7 @@
       }
     },
     "metadata": {
-      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+      "$ref": "https://capact.io/schemas/common/metadata.json"
     }
   }
 }

@@ -95,7 +95,7 @@ Kubernetes controller integration tests which are using fake K8s API Server and 
 
 #### Cross-functional
 
-The cross-functional tests are executed on [`kind`](https://sigs.k8s.io//kind) where all Voltron components are pre-installed.
+The cross-functional tests are executed on [`kind`](https://sigs.k8s.io//kind) where all Capact components are pre-installed.
 
 ```bash
 make test-integration
@@ -125,23 +125,25 @@ make dev-cluster
 You can export the following environment variables to configure the script:
 - To disable monitoring stack installation, use `DISABLE_MONITORING_INSTALLATION=true`.
 - To disable kubed installation, use `DISABLE_KUBED_INSTALLATION=true`.
-- To disable `/etc/hosts` update with all Voltron subdomain, use `DISABLE_HOSTS_UPDATE=true`.
-- To disable setting self-signed TLS certificate for `*.voltron.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
+- To disable `/etc/hosts` update with all Capact subdomain, use `DISABLE_HOSTS_UPDATE=true`.
+- To disable setting self-signed TLS certificate for `*.capact.local` as trusted, use `DISABLE_ADDING_TRUSTED_CERT=true`.
 - To disable Database Populator, use `ENABLE_POPULATOR=false`
-- To use test setup (test policy and populate OCH manifests from `test/och-content`), use `USE_TEST_SETUP=true`.
+- To enable test setup, use `USE_TEST_SETUP=true`.
 - To disable higher resource requests and limits for components, use `INCREASE_RESOURCE_LIMITS=false`.
-- To override Voltron Helm chart values, use `CUSTOM_VOLTRON_SET_FLAGS` e.g. `CUSTOM_VOLTRON_SET_FLAGS="--set gateway.auth.password=myPass"`.
+- To override Capact Helm chart values, use `CUSTOM_CAPACT_SET_FLAGS` e.g. `CUSTOM_CAPACT_SET_FLAGS="--set gateway.auth.password=myPass"`.
 - To override Ingress NGINX Helm chart values, use `CUSTOM_NGINX_SET_FLAGS`.
 - To override the Git branch from which the source manifests should be populated, use `OCH_MANIFESTS_SOURCE_REPO_REF`, e.g. `OCH_MANIFESTS_SOURCE_REPO_REF="my-fancy-branch"`
+- To override Cert Manager Helm chart values, use `CUSTOM_CERT_MANAGER_SET_FLAGS`.
+
 
 ### Access Gateway GraphQL Playground
 
-Voltron Gateway aggregates all GraphQL APIs from multiple components (Local OCH, Public OCH, Engine) into a single endpoint.
+Capact Gateway aggregates all GraphQL APIs from multiple components (Local OCH, Public OCH, Engine) into a single endpoint.
 
 To see the Gateway URL and authentication details, use the following command:
 
 ```bash
-helm get notes -n voltron-system voltron
+helm get notes -n capact-system capact
 ```
 
 ### Rebuild Docker images and update cluster
@@ -173,7 +175,7 @@ make dev-cluster-delete
 
 ## Build and push Docker images
 
-There are a Make targets dedicated to build and push Voltron Docker images.
+There are a Make targets dedicated to build and push Capact Docker images.
 
 We have images for:
 - application defined under [cmd](../cmd) directory
@@ -290,7 +292,7 @@ make gen-k8s-resources
 
 This project uses the [GQLGen](https://github.com/99designs/gqlgen) library, which generates the Go struct and server from GraphQL schema definition.
 
-In Voltron project we have three GraphQL schemas, from which the Go code is generated:
+In Capact project we have three GraphQL schemas, from which the Go code is generated:
 - [Engine](../pkg/engine/api/graphql/schema.graphql)
 - [Local OCH](../och-js/graphql/local/schema.graphql)
 - [Public OCH](../och-js/graphql/public/schema.graphql)
@@ -312,12 +314,12 @@ make gen-docs
 
 ## Instrumentation
 
-This section describes the approach for Voltron components instrumentation.  
+This section describes the approach for Capact components instrumentation.  
 
 ### Enable metrics scrape 
 
-We use Prometheus Operator for monitoring. To enable metrics scraping, you need to create a ServiceMonitor with `voltron.dev/scrape-metrics: "true"` label. ServiceMonitor can be created in any Namespace.
-Check [Engine metrics.yaml](../deploy/kubernetes/charts/voltron/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
+We use Prometheus Operator for monitoring. To enable metrics scraping, you need to create a ServiceMonitor with `capact.io/scrape-metrics: "true"` label. ServiceMonitor can be created in any Namespace.
+Check [Engine metrics.yaml](../deploy/kubernetes/charts/capact/charts/engine/templates/metrics.yaml) file for a reference on how to create a proper Service and ServiceMonitor.
 
 ### Add Grafana Dashboard
 
@@ -329,7 +331,7 @@ A recommendation is to use one ConfigMap per dashboard as Grafana doesn't handle
 * No escaping is needed for double curly brackets. 
 * IDE can still support JSON formatting/validation.
 
-Check the [Engine Helm chart](../deploy/kubernetes/charts/voltron/charts/engine) for a reference on how to store and load the dashboards from JSON to ConfigMap.
+Check the [Engine Helm chart](../deploy/kubernetes/charts/capact/charts/engine) for a reference on how to store and load the dashboards from JSON to ConfigMap.
 
 > **CAUTION:** The size of a ConfigMap is limited to 1MB.
 
@@ -339,7 +341,7 @@ Useful materials when creating Grafana dashboards:
 
 ### Access Prometheus and Grafana
 
-If you installed the Voltron with monitoring enabled, the Prometheus and Grafana are not exposed using Ingress. You can access them by forwarding Service ports to your localhost. 
+If you installed Capact with monitoring enabled, the Prometheus and Grafana are not exposed using Ingress. You can access them by forwarding Service ports to your localhost. 
 
 #### Prometheus
 

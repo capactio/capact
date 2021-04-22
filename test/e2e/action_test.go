@@ -13,13 +13,13 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"projectvoltron.dev/voltron/internal/ptr"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
+	"capact.io/capact/internal/ptr"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	ochclient "capact.io/capact/pkg/och/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	engine "projectvoltron.dev/voltron/pkg/engine/client"
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
+	engine "capact.io/capact/pkg/engine/client"
 )
 
 const clusterPolicyConfigMapKey = "cluster-policy.yaml"
@@ -46,7 +46,7 @@ var _ = Describe("Action", func() {
 
 	Context("Action execution", func() {
 		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
-			actionPath := "cap.interface.voltron.validation.action.passing"
+			actionPath := "cap.interface.capactio.capact.validation.action.passing"
 			testValue := "Implementation A"
 
 			By("Preparing input Type Instances")
@@ -118,7 +118,7 @@ var _ = Describe("Action", func() {
 			_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 				Name: failingActionName,
 				ActionRef: &enginegraphql.ManifestReferenceInput{
-					Path:     "cap.interface.voltron.validation.action.failing",
+					Path:     "cap.interface.capactio.capact.validation.action.failing",
 					Revision: ptr.String("0.1.0"),
 				},
 			})
@@ -155,12 +155,12 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.voltron.validation.single-key",
+			Path:     "cap.type.capactio.capact.validation.single-key",
 			Revision: "0.1.0",
 		},
 		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
 			{
-				Path:     "com.voltron.attribute",
+				Path:     "cap.attribute.capactio.capact.attribute",
 				Revision: "0.1.0",
 			},
 		},
@@ -173,13 +173,13 @@ func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.voltron.validation.download",
+			Path:     "cap.type.capactio.capact.validation.download",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": testValue},
 		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
 			{
-				Path:     "com.voltron.attribute1",
+				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
 			},
 		},
@@ -189,13 +189,13 @@ func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTy
 func getTypeInstanceInputForUpdate() *ochlocalgraphql.CreateTypeInstanceInput {
 	return &ochlocalgraphql.CreateTypeInstanceInput{
 		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
-			Path:     "cap.type.voltron.validation.update",
+			Path:     "cap.type.capactio.capact.validation.update",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": "random text to update"},
 		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
 			{
-				Path:     "com.voltron.attribute1",
+				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
 			},
 		},
@@ -280,7 +280,7 @@ func updateClusterPolicyConfigMap(stringToFind, stringToReplace string) func() {
 func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client, testValue string) {
 	uploaded, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
 		TypeRef: &ochlocalgraphql.TypeRefFilterInput{
-			Path:     "cap.type.voltron.validation.upload",
+			Path:     "cap.type.capactio.capact.validation.upload",
 			Revision: ptr.String("0.1.0"),
 		},
 	})

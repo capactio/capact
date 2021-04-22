@@ -6,10 +6,10 @@ import (
 	"io"
 	"os"
 
-	"projectvoltron.dev/voltron/internal/ocftool/action"
-	"projectvoltron.dev/voltron/internal/ocftool/client"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
+	"capact.io/capact/internal/ocftool/action"
+	"capact.io/capact/internal/ocftool/client"
+	"capact.io/capact/internal/ocftool/config"
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
@@ -52,7 +52,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatest(ctx, gqlpublicapi.InterfaceFilter{
+	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
 		PathPattern: &opts.pathPattern,
 	})
 	if err != nil {

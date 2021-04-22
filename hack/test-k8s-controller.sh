@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This script provisions testing environment using 'kind'(kubernetes-in-docker)
-# and execute end-to-end Voltron tests.
+# and execute end-to-end Capact tests.
 #
 # It requires Docker to be installed.
 # Dependencies such as kubebuilder can be installed on demand.
@@ -11,9 +11,12 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-readonly REPO_ROOT_DIR=${CURRENT_DIR}/..
-readonly TMP_DIR=$(mktemp -d)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+TMP_DIR=$(mktemp -d)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
+readonly TMP_DIR
 
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }

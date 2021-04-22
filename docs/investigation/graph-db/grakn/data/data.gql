@@ -1,8 +1,8 @@
 insert
 
-$maintainer1 isa maintainer, has name "Voltron Dev Team", has email "team-dev@projectvoltron.dev", has url "https://projectvoltron.dev";
+$maintainer1 isa maintainer, has name "Capact Dev Team", has email "team-dev@capact.io", has url "https://capact.io";
 
-$group1 isa interfaceGroup, has prefix "cap.interface.productivity", has path "cap.interface.productivity.jira", has name "jira", has displayName "Jira", has description "Jira Applicatuib", has documentationURL "https://projectvoltron.dev", has supportURL "https://projectvoltron.dev/contact", has iconURL "https://projectvoltron.dev/favicon.ico"; 
+$group1 isa interfaceGroup, has prefix "cap.interface.productivity", has path "cap.interface.productivity.jira", has name "jira", has displayName "Jira", has description "Jira Applicatuib", has documentationURL "https://capact.io", has supportURL "https://capact.io/contact", has iconURL "https://capact.io/favicon.ico";
 
 $iface1 isa interface, has prefix "cap.interface.productivity.jira", has path "cap.interface.productivity.jira.install", has name "install", has displayName "Install", has description "Install action for Jira", has documentationURL "https://support.atlassian.com/jira-software-cloud/resources/", has supportURL "https://www.atlassian.com/software/jira", has iconURL "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png", has revision "0.1.0", has spec "{}";
 
@@ -14,15 +14,15 @@ $impl1 isa implementation, has description "Action which installs Jira via Helm 
 
 $impl2 isa implementation, has description "Action which updates Jira via Helm chart", has displayName "Update Jira", has documentationURL "https://github.com/javimox/helm-charts/tree/master/charts/jira-software", has iconURL "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png", has name "update", has prefix "cap.implementation.attlasian.jira", has path "cap.implementation.attlasian.jira.update", has supportURL " https://mox.sh/helm", has revision "0.1.0", has spec "{}";
 
-$tag1 isa tag, has revision "0.1.0", has spec "{}", has name "baseline", has path "cap.core.tag.system.baseline", has prefix "cap.core.tag.system", has description "Indication that tagged item is an essential system capability.", has displayName "Baseline Capability", has documentationURL "https://projectvoltron.dev", has supportURL "https://projectvoltron.dev/contact", has iconURL "https://projectvoltron.dev/favicon.ico";
+$tag1 isa tag, has revision "0.1.0", has spec "{}", has name "baseline", has path "cap.core.tag.system.baseline", has prefix "cap.core.tag.system", has description "Indication that tagged item is an essential system capability.", has displayName "Baseline Capability", has documentationURL "https://capact.io", has supportURL "https://capact.io/contact", has iconURL "https://capact.io/favicon.ico";
 
-$tag2 isa tag, has revision "0.1.0", has spec "{}", has name "gcp", has path "cap.tag.cloud.provide.gcp", has prefix "cap.tag.cloud.provider", has description "Specifies that a given manifest is related to GCP", has displayName "Google Cloud Platform Cloud Provider", has documentationURL "https://projectvoltron.dev", has supportURL "https://projectvoltron.dev/contact", has iconURL "https://projectvoltron.dev/favicon.ico";
+$tag2 isa tag, has revision "0.1.0", has spec "{}", has name "gcp", has path "cap.tag.cloud.provide.gcp", has prefix "cap.tag.cloud.provider", has description "Specifies that a given manifest is related to GCP", has displayName "Google Cloud Platform Cloud Provider", has documentationURL "https://capact.io", has supportURL "https://capact.io/contact", has iconURL "https://capact.io/favicon.ico";
 
-$tag3 isa tag, has revision "0.1.0", has spec "{}", has name "bar", has prefix "cap.tag.foo", has path "cap.tag.foo.bar", has description "Specifies that a given manifest is related to GCP", has displayName "Google Cloud Platform Cloud Provider", has documentationURL "https://projectvoltron.dev", has supportURL "https://projectvoltron.dev/contact", has iconURL "https://projectvoltron.dev/favicon.ico";
+$tag3 isa tag, has revision "0.1.0", has spec "{}", has name "bar", has prefix "cap.tag.foo", has path "cap.tag.foo.bar", has description "Specifies that a given manifest is related to GCP", has displayName "Google Cloud Platform Cloud Provider", has documentationURL "https://capact.io", has supportURL "https://capact.io/contact", has iconURL "https://capact.io/favicon.ico";
 
 $type1 isa type_, has name "config", has prefix "cap.type.productivity.jira", has path "cap.type.productivity.jira.config", has displayName "Jira config", has description "Defines configuration for Jira instance", has documentationURL "https://support.atlassian.com/jira-software-cloud/resources/", has supportURL "https://www.atlassian.com/software/jira", has iconURL "https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png", has revision "0.1.0", has spec "{}";
 
-$type2 isa type_, has name "kubernetes", has prefix "cap.core.type.platform", has path "cap.core.type.platform.kubernetes", has displayName "Kubernetes Platform", has description "This Type indicates that a given platform is a Kubernetes installation.", has documentationURL "https://kubernetes.io/docs", has supportURL "https://kubernetes.io/", has iconURL "https://projectvoltron.dev/favicon.ico", has revision "0.1.0", has spec "{}";
+$type2 isa type_, has name "kubernetes", has prefix "cap.core.type.platform", has path "cap.core.type.platform.kubernetes", has displayName "Kubernetes Platform", has description "This Type indicates that a given platform is a Kubernetes installation.", has documentationURL "https://kubernetes.io/docs", has supportURL "https://kubernetes.io/", has iconURL "https://capact.io/favicon.ico", has revision "0.1.0", has spec "{}";
 
 $tag-type1 (taggs: $tag1, tagged: $type2) isa tagging;
 $tag-imp1 (taggs: $tag3, tagged: $impl1) isa tagging;

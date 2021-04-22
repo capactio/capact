@@ -1,12 +1,12 @@
 metadata:
   attributes: []
   description: Templating Jinja files
-  displayName: Template action for Voltron
+  displayName: Template action for Capact
   documentationURL: https://helm.sh/
   iconURL:
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: template
   path: cap.implementation.jinja2.template
   prefix: cap.implementation.jinja2

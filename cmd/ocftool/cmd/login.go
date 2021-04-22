@@ -4,11 +4,11 @@ import (
 	"io"
 	"os"
 
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/config"
+	"capact.io/capact/internal/ocftool/credstore"
+	"capact.io/capact/internal/ocftool/heredoc"
 	"github.com/fatih/color"
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/config"
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/cli/cli"

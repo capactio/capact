@@ -1,21 +1,21 @@
-# Upgrade Voltron components via Action
+# Upgrade Capact components via Action
 
 Created on 2021-04-01 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
 
 ## Overview
 
-This document describes how Voltron components can be updated via dedicated Voltron [Capability](../terminology.md#capability).
+This document describes how Capact components can be updated via dedicated Capact [Capability](../terminology.md#capability).
 
 <!-- toc -->
 
 - [Motivation](#motivation)
 - [Goal](#goal)
 - [Proposal - Selected solution](#proposal---selected-solution)
-  * [Voltron installation](#voltron-installation)
+  * [Capact installation](#capact-installation)
   * [Access installation resources](#access-installation-resources)
-  * [Voltron Helm charts](#voltron-helm-charts)
+  * [Capact Helm charts](#capact-helm-charts)
   * [Versioning](#versioning)
-  * [Voltron upgrade Action](#voltron-upgrade-action)
+  * [Capact upgrade Action](#capact-upgrade-action)
     + [Known issues](#known-issues)
     + [Advantages](#advantages)
     + [Disadvantages](#disadvantages)
@@ -24,18 +24,18 @@ This document describes how Voltron components can be updated via dedicated Volt
   * [CLI](#cli)
 - [Alternatives](#alternatives)
   * [Access installation resources](#access-installation-resources-1)
-  * [Voltron upgrade Action](#voltron-upgrade-action-1)
-  * [Voltron Helm charts](#voltron-helm-charts-1)
+  * [Capact upgrade Action](#capact-upgrade-action-1)
+  * [Capact Helm charts](#capact-helm-charts-1)
 
 <!-- tocstop -->
 
 ## Motivation
 
-To simplify the upgrade process and benefit from Voltron features, we want to create and use dedicated [Interface](../../ocf-spec/0.0.1/README.md#interface) and [Implementation](../../ocf-spec/0.0.1/README.md#implementation) manifests.
+To simplify the upgrade process and benefit from Capact features, we want to create and use dedicated [Interface](../../ocf-spec/0.0.1/README.md#interface) and [Implementation](../../ocf-spec/0.0.1/README.md#implementation) manifests.
 
 ## Goal
 
-Prepare the zero-downtime Voltron Upgrade process via dedicated Action.
+Prepare the zero-downtime Capact Upgrade process via dedicated Action.
 
 ## Proposal - Selected solution
 
@@ -44,15 +44,15 @@ The sections below describe the solutions selected during the engineering team m
 - [Łukasz Oleś](https://github.com/lukaszo)
 - [Mateusz Szostok](https://github.com/mszostok)
 
-### Voltron installation
+### Capact installation
 
-Voltron is installed via Helm command. We will add a dedicated `post-install` Job to execute the `populator` binary to upload initial TypeInstances which describe Voltron installation. 
+Capact is installed via Helm command. We will add a dedicated `post-install` Job to execute the `populator` binary to upload initial TypeInstances which describe Capact installation. 
 
 ### Access installation resources
 
 Helm charts and CRDs are published to the GCS bucket.
 
-### Voltron Helm charts
+### Capact Helm charts
 
 External Helm charts are stored as separate charts with one dependency. As an example, take the [`argo`](../../deploy/kubernetes/charts/argo) chart where the `Chart.yaml` is:
 
@@ -84,17 +84,17 @@ Cons:
 
 | Property                                 | Versioning strategy                                                                                                 |
 |------------------------------------------|---------------------------------------------------------------------------------------------------------------------|
-| **version** from `Chart.yaml`            | It is the same for all Helm charts (Voltron and all dependencies). It is changed manually for each Voltron release. |
+| **version** from `Chart.yaml`            | It is the same for all Helm charts (Capact and all dependencies). It is changed manually for each Capact release. |
 | **appVersion** from `Chart.yaml`         | It is the same as **version** from `Chart.yaml`                                                                     |
-| **DOCKER_TAG** for Voltron Docker images | It is the same as **version** from `Chart.yaml`                                                                     |
+| **DOCKER_TAG** for Capact Docker images | It is the same as **version** from `Chart.yaml`                                                                     |
 | CLI version                          | It is the same as **version** from `Chart.yaml`                                                                     |
-| **revision** for upgrade Action          | It is changed manually and independent of the Voltron version. CLI uses the latest one.                             |
+| **revision** for upgrade Action          | It is changed manually and independent of the Capact version. CLI uses the latest one.                             |
 
-### Voltron upgrade Action
+### Capact upgrade Action
 
 This section describes final agreements for the upgrade [Action](../terminology.md#action).
 
-1. Interface requires multiple input TypeInstance which describe Voltron and all its dependencies. 
+1. Interface requires multiple input TypeInstance which describe Capact and all its dependencies. 
 
     <details><summary>Interface input TypeInstances</summary>
 
@@ -102,12 +102,12 @@ This section describes final agreements for the upgrade [Action](../terminology.
     spec:
       input:
         typeInstances:
-          voltron-config:
+          capact-config:
             typeRef:
-              path: cap.type.projectvoltron.voltron.config
+              path: cap.type.capactio.capact.config
               revision: 0.1.0
             verbs: [ "get", "update" ]
-          voltron-helm-release:
+          capact-helm-release:
             typeRef:
               path: cap.type.helm.chart.release
               revision: 0.1.0
@@ -198,7 +198,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 
 1. The long-running cluster is configured with only [test content](../../test/och-content), as we do not have federation support yet. As a result, we will not have access to the upgrade Action manifests. To fix that problem, we decided to merge `test/och-content` into `och-content`. Each manifest will be defined under the `validation` node. Additionally, we will give an option for others to have out-of-the-box manifests, which they can use for their own validation process.
 
-1. Add logic to block [e2e tests](../../test) until Voltron upgrade is finished.
+1. Add logic to block [e2e tests](../../test) until Capact upgrade is finished.
 
 1. If necessary, the upgrade migration logic should be defined directly in Action.
 
@@ -209,7 +209,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 #### Known issues
 
 - Engine needs to produce the ClusterRoleBinding for Action. This will be fixed by Namespace unification.
-- Problem with the `minio` Secret that is not synced from the `argo` Namespace to the `voltron-system` Namespace. This will be fixed by Namespace unification.
+- Problem with the `minio` Secret that is not synced from the `argo` Namespace to the `capact-system` Namespace. This will be fixed by Namespace unification.
 - Sometimes Helm upgrade runner doesn't work when there is a new Helm chart version. This is due to the cache mechanism. We should have an option to force Helm chart download.
 
 #### Advantages
@@ -226,7 +226,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 Applying additional `values.yaml` files directly from Helm chart repository doesn't work. For example, when you use the Helm chart with `values-higher-res-limits.yaml`, it returns this error:
 	
 	```bash
-	helm upgrade neo4j --install --create-namespace --namespace="neo4j" -f values-higher-res-limits.yaml voltron-awesome-charts/neo4j-helm
+    helm upgrade neo4j --install --create-namespace --namespace="neo4j" -f values-higher-res-limits.yaml capact-awesome-charts/neo4j-helm
 	  Release "neo4j" does not exist. Installing it now.
 	  Error: open values-higher-res-limits.yaml: no such file or directory
     ```
@@ -245,11 +245,11 @@ Applying additional `values.yaml` files directly from Helm chart repository does
     
     Example:
     ```bash
-    voltron upgrade --version @latest  --override-docker-tag <commit_sha>
+    capact upgrade --version @latest  --override-docker-tag <commit_sha>
     ```
 
 1. Wait until upgrade is finished.
-1. After the upgrade Action succeeded, execute `voltron action delete foo`. 
+1. After the upgrade Action succeeded, execute `capact action delete foo`. 
 
 ### CLI
 
@@ -257,12 +257,12 @@ Applying additional `values.yaml` files directly from Helm chart repository does
 
 The CLI executes the upgrade Action in the following way:
 
-1. Finds the `voltron-config` TypeInstance based on the **typeRef** property.
-1. Creates input TypeInstances based on the `voltron-config.uses` relation.
+1. Finds the `capact-config` TypeInstance based on the **typeRef** property.
+1. Creates input TypeInstances based on the `capact-config.uses` relation.
 1. Creates input parameters from user input (via CLI flags).
 1. Generates the Action upgrade name.
-1. Gets the latest Helm chart based on `index.yaml` from the `voltron-master-charts` repository.
-1. Creates the `cap.interface.projectvoltron.voltron.upgrade` Action.
+1. Gets the latest Helm chart based on `index.yaml` from the `capact-master-charts` repository.
+1. Creates the `cap.interface.capactio.capact.upgrade` Action.
 1. Waits until the Action is ready to run.
 1. Executes the Action.
 1. (Optionally) Waits until the Action is finished.
@@ -279,7 +279,7 @@ The CLI executes the upgrade Action in the following way:
   - Use the GitHub raw object, or
   - Clone the `go-voltron` repository. Referencing locally available Helm chart is not supported by Helm Runner.
 
-### Voltron upgrade Action
+### Capact upgrade Action
 
 Interface supports generic input parameters.
 
@@ -387,9 +387,9 @@ spec:
 
 Features like increasing resource limits can be handled via CLI, and if we migrate the bash script to CLI, we will be able to decrease the LOE as we will have a single source of truth for configuration parameters. We can use the [`helm-schema-gen` plugin](https://github.com/karuppiah7890/helm-schema-gen) to generate the initial JSONSchema input files for our Helm charts. To support this way of configuration in Implementations, we need to add the function to translate JSON to YAML in Jinja Runner.
     
-### Voltron Helm charts
+### Capact Helm charts
 
-- Have a single Voltron chart with dependencies.
+- Have a single Capact chart with dependencies.
   
   Cons:
     - It is problematic as we will have "umbrella chart", so we cannot upgrade a given dependency independently.

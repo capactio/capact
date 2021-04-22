@@ -5,15 +5,15 @@ import (
 	"fmt"
 	"sync"
 
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
 
 	"github.com/pkg/errors"
 
-	"projectvoltron.dev/voltron/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 
-	ochpublicgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
-	"projectvoltron.dev/voltron/pkg/och/client/public"
-	"projectvoltron.dev/voltron/pkg/sdk/apis/0.0.1/types"
+	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
+	"capact.io/capact/pkg/och/client/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type OCHClient interface {

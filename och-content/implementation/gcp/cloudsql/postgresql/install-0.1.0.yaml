@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
   attributes:
     cap.attribute.cloud.provider.gcp:
       revision: 0.1.0
@@ -72,7 +72,7 @@ spec:
                   from: "{{steps.cloudsql-run.outputs.artifacts.additional}}"
             steps:
               - - name: create-cloudsql-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -108,8 +108,8 @@ spec:
                           data: |
 
               - - name: cloudsql-run
-                  voltron-action: cloudsql.run
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-action: cloudsql.run
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: postgresql
                       from: additional
                     - name: cloudsql-instance

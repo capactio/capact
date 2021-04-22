@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"projectvoltron.dev/voltron/pkg/httputil"
+	"capact.io/capact/pkg/httputil"
 )
 
 func TestNewClient(t *testing.T) {

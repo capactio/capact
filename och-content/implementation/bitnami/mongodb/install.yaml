@@ -11,9 +11,9 @@ metadata:
   license:
     name: "Apache 2.0"
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
-      url: https://projectvoltron.dev
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
 
 spec:
   appVersion: "4"
@@ -66,7 +66,7 @@ spec:
                   from: "{{steps.helm-install.outputs.artifacts.additional}}"
             steps:
               - - name: create-helm-args
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -97,7 +97,7 @@ spec:
                                   - weight: 1
                                     preference:
                                       matchExpressions:
-                                      - key: node.voltron.dev/type
+                                      - key: node.capact.io/type
                                         operator: In
                                         values:
                                         - storage
@@ -115,8 +115,8 @@ spec:
                           data: |
 
               - - name: helm-install
-                  voltron-action: helm.install
-                  voltron-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                  capact-action: helm.install
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
                     - name: mongodb
                       from: additional
                     - name: mongo-helm-release

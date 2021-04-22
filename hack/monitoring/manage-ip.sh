@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-CLUSTER_NAME=${CLUSTER_NAME:-voltron-dev3}
-REGION=${REGION:-europe-north1}
+CLUSTER_NAME=${CLUSTER_NAME:-capact-dev}
+REGION=${REGION:-europe-west3}
 
 usage() {
   echo "usage: manage-ip.sh add|remove"

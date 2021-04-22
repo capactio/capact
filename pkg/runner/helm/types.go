@@ -3,9 +3,9 @@ package helm
 import (
 	"encoding/json"
 
+	"capact.io/capact/pkg/runner"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
-	"projectvoltron.dev/voltron/pkg/runner"
 )
 
 type outputter interface {

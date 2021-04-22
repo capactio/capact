@@ -1,0 +1,74 @@
+kind: ServiceAccount
+apiVersion: v1
+metadata:
+  name: post-install-type-instances-job
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "capact.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: post-install-type-instances-job
+  labels:
+  {{- include "capact.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+rules:
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: [ "get", "list"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: post-install-type-instances-job
+  labels:
+  {{- include "capact.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+subjects:
+  - kind: ServiceAccount
+    name: post-install-type-instances-job
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: post-install-type-instances-job
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: post-install-type-instances-job
+  namespace: {{ .Release.Namespace }}
+  labels:
+  {{- include "capact.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  backoffLimit: 5
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: post-install-type-instances-job
+      containers:
+        - name: job
+          image:  "{{ .Values.global.containerRegistry.path }}/{{ .Values.postInstallTypeInstanceJob.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
+          env:
+            - name: HELM_RELEASES_NS_LOOKUP
+              value: "{{ .Release.Namespace }},argo,ingress-nginx,kubed,neo4j,monitoring"
+            - name: HELM_REPOSITORY_PATH
+              value: "https://capactio-awesome-charts.storage.googleapis.com"
+            - name: CAPACT_RELEASE_NAME
+              value: "capact"
+            - name: LOCAL_OCH_ENDPOINT
+              value: "http://capact-och-local.{{ .Release.Namespace }}/graphql"
+          command: ["/bin/sh", "-c"]
+          args: {{ .Values.postInstallTypeInstanceJob.args }}

@@ -1,7 +1,7 @@
-name: periodic-cluster-integration-tests
+name: Periodic cluster integration tests
 on:
   schedule:
-  - cron: '0 */2 * * *'
+  - cron: '0 */4 * * *'
 
 jobs:
   integration-tests:
@@ -26,9 +26,9 @@ jobs:
         id: network-enable
         run: |
           ./hack/ci/add-job-ip.sh
-      - name: Test Voltron release
+      - name: Test Capact release
         run: |
-          helm test voltron --namespace=voltron-system --timeout="10m" --logs
+          helm test capact --namespace=capact-system --timeout="10m" --logs
       - name: Network cleanup
         # The `always()` is needed to always run the step, even if previous ones failed. From docs: "If your if expression does not contain any of the status functions it will automatically result with success()."
         # Without that it will results in: `Evaluating: (success() && (steps.network-enable.outcome == 'success'))`
@@ -50,7 +50,7 @@ jobs:
         if: ${{ always() && needs.integration-tests.result != 'success' }}
         uses: rtCamp/action-slack-notify@v2
         env:
-          SLACK_USERNAME: Voltron CI Notifier
+          SLACK_USERNAME: Capact CI Notifier
           SLACK_COLOR: 'red'
           SLACK_TITLE: 'Message'
           SLACK_CHANNEL: 'capact-dev-private'

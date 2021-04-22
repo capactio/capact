@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This scripts runs linters to ensure the correctness of the Voltron Go codebase.
+# This scripts runs linters to ensure the correctness of the Capact Go codebase.
 #
 # Golangci-lint dependencies can be installed on-demand.
 
@@ -9,10 +9,13 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
-readonly ROOT_PATH=$(cd "${CURRENT_DIR}/.." && pwd)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+TMP_DIR=$(mktemp -d)
+readonly TMP_DIR
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
 readonly GOLANGCI_LINT_VERSION="v1.31.0"
-readonly TMP_DIR=$(mktemp -d)
 
 LINT_TIMEOUT=${LINT_TIMEOUT:-5m}
 SKIP_DEPS_INSTALLATION=${SKIP_DEPS_INSTALLATION:-true}
@@ -52,7 +55,7 @@ golangci::run_checks() {
   shout "Run golangci-lint checks"
 
   # shellcheck disable=SC2046
-  golangci-lint run --timeout="${LINT_TIMEOUT}" $(golangci::fix_if_requested) "${ROOT_PATH}/..."
+  golangci-lint run --timeout="${LINT_TIMEOUT}" $(golangci::fix_if_requested) "${REPO_ROOT_DIR}/..."
 
   echo -e "${GREEN}√ run golangci-lint${NC}"
 }
@@ -65,12 +68,12 @@ golangci::fix_if_requested() {
 
 dockerfile::run_checks() {
   shout "Run hadolint Dockerfile checks"
-  docker run --rm -i hadolint/hadolint < "${ROOT_PATH}/Dockerfile"
+  docker run --rm -i hadolint/hadolint < "${REPO_ROOT_DIR}/Dockerfile"
   echo -e "${GREEN}√ run hadolint${NC}"
 }
 
 shellcheck::files_to_check() {
-  pushd "$ROOT_PATH" > /dev/null
+  pushd "$REPO_ROOT_DIR" > /dev/null
   paths=$(find . -path ./och-js/node_modules -path ./tmp -prune -false -o -name '*.sh')
   popd > /dev/null
 
@@ -82,14 +85,14 @@ shellcheck::run_checks() {
   shout "Run shellcheck checks"
 
   # shellcheck disable=SC2046
-  docker run --rm -v "$ROOT_PATH":/mnt -w /mnt koalaman/shellcheck:stable -x $(shellcheck::files_to_check)
+  docker run --rm -v "$REPO_ROOT_DIR":/mnt -w /mnt koalaman/shellcheck:stable -x $(shellcheck::files_to_check)
   echo -e "${GREEN}√ run shellcheck${NC}"
 }
 
 graphql::run_checks() {
   shout "Run graphql-schema-linter checks"
 
-  docker run --rm -v "$ROOT_PATH":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
+  docker run --rm -v "$REPO_ROOT_DIR":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
     --src ./pkg/engine/api/graphql/schema.graphql \
     --src ./och-js/graphql/public/schema.graphql \
     --src ./och-js/graphql/local/schema.graphql \

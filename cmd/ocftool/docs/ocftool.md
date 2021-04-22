@@ -10,14 +10,14 @@ Collective Capability Manager CLI
 
 ocftool - Collective Capability Manager CLI
 
-A utility for managing Project Voltron & assist with authoring OCF content
+A utility for managing Capact & assist with authoring OCF content
 
-To begin working with Project Voltron using the ocftool CLI, start with:
+To begin working with Capact using the ocftool CLI, start with:
 
     $ ocftool login
 
 NOTE: If you would like to use 'pass' for credential storage, be sure to
-      set CAPECTL_CREDENTIALS_STORE_BACKEND to 'pass' in your shell's env variables.
+      set CAPACT_CREDENTIALS_STORE_BACKEND to 'pass' in your shell's env variables.
 
       In order to watch follow the progress of the workflow execution, it is required
       to have 'kubectl' configured with the default context set to the same cluster where
@@ -49,9 +49,11 @@ ocftool [flags]
 ### SEE ALSO
 
 * [ocftool action](ocftool_action.md)	 - This command consists of multiple subcommands to interact with target Actions
+* [ocftool completion](ocftool_completion.md)	 - Generate shell completion scripts
 * [ocftool config](ocftool_config.md)	 - Manage configuration
 * [ocftool hub](ocftool_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
 * [ocftool login](ocftool_login.md)	 - Login to a Hub (Gateway) server
 * [ocftool logout](ocftool_logout.md)	 - Logout from the Hub (Gateway) server
+* [ocftool upgrade](ocftool_upgrade.md)	 - Upgrades Capact
 * [ocftool validate](ocftool_validate.md)	 - Validate OCF manifests
 

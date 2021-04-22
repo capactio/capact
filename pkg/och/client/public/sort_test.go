@@ -3,8 +3,8 @@ package public
 import (
 	"testing"
 
+	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"github.com/stretchr/testify/assert"
-	gqlpublicapi "projectvoltron.dev/voltron/pkg/och/api/graphql/public"
 )
 
 func TestSortImplementationRevisionsByPathAndRevision(t *testing.T) {

@@ -1,0 +1,13 @@
+apiVersion: v2
+name: cert-manager
+description: A Helm chart for CertManager for Capact installation
+
+type: application
+
+version: 0.1.0
+
+dependencies:
+  - name: cert-manager
+    version: "1.2.x"
+    repository: https://charts.jetstack.io
+    condition: cert-manager.enabled

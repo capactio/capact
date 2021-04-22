@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"projectvoltron.dev/voltron/internal/ocftool/credstore"
-	enginegraphql "projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	"projectvoltron.dev/voltron/pkg/engine/client"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	ochlocalgraphql "projectvoltron.dev/voltron/pkg/och/api/graphql/local"
-	"projectvoltron.dev/voltron/pkg/och/client/local"
+	"capact.io/capact/internal/ocftool/credstore"
+	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/engine/client"
+	"capact.io/capact/pkg/httputil"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	"capact.io/capact/pkg/och/client/local"
 
 	"github.com/machinebox/graphql"
 )
@@ -23,8 +23,9 @@ type ClusterClient interface {
 type ActionClient interface {
 	CreateAction(ctx context.Context, in *enginegraphql.ActionDetailsInput) (*enginegraphql.Action, error)
 	GetAction(ctx context.Context, name string) (*enginegraphql.Action, error)
-	ListActions(ctx context.Context) ([]*enginegraphql.Action, error)
+	ListActions(ctx context.Context, filter *enginegraphql.ActionFilter) ([]*enginegraphql.Action, error)
 	RunAction(ctx context.Context, name string) error
+	DeleteAction(ctx context.Context, name string) error
 }
 
 type TypeInstanceClient interface {

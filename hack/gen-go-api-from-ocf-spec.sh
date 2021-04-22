@@ -10,8 +10,11 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
+
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 # shellcheck source=./hack/lib/const.sh
@@ -30,7 +33,7 @@ check_for_unknown_issues() {
   if ! diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"; then
     echo "Error:
     API rules check failed. Reported violations \"${REPORT_FILENAME}\" differ from known violations \"${KNOWN_VIOLATION_FILENAME}\"."
-    
+
     diff -u "${REPORT_FILENAME}" "${KNOWN_VIOLATION_FILENAME}"
 
     echo "Please fix API source file if new violation is detected, or update known violations \"${KNOWN_VIOLATION_FILENAME}\" if existing violation is being fixed."

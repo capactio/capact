@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
-  "$id": "https://projectvoltron.dev/schemas/attribute.json",
+  "$id": "https://capact.io/schemas/attribute.json",
   "type": "object",
   "description": "Attribute is used to categorize Implementations, Types and TypeInstances. For example, you can use `cap.core.attribute.workload.stateful` Attribute to find and filter Stateful Implementations.",
   "required": [
@@ -44,7 +44,7 @@
       }
     },
     "metadata": {
-      "$ref": "https://projectvoltron.dev/schemas/common/metadata.json"
+      "$ref": "https://capact.io/schemas/common/metadata.json"
     },
     "spec": {
       "$id": "#/properties/spec",

@@ -8,13 +8,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/model"
+	"capact.io/capact/internal/k8s-engine/graphql/model"
 
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/pkg/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/ptr"
-	"projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -144,16 +144,17 @@ func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alph
 		return nil, errors.Wrap(err, errContext)
 	}
 
-	if filter.Phase == nil {
+	if filter.AllAllowed() {
 		return itemList.Items, nil
 	}
 
 	// field selectors for CRDs are not supported (apart from name and namespace)
-	log.Info("Filtering Actions", zap.String("status.phase", string(*filter.Phase)))
+	// Regex filter is also not supported on server side.
+	log.Info("Filtering Actions", filter.ZapFields()...)
 
 	var filteredItems []v1alpha1.Action
 	for _, item := range itemList.Items {
-		if item.Status.Phase != *filter.Phase {
+		if !filter.Match(item) {
 			continue
 		}
 

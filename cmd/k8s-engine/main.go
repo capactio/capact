@@ -4,6 +4,18 @@ import (
 	"log"
 	"time"
 
+	"capact.io/capact/internal/graphqlutil"
+	"capact.io/capact/internal/k8s-engine/controller"
+	domaingraphql "capact.io/capact/internal/k8s-engine/graphql"
+	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/k8s-engine/validate"
+	"capact.io/capact/internal/logger"
+	"capact.io/capact/pkg/engine/api/graphql"
+	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/httputil"
+	ochclient "capact.io/capact/pkg/och/client"
+	"capact.io/capact/pkg/sdk/renderer"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
 	"github.com/go-logr/zapr"
@@ -12,18 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"projectvoltron.dev/voltron/internal/graphqlutil"
-	"projectvoltron.dev/voltron/internal/k8s-engine/controller"
-	domaingraphql "projectvoltron.dev/voltron/internal/k8s-engine/graphql"
-	"projectvoltron.dev/voltron/internal/k8s-engine/graphql/namespace"
-	"projectvoltron.dev/voltron/internal/k8s-engine/validate"
-	"projectvoltron.dev/voltron/internal/logger"
-	"projectvoltron.dev/voltron/pkg/engine/api/graphql"
-	corev1alpha1 "projectvoltron.dev/voltron/pkg/engine/k8s/api/v1alpha1"
-	"projectvoltron.dev/voltron/pkg/httputil"
-	ochclient "projectvoltron.dev/voltron/pkg/och/client"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer"
-	"projectvoltron.dev/voltron/pkg/sdk/renderer/argo"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -58,7 +58,7 @@ type Config struct {
 	Logger logger.Config
 
 	GraphQLGateway struct {
-		Endpoint string `envconfig:"default=http://voltron-gateway/graphql"`
+		Endpoint string `envconfig:"default=http://capact-gateway/graphql"`
 		Username string
 		Password string
 	}
@@ -93,7 +93,7 @@ func main() {
 		Scheme:                  scheme,
 		LeaderElection:          cfg.EnableLeaderElection,
 		LeaderElectionNamespace: cfg.LeaderElectionNamespace,
-		LeaderElectionID:        "152f0254.projectvoltron.dev",
+		LeaderElectionID:        "152f0254.capact.io",
 		MetricsBindAddress:      cfg.MetricsAddr,
 		HealthProbeBindAddress:  cfg.HealthzAddr,
 	})

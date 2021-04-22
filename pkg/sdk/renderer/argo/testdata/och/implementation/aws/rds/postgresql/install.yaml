@@ -3,11 +3,11 @@ metadata:
     - metadata:
         description: Specifies that a given manifest is related to AWS
         displayName: Amazon Web Services Provider
-        documentationURL: https://projectvoltron.dev
+        documentationURL: https://capact.io
         iconURL:
         maintainers:
-          - email: team-dev@projectvoltron.dev
-            name: Voltron Dev Team
+          - email: team-dev@capact.io
+            name: Capact Dev Team
         name: aws
         path: cap.attribute.cloud.provider.aws
         prefix: cap.attribute.cloud.provider
@@ -22,8 +22,8 @@ metadata:
   documentationURL: https://aws.amazon.com/rds/postgresql/
   iconURL:
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: install
   path: cap.implementation.aws.rds.postgresql.install
   prefix: cap.implementation.aws.rds.postgresql
@@ -67,14 +67,14 @@ spec:
                             engine_version: "11.10"
                             major_engine_version: "11"
                   name: fill-params
-                  voltron-action: jinja2.template
+                  capact-action: jinja2.template
               - - arguments:
                     artifacts:
                       - from: "{{steps.fill-params.outputs.artifacts.render}}"
                         name: input-parameters
                   name: provision
-                  voltron-action: rds.provision
-                  voltron-outputTypeInstances:
+                  capact-action: rds.provision
+                  capact-outputTypeInstances:
                     - from: postgresql
                       name: postgresql
     runnerInterface: argo.run

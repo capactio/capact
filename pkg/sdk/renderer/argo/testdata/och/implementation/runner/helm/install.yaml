@@ -5,8 +5,8 @@ metadata:
   documentationURL: https://helm.sh/
   iconURL:
   maintainers:
-    - email: team-dev@projectvoltron.dev
-      name: Voltron Dev Team
+    - email: team-dev@capact.io
+      name: Capact Dev Team
   name: install
   path: cap.implementation.runner.helm.install
   prefix: cap.implementation.runner.helm

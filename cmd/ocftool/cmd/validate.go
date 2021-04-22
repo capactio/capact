@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"projectvoltron.dev/voltron/internal/ocftool"
-	"projectvoltron.dev/voltron/internal/ocftool/heredoc"
-	"projectvoltron.dev/voltron/internal/ocftool/schema"
-	"projectvoltron.dev/voltron/pkg/sdk/manifest"
+	"capact.io/capact/internal/ocftool"
+	"capact.io/capact/internal/ocftool/heredoc"
+	"capact.io/capact/internal/ocftool/schema"
+	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
