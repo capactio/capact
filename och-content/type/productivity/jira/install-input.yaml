@@ -333,7 +333,7 @@ spec:
                 "type": "object"
               },
               "licenseKeyInBase64": {
-                "$id": "#/properties/bitbucket/properties/license",
+                "$id": "#/properties/jira/properties/licenseKeyInBase64",
                 "description": "Base64 encoded Bitbucket license key. If specified, then the license will be automatically populated during Bitbucket setup. Otherwise, it will need to be provided via the browser after initial startup.",
                 "type": "string"
               },
