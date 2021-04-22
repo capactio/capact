@@ -334,7 +334,7 @@ spec:
               },
               "licenseKeyInBase64": {
                 "$id": "#/properties/jira/properties/licenseKeyInBase64",
-                "description": "Base64 encoded Bitbucket license key. If specified, then the license will be automatically populated during Bitbucket setup. Otherwise, it will need to be provided via the browser after initial startup.",
+                "description": "Base64 encoded Jira license key. If specified, then the license will be automatically populated during Jira setup. Otherwise, it will need to be provided via the browser after initial startup.",
                 "type": "string"
               },
               "ports": {
