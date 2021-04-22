@@ -41,6 +41,7 @@ capact::aws::terraform::apply() {
       -var "region=${CAPACT_REGION}" \
       -var "domain_name=${CAPACT_DOMAIN_NAME}" \
       -var "efs_enabled=${EKS_EFS_ENABLED}" \
+      -var "az_count=${EKS_AZ_COUNT}" \
       ${terraform_opts}
 
     local -r tf_output=$(terraform output -json)
@@ -188,6 +189,7 @@ main() {
   export DOCKER_TAG="${CAPACT_DOCKER_TAG}"
   export DOCKER_REPOSITORY="${CAPACT_DOCKER_REPOSITORY:-gcr.io/projectvoltron}"
   export EKS_EFS_ENABLED="${EKS_EFS_ENABLED:-false}"
+  export EKS_AZ_COUNT="${EKS_AZ_COUNT:-1}"
 
   capact::aws::terraform::apply
 

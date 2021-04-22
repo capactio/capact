@@ -11,8 +11,8 @@ config file locations might vary based on your system. Make sure to restart your
 shell before testing whether completions are working.
 
 ### bash
-  Add this to your ~/.bash_profile:
-  	eval "$(ocftool completion bash)"
+  Run this command:
+  	echo "source <(argo completion bash)" >> ~/.bashrc
 
 ### zsh
   Generate a _ocftool completion script and put it somewhere in your $fpath:

@@ -25,7 +25,6 @@ This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (A
 - S3 bucket for the remote Terraform state file
 - AWS account with **AdministratorAccess** permissions on it
 - [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-- [Helm 3](https://helm.sh)  
 - A domain name for the Capact installation
 
 To configure the AWS CLI follow [this](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) guide.
@@ -55,9 +54,12 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
    ```   
 
 2. Run the installation script:
+   
    ```bash
    ./hack/eks/install.sh
    ```
+
+   When you see the "Do you want to perform these actions?" question, provide `yes` value in the command line and press enter.
    
    This can take around to 20 minutes to finish.
    

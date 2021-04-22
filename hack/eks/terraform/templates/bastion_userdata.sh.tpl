@@ -17,10 +17,21 @@ curl --fail -Lo /usr/local/bin/capact https://storage.googleapis.com/projectvolt
 chmod +x /usr/local/bin/capact
 capact --version
 
+# enable capact autocompletion
+echo "source <(capact completion bash)" >> ~/.bashrc
+
 # download kubectl
 curl --fail -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x /usr/local/bin/kubectl
 kubectl version --client
+
+# enable kubectl autocompletion and set aliases
+cat <<EOT >> ~/.bashrc
+source <(kubectl completion bash)
+alias k=kubectl
+alias kc=kubectl
+complete -F __start_kubectl k
+EOT
 
 # download helm
 curl --fail -Lo helm.tar.gz "https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz"
@@ -29,9 +40,15 @@ cp linux-amd64/helm /usr/local/bin
 rm -rf helm.tar.gz linux-amd64
 helm version
 
+# enable helm autocompletion
+echo "source <(helm completion bash)" >> ~/.bashrc
+
 # download argo
-curl -sLO "https://github.com/argoproj/argo/releases/download/v2.12.11/argo-darwin-amd64.gz"
-gunzip argo-darwin-amd64.gz
-chmod +x argo-darwin-amd64
-mv ./argo-darwin-amd64 /usr/local/bin/argo
+curl -sLO "https://github.com/argoproj/argo/releases/download/v2.12.11/argo-linux-amd64.gz"
+gunzip argo-linux-amd64.gz
+chmod +x argo-linux-amd64
+mv ./argo-linux-amd64 /usr/local/bin/argo
 argo version
+
+# enable argo autocompletion
+echo "source <(argo completion bash)" >> ~/.bashrc
