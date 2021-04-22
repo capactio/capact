@@ -256,8 +256,8 @@ spec:
                                     maxHeap: <@ input.jira.resources.jvm.maxHeap | default("1g") @>
                                     minHeap: <@ input.jira.resources.jvm.minHeap | default("1g") @>
                                     reservedCodeCache: <@ input.jira.resources.jvm.reservedCodeCache | default("512m") @>
-                                  <% if input.bitbucket.resources.container %>
-                                  container: <@ input.bitbucket.resources.container @>
+                                  <% if input.jira.resources.container %>
+                                  container: <@ input.jira.resources.container @>
                                   <% else %>
                                   container:
                                     limits:
