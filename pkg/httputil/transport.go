@@ -3,28 +3,28 @@ package httputil
 import "net/http"
 
 // newConfigurableTransport
-func newConfigurableTransport() *ConfigurableTransport {
-	return &ConfigurableTransport{
+func newConfigurableTransport() *configurableTransport {
+	return &configurableTransport{
 		transport: http.DefaultTransport.(*http.Transport).Clone(),
 	}
 }
 
-type ConfigurableTransport struct {
+type configurableTransport struct {
 	user      string
 	pass      string
 	transport *http.Transport
 }
 
-func (t *ConfigurableTransport) SetBasicAuth(user, pass string) {
+func (t *configurableTransport) SetBasicAuth(user, pass string) {
 	t.user = user
 	t.pass = pass
 }
 
-func (t *ConfigurableTransport) SetTLSInsecureSkipVerify(skip bool) {
+func (t *configurableTransport) SetTLSInsecureSkipVerify(skip bool) {
 	t.transport.TLSClientConfig.InsecureSkipVerify = skip
 }
 
-func (t *ConfigurableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *configurableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.SetBasicAuth(t.user, t.pass)
 	return t.transport.RoundTrip(req)
 }

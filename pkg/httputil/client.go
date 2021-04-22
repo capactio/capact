@@ -25,12 +25,12 @@ type ClientOption func(*http.Client)
 
 func WithBasicAuth(user, pass string) ClientOption {
 	return func(client *http.Client) {
-		client.Transport.(*ConfigurableTransport).SetBasicAuth(user, pass)
+		client.Transport.(*configurableTransport).SetBasicAuth(user, pass)
 	}
 }
 
 func WithTLSInsecureSkipVerify(skip bool) func(client *http.Client) {
 	return func(client *http.Client) {
-		client.Transport.(*ConfigurableTransport).SetTLSInsecureSkipVerify(skip)
+		client.Transport.(*configurableTransport).SetTLSInsecureSkipVerify(skip)
 	}
 }

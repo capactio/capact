@@ -57,7 +57,7 @@ func TestNewClient(t *testing.T) {
 			require.Equal(t, tc.password, receivedPass)
 
 			// TLS is configured
-			cfgTransport := cli.Transport.(*ConfigurableTransport)
+			cfgTransport := cli.Transport.(*configurableTransport)
 			assert.Equal(t, tc.skipCertVerification, cfgTransport.transport.TLSClientConfig.InsecureSkipVerify)
 			assert.Equal(t, tc.timeout, cli.Timeout)
 

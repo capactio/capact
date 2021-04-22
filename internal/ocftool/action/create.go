@@ -9,6 +9,7 @@ import (
 	"capact.io/capact/internal/ocftool/config"
 	"capact.io/capact/internal/ptr"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
+
 	"github.com/fatih/color"
 )
 
