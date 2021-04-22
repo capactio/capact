@@ -35,7 +35,8 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
 ## Installation
 
 1. Set the following environment variables:
-  ```
+   
+  ```bash
   export CAPACT_NAME=<name_of_the_environment>
   export CAPACT_REGION=<aws_region_in_which_to_deploy_capact>
   export CAPACT_DOMAIN_NAME=<domain_name_used_for_the_capact_environment>
@@ -47,7 +48,19 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
 >
 > `export CAPACT_TERRAFORM_OPTS="-var worker_group_max_size=4"`
 
-2. Run `hack/eks/install.sh`. This can take around to 20 minutes to finish.
+1. If you want to enable [Amazon Elastic File System](https://aws.amazon.com/efs/) configuration, run:
+   
+   ```bash
+   export EKS_EFS_ENABLED=true
+   ```   
+
+2. Run the installation script:
+   ```bash
+   ./hack/eks/install.sh
+   ```
+   
+   This can take around to 20 minutes to finish.
+   
 3. Configure the name servers for the Capact Route53 Hosted Zone in your DNS provider. To get the name server for the hosted zone check the [`config/route53_zone_name_servers`](./config/route53_zone_name_servers) file.
   ```bash
   cat hack/eks/config/route53_zone_name_servers

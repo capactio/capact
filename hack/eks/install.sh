@@ -204,12 +204,11 @@ main() {
   export CUSTOM_CAPACT_SET_FLAGS
   export CUSTOM_CERT_MANAGER_SET_FLAGS
 
-  capact::aws::install::fluent_bit
-
   if [[ "${EKS_EFS_ENABLED}" == "true" ]]; then
       capact::aws::install::efs_csi_driver
   fi
 
+  capact::aws::install::fluent_bit
   capact::aws::install::capact
   capact::aws::install::public_ingress_controller
   capact::aws::register_dnses
