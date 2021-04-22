@@ -153,7 +153,7 @@ spec:
                               repo: "https://concourse-charts.storage.googleapis.com"
                               version: "14.6.2"
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.imageTag }}"
                                 host: "{{ (index .Values.web.ingress.hosts 0) }}"
                                 userAndPassword: "{{ .Values.secrets.localUsers }}"

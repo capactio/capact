@@ -162,7 +162,7 @@ spec:
                               repo: "https://helm.mox.sh"
                               version: "0.2.5"
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 version: "{{ .Values.image.tag }}"
                                 host: "{{ (index .Values.ingress.hosts 0).host }}"
                             values:

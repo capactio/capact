@@ -64,7 +64,7 @@ spec:
                   path: "/additional.yaml"
                   optional: true
             container:
-              image: gcr.io/projectvoltron/pr/helm-runner:PR-229
+              image: gcr.io/projectvoltron/pr/helm-runner:PR-242
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"

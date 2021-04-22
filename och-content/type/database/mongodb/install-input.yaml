@@ -22,64 +22,1632 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for MongoDB configuration",
-        "examples": [
-          {
-            "user": {
-              "username": "username",
-              "password": "password"
-            },
-            "rootPassword": "pass",
-            "defaultDBName": "default_db"
-          }
-        ],
-        "required": [
-            "user"
-        ],
+        "title": "MongoDB install input for Bitnami Helm chart installation",
         "properties": {
-          "user": {
-            "$id": "#/properties/user",
+          "image": {
+            "$id": "#/properties/image",
             "type": "object",
-            "title": "Defines custom user details",
-            "required": [
-                "password"
-            ],
+            "title": "The image schema",
             "properties": {
-              "username": {
-                "$id": "#/properties/user/properties/username",
+              "registry": {
+                "$id": "#/properties/image/properties/registry",
                 "type": "string",
-                "title": "Create the specified custom user.",
-                "default": "mongo"
+                "title": "The registry schema",
+                "default": "docker.io"
               },
-              "password": {
-                "$id": "#/properties/user/properties/password",
+              "repository": {
+                "$id": "#/properties/image/properties/repository",
                 "type": "string",
-                "title": "Sets the custom user password"
+                "title": "The repository schema",
+                "default": "bitnami/mongodb"
+              },
+              "tag": {
+                "$id": "#/properties/image/properties/tag",
+                "type": "string",
+                "title": "The tag schema",
+                "default": "4.4.2-debian-10-r27"
+              },
+              "pullPolicy": {
+                "$id": "#/properties/image/properties/pullPolicy",
+                "type": "string",
+                "title": "The pullPolicy schema",
+                "default": "IfNotPresent"
+              },
+              "debug": {
+                "$id": "#/properties/image/properties/debug",
+                "type": "boolean",
+                "title": "The debug schema",
+                "default": false
               }
             },
             "additionalProperties": false
           },
-          "rootPassword": {
-            "$id": "#/properties/rootPassword",
+          "clusterDomain": {
+            "$id": "#/properties/clusterDomain",
             "type": "string",
-            "title": "Defines a root password"
+            "title": "The clusterDomain schema",
+            "default": "cluster.local"
           },
-          "replicas": {
-            "$id": "#/properties/replicas",
+          "architecture": {
+            "$id": "#/properties/architecture",
+            "type": "string",
+            "title": "The architecture schema",
+            "default": "replicaset"
+          },
+          "useStatefulSet": {
+            "$id": "#/properties/useStatefulSet",
+            "type": "boolean",
+            "title": "The useStatefulSet schema",
+            "default": false
+          },
+          "auth": {
+            "$id": "#/properties/auth",
+            "type": "object",
+            "title": "The auth schema",
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/auth/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "username": {
+                "$id": "#/properties/auth/properties/username",
+                "type": "string",
+                "title": "The username schema",
+                "default": "mongo"
+              },
+              "database": {
+                "$id": "#/properties/auth/properties/database",
+                "type": "string",
+                "title": "The database schema",
+                "default": "mongo"
+              },
+              "rootPassword": {
+                "$id": "#/properties/auth/properties/rootPassword",
+                "type": "string",
+                "title": "The rootPassword schema",
+                "default": ""
+              },
+              "replicaSetKey": {
+                "$id": "#/properties/auth/properties/replicaSetKey",
+                "type": "string",
+                "title": "The replicaSetKey schema",
+                "default": ""
+              }
+            },
+            "additionalProperties": false
+          },
+          "tls": {
+            "$id": "#/properties/tls",
+            "type": "object",
+            "title": "The tls schema",
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/tls/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": false
+              },
+              "caCert": {
+                "$id": "#/properties/tls/properties/caCert",
+                "type": "string",
+                "title": "The caCert schema",
+                "default": false
+              },
+              "caKey": {
+                "$id": "#/properties/tls/properties/caKey",
+                "type": "string",
+                "title": "The caKey schema",
+                "default": false
+              },
+              "image": {
+                "$id": "#/properties/tls/properties/image",
+                "type": "object",
+                "title": "The image schema",
+                "properties": {
+                  "registry": {
+                    "$id": "#/properties/tls/properties/image/properties/registry",
+                    "type": "string",
+                    "title": "The registry schema",
+                    "default": "docker.io"
+                  },
+                  "repository": {
+                    "$id": "#/properties/tls/properties/image/properties/repository",
+                    "type": "string",
+                    "title": "The repository schema",
+                    "default": "bitnami/nginx"
+                  },
+                  "tag": {
+                    "$id": "#/properties/tls/properties/image/properties/tag",
+                    "type": "string",
+                    "title": "The tag schema",
+                    "default": "1.19.5-debian-10-r19"
+                  },
+                  "pullPolicy": {
+                    "$id": "#/properties/tls/properties/image/properties/pullPolicy",
+                    "type": "string",
+                    "title": "The pullPolicy schema",
+                    "default": "IfNotPresent"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "replicaSetName": {
+            "$id": "#/properties/replicaSetName",
+            "type": "string",
+            "title": "The replicaSetName schema",
+            "default": "rs0"
+          },
+          "replicaSetHostnames": {
+            "$id": "#/properties/replicaSetHostnames",
+            "type": "boolean",
+            "title": "The replicaSetHostnames schema",
+            "default": true
+          },
+          "enableIPv6": {
+            "$id": "#/properties/enableIPv6",
+            "type": "boolean",
+            "title": "The enableIPv6 schema",
+            "default": false
+          },
+          "directoryPerDB": {
+            "$id": "#/properties/directoryPerDB",
+            "type": "boolean",
+            "title": "The directoryPerDB schema",
+            "default": false
+          },
+          "systemLogVerbosity": {
+            "$id": "#/properties/systemLogVerbosity",
             "type": "integer",
-            "title": "Defines replicas number",
-            "default": 1,
-            "minimum": 0
+            "title": "The systemLogVerbosity schema",
+            "default": 0
           },
-          "defaultDBName": {
-            "$id": "#/properties/defaultDBName",
+          "disableSystemLog": {
+            "$id": "#/properties/disableSystemLog",
+            "type": "boolean",
+            "title": "The disableSystemLog schema",
+            "default": false
+          },
+          "configuration": {
+            "$id": "#/properties/configuration",
             "type": "string",
-            "title": "Defines a name for the default database that is created",
-            "default": "mongo"
+            "title": "The configuration schema",
+            "default": ""
+          },
+          "initdbScripts": {
+            "$id": "#/properties/initdbScripts",
+            "type": "object",
+            "title": "The initdbScripts schema",
+            "default": {},
+            "additionalProperties": true
+          },
+          "extraFlags": {
+            "$id": "#/properties/extraFlags",
+            "type": "array",
+            "title": "The extraFlags schema",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/extraFlags/items"
+            }
+          },
+          "extraEnvVars": {
+            "$id": "#/properties/extraEnvVars",
+            "type": "array",
+            "title": "The extraEnvVars schema",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/extraEnvVars/items"
+            }
+          },
+          "annotations": {
+            "$id": "#/properties/annotations",
+            "type": "object",
+            "title": "The annotations schema",
+            "default": {}
+          },
+          "labels": {
+            "$id": "#/properties/labels",
+            "type": "object",
+            "title": "The labels schema",
+            "default": {}
+          },
+          "replicaCount": {
+            "$id": "#/properties/replicaCount",
+            "type": "integer",
+            "title": "The replicaCount schema",
+            "default": 3
+          },
+          "strategyType": {
+            "$id": "#/properties/strategyType",
+            "type": "string",
+            "title": "The strategyType schema",
+            "default": "RollingUpdate"
+          },
+          "podManagementPolicy": {
+            "$id": "#/properties/podManagementPolicy",
+            "type": "string",
+            "title": "The podManagementPolicy schema",
+            "default": "OrderedReady"
+          },
+          "podAffinityPreset": {
+            "$id": "#/properties/podAffinityPreset",
+            "type": "string",
+            "title": "The podAffinityPreset schema",
+            "default": ""
+          },
+          "podAntiAffinityPreset": {
+            "$id": "#/properties/podAntiAffinityPreset",
+            "type": "string",
+            "title": "The podAntiAffinityPreset schema",
+            "default": "soft"
+          },
+          "nodeAffinityPreset": {
+            "$id": "#/properties/nodeAffinityPreset",
+            "type": "object",
+            "title": "The nodeAffinityPreset schema",
+            "properties": {
+              "type": {
+                "$id": "#/properties/nodeAffinityPreset/properties/type",
+                "type": "string",
+                "title": "The type schema",
+                "default": ""
+              },
+              "key": {
+                "$id": "#/properties/nodeAffinityPreset/properties/key",
+                "type": "string",
+                "title": "The key schema",
+                "default": ""
+              },
+              "values": {
+                "$id": "#/properties/nodeAffinityPreset/properties/values",
+                "type": "array",
+                "title": "The values schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/nodeAffinityPreset/properties/values/items"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "affinity": {
+            "$id": "#/properties/affinity",
+            "type": "object",
+            "title": "The affinity schema",
+            "default": {}
+          },
+          "nodeSelector": {
+            "$id": "#/properties/nodeSelector",
+            "type": "object",
+            "title": "The nodeSelector schema",
+            "default": {}
+          },
+          "tolerations": {
+            "$id": "#/properties/tolerations",
+            "type": "array",
+            "title": "The tolerations schema",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/tolerations/items"
+            }
+          },
+          "podLabels": {
+            "$id": "#/properties/podLabels",
+            "type": "object",
+            "title": "The podLabels schema",
+            "default": {}
+          },
+          "podAnnotations": {
+            "$id": "#/properties/podAnnotations",
+            "type": "object",
+            "title": "The podAnnotations schema",
+            "default": {}
+          },
+          "podSecurityContext": {
+            "$id": "#/properties/podSecurityContext",
+            "type": "object",
+            "title": "The podSecurityContext schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/podSecurityContext/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "fsGroup": {
+                "$id": "#/properties/podSecurityContext/properties/fsGroup",
+                "type": "integer",
+                "title": "The fsGroup schema",
+                "default": 1001
+              },
+              "sysctls": {
+                "$id": "#/properties/podSecurityContext/properties/sysctls",
+                "type": "array",
+                "title": "The sysctls schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/podSecurityContext/properties/sysctls/items"
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "containerSecurityContext": {
+            "$id": "#/properties/containerSecurityContext",
+            "type": "object",
+            "title": "The containerSecurityContext schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/containerSecurityContext/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "runAsUser": {
+                "$id": "#/properties/containerSecurityContext/properties/runAsUser",
+                "type": "integer",
+                "title": "The runAsUser schema",
+                "default": 1001
+              },
+              "runAsNonRoot": {
+                "$id": "#/properties/containerSecurityContext/properties/runAsNonRoot",
+                "type": "boolean",
+                "title": "The runAsNonRoot schema",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "resources": {
+            "$id": "#/properties/resources",
+            "type": "object",
+            "title": "The resources schema",
+            "default": {},
+            "properties": {
+              "limits": {
+                "$id": "#/properties/resources/properties/limits",
+                "type": "object",
+                "title": "The limits schema",
+                "properties": {
+                  "memory": {
+                    "$id": "#/properties/resources/properties/limits/properties/memory",
+                    "type": "string",
+                    "default": "2Gi"
+                  },
+                  "cpu": {
+                    "$id": "#/properties/resources/properties/limits/properties/memory",
+                    "type": "string",
+                    "default": "2"
+                  }
+                }
+              },
+              "requests": {
+                "$id": "#/properties/resources/properties/requests",
+                "type": "object",
+                "title": "The requests schema",
+                "properties": {
+                  "memory": {
+                    "$id": "#/properties/resources/properties/limits/properties/memory",
+                    "type": "string",
+                    "default": "2Gi"
+                  },
+                  "cpu": {
+                    "$id": "#/properties/resources/properties/limits/properties/memory",
+                    "type": "string",
+                    "default": "500m"
+                  }
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "livenessProbe": {
+            "$id": "#/properties/livenessProbe",
+            "type": "object",
+            "title": "The livenessProbe schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/livenessProbe/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "initialDelaySeconds": {
+                "$id": "#/properties/livenessProbe/properties/initialDelaySeconds",
+                "type": "integer",
+                "title": "The initialDelaySeconds schema",
+                "default": 30
+              },
+              "periodSeconds": {
+                "$id": "#/properties/livenessProbe/properties/periodSeconds",
+                "type": "integer",
+                "title": "The periodSeconds schema",
+                "default": 10
+              },
+              "timeoutSeconds": {
+                "$id": "#/properties/livenessProbe/properties/timeoutSeconds",
+                "type": "integer",
+                "title": "The timeoutSeconds schema",
+                "default": 5
+              },
+              "failureThreshold": {
+                "$id": "#/properties/livenessProbe/properties/failureThreshold",
+                "type": "integer",
+                "title": "The failureThreshold schema",
+                "default": 6
+              },
+              "successThreshold": {
+                "$id": "#/properties/livenessProbe/properties/successThreshold",
+                "type": "integer",
+                "title": "The successThreshold schema",
+                "default": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "readinessProbe": {
+            "$id": "#/properties/readinessProbe",
+            "type": "object",
+            "title": "The readinessProbe schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/readinessProbe/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "initialDelaySeconds": {
+                "$id": "#/properties/readinessProbe/properties/initialDelaySeconds",
+                "type": "integer",
+                "title": "The initialDelaySeconds schema",
+                "default": 5
+              },
+              "periodSeconds": {
+                "$id": "#/properties/readinessProbe/properties/periodSeconds",
+                "type": "integer",
+                "title": "The periodSeconds schema",
+                "default": 10
+              },
+              "timeoutSeconds": {
+                "$id": "#/properties/readinessProbe/properties/timeoutSeconds",
+                "type": "integer",
+                "title": "The timeoutSeconds schema",
+                "default": 5
+              },
+              "failureThreshold": {
+                "$id": "#/properties/readinessProbe/properties/failureThreshold",
+                "type": "integer",
+                "title": "The failureThreshold schema",
+                "default": 6
+              },
+              "successThreshold": {
+                "$id": "#/properties/readinessProbe/properties/successThreshold",
+                "type": "integer",
+                "title": "The successThreshold schema",
+                "default": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "customLivenessProbe": {
+            "$id": "#/properties/customLivenessProbe",
+            "type": "object",
+            "title": "The customLivenessProbe schema",
+            "default": {}
+          },
+          "customReadinessProbe": {
+            "$id": "#/properties/customReadinessProbe",
+            "type": "object",
+            "title": "The customReadinessProbe schema",
+            "default": {}
+          },
+          "initContainers": {
+            "$id": "#/properties/initContainers",
+            "type": "object",
+            "title": "The initContainers schema",
+            "default": {}
+          },
+          "sidecars": {
+            "$id": "#/properties/sidecars",
+            "type": "object",
+            "title": "The sidecars schema",
+            "default": {}
+          },
+          "extraVolumeMounts": {
+            "$id": "#/properties/extraVolumeMounts",
+            "type": "array",
+            "title": "The extraVolumeMounts schema",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/extraVolumeMounts/items"
+            }
+          },
+          "extraVolumes": {
+            "$id": "#/properties/extraVolumes",
+            "type": "array",
+            "title": "The extraVolumes schema",
+            "default": [],
+            "additionalItems": true,
+            "items": {
+              "$id": "#/properties/extraVolumes/items"
+            }
+          },
+          "pdb": {
+            "$id": "#/properties/pdb",
+            "type": "object",
+            "title": "The pdb schema",
+            "default": {},
+            "properties": {
+              "create": {
+                "$id": "#/properties/pdb/properties/create",
+                "type": "boolean",
+                "title": "The create schema",
+                "default": true
+              },
+              "minAvailable": {
+                "$id": "#/properties/pdb/properties/minAvailable",
+                "type": "integer",
+                "title": "The minAvailable schema",
+                "default": 1
+              }
+            },
+            "additionalProperties": false
+          },
+          "persistence": {
+            "$id": "#/properties/persistence",
+            "type": "object",
+            "title": "The persistence schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/persistence/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": true
+              },
+              "accessModes": {
+                "$id": "#/properties/persistence/properties/accessModes",
+                "type": "array",
+                "title": "The accessModes schema",
+                "default": [
+                  "ReadWriteOnce"
+                ],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/persistence/properties/accessModes/items",
+                  "anyOf": [
+                    {
+                      "$id": "#/properties/persistence/properties/accessModes/items/anyOf/0",
+                      "type": "string",
+                      "title": "The first anyOf schema",
+                      "default": ""
+                    }
+                  ]
+                }
+              },
+              "size": {
+                "$id": "#/properties/persistence/properties/size",
+                "type": "string",
+                "title": "The size schema",
+                "default": "8Gi"
+              },
+              "annotations": {
+                "$id": "#/properties/persistence/properties/annotations",
+                "type": "object",
+                "title": "The annotations schema",
+                "default": {}
+              },
+              "mountPath": {
+                "$id": "#/properties/persistence/properties/mountPath",
+                "type": "string",
+                "title": "The mountPath schema",
+                "default": "/bitnami/mongodb"
+              },
+              "subPath": {
+                "$id": "#/properties/persistence/properties/subPath",
+                "type": "string",
+                "title": "The subPath schema",
+                "default": ""
+              },
+              "volumeClaimTemplates": {
+                "$id": "#/properties/persistence/properties/volumeClaimTemplates",
+                "type": "object",
+                "title": "The volumeClaimTemplates schema",
+                "default": {},
+                "properties": {
+                  "selector": {
+                    "$id": "#/properties/persistence/properties/volumeClaimTemplates/properties/selector",
+                    "type": "null",
+                    "title": "The selector schema",
+                    "default": null
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "service": {
+            "$id": "#/properties/service",
+            "type": "object",
+            "title": "The service schema",
+            "default": {},
+            "properties": {
+              "type": {
+                "$id": "#/properties/service/properties/type",
+                "type": "string",
+                "title": "The type schema",
+                "default": "ClusterIP"
+              },
+              "port": {
+                "$id": "#/properties/service/properties/port",
+                "type": "integer",
+                "title": "The port schema",
+                "default": 27017
+              },
+              "portName": {
+                "$id": "#/properties/service/properties/portName",
+                "type": "string",
+                "title": "The portName schema",
+                "default": "mongodb"
+              },
+              "nodePort": {
+                "$id": "#/properties/service/properties/nodePort",
+                "type": "string",
+                "title": "The nodePort schema",
+                "default": ""
+              },
+              "externalIPs": {
+                "$id": "#/properties/service/properties/externalIPs",
+                "type": "array",
+                "title": "The externalIPs schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/service/properties/externalIPs/items"
+                }
+              },
+              "loadBalancerSourceRanges": {
+                "$id": "#/properties/service/properties/loadBalancerSourceRanges",
+                "type": "array",
+                "title": "The loadBalancerSourceRanges schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/service/properties/loadBalancerSourceRanges/items"
+                }
+              },
+              "annotations": {
+                "$id": "#/properties/service/properties/annotations",
+                "type": "object",
+                "title": "The annotations schema",
+                "default": {}
+              }
+            },
+            "additionalProperties": false
+          },
+          "externalAccess": {
+            "$id": "#/properties/externalAccess",
+            "type": "object",
+            "title": "The externalAccess schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/externalAccess/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": false
+              },
+              "autoDiscovery": {
+                "$id": "#/properties/externalAccess/properties/autoDiscovery",
+                "type": "object",
+                "title": "The autoDiscovery schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": false
+                  },
+                  "image": {
+                    "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image",
+                    "type": "object",
+                    "title": "The image schema",
+                    "default": {},
+                    "properties": {
+                      "registry": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/registry",
+                        "type": "string",
+                        "title": "The registry schema",
+                        "default": "docker.io"
+                      },
+                      "repository": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/repository",
+                        "type": "string",
+                        "title": "The repository schema",
+                        "default": "bitnami/kubectl"
+                      },
+                      "tag": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/tag",
+                        "type": "string",
+                        "title": "The tag schema",
+                        "default": "1.18.13-debian-10-r5"
+                      },
+                      "pullPolicy": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/pullPolicy",
+                        "type": "string",
+                        "title": "The pullPolicy schema",
+                        "default": "IfNotPresent"
+                      },
+                      "pullSecrets": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/pullSecrets",
+                        "type": "array",
+                        "title": "The pullSecrets schema",
+                        "default": [],
+                        "additionalItems": true,
+                        "items": {
+                          "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/image/properties/pullSecrets/items"
+                        }
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "resources": {
+                    "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/resources",
+                    "type": "object",
+                    "title": "The resources schema",
+                    "default": {},
+                    "properties": {
+                      "limits": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/resources/properties/limits",
+                        "type": "object",
+                        "title": "The limits schema",
+                        "default": {}
+                      },
+                      "requests": {
+                        "$id": "#/properties/externalAccess/properties/autoDiscovery/properties/resources/properties/requests",
+                        "type": "object",
+                        "title": "The requests schema",
+                        "default": {}
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "additionalProperties": false
+              },
+              "service": {
+                "$id": "#/properties/externalAccess/properties/service",
+                "type": "object",
+                "title": "The service schema",
+                "default": {},
+                "properties": {
+                  "type": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/type",
+                    "type": "string",
+                    "title": "The type schema",
+                    "default": "LoadBalancer"
+                  },
+                  "port": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/port",
+                    "type": "integer",
+                    "title": "The port schema",
+                    "default": 27017
+                  },
+                  "loadBalancerIPs": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/loadBalancerIPs",
+                    "type": "array",
+                    "title": "The loadBalancerIPs schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/externalAccess/properties/service/properties/loadBalancerIPs/items"
+                    }
+                  },
+                  "loadBalancerSourceRanges": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/loadBalancerSourceRanges",
+                    "type": "array",
+                    "title": "The loadBalancerSourceRanges schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/externalAccess/properties/service/properties/loadBalancerSourceRanges/items"
+                    }
+                  },
+                  "nodePorts": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/nodePorts",
+                    "type": "array",
+                    "title": "The nodePorts schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/externalAccess/properties/service/properties/nodePorts/items"
+                    }
+                  },
+                  "annotations": {
+                    "$id": "#/properties/externalAccess/properties/service/properties/annotations",
+                    "type": "object",
+                    "title": "The annotations schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "arbiter": {
+            "$id": "#/properties/arbiter",
+            "type": "object",
+            "title": "The arbiter schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/arbiter/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": false
+              },
+              "configuration": {
+                "$id": "#/properties/arbiter/properties/configuration",
+                "type": "string",
+                "title": "The configuration schema",
+                "default": ""
+              },
+              "extraFlags": {
+                "$id": "#/properties/arbiter/properties/extraFlags",
+                "type": "array",
+                "title": "The extraFlags schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/arbiter/properties/extraFlags/items"
+                }
+              },
+              "extraEnvVars": {
+                "$id": "#/properties/arbiter/properties/extraEnvVars",
+                "type": "array",
+                "title": "The extraEnvVars schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/arbiter/properties/extraEnvVars/items"
+                }
+              },
+              "annotations": {
+                "$id": "#/properties/arbiter/properties/annotations",
+                "type": "object",
+                "title": "The annotations schema",
+                "default": {}
+              },
+              "labels": {
+                "$id": "#/properties/arbiter/properties/labels",
+                "type": "object",
+                "title": "The labels schema",
+                "default": {}
+              },
+              "podAffinityPreset": {
+                "$id": "#/properties/arbiter/properties/podAffinityPreset",
+                "type": "string",
+                "title": "The podAffinityPreset schema",
+                "default": ""
+              },
+              "podAntiAffinityPreset": {
+                "$id": "#/properties/arbiter/properties/podAntiAffinityPreset",
+                "type": "string",
+                "title": "The podAntiAffinityPreset schema",
+                "default": "soft"
+              },
+              "nodeAffinityPreset": {
+                "$id": "#/properties/arbiter/properties/nodeAffinityPreset",
+                "type": "object",
+                "title": "The nodeAffinityPreset schema",
+                "default": {},
+                "properties": {
+                  "type": {
+                    "$id": "#/properties/arbiter/properties/nodeAffinityPreset/properties/type",
+                    "type": "string",
+                    "title": "The type schema",
+                    "default": ""
+                  },
+                  "key": {
+                    "$id": "#/properties/arbiter/properties/nodeAffinityPreset/properties/key",
+                    "type": "string",
+                    "title": "The key schema",
+                    "default": ""
+                  },
+                  "values": {
+                    "$id": "#/properties/arbiter/properties/nodeAffinityPreset/properties/values",
+                    "type": "array",
+                    "title": "The values schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/arbiter/properties/nodeAffinityPreset/properties/values/items"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "affinity": {
+                "$id": "#/properties/arbiter/properties/affinity",
+                "type": "object",
+                "title": "The affinity schema",
+                "default": {}
+              },
+              "nodeSelector": {
+                "$id": "#/properties/arbiter/properties/nodeSelector",
+                "type": "object",
+                "title": "The nodeSelector schema",
+                "default": {}
+              },
+              "tolerations": {
+                "$id": "#/properties/arbiter/properties/tolerations",
+                "type": "array",
+                "title": "The tolerations schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/arbiter/properties/tolerations/items"
+                }
+              },
+              "podLabels": {
+                "$id": "#/properties/arbiter/properties/podLabels",
+                "type": "object",
+                "title": "The podLabels schema",
+                "default": {}
+              },
+              "podAnnotations": {
+                "$id": "#/properties/arbiter/properties/podAnnotations",
+                "type": "object",
+                "title": "The podAnnotations schema",
+                "default": {}
+              },
+              "podSecurityContext": {
+                "$id": "#/properties/arbiter/properties/podSecurityContext",
+                "type": "object",
+                "title": "The podSecurityContext schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/arbiter/properties/podSecurityContext/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "fsGroup": {
+                    "$id": "#/properties/arbiter/properties/podSecurityContext/properties/fsGroup",
+                    "type": "integer",
+                    "title": "The fsGroup schema",
+                    "default": 1001
+                  },
+                  "sysctls": {
+                    "$id": "#/properties/arbiter/properties/podSecurityContext/properties/sysctls",
+                    "type": "array",
+                    "title": "The sysctls schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/arbiter/properties/podSecurityContext/properties/sysctls/items"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "containerSecurityContext": {
+                "$id": "#/properties/arbiter/properties/containerSecurityContext",
+                "type": "object",
+                "title": "The containerSecurityContext schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/arbiter/properties/containerSecurityContext/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "runAsUser": {
+                    "$id": "#/properties/arbiter/properties/containerSecurityContext/properties/runAsUser",
+                    "type": "integer",
+                    "title": "The runAsUser schema",
+                    "default": 1001
+                  }
+                }
+              },
+              "resources": {
+                "$id": "#/properties/arbiter/properties/resources",
+                "type": "object",
+                "title": "The resources schema",
+                "default": {},
+                "properties": {
+                  "limits": {
+                    "$id": "#/properties/arbiter/properties/resources/properties/limits",
+                    "type": "object",
+                    "title": "The limits schema",
+                    "default": {}
+                  },
+                  "requests": {
+                    "$id": "#/properties/arbiter/properties/resources/properties/requests",
+                    "type": "object",
+                    "title": "The requests schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": false
+              },
+              "livenessProbe": {
+                "$id": "#/properties/arbiter/properties/livenessProbe",
+                "type": "object",
+                "title": "The livenessProbe schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "initialDelaySeconds": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "The initialDelaySeconds schema",
+                    "default": 30
+                  },
+                  "periodSeconds": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "The periodSeconds schema",
+                    "default": 10
+                  },
+                  "timeoutSeconds": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "The timeoutSeconds schema",
+                    "default": 5
+                  },
+                  "failureThreshold": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/failureThreshold",
+                    "type": "integer",
+                    "title": "The failureThreshold schema",
+                    "default": 6
+                  },
+                  "successThreshold": {
+                    "$id": "#/properties/arbiter/properties/livenessProbe/properties/successThreshold",
+                    "type": "integer",
+                    "title": "The successThreshold schema",
+                    "default": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "readinessProbe": {
+                "$id": "#/properties/arbiter/properties/readinessProbe",
+                "type": "object",
+                "title": "The readinessProbe schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "initialDelaySeconds": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "The initialDelaySeconds schema",
+                    "default": 5
+                  },
+                  "periodSeconds": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "The periodSeconds schema",
+                    "default": 10
+                  },
+                  "timeoutSeconds": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "The timeoutSeconds schema",
+                    "default": 5
+                  },
+                  "failureThreshold": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/failureThreshold",
+                    "type": "integer",
+                    "title": "The failureThreshold schema",
+                    "default": 6
+                  },
+                  "successThreshold": {
+                    "$id": "#/properties/arbiter/properties/readinessProbe/properties/successThreshold",
+                    "type": "integer",
+                    "title": "The successThreshold schema",
+                    "default": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "customLivenessProbe": {
+                "$id": "#/properties/arbiter/properties/customLivenessProbe",
+                "type": "object",
+                "title": "The customLivenessProbe schema",
+                "default": {}
+              },
+              "customReadinessProbe": {
+                "$id": "#/properties/arbiter/properties/customReadinessProbe",
+                "type": "object",
+                "title": "The customReadinessProbe schema",
+                "default": {}
+              },
+              "initContainers": {
+                "$id": "#/properties/arbiter/properties/initContainers",
+                "type": "object",
+                "title": "The initContainers schema",
+                "default": {}
+              },
+              "sidecars": {
+                "$id": "#/properties/arbiter/properties/sidecars",
+                "type": "object",
+                "title": "The sidecars schema",
+                "default": {}
+              },
+              "extraVolumeMounts": {
+                "$id": "#/properties/arbiter/properties/extraVolumeMounts",
+                "type": "array",
+                "title": "The extraVolumeMounts schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/arbiter/properties/extraVolumeMounts/items"
+                }
+              },
+              "extraVolumes": {
+                "$id": "#/properties/arbiter/properties/extraVolumes",
+                "type": "array",
+                "title": "The extraVolumes schema",
+                "default": [],
+                "additionalItems": true,
+                "items": {
+                  "$id": "#/properties/arbiter/properties/extraVolumes/items"
+                }
+              },
+              "pdb": {
+                "$id": "#/properties/arbiter/properties/pdb",
+                "type": "object",
+                "title": "The pdb schema",
+                "default": {},
+                "properties": {
+                  "create": {
+                    "$id": "#/properties/arbiter/properties/pdb/properties/create",
+                    "type": "boolean",
+                    "title": "The create schema",
+                    "default": false
+                  },
+                  "minAvailable": {
+                    "$id": "#/properties/arbiter/properties/pdb/properties/minAvailable",
+                    "type": "integer",
+                    "title": "The minAvailable schema",
+                    "default": 1
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "serviceAccount": {
+            "$id": "#/properties/serviceAccount",
+            "type": "object",
+            "title": "The serviceAccount schema",
+            "default": {},
+            "properties": {
+              "create": {
+                "$id": "#/properties/serviceAccount/properties/create",
+                "type": "boolean",
+                "title": "The create schema",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "rbac": {
+            "$id": "#/properties/rbac",
+            "type": "object",
+            "title": "The rbac schema",
+            "default": {},
+            "properties": {
+              "create": {
+                "$id": "#/properties/rbac/properties/create",
+                "type": "boolean",
+                "title": "The create schema",
+                "default": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "volumePermissions": {
+            "$id": "#/properties/volumePermissions",
+            "type": "object",
+            "title": "The volumePermissions schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/volumePermissions/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": false
+              },
+              "image": {
+                "$id": "#/properties/volumePermissions/properties/image",
+                "type": "object",
+                "title": "The image schema",
+                "default": {},
+                "properties": {
+                  "registry": {
+                    "$id": "#/properties/volumePermissions/properties/image/properties/registry",
+                    "type": "string",
+                    "title": "The registry schema",
+                    "default": "docker.io"
+                  },
+                  "repository": {
+                    "$id": "#/properties/volumePermissions/properties/image/properties/repository",
+                    "type": "string",
+                    "title": "The repository schema",
+                    "default": "bitnami/minideb"
+                  },
+                  "tag": {
+                    "$id": "#/properties/volumePermissions/properties/image/properties/tag",
+                    "type": "string",
+                    "title": "The tag schema",
+                    "default": "buster"
+                  },
+                  "pullPolicy": {
+                    "$id": "#/properties/volumePermissions/properties/image/properties/pullPolicy",
+                    "type": "string",
+                    "title": "The pullPolicy schema",
+                    "default": "Always"
+                  },
+                  "pullSecrets": {
+                    "$id": "#/properties/volumePermissions/properties/image/properties/pullSecrets",
+                    "type": "array",
+                    "title": "The pullSecrets schema",
+                    "default": [],
+                    "additionalItems": true,
+                    "items": {
+                      "$id": "#/properties/volumePermissions/properties/image/properties/pullSecrets/items"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "resources": {
+                "$id": "#/properties/volumePermissions/properties/resources",
+                "type": "object",
+                "title": "The resources schema",
+                "default": {},
+                "properties": {
+                  "limits": {
+                    "$id": "#/properties/volumePermissions/properties/resources/properties/limits",
+                    "type": "object",
+                    "title": "The limits schema",
+                    "default": {}
+                  },
+                  "requests": {
+                    "$id": "#/properties/volumePermissions/properties/resources/properties/requests",
+                    "type": "object",
+                    "title": "The requests schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": true
+              },
+              "securityContext": {
+                "$id": "#/properties/volumePermissions/properties/securityContext",
+                "type": "object",
+                "title": "The securityContext schema",
+                "default": {},
+                "properties": {
+                  "runAsUser": {
+                    "$id": "#/properties/volumePermissions/properties/securityContext/properties/runAsUser",
+                    "type": "integer",
+                    "title": "The runAsUser schema",
+                    "default": 0
+                  }
+                },
+                "additionalProperties": true
+              }
+            },
+            "additionalProperties": true
+          },
+          "metrics": {
+            "$id": "#/properties/metrics",
+            "type": "object",
+            "title": "The metrics schema",
+            "default": {},
+            "properties": {
+              "enabled": {
+                "$id": "#/properties/metrics/properties/enabled",
+                "type": "boolean",
+                "title": "The enabled schema",
+                "default": false
+              },
+              "image": {
+                "$id": "#/properties/metrics/properties/image",
+                "type": "object",
+                "title": "The image schema",
+                "default": {},
+                "properties": {
+                  "registry": {
+                    "$id": "#/properties/metrics/properties/image/properties/registry",
+                    "type": "string",
+                    "title": "The registry schema",
+                    "default": "docker.io"
+                  },
+                  "repository": {
+                    "$id": "#/properties/metrics/properties/image/properties/repository",
+                    "type": "string",
+                    "title": "The repository schema",
+                    "default": "bitnami/mongodb-exporter"
+                  },
+                  "tag": {
+                    "$id": "#/properties/metrics/properties/image/properties/tag",
+                    "type": "string",
+                    "title": "The tag schema",
+                    "default": "0.20.1-debian-10-r11"
+                  },
+                  "pullPolicy": {
+                    "$id": "#/properties/metrics/properties/image/properties/pullPolicy",
+                    "type": "string",
+                    "title": "The pullPolicy schema",
+                    "default": "IfNotPresent"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "extraFlags": {
+                "$id": "#/properties/metrics/properties/extraFlags",
+                "type": "string",
+                "title": "The extraFlags schema",
+                "default": ""
+              },
+              "extraUri": {
+                "$id": "#/properties/metrics/properties/extraUri",
+                "type": "string",
+                "title": "The extraUri schema",
+                "default": ""
+              },
+              "resources": {
+                "$id": "#/properties/metrics/properties/resources",
+                "type": "object",
+                "title": "The resources schema",
+                "default": {},
+                "properties": {
+                  "limits": {
+                    "$id": "#/properties/metrics/properties/resources/properties/limits",
+                    "type": "object",
+                    "title": "The limits schema",
+                    "default": {}
+                  },
+                  "requests": {
+                    "$id": "#/properties/metrics/properties/resources/properties/requests",
+                    "type": "object",
+                    "title": "The requests schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": false
+              },
+              "service": {
+                "$id": "#/properties/metrics/properties/service",
+                "type": "object",
+                "title": "The service schema",
+                "default": {},
+                "properties": {
+                  "annotations": {
+                    "$id": "#/properties/metrics/properties/service/properties/annotations",
+                    "type": "object",
+                    "title": "The annotations schema",
+                    "default": {},
+                    "properties": {
+                      "prometheus.io/scrape": {
+                        "$id": "#/properties/metrics/properties/service/properties/annotations/properties/prometheus.io/scrape",
+                        "type": "string",
+                        "title": "The prometheus.io/scrape schema",
+                        "default": "true"
+                      },
+                      "prometheus.io/port": {
+                        "$id": "#/properties/metrics/properties/service/properties/annotations/properties/prometheus.io/port",
+                        "type": "string",
+                        "title": "The prometheus.io/port schema",
+                        "default": "{{ .Values.metrics.service.port }}"
+                      },
+                      "prometheus.io/path": {
+                        "$id": "#/properties/metrics/properties/service/properties/annotations/properties/prometheus.io/path",
+                        "type": "string",
+                        "title": "The prometheus.io/path schema",
+                        "default": "/metrics"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "type": {
+                    "$id": "#/properties/metrics/properties/service/properties/type",
+                    "type": "string",
+                    "title": "The type schema",
+                    "default": "ClusterIP"
+                  },
+                  "port": {
+                    "$id": "#/properties/metrics/properties/service/properties/port",
+                    "type": "integer",
+                    "title": "The port schema",
+                    "default": 9216
+                  }
+                },
+                "additionalProperties": false
+              },
+              "livenessProbe": {
+                "$id": "#/properties/metrics/properties/livenessProbe",
+                "type": "object",
+                "title": "The livenessProbe schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "initialDelaySeconds": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "The initialDelaySeconds schema",
+                    "default": 15
+                  },
+                  "periodSeconds": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "The periodSeconds schema",
+                    "default": 5
+                  },
+                  "timeoutSeconds": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "The timeoutSeconds schema",
+                    "default": 5
+                  },
+                  "failureThreshold": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/failureThreshold",
+                    "type": "integer",
+                    "title": "The failureThreshold schema",
+                    "default": 3
+                  },
+                  "successThreshold": {
+                    "$id": "#/properties/metrics/properties/livenessProbe/properties/successThreshold",
+                    "type": "integer",
+                    "title": "The successThreshold schema",
+                    "default": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "readinessProbe": {
+                "$id": "#/properties/metrics/properties/readinessProbe",
+                "type": "object",
+                "title": "The readinessProbe schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": true
+                  },
+                  "initialDelaySeconds": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "The initialDelaySeconds schema",
+                    "default": 5
+                  },
+                  "periodSeconds": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "The periodSeconds schema",
+                    "default": 5
+                  },
+                  "timeoutSeconds": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "The timeoutSeconds schema",
+                    "default": 1
+                  },
+                  "failureThreshold": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/failureThreshold",
+                    "type": "integer",
+                    "title": "The failureThreshold schema",
+                    "default": 3
+                  },
+                  "successThreshold": {
+                    "$id": "#/properties/metrics/properties/readinessProbe/properties/successThreshold",
+                    "type": "integer",
+                    "title": "The successThreshold schema",
+                    "default": 1
+                  }
+                },
+                "additionalProperties": false
+              },
+              "serviceMonitor": {
+                "$id": "#/properties/metrics/properties/serviceMonitor",
+                "type": "object",
+                "title": "The serviceMonitor schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/metrics/properties/serviceMonitor/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": false
+                  },
+                  "interval": {
+                    "$id": "#/properties/metrics/properties/serviceMonitor/properties/interval",
+                    "type": "string",
+                    "title": "The interval schema",
+                    "default": "30s"
+                  },
+                  "additionalLabels": {
+                    "$id": "#/properties/metrics/properties/serviceMonitor/properties/additionalLabels",
+                    "type": "object",
+                    "title": "The additionalLabels schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": false
+              },
+              "prometheusRule": {
+                "$id": "#/properties/metrics/properties/prometheusRule",
+                "type": "object",
+                "title": "The prometheusRule schema",
+                "default": {},
+                "properties": {
+                  "enabled": {
+                    "$id": "#/properties/metrics/properties/prometheusRule/properties/enabled",
+                    "type": "boolean",
+                    "title": "The enabled schema",
+                    "default": false
+                  },
+                  "additionalLabels": {
+                    "$id": "#/properties/metrics/properties/prometheusRule/properties/additionalLabels",
+                    "type": "object",
+                    "title": "The additionalLabels schema",
+                    "default": {}
+                  },
+                  "rules": {
+                    "$id": "#/properties/metrics/properties/prometheusRule/properties/rules",
+                    "type": "object",
+                    "title": "The rules schema",
+                    "default": {}
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
           }
         },
         "additionalProperties": false
       }
-
+      
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

@@ -31,22 +31,23 @@ spec:
             },
             "rootPassword": "pass",
             "defaultDBName": "default_db",
-            "host": "host",
-            "port": 27017,
+            "replicas": [
+              "mongodb-1:27017"
+            ],
+            "replicaSetName": "rs0"
           }
         ],
         "required": [
-            "user",
-            "defaultDBName",
-            "rootPassword",
-            "host",
-            "port"
+          "user",
+          "defaultDBName",
+          "rootPassword",
+          "replicas"
         ],
         "$ocfRefs": {
           "hostname": {
             "name": "cap.core.type.networking.hostname",
             "revision": "0.1.0"
-          }
+          },
           "port": {
             "name": "cap.core.type.networking.port",
             "revision": "0.1.0"
@@ -58,8 +59,8 @@ spec:
             "type": "object",
             "title": "Defines custom user details",
             "required": [
-                "username",
-                "password"
+              "username",
+              "password"
             ],
             "properties": {
               "username": {
@@ -92,6 +93,19 @@ spec:
           "port": {
             "$ref": "#/$ocfRefs/port"
           },
+          "replicas": {
+            "$id": "#/properties/replicas",
+            "type": "array",
+            "title": "List of replica endpoints",
+            "items": {
+              "type": "string"
+            }
+          },
+          "replicaSetName": {
+            "$id": "#/properties/replicaSetName",
+            "type": "string",
+            "title": "Name of the replica set"
+          }
         },
         "additionalProperties": false
       }

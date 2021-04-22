@@ -9,7 +9,7 @@ values:
   postgresqlDatabase: postgres
   postgresqlPassword: s3cr3t
 output:
-  goTemplate:
+  goTemplate: |
     host: '{{ template "postgresql.primary.fullname" . }}'
     port: '{{ template "postgresql.port" . }}'
     defaultDBName: '{{ template "postgresql.database" . }}'

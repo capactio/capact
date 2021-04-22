@@ -6,7 +6,7 @@ values:
   commonAnnotations:
         upgraded: "true"
 output:
-  goTemplate:
+  goTemplate: |
     host: '{{ template "postgresql.primary.fullname" . }}'
     port: '{{ template "postgresql.port" . }}'
     defaultDBName: '{{ template "postgresql.database" . }}'
