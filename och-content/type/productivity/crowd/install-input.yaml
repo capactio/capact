@@ -33,8 +33,8 @@ spec:
         "default": {},
         "examples": [
           {
-            "host": "crowd.capact.local",
             "ingress": {
+              "host": "crowd.capact.local",
               "enabled": true
             },
             "image": {
@@ -68,14 +68,14 @@ spec:
           }
         ],
         "properties": {
-          "host": {
-            "$ref": "#/$ocfRefs/hostname"
-          },
           "ingress": {
             "$id": "#/properties/ingress",
             "type": "object",
             "title": "The ingress configuration",
             "properties": {
+              "host": {
+                "$ref": "#/$ocfRefs/hostname"
+              },
               "enabled": {
                 "$id": "#/properties/ingress/properties/enabled",
                 "type": "boolean",

@@ -150,6 +150,7 @@ spec:
                             chart:
                               name: "crowd"
                               repo: "https://helm.mox.sh"
+                              version: "2.0.5"
                             output:
                               goTemplate: |
                                 version: "{{ .Values.image.tag }}"
@@ -174,14 +175,14 @@ spec:
                                 tls:
                                   - secretName: crowd-server-tls-<@ random_word(length=5) @>
                                     hosts:
-                                      - <@ input.host @>
+                                      - <@ input.ingress.host @>
                                 hosts:
-                                - host: <@ input.host @>
+                                - host: <@ input.ingress.host @>
                                   paths: ['/']
 
                               image:
                                 repository: <@ input.image.repository | default("atlassian/crowd") @>
-                                tag: <@ input.image.tag | default("4.2.3") @>
+                                tag: <@ input.image.tag | default("4.3.0") @>
                                 pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
                                 pullSecrets: <@ input.image.pullSecrets | default({}) @>
 

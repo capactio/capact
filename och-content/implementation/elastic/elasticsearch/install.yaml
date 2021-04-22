@@ -121,6 +121,7 @@ spec:
                               <% endif %>
                                 basicAuthSecretName: <@ metadata.name @>
                             values:
+                              imageTag: 7.4.1
                               replicas: <@ replicas | default('3')@>
                               esConfig:
                                 elasticsearch.yml: |
