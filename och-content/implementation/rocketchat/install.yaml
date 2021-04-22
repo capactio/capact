@@ -221,18 +221,18 @@ spec:
                               ##
                               livenessProbe:
                                 enabled: <@ input.livenessProbe.enabled | default(true) @>
-                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(60) @>
-                                periodSeconds: <@ input.livenessProbe.periodSeconds | default(15) @>
-                                timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(5) @>
-                                failureThreshold: <@ input.livenessProbe.failureThreshold | default(1) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ input.livenessProbe.periodSeconds | default(5) @>
+                                timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(3) @>
+                                failureThreshold: <@ input.livenessProbe.failureThreshold | default(3) @>
                                 successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
 
                               readinessProbe:
                                 enabled: <@ input.readinessProbe.enabled | default(true) @>
-                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(60) @>
-                                periodSeconds: <@ input.readinessProbe.periodSeconds | default(15) @>
-                                timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(5) @>
-                                failureThreshold: <@ input.readinessProbe.failureThreshold | default(1) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ input.readinessProbe.periodSeconds | default(5) @>
+                                timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(3) @>
+                                failureThreshold: <@ input.readinessProbe.failureThreshold | default(3) @>
                                 successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
 
                             output:
