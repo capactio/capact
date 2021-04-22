@@ -468,6 +468,27 @@ When running on AWS, NFS also can be used or EFS(Elastic File Storage). Checkout
 
 When shared storage is available then set StorageClass for `sharedHome` variable.
 
+### Troubleshooting
+
+1. Jira pod is restarting during setup
+   This may mean that it's running out for memory. Increase requested resources by setting following input parameters:
+
+   ```yaml
+   jira:
+     resources:
+       container:
+         requests:
+           memory: "8G"
+	   cpu: 4
+   ```
+
+1. Health check for Cluster Scheduler fails
+   Read more about it on [Atlassian Support page](https://confluence.atlassian.com/jirakb/healthcheck-scheduler-738722403.html)
+   You need to delete the first pod. It's the one with `-0` at the end
+
+   ```bash
+   kubect delete pod <pod name>
+   ```
 
 ###  Additional resources
 
