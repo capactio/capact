@@ -139,6 +139,8 @@ spec:
                                     secretKeyRef:
                                       name: <@ metadata.name @>
                                       key: username
+                              roles:
+                                remote_cluster_client: null # not supported by Elasticsearch 7.4.1
                               <% if host %>
                               ingress:
                                 enabled: true

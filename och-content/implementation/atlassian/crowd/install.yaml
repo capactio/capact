@@ -280,7 +280,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(60) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(120) @>
                                 periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
@@ -293,7 +293,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(60) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(120) @>
                                 periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>
