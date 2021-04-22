@@ -45,8 +45,8 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 		return nil, err
 	}
 
-	okCheck := color.New(color.FgGreen).FprintlnFunc()
-	okCheck(w, "Action created successfully\n")
+	okCheck := color.New(color.FgGreen).FprintfFunc()
+	okCheck(w, "Action %s/%s created successfully\n", opts.Namespace, act.Name)
 
 	return &CreateOutput{
 		Action:    act,

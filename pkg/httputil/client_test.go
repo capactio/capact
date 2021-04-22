@@ -1,4 +1,4 @@
-package httputil_test
+package httputil
 
 import (
 	"net/http"
@@ -8,63 +8,63 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"capact.io/capact/pkg/httputil"
 )
 
 func TestNewClient(t *testing.T) {
 	tests := map[string]struct {
 		timeout              time.Duration
 		skipCertVerification bool
+		username             string
+		password             string
 	}{
-		"Respect given timeout and skips cert verification": {
+		"Set given timeout and skips cert verification": {
 			timeout:              time.Second,
 			skipCertVerification: true,
 		},
-		"Respect given timeout and DOES NOT skip cert verification": {
+		"Set given timeout and DOES NOT skip cert verification": {
 			timeout:              time.Second,
 			skipCertVerification: false,
+		},
+		"Set given basic auth": {
+			username: "abc",
+			password: "abc",
+		},
+		"Set given basic auth and skip cert verification": {
+			username:             "abc",
+			password:             "abc",
+			skipCertVerification: true,
 		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
+			// given
+			var receivedUser, receivedPass string
+			ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				receivedUser, receivedPass, _ = r.BasicAuth()
+			}))
+
+			cli := NewClient(tc.timeout, WithBasicAuth(tc.username, tc.password), WithTLSInsecureSkipVerify(tc.skipCertVerification))
+
 			// when
-			gotCli := httputil.NewClient(tc.timeout, httputil.WithTLSInsecureSkipVerify(tc.skipCertVerification))
+			resp, err := cli.Get(ts.URL)
 
 			// then
-			transport := gotCli.Transport.(*http.Transport)
-			assert.Equal(t, tc.skipCertVerification, transport.TLSClientConfig.InsecureSkipVerify)
-			assert.Equal(t, gotCli.Timeout, tc.timeout)
+			require.NoError(t, err)
+			defer resp.Body.Close()
+
+			// BasicAuth is configured
+			require.Equal(t, tc.username, receivedUser)
+			require.Equal(t, tc.password, receivedPass)
+
+			// TLS is configured
+			cfgTransport := cli.Transport.(*ConfigurableTransport)
+			assert.Equal(t, tc.skipCertVerification, cfgTransport.transport.TLSClientConfig.InsecureSkipVerify)
+			assert.Equal(t, tc.timeout, cli.Timeout)
 
 			// assert that at least some default timeouts are set
-			assert.NotZero(t, transport.IdleConnTimeout)
-			assert.NotZero(t, transport.TLSHandshakeTimeout)
-			assert.NotZero(t, transport.ExpectContinueTimeout)
+			assert.NotZero(t, cfgTransport.transport.IdleConnTimeout)
+			assert.NotZero(t, cfgTransport.transport.TLSHandshakeTimeout)
+			assert.NotZero(t, cfgTransport.transport.ExpectContinueTimeout)
 		})
 	}
-}
-
-func TestClientProvidedBasicAuthIsUsedInRequests(t *testing.T) {
-	// given
-	const (
-		username = "test"
-		password = "s3cr3t"
-	)
-
-	var receivedUser, receivedPass string
-	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		receivedUser, receivedPass, _ = r.BasicAuth()
-	}))
-
-	cli := httputil.NewClient(30*time.Second, httputil.WithBasicAuth(username, password))
-
-	// when
-	resp, err := cli.Get(ts.URL)
-
-	// then
-	require.NoError(t, err)
-	defer resp.Body.Close()
-
-	require.Equal(t, username, receivedUser)
-	require.Equal(t, password, receivedPass)
 }
