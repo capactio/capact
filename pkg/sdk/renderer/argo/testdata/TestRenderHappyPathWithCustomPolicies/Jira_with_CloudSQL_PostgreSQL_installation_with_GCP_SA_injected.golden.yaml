@@ -205,7 +205,7 @@ args:
           value: '{{outputs.artifacts.additional.path}}'
         - name: RUNNER_LOGGER_DEV_MODE
           value: "true"
-        image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-113
+        image: gcr.io/projectvoltron/pr/cloudsql-runner:PR-252
         name: ""
         resources: {}
       inputs:
@@ -462,7 +462,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-207
+        image: gcr.io/projectvoltron/pr/helm-runner:PR-252
         name: ""
         resources: {}
       inputs:
