@@ -20,7 +20,7 @@ spec:
 
   additionalInput:
     typeInstances:
-      postgresql:
+      mongodb:
         typeRef:
           path: cap.type.database.mongodb.config
           revision: 0.1.0
@@ -92,6 +92,29 @@ spec:
                               username: "mongo"
                             defaultDBName: "mongo"
 
+              - - name: render-mongodb-connection-url
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            <%- set ns = namespace(replicas="") %>
+                            <% for r in mongo.replicas -%>
+                              <%- set ns.replicas = ns.replicas + r %>
+                              <% if not loop.last -%>
+                                <%- set ns.replicas = ns.replicas + "," %>
+                              <%- endif %>
+                            <%- endfor %>
+                            mongoURL: "mongodb://<@ mongo.user.username @>:<@ mongo.user.password@>@<@ ns.replicas @>/<@ mongo.defaultDBName @>?replicaSet=<@ mongo.replicaSetName @>"
+                            oplogURL: "mongodb://root:<@ mongo.rootPassword@>@<@ ns.replicas @>/local?replicaSet=<@ mongo.replicaSetName @>&authSource=admin"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.mongodb}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: mongo
+
               - - name: render-helm-args
                   capact-action: jinja2.template
                   arguments:
@@ -104,22 +127,14 @@ spec:
                               name: "rocketchat"
                               repo: "https://charts.helm.sh/stable"
                             values:
-                              extraEnv: |
-                                - name: EXIT_UNHANDLEDPROMISEREJECTION
-                                  value: "true"
-                              image:
-                                tag: 3.13.1
                               mongodb:
                                 enabled: false
-                              <% set mongo_addr = mongo.host + ':' + mongo.port %>
-                              <% set mongo_url = 'mongodb://' + mongo.user.username + ':' + mongo.user.password + '@' + mongo_addr %>
-                              externalMongodbUrl: "<@ mongo_url @>/<@ mongo.defaultDBName @>"
-                              <% set oplog_mongo_url = 'mongodb://root:' + mongo.rootPassword + '@' + mongo_addr + '/local?replicaSet=rs0&authSource=admin' %>
-                              externalMongodbOplogUrl: "<@ oplog_mongo_url @>"
+                              externalMongodbUrl: <@ mongo.mongoURL @>
+                              externalMongodbOplogUrl: <@ mongo.oplogURL @>
+
                               ingress:
-                                enabled: true
+                                enabled: <@ input.ingress.enabled | default(true) @>
                                 annotations:
-                                  acmechallengetype: http01
                                   cert-manager.io/cluster-issuer: letsencrypt
                                   kubernetes.io/ingress.class: nginx
                                   kubernetes.io/tls-acme: "true"
@@ -128,42 +143,108 @@ spec:
                                   - secretName: rocketchat-server-tls-<@ random_word(length=5) @>
                                     hosts:
                                       - <@ input.host @>
+                              image:
+                                repository: <@ input.image.repository | default("docker.io/rocketchat/rocket.chat") @>
+                                tag: <@ input.image.tag | default("3.13.1") @>
+                                pullPolicy: <@ input.image.pullPollicy | default("IfNotPresent") @>
+
                               host: <@ input.host @>
-                              affinity: <@ input.affinity @>
-                              replicaCount: <@ input.replicas @>
-                              podAntiAffinity: "soft"
+
+                              replicaCount: <@ input.replicaCount |default(3) @>
+                              minAvailable: <@ input.minAvailable | default(1) @>
+
+                              smtp:
+                                enabled: <@ input.smtp.enabled | default(false) @>
+                                username: <@ input.smtp.username | default("") @>
+                                password: <@ input.smtp.password | default(random_word()) @>
+                                host: <@ input.smtp.host | default("") @>
+                                port: <@ input.smtp.port | default(587) @>
+
+                              extraEnv: |
+                                - name: EXIT_UNHANDLEDPROMISEREJECTION
+                                  value: "true"
+
+                              podAntiAffinity: <@ input.podAntiAffinity | default("soft") @>
+                              podAntiAffinityTopologyKey: <@ input.podAntiAffinityTopologyKey | default("kubernetes.io/hostname") @>
+                              affinity: <@ input.affinity | default({}) @>
+
+                              # persistence is used for storing file uploads, if disabled then MongoDB is used
+                              persistence:
+                                enabled: <@ input.persistence.enabled | default(false) @>
+                                existingClaim: <@ input.persistence.existingClaim | default("") @>
+                                storageClass: <@ input.persistence.storageClass | default("") @>
+                                accessMode: <@ input.persistence.accessMode | default("ReadWriteOnce") @>
+                                size: <@ input.persistence.size | default("8Gi") @>
+
                               # https://docs.rocket.chat/installation/hardware-requirements
                               resources:
                                 requests:
-                                  memory: "1G"
-                                  cpu: "200m"
+                                  memory: <@ input.resources.requests.memory | default("1G") @>
+                                  cpu: <@ input.resources.requests.cpu | default("200m") @>
                                 limits:
-                                  memory: "2G"
-                                  cpu: "1"
+                                  memory: <@ input.resources.limits.memory | default("2G") @>
+                                  cpu: <@ input.resources.limits.cpu | default("1") @>
+
+                              securityContext:
+                                enabled: <@ input.securityContext.enabled | default(true) @>
+                                runAsUser: <@ input.securityContext.runAsUser | default(999) @>
+                                fsGroup: <@ input.securityContext.fsGroup| default(999) @>
+
+                              serviceAccount:
+                                # Specifies whether a ServiceAccount should be created
+                                create: <@ input.serviceAccount.create | default(true) @>
+
+                                # The name of the ServiceAccount to use.
+                                # If not set and create is true, a name is generated using the fullname template
+                                name: <@ input.serviceAccount.name | default("") @>
+
+                              service:
+                                annotations: <@ input.service.annotations | default({}) @>
+                                labels: <@ input.service.labels | default({}) @>
+
+                                ## ServiceType
+                                ## ref: https://kubernetes.io/docs/user-guide/services/#publishing-services---service-types
+                                type: <@ input.service.type | default("ClusterIP") @>
+
+                                ## Optional static port assignment for service type NodePort.
+                                nodePort: <@ input.service.nodePort | default("") @>
+                                port: <@ input.service.port | default(80) @>
+
+                              ## Optional Pod Labels.
+                              podLabels: <@ input.podLabels | default({}) @>
+
+                              ## Optional Pod Annotations.
+                              podAnnotations: <@ input.podAnnotations | default({}) @>
+
+                              ## Liveness and readiness probe values
+                              ## Ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
+                              ##
                               livenessProbe:
-                                enabled: true
-                                initialDelaySeconds: 60
-                                periodSeconds: 1
-                                timeoutSeconds: 1
-                                failureThreshold: 1
-                                successThreshold: 1
+                                enabled: <@ input.livenessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ input.livenessProbe.periodSeconds | default(5) @>
+                                timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(3) @>
+                                failureThreshold: <@ input.livenessProbe.failureThreshold | default(3) @>
+                                successThreshold: <@ input.livenessProbe.successThreshold | default(1) @>
+
                               readinessProbe:
-                                enabled: true
-                                initialDelaySeconds: 60
-                                periodSeconds: 1
-                                timeoutSeconds: 1
-                                failureThreshold: 1
-                                successThreshold: 1
+                                enabled: <@ input.readinessProbe.enabled | default(true) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ input.readinessProbe.periodSeconds | default(5) @>
+                                timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(3) @>
+                                failureThreshold: <@ input.readinessProbe.failureThreshold | default(3) @>
+                                successThreshold: <@ input.readinessProbe.successThreshold | default(1) @>
+
                             output:
                               goTemplate: |
                                 host: "{{ .Values.host }}"
                                 version: "{{ .Values.image.tag }}"
                       - name: input-parameters
-                        from: "{{steps.install-db.outputs.artifacts.mongodb}}"
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: configuration
                         raw:
                           data: |
-                            prefix: mongo
+                            prefix: input
 
               - - name: fill-input-params-in-helm-args
                   capact-action: jinja2.template
@@ -172,11 +253,11 @@ spec:
                       - name: template
                         from: "{{steps.render-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{steps.render-mongodb-connection-url.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |
-                            prefix: input
+                            prefix: mongo
 
               - - name: helm-install
                   capact-action: helm.install
