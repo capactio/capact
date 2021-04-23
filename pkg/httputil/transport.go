@@ -28,6 +28,5 @@ func (t *configurableTransport) RoundTrip(req *http.Request) (*http.Response, er
 	if t.user != "" && t.pass != "" {
 		req.SetBasicAuth(t.user, t.pass)
 	}
-	req.SetBasicAuth(t.user, t.pass)
 	return t.transport.RoundTrip(req)
 }
