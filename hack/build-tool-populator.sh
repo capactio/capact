@@ -8,10 +8,10 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-# shellcheck disable=SC2155
-readonly CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-# shellcheck disable=SC2155
-readonly REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+CURRENT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT_DIR=$(cd "${CURRENT_DIR}/.." && pwd)
+readonly CURRENT_DIR
+readonly REPO_ROOT_DIR
 
 ARCHs=${CLI_ARCH:-"amd64"}
 OSes=${CLI_OS:-"linux darwin windows"}

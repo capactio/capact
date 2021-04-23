@@ -150,6 +150,7 @@ spec:
                             chart:
                               name: "crowd"
                               repo: "https://helm.mox.sh"
+                              version: "2.0.5"
                             output:
                               goTemplate: |
                                 version: "{{ .Values.image.tag }}"
@@ -170,18 +171,20 @@ spec:
                                   kubernetes.io/ingress.class: nginx
                                   kubernetes.io/tls-acme: "true"
                                   nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+                                  nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+                                  nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
                                   nginx.ingress.kubernetes.io/affinity: "cookie"
                                 tls:
                                   - secretName: crowd-server-tls-<@ random_word(length=5) @>
                                     hosts:
-                                      - <@ input.host @>
+                                      - <@ input.ingress.host @>
                                 hosts:
-                                - host: <@ input.host @>
+                                - host: <@ input.ingress.host @>
                                   paths: ['/']
 
                               image:
                                 repository: <@ input.image.repository | default("atlassian/crowd") @>
-                                tag: <@ input.image.tag | default("4.2.3") @>
+                                tag: <@ input.image.tag | default("4.3.0") @>
                                 pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
                                 pullSecrets: <@ input.image.pullSecrets | default({}) @>
 
@@ -279,7 +282,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(60) @>
+                                initialDelaySeconds: <@ input.readinessProbe.initialDelaySeconds | default(120) @>
                                 periodSeconds: <@ input.readinessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.readinessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.readinessProbe.failureThreshold | default(6) @>
@@ -292,7 +295,7 @@ spec:
                                 httpGet:
                                   path: /crowd/status
                                   port: http
-                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(60) @>
+                                initialDelaySeconds: <@ input.livenessProbe.initialDelaySeconds | default(120) @>
                                 periodSeconds: <@ input.livenessProbe.periodSeconds | default(30) @>
                                 timeoutSeconds: <@ input.livenessProbe.timeoutSeconds | default(10) @>
                                 failureThreshold: <@ input.livenessProbe.failureThreshold | default(6) @>

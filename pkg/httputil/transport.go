@@ -25,6 +25,9 @@ func (t *configurableTransport) SetTLSInsecureSkipVerify(skip bool) {
 }
 
 func (t *configurableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if t.user != "" && t.pass != "" {
+		req.SetBasicAuth(t.user, t.pass)
+	}
 	req.SetBasicAuth(t.user, t.pass)
 	return t.transport.RoundTrip(req)
 }

@@ -104,7 +104,7 @@ spec:
                   globalName: tfstate
                   path: "/terraform-state.yaml"
             container:
-              image: gcr.io/projectvoltron/pr/terraform-runner:PR-221
+              image: gcr.io/projectvoltron/pr/terraform-runner:PR-252
               env:
                 - name: RUNNER_CONTEXT_PATH
                   value: "{{inputs.artifacts.runner-context.path}}"

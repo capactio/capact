@@ -45,7 +45,7 @@ spec:
                 - name: render
                   path: "/render.yml"
             container:
-              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-144
+              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-252
               args:
                 - /template.yml 
                 - /values.yml 

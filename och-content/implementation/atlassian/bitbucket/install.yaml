@@ -247,7 +247,7 @@ spec:
                               image:
                                 repository: <@ input.image.repository | default("atlassian/bitbucket-server") @>
                                 pullPolicy: <@ input.image.pullPolicy | default("IfNotPresent") @>
-                                tag: <@ input.image.tag | default("") @>
+                                tag: <@ input.image.tag | default("7.12.0-jdk11") @>
 
                               serviceAccount:
                                 name: <@ input.serviceAccount.name | default("") @>
