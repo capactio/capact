@@ -1,4 +1,4 @@
-# Schema 0.0.1
+# Specification 0.0.1
 
 The [schema](./schema) directory contains a representation of the OCF entities in the [JSON Schema draft-07](https://json-schema.org/draft-07/json-schema-release-notes.html) specification.
 

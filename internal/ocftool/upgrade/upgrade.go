@@ -434,7 +434,8 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 		}
 	}
 
-	resp, err := u.httpClient.Get(fmt.Sprintf("%s/index.yaml", repoURL))
+	url := fmt.Sprintf("%s/index.yaml", repoURL)
+	resp, err := u.httpClient.Get(url)
 	if err != nil {
 		return "", errors.Wrap(err, "while getting capactio Helm Chart repository index.yaml")
 	}
@@ -447,7 +448,7 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 
 	i := &repo.IndexFile{}
 	if err := yaml.UnmarshalStrict(data, i); err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "Index fetch from %q is malformed", url)
 	}
 	sortFn(i)
 

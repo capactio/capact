@@ -83,6 +83,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 	create := action.CreateOptions{
 		InterfacePath: interfacePath,
 		DryRun:        false,
+		Interactive:   true,
 	}
 
 	_, err = action.Create(ctx, create, w)
