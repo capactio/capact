@@ -17,6 +17,8 @@ This tutorial shows the basic concepts of Capact on the Jira installation exampl
 - [Behind the scenes](#behind-the-scenes)
   * [OCF manifests](#ocf-manifests)
   * [Content development](#content-development)
+- [Clustered Jira setup](#clustered-jira-setup)
+- [Troubleshooting](#troubleshooting)
 - [Additional resources](#additional-resources)
 
 <!-- tocstop -->
@@ -471,6 +473,7 @@ When shared storage is available then set StorageClass for `sharedHome` variable
 ### Troubleshooting
 
 1. Jira pod is restarting during setup
+
    This may mean that it's running out for memory. Increase requested resources by setting following input parameters:
 
    ```yaml
@@ -483,6 +486,7 @@ When shared storage is available then set StorageClass for `sharedHome` variable
    ```
 
 1. Health check for Cluster Scheduler fails
+
    Read more about it on [Atlassian Support page](https://confluence.atlassian.com/jirakb/healthcheck-scheduler-738722403.html)
    You need to delete the first pod. It's the one with `-0` at the end
 
