@@ -78,7 +78,7 @@ module "cert_manager_irsa" {
   role_name                     = "${var.namespace}-cert_manager-irsa"
   provider_url                  = replace(module.eks.cluster_oidc_issuer_url, "https://", "")
   role_policy_arns              = [aws_iam_policy.cert_manager_policy.arn]
-  oidc_fully_qualified_subjects = ["system:serviceaccount:cert-manager:cert-manager"]
+  oidc_fully_qualified_subjects = ["system:serviceaccount:capact-system:cert-manager"]
   tags                          = local.tags
 }
 

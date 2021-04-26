@@ -2,6 +2,8 @@
 
 This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (Amazon EKS) cluster with full Capact installation using Terraform.
 
+## Table of Contents
+
 <!-- toc -->
 
 - [Architecture](#architecture)
@@ -103,13 +105,13 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
   If there is no such Secret resource, see the logs of Cert Manager controller:
   
   ```bash
-  kubectl logs -l=app.kubernetes.io/component=controller -n cert-manager
+  kubectl logs -l=app.kubernetes.io/component=controller -l=app=cert-manager -n capact-system
   ```
   
   Cert Manager may have difficulties to detect the updated nameservers. To solve this, kill the pod: 
   
   ```bash
-  kubectl delete pod -l=app.kubernetes.io/component=controller -n cert-manager
+  kubectl delete pod -l=app.kubernetes.io/component=controller -l=app=cert-manager -n capact-system
   ```
 
 ## Access API server from the bastion host
@@ -189,10 +191,11 @@ Only the bastion host can access the Capact Gateway. To be able to connect to th
 
 ## Cleanup
 
-1. Remove the ingress-nginx and public-ingress-nginx Helm releases. This is required to deprovision the AWS ELBs.
+1. Remove the `ingress-nginx` and `public-ingress-nginx` Helm releases. This is required to deprovision the AWS ELBs. Run:
+   
   ```bash
-  helm delete -n ingress-nginx ingress-nginx
-  helm delete -n public-ingress-nginx public-ingress-nginx
+  helm delete -n capact-system ingress-nginx
+  helm delete -n capact-system public-ingress-nginx
   ```
 
 1. Remove the records from the Route53 Hosted Zone from the AWS Console. Only the entries for apex SOA and NS should be left.
@@ -209,6 +212,8 @@ Only the bastion host can access the Capact Gateway. To be able to connect to th
  
   ```bash
   terraform state rm 'module.eks.kubernetes_config_map.aws_auth[0]'
+  terraform state rm 'kubernetes_storage_class.efs_storage_class'
+  terraform state rm 'kubernetes_service_account.efs_csi_driver_ctrl_sa'
   terraform destroy -var domain_name=$CAPACT_DOMAIN_NAME
   ```
 

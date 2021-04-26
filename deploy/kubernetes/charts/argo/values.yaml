@@ -16,7 +16,7 @@ argo:
   artifactRepository:
     s3:
       bucket: argo-artifacts
-      endpoint: argo-minio.argo.svc.cluster.local:9000
+      endpoint: argo-minio.capact-system.svc.cluster.local:9000
 
   minio:
     securityContext:

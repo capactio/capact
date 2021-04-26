@@ -16,12 +16,11 @@ readonly K8S_DEPLOY_DIR="${REPO_ROOT_DIR}/deploy/kubernetes"
 
 helm upgrade public-ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
     --install \
-    --create-namespace \
-    --namespace="public-ingress-nginx" \
+    --namespace="capact-system" \
     --values "${CURRENT_DIR}/values.yml" \
     --wait
 
-kubectl wait --namespace public-ingress-nginx \
+kubectl wait --namespace capact-system \
   --for=condition=ready pod \
   --selector=app.kubernetes.io/component=controller \
   --timeout=90s

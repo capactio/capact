@@ -35,7 +35,7 @@ Velero stores logs in object store. To see logs locally we need access to `minio
 is to add it to `/etc/hosts` and to enable port forwarding:
 
 ```shell
-kubectl -n argo port-forward service/argo-minio 9000
+kubectl -n capact-system port-forward service/argo-minio 9000
 ```
 
 ## Installing Persistent Volume provider
@@ -109,7 +109,7 @@ We will use [openebs/lvm-localpv](https://github.com/openebs/lvm-localpv/) here.
 1. Populate database
 
    ```bash
-   kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
+   kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
 
    APP_JSONPUBLISHADDR=http://{IP} APP_LOGGER_DEV_MODE=true APP_MANIFESTS_PATH=./och-content go run cmd/populator/main.go .
    ```

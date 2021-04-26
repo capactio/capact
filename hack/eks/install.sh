@@ -99,7 +99,7 @@ capact::aws::register_dnses() {
 
   local internal_lb_fqdn
   for _ in $(seq 6); do
-    internal_lb_fqdn="$(kubectl -n ingress-nginx get svc ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
+    internal_lb_fqdn="$(kubectl -n capact-system get svc ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
     if [ -n "${internal_lb_fqdn}" ]; then
       break
     fi
@@ -112,7 +112,7 @@ capact::aws::register_dnses() {
 
   local external_lb_fqdn
   for _ in $(seq 6); do
-    external_lb_fqdn="$(kubectl -n public-ingress-nginx get svc public-ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
+    external_lb_fqdn="$(kubectl -n capact-system get svc public-ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
     if [ -n "${external_lb_fqdn}" ]; then
       break
     fi

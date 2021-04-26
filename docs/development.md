@@ -348,7 +348,7 @@ If you installed Capact with monitoring enabled, the Prometheus and Grafana are 
 Forward the Prometheus server to your localhost: 
 
 ```bash
-kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n monitoring 9090
+kubectl port-forward svc/monitoring-kube-prometheus-prometheus -n capact-system 9090
 ```
 
 Now can open your browser at http://localhost:9090. In the Prometheus dashboard, you can query on the metrics, see all the predefined alerts and Prometheus targets.
@@ -358,7 +358,7 @@ Now can open your browser at http://localhost:9090. In the Prometheus dashboard,
 Forward the Grafana server to your localhost: 
 
 ```bash
-kubectl port-forward svc/monitoring-grafana -n monitoring 3000:80
+kubectl port-forward svc/monitoring-grafana -n capact-system 3000:80
 ```
 
 

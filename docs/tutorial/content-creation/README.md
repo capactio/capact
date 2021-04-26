@@ -647,7 +647,7 @@ This can take a few minutes. We disabled the populator sidecar in OCH public, as
 
 To populate the data, you will need to first set up port-forwarding to the Neo4j database service:
 ```
-kubectl port-forward -n neo4j svc/neo4j-neo4j 7474 7687
+kubectl port-forward -n capact-system svc/neo4j-neo4j 7474 7687
 ```
 
 Then populate the data, with the populator:
@@ -742,7 +742,7 @@ After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be
 You can also check the status of the Action by monitoring the workflow for the Action on the Argo UI. This can give you useful information, when debugging your Action.
 To get access to the Argo UI, execute the following command to set up port-forwarding to Argo:
 ```
-kubectl port-forward -n argo svc/argo-server 2746
+kubectl port-forward -n capact-system svc/argo-server 2746
 ```
 
 Now you can access the Argo UI with your browser by opening http://127.0.0.1:2746.

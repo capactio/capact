@@ -236,16 +236,18 @@ While you can use `kubectl` to edit the ConfigMap with Policy directly, its cont
 
 2. Pass the `cluster-policy.overrides.yaml` as Helm chart values override with the `-f /path/to/cluster-policy.overrides.yaml` parameter.
 
-   1. During Capact chart installation:
+   1. During Capact installation:
+    
+   Follow the [Kubernetes installation guide](../deploy/kubernetes/README.md). While installing Capact Helm chart, provide additional overrides:
    
    ```bash
-   helm install capact ./charts/capact --create-namespace -n capact-system -f /path/to/cluster-policy.overrides.yaml
+   helm install capact ./charts/capact -n capact-system -f /path/to/cluster-policy.overrides.yaml
    ```
 
    1. During Capact chart upgrade:
 
    ```bash
-   helm upgrade capact ./charts/capact -n capact-system -f /path/to/cluster-policy.overrides.yaml
+   helm upgrade capact ./charts/capact -n capact-system --reuse-values -f /path/to/cluster-policy.overrides.yaml
    ```
 
 To read more about Capact installation and upgrade, see the [`README.md`](../deploy/kubernetes/charts/argo/charts/argo/README.md) document of the Capact deployment.

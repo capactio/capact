@@ -100,8 +100,8 @@ To access Neo4j Browser, follow the steps:
 1. Run the following commands:
 
 ```bash
-kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
-kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
+kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
+kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
 ```
 
 1. Navigate to [http://localhost:7474](http://localhost:7474).

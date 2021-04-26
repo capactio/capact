@@ -63,7 +63,7 @@ spec:
           imagePullPolicy: {{ .Values.postInstallTypeInstanceJob.image.pullPolicy }}
           env:
             - name: HELM_RELEASES_NS_LOOKUP
-              value: "{{ .Release.Namespace }},argo,ingress-nginx,kubed,neo4j,monitoring"
+              value: "{{ .Release.Namespace }}"
             - name: HELM_REPOSITORY_PATH
               value: "https://capactio-awesome-charts.storage.googleapis.com"
             - name: CAPACT_RELEASE_NAME

@@ -88,7 +88,7 @@ index 583d6fd7..0ea36620 100644
 
 You can also use the pre-built controller image for that:
 ```
-kubectl -n argo set image deployment/argo-workflow-controller controller=gcr.io/projectvoltron/argo/workflow-controller:rendering-poc
+kubectl -n capact-system set image deployment/argo-workflow-controller controller=gcr.io/projectvoltron/argo/workflow-controller:rendering-poc
 ```
 
 ## Usage

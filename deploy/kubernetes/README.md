@@ -13,6 +13,12 @@ Before you begin, make sure you have the following tools installed:
 
 To install Capact, run the following steps:
 
+1. Create dedicated namespace:
+   
+   ```bash
+   kubectl create namespace capact-system
+   ```
+   
 1. Install Capact Custom Resource Definitions:
     
    ```bash
@@ -22,13 +28,13 @@ To install Capact, run the following steps:
 1. Install NGINX Ingress Controller:
     
     ```bash
-   helm install ingress-nginx ./ingress-nginx --create-namespace -n ingress-nginx
+   helm install ingress-nginx ./ingress-nginx -n capact-system
    ```
 
 1. Install Argo Workflow:
 
     ```bash
-   helm install argo ./argo --create-namespace -n argo
+   helm install argo ./argo -n capact-system
    ```
 
 1. **[Optional]** To run Argo workflows in any namespace, follow these steps:
@@ -36,19 +42,19 @@ To install Capact, run the following steps:
     1. Install kubed:
 
         ```bash
-        helm install kubed ./charts/kubed --create-namespace -n kubed 
+        helm install kubed ./charts/kubed -n capact-system 
         ``` 
    
    1. Annotate Minio secret to synchronize it to all namespaces:
        
        ```bash
-       kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync=""
+       kubectl annotate secret -n capact-system argo-minio kubed.appscode.com/sync=""
        ```
 
 1. **[Optional]** Install monitoring stack:
 
     ```bash
-    helm install monitoring ./charts/monitoring --create-namespace -n monitoring
+    helm install monitoring ./charts/monitoring -n capact-system
     ```
    
     > **NOTE:** This command installs the Prometheus and Grafana with default Kubernetes metrics exporters and Grafana dashboards.
@@ -58,7 +64,7 @@ To install Capact, run the following steps:
 1. Install Capact Helm chart:
     
     ```bash
-    helm install capact ./charts/capact --create-namespace -n capact-system
+    helm install capact ./charts/capact -n capact-system
     ```
 
 ## Upgrade
@@ -95,11 +101,16 @@ To upgrade Capact installation, do the following steps:
 
 To uninstall Capact, follow the steps:
 
-1. Uninstall Capact Helm chart:
+1. Uninstall Capact Helm charts:
     
     ```bash
-    helm uninstall capact -n capact-system
+    helm uninstall -n capact-system $(helm list -q -n capact-system)
     ```
+1. Delete Capact namespace:
+
+   ```bash
+   kubectl delete namespace capact-system
+   ```
 
 1. Delete all Capact Custom Resource Definitions:
     

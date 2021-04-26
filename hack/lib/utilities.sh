@@ -261,6 +261,9 @@ capact::install_upgrade::charts() {
     shout "- Applying Capact CRDs..."
     kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
 
+    shout "- Creating Capact Namespace..."
+    kubectl create namespace "${CAPACT_NAMESPACE}" --dry-run=client -oyaml | kubectl apply -f -
+
     capact::install_upgrade::neo4j
 
     capact::install_upgrade::ingress_controller
@@ -310,7 +313,6 @@ capact::install_upgrade::charts() {
     # shellcheck disable=SC2086
     helm upgrade "${CAPACT_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/capact" \
         --install \
-        --create-namespace \
         --namespace="${CAPACT_NAMESPACE}" \
         --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
         --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
@@ -327,8 +329,7 @@ capact::install_upgrade::monitoring() {
     shout "- Installing monitoring Helm chart [wait: false]..."
     helm upgrade monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
         --install \
-        --create-namespace \
-        --namespace="monitoring"
+        --namespace="${CAPACT_NAMESPACE}"
 }
 
 capact::install_upgrade::kubed() {
@@ -336,8 +337,7 @@ capact::install_upgrade::kubed() {
     shout "- Installing kubed Helm chart [wait: false]..."
     helm upgrade kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
         --install \
-        --create-namespace \
-        --namespace="kubed"
+        --namespace="${CAPACT_NAMESPACE}"
 }
 
 capact::install_upgrade::neo4j() {
@@ -352,13 +352,12 @@ capact::install_upgrade::neo4j() {
 
     helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
         --install \
-        --create-namespace \
-        --namespace="neo4j" \
+        --namespace="${CAPACT_NAMESPACE}" \
         -f "${NEO4J_RESOURCE_OVERRIDES}" \
         --wait
 
     echo -e "\n- Waiting for Neo4j database to be ready...\n"
-    kubectl wait --namespace neo4j \
+    kubectl wait --namespace "${CAPACT_NAMESPACE}" \
       --for=condition=ready pod \
       --selector=app.kubernetes.io/component=core \
       --timeout=300s
@@ -387,14 +386,13 @@ capact::install_upgrade::ingress_controller() {
     # shellcheck disable=SC2086
     helm upgrade ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
         --install \
-        --create-namespace \
-        --namespace="ingress-nginx" \
+        --namespace="${CAPACT_NAMESPACE}" \
         -f "${INGRESS_CTRL_OVERRIDES}" \
         ${CUSTOM_NGINX_SET_FLAGS:-} \
         --wait
 
     echo -e "\n- Waiting for Ingress Controller to be ready...\n"
-    kubectl wait --namespace ingress-nginx \
+    kubectl wait --namespace "${CAPACT_NAMESPACE}" \
       --for=condition=ready pod \
       --selector=app.kubernetes.io/component=controller \
       --timeout=90s
@@ -406,8 +404,7 @@ capact::install_upgrade::argo() {
 
     helm upgrade argo "${K8S_DEPLOY_DIR}/charts/argo" \
         --install \
-        --create-namespace \
-        --namespace="argo"
+        --namespace="${CAPACT_NAMESPACE}"
 }
 
 capact::install_upgrade::cert_manager() {
@@ -423,15 +420,14 @@ capact::install_upgrade::cert_manager() {
     # shellcheck disable=SC2086
     helm upgrade cert-manager "${K8S_DEPLOY_DIR}/charts/cert-manager" \
         --install \
-        --create-namespace \
-        --namespace="cert-manager" \
+        --namespace="${CAPACT_NAMESPACE}" \
         -f "${values_overrides}" \
         ${CUSTOM_CERT_MANAGER_SET_FLAGS:-}
 }
 
 capact::synchronize::minio_secret() {
   echo "Annotating Minio secret to be synchronized across all namespaces..."
-  kubectl annotate secret -n argo argo-minio kubed.appscode.com/sync="" --overwrite
+  kubectl annotate secret -n "${CAPACT_NAMESPACE}" argo-minio kubed.appscode.com/sync="" --overwrite
 }
 
 # Updates /etc/hosts with all Capact subdomains.
