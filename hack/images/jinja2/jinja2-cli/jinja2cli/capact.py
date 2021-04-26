@@ -1,5 +1,6 @@
 import string
 import random
+from base64 import b64decode, b64encode
 
 from jinja2.runtime import Undefined, missing
 
@@ -56,4 +57,4 @@ def random_word(length: int = 10) -> str:
     return random_string(letters=string.ascii_lowercase, length=length)
 
 
-ALL = [random_string, random_word]
+ALL = [random_string, random_word, b64encode, b64decode]

@@ -1,0 +1,44 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.aws.elasticsearch
+  name: provision
+  displayName: "Provision"
+  description: "Provisioning of AWS Elasticsearch"
+  documentationURL: https://aws.amazon.com/elasticsearch-service/
+  supportURL: https://aws.amazon.com/elasticsearch-service/
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.aws.elasticsearch.provision-input",
+                  "revision": "0.1.0"
+                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+            }
+  output:
+    typeInstances:
+      elasticsearch:
+        typeRef:
+          path: cap.type.analytics.elasticsearch.config
+          revision: 0.1.0
+      elasticsearch-domain:
+        typeRef:
+          path: cap.type.aws.elasticsearch.domain
+          revision: 0.1.0
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
