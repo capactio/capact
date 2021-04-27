@@ -45,8 +45,7 @@ spec:
                 - name: render
                   path: "/render.yml"
             container:
-              image: gcr.io/projectvoltron/infra/jinja2:cp-375
-              imagePullPolicy: Always
+              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-257
               args:
                 - /template.yml 
                 - /values.yml 

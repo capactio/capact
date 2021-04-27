@@ -76,7 +76,7 @@ def random_password(length: int = 10, numbers=True,
         pwlist += [random.choice(_punctuation)]
 
     to_fill = length - numbers - lowercase - uppercase - special
-    pwlist = [random.choice(chars) for i in range(to_fill)]
+    pwlist += [random.choice(chars) for i in range(to_fill)]
 
     random.shuffle(pwlist)
     return ''.join(pwlist)

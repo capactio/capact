@@ -75,7 +75,7 @@ spec:
             outputs:
               artifacts:
                 - name: elasticsearch
-                  from: "{{steps.fill-secret-name-in-elasticsearch-ti.outputs.artifacts.render}}"
+                  from: "{{steps.fill-secret-in-es-ti.outputs.artifacts.render}}"
                 - name: elasticsearch_domain
                   from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
             steps:
@@ -106,7 +106,7 @@ spec:
                     artifacts:
                       - name: manifest
                         from: "{{steps.render-secret-manifest.outputs.artifacts.render}}"
-              - - name: decode-elasticsearch-creds
+              - - name: decode-es-creds
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -361,7 +361,7 @@ spec:
                                 availability_zones: "{{ .vpc_options_availability_zones }}"
                                 elasticsearch_version: "{{ .elasticsearch_version }}"
 
-              - - name: fill-aws-params-in-module-args
+              - - name: fill-aws-params
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -374,14 +374,14 @@ spec:
                           data: |
                             prefix: aws
 
-              - - name: fill-secret-name-in-helm-args
+              - - name: fill-secret-in-helm
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-aws-params.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{steps.decode-elasticsearch-creds.outputs.artifacts.render}}"
+                        from: "{{steps.decode-es-creds.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |
@@ -397,11 +397,11 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-secret-name-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-secret-in-helm.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
-              - - name: create-elasticsearch-ti
+              - - name: create-es-ti
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -420,7 +420,7 @@ spec:
                             port: 443
                             basicAuthSecretName: "<@ basicAuth.metadata.name @>"
 
-              - - name: fill-secret-name-in-elasticsearch-ti
+              - - name: fill-secret-in-es-ti
                   capact-action: jinja2.template
                   capact-outputTypeInstances:
                     - name: elasticsearch
@@ -428,7 +428,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.create-elasticsearch-ti.outputs.artifacts.render}}"
+                        from: "{{steps.create-es-ti.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-basic-auth-secret.outputs.artifacts.manifest}}"
                       - name: configuration
