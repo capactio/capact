@@ -25,11 +25,11 @@ This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (A
 
 - S3 bucket for the remote Terraform state file
 - AWS account with **AdministratorAccess** permissions on it
-- [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
 - A domain name for the Capact installation
-
+- [Terraform](https://www.terraform.io/downloads.html) 0.15 or newer
+- [AWS CLI v2](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+  
 To configure the AWS CLI follow [this](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html) guide.
-
 If you use AWS SSO on your account, then you can also configure SSO for AWS CLI instead of creating an IAM user. [This page](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) shows how to configure AWS CLI with AWS SSO.
 
 ## Installation
@@ -91,6 +91,27 @@ If you use AWS SSO on your account, then you can also configure SSO for AWS CLI 
   }
   ```
 
+1. Wait for the DNS propagation.
+1. Verify if the Cert Manager issued a certificate for Gateway.
+
+  Run:
+
+  ```bash
+  kubectl get secret -n capact-system gateway-tls
+  ```
+
+  If there is no such Secret resource, see the logs of Cert Manager controller:
+  
+  ```bash
+  kubectl logs -l=app.kubernetes.io/component=controller -n cert-manager
+  ```
+  
+  Cert Manager may have difficulties to detect the updated nameservers. To solve this, kill the pod: 
+  
+  ```bash
+  kubectl delete pod -l=app.kubernetes.io/component=controller -n cert-manager
+  ```
+
 ## Access API server from the bastion host
 
 The bastion hosts has `kubectl` preinstalled and `kubeconfig` configured to the EKS cluster API server. SSH to the bastion using the following command from:
@@ -105,9 +126,7 @@ kubectl get nodes
 
 ## Use Capact CLI from the bastion host
 
-The bastion host can access the Capact gateway and has `capectl` preinstalled.
-
-> **NOTE**: The current version of the released capectl does not support Gateway API. You have to build it from the source and upload to the bastion host.
+The bastion host can access the Capact gateway and has Capact CLI preinstalled, along with `kubectl`, Argo and Helm binaries.
 
 1. SSH to the bastion host:
   ```bash
@@ -117,23 +136,23 @@ The bastion host can access the Capact gateway and has `capectl` preinstalled.
 1. Get the address and credentials to the Capact Gateway:
   ```bash
   # get the gateway address
-  kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}'
+  export CAPACT_GATEWAY_HOST=$(kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}')
 
   # get the gateway username
-  kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}'
+  export CAPACT_GATEWAY_USERNAME=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}')
 
   # get the gateway password
-  kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}'
+  export CAPACT_GATEWAY_PASSWORD=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}')
   ```
 
 1. Login to the cluster:
   ```bash
-  capectl login {gateway-address}
+  capact login "https://${CAPACT_GATEWAY_HOST}" -u "${CAPACT_GATEWAY_USERNAME}" -p "${CAPACT_GATEWAY_PASSWORD}"
   ```
 
 1. Verify, if you can query the Capact Gateway and list all Interfaces in the OCH:
   ```bash
-  capectl hub interfaces search
+  capact hub interfaces search
   ```
 
 ## Connect to Capact Gateway from local machine

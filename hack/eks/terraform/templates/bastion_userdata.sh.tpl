@@ -26,7 +26,7 @@ chmod +x /usr/local/bin/kubectl
 kubectl version --client
 
 # enable kubectl autocompletion and set aliases
-cat <<EOT >> /home/ubuntu/.bashrc
+cat <<EOT >> /home/${capact_user}/.bashrc
 source <(kubectl completion bash)
 alias k=kubectl
 alias kc=kubectl
