@@ -292,7 +292,7 @@ spec:
                                   enabled: <@ input.bitbucket.clustering.enabled | default(false) @>
 
                                 elasticSearch:
-                                  baseUrl: http://<@ elastic.host @>:<@ elastic.port @>
+                                  baseUrl: <@ elastic.protocol @>://<@ elastic.host @>:<@ elastic.port @>
                                   credentials:
                                     secretName: <@ elastic.basicAuthSecretName @>
                                     usernameSecreyKey: "username"

@@ -8,6 +8,11 @@ output "domain_id" {
   value       = module.main.domain_id
 }
 
+output "domain_name" {
+  description = "Unique identifier for the domain"
+  value       = var.domain_name
+}
+
 output "endpoint" {
   description = "Domain-specific endpoint used to submit index, search, and data upload requests"
   value       = module.main.endpoint

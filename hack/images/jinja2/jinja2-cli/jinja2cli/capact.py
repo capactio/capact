@@ -1,8 +1,10 @@
 import string
 import random
-from base64 import b64decode, b64encode
+import base64
 
 from jinja2.runtime import Undefined, missing
+
+_punctuation = r"""!"#$%&()*+,-./:;<=>?@[\]^_{|}~"""
 
 
 class UndefinedDict:
@@ -49,6 +51,37 @@ def random_string(letters: str = "", length: int = 10) -> str:
     return "".join(random.choices(letters, k=length))
 
 
+def random_password(length: int = 10, numbers=True,
+                    lowercase=True, uppercase=True, special=True) -> str:
+    """
+    random_password generates a random password with a given length
+    and requirements.
+    It ensures at least one character from the selected groups
+    will be present in the generated password
+    """
+    chars = ""
+    pwlist = []
+
+    if numbers:
+        chars += string.digits
+        pwlist += [random.choice(string.digits)]
+    if lowercase:
+        chars += string.ascii_lowercase
+        pwlist += [random.choice(string.ascii_lowercase)]
+    if uppercase:
+        chars += string.ascii_uppercase
+        pwlist += [random.choice(string.ascii_uppercase)]
+    if special:
+        chars += _punctuation
+        pwlist += [random.choice(_punctuation)]
+
+    to_fill = length - numbers - lowercase - uppercase - special
+    pwlist = [random.choice(chars) for i in range(to_fill)]
+
+    random.shuffle(pwlist)
+    return ''.join(pwlist)
+
+
 def random_word(length: int = 10) -> str:
     """
     random word generates random word of the given length using only
@@ -57,4 +90,13 @@ def random_word(length: int = 10) -> str:
     return random_string(letters=string.ascii_lowercase, length=length)
 
 
-ALL = [random_string, random_word, b64encode, b64decode]
+def b64encode(s: str) -> str:
+    return base64.b64encode(s.encode()).decode()
+
+
+def b64decode(s: str) -> str:
+    return base64.b64decode(s).decode()
+
+
+GLOBALS = [random_string, random_word, random_password]
+FILTERS = [b64decode, b64encode]

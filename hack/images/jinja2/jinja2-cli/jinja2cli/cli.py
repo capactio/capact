@@ -243,7 +243,10 @@ def render(template_path, data, extensions, filters, strict=False):
         filter = import_string(filter)
         env.filters[filter.__name__] = filter
 
-    for vf in capact.ALL:
+    for fltr in capact.FILTERS:
+        env.filters[fltr.__name__] = fltr
+
+    for vf in capact.GLOBALS:
         env.globals[vf.__name__] = vf
 
     return env.get_template(os.path.basename(template_path)).render(data)
