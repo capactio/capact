@@ -12,15 +12,26 @@ unzip awscliv2.zip
 
 rm -rf awscliv2.zip aws
 
-# download capectl
-curl --fail -Lo /usr/local/bin/capectl https://storage.googleapis.com/projectvoltron_ocftool/${capectl_version}/ocftool-linux-amd64
-chmod +x /usr/local/bin/capectl
-capectl --version
+# download capact
+curl --fail -Lo /usr/local/bin/capact https://storage.googleapis.com/projectvoltron_ocftool/${capact_cli_version}/ocftool-linux-amd64
+chmod +x /usr/local/bin/capact
+capact --version
+
+# enable capact autocompletion
+echo "source <(capact completion bash)" >> /home/${capact_user}/.bashrc
 
 # download kubectl
 curl --fail -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
 chmod +x /usr/local/bin/kubectl
 kubectl version --client
+
+# enable kubectl autocompletion and set aliases
+cat <<EOT >> /home/${capact_user}/.bashrc
+source <(kubectl completion bash)
+alias k=kubectl
+alias kc=kubectl
+complete -F __start_kubectl k
+EOT
 
 # download helm
 curl --fail -Lo helm.tar.gz "https://get.helm.sh/helm-v3.5.3-linux-amd64.tar.gz"
@@ -28,3 +39,16 @@ tar xfz helm.tar.gz
 cp linux-amd64/helm /usr/local/bin
 rm -rf helm.tar.gz linux-amd64
 helm version
+
+# enable helm autocompletion
+echo "source <(helm completion bash)" >> /home/${capact_user}/.bashrc
+
+# download argo
+curl -sLO "https://github.com/argoproj/argo/releases/download/v2.12.11/argo-linux-amd64.gz"
+gunzip argo-linux-amd64.gz
+chmod +x argo-linux-amd64
+mv ./argo-linux-amd64 /usr/local/bin/argo
+argo version
+
+# enable argo autocompletion
+echo "source <(argo completion bash)" >> /home/${capact_user}/.bashrc

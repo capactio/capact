@@ -81,7 +81,12 @@ variable "domain_name" {
   description = "Domain, under which this Capact installation will be available, e.g. 'capact.my-domain.com'"
 }
 
-variable "capectl_version" {
-  default = "v0.2.1"
-  description = "Version of the capectl binary, installed on the bastion host"
+variable "capact_cli_version" {
+  default = "v0.3.0"
+  description = "Version of the Capact CLI binary, installed on the bastion host"
+}
+
+variable "efs_enabled" {
+  default = false
+  description = "Enables EFS storage configuration for EKS cluster"
 }

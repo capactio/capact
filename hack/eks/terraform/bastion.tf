@@ -40,8 +40,11 @@ module "ec2_bastion" {
   name          = "${var.namespace}-bastion"
   key_name      = module.bastion_key_pair.key_name
   instance_type = "t3a.micro"
+
+  ssh_user = local.bastion_ssh_user
   user_data_base64 = base64encode(templatefile("templates/bastion_userdata.sh.tpl", {
-    capectl_version = var.capectl_version
+    capact_cli_version = var.capact_cli_version
+    capact_user = local.bastion_ssh_user
   }))
 
   ami_filter = {
