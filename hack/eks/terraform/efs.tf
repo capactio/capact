@@ -74,20 +74,9 @@ resource "aws_iam_role_policy_attachment" "efs_csi_driver_policy_attachment" {
   policy_arn = aws_iam_policy.efs_csi_driver_policy[count.index].arn
 }
 
-resource "kubernetes_service_account" "efs_csi_driver_ctrl_sa" {
-  count = var.efs_enabled ? 1 : 0
-  metadata {
-    name = "efs-csi-controller-sa"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn": aws_iam_role.efs_csi_driver_role[count.index].arn
-    }
-  }
-}
-
 module "efs_security_group" {
   source = "terraform-aws-modules/security-group/aws"
-  version = "~> 3"
+  version = "~> 4.0"
 
   name = "${var.namespace}-efs-security-group"
   description = "Security group for EFS"
@@ -117,11 +106,26 @@ resource "aws_efs_mount_target" "eks_efs_mount" {
 
   subnet_id = local.worker_subnets[count.index]
   file_system_id = aws_efs_file_system.eks_efs[0].id
-  security_groups = [module.efs_security_group.this_security_group_id]
+  security_groups = [module.efs_security_group.security_group_id]
+}
+
+resource "kubernetes_service_account" "efs_csi_driver_ctrl_sa" {
+  count = var.efs_enabled ? 1 : 0
+  depends_on = [module.eks]
+
+  metadata {
+    name = "efs-csi-controller-sa"
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn": aws_iam_role.efs_csi_driver_role[count.index].arn
+    }
+  }
 }
 
 resource "kubernetes_storage_class" "efs_storage_class" {
   count = var.efs_enabled ? 1 : 0
+  depends_on = [module.eks]
+
   metadata {
     name = "efs-sc"
   }
