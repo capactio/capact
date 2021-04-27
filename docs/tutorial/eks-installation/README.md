@@ -179,13 +179,16 @@ Only the bastion host can access the Capact Gateway. To be able to connect to th
 1. Remove the records from the Route53 Hosted Zone from the AWS Console. Only the entries for apex SOA and NS should be left.
 
 1. Deprovision the EKS cluster and VPC.
+ 
   ```bash
   cd hack/eks/terraform
-
   # This command might fail. See "Limitations and bugs" section.
   terraform destroy -var domain_name=$CAPACT_DOMAIN_NAME
+  ```
 
-  # If the previous command failed execute the following two commands.
+  If the previous command failed execute the following commands:
+ 
+  ```bash
   terraform state rm 'module.eks.kubernetes_config_map.aws_auth[0]'
   terraform destroy -var domain_name=$CAPACT_DOMAIN_NAME
   ```

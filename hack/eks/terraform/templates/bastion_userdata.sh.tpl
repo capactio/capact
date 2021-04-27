@@ -18,7 +18,7 @@ chmod +x /usr/local/bin/capact
 capact --version
 
 # enable capact autocompletion
-echo "source <(capact completion bash)" >> ~/.bashrc
+echo "source <(capact completion bash)" >> /home/${capact_user}/.bashrc
 
 # download kubectl
 curl --fail -Lo /usr/local/bin/kubectl "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
@@ -26,7 +26,7 @@ chmod +x /usr/local/bin/kubectl
 kubectl version --client
 
 # enable kubectl autocompletion and set aliases
-cat <<EOT >> ~/.bashrc
+cat <<EOT >> /home/ubuntu/.bashrc
 source <(kubectl completion bash)
 alias k=kubectl
 alias kc=kubectl
@@ -41,7 +41,7 @@ rm -rf helm.tar.gz linux-amd64
 helm version
 
 # enable helm autocompletion
-echo "source <(helm completion bash)" >> ~/.bashrc
+echo "source <(helm completion bash)" >> /home/${capact_user}/.bashrc
 
 # download argo
 curl -sLO "https://github.com/argoproj/argo/releases/download/v2.12.11/argo-linux-amd64.gz"
@@ -51,4 +51,4 @@ mv ./argo-linux-amd64 /usr/local/bin/argo
 argo version
 
 # enable argo autocompletion
-echo "source <(argo completion bash)" >> ~/.bashrc
+echo "source <(argo completion bash)" >> /home/${capact_user}/.bashrc
