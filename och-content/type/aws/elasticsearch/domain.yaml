@@ -24,9 +24,9 @@ spec:
         "title": "The schema for AWS Elasticsearch domain",
         "examples": [
           {
-            "arn": "arn:aws:es:eu-west-1:347763108806:domain/elastic-vvqedsydpywi",
+            "arn": "arn:aws:es:eu-west-1:1234567890:domain/elastic-vvqedsydpywi",
             "availability_zones": "[]",
-            "domain_id": "347763108806/elastic-vvqedsydpywi",
+            "domain_id": "1234567890/elastic-vvqedsydpywi",
             "domain_name": "elastic-vvqedsydpywi",
             "elasticsearch_version": "7.4",
             "endpoint": "search-elastic-vvqedsydpywi-rdi5cbrbkib5gduzc4tcn57tjq.eu-west-1.es.amazonaws.com",
