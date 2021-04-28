@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2154
 
-sudo snap install yq
+sudo snap install yq --channel=v3/stable
 IP_ADDED_JOB=$(printf "%s/32" "$(curl "${GET_IP_SERVICE}")")
 AUTHORIZED=$(gcloud container clusters describe "${TF_VAR_cluster_name}" --zone "${TF_VAR_region}" |yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
 AUTHORIZED=$(echo "${AUTHORIZED}" | tr ' ' ',' | sed 's/^,//g;s/ //g')

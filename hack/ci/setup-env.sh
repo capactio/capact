@@ -3,6 +3,7 @@
 echo "Setting up CI environmental variables..."
 export NAME="dev"
 
+# LOAD_BALANCER_EXTERNAL_IP is a reserved IP in "External IP addresses" on GCP. It needs to be in the same region.
 # Remember when changing LOAD_BALANCER_EXTERNAL_IP to update record A in the Cloud DNS for gateway
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.16.2
@@ -10,14 +11,14 @@ SKIP_DEPS_INSTALLATION=false
 PROJECT_ID=projectvoltron
 RECREATE_CLUSTER_GCS_BUCKET=projectvoltron_cluster_recreate
 GET_IP_SERVICE=ifconfig.me
-TF_VAR_region=europe-west3
+TF_VAR_region=europe-west1
 TF_VAR_cluster_name=capact-${NAME}
 TF_VAR_google_compute_network_name=vpc-network-${NAME}
 TF_VAR_google_compute_subnetwork_name=subnetwork-${NAME}
 TF_VAR_node_pool_name=node-pool-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name1=gke-pods-${NAME}
 TF_VAR_google_compute_subnetwork_secondary_ip_range_name2=gke-services-${NAME}
-LOAD_BALANCER_EXTERNAL_IP=34.89.180.53
+LOAD_BALANCER_EXTERNAL_IP=34.77.136.118
 CERT_MAX_AGE=85
 CERT_NUMBER_TO_BACKUP=1
 CERT_SERVICE_NAMESPACE=capact-system

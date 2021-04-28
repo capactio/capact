@@ -1,5 +1,5 @@
 provider "google" {
-  region  = "europe-west3"
+  region  = "europe-west1"
 }
 
 variable "cluster_name" {
@@ -8,12 +8,12 @@ variable "cluster_name" {
 }
 
 variable "location" {
-  default = "europe-west3"
+  default = "europe-west1"
   type    = string
 }
 
 variable "region" {
-  default = "europe-west3"
+  default = "europe-west1"
   type    = string
 }
 
