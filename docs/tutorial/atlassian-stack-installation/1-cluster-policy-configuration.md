@@ -93,8 +93,8 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
 
 1. Update the cluster policy ConfigMap:
 
-```bash
-kubectl create configmap -n capact-system capact-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
-```
+   ```bash
+   kubectl create configmap -n capact-system capact-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
+   ```
 
-**Next steps:** Navigate back to the [main Readme](./README.md) and follow next steps.
+**Next steps:** Navigate back to the [main README](./README.md) and follow next steps.

@@ -45,4 +45,4 @@ To create Amazon Relational Database Service for PostgreSQL, follow the steps:
     
    Note the `postgresql` TypeInstance ID, as it will be used for Atlassian application installation.
 
-**Next steps:** Navigate back to the [main Readme](./README.md) and follow next steps.
+**Next steps:** Navigate back to the [main README](./README.md) and follow next steps.
