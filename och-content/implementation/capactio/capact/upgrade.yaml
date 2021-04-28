@@ -160,7 +160,7 @@ spec:
                   arguments:
                     parameters:
                       - name: namespace
-                        value: 'neo4j'
+                        value: 'capact-system'
                       - name: selector
                         value: 'app.kubernetes.io/component=core'
                       - name: timeout
@@ -181,7 +181,7 @@ spec:
                   arguments:
                     parameters:
                       - name: namespace
-                        value: 'ingress-nginx'
+                        value: 'capact-system'
                       - name: selector
                         value: 'app.kubernetes.io/component=controller'
                       - name: timeout
@@ -244,11 +244,13 @@ spec:
               image: bitnami/kubectl:1.18
               command: [ kubectl ]
               args: [ "apply", "-f={{inputs.parameters.crdURL}}"]
+
           - name: synchronize-minio-secret
             container:
               image: bitnami/kubectl:1.18
               command: [ kubectl ]
-              args: [ "annotate", "secret", "-n=argo", "argo-minio", 'kubed.appscode.com/sync=', "--overwrite" ]
+              args: [ "annotate", "secret", "-n=capact-system", "argo-minio", 'kubed.appscode.com/sync=', "--overwrite" ]
+
           - name: wait-for-ready-pod
             inputs:
               parameters:

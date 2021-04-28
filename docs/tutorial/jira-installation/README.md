@@ -224,7 +224,7 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     By default, the Argo UI doesn't have a dedicated Ingress. You need to port-forward the Service to your local machine: 
     
     ```bash
-    kubectl -n argo port-forward svc/argo-server 2746
+    kubectl -n capact-system port-forward svc/argo-server 2746
     ```
    
     Navigate to [http://localhost:2746](http://localhost:2746) to open Argo UI, and check the currently running `jira-install` workflow.

@@ -191,7 +191,7 @@ This guide explains how to deploy Capact on a cluster using your own domain.
    As the previous step created a LoadBalancer, you now need to create a DNS record for its external IP. 
    
    ```bash
-   export EXTERNAL_PUBLIC_IP=$(kubectl get service ingress-nginx-controller -n ingress-nginx -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
+   export EXTERNAL_PUBLIC_IP=$(kubectl get service ingress-nginx-controller -n capact-system -o jsonpath="{.status.loadBalancer.ingress[0].ip}")
    gcloud dns --project=$GCP_PROJECT record-sets transaction start --zone=$DNS_ZONE
    gcloud dns --project=$GCP_PROJECT record-sets transaction add $EXTERNAL_PUBLIC_IP --name=\*.$DOMAIN. --ttl=60 --type=A --zone=$DNS_ZONE
    gcloud dns --project=$GCP_PROJECT record-sets transaction execute --zone=$DNS_ZONE

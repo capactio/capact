@@ -47,9 +47,9 @@ EOF
 RUNNER_CONTEXT_PATH=/tmp/argo-runner-context.yaml RUNNER_ARGS_PATH=cmd/argo-runner/example-args.yaml RUNNER_LOGGER_DEV_MODE=true go run cmd/argo-runner/main.go
 ```
 
-You can check the workflow status in Argo UI on http://localhost:2746 after setting port-forwarding:
+You can check the workflow status in Argo UI on [http://localhost:2746](http://localhost:2746) after setting port-forwarding:
 ```bash
-kubectl port-forward -n argo svc/argo-server 2746
+kubectl port-forward -n capact-system svc/argo-server 2746
 ```
 
 ## Configuration

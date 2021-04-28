@@ -54,13 +54,14 @@ The following tools are required:
     
     ```bash
     HOST=`kubectl -n capact-system get ingress capact-gateway -o go-template --template="{{ (index .spec.rules 0).host }}"`
+    USERNAME=`helm -n capact-system get values capact --all -o json | jq .global.gateway.auth.username -r`
     PASSWORD=`helm -n capact-system get values capact --all -o json | jq .global.gateway.auth.password -r`
     ```
 
     then configure `capectl`
 
     ```bash
-    capectl login "https://${HOST}" -u graphql -p ${PASSWORD}
+    capectl login "https://${HOST}" -u ${USERNAME} -p ${PASSWORD}
     capectl config set-context https://${HOST}
     ```
 
@@ -178,10 +179,10 @@ Here we are simulating scenario when Kubernetes lost a connection to one of the 
    kubectl get pod -o wide
    ```
 
-1. Make sure that the pod running in the `public-ingress-nginx` namespace is not running on the same nodes as RocketChat.
+1. Make sure that the pod with `public-ingress-nginx` prefix is not running on the same nodes as RocketChat.
 
    ```bash
-   kubectl -n public-ingress-nginx get pod -o wide
+   kubectl -n capact-system get pod -o wide
    ```
 
 1. Get a list of nodes where RocketChat pods are running:

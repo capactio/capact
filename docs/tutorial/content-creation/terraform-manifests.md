@@ -17,14 +17,14 @@ Terraform Runner internally uses [go-getter](https://github.com/hashicorp/go-get
 To use Minio to upload modules, enable port forward:
 
 ```shell
-kubectl -n argo port-forward svc/argo-minio --address 0.0.0.0 9000:9000
+kubectl -n capact-system port-forward svc/argo-minio --address 0.0.0.0 9000:9000
 ```
 
 Using MinIO client, configure the access:
 
 ```shell
-SECRETKEY=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.secretkey}' | base64 --decode)
-ACCESSKEY=$(kubectl  -n argo get secret argo-minio -o jsonpath='{.data.accesskey}' | base64 --decode)
+SECRETKEY=$(kubectl  -n capact-system get secret argo-minio -o jsonpath='{.data.secretkey}' | base64 --decode)
+ACCESSKEY=$(kubectl  -n capact-system get secret argo-minio -o jsonpath='{.data.accesskey}' | base64 --decode)
 
 mc alias set minio http://localhost:9000 ${ACCESSKEY} ${SECRETKEY}
 ```

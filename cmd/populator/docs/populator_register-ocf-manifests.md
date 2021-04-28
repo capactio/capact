@@ -26,8 +26,8 @@ To be able to use it locally when Capact is running in a Kubernetes cluster, two
 be forwarded:
 
 ```shell
-kubectl -n neo4j port-forward svc/neo4j-neo4j 7687:7687
-kubectl -n neo4j port-forward svc/neo4j-neo4j 7474:7474
+kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
+kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 ```
 
 

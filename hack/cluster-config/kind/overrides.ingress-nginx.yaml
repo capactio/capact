@@ -20,7 +20,7 @@ ingress-nginx:
       enabled: false
     extraArgs:
       publish-status-address: localhost
-      default-ssl-certificate: ingress-nginx/default-ssl-cert
+      default-ssl-certificate: capact-system/default-ssl-cert
     config:
       ssl-redirect: "true"
       force-ssl-redirect: "true" # To enable HTTPS redirect with default SSL certificate

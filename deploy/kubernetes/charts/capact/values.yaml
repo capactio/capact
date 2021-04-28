@@ -7,7 +7,7 @@ global:
   domainName: "dev.cluster.projectvoltron.dev"
 
   database:
-    endpoint: bolt://neo4j-neo4j.neo4j:7687
+    endpoint: bolt://neo4j-neo4j:7687
     username: neo4j
     password: okon
 
