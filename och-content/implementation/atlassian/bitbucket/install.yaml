@@ -24,12 +24,12 @@ spec:
         typeRef:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
-        verbs: [ "get" ]
+        verbs: ["get"]
       elasticsearch:
         typeRef:
           path: cap.type.analytics.elasticsearch.config
           revision: 0.1.0
-        verbs: [ "get" ]
+        verbs: ["get"]
 
   outputTypeInstanceRelations:
     bitbucket-config:
@@ -87,7 +87,6 @@ spec:
       workflow:
         entrypoint: bitbucket-install
         templates:
-
           - name: bitbucket-install
             inputs:
               artifacts:
@@ -220,7 +219,7 @@ spec:
                       - name: input-parameters
                         raw:
                           data: |
-                            replicas: 1
+
                   capact-outputTypeInstances:
                     - name: elasticsearch
                       from: elasticsearch
@@ -292,7 +291,7 @@ spec:
                                   enabled: <@ input.bitbucket.clustering.enabled | default(false) @>
 
                                 elasticSearch:
-                                  baseUrl: http://<@ elastic.host @>:<@ elastic.port @>
+                                  baseUrl: <@ elastic.protocol @>://<@ elastic.host @>:<@ elastic.port @>
                                   credentials:
                                     secretName: <@ elastic.basicAuthSecretName @>
                                     usernameSecreyKey: "username"
@@ -496,7 +495,7 @@ spec:
                   path: "/tmp/manifest.yaml"
             script:
               image: bitnami/kubectl:1.18
-              command: [ bash ]
+              command: [bash]
               source: |
                 # Checking if manifest is not empty
                 if grep -q '[^[:space:]]' "{{inputs.artifacts.manifest.path}}"; then

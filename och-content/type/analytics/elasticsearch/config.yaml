@@ -28,7 +28,8 @@ spec:
             "version",
             "host",
             "basicAuthSecretName",
-            "port"
+            "port",
+            "protocol"
         ],
         "$ocfRefs": {
           "semVer": {
@@ -47,6 +48,9 @@ spec:
         "properties": {
           "version": {
             "$ref": "#/$ocfRefs/semVer"
+          },
+          "protocol": {
+            "type": "string"
           },
           "host": {
             "$ref": "#/$ocfRefs/hostname"

@@ -120,6 +120,7 @@ spec:
                                 port: "{{ .Values.httpPort }}"
                               <% endif %>
                                 basicAuthSecretName: <@ metadata.name @>
+                                protocol: "http"
                             values:
                               imageTag: 7.4.1
                               replicas: <@ replicas | default('3')@>
