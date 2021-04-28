@@ -1,4 +1,4 @@
-# 3. Install Bitbucket
+# 4. Install Bitbucket
 
 Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-content/interface/productivity/bitbucket/install.yaml) on Kubernetes with the existing PostgreSQL instance.
 
@@ -11,7 +11,7 @@ Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-con
     >**NOTE**: Use the PostgreSQL TypeInstance ID from the [Provision AWS RDS for PostgreSQL](./2-aws-rds-provisioning.md) tutorial.
 
    ```bash
-   export DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
+   export CAPACT_DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
    export LICENSE_KEY_BASE64=$(/bin/cat license.txt | base64 )
    export POSTGRESQL_TI_ID={ti_id} 
    ``` 
@@ -27,7 +27,7 @@ Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-con
     replicaCount: 2
     
     ingress:
-      host: bitbucket.${DOMAIN_NAME}
+      host: bitbucket.${CAPACT_DOMAIN_NAME}
     
     bitbucket:
       # -- The Bitbucket license key.

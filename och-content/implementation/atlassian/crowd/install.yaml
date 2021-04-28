@@ -202,7 +202,7 @@ spec:
                               securityContext:
                                 readOnlyRootFilesystem: <@ input.securityContext.readOnlyRootFilesystem | default(false | tojson) @>
                                 runAsNonRoot: <@ input.securityContext.runAsNonRoot | default(false | tojson) @>
-                                runAsUser: <@ input.securityContext.runAsUser | default(2004) @>
+                                runAsUser: <@ input.securityContext.runAsUser | default(0) @>
 
                               ## ref: https://kubernetes.io/docs/concepts/services-networking/service/
                               service:
