@@ -214,7 +214,7 @@ formats = {
 }
 
 
-def render(template_path, data, extensions, filters, strict=False):
+def render(template_path, data, extensions, filters=None, strict=False):
     from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
     env = Environment(
@@ -239,9 +239,9 @@ def render(template_path, data, extensions, filters, strict=False):
     if filters:
         from jinja2.utils import import_string
 
-    for filter in set(filters):
-        filter = import_string(filter)
-        env.filters[filter.__name__] = filter
+        for filter in set(filters):
+            filter = import_string(filter)
+            env.filters[filter.__name__] = filter
 
     for fltr in capact.FILTERS:
         env.filters[fltr.__name__] = fltr

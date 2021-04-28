@@ -83,7 +83,7 @@ spec:
                           data: |
                             domain_name: "elastic-<@ random_word(length=12) @>"
                             region: "eu-west-1"
-                            cluster_config_instance_count: <@ replicas | default(2) @>
+                            cluster_config_instance_count: <@ replicas | default(3) @>
 
               - - name: provision
                   capact-action: elasticsearch.provision

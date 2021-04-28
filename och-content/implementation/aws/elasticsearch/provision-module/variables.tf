@@ -40,7 +40,7 @@ variable "advanced_security_options_internal_user_database_enabled" {
 }
 
 variable "advanced_security_options_master_user_arn" {
-  description = "ARN for the master user. Only specify if `internal_user_database_enabled` is not set or set to `false`)"
+  description = "ARN for the master user. Only specify if `internal_user_database_enabled` is not set or set to `false`"
   type        = string
   default     = null
 }
@@ -121,7 +121,7 @@ variable "ebs_options_volume_type" {
 }
 
 variable "ebs_options_volume_size" {
-  description = "The size of EBS volumes attached to data nodes (in GB). Required if ebs_enabled is set to true"
+  description = "The size of EBS volumes attached to data nodes (in GB). Required if ebs_enabled is set to `true`."
   type        = number
   default     = 10
 }
@@ -180,7 +180,7 @@ variable "cluster_config_instance_type" {
 variable "cluster_config_instance_count" {
   description = "Number of instances in the cluster"
   type        = number
-  default     = 2
+  default     = 3
 }
 
 variable "cluster_config_dedicated_master_enabled" {
