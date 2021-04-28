@@ -34,29 +34,28 @@ module "eks" {
 
   manage_aws_auth = true
   map_roles = [{
-    rolearn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ec2_bastion.role}"
+    rolearn  = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${module.ec2_bastion.role}"
     username = "bastion"
-    groups = ["system:masters"]
+    groups   = ["system:masters"]
   }]
   enable_irsa = true
 
   write_kubeconfig = false
 
-  kubeconfig_aws_authenticator_command = "aws"
+  kubeconfig_aws_authenticator_command      = "aws"
   kubeconfig_aws_authenticator_command_args = ["eks", "get-token", "--cluster-name", local.eks_cluster_name]
 
   workers_additional_policies = [
     aws_iam_policy.eks_worker_write_logs.id
   ]
-  worker_groups = [
-    {
-      instance_type        = var.worker_group_instance_type
-      asg_max_size         = var.worker_group_max_size
-      asg_desired_capacity = var.worker_group_max_size
-      root_volume_type     = "gp2"
-      subnets              = local.worker_subnets
-    }
-  ]
+
+  node_groups = [{
+    max_capacity     = var.worker_group_max_size
+    desired_capacity = var.worker_group_max_size
+    instance_types   = [var.worker_group_instance_type]
+    subnets          = local.worker_subnets
+    disk_size        = 50
+  }]
 
   tags = local.tags
 }
