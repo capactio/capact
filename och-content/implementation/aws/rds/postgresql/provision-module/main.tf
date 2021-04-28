@@ -28,7 +28,7 @@ data "aws_availability_zones" "available" {
 
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
-  version = "~> 2"
+  version = "~> 3.0.0"
 
   name = local.name
   cidr = "10.99.0.0/18"
@@ -52,7 +52,7 @@ module "vpc" {
 
 module "security_group" {
   source = "terraform-aws-modules/security-group/aws"
-  version = "~> 3"
+  version = "~> 4.0.0"
 
   name = local.name
   description = "PostgreSQL security group created by Capact"
@@ -108,7 +108,7 @@ module "db" {
   multi_az = var.multi_az
   subnet_ids = module.vpc.public_subnets
   vpc_security_group_ids = [
-    module.security_group.this_security_group_id]
+    module.security_group.security_group_id]
 
   maintenance_window = var.maintenance_window
   backup_window = var.backup_window
