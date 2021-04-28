@@ -10,7 +10,8 @@ resource "aws_iam_policy" "eks_worker_write_logs" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:PutRetentionPolicy"
         ]
         Effect   = "Allow"
         Resource = "*"
