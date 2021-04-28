@@ -8,7 +8,7 @@ set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
 CLUSTER_NAME=${CLUSTER_NAME:-capact-dev}
-REGION=${REGION:-europe-west3}
+REGION=${REGION:-europe-west1}
 
 usage() {
   echo "usage: manage-ip.sh add|remove"
