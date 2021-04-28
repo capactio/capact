@@ -76,7 +76,7 @@ jobs:
           OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
           USE_TEST_SETUP: "true"
         run: |
-          CUSTOM_NGINX_SET_FLAGS="--set ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
+          export CUSTOM_NGINX_SET_FLAGS="--set ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Configure Cert Manager in cluster
         run: |
