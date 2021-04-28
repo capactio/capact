@@ -1,0 +1,50 @@
+apiVersion: v1
+entries:
+  capact:
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2021-04-28T07:56:53.45103179Z"
+    dependencies:
+    - name: engine
+      repository: file://charts/engine
+      version: 0.0.1
+    - name: gateway
+      repository: file://charts/gateway
+      version: 0.0.1
+    - name: och-local
+      repository: file://charts/och-local
+      version: 0.0.1
+    - name: och-public
+      repository: file://charts/och-public
+      version: 0.0.1
+    description: It is the earlier based on `version` but older based on `created`.
+    digest: 8594fed8256701af61ca88589ab9067fe8863d4f60bc3bf0f942e5fbdde89f2f
+    name: capact
+    type: application
+    urls:
+    - https://storage.googleapis.com/capactio-master-charts/capact-0.2.0-7a347a9.tgz
+    version: 0.2.0-7a347a9
+  - apiVersion: v2
+    appVersion: 0.0.1
+    created: "2021-04-23T14:20:09.176183088Z"
+    dependencies:
+    - name: engine
+      repository: file://charts/engine
+      version: 0.0.1
+    - name: gateway
+      repository: file://charts/gateway
+      version: 0.0.1
+    - name: och-local
+      repository: file://charts/och-local
+      version: 0.0.1
+    - name: och-public
+      repository: file://charts/och-public
+      version: 0.0.1
+    description: It is the older based on `version` but earlier based on `created`.
+    digest: 95b244f04d4d64abaea0da8f5d3386c86b3d9a4a7d2948946ccdc2fe191cd3de
+    name: capact
+    type: application
+    urls:
+    - https://storage.googleapis.com/capactio-master-charts/capact-0.1.0-8a9cd65.tgz
+    version: 0.2.1
+generated: "2021-04-28T07:56:53.438217713Z"
