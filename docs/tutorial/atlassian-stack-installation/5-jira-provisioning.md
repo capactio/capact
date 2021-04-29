@@ -19,6 +19,14 @@ To create Jira, follow the steps:
       sharedHome:
         persistentVolumeClaim:
           storageClassName: efs-sc
+          resources:
+            requests:
+              storage: 10Gi
+      localHome:
+        persistentVolumeClaim:
+          resources:
+            requests:
+              storage: 10Gi
     resources:
       jvm:
         maxHeap: 2g
