@@ -4,7 +4,7 @@ import base64
 
 from jinja2.runtime import Undefined, missing
 
-_punctuation = r"""!"#$%&()*+,-./:;<=>?@[\]^_{|}~"""
+_punctuation = r"""!#$%&()*+,-.:;<=>?@[]^_{|}~"""
 
 
 class UndefinedDict:
