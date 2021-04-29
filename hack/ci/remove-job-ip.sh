@@ -5,7 +5,8 @@ sudo snap install yq --channel=v3/stable
 gcloud config set project "${PROJECT_ID}"
 AUTHORIZED=$(gcloud container clusters describe "${TF_VAR_cluster_name}" --zone "${TF_VAR_region}" \
 | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' | grep -v "${IP_ADDED_JOB}") || true
-AUTHORIZED=$(echo "${AUTHORIZED}" | tr '\n' ',' | sed 's/,$/\n/') || true
+AUTHORIZED=$(echo "${AUTHORIZED}" | tr '\n' ',' | sed 's/,$//') || true
+
 if [ -z "${AUTHORIZED}" ]
   then
     gcloud container clusters update "${TF_VAR_cluster_name}" --zone "${TF_VAR_region}" --no-enable-master-authorized-networks

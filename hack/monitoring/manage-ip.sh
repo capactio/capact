@@ -49,7 +49,7 @@ ip::remove() {
     | grep -v "${removed_ip}" || true)
   authorized=$(echo "${authorized}" \
     | tr '\n' ',' \
-    | sed 's/,$/\n/')
+    | sed 's/,$//')
 
 
   if [ -z "${authorized}" ]; then
