@@ -450,6 +450,7 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 	if err := yaml.UnmarshalStrict(data, i); err != nil {
 		return "", errors.Wrapf(err, "Index fetch from %q is malformed", url)
 	}
+
 	sortFn(i)
 
 	capactEntry, ok := i.Entries[capactName]
@@ -468,4 +469,4 @@ type ByCreatedTime repo.ChartVersions
 
 func (b ByCreatedTime) Len() int           { return len(b) }
 func (b ByCreatedTime) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b ByCreatedTime) Less(i, j int) bool { return b[i].Created.Before(b[j].Created) }
+func (b ByCreatedTime) Less(i, j int) bool { return b[i].Created.After(b[j].Created) }
