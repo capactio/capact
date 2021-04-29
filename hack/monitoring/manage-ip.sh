@@ -26,9 +26,9 @@ ip::add() {
   authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
     | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
   authorized=$(echo "${authorized}" \
-    | tr ' ' ',' \
+    | tr '\n' ',' \
     | sed 's/^,//g;s/ //g')
-  authorized=$(printf "%s,%s" "${authorized}" "${added_ip}" \
+  authorized=$(printf "%s%s" "${authorized}" "${added_ip}" \
     | sed s/^,//g)
 
   echo "Setting authorized networks to ${authorized}..."
@@ -49,7 +49,7 @@ ip::remove() {
     | grep -v "${removed_ip}" || true)
   authorized=$(echo "${authorized}" \
     | tr '\n' ',' \
-    | sed 's/,$/\n/')
+    | sed 's/,$//')
 
 
   if [ -z "${authorized}" ]; then
