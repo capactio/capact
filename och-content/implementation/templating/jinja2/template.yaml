@@ -45,10 +45,10 @@ spec:
                 - name: render
                   path: "/render.yml"
             container:
-              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-257
+              image: gcr.io/projectvoltron/pr/infra/jinja2:PR-267
               args:
-                - /template.yml 
-                - /values.yml 
+                - /template.yml
+                - /values.yml
                 - --format=yaml
                 - -o
                 - /render.yml
