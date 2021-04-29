@@ -300,8 +300,9 @@ spec:
                                 host: <@ input.ingress.host @>
                                 annotations:
                                   nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+                                  cert-manager.io/cluster-issuer: letsencrypt
                                 https: <@ input.ingress.https | default(true) @>
-                                tlsSecretName: <@ input.ingress.tlsSecretName | default("") @>
+                                tlsSecretName: confluence-server-tls-<@ random_word(length=5) @>
                               fluentd:
                                 enabled: <@ input.fluentd.enabled | default(false) @>
                                 imageName: <@ input.fluentd.imageName | default("fluent/fluentd-kubernetes-daemonset:v1.11.5-debian-elasticsearch7-1.2") @>
