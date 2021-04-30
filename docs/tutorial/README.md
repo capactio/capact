@@ -7,4 +7,4 @@ The directory contains the following tutorials:
 - [`content-creation`](./content-creation/README.md) - Describes content creation for Capact.
 - [`eks-installation`](./eks-installation/README.md) - Describes how provision an Amazon EKS cluster with Capact installed on it.
 - [`rocketchat-installation`](./rocketchat-installation/README.md) - Describes how to install RocketChat using Capact.
-- [`atlassian-stack-installation`](./atlassian-stack-installation/README.md) - Describes how to install Atlassian Stack with AWS solutions as dependencies.
+- [`productivity-stack-installation`](productivity-stack-installation/README.md) - Describes how to install a set of productivity applications using AWS solutions as dependencies.
