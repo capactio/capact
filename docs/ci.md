@@ -67,7 +67,7 @@ Steps:
 1. If [Capact Helm Charts](../deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
-1. Update the existing long-running cluster via [CLI](../cmd/ocftool/docs/ocftool_upgrade.md).
+1. Update the existing long-running cluster via [CLI](../cmd/capact/docs/capact_upgrade.md).
 1. Delete all Actions which are in the `SUCCEEDED` phase and whose names have the `capact-upgrade-` prefix. 
 1. If any step failed, send a Slack notification.
 

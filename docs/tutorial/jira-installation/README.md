@@ -41,7 +41,7 @@ The diagrams below show possible scenarios:
 
 ###  Prerequisites
 
-* [`ocftool`](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0) installed.
+* [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases) installed.
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 * GKE cluster with a fresh Capact installation. See the [installation tutorial](../capact-installation/README.md). 
 * For the scenario with Cloud SQL, Access to Google Cloud Platform.  
@@ -452,10 +452,10 @@ To make it easier to develop new OCH content, we implemented a dedicated CLI. Cu
 To validate all OCH manifests, navigate to the repository root directory and run the following command:
 
 ```bash
-ocftool validate ./och-content/**/*.yaml
+capact validate ./och-content/**/*.yaml
 ```
 
-In the future, we plan to extend the `ocftool` with additional features, such as:
+In the future, we plan to extend the Capact CLI with additional features, such as:
 - manifests scaffolding,
 - manifests submission,
 - signing manifests.

@@ -13,7 +13,7 @@
   * [Create the Type manifests](#create-the-type-manifests)
 - [Runners](#runners)
 - [Write the Implementation for the Interface](#write-the-implementation-for-the-interface)
-- [Validate the manifests using ocftool](#validate-the-manifests-using-ocftool)
+- [Validate the manifests using Capact CLI](#validate-the-manifests-using-capact-cli)
 - [Populate the manifests into OCH](#populate-the-manifests-into-och)
 - [Run your new action](#run-your-new-action)
   * [View the Action workflow in Argo UI](#view-the-action-workflow-in-argo-ui)
@@ -41,7 +41,7 @@ To develop and test the created content, you will need to have a Capact environm
 * [Docker](https://docs.docker.com/engine/install/)
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* [ocftool](https://github.com/Project-Voltron/go-voltron/releases/tag/v0.1.0)
+* [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases)
 * [populator](../../../cmd/populator/docs/populator_register-ocf-manifests.md) - For now, you need to compile it from source
 
 Also, clone the Capact repository with the current OCF content.
@@ -53,7 +53,7 @@ Some other materials worth reading before are:
 - [JIRA installation tutorial](../jira-installation/README.md) - Learn how to execute actions in Capact.
 - [Argo Workflows documentation](https://argoproj.github.io/argo-workflows/) - Capact action syntax is based on Argo workflows, so it's highly recommended you understand what is Argo and how to create Argo workflows.
 - [Capact runners](../../runner.md) - Understand, what are Capact runners.
-- [ocftool](../../../cmd/ocftool/docs/ocftool.md) - Learn how to validate your manifests syntax.
+- [Capact CLI](../../../cmd/cli/docs/capact.md) - Learn how to validate your manifests syntax.
 
 ## Types, Interfaces and Implementations
 
@@ -621,18 +621,18 @@ arguments:
 ```
 To verify, if a runner needs the context, check the **Interface** of the runner (eg. [Interface for Helm runner](../../../och-content/interface/runner/helm/run.yaml)).
 
-## Validate the manifests using ocftool
+## Validate the manifests using Capact CLI
 
-You can use the `ocftool` to validate the manifests you created. The `ocftool validate` command checks the manifests against JSON schemas and can tell you, if your manifests are correct.
+You can use the Capact CLI to validate the manifests you created. The `capact validate` command checks the manifests against JSON schemas and can tell you, if your manifests are correct.
 
-> For now the `ocftool` does not verify the content of the `action` property in **Implementations**. It will not verify, that your workflow is correct and will execute properly.
+> For now the Capact CLI does not verify the content of the `action` property in **Implementations**. It will not verify, that your workflow is correct and will execute properly.
 
 To verify all your manifests in `och-content` directory, execute:
 ```
-ocftool validate och-content/**/*.yaml
+capact validate och-content/**/*.yaml
 ```
 
-You can read more about the `ocftool` [here](../../../cmd/ocftool/README.md).
+You can read more about the Capact CLI [here](../../../cmd/cli/README.md).
 
 ## Populate the manifests into OCH
 

@@ -5,7 +5,7 @@ package examples
 import (
 	"testing"
 
-	"capact.io/capact/internal/ocftool/schema"
+	"capact.io/capact/internal/cli/schema"
 	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/stretchr/testify/require"

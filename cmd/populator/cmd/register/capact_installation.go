@@ -4,8 +4,8 @@ import (
 	"github.com/docker/cli/cli"
 	"github.com/spf13/cobra"
 
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/installation"
-	"capact.io/capact/internal/ocftool/heredoc"
 )
 
 // TODO: support configuration both via flags and environment variables

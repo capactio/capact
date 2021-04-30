@@ -77,14 +77,14 @@ To upgrade Capact installation, do the following steps:
 
    ```bash
    # {OS} - possible values: linux, darwin, windows
-   CLI_OS={OS} make build-tool-ocftool
+   CLI_OS={OS} make build-tool-cli
    ```
 
 2. Log into the cluster:
 
    ```bash
    # {OS} - same as in the first step
-   ./bin/ocftool-{OS}-amd64 login {CLUSTER_GATEWAY_URL} -u {GATEWAY_USERNAME} -p {GATEWAY_PASSWORD}
+   ./bin/capact-{OS}-amd64 login {CLUSTER_GATEWAY_URL} -u {GATEWAY_USERNAME} -p {GATEWAY_PASSWORD}
    ```
    
 3. Trigger cluster upgrade:
@@ -92,10 +92,10 @@ To upgrade Capact installation, do the following steps:
    ```bash
    # {OS} - same as in the first step
    # Upgrade Capact components to the newest available version
-   ./bin/ocftool-{OS}-amd64 upgrade
+   ./bin/capact-{OS}-amd64 upgrade
    ```
    
-   >**NOTE:** To check possible configuration options, run: `./bin/ocftool-{OS}-amd64 upgrade --help`
+   >**NOTE:** To check possible configuration options, run: `./bin/capact-{OS}-amd64 upgrade --help`
                  
 ## Uninstall
 

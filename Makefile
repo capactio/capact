@@ -21,9 +21,9 @@ APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populat
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
-build-tool-ocftool:
-	./hack/build-tool-ocftool.sh
-.PHONY: build-tool-ocftool
+build-tool-cli:
+	./hack/build-tool-cli.sh
+.PHONY: build-tool-cli
 
 build-tool-populator:
 	./hack/build-tool-populator.sh
@@ -158,12 +158,12 @@ gen-go-source-code:
 	go generate -x ./...
 .PHONY: gen-go-source-code
 
-gen-docs: gen-docs-ocftool
+gen-docs: gen-docs-cli
 .PHONY: gen-docs
 
-gen-docs-ocftool:
-	go run cmd/ocftool/main.go gen-usage-docs
-.PHONY: gen-docs-ocftool
+gen-docs-cli:
+	go run cmd/cli/main.go gen-usage-docs
+.PHONY: gen-docs-cli
 
 ###############
 # Development #

@@ -243,9 +243,9 @@ jobs:
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
           restore-keys: |
             ${{ runner.os }}-go-
-      - name: Build ocftool for linux
+      - name: Build Capact CLI for linux
         run: |
-          CLI_OS=linux make build-tool-ocftool && mv ./bin/ocftool-linux-amd64 ./capact
+          CLI_OS=linux make build-tool-cli && mv ./bin/capact-linux-amd64 ./capact
       - name: Log into Capact long-running cluster
         env:
           GATEWAY_PASSWORD: ${{ secrets.LONG_RUNNING_GATEWAY_PASSWORD }}
