@@ -13,3 +13,4 @@ This tutorial showcases how to install Atlassian stack on AWS EKS cluster with s
 1. [Provision AWS RDS for PostgreSQL](./2-aws-rds-provisioning.md)
 1. [Install Crowd](./3-crowd-installation.md)
 1. [Provision Bitbucket](./4-bitbucket-installation.md)
+1. [Provision Jira](./5-jira-provisioning.md)
