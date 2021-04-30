@@ -1,4 +1,4 @@
-# 3. Provision Bitbucket
+# 3. Install Bitbucket
 
 Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-content/interface/productivity/bitbucket/install.yaml) on Kubernetes with the existing PostgreSQL instance.
 
