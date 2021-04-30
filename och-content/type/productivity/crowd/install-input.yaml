@@ -184,8 +184,8 @@ spec:
               "runAsUser": {
                 "$id": "#/properties/securityContext/properties/runAsUser",
                 "type": "integer",
-                "title": "User ID for running the container",
-                "default": 2004
+                "title": "User ID for running the container. If it's root, it generates server.xml file based on environmental variables and changes user.",
+                "default": 0
               }
             },
             "additionalProperties": false

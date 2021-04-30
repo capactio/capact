@@ -4,13 +4,8 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
 
 1. Create new User in AWS dashboard [https://console.aws.amazon.com/iam/home?region=eu-west-1#/home](https://console.aws.amazon.com/iam/home?region=eu-west-1#/home)
 
-   Add the following permissions:
-    - **AmazonVPCFullAccess**
-    - **AmazonRDSFullAccess**
-    - **AmazonRDSDataFullAccess**
-    - **IAMFullAccess**
-
-   Note the access key and secret key.
+   - Add the **AdministratorAccess** permissions. 
+   - Note the access key and secret key.
 
 1. Follow the tutorial ["Connect to Capact Gateway from local machine"](../eks-installation/README.md#connect-to-capact-gateway-from-local-machine) to be able to connect to Gateway.
 1. Execute `helm get notes capact -n capact-system` on Bastion host and copy required headers.
