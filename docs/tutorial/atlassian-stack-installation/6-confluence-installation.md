@@ -10,7 +10,7 @@ To deploy Atlassian Confluence Data Center on Kubernetes, follow the steps:
 
     >**NOTE**: Use the PostgreSQL TypeInstance ID from the [Provision AWS RDS for PostgreSQL](./2-aws-rds-provisioning.md) tutorial.
    ```bash
-   export DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
+   export CAPACT_DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
    export LICENSE_KEY_BASE64=$(/bin/cat license.txt | base64 -w 0)
    export POSTGRESQL_TI_ID={ti_id} 
    ``` 
