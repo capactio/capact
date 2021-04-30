@@ -63,13 +63,14 @@ Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-con
       sharedHome:
         persistentVolumeClaim:
           create: true
-          # Make sure that this matches your StorageClass name on your own K8s cluster. 
+          # Make sure that this matches your StorageClass name on your own K8s cluster.
+          # It has to be a shared storage such as AWS EFS.
           storageClassName: "efs-sc"
 
     ENDOFFILE
     ```
 
-1. Create a file with PostgreSQL TypeInstance ID:
+2. Create a file with PostgreSQL TypeInstance ID:
  
     ```bash
     cat > /tmp/bb-ti.yaml << ENDOFFILE
@@ -79,13 +80,13 @@ Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-con
     ENDOFFILE
     ```
 
-1. Create a Kubernetes Namespace:
+3. Create a Kubernetes Namespace:
 
     ```bash
     kubectl create namespace bitbucket
     ```
 
-1. Create a Bitbucket Action:
+4. Create a Bitbucket Action:
 
     >**NOTE:** You must have a proper cluster policy configuration as described in the [Configure Cluster Policy to prefer AWS solutions](./1-cluster-policy-configuration.md) tutorial.
  
@@ -97,24 +98,25 @@ Follow these steps to install [Atlassian Bitbucket Data Center](../../../och-con
     --type-instances-from-file /tmp/bb-ti.yaml
     ```
 
-1. Run the Action:
+5. Run the Action:
 
     ```bash
     capact action run bitbucket -n bitbucket
     ```
-1. Watch the Action:
+
+6. Watch the Action:
 
     ```bash
     capact action watch bitbucket -n bitbucket
     ```
 
-1. Once the Action succeeded, list the output TypeInstances:
+7. Once the Action succeeded, list the output TypeInstances:
 
    ```bash
    capact action status bitbucket -n bitbucket
    ```
 
-1. Find the **bitbucket-config** TypeInstance and copy-paste the **host** URL into your browser to open Bitbucket.
+8. Find the **bitbucket-config** TypeInstance and copy-paste the **host** URL into your browser to open Bitbucket.
    
    >**NOTE:** To log in, use the credentials specified for the **sysadminCredentials** property in the input installation parameters. 
 
