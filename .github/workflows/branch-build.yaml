@@ -18,6 +18,7 @@ on:
     branches:
       - "master"
       - "release-0.2"
+      - "release-0.3"
 
 jobs:
 # Commented to reduce CI build time. Uncomment when going open-source.
