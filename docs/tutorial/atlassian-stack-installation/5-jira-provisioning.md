@@ -1,4 +1,4 @@
-# 3. Provision Jira
+# 5. Provision Jira
 
 Follow these steps to install Atlassian Jira using existing PostgreSQL installation.
 
