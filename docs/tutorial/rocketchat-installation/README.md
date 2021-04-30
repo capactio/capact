@@ -38,7 +38,9 @@ The following tools are required:
   To build it, install Go and run:
 
   ```bash
-  GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o capact ./cmd/cli/main.go
+  CLI_OS=linux make build-tool-cli
+  chmod +x ./bin/capact-linux-amd64
+  mv ./bin/capact-linux-amd64 /usr/local/bin/capact
   ```
 
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
