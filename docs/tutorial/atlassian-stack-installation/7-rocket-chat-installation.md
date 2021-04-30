@@ -5,7 +5,7 @@ To deploy Rocket.chat on Kubernetes, follow the steps:
 1. Export Capact cluster domain name as environment variable:
 
    ```bash
-   export DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
+   export CAPACT_DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
    ``` 
 
 1. Create a file with installation parameters:
