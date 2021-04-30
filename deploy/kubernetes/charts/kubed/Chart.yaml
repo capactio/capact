@@ -4,7 +4,7 @@ description: A Helm chart for kubed for Capact installation
 
 type: application
 
-version: 0.2.0
+version: 0.3.0
 
 dependencies:
   - name: kubed
