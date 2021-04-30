@@ -2,7 +2,7 @@
 
 This tutorial showcases how to install Atlassian stack on AWS EKS cluster with single AWS RDS instance.
 
-![Capact_Atlassian](./assets/Capact_Atlassian.png)
+![Capact_Atlassian](./assets/Capact_Atlassian.svg)
 
 ## Prerequisites
 
