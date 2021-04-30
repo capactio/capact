@@ -70,7 +70,7 @@ capact::aws::install::fluent_bit() {
 capact::aws::install::efs_csi_driver() {
   shout "Deploying AWS EFS CSI driver..."
   "${CURRENT_DIR}"/aws-efs-csi-driver/install.sh
-  shout "aws-for-fluent-bit deployed successfully!"
+  shout "AWS EFS CSI driver deployed successfully!"
 }
 
 capact::aws::install::capact() {
