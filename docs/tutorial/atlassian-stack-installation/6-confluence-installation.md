@@ -4,6 +4,8 @@ To deploy Atlassian Confluence Data Center on Kubernetes, follow the steps:
 
 1. Save your Confluence license in the `license.txt` file. 
 
+    >**NOTE:** You can generate a trial license from the [Atlassian Website](https://my.atlassian.com/license/evaluation).
+    
 1. Export Capact cluster domain name, license and PostgreSQL TypeInstance ID as environment variables:
 
     >**NOTE**: Use the PostgreSQL TypeInstance ID from the [Provision AWS RDS for PostgreSQL](./2-aws-rds-provisioning.md) tutorial.
