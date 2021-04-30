@@ -30,7 +30,7 @@ To deploy Rocket.chat on Kubernetes, follow the steps:
     kubectl create namespace rocketchat
     ```
 
-1. Create Action:
+1. Create an Action:
  
     ```bash
     capact action create cap.interface.productivity.rocketchat.install \
