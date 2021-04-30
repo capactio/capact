@@ -1,4 +1,4 @@
-# 5. Provision Confluence
+# 6. Install Confluence
 
 To deploy Atlassian Confluence Data Center on Kubernetes, follow the steps:
 

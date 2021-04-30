@@ -1,4 +1,4 @@
-# 6. Provision Rocket.chat
+# 7. Install Rocket.chat
 
 To deploy Rocket.chat on Kubernetes, follow the steps:
 
