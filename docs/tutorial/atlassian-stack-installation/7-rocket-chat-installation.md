@@ -12,7 +12,7 @@ To deploy Rocket.chat on Kubernetes, follow the steps:
 
     ```bash
     cat > /tmp/rocketchat-params.yaml << ENDOFFILE
-    host: rocketchat.${DOMAIN_NAME}
+    host: rocketchat.${CAPACT_DOMAIN_NAME}
     replicaCount: 2
     resources:
       requests:
