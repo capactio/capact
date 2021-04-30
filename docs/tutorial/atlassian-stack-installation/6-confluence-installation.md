@@ -20,7 +20,7 @@ To deploy Atlassian Confluence Data Center on Kubernetes, follow the steps:
     ```bash
     cat > /tmp/confluence-params.yaml << ENDOFFILE
     ingress:
-      host: confluence.${DOMAIN_NAME}
+      host: confluence.${CAPACT_DOMAIN_NAME}
     
     volumes:
       localHome:
