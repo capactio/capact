@@ -24,7 +24,7 @@ To deploy Rocket.chat on Kubernetes, follow the steps:
     ENDOFFILE
     ```
 
-1. Create Kubernetes Namespace:
+1. Create a Kubernetes Namespace:
 
     ```bash
     kubectl create namespace rocketchat
