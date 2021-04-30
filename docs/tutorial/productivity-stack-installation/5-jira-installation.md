@@ -78,7 +78,7 @@ Follow these steps to install Atlassian Jira using existing PostgreSQL installat
  
 1. Setup the Jira installation. This can take a few minutes. If you get an `503 Service Unavailable` error, refresh the page and continue.
 
-1. (Optional) After Jira is configured and you are able to login, you can scale out the Jira StatefulSet:
+1. (Optional) Once Jira is configured and you are able to login, you can scale out the Jira StatefulSet:
     
     ```bash
     kubectl -n jira scale statefulsets.apps -l app.kubernetes.io/name=jira --replicas 2
@@ -88,4 +88,4 @@ Follow these steps to install Atlassian Jira using existing PostgreSQL installat
 
     ![jira-clustering-dashboard](./assets/jira-clustering-dashboard.png)
   
-  **Next steps:** Navigate back to the [main README](./README.md) and follow next steps.
+**Next steps:** Navigate back to the [main README](./README.md) and follow next steps.
