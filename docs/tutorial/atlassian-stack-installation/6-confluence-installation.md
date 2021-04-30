@@ -74,7 +74,7 @@ To deploy Atlassian Confluence Data Center on Kubernetes, follow the steps:
     kubectl create namespace confluence
     ```
 
-1. Create Action:
+1. Create an Action:
 
     ```bash
     capact action create cap.interface.productivity.confluence.install \
