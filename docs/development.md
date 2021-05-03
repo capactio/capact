@@ -8,12 +8,14 @@ Read this document to learn how to develop the project. Please also follow guide
 
 - [Prerequisites](#prerequisites)
 - [Dependency management](#dependency-management)
+- [Makefile](#makefile)
 - [Testing](#testing)
   * [Unit tests](#unit-tests)
   * [Lint tests](#lint-tests)
   * [Integration tests](#integration-tests)
     + [Cross-functional](#cross-functional)
   * [K8s controller](#k8s-controller)
+  * [Docker Image Security Scan](#docker-image-security-scan)
 - [Development cluster](#development-cluster)
   * [Create a cluster and install components](#create-a-cluster-and-install-components)
   * [Rebuild Docker images and update cluster](#rebuild-docker-images-and-update-cluster)
@@ -22,6 +24,7 @@ Read this document to learn how to develop the project. Please also follow guide
 - [Build and push Docker images](#build-and-push-docker-images)
   * [All components](#all-components)
   * [Single component](#single-component)
+- [Releasing Helm Charts](#releasing-helm-charts)
 - [Build binaries](#build-binaries)
 - [Generators](#generators)
   * [Generate Go code from the OCF JSON Schemas](#generate-go-code-from-the-ocf-json-schemas)
@@ -54,6 +57,14 @@ This project uses `go modules` as a dependency manager. To install all required 
 
 ```bash
 go mod download
+```
+
+## Makefile
+
+This project make to run most common tasks. In order to get help, run the following command:
+
+```bash
+make help
 ```
 
 ## Testing
@@ -109,6 +120,14 @@ For that purpose we use the [envtest](https://sigs.k8s.io/controller-runtime/pkg
 ```bash
 make test-k8s-controller
 ```
+
+### Docker Image Security Scan
+To build images and execute a Snyk vulnerability scan on the containers, execute:
+```bash
+make image-security-scan
+```
+> **NOTE:** It is required to accept Snyk's TOC in order for this to work. It is recommended to create a free Snyk account.
+
 
 ## Development cluster 
 
@@ -233,18 +252,26 @@ If you want to build and push Docker image for a single component, follow these 
     make push-test-image-e2e
     ```
 
-## Build Binaries
+### Releasing Helm Charts
 
-To build the binaries for the Capact CLI, execute:
+In order to push the latest Help charts to the configured GCS bucket, execute the following:
 
 ```bash
-make build-tool-cli
+make release-charts
 ```
 
-To build the binaries for the Populator, execute:
+## Build Binaries
+
+To build all the CLI binaries (Capact CLI and Populator), execute the following:
 
 ```bash
-make build-tool-populator
+make build-cli-tools
+```
+
+In order to minimize the binary sizes, you can opt to enable UPX compression after building the binaries::
+
+```bash
+make build-cli-tools-small
 ```
 
 The binaries will be placed under the `bin/` subdirectory in the root of the source tree.

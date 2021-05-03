@@ -1,6 +1,6 @@
 # syntax = docker/dockerfile:1-experimental
 
-FROM golang:1.16.2-alpine as builder
+FROM golang:1.16.3-alpine as builder
 
 ARG COMPONENT
 ARG SOURCE_PATH="./cmd/$COMPONENT/main.go"
@@ -34,7 +34,7 @@ LABEL app=$COMPONENT
 
 CMD ["/app"]
 
-FROM alpine:3.12.3 as generic-alpine
+FROM alpine:3.13.5 as generic-alpine
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
@@ -42,7 +42,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
 
-RUN apk add --no-cache 'git=>2.26' 'openssh=~8.3' && \
+RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
     mkdir /root/.ssh && \
     chmod 700 /root/.ssh && \
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
@@ -59,7 +59,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app.test
 
-RUN apk add --no-cache 'git=>2.26' && \
+RUN apk add --no-cache 'git=>2.30' && \
     go get github.com/onsi/ginkgo/ginkgo
 
 LABEL source=git@github.com:Project-Voltron/go-voltron.git
@@ -67,7 +67,7 @@ LABEL app=$COMPONENT
 
 CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
-FROM alpine:3.12.3 as terraform-runner
+FROM alpine:3.13.5 as terraform-runner
 ARG COMPONENT
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
@@ -75,7 +75,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
 
-RUN apk add --no-cache 'git=>2.26' 'openssh=~8.3' && \
+RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
     mkdir /root/.ssh && \
     chmod 700 /root/.ssh && \
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
