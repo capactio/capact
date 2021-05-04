@@ -3,7 +3,7 @@ global:
   containerRegistry:
     path: gcr.io/projectvoltron
     # Overrides the image tag for all Capact component. Default is the sub-chart appVersion.
-    overrideTag: "latest"
+    overrideTag: "52561b7"
   domainName: "dev.cluster.projectvoltron.dev"
 
   database:
