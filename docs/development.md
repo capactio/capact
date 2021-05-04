@@ -122,12 +122,14 @@ make test-k8s-controller
 ```
 
 ### Docker Image Security Scan
+
 To build images and execute a Snyk vulnerability scan on the containers, execute:
+
 ```bash
 make image-security-scan
 ```
-> **NOTE:** It is required to accept Snyk's TOC in order for this to work. It is recommended to create a free Snyk account.
 
+> **NOTE:** It is required to accept Snyk's TOC in order for this to work. It is recommended to create a free Snyk account.
 
 ## Development cluster 
 
@@ -268,7 +270,9 @@ To build all the CLI tools binaries (Capact CLI and Populator), execute the foll
 make build-all-tools
 ```
 
-In order to minimize the binary sizes, you can opt to enable UPX compression after building the binaries:
+In order to minimize the binary sizes, you can opt to enable [UPX](https://github.com/upx/upx) compression after building the binaries:
+
+> **NOTE:** Make sure [the UPX tool is installed](https://github.com/upx/upx/releases) before running the command. 
 
 ```bash
 make build-all-tools-prod
