@@ -10,7 +10,7 @@ export DOCKER_BUILDKIT = 1
 export DOCKER_REPOSITORY ?= gcr.io/projectvoltron
 export DOCKER_TAG ?= latest
 
-all: generate build-all-images test-ocf-manifests test-unit test-lint
+all: generate build-all-images test-ocf-manifests test-unit test-lint ## Default: generate all, build all, test all and lint
 .PHONY: all
 
 ############
@@ -21,40 +21,46 @@ APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populat
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
-build-tool-cli:
+build-all-tools-prod: export UPX_ON=true ## Builds the standalone UPX-compressed binaries for all tools
+build-all-tools-prod: build-tool-cli build-tool-populator
+.PHONY: build-cli-tools-prod
+
+build-all-tools: build-tool-cli build-tool-populator ## Builds the standalone binaries for all tools
+.PHONY: build-cli-tools
+
+build-tool-cli: ## Builds the standalone binaries for the capact CLI
 	./hack/build-tool-cli.sh
 .PHONY: build-tool-cli
 
-build-tool-populator:
+build-tool-populator: ## Builds the standalone binaries for the OCH Populator
 	./hack/build-tool-populator.sh
 .PHONY: build-tool-populator
 
 # All images
-build-all-apps-images: $(addprefix build-app-image-,$(APPS))
+build-all-apps-images: $(addprefix build-app-image-,$(APPS)) ## Builds all application images
 .PHONY: build-all-apps-images
 
-build-all-tests-images: $(addprefix build-test-image-,$(TESTS))
+build-all-tests-images: $(addprefix build-test-image-,$(TESTS)) ## Builds all test images
 .PHONY: build-all-tests-images
 
-build-all-images: build-all-apps-images build-all-tests-images $(addprefix build-infra-image-,$(INFRA))
+build-all-images: build-all-apps-images build-all-tests-images $(addprefix build-infra-image-,$(INFRA)) ## Build all images
 .PHONY: build-all-images
 
-push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA))
+push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-image-,$(TESTS)) $(addprefix push-infra-image-,$(INFRA)) ## Push all images to the repository
 .PHONY: push-all-images
 
 # App images
-build-app-image-och-js:
+build-app-image-och-js: ## Build application image for och-js
 	$(eval APP := och-js)
 	cd och-js && $(MAKE) build-app-image
 .PHONY: build-app-image-och-js
 
-build-app-image-populator:
+build-app-image-populator: ## Build application image for OCH database populator
 	$(eval APP := populator)
 	docker build --build-arg COMPONENT=$(APP) --target generic-alpine -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-populator
 
-
-build-app-image-terraform-runner:
+build-app-image-terraform-runner: ## Build application image for terraform runner
 	$(eval APP := terraform-runner)
 	docker build --build-arg COMPONENT=$(APP) --target terraform-runner -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-terraform-runner
@@ -107,15 +113,15 @@ push-infra-image-%:
 # Testing #
 ###########
 
-test-unit:
+test-unit: ## Execute unit tests
 	./hack/test-unit.sh
 .PHONY: test-unit
 
-test-lint:
+test-lint: ## Run linters on the codebase
 	./hack/lint.sh
 .PHONY: test-lint
 
-test-ocf-manifests:
+test-ocf-manifests: ## Validate the OCF manifests against the OCF schema
 	./hack/test-ocf-manifests.sh
 .PHONY: test-ocf-manifests
 
@@ -131,26 +137,30 @@ test-generated:
 	./hack/test-generated.sh
 .PHONY: test-generated
 
-test-cover-html: test-unit
+test-cover-html: test-unit ## Generate file with unit test coverage data
 	go tool cover -html=./coverage.txt
 .PHONY: test-cover-html
+
+image-security-scan: build-all-images ## Build the docker images and check for vulnerabilities using Snyk
+	./hack/scan-images.sh
+.PHONY: test-image-security-scan
 
 ##############
 # Generating #
 ##############
 
-generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code gen-docs
+generate: gen-go-api-from-ocf-spec gen-k8s-resources gen-graphql-resources gen-go-source-code gen-docs ## Run all generators
 .PHONY: generate
 
-gen-go-api-from-ocf-spec:
+gen-go-api-from-ocf-spec: ## Generate Go code from OCF JSON Schemas
 	./hack/gen-go-api-from-ocf-spec.sh
 .PHONY: gen-go-api
 
-gen-k8s-resources:
+gen-k8s-resources: ## Generate K8s resources
 	./hack/gen-k8s-resources.sh
 .PHONY: gen-k8s-resources
 
-gen-graphql-resources:
+gen-graphql-resources: ## Generate code from GraphQL schema
 	./hack/gen-graphql-resources.sh
 .PHONY: gen-graphql-resources
 
@@ -158,7 +168,7 @@ gen-go-source-code:
 	go generate -x ./...
 .PHONY: gen-go-source-code
 
-gen-docs: gen-docs-cli
+gen-docs: gen-docs-cli ## Generate all documentation
 .PHONY: gen-docs
 
 gen-docs-cli:
@@ -169,19 +179,19 @@ gen-docs-cli:
 # Development #
 ###############
 
-dev-cluster:
+dev-cluster: ## Create the dev cluster
 	./hack/dev-cluster-create.sh
 .PHONY: dev-cluster
 
-dev-cluster-update:
+dev-cluster-update: ## Updadte the dev cluster
 	./hack/dev-cluster-update.sh
 .PHONY: dev-cluster-update
 
-dev-cluster-delete:
+dev-cluster-delete: ## Delete the dev cluster
 	./hack/dev-cluster-delete.sh
 .PHONY: dev-cluster-delete
 
-fix-lint-issues:
+fix-lint-issues: ## Automatically fix lint issues
 	LINT_FORCE_FIX=true ./hack/lint.sh
 .PHONY: fix-lint
 
@@ -189,6 +199,18 @@ fix-lint-issues:
 # Releasing #
 #############
 
-release-charts:
+release-charts: ## Release Capact Helm Charts
 	./hack/release-charts.sh
 .PHONY: release-charts
+
+#############
+# Other     #
+#############
+
+clean: ## Cleans all files/directories defined in .gitignore
+	git clean
+.PHONY: clean
+
+help: ## Show this help
+	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+.PHONY: help

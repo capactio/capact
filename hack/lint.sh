@@ -25,7 +25,7 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 # shellcheck source=./hack/lib/const.sh
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
 
-GRAPHQL_SCHEMA_LINTER_IMAGE="gcr.io/projectvoltron/infra/graphql-schema-linter:${GRAPHQL_SCHEMA_LINTER_IMAGE_VERSION}"
+GRAPHQL_SCHEMA_LINTER_IMAGE="gcr.io/projectvoltron/pr/infra/graphql-schema-linter:${GRAPHQL_SCHEMA_LINTER_IMAGE_TAG}"
 
 cleanup() {
     rm -rf "${TMP_DIR}"

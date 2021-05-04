@@ -1,4 +1,4 @@
-FROM node:lts-alpine3.12
+FROM node:lts-alpine3.13
 
 ENV GEN_DIR /opt/quicktype-generator
 WORKDIR ${GEN_DIR}

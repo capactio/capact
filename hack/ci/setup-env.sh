@@ -6,7 +6,7 @@ export NAME="dev"
 # LOAD_BALANCER_EXTERNAL_IP is a reserved IP in "External IP addresses" on GCP. It needs to be in the same region.
 # Remember when changing LOAD_BALANCER_EXTERNAL_IP to update record A in the Cloud DNS for gateway
 cat <<EOT >> "$GITHUB_ENV"
-GO_VERSION=^1.16.2
+GO_VERSION=^1.16.3
 SKIP_DEPS_INSTALLATION=false
 PROJECT_ID=projectvoltron
 RECREATE_CLUSTER_GCS_BUCKET=projectvoltron_cluster_recreate
