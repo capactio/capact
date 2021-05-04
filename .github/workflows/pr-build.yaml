@@ -12,9 +12,10 @@ on:
       - "**.sh"
       - "Makefile"
       - "deploy/**"
-      - "!**.md"
+      - "och-js/**"
       - "och-content/**"
       - "Dockerfile"
+      - "!**.md"
     branches:
       - "master"
 
