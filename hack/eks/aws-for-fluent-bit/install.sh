@@ -17,8 +17,7 @@ helm repo update
 helm upgrade aws-for-fluent-bit "eks-charts/aws-for-fluent-bit" \
     --install \
     --namespace="kube-system" \
-    --version v0.1.6 \
+    --version v0.1.7 \
     --values "${CURRENT_DIR}/values.yml" \
     --set "cloudWatch.logGroupName=/aws/eks/${CAPACT_NAME}/logs" \
     --set "cloudWatch.region=${CAPACT_REGION}" \
-    --wait
