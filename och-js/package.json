@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@godaddy/terminus": "^4.5.0",
-    "apollo-server-express": "^2.19.2",
+    "apollo-server-express": "^2.22.2",
     "express": "^4.17.0",
     "graphql": "^14.7.0",
     "neo4j-driver": "^4.2.1",
