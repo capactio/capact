@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"testing"
 
-	"capact.io/capact/internal/ocftool/schema"
+	"capact.io/capact/internal/cli/schema"
 	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/pkg/errors"

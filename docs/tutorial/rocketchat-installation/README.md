@@ -33,12 +33,14 @@ The diagram below shows the scenario:
 
 The following tools are required:
 
-* capectl installed
+* Capact CLI installed
 
   To build it, install Go and run:
 
   ```bash
-  GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o capectl ./cmd/ocftool/main.go
+  CLI_OS=linux make build-tool-cli
+  chmod +x ./bin/capact-linux-amd64
+  mv ./bin/capact-linux-amd64 /usr/local/bin/capact
   ```
 
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
@@ -48,7 +50,7 @@ The following tools are required:
 ### Install all RocketChat components in a Kubernetes cluster
 
 
-1. Setup capectl
+1. Setup Capact CLI
 
     To obtain the Gateway URL and password run:
     
@@ -58,11 +60,11 @@ The following tools are required:
     PASSWORD=`helm -n capact-system get values capact --all -o json | jq .global.gateway.auth.password -r`
     ```
 
-    then configure `capectl`
+    Configure Capact CLI:
 
     ```bash
-    capectl login "https://${HOST}" -u ${USERNAME} -p ${PASSWORD}
-    capectl config set-context https://${HOST}
+    capact login "https://${HOST}" -u ${USERNAME} -p ${PASSWORD}
+    capact config set-context https://${HOST}
     ```
 
 1. Make sure to separate workloads
@@ -80,7 +82,7 @@ The following tools are required:
     Open interactive actions browser, and type there `rocket` to find correct action.
 
     ```bash
-    capectl hub interfaces browse
+    capact hub interfaces browse
     ```
 
     Press enter, this will start a wizard:
@@ -108,7 +110,7 @@ The following tools are required:
 1. Get the status of the Action from the previous step:
 
    ```bash
-   capectl action get rocket
+   capact action get rocket
    ```
 
    Wait until the Action is in `READY_TO_RUN` state. It means that the Action was processed by the Engine, and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
@@ -118,13 +120,13 @@ The following tools are required:
    In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, you need to run the action:
 
    ```bash
-   capectl action run rocket
+   capact action run rocket
    ```
 
 1. Check the Action execution:
     
    ```bash
-   capectl action watch rocket
+   capact action watch rocket
    ```
 
    Wait until the Action is finished.
@@ -213,7 +215,7 @@ Here we are simulating scenario when Kubernetes lost a connection to one of the 
 When you are done, remove the Action and Helm charts:
 
 ```bash
-capectl action delete rocket
+capact action delete rocket
 helm delete $(helm list -f="rocketchat-*|mongodb-*" -q
 ```
 

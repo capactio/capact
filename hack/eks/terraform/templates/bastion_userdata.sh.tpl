@@ -13,7 +13,7 @@ unzip awscliv2.zip
 rm -rf awscliv2.zip aws
 
 # download capact
-curl --fail -Lo /usr/local/bin/capact https://storage.googleapis.com/projectvoltron_ocftool/${capact_cli_version}/ocftool-linux-amd64
+curl --fail -Lo /usr/local/bin/capact https://storage.googleapis.com/capactio_binaries/${capact_cli_version}/capact-linux-amd64
 chmod +x /usr/local/bin/capact
 capact --version
 

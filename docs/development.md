@@ -235,13 +235,13 @@ If you want to build and push Docker image for a single component, follow these 
 
 ## Build Binaries
 
-To build the binaries for ocftool, execute:
+To build the binaries for the Capact CLI, execute:
 
 ```bash
-make build-tool-ocftool
+make build-tool-cli
 ```
 
-To build the binaries for populator, execute:
+To build the binaries for the Populator, execute:
 
 ```bash
 make build-tool-populator
@@ -305,7 +305,7 @@ make gen-graphql-resources
 
 ### Generate documentation
 
-For the `ocftool` development we use [Cobra](https://github.com/spf13/cobra) library. The documentation for the CLI is generated automatically based on CLI commands code.
+For the Capact CLI development we use [Cobra](https://github.com/spf13/cobra) library. The documentation for the CLI is generated automatically based on CLI commands code.
 
 To regenerate the documentation for CLI, execute:
 ```bash

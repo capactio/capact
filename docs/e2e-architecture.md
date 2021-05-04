@@ -32,7 +32,7 @@ UI does all HTTP requests to [Gateway](#gateway).
 
 CLI is command line tool which makes easier with working the [OCF](#ocf) manifests and Actions.
 
-To read the documentation about CLI tool, see the [`docs`](../cmd/ocftool/docs) subdirectory in the `cmd/ocftool` directory.
+To read the documentation about CLI tool, see the [`docs`](../cmd/cli/docs) subdirectory in the `cmd/cli` directory.
 
 CLI utilizes [SDK](#sdk).
 

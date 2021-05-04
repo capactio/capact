@@ -10,9 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/getter"
 	"capact.io/capact/internal/logger"
-	"capact.io/capact/internal/ocftool/heredoc"
 	"capact.io/capact/pkg/sdk/dbpopulator"
 
 	"github.com/avast/retry-go"

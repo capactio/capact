@@ -82,7 +82,7 @@ The following Capact components reside in this repository:
 - [Gateway](./cmd/gateway) - GraphQL Gateway, which consolidates Capact GraphQL APIs in one endpoint.
 - [Helm runner](./cmd/helm-runner) - Runner, which manages Helm releases.
 - [Engine](./cmd/k8s-engine) - Kubernetes Capact Engine, which handles Action execution.
-- [CLI](./cmd/ocftool) - A CLI tool for interacting with Capact.
+- [CLI](./cmd/cli) - A CLI tool for interacting with Capact.
 - [Open Capability Hub](./och-js) - Component, which stores OCF Manifests and exposes API to manage them.
 - [Populator](./cmd/populator) - A CLI tool, which populates resources such as OCF manifests into database.
 - [Open Capability Format specification](./ocf-spec) - Specification, which defines the shape of Capact entities.
