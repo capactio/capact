@@ -2,6 +2,8 @@
 #
 # This script build the populator CLI.
 #
+# Optional envs:
+#  - UPX_ON
 
 # standard bash error handling
 set -o nounset # treat unset variables as an error and exit immediately.

@@ -262,16 +262,16 @@ make release-charts
 
 ## Build Binaries
 
-To build all the CLI binaries (Capact CLI and Populator), execute the following:
+To build all the CLI tools binaries (Capact CLI and Populator), execute the following:
 
 ```bash
-make build-cli-tools
+make build-all-tools
 ```
 
-In order to minimize the binary sizes, you can opt to enable UPX compression after building the binaries::
+In order to minimize the binary sizes, you can opt to enable UPX compression after building the binaries:
 
 ```bash
-make build-cli-tools-small
+make build-all-tools-prod
 ```
 
 The binaries will be placed under the `bin/` subdirectory in the root of the source tree.

@@ -2,7 +2,6 @@ FROM node:lts-alpine3.13
 
 WORKDIR /opt/grapqhl-schema-linter
 
-# hadolint ignore=DL3059,DL3018
 RUN apk add --no-cache bash
 
 RUN npm install -g graphql-schema-linter@2.0.1

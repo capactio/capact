@@ -21,14 +21,11 @@ APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populat
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
-build-cli-tools-small: ## Builds the standalone UPX-compressed CLI binaries
-	UPX_ON=true ./hack/build-tool-cli.sh
-	UPX_ON=true ./hack/build-tool-populator.sh
-.PHONY: build-cli-tools-small
+build-all-tools-prod: export UPX_ON=true ## Builds the standalone UPX-compressed binaries for all tools
+build-all-tools-prod: build-tool-cli build-tool-populator
+.PHONY: build-cli-tools-prod
 
-build-cli-tools: ## Builds the standalone CLI binaries
-	UPX_ON=false ./hack/build-tool-cli.sh
-	UPX_ON=false ./hack/build-tool-populator.sh
+build-all-tools: build-tool-cli build-tool-populator ## Builds the standalone binaries for all tools
 .PHONY: build-cli-tools
 
 build-tool-cli: ## Builds the standalone binaries for the capact CLI
@@ -207,12 +204,12 @@ release-charts: ## Release Capact Helm Charts
 .PHONY: release-charts
 
 #############
-# Other      #
+# Other     #
 #############
+
 clean: ## Cleans all files/directories defined in .gitignore
 	git clean
 .PHONY: clean
-
 
 help: ## Show this help
 	@egrep -h '\s##\s' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'

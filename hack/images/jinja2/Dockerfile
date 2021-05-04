@@ -11,7 +11,6 @@ ENV TEMPLATES_DIR /templates
 COPY jinja2-cli/ $SCRIPTS_DIR/jinja2-cli
 
 RUN pip3 install --no-cache-dir pip==21.1.1
-# hadolint ignore=DL3013,DL3059
 RUN pip3 install --no-cache-dir $SCRIPTS_DIR/jinja2-cli[yaml]
 
 ENTRYPOINT ["jinja2"]
