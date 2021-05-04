@@ -50,7 +50,7 @@ The following tools are required:
 ### Install all RocketChat components in a Kubernetes cluster
 
 
-1. Setup capact
+1. Setup Capact CLI
 
     To obtain the Gateway URL and password run:
     
@@ -60,7 +60,7 @@ The following tools are required:
     PASSWORD=`helm -n capact-system get values capact --all -o json | jq .global.gateway.auth.password -r`
     ```
 
-    then configure `capact`
+    Configure Capact CLI:
 
     ```bash
     capact login "https://${HOST}" -u ${USERNAME} -p ${PASSWORD}

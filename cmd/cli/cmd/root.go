@@ -18,11 +18,15 @@ func NewRoot() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   cli.Name,
 		Short: "Collective Capability Manager CLI",
-		Long: strings.Join([]string{figure.NewColorFigure(cli.Name, "mini", "green", true).String(),
-			heredoc.WithCLIName(`
+		Long: strings.Join(
+			[]string{
+				"```",
+				figure.NewColorFigure(cli.Name, "mini", "green", true).String(),
+				"```\n",
+				heredoc.WithCLIName(`
         <cli> - Collective Capability Manager CLI
 
-        A utility for managing Capact & assist with authoring OCF content
+        A utility that manages Capact resources and assists with creating OCF content.
 
         To begin working with Capact using the <cli> CLI, start with:
 
@@ -46,7 +50,10 @@ func NewRoot() *cobra.Command {
             $ <cli> action status @latest                    # Gets the status of the last triggered action
             $ <cli> action watch <action name>               # Watches the workflow engine's progress while processing the specified action
 
-            `, cli.Name)}, "\n"),
+            `, cli.Name),
+			},
+			"\n",
+		),
 		Version:      cli.Version,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {

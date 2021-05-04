@@ -4,14 +4,17 @@ Collective Capability Manager CLI
 
 ### Synopsis
 
+```
 
   _   _.  ._    _.   _  _|_
  (_  (_|  |_)  (_|  (_   |_
           |
 
+```
+
 capact - Collective Capability Manager CLI
 
-A utility for managing Capact & assist with authoring OCF content
+A utility that manages Capact resources and assists with creating OCF content.
 
 To begin working with Capact using the capact CLI, start with:
 
