@@ -4,4 +4,4 @@ This guide shows how to perform basic day 2 operations of Capact and troubleshoo
 
 ## Content
 
-- ...
+- [Capact metrics and capacity management](./metrics.md)
