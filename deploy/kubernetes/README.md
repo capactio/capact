@@ -61,6 +61,12 @@ To install Capact, run the following steps:
     Installed Capact components configure automatically with monitoring stack by creating ServiceMonitor and dedicated Grafana dashboards.
     For more information check [instrumentation](../../docs/development.md#instrumentation) section.
 
+1. **[Optional]** Install Cert Manager:
+
+    ```bash
+    helm install cert-manager ./charts/cert-manager -n capact-system
+    ```
+
 1. Install Capact Helm chart:
     
     ```bash
