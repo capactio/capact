@@ -6,7 +6,6 @@ This document describes Capact release process. Currently, it consists of a set 
 
 <!-- toc -->
 
-- [Prerequisites](#prerequisites)
 - [Steps](#steps)
   * [Export environmental variables](#export-environmental-variables)
   * [Create a pre-release pull request](#create-a-pre-release-pull-request)
@@ -16,10 +15,6 @@ This document describes Capact release process. Currently, it consists of a set 
 - [Create GitHub release](#create-github-release)
 
 <!-- tocstop -->
-
-## Prerequisites
-
-- [yq](https://github.com/mikefarah/yq) v3
 
 ## Steps
 
@@ -58,10 +53,14 @@ export RELEASE_BRANCH=release-0.3
    git checkout -b prepare-${RELEASE_VERSION}
    ```   
 
-1. Modify `.github/workflows/branch-build.yaml` and append new branch to `branches`:
+1. Modify `.github/workflows/branch-build.yaml` and append new branch to `on.push.branches`:
 
-    ```bash
-    yq --style double w -i .github/workflows/branch-build.yaml 'on.push.branches[+]' "${RELEASE_BRANCH}"
+    ```yaml
+    branches:
+      - "master"
+      - "release-0.2"
+      # (...)
+      - "release-{major}.{minor}" # append the new release branch item
     ```
 
 1. Change versions of all Helm charts:
