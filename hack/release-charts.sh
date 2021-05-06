@@ -22,6 +22,7 @@ readonly charts=(
   "argo"
   "ingress-nginx"
   "kubed"
+  "cert-manager"
   "monitoring"
   "neo4j"
   "capact"
