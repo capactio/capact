@@ -33,3 +33,7 @@ func NewEntrypointWorkflowIndexNotFoundError(entrypoint string) error {
 func NewTypeReferenceNotFoundError(typeInstanceName string) error {
 	return errors.Errorf("cannot find TypeReference for TypeInstance %s", typeInstanceName)
 }
+
+func NewMissingOwnerIDError() error {
+	return errors.New("missing ownerID")
+}

@@ -48,7 +48,7 @@ type OCHImplementationGetter interface {
 }
 
 type ArgoRenderer interface {
-	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error)
+	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, []string, error)
 }
 
 type ActionValidator interface {
@@ -259,13 +259,16 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	renderedAction, err := a.argoRenderer.Render(
+	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+
+	renderedAction, typeInstancesToLock, err := a.argoRenderer.Render(
 		ctx,
 		runnerCtxSecretRef,
 		interfaceRef,
 		argo.WithSecretUserInput(ref),
 		argo.WithPolicy(policy),
 		argo.WithTypeInstances(typeInstances),
+		argo.WithOwnerID(ownerID),
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
@@ -283,6 +286,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
 	status.SetInputParameters(userInput)
+	status.SetTypeInstancesToLock(typeInstancesToLock)
 
 	return status, nil
 }

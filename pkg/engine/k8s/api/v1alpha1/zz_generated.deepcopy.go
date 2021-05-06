@@ -437,6 +437,11 @@ func (in *RenderingStatus) DeepCopyInto(out *RenderingStatus) {
 		*out = new(ResolvedActionInput)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.TypeInstancesToLock != nil {
+		in, out := &in.TypeInstancesToLock, &out.TypeInstancesToLock
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.AdvancedRendering != nil {
 		in, out := &in.AdvancedRendering, &out.AdvancedRendering
 		*out = new(AdvancedRenderingStatus)

@@ -24,3 +24,9 @@ func WithPolicy(policy clusterpolicy.ClusterPolicy) RendererOption {
 		r.policyEnforcedCli.SetPolicy(policy)
 	}
 }
+
+func WithOwnerID(ownerID string) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.ownerID = &ownerID
+	}
+}

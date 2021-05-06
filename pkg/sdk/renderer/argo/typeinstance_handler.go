@@ -212,7 +212,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	return nil
 }
 
-func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances) error {
+func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances, ownerID string) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
@@ -270,6 +270,10 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 				{
 					Name:  "APP_UPDATE_CONFIG_TYPE_INSTANCES_DIR",
 					Value: "/update/typeInstances",
+				},
+				{
+					Name:  "APP_UPDATE_CONFIG_OWNER_ID",
+					Value: ownerID,
 				},
 			},
 		},

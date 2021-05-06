@@ -28,6 +28,7 @@ type dedicatedRenderer struct {
 	// set with options
 	userInputSecretRef *UserInputSecretRef
 	inputTypeInstances []types.InputTypeInstanceRef
+	ownerID            *string
 
 	// internal vars
 	currentIteration   int
@@ -122,12 +123,25 @@ func (r *dedicatedRenderer) AddOutputTypeInstancesStep(workflow *Workflow) error
 	}
 
 	if len(r.typeInstancesToUpdate) > 0 {
-		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.typeInstancesToUpdate); err != nil {
+		if r.ownerID == nil {
+			return NewMissingOwnerIDError()
+		}
+
+		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.typeInstancesToUpdate, *r.ownerID); err != nil {
 			return err
 		}
 	}
 
 	return nil
+}
+
+func (r *dedicatedRenderer) GetTypeInstancesToLock() []string {
+	typeInstances := []string{}
+	for _, ti := range r.typeInstancesToUpdate {
+		typeInstances = append(typeInstances, ti.ID)
+	}
+
+	return typeInstances
 }
 
 func (r *dedicatedRenderer) GetRootTemplates() []*Template {

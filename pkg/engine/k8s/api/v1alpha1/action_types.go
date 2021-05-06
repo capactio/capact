@@ -257,6 +257,11 @@ type RenderingStatus struct {
 	// +optional
 	Input *ResolvedActionInput `json:"input,omitempty"`
 
+	// TypeInstancesToLock contains IDs of TypeInstance, which have to be locked
+	// before running the Action
+	// +optional
+	TypeInstancesToLock []string `json:"typeInstancesToLock,omitempty"`
+
 	// AdvancedRendering describes status related to advanced rendering mode. CURRENTLY NOT IMPLEMENTED.
 	// +optional
 	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
@@ -275,6 +280,10 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 		r.Input = &ResolvedActionInput{}
 	}
 	r.Input.SetParameters(params)
+}
+
+func (r *RenderingStatus) SetTypeInstancesToLock(typeInstances []string) {
+	r.TypeInstancesToLock = typeInstances
 }
 
 // ResolvedActionInput contains resolved details of Action input.

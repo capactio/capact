@@ -38,22 +38,26 @@ func TestRenderHappyPath(t *testing.T) {
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUID)
 
+	ownerID := "default/action"
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
 	}, policyEnforcedCli, typeInstanceHandler)
 
 	tests := []struct {
-		name               string
-		ref                types.InterfaceRef
-		inputTypeInstances []types.InputTypeInstanceRef
-		userInput          *UserInputSecretRef
+		name                string
+		ref                 types.InterfaceRef
+		inputTypeInstances  []types.InputTypeInstanceRef
+		userInput           *UserInputSecretRef
+		typeInstancesToLock []string
 	}{
 		{
 			name: "PostgreSQL workflow without user input and TypeInstances",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
+			typeInstancesToLock: []string{},
 		},
 		{
 			name: "PostgreSQL workflow with user input and without TypeInstances",
@@ -64,6 +68,7 @@ func TestRenderHappyPath(t *testing.T) {
 				Name: "user-input",
 				Key:  "parameters.json",
 			},
+			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Jira workflow with user input and gcp TypeInstance",
@@ -80,6 +85,7 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
 				},
 			},
+			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Jira workflow with user input and gcp and postgresql TypeInstances",
@@ -100,12 +106,14 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
+			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Atlassian stack without user input and TypeInstances",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.atlassian.stack.install",
 			},
+			typeInstancesToLock: []string{},
 		},
 		{
 			name: "PostgreSQL change password",
@@ -126,6 +134,7 @@ func TestRenderHappyPath(t *testing.T) {
 				Name: "user-input",
 				Key:  "parameters.json",
 			},
+			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 		{
 			name: "Nested PostgreSQL change password",
@@ -146,12 +155,14 @@ func TestRenderHappyPath(t *testing.T) {
 				Name: "user-input",
 				Key:  "parameters.json",
 			},
+			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 		{
 			name: "Two level nested workflow",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.nested.root",
 			},
+			typeInstancesToLock: []string{},
 		},
 	}
 	for _, test := range tests {
@@ -160,18 +171,20 @@ func TestRenderHappyPath(t *testing.T) {
 			t.Parallel()
 
 			// when
-			renderedArgs, err := argoRenderer.Render(
+			renderedArgs, typeInstancesToLock, err := argoRenderer.Render(
 				context.Background(),
 				RunnerContextSecretRef{Name: "secret", Key: "key"},
 				tt.ref,
 				WithSecretUserInput(tt.userInput),
 				WithTypeInstances(tt.inputTypeInstances),
 				WithPolicy(policy),
+				WithOwnerID(ownerID),
 			)
 
 			// then
 			require.NoError(t, err)
 			assertYAMLGoldenFile(t, renderedArgs, t.Name())
+			assert.Equal(t, tt.typeInstancesToLock, typeInstancesToLock)
 		})
 	}
 }
@@ -256,7 +269,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			}, policyEnforcedCli, typeInstanceHandler)
 
 			// when
-			renderedArgs, err := argoRenderer.Render(
+			renderedArgs, _, err := argoRenderer.Render(
 				context.Background(),
 				RunnerContextSecretRef{Name: "secret", Key: "key"},
 				tt.ref,
@@ -291,7 +304,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	}
 
 	// when
-	renderedArgs, err := argoRenderer.Render(
+	renderedArgs, _, err := argoRenderer.Render(
 		context.Background(),
 		RunnerContextSecretRef{Name: "secret", Key: "key"},
 		interfaceRef,
@@ -322,7 +335,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	}
 
 	// when
-	renderedArgs, err := argoRenderer.Render(
+	renderedArgs, _, err := argoRenderer.Render(
 		context.Background(),
 		RunnerContextSecretRef{Name: "secret", Key: "key"},
 		interfaceRef,
