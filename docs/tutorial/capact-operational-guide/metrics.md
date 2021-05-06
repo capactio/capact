@@ -39,3 +39,5 @@ You can also check the **Kubernetes / Compute Resources / Namespace (Pods)** das
 ![grafana_resources_namespaces](./assets/grafana_resources_namespaces.png)
 
 To check the disk space, open the **Nodes** dashboard and look at the **Disk Space Usage** graph for each instance.
+
+![grafana_nodes](./assets/grafana_nodes.png)
