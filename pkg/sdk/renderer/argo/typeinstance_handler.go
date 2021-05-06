@@ -230,7 +230,8 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		})
 
 		payload = append(payload, graphqllocal.UpdateTypeInstancesInput{
-			ID: ti.ID,
+			ID:      ti.ID,
+			OwnerID: &ownerID,
 			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{
 				Attributes: []*graphqllocal.AttributeReferenceInput{},
 			},
@@ -270,10 +271,6 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 				{
 					Name:  "APP_UPDATE_CONFIG_TYPE_INSTANCES_DIR",
 					Value: "/update/typeInstances",
-				},
-				{
-					Name:  "APP_UPDATE_CONFIG_OWNER_ID",
-					Value: ownerID,
 				},
 			},
 		},

@@ -104,13 +104,13 @@ var _ = AfterSuite(func() {
 
 type argoRendererFake struct{}
 
-func (c *argoRendererFake) Render(ctx context.Context, runnerCtx argo.RunnerContextSecretRef, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error) {
+func (c *argoRendererFake) Render(ctx context.Context, runnerCtx argo.RunnerContextSecretRef, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, []string, error) {
 	return &types.Action{
 		Args: map[string]interface{}{
 			"workflow": struct{}{},
 		},
 		RunnerInterface: "argo.run",
-	}, nil
+	}, []string{}, nil
 }
 
 type actionValidatorFake struct{}
