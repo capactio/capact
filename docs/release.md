@@ -20,7 +20,7 @@ This document describes Capact release process. Currently, it consists of a set 
 
 ### Export environmental variables
 
-Export environmental variable with your version:
+Export environmental variable with the new Capact version:
     
 Use [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) to specify the next Capact release.
 
@@ -53,7 +53,7 @@ export RELEASE_BRANCH=release-0.3
    git checkout -b prepare-${RELEASE_VERSION}
    ```   
 
-1. Modify `.github/workflows/branch-build.yaml` and append new branch to `on.push.branches`:
+1. Modify `.github/workflows/branch-build.yaml` and append new branch to **on.push.branches**:
 
     ```yaml
     branches:
@@ -115,7 +115,7 @@ If you release major or minor version, create a dedicated release branch.
 1. Get the latest commit short hash on the destination branch:
     
    ```bash
-     export CAPACT_IMAGE_TAG=$(git rev-parse --short HEAD | sed 's/.$//')
+   export CAPACT_IMAGE_TAG=$(git rev-parse --short HEAD | sed 's/.$//')
    ```  
 
    > **NOTE:** It will be used as a Docker image tag for the release Helm charts. Make sure all the component images with this tag have been built on CI.  
@@ -142,7 +142,7 @@ If you release major or minor version, create a dedicated release branch.
 1. Release Helm charts:
    
     ```bash
-    ./hack/release-charts.sh
+    make release-charts
     ```
 
 1. Release tools binaries:
@@ -172,7 +172,6 @@ If you release major or minor version, create a dedicated release branch.
 
 ## Create GitHub release
     
-1. Navigate to [New GitHub release](https://github.com/Project-Voltron/go-voltron/releases/new) page.
-1. Copy the release notes from the pull request created in first step.
-1. Create new GitHub release with the copied notes.
-
+1. Navigate to the [New GitHub release](https://github.com/Project-Voltron/go-voltron/releases/new) page.
+1. Copy the release notes from the pull request created in the [Create a pre-release pull request](#create-a-pre-release-pull-request) section.
+1. Create the new GitHub release with the copied notes.
