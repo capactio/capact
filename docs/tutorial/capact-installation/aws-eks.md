@@ -1,4 +1,4 @@
-# Capact EKS deployment
+# Capact installation on Amazon Web Services
 
 This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (Amazon EKS) cluster with full Capact installation using Terraform.
 
