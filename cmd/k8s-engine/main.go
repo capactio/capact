@@ -108,7 +108,7 @@ func main() {
 	exitOnError(err, "while creating Argo client")
 	actionValidator := validate.NewActionValidator(wfCli)
 
-	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, controller.Config{
+	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, ochClient, controller.Config{
 		BuiltinRunner: cfg.BuiltinRunner,
 		ClusterPolicy: cfg.ClusterPolicy,
 	})

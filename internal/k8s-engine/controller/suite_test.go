@@ -22,6 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	graphql "capact.io/capact/pkg/och/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 )
@@ -81,7 +82,7 @@ var _ = BeforeSuite(func(done Done) {
 	}
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, cfg),
+		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, &typeInstanceLockerFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -124,4 +125,14 @@ func (v *actionValidatorFake) Validate(action *types.Action, namespace string) e
 // returns path with OS specific Separator
 func toOSPath(path string) string {
 	return filepath.Join(strings.Split(path, "/")...)
+}
+
+type typeInstanceLockerFake struct{}
+
+func (l *typeInstanceLockerFake) LockTypeInstances(ctx context.Context, in *graphql.LockTypeInstancesInput) error {
+	return nil
+}
+
+func (l *typeInstanceLockerFake) UnlockTypeInstances(ctx context.Context, in *graphql.UnlockTypeInstancesInput) error {
+	return nil
 }

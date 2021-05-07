@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/pkg/errors"
-	"github.com/vrischmann/envconfig"
 	engineclient "capact.io/capact/pkg/engine/client"
 	"capact.io/capact/pkg/httputil"
 	"capact.io/capact/pkg/iosafety"
 	ochclient "capact.io/capact/pkg/och/client"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
+	"github.com/pkg/errors"
+	"github.com/vrischmann/envconfig"
 )
 
 type GatewayConfig struct {
@@ -30,14 +30,14 @@ type ClusterPolicyConfig struct {
 }
 
 type Config struct {
-	StatusEndpoints []string
-	IgnoredPodsNames            []string      `envconfig:"optional"`
-	PollingInterval             time.Duration `envconfig:"default=2s"`
-	PollingTimeout              time.Duration `envconfig:"default=5m"`
-	Gateway                     GatewayConfig
-	ClusterPolicy               ClusterPolicyConfig
-	OCHLocalDeployNamespace     string `envconfig:"default=capact-system"`
-	OCHLocalDeployName          string `envconfig:"default=capact-och-local"`
+	StatusEndpoints         []string
+	IgnoredPodsNames        []string      `envconfig:"optional"`
+	PollingInterval         time.Duration `envconfig:"default=2s"`
+	PollingTimeout          time.Duration `envconfig:"default=5m"`
+	Gateway                 GatewayConfig
+	ClusterPolicy           ClusterPolicyConfig
+	OCHLocalDeployNamespace string `envconfig:"default=capact-system"`
+	OCHLocalDeployName      string `envconfig:"default=capact-och-local"`
 }
 
 var cfg Config

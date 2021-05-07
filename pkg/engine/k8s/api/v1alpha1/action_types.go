@@ -129,6 +129,10 @@ func (in *Action) IsBeingDeleted() bool {
 	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+func (in *Action) IsCompleted() bool {
+	return in.Status.Phase == FailedActionPhase || in.Status.Phase == SucceededActionPhase || in.Status.Phase == CanceledActionPhase
+}
+
 // ActionInput describes Action input.
 type ActionInput struct {
 

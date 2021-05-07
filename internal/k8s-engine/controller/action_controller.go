@@ -37,6 +37,8 @@ type (
 		EnsureWorkflowSAExists(ctx context.Context, action *v1alpha1.Action) (*corev1.ServiceAccount, error)
 		EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error
 		EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error
+		LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
+		UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
 	}
 	actionRenderer interface {
 		RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error)
@@ -132,6 +134,15 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return result, nil
 	}
 
+	if action.IsCompleted() {
+		log.Info("Unlock TypeInstances")
+		err := r.unlockTypeInstances(ctx, action)
+		if err != nil {
+			return reportOnError(err, "Unlock TypeInstances")
+		}
+		return ctrl.Result{}, nil
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -180,6 +191,11 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
+	if err := r.svc.LockTypeInstances(ctx, action); err != nil {
+		msg := "Cannot lock TypeInstances"
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
+	}
+
 	if err := r.svc.EnsureRunnerExecuted(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot execute runner: %s", err)
 		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
@@ -216,6 +232,7 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		}
 
 		action.Status = *newStatus
+
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
 		}
@@ -268,6 +285,10 @@ func (r *ActionReconciler) runnerJobStatus(ctx context.Context, action *v1alpha1
 	}
 
 	return &outStatus, nil
+}
+
+func (r *ActionReconciler) unlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	return r.svc.UnlockTypeInstances(ctx, action)
 }
 
 func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Action, currentPhase v1alpha1.ActionPhase, errMsg string) (ctrl.Result, error) {

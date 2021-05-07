@@ -15,6 +15,7 @@ import (
 	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	ochlocalapi "capact.io/capact/pkg/och/api/graphql/local"
 	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -55,25 +56,32 @@ type ActionValidator interface {
 	Validate(action *types.Action, namespace string) error
 }
 
+type TypeInstanceLocker interface {
+	LockTypeInstances(ctx context.Context, in *ochlocalapi.LockTypeInstancesInput) error
+	UnlockTypeInstances(ctx context.Context, in *ochlocalapi.UnlockTypeInstancesInput) error
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
-	k8sCli           client.Client
-	builtinRunner    BuiltinRunnerConfig
-	clusterPolicyCfg ClusterPolicyConfig
-	argoRenderer     ArgoRenderer
-	actionValidator  ActionValidator
-	log              *zap.Logger
+	k8sCli             client.Client
+	builtinRunner      BuiltinRunnerConfig
+	clusterPolicyCfg   ClusterPolicyConfig
+	argoRenderer       ArgoRenderer
+	actionValidator    ActionValidator
+	typeInstanceLocker TypeInstanceLocker
+	log                *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, typeInstanceLocker TypeInstanceLocker, cfg Config) *ActionService {
 	return &ActionService{
-		k8sCli:           cli,
-		builtinRunner:    cfg.BuiltinRunner,
-		clusterPolicyCfg: cfg.ClusterPolicy,
-		argoRenderer:     argoRenderer,
-		actionValidator:  actionValidator,
-		log:              log,
+		k8sCli:             cli,
+		builtinRunner:      cfg.BuiltinRunner,
+		clusterPolicyCfg:   cfg.ClusterPolicy,
+		argoRenderer:       argoRenderer,
+		actionValidator:    actionValidator,
+		typeInstanceLocker: typeInstanceLocker,
+		log:                log,
 	}
 }
 
@@ -234,6 +242,24 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	}
 
 	return nil
+}
+
+func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+
+	return a.typeInstanceLocker.LockTypeInstances(ctx, &ochlocalapi.LockTypeInstancesInput{
+		OwnerID: ownerID,
+		Ids:     action.Status.Rendering.TypeInstancesToLock,
+	})
+}
+
+func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+
+	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &ochlocalapi.UnlockTypeInstancesInput{
+		OwnerID: ownerID,
+		Ids:     action.Status.Rendering.TypeInstancesToLock,
+	})
 }
 
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.

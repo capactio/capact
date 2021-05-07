@@ -7,15 +7,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
+	"capact.io/capact/internal/ptr"
+	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
+	ochclient "capact.io/capact/pkg/och/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"capact.io/capact/internal/ptr"
-	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
-	ochclient "capact.io/capact/pkg/och/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
@@ -138,6 +139,63 @@ var _ = Describe("Action", func() {
 				getActionStatusFunc(ctx, engineClient, failingActionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
+		})
+
+		FIt("Should lock and unlock updated TypeInstances", func() {
+			actionPath := "cap.interface.capactio.capact.validation.action.update"
+
+			By("Prepare TypeInstance to update")
+			var typeInstances []*enginegraphql.InputTypeInstanceData
+
+			// TypeInstance which will be downloaded and updated
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			defer updateTICleanup()
+
+			typeInstances = append(typeInstances,
+				&enginegraphql.InputTypeInstanceData{Name: "testUpdate", ID: updateTI.ID})
+
+			By("Create and run Action")
+
+			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
+			defer func() {
+				err := engineClient.DeleteAction(ctx, actionName)
+				Expect(err).ToNot(HaveOccurred())
+			}()
+
+			err := engineClient.RunAction(ctx, actionName)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Verify the TypeInstance is locked")
+			Eventually(func() error {
+				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				if err != nil {
+					return err
+				}
+
+				if updateTI.LockedBy == nil {
+					return errors.New("TypeInstance is not locked")
+				}
+
+				return nil
+			}, 30*time.Second).Should(BeNil())
+
+			By("Wait for Action completion")
+			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
+
+			By("Verify the TypeInstance is unlock after the action passes")
+			Eventually(func() error {
+				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				if err != nil {
+					return err
+				}
+
+				if updateTI.LockedBy != nil {
+					return errors.New("TypeInstance is locked")
+				}
+
+				return nil
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNil())
 		})
 	})
 })
