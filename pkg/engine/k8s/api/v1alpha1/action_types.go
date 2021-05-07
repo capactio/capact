@@ -258,7 +258,7 @@ type RenderingStatus struct {
 	Input *ResolvedActionInput `json:"input,omitempty"`
 
 	// TypeInstancesToLock contains IDs of TypeInstance, which have to be locked
-	// before running the Action
+	// before running the Action.
 	// +optional
 	TypeInstancesToLock []string `json:"typeInstancesToLock,omitempty"`
 

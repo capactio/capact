@@ -136,7 +136,7 @@ func (r *dedicatedRenderer) AddOutputTypeInstancesStep(workflow *Workflow) error
 }
 
 func (r *dedicatedRenderer) GetTypeInstancesToLock() []string {
-	typeInstances := []string{}
+	var typeInstances []string
 	for _, ti := range r.typeInstancesToUpdate {
 		typeInstances = append(typeInstances, ti.ID)
 	}

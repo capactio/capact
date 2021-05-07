@@ -45,26 +45,30 @@ func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedOCHClient,
 	return r
 }
 
-func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, []string, error) {
+func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutput, error) {
+	if input == nil {
+		input = &RenderInput{}
+	}
+
 	// 0. Populate render options
-	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, opts...)
+	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, input.Options...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
 	// 1. Find the root manifests
-	interfaceRef := interfaceRefToOCH(ref)
+	interfaceRef := interfaceRefToOCH(input.InterfaceRef)
 
 	// 1.1 Get Interface
 	iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, interfaceRef)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	// 1.2 Get all ImplementationRevisions for a given Interface
 	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRef)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, `while listing ImplementationRevisions for Interface "%s:%s"`,
+		return nil, errors.Wrapf(err, `while listing ImplementationRevisions for Interface "%s:%s"`,
 			interfaceRef.Path, interfaceRef.Revision,
 		)
 	}
@@ -72,7 +76,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// 1.3 Pick one of the Implementations
 	implementation, err := dedicatedRenderer.PickImplementationRevision(implementations)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, `while picking ImplementationRevision for Interface "%s:%s"`,
+		return nil, errors.Wrapf(err, `while picking ImplementationRevision for Interface "%s:%s"`,
 			interfaceRef.Path, interfaceRef.Revision)
 	}
 
@@ -80,13 +84,13 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	// TODO: we should check whether imported revision is valid for this render algorithm
 	runnerInterface, err := dedicatedRenderer.ResolveRunnerInterface(implementation)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "while resolving runner Interface")
+		return nil, errors.Wrap(err, "while resolving runner Interface")
 	}
 
 	// 3. Extract workflow from the root Implementation
 	rootWorkflow, _, err := dedicatedRenderer.UnmarshalWorkflowFromImplementation("", &implementation)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "while creating root workflow")
+		return nil, errors.Wrap(err, "while creating root workflow")
 	}
 
 	// 3.1 Add our own root step and replace entrypoint
@@ -99,49 +103,50 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	typeInstancesToInject := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
+		return nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
 	}
 
 	// 6. Add runner context
-	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
-		return nil, nil, err
+	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
+		return nil, err
 	}
 
 	// 7. Add steps to populate rootWorkflow with input TypeInstances
 	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	availableArtifacts := dedicatedRenderer.tplInputArguments[dedicatedRenderer.entrypointStep.Template]
 
 	// 8 Register output TypeInstances
 	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts); err != nil {
-		return nil, nil, errors.Wrap(err, "while noting output artifacts")
+		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
 	// 9. Render rootWorkflow templates
 	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	rootWorkflow.Templates = dedicatedRenderer.GetRootTemplates()
 
 	if err := dedicatedRenderer.AddOutputTypeInstancesStep(rootWorkflow); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	out, err := r.toMapStringInterface(rootWorkflow)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	typeInstancesToLock := dedicatedRenderer.GetTypeInstancesToLock()
-
-	return &types.Action{
-		Args:            out,
-		RunnerInterface: runnerInterface,
-	}, typeInstancesToLock, err
+	return &RenderOutput{
+		Action: &types.Action{
+			Args:            out,
+			RunnerInterface: runnerInterface,
+		},
+		TypeInstancesToLock: dedicatedRenderer.GetTypeInstancesToLock(),
+	}, nil
 }
 
 func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, error) {

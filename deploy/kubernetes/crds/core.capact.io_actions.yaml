@@ -331,7 +331,7 @@ spec:
                         type: array
                     type: object
                   typeInstancesToLock:
-                    description: TypeInstancesToLock contains IDs of TypeInstance, which have to be locked before running the Action
+                    description: TypeInstancesToLock contains IDs of TypeInstance, which have to be locked before running the Action.
                     items:
                       type: string
                     type: array

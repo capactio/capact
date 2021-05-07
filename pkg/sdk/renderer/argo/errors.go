@@ -35,5 +35,5 @@ func NewTypeReferenceNotFoundError(typeInstanceName string) error {
 }
 
 func NewMissingOwnerIDError() error {
-	return errors.New("missing ownerID")
+	return errors.New("missing ownerID used to update TypeInstances")
 }

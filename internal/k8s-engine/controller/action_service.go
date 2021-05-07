@@ -48,7 +48,7 @@ type OCHImplementationGetter interface {
 }
 
 type ArgoRenderer interface {
-	Render(ctx context.Context, runnerCtxSecretRef argo.RunnerContextSecretRef, interfaceRef types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, []string, error)
+	Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)
 }
 
 type ActionValidator interface {
@@ -261,24 +261,28 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
 
-	renderedAction, typeInstancesToLock, err := a.argoRenderer.Render(
+	renderOutput, err := a.argoRenderer.Render(
 		ctx,
-		runnerCtxSecretRef,
-		interfaceRef,
-		argo.WithSecretUserInput(ref),
-		argo.WithPolicy(policy),
-		argo.WithTypeInstances(typeInstances),
-		argo.WithOwnerID(ownerID),
+		&argo.RenderInput{
+			RunnerContextSecretRef: runnerCtxSecretRef,
+			InterfaceRef:           interfaceRef,
+			Options: []argo.RendererOption{
+				argo.WithSecretUserInput(ref),
+				argo.WithPolicy(policy),
+				argo.WithTypeInstances(typeInstances),
+				argo.WithOwnerID(ownerID),
+			},
+		},
 	)
 	if err != nil {
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if err := a.actionValidator.Validate(renderedAction, action.Namespace); err != nil {
+	if err := a.actionValidator.Validate(renderOutput.Action, action.Namespace); err != nil {
 		return nil, errors.Wrap(err, "while validating rendered Action")
 	}
 
-	actionBytes, err := json.Marshal(renderedAction)
+	actionBytes, err := json.Marshal(renderOutput.Action)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
@@ -286,7 +290,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
 	status.SetInputParameters(userInput)
-	status.SetTypeInstancesToLock(typeInstancesToLock)
+	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 
 	return status, nil
 }

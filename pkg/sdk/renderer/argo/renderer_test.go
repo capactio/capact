@@ -57,7 +57,6 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			typeInstancesToLock: []string{},
 		},
 		{
 			name: "PostgreSQL workflow with user input and without TypeInstances",
@@ -68,7 +67,6 @@ func TestRenderHappyPath(t *testing.T) {
 				Name: "user-input",
 				Key:  "parameters.json",
 			},
-			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Jira workflow with user input and gcp TypeInstance",
@@ -85,7 +83,6 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
 				},
 			},
-			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Jira workflow with user input and gcp and postgresql TypeInstances",
@@ -106,14 +103,12 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			typeInstancesToLock: []string{},
 		},
 		{
 			name: "Atlassian stack without user input and TypeInstances",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.atlassian.stack.install",
 			},
-			typeInstancesToLock: []string{},
 		},
 		{
 			name: "PostgreSQL change password",
@@ -162,7 +157,6 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.nested.root",
 			},
-			typeInstancesToLock: []string{},
 		},
 	}
 	for _, test := range tests {
@@ -171,20 +165,24 @@ func TestRenderHappyPath(t *testing.T) {
 			t.Parallel()
 
 			// when
-			renderedArgs, typeInstancesToLock, err := argoRenderer.Render(
+			renderOutput, err := argoRenderer.Render(
 				context.Background(),
-				RunnerContextSecretRef{Name: "secret", Key: "key"},
-				tt.ref,
-				WithSecretUserInput(tt.userInput),
-				WithTypeInstances(tt.inputTypeInstances),
-				WithPolicy(policy),
-				WithOwnerID(ownerID),
+				&RenderInput{
+					RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
+					InterfaceRef:           tt.ref,
+					Options: []RendererOption{
+						WithSecretUserInput(tt.userInput),
+						WithTypeInstances(tt.inputTypeInstances),
+						WithPolicy(policy),
+						WithOwnerID(ownerID),
+					},
+				},
 			)
 
 			// then
 			require.NoError(t, err)
-			assertYAMLGoldenFile(t, renderedArgs, t.Name())
-			assert.Equal(t, tt.typeInstancesToLock, typeInstancesToLock)
+			assertYAMLGoldenFile(t, renderOutput.Action, t.Name())
+			assert.Equal(t, tt.typeInstancesToLock, renderOutput.TypeInstancesToLock)
 		})
 	}
 }
@@ -269,17 +267,21 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			}, policyEnforcedCli, typeInstanceHandler)
 
 			// when
-			renderedArgs, _, err := argoRenderer.Render(
+			renderOutput, err := argoRenderer.Render(
 				context.Background(),
-				RunnerContextSecretRef{Name: "secret", Key: "key"},
-				tt.ref,
-				WithTypeInstances(tt.inputTypeInstances),
-				WithPolicy(tt.policy),
+				&RenderInput{
+					RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
+					InterfaceRef:           tt.ref,
+					Options: []RendererOption{
+						WithTypeInstances(tt.inputTypeInstances),
+						WithPolicy(tt.policy),
+					},
+				},
 			)
 
 			// then
 			require.NoError(t, err)
-			assertYAMLGoldenFile(t, renderedArgs, t.Name())
+			assertYAMLGoldenFile(t, renderOutput.Action, t.Name())
 		})
 	}
 }
@@ -304,15 +306,20 @@ func TestRendererMaxDepth(t *testing.T) {
 	}
 
 	// when
-	renderedArgs, _, err := argoRenderer.Render(
+	renderOutput, err := argoRenderer.Render(
 		context.Background(),
-		RunnerContextSecretRef{Name: "secret", Key: "key"},
-		interfaceRef,
-		WithPolicy(policy))
+		&RenderInput{
+			RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
+			InterfaceRef:           interfaceRef,
+			Options: []RendererOption{
+				WithPolicy(policy),
+			},
+		},
+	)
 
 	// then
 	assert.EqualError(t, err, "Exceeded maximum render depth level [max depth 3]")
-	assert.Nil(t, renderedArgs)
+	assert.Nil(t, renderOutput)
 }
 
 func TestRendererDenyAllPolicy(t *testing.T) {
@@ -335,16 +342,21 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	}
 
 	// when
-	renderedArgs, _, err := argoRenderer.Render(
+	renderOutput, err := argoRenderer.Render(
 		context.Background(),
-		RunnerContextSecretRef{Name: "secret", Key: "key"},
-		interfaceRef,
-		WithPolicy(policy))
+		&RenderInput{
+			RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
+			InterfaceRef:           interfaceRef,
+			Options: []RendererOption{
+				WithPolicy(policy),
+			},
+		},
+	)
 
 	// then
 	assert.EqualError(t, err,
 		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:": No Implementations found with current policy for given Interface`)
-	assert.Nil(t, renderedArgs)
+	assert.Nil(t, renderOutput)
 }
 
 func assertYAMLGoldenFile(t *testing.T, actualYAMLData interface{}, filename string, msgAndArgs ...interface{}) {
