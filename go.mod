@@ -9,7 +9,6 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/semver/v3 v3.0.3
-	github.com/agnivade/levenshtein v1.1.0 // indirect
 	github.com/argoproj/argo/v2 v2.0.0-00010101000000-000000000000
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/briandowns/spinner v1.12.0
@@ -30,9 +29,9 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.12
-	github.com/mitchellh/mapstructure v1.2.2
-	github.com/nautilus/gateway v0.1.7
-	github.com/nautilus/graphql v0.0.12
+	github.com/mitchellh/mapstructure v1.4.1
+	github.com/nautilus/gateway v0.1.16
+	github.com/nautilus/graphql v0.0.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
 	github.com/olekukonko/tablewriter v0.0.0-20170122224234-a0225b3f23b5
 	github.com/onsi/ginkgo v1.15.1
@@ -73,13 +72,8 @@ replace (
 	// - https://github.com/argoproj/argo-workflows/issues/4772
 	// - we can compile argo without static files
 	github.com/argoproj/argo/v2 => github.com/Project-Voltron/argo-workflows/v2 v2.12.10-0.20210323093745-be9145c858b1
-	// Remove when the issues are resolved:
-	// https://github.com/graphql-go/graphql/issues/586
-	github.com/graphql-go/graphql => github.com/pkosiec/graphql-go v0.7.10-0.20201208110622-388f8a2d4f19
 
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
-	// https://github.com/nautilus/gateway/issues/121
-	github.com/nautilus/graphql => github.com/pkosiec/graphql v0.0.13-0.20201208111257-86f2e16b2778
 
 	// Remove after vendoring new Argo: https://github.com/argoproj/argo/pull/4426
 	k8s.io/api => k8s.io/api v0.17.9
