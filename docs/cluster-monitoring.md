@@ -49,27 +49,9 @@ Now run the script to add your public IP address to the authorized control plane
 ./hack/monitoring/manage-ip.sh add
 ```
 
-Now execute the following script to get Grafana credentials and setup port forwarding to Grafana:
-```bash
-./hack/monitoring/grafana-forward.sh 
-```
-```bash
-Username: *****
-Password: *****
-Forwarding from 127.0.0.1:3000 -> 3000
-Forwarding from [::1]:3000 -> 3000
-Handling connection for 3000
-Handling connection for 3000
-```
+## Check the cluster metrics
 
-This script will run in the foreground in your shell during the port-forwarding.
-
-Open [http://127.0.0.1:3000](http://127.0.0.1:3000) and login into Grafana using the credentials printed out in the script.
-
-## Check cluster health
-
-1. Open the `Kubernetes/Computer Resources/Cluster` dashboard. Check, if the cluster has enough CPU and memory resources, by looking on the CPU and memory requests commitments. Also look on the CPU and memory usage graphs.
-2. On the `Kubernetes/Compute Resources/Namespace (Pods)` dashboard check the resource usages for pods in all namespaces. Verify the pods have enough resources and do not experience issues like out of memory kills.
+Follow [this guide](./tutorial/capact-operational-guide/metrics.md) to connect to Grafana and check the cluster metrics.
 
 ## Remove your IP from the authorized list
 
