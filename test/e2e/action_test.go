@@ -147,7 +147,6 @@ var _ = Describe("Action", func() {
 			By("Prepare TypeInstance to update")
 			var typeInstances []*enginegraphql.InputTypeInstanceData
 
-			// TypeInstance which will be downloaded and updated
 			update := getTypeInstanceInputForUpdate()
 			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
 			defer updateTICleanup()

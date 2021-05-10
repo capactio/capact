@@ -232,7 +232,6 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		}
 
 		action.Status = *newStatus
-
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
 		}
