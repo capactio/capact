@@ -245,6 +245,10 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 }
 
 func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	if action.Status.Rendering.TypeInstancesToLock == nil {
+		return nil
+	}
+
 	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
 
 	return a.typeInstanceLocker.LockTypeInstances(ctx, &ochlocalapi.LockTypeInstancesInput{
@@ -254,6 +258,10 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 }
 
 func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	if action.Status.Rendering.TypeInstancesToLock == nil {
+		return nil
+	}
+
 	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
 
 	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &ochlocalapi.UnlockTypeInstancesInput{

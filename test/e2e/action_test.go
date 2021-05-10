@@ -46,7 +46,7 @@ var _ = Describe("Action", func() {
 	})
 
 	Context("Action execution", func() {
-		FIt("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
+		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
 			actionPath := "cap.interface.capactio.capact.validation.action.passing"
 			testValue := "Implementation A"
 
