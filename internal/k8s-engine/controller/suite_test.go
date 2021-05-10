@@ -104,12 +104,14 @@ var _ = AfterSuite(func() {
 
 type argoRendererFake struct{}
 
-func (c *argoRendererFake) Render(ctx context.Context, runnerCtx argo.RunnerContextSecretRef, ref types.InterfaceRef, opts ...argo.RendererOption) (*types.Action, error) {
-	return &types.Action{
-		Args: map[string]interface{}{
-			"workflow": struct{}{},
+func (c *argoRendererFake) Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error) {
+	return &argo.RenderOutput{
+		Action: &types.Action{
+			Args: map[string]interface{}{
+				"workflow": struct{}{},
+			},
+			RunnerInterface: "argo.run",
 		},
-		RunnerInterface: "argo.run",
 	}, nil
 }
 

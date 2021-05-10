@@ -330,6 +330,11 @@ spec:
                           type: object
                         type: array
                     type: object
+                  typeInstancesToLock:
+                    description: TypeInstancesToLock contains IDs of TypeInstance, which have to be locked before running the Action.
+                    items:
+                      type: string
+                    type: array
                 type: object
               runBy:
                 description: RunBy holds user data which run a given Action. CURRENTLY NOT IMPLEMENTED.

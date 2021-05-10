@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"fmt"
 	"testing"
 
 	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
@@ -57,7 +56,6 @@ func TestResolveActionFromImports(t *testing.T) {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
 			reference, err := d.resolveActionPathFromImports(test.imports, test.actionRef)
-			fmt.Println(err, reference, test.reference)
 			if test.shouldFail {
 				if err == nil {
 					t.Fatal("test should fail, but did not")

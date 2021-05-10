@@ -4,6 +4,7 @@ package argo
 import (
 	"regexp"
 
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
 )
 
@@ -43,6 +44,17 @@ type RunnerContextSecretRef struct {
 type UserInputSecretRef struct {
 	Name string
 	Key  string
+}
+
+type RenderInput struct {
+	RunnerContextSecretRef RunnerContextSecretRef
+	InterfaceRef           types.InterfaceRef
+	Options                []RendererOption
+}
+
+type RenderOutput struct {
+	Action              *types.Action
+	TypeInstancesToLock []string
 }
 
 var workflowArtifactRefRegex = regexp.MustCompile(`{{workflow\.outputs\.artifacts\.(.+)}}`)

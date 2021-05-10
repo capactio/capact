@@ -45,15 +45,19 @@ func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedOCHClient,
 	return r
 }
 
-func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextSecretRef, ref types.InterfaceRef, opts ...RendererOption) (*types.Action, error) {
+func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutput, error) {
+	if input == nil {
+		input = &RenderInput{}
+	}
+
 	// 0. Populate render options
-	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, opts...)
+	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, input.Options...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
 
 	// 1. Find the root manifests
-	interfaceRef := interfaceRefToOCH(ref)
+	interfaceRef := interfaceRefToOCH(input.InterfaceRef)
 
 	// 1.1 Get Interface
 	iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, interfaceRef)
@@ -103,7 +107,7 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 	}
 
 	// 6. Add runner context
-	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, runnerCtxSecretRef); err != nil {
+	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
 		return nil, err
 	}
 
@@ -136,9 +140,12 @@ func (r *Renderer) Render(ctx context.Context, runnerCtxSecretRef RunnerContextS
 		return nil, err
 	}
 
-	return &types.Action{
-		Args:            out,
-		RunnerInterface: runnerInterface,
+	return &RenderOutput{
+		Action: &types.Action{
+			Args:            out,
+			RunnerInterface: runnerInterface,
+		},
+		TypeInstancesToLock: dedicatedRenderer.GetTypeInstancesToLock(),
 	}, nil
 }
 

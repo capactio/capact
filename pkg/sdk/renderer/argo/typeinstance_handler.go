@@ -212,7 +212,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	return nil
 }
 
-func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances) error {
+func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances, ownerID string) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
@@ -230,7 +230,8 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		})
 
 		payload = append(payload, graphqllocal.UpdateTypeInstancesInput{
-			ID: ti.ID,
+			ID:      ti.ID,
+			OwnerID: &ownerID,
 			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{
 				Attributes: []*graphqllocal.AttributeReferenceInput{},
 			},
