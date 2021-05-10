@@ -133,7 +133,7 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 	switch {
 	case err == nil:
 	case apierrors.IsAlreadyExists(err):
-		old := &rbacv1.RoleBinding{}
+		old := &rbacv1.ClusterRoleBinding{}
 		key := client.ObjectKey{Name: binding.Name, Namespace: binding.Namespace}
 		if err := a.k8sCli.Get(ctx, key, old); err != nil {
 			return nil, err

@@ -46,7 +46,7 @@ var _ = Describe("Action", func() {
 	})
 
 	Context("Action execution", func() {
-		It("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
+		FIt("should pick proper Implementation and inject TypeInstance based on cluster policy", func() {
 			actionPath := "cap.interface.capactio.capact.validation.action.passing"
 			testValue := "Implementation A"
 
@@ -141,7 +141,7 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		FIt("Should lock and unlock updated TypeInstances", func() {
+		It("Should lock and unlock updated TypeInstances", func() {
 			actionPath := "cap.interface.capactio.capact.validation.action.update"
 
 			By("Prepare TypeInstance to update")
