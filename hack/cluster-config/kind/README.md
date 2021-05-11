@@ -26,4 +26,4 @@ data:
   tls.key: # paste the base64 encoded private key from capact-local-ca.key
 ```
 
-You might need to import the newly generated CA certificate in you system's and browser's trust stores.
+You might need to import the newly generated CA certificate in your system's and browser's trust stores.

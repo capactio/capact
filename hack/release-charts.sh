@@ -40,7 +40,7 @@ setChartVersionToCommitSHA() {
 }
 
 function wereChartsModifed() {
-  DIFF="dasdas"
+  DIFF=$(git diff HEAD^ HEAD -- "${DEPLOY_CHARTS_DIR}")
   readonly DIFF
   if [ "${DIFF:-}" = "" ]; then
     return 1
