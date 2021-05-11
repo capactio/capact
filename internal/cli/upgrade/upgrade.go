@@ -360,6 +360,7 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 // - kubed-helm-release
 // - monitoring-helm-release
 // - neo4j-helm-release
+// - cert-manager-helm-release
 func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.InputTypeInstanceData, error) {
 	inputTI := []*gqlengine.InputTypeInstanceData{
 		{

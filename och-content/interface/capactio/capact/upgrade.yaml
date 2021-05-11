@@ -65,6 +65,12 @@ spec:
           path: cap.type.helm.chart.release
           revision: 0.1.0
         verbs: [ "get", "update" ]
+      cert-manager-helm-release:
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+        verbs: [ "get", "update" ]
+
   output:
     typeInstances:
       capact-config:
