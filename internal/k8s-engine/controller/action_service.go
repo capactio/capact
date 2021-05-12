@@ -249,7 +249,7 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 		return nil
 	}
 
-	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+	ownerID := ownerIDKey(action)
 
 	return a.typeInstanceLocker.LockTypeInstances(ctx, &ochlocalapi.LockTypeInstancesInput{
 		OwnerID: ownerID,
@@ -262,7 +262,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 		return nil
 	}
 
-	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+	ownerID := ownerIDKey(action)
 
 	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &ochlocalapi.UnlockTypeInstancesInput{
 		OwnerID: ownerID,
@@ -535,4 +535,8 @@ func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (
 	}
 
 	return &renderingAction, nil
+}
+
+func ownerIDKey(a *v1alpha1.Action) string {
+	return fmt.Sprintf("%s/%s", a.Namespace, a.Name)
 }

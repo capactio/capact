@@ -46,13 +46,16 @@ spec:
             inputs:
               artifacts:
                 - name: testUpdate
+                - name: input-parameters
             steps:
               - - name: cp
                   template: cp
                   arguments:
                     artifacts:
                       - name: update
-                        from: "{{inputs.artifacts.testUpdate}}"
+                        from: "{{ inputs.artifacts.testUpdate }}"
+                      - name: input-parameters
+                        from: "{{ inputs.artifacts.input-parameters }}"
                   capact-updateTypeInstances:
                     - name: testUpdate
                       from: update
@@ -61,6 +64,8 @@ spec:
               artifacts:
                 - name: update
                   path: /update
+                - name: input-parameters
+                  path: /input-parameters
             outputs:
               artifacts:
                 - name: update
@@ -68,7 +73,7 @@ spec:
             container:
               image: alpine:latest
               command: ["sh", "-c"]
-              args: ["echo 'updated: true' | tee /update && sleep 1"]
+              args: ["cat /input-parameters | grep success && echo 'updated: true' | tee /update && sleep 2"]
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

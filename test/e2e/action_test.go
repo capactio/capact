@@ -13,6 +13,7 @@ import (
 	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
 	ochclient "capact.io/capact/pkg/och/client"
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -69,9 +70,13 @@ var _ = Describe("Action", func() {
 			typeInstances = append(typeInstances,
 				&enginegraphql.InputTypeInstanceData{Name: "testUpdate", ID: updateTI.ID})
 
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: typeInstances,
+			}
+
 			By("1. Expecting Implementation A is picked based on test policy and requirements met...")
 
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
@@ -106,7 +111,7 @@ var _ = Describe("Action", func() {
 
 			By("4. Expecting Implementation B is picked based on test policy...")
 
-			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
+			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation B'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
@@ -141,28 +146,109 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		It("Should lock and unlock updated TypeInstances", func() {
-			actionPath := "cap.interface.capactio.capact.validation.action.update"
+		FDescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}) {
+			const actionPath = "cap.interface.capactio.capact.validation.action.update"
 
 			By("Prepare TypeInstance to update")
-			var typeInstances []*enginegraphql.InputTypeInstanceData
 
 			update := getTypeInstanceInputForUpdate()
 			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
 			defer updateTICleanup()
 
-			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "testUpdate", ID: updateTI.ID})
+			typeInstances := []*enginegraphql.InputTypeInstanceData{
+				{Name: "testUpdate", ID: updateTI.ID},
+			}
+
+			parameters, err := mapToInputParameters(inputParameters)
+			Expect(err).ToNot(HaveOccurred())
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: typeInstances,
+				Parameters:    parameters,
+			}
 
 			By("Create and run Action")
 
-			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, typeInstances)
+			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
 			defer func() {
 				err := engineClient.DeleteAction(ctx, actionName)
 				Expect(err).ToNot(HaveOccurred())
 			}()
 
-			err := engineClient.RunAction(ctx, actionName)
+			err = engineClient.RunAction(ctx, actionName)
+			Expect(err).ToNot(HaveOccurred())
+
+			By("Verify the TypeInstance is locked")
+			Eventually(func() error {
+				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				if err != nil {
+					return err
+				}
+
+				if updateTI.LockedBy == nil {
+					return errors.New("TypeInstance is not locked")
+				}
+
+				return nil
+			}, 30*time.Second).Should(BeNil())
+
+			By("Wait for Action completion")
+			runActionAndWaitForFinished(ctx, engineClient, actionName)
+
+			By("Verify the TypeInstance is unlock after the action passes")
+			Eventually(func() error {
+				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				if err != nil {
+					return err
+				}
+
+				if updateTI.LockedBy != nil {
+					return errors.New("TypeInstance is locked")
+				}
+
+				return nil
+			}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNil())
+		},
+			Entry("Passing action", map[string]interface{}{
+				"testString": "success",
+			}),
+			Entry("Failing action", map[string]interface{}{
+				"testString": "failure",
+			}),
+		)
+
+		It("Should lock and unlock updated TypeInstances", func() {
+			const actionPath = "cap.interface.capactio.capact.validation.action.update"
+
+			By("Prepare TypeInstance to update")
+
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			defer updateTICleanup()
+
+			typeInstances := []*enginegraphql.InputTypeInstanceData{
+				{Name: "testUpdate", ID: updateTI.ID},
+			}
+
+			parameters, err := mapToInputParameters(map[string]interface{}{
+				"testString": "success",
+			})
+			Expect(err).ToNot(HaveOccurred())
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: typeInstances,
+				Parameters:    parameters,
+			}
+
+			By("Create and run Action")
+
+			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			defer func() {
+				err := engineClient.DeleteAction(ctx, actionName)
+				Expect(err).ToNot(HaveOccurred())
+			}()
+
+			err = engineClient.RunAction(ctx, actionName)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("Verify the TypeInstance is locked")
@@ -259,15 +345,13 @@ func getTypeInstanceInputForUpdate() *ochlocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *engine.Client, actionName, actionPath string, typeInstances []*enginegraphql.InputTypeInstanceData) *enginegraphql.Action {
+func createActionAndWaitForReadyToRunPhase(ctx context.Context, engineClient *engine.Client, actionName, actionPath string, input *enginegraphql.ActionInputData) *enginegraphql.Action {
 	_, err := engineClient.CreateAction(ctx, &enginegraphql.ActionDetailsInput{
 		Name: actionName,
 		ActionRef: &enginegraphql.ManifestReferenceInput{
 			Path: actionPath,
 		},
-		Input: &enginegraphql.ActionInputData{
-			TypeInstances: typeInstances,
-		},
+		Input: input,
 	})
 	Expect(err).ToNot(HaveOccurred())
 
@@ -293,14 +377,23 @@ func assertActionRenderedWorkflowContains(action *enginegraphql.Action, stringTo
 }
 
 func runActionAndWaitForSucceeded(ctx context.Context, engineClient *engine.Client, actionName string) {
+	runActionAndWaitForStatus(ctx, engineClient, actionName,
+		enginegraphql.ActionStatusPhaseSucceeded)
+}
+
+func runActionAndWaitForFinished(ctx context.Context, engineClient *engine.Client, actionName string) {
+	runActionAndWaitForStatus(ctx, engineClient, actionName,
+		enginegraphql.ActionStatusPhaseSucceeded, enginegraphql.ActionStatusPhaseFailed)
+}
+
+func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client, actionName string, statuses ...enginegraphql.ActionStatusPhase) {
 	err := engineClient.RunAction(ctx, actionName)
 	Expect(err).ToNot(HaveOccurred())
 
-	// Wait for Action Succeeded
 	Eventually(
 		getActionStatusFunc(ctx, engineClient, actionName),
 		cfg.PollingTimeout, cfg.PollingInterval,
-	).Should(Equal(enginegraphql.ActionStatusPhaseSucceeded))
+	).Should(BeElementOf(statuses))
 }
 
 func createTypeInstance(ctx context.Context, ochClient *ochclient.Client, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, func()) {
@@ -396,4 +489,14 @@ func getTypeInstanceWithValue(typeInstances []ochlocalgraphql.TypeInstance, test
 		}
 	}
 	return nil, fmt.Errorf("No TypeInstance with value %s", testValue)
+}
+
+func mapToInputParameters(params map[string]interface{}) (*enginegraphql.JSON, error) {
+	marshalled, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+
+	res := enginegraphql.JSON(marshalled)
+	return &res, nil
 }

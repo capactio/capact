@@ -135,12 +135,12 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if action.IsCompleted() {
-		log.Info("Unlock TypeInstances")
-		err := r.unlockTypeInstances(ctx, action)
+		log.Info("Handling finished action")
+		result, err := r.handleFinishedAction(ctx, action)
 		if err != nil {
-			return reportOnError(err, "Unlock TypeInstances")
+			return reportOnError(err, "Handling finished action")
 		}
-		return ctrl.Result{}, nil
+		return result, nil
 	}
 
 	return ctrl.Result{}, nil
@@ -286,8 +286,12 @@ func (r *ActionReconciler) runnerJobStatus(ctx context.Context, action *v1alpha1
 	return &outStatus, nil
 }
 
-func (r *ActionReconciler) unlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
-	return r.svc.UnlockTypeInstances(ctx, action)
+func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	if err := r.svc.UnlockTypeInstances(ctx, action); err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "while unlocking TypeInstances")
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Action, currentPhase v1alpha1.ActionPhase, errMsg string) (ctrl.Result, error) {
