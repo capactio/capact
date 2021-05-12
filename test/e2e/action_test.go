@@ -6,6 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"strconv"
 	"strings"
 	"time"
 
@@ -27,17 +29,22 @@ import (
 const clusterPolicyConfigMapKey = "cluster-policy.yaml"
 const clusterPolicyTokenToReplace = "{typeInstanceUUID}"
 
+func getActionName() string {
+	return fmt.Sprintf("e2e-test-%d-%s", GinkgoParallelNode(), strconv.Itoa(rand.Intn(10000)))
+}
+
 var _ = Describe("Action", func() {
 	var engineClient *engine.Client
 	var ochClient *ochclient.Client
+	var actionName string
 
-	actionName := fmt.Sprintf("e2e-test-%d", GinkgoParallelNode())
 	failingActionName := fmt.Sprintf("e2e-failing-test-%d", GinkgoParallelNode())
 	ctx := context.Background()
 
 	BeforeEach(func() {
 		engineClient = getEngineGraphQLClient()
 		ochClient = getOCHGraphQLClient()
+		actionName = getActionName()
 	})
 
 	AfterEach(func() {
@@ -146,7 +153,7 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		FDescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}) {
+		DescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}) {
 			const actionPath = "cap.interface.capactio.capact.validation.action.update"
 
 			By("Prepare TypeInstance to update")
@@ -216,72 +223,6 @@ var _ = Describe("Action", func() {
 				"testString": "failure",
 			}),
 		)
-
-		It("Should lock and unlock updated TypeInstances", func() {
-			const actionPath = "cap.interface.capactio.capact.validation.action.update"
-
-			By("Prepare TypeInstance to update")
-
-			update := getTypeInstanceInputForUpdate()
-			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
-			defer updateTICleanup()
-
-			typeInstances := []*enginegraphql.InputTypeInstanceData{
-				{Name: "testUpdate", ID: updateTI.ID},
-			}
-
-			parameters, err := mapToInputParameters(map[string]interface{}{
-				"testString": "success",
-			})
-			Expect(err).ToNot(HaveOccurred())
-
-			inputData := &enginegraphql.ActionInputData{
-				TypeInstances: typeInstances,
-				Parameters:    parameters,
-			}
-
-			By("Create and run Action")
-
-			createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
-			defer func() {
-				err := engineClient.DeleteAction(ctx, actionName)
-				Expect(err).ToNot(HaveOccurred())
-			}()
-
-			err = engineClient.RunAction(ctx, actionName)
-			Expect(err).ToNot(HaveOccurred())
-
-			By("Verify the TypeInstance is locked")
-			Eventually(func() error {
-				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
-				if err != nil {
-					return err
-				}
-
-				if updateTI.LockedBy == nil {
-					return errors.New("TypeInstance is not locked")
-				}
-
-				return nil
-			}, 30*time.Second).Should(BeNil())
-
-			By("Wait for Action completion")
-			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
-
-			By("Verify the TypeInstance is unlock after the action passes")
-			Eventually(func() error {
-				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
-				if err != nil {
-					return err
-				}
-
-				if updateTI.LockedBy != nil {
-					return errors.New("TypeInstance is locked")
-				}
-
-				return nil
-			}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNil())
-		})
 	})
 })
 
