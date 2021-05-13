@@ -37,6 +37,8 @@ type (
 		EnsureWorkflowSAExists(ctx context.Context, action *v1alpha1.Action) (*corev1.ServiceAccount, error)
 		EnsureRunnerInputDataCreated(ctx context.Context, saName string, action *v1alpha1.Action) error
 		EnsureRunnerExecuted(ctx context.Context, saName string, action *v1alpha1.Action) error
+		LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
+		UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
 	}
 	actionRenderer interface {
 		RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error)
@@ -132,6 +134,15 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return result, nil
 	}
 
+	if action.IsCompleted() {
+		log.Info("Handling finished action")
+		result, err := r.handleFinishedAction(ctx, action)
+		if err != nil {
+			return reportOnError(err, "Handling finished action")
+		}
+		return result, nil
+	}
+
 	return ctrl.Result{}, nil
 }
 
@@ -177,6 +188,11 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 
 	if err := r.svc.EnsureRunnerInputDataCreated(ctx, sa.Name, action); err != nil {
 		msg := fmt.Sprintf("Cannot create runner input: %s", err)
+		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
+	}
+
+	if err := r.svc.LockTypeInstances(ctx, action); err != nil {
+		msg := "Cannot lock TypeInstances"
 		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
@@ -268,6 +284,14 @@ func (r *ActionReconciler) runnerJobStatus(ctx context.Context, action *v1alpha1
 	}
 
 	return &outStatus, nil
+}
+
+func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	if err := r.svc.UnlockTypeInstances(ctx, action); err != nil {
+		return ctrl.Result{}, errors.Wrap(err, "while unlocking TypeInstances")
+	}
+
+	return ctrl.Result{}, nil
 }
 
 func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Action, currentPhase v1alpha1.ActionPhase, errMsg string) (ctrl.Result, error) {

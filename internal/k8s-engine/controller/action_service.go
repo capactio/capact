@@ -15,6 +15,7 @@ import (
 	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	ochlocalapi "capact.io/capact/pkg/och/api/graphql/local"
 	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -55,25 +56,32 @@ type ActionValidator interface {
 	Validate(action *types.Action, namespace string) error
 }
 
+type TypeInstanceLocker interface {
+	LockTypeInstances(ctx context.Context, in *ochlocalapi.LockTypeInstancesInput) error
+	UnlockTypeInstances(ctx context.Context, in *ochlocalapi.UnlockTypeInstancesInput) error
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
-	k8sCli           client.Client
-	builtinRunner    BuiltinRunnerConfig
-	clusterPolicyCfg ClusterPolicyConfig
-	argoRenderer     ArgoRenderer
-	actionValidator  ActionValidator
-	log              *zap.Logger
+	k8sCli             client.Client
+	builtinRunner      BuiltinRunnerConfig
+	clusterPolicyCfg   ClusterPolicyConfig
+	argoRenderer       ArgoRenderer
+	actionValidator    ActionValidator
+	typeInstanceLocker TypeInstanceLocker
+	log                *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, typeInstanceLocker TypeInstanceLocker, cfg Config) *ActionService {
 	return &ActionService{
-		k8sCli:           cli,
-		builtinRunner:    cfg.BuiltinRunner,
-		clusterPolicyCfg: cfg.ClusterPolicy,
-		argoRenderer:     argoRenderer,
-		actionValidator:  actionValidator,
-		log:              log,
+		k8sCli:             cli,
+		builtinRunner:      cfg.BuiltinRunner,
+		clusterPolicyCfg:   cfg.ClusterPolicy,
+		argoRenderer:       argoRenderer,
+		actionValidator:    actionValidator,
+		typeInstanceLocker: typeInstanceLocker,
+		log:                log,
 	}
 }
 
@@ -125,7 +133,7 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 	switch {
 	case err == nil:
 	case apierrors.IsAlreadyExists(err):
-		old := &rbacv1.RoleBinding{}
+		old := &rbacv1.ClusterRoleBinding{}
 		key := client.ObjectKey{Name: binding.Name, Namespace: binding.Namespace}
 		if err := a.k8sCli.Get(ctx, key, old); err != nil {
 			return nil, err
@@ -236,6 +244,32 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
+func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	if action.Status.Rendering.TypeInstancesToLock == nil {
+		return nil
+	}
+
+	ownerID := ownerIDKey(action)
+
+	return a.typeInstanceLocker.LockTypeInstances(ctx, &ochlocalapi.LockTypeInstancesInput{
+		OwnerID: ownerID,
+		Ids:     action.Status.Rendering.TypeInstancesToLock,
+	})
+}
+
+func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	if action.Status.Rendering.TypeInstancesToLock == nil {
+		return nil
+	}
+
+	ownerID := ownerIDKey(action)
+
+	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &ochlocalapi.UnlockTypeInstancesInput{
+		OwnerID: ownerID,
+		Ids:     action.Status.Rendering.TypeInstancesToLock,
+	})
+}
+
 // ResolveImplementationForAction returns specific implementation for interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
 	ref, userInput, err := a.getUserInputData(ctx, action)
@@ -259,7 +293,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+	ownerID := ownerIDKey(action)
 
 	renderOutput, err := a.argoRenderer.Render(
 		ctx,
@@ -501,4 +535,8 @@ func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (
 	}
 
 	return &renderingAction, nil
+}
+
+func ownerIDKey(a *v1alpha1.Action) string {
+	return fmt.Sprintf("%s/%s", a.Namespace, a.Name)
 }
