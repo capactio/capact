@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/policy"
@@ -14,6 +16,7 @@ import (
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewRoot() *cobra.Command {
@@ -79,5 +82,31 @@ func NewRoot() *cobra.Command {
 		policy.NewCmd(),
 	)
 
+	cobra.OnInitialize(initConfig)
+
 	return rootCmd
+}
+
+var (
+	configPath = "$HOME/.config/capact"
+)
+
+func initConfig() {
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(configPath)
+
+	if err := viper.ReadInConfig(); err != nil {
+		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			if err := viper.SafeWriteConfig(); err != nil {
+				handleError(err)
+			}
+		} else {
+			handleError(err)
+		}
+	}
+}
+
+func handleError(err error) {
+	fmt.Println(err)
+	os.Exit(1)
 }

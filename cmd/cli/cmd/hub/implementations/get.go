@@ -54,10 +54,7 @@ func NewGet() *cobra.Command {
 }
 
 func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	cli, err := client.NewHub(server)
 	if err != nil {

@@ -22,10 +22,7 @@ type GetOptions struct {
 }
 
 func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	actionCli, err := client.NewCluster(server)
 	if err != nil {
@@ -54,7 +51,7 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		}
 	}
 
-	printAction, err := selectListPrinter(opts.Output)
+	printAction, err := selectPrinter(opts.Output)
 	if err != nil {
 		return err
 	}
@@ -64,9 +61,9 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface
 
-type listPrinter func(namespace string, in []*gqlengine.Action, w io.Writer) error
+type printer func(namespace string, in []*gqlengine.Action, w io.Writer) error
 
-func selectListPrinter(format string) (listPrinter, error) {
+func selectPrinter(format string) (printer, error) {
 	switch format {
 	case "json":
 		return func(_ string, in []*gqlengine.Action, w io.Writer) error {
@@ -77,13 +74,13 @@ func selectListPrinter(format string) (listPrinter, error) {
 			return printYAML(in, w)
 		}, nil
 	case "table":
-		return printListTable, nil
+		return printGetTable, nil
 	}
 
 	return nil, fmt.Errorf("Unknown output format %q", format)
 }
 
-func printListTable(namespace string, in []*gqlengine.Action, w io.Writer) error {
+func printGetTable(namespace string, in []*gqlengine.Action, w io.Writer) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"NAMESPACE", "NAME", "PATH", "RUN", "STATUS", "AGE"})
 	table.SetBorder(false)

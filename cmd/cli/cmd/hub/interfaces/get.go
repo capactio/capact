@@ -51,10 +51,7 @@ func NewGet() *cobra.Command {
 }
 
 func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	cli, err := client.NewHub(server)
 	if err != nil {

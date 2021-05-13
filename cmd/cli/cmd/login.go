@@ -109,7 +109,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		Secret:   answers.Password,
 	}
 	if err := loginClientSide(answers.Server, &creds); err != nil {
-		return err
+		return errors.Wrap(err, "while verifying provided credentials")
 	}
 
 	if err = credstore.AddHub(answers.Server, creds); err != nil {

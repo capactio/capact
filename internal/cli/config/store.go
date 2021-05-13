@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
@@ -15,42 +13,20 @@ const (
 	defaultContextKey = "defaultContext"
 )
 
-func ReadConfig() error {
-	viper.AddConfigPath(ConfigPath)
-	viper.SetConfigType("yaml")
+func SetAsDefaultContext(server string, override bool) error {
+	currentDefaultContext := GetDefaultContext()
 
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			if err := viper.SafeWriteConfig(); err != nil {
-				return err
-			}
-		} else {
-			fmt.Println(err)
-			return err
+	if currentDefaultContext == "" || override {
+		viper.Set(defaultContextKey, server)
+
+		if err := viper.WriteConfig(); err != nil {
+			return errors.Wrap(err, "while writing config file")
 		}
 	}
 
 	return nil
 }
 
-func WriteConfig() error {
-	return viper.WriteConfig()
-}
-
-func SetAsDefaultContext(server string, override bool) error {
-	currentDefaultContext, _ := GetDefaultContext()
-
-	if currentDefaultContext == "" || override {
-		viper.Set(defaultContextKey, server)
-	}
-
-	if err := WriteConfig(); err != nil {
-		return errors.Wrap(err, "while writing config file")
-	}
-
-	return nil
-}
-
-func GetDefaultContext() (string, error) {
-	return viper.GetString(defaultContextKey), nil
+func GetDefaultContext() string {
+	return viper.GetString(defaultContextKey)
 }
