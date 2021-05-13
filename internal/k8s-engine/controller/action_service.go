@@ -293,7 +293,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	ownerID := fmt.Sprintf("%s/%s", action.Namespace, action.Name)
+	ownerID := ownerIDKey(action)
 
 	renderOutput, err := a.argoRenderer.Render(
 		ctx,
