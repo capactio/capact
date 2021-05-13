@@ -433,11 +433,11 @@ func getTypeInstanceWithValue(typeInstances []ochlocalgraphql.TypeInstance, test
 }
 
 func mapToInputParameters(params map[string]interface{}) (*enginegraphql.JSON, error) {
-	marshalled, err := json.Marshal(params)
+	marshaled, err := json.Marshal(params)
 	if err != nil {
 		return nil, err
 	}
 
-	res := enginegraphql.JSON(marshalled)
+	res := enginegraphql.JSON(marshaled)
 	return &res, nil
 }
