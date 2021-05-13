@@ -19,38 +19,38 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type searchOptions struct {
+type getOptions struct {
 	pathPattern string
 	output      string
 }
 
-func NewSearch() *cobra.Command {
-	var opts searchOptions
+func NewGet() *cobra.Command {
+	var opts getOptions
 
-	search := &cobra.Command{
-		Use:   "search",
-		Short: "Search provides the ability to list and search for OCH Interfaces",
+	get := &cobra.Command{
+		Use:   "get",
+		Short: "Get provides the ability to list and search for OCH Interfaces",
 		Example: heredoc.WithCLIName(`
 			# Show all interfaces in table format
-			<cli> hub interfaces search
+			<cli> hub interfaces get
 			
 			# Show all interfaces in JSON format which are located under the "cap.interface.templating" prefix 
-			<cli> hub interfaces search -o json --path-pattern "cap.interface.*"
+			<cli> hub interfaces get -o json --path-pattern "cap.interface.*"
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return listInterfaces(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
-	flags := search.Flags()
+	flags := get.Flags()
 
 	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path for a given Interface, e.g. cap.interface.*")
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
-	return search
+	return get
 }
 
-func listInterfaces(ctx context.Context, opts searchOptions, w io.Writer) error {
+func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 	server, err := config.GetDefaultContext()
 	if err != nil {
 		return err

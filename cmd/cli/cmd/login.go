@@ -1,14 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"io"
 	"os"
 
 	capactCLI "capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/internal/cli/heredoc"
+	"capact.io/capact/pkg/engine/api/graphql"
 	"github.com/fatih/color"
+	"github.com/pkg/errors"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/cli/cli"
@@ -104,7 +108,7 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		Username: answers.Username,
 		Secret:   answers.Password,
 	}
-	if err := loginClientSide(creds); err != nil {
+	if err := loginClientSide(answers.Server, &creds); err != nil {
 		return err
 	}
 
@@ -122,7 +126,16 @@ func runLogin(opts loginOptions, w io.Writer) error {
 	return nil
 }
 
-func loginClientSide(_ credstore.Credentials) error {
-	// TODO check whether provided creds allow us to auth into the given server
+func loginClientSide(serverURL string, creds *credstore.Credentials) error {
+	cli, err := client.NewClusterWithCreds(serverURL, creds)
+	if err != nil {
+		return err
+	}
+
+	_, err = cli.ListActions(context.Background(), &graphql.ActionFilter{})
+	if err != nil {
+		return errors.Wrap(err, "while executing get action to test credentials")
+	}
+
 	return nil
 }

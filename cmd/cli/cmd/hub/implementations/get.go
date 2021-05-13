@@ -19,41 +19,41 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type searchOptions struct {
+type getOptions struct {
 	interfacePath     string
 	output            string
 	interfaceRevision string
 }
 
-func NewSearch() *cobra.Command {
-	var opts searchOptions
+func NewGet() *cobra.Command {
+	var opts getOptions
 
-	search := &cobra.Command{
-		Use:   "search",
+	get := &cobra.Command{
+		Use:   "get",
 		Short: "Lists the currently available Implementations on the Hub server",
 		Example: heredoc.WithCLIName(`
 			# Show all implementations in table format
-			<cli> hub implementations search cap.interface.database.postgresql.install
+			<cli> hub implementations get cap.interface.database.postgresql.install
 			
 			# Show all implementations in YAML format			
-			<cli> hub implementations search cap.interface.database.postgresql.install -oyaml
+			<cli> hub implementations get cap.interface.database.postgresql.install -oyaml
 		`, cli.Name),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.interfacePath = args[0]
-			return searchImpl(cmd.Context(), opts, os.Stdout)
+			return getImpl(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
-	flags := search.Flags()
+	flags := get.Flags()
 
 	flags.StringVar(&opts.interfaceRevision, "interface-revision", "", "Specific interface revision")
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
-	return search
+	return get
 }
 
-func searchImpl(ctx context.Context, opts searchOptions, w io.Writer) error {
+func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 	server, err := config.GetDefaultContext()
 	if err != nil {
 		return err
