@@ -153,7 +153,7 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		DescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}) {
+		DescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}, expectedStatus enginegraphql.ActionStatusPhase) {
 			const actionPath = "cap.interface.capactio.capact.validation.action.update"
 
 			By("Prepare TypeInstance to update")
@@ -200,7 +200,7 @@ var _ = Describe("Action", func() {
 			}, 30*time.Second).Should(BeNil())
 
 			By("Wait for Action completion")
-			runActionAndWaitForFinished(ctx, engineClient, actionName)
+			runActionAndWaitForStatus(ctx, engineClient, actionName, expectedStatus)
 
 			By("Verify the TypeInstance is unlock after the action passes")
 			Eventually(func() error {
@@ -218,10 +218,10 @@ var _ = Describe("Action", func() {
 		},
 			Entry("Passing action", map[string]interface{}{
 				"testString": "success",
-			}),
+			}, enginegraphql.ActionStatusPhaseSucceeded),
 			Entry("Failing action", map[string]interface{}{
 				"testString": "failure",
-			}),
+			}, enginegraphql.ActionStatusPhaseFailed),
 		)
 	})
 })
@@ -320,11 +320,6 @@ func assertActionRenderedWorkflowContains(action *enginegraphql.Action, stringTo
 func runActionAndWaitForSucceeded(ctx context.Context, engineClient *engine.Client, actionName string) {
 	runActionAndWaitForStatus(ctx, engineClient, actionName,
 		enginegraphql.ActionStatusPhaseSucceeded)
-}
-
-func runActionAndWaitForFinished(ctx context.Context, engineClient *engine.Client, actionName string) {
-	runActionAndWaitForStatus(ctx, engineClient, actionName,
-		enginegraphql.ActionStatusPhaseSucceeded, enginegraphql.ActionStatusPhaseFailed)
 }
 
 func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client, actionName string, statuses ...enginegraphql.ActionStatusPhase) {
