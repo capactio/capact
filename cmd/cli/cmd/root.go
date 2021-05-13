@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/policy"
@@ -87,16 +88,21 @@ func NewRoot() *cobra.Command {
 	return rootCmd
 }
 
-var (
-	configPath = "$HOME/.config/capact"
-)
-
 func initConfig() {
+	configPath, err := getConfigPath()
+	if err != nil {
+		handleError(err)
+	}
+
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(configPath)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+			if err := os.MkdirAll(configPath, 0700); err != nil {
+				handleError(err)
+			}
+
 			if err := viper.SafeWriteConfig(); err != nil {
 				handleError(err)
 			}
@@ -104,6 +110,15 @@ func initConfig() {
 			handleError(err)
 		}
 	}
+}
+
+func getConfigPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(homeDir, ".config", "capact"), nil
 }
 
 func handleError(err error) {
