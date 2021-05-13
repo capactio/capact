@@ -1,9 +1,20 @@
 ## capact action get
 
-Displays the details of an Action from the workflow engine
+Lists the available Actions
 
 ```
-capact action get ACTION [flags]
+capact action get [flags]
+```
+
+### Examples
+
+```
+# Show all Actions in table format
+capact action get
+
+# Show the Action "funny-stallman" in JSON format
+capact action get funny-stallman -ojson
+
 ```
 
 ### Options
