@@ -45,29 +45,15 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
    
     ```bash
     cat > /tmp/policy.yaml << ENDOFFILE
-    apiVersion: 0.1.0
     rules:
-       cap.interface.database.postgresql.install:
+       - interface:
+           path: "cap.interface.database.postgresql.install"
          oneOf:
            - implementationConstraints:
                attributes:
                  - path: "cap.attribute.cloud.provider.aws"
-       cap.interface.aws.rds.postgresql.provision:
-         oneOf:
-           - implementationConstraints:
-               attributes:
-                 - path: "cap.attribute.cloud.provider.aws"
-             injectTypeInstances:
-               - id: ${TI_ID}
-                 typeRef:
-                   path: "cap.type.aws.auth.credentials"
-                   revision: "0.1.0"
-       cap.interface.analytics.elasticsearch.install:
-         oneOf:
-           - implementationConstraints:
-               attributes:
-                 - path: "cap.attribute.cloud.provider.aws"
-       cap.interface.aws.elasticsearch.provision:
+       - interface:
+           path: "cap.interface.aws.rds.postgresql.provision"
          oneOf:
            - implementationConstraints:
                attributes:
@@ -77,7 +63,25 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
                  typeRef:
                    path: "cap.type.aws.auth.credentials"
                    revision: "0.1.0"
-       cap.*:
+       - interface:
+           path: "cap.interface.analytics.elasticsearch.install"
+         oneOf:
+           - implementationConstraints:
+               attributes:
+                 - path: "cap.attribute.cloud.provider.aws"
+       - interface:
+           path: "cap.interface.aws.elasticsearch.provision"
+         oneOf:
+           - implementationConstraints:
+               attributes:
+                 - path: "cap.attribute.cloud.provider.aws"
+             injectTypeInstances:
+               - id: ${TI_ID}
+                 typeRef:
+                   path: "cap.type.aws.auth.credentials"
+                   revision: "0.1.0"
+       - interface:
+           path: "cap.*"
          oneOf:
            - implementationConstraints:
                requires:
@@ -89,7 +93,7 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
 1. Update the cluster policy ConfigMap:
 
    ```bash
-   kubectl create configmap -n capact-system capact-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
+   capact policy update --from-file=/tmp/policy.yaml
    ```
 
 **Next steps:** Navigate back to the [main README](./README.md) and follow next steps.
