@@ -17,15 +17,17 @@ import (
 
 type ClusterClient interface {
 	TypeInstanceClient
-	ActionClient
+	EngineClient
 }
 
-type ActionClient interface {
+type EngineClient interface {
 	CreateAction(ctx context.Context, in *enginegraphql.ActionDetailsInput) (*enginegraphql.Action, error)
 	GetAction(ctx context.Context, name string) (*enginegraphql.Action, error)
 	ListActions(ctx context.Context, filter *enginegraphql.ActionFilter) ([]*enginegraphql.Action, error)
 	RunAction(ctx context.Context, name string) error
 	DeleteAction(ctx context.Context, name string) error
+	UpdatePolicy(ctx context.Context, policy *enginegraphql.PolicyInput) (*enginegraphql.Policy, error)
+	GetPolicy(ctx context.Context) (*enginegraphql.Policy, error)
 }
 
 type TypeInstanceClient interface {
@@ -34,7 +36,7 @@ type TypeInstanceClient interface {
 
 type clusterClient struct {
 	TypeInstanceClient
-	ActionClient
+	EngineClient
 }
 
 func NewCluster(server string) (ClusterClient, error) {
@@ -52,6 +54,6 @@ func NewCluster(server string) (ClusterClient, error) {
 
 	return &clusterClient{
 		TypeInstanceClient: local.NewClient(gqlClient),
-		ActionClient:       client.New(endpoint, httpClient),
+		EngineClient:       client.New(endpoint, httpClient),
 	}, nil
 }

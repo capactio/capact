@@ -4,6 +4,8 @@ import (
 	"log"
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/policy"
+
 	"capact.io/capact/cmd/cli/cmd/action"
 	"capact.io/capact/cmd/cli/cmd/config"
 	"capact.io/capact/cmd/cli/cmd/hub"
@@ -73,6 +75,7 @@ func NewRoot() *cobra.Command {
 		hub.NewHub(),
 		config.NewConfig(),
 		action.NewAction(),
+		policy.NewPolicy(),
 	)
 
 	return rootCmd
