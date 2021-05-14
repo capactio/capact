@@ -58,7 +58,7 @@ func (s *Service) Update(ctx context.Context, in clusterpolicy.ClusterPolicy) (c
 
 	policyStr, err := in.ToYAMLString()
 	if err != nil {
-		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while marshalling Policy")
+		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while marshaling Policy")
 	}
 
 	cfgMap.Data[clusterPolicyConfigMapKey] = policyStr

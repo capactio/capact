@@ -32,7 +32,7 @@ func FromYAMLString(in string) (ClusterPolicy, error) {
 
 	var policy ClusterPolicy
 	if err := yaml.Unmarshal(bytes, &policy); err != nil {
-		return ClusterPolicy{}, errors.Wrap(err, "while unmarshalling policy from YAML bytes")
+		return ClusterPolicy{}, errors.Wrap(err, "while unmarshaling policy from YAML bytes")
 	}
 
 	return policy, nil
@@ -44,7 +44,7 @@ func Validate(in []byte) error {
 	}
 
 	if err := yaml.Unmarshal(in, &unmarshalled); err != nil {
-		return errors.Wrap(err, "while unmarshalling policy to validate API version")
+		return errors.Wrap(err, "while unmarshaling policy to validate API version")
 	}
 
 	constraints, err := semver.NewConstraint(supportedAPIVersionConstraintString)

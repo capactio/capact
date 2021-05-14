@@ -3,6 +3,7 @@
 package controller
 
 import (
+	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 	"context"
 	"io/ioutil"
 	"path/filepath"
@@ -78,11 +79,10 @@ var _ = BeforeSuite(func(done Done) {
 			Timeout: time.Second,
 			Image:   "not-needed",
 		},
-		ClusterPolicy: ClusterPolicyConfig{},
 	}
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, &typeInstanceLockerFake{}, cfg),
+		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, &typeInstanceLockerFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -135,4 +135,10 @@ func (l *typeInstanceLockerFake) LockTypeInstances(ctx context.Context, in *grap
 
 func (l *typeInstanceLockerFake) UnlockTypeInstances(ctx context.Context, in *graphql.UnlockTypeInstancesInput) error {
 	return nil
+}
+
+type policyServiceFake struct {}
+
+func (p policyServiceFake) Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
+	return clusterpolicy.ClusterPolicy{}, nil
 }

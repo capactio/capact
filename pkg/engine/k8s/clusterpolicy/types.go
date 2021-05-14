@@ -52,7 +52,7 @@ func (p ClusterPolicy) ToYAMLString() (string, error) {
 	bytes, err := yaml.Marshal(&p)
 
 	if err != nil {
-		return "", errors.Wrap(err, "while marshalling policy to YAML bytes")
+		return "", errors.Wrap(err, "while marshaling policy to YAML bytes")
 	}
 
 	return string(bytes), nil

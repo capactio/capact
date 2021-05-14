@@ -110,7 +110,7 @@ func (r *Manager) unmarshalFromFile(path string, out interface{}) error {
 	}
 
 	if err := yaml.Unmarshal(bytes, &out); err != nil {
-		return errors.Wrapf(err, "while unmarshalling data from file %q", path)
+		return errors.Wrapf(err, "while unmarshaling data from file %q", path)
 	}
 
 	return nil
