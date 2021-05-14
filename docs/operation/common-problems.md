@@ -118,7 +118,7 @@ Debugging steps:
 
 - [Check if OCH Public is up and running](diagnostics.md#och-public-health)
 
-- [Check if OCH Public has in logs](diagnostics.md#och-public-health) information that it was started. It should contain a message similar to: `INFO   GraphQL API is listening   {"endpoint":"http://:8080/graphql"}`
+- [Check if OCH Public has in logs](diagnostics.md#och-public-logs) information that it was started. It should contain a message similar to: `INFO   GraphQL API is listening   {"endpoint":"http://:8080/graphql"}`
 
 - [Check if OCH Local is up and running](diagnostics.md#och-local-health)
 

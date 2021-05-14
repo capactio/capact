@@ -45,7 +45,7 @@ All the containers from Pods should be in the `Running` status. Restarts number 
 If the Engine is [healthy](#engine-health), you should be able to track any bug by checking the logs. To check the logs, run:
 
 ```
-kubectl logs -n capact-system -l app.kubernetes.io/name=engine -c ctrl
+kubectl logs -n capact-system -l app.kubernetes.io/name=engine -c engine
 ```
 
 To check the logs since a given time, use the `--since-time` flag, for example:
@@ -188,10 +188,10 @@ To check the logs since a given time, use the `--since-time` flag, for example:
 - Check if manifest source is correct, run:
 
   ```bash
-  kubectl get deploy capact-och-public -o=jsonpath='{$.spec.template.spec.containers[?(@.name=="och-public-populator")].env[?(@.name=="MANIFESTS_PATH")].value}'
+  kubectl -n capact-system get deploy capact-och-public -o=jsonpath='{$.spec.template.spec.containers[?(@.name=="och-public-populator")].env[?(@.name=="MANIFESTS_PATH")].value}'
   ```
   
-  Check the [go-getter](https://github.com/hashicorp/go-getter) project to understand URL format.   
+  Check the [go-getter](https://github.com/hashicorp/go-getter#url-format) project to understand URL format.   
 
 ## OCH Local
 
