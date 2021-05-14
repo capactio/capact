@@ -29,7 +29,7 @@ func TestFromYAMLBytes_Invalid(t *testing.T) {
 	// given
 	in := loadInput(t, "testdata/invalid.yaml")
 
-	expectedConstraintErrs := []error{fmt.Errorf("2.0.0 does not have same major version as 0.1")}
+	expectedConstraintErrs := []error{fmt.Errorf("2.0.0 does not have same major version as 0.2")}
 	expectedErr := clusterpolicy.NewUnsupportedAPIVersionError(expectedConstraintErrs)
 
 	// when
@@ -48,32 +48,23 @@ func loadInput(t *testing.T, path string) string {
 
 func fixValidPolicy() clusterpolicy.ClusterPolicy {
 	return clusterpolicy.ClusterPolicy{
-		APIVersion: "0.1.0",
-		Rules: clusterpolicy.RulesMap{
-			"cap.*": {
-				OneOf: []clusterpolicy.Rule{
-					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Requires: &[]types.TypeRefWithOptRevision{
-								{
-									Path: "cap.core.type.platform.kubernetes",
-								},
-							},
-						},
-					},
+		APIVersion: clusterpolicy.CurrentAPIVersion,
+		Rules: clusterpolicy.RulesList{
+			{
+				Interface: types.ManifestRef{
+					Path:     "cap.interface.database.postgresql.install",
+					Revision: ptr.String("0.1.0"),
 				},
-			},
-			"cap.interface.database.postgresql.install:0.1.0": {
 				OneOf: []clusterpolicy.Rule{
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Requires: &[]types.TypeRefWithOptRevision{
+							Requires: &[]types.ManifestRef{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
 							},
-							Attributes: &[]types.AttributeRef{
+							Attributes: &[]types.ManifestRef{
 								{
 									Path:     "cap.attribute.cloud.provider.gcp",
 									Revision: ptr.String("0.1.1"),
@@ -87,7 +78,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
 							{
 								ID: "sample-uuid",
-								TypeRef: types.TypeRefWithOptRevision{
+								TypeRef: types.ManifestRef{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
@@ -96,7 +87,7 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 					},
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
-							Attributes: &[]types.AttributeRef{
+							Attributes: &[]types.ManifestRef{
 								{
 									Path: "cap.attribute.cloud.provider.aws",
 								},
@@ -106,6 +97,22 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 					{
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
 							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
+						},
+					},
+				},
+			},
+			{
+				Interface: types.ManifestRef{
+					Path: "cap.*",
+				},
+				OneOf: []clusterpolicy.Rule{
+					{
+						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+							Requires: &[]types.ManifestRef{
+								{
+									Path: "cap.core.type.platform.kubernetes",
+								},
+							},
 						},
 					},
 				},

@@ -1,6 +1,8 @@
-apiVersion: 0.1.0
+apiVersion: 0.2.0
 rules:
-  cap.interface.database.postgresql.install:0.1.0:
+  - interface:
+      path: cap.interface.database.postgresql.install
+      revision: 0.1.0
     oneOf:
       - implementationConstraints:
           requires:
@@ -22,7 +24,8 @@ rules:
       - implementationConstraints:
           path: cap.implementation.bitnami.postgresql.install
 
-  cap.*: # any other Interface
+  - interface:
+      path: cap.* # any other Interface
     oneOf:
       - implementationConstraints:
           requires:

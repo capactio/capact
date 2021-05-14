@@ -25,7 +25,7 @@ type Service struct {
 
 func NewService(log *zap.Logger, actionCli client.Client) *Service {
 	return &Service{
-		log:    log.With(zap.String("module", "service")),
+		log:    log.With(zap.String("module", "actionService")),
 		k8sCli: actionCli,
 	}
 }

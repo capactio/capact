@@ -33,6 +33,21 @@ type ManifestReference {
   revision: Version!
 }
 
+type ManifestReferenceWithOptionalRevision {
+  path: NodePath!
+  revision: Version
+}
+
+type TypeInstanceReference {
+  id: ID!
+  typeRef: ManifestReferenceWithOptionalRevision!
+}
+
+input TypeInstanceReferenceInput {
+  id: ID!
+  typeRef: ManifestReferenceInput!
+}
+
 """
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
@@ -284,9 +299,73 @@ enum ActionStatusPhase {
   FAILED
 }
 
+input PolicyInput {
+  rules: [RulesForInterfaceInput!]!
+}
+
+input RulesForInterfaceInput {
+  interface: ManifestReferenceInput!
+  oneOf:     [PolicyRuleInput!]!
+}
+
+input PolicyRuleInput {
+  implementationConstraints: PolicyRuleImplementationConstraintsInput
+  injectTypeInstances: [TypeInstanceReferenceInput!]
+}
+
+input PolicyRuleImplementationConstraintsInput {
+  """
+  Refers a specific required TypeInstance by path and optional revision.
+  """
+  requires: [ManifestReferenceInput!]
+
+  """
+  Refers a specific Attribute by path and optional revision.
+  """
+  attributes: [ManifestReferenceInput!]
+
+  """
+  Refers a specific Implementation with exact path.
+  """
+  path: NodePath
+}
+
+type Policy {
+  rules: [RulesForInterface!]!
+}
+
+type RulesForInterface {
+  interface: ManifestReferenceWithOptionalRevision!
+  oneOf:     [PolicyRule!]!
+}
+
+type PolicyRule {
+  implementationConstraints: PolicyRuleImplementationConstraints
+  injectTypeInstances: [TypeInstanceReference!]
+}
+
+type PolicyRuleImplementationConstraints {
+  """
+  Refers a specific required TypeInstance by path and optional revision.
+  """
+  requires: [ManifestReferenceWithOptionalRevision!]
+
+  """
+  Refers a specific Attribute by path and optional revision.
+  """
+  attributes: [ManifestReferenceWithOptionalRevision!]
+
+  """
+  Refers a specific Implementation with exact path.
+  """
+  path: NodePath
+}
+
 type Query {
   action(name: String!): Action
   actions(filter: ActionFilter): [Action!]!
+
+  policy: Policy!
 }
 
 type Mutation {
@@ -310,6 +389,8 @@ type Mutation {
   DeleteAction does not remove the resources, which were created or modified by this Action.
   """
   deleteAction(name: String!): Action!
+
+  updatePolicy(in: PolicyInput!): Policy!
 }
 
 # TODO: Directive for User authorization in https://cshark.atlassian.net/browse/SV-58

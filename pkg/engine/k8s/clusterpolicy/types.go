@@ -2,41 +2,58 @@ package clusterpolicy
 
 import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
+)
+
+const (
+	CurrentAPIVersion        = "0.2.0"
+	AnyInterfacePath  string = "cap.*"
 )
 
 type ClusterPolicy struct {
-	APIVersion string   `json:"apiVersion"`
-	Rules      RulesMap `json:"rules"`
+	APIVersion string    `json:"apiVersion"`
+	Rules      RulesList `json:"rules"`
 }
 
-const AnyInterfacePath InterfacePath = "cap.*"
+type RulesList []RulesForInterface
 
-// TODO: Change structure to preserve keys order in map, once we support regexes
-type RulesMap map[InterfacePath]Rules
+type RulesForInterface struct {
+	// Interface refers to a given Interface manifest.
+	Interface types.ManifestRef `json:"interface"`
 
-type Rules struct {
 	OneOf []Rule `json:"oneOf"`
 }
 
-type InterfacePath string
-
 type Rule struct {
-	ImplementationConstraints ImplementationConstraints `json:"implementationConstraints"`
-	InjectTypeInstances       []TypeInstanceToInject    `json:"injectTypeInstances"`
+	ImplementationConstraints ImplementationConstraints `json:"implementationConstraints,omitempty"`
+	InjectTypeInstances       []TypeInstanceToInject    `json:"injectTypeInstances,omitempty"`
 }
 
 type ImplementationConstraints struct {
-	// Requires refers a specific requirement by path and optional revision.
-	Requires *[]types.TypeRefWithOptRevision `json:"requires,omitempty"`
+	// Requires refers a specific requirement path and optional revision.
+	Requires *[]types.ManifestRef `json:"requires,omitempty"`
 
 	// Attributes refers a specific Attribute by path and optional revision.
-	Attributes *[]types.AttributeRef `json:"attributes,omitempty"`
+	Attributes *[]types.ManifestRef `json:"attributes,omitempty"`
 
 	// Path refers a specific Implementation with exact path.
 	Path *string `json:"path,omitempty"`
 }
 
 type TypeInstanceToInject struct {
-	ID      string                       `json:"id"`
-	TypeRef types.TypeRefWithOptRevision `json:"typeRef"`
+	ID string `json:"id"`
+
+	// TypeRef refers to a given Type.
+	TypeRef types.ManifestRef `json:"typeRef"`
+}
+
+func (p ClusterPolicy) ToYAMLString() (string, error) {
+	bytes, err := yaml.Marshal(&p)
+
+	if err != nil {
+		return "", errors.Wrap(err, "while marshalling policy to YAML bytes")
+	}
+
+	return string(bytes), nil
 }

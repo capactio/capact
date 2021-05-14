@@ -9,7 +9,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const supportedAPIVersionConstraintString = "^0.1"
+const supportedAPIVersionConstraintString = "^0.2"
 
 type SupportedAPIVersionMap map[string]struct{}
 

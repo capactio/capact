@@ -2,6 +2,7 @@ package graphql
 
 import (
 	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	"capact.io/capact/internal/k8s-engine/graphql/domain/policy"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"go.uber.org/zap"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -10,25 +11,37 @@ import (
 var _ graphql.ResolverRoot = &RootResolver{}
 
 type RootResolver struct {
-	mutationResolver graphql.MutationResolver
-	queryResolver    graphql.QueryResolver
+	combinedResolver combinedResolver
 }
 
-func NewRootResolver(log *zap.Logger, k8sCli client.Client) *RootResolver {
+func NewRootResolver(log *zap.Logger, k8sCli client.Client, policyService policy.Service) *RootResolver {
 	actionConverter := action.NewConverter()
 	actionService := action.NewService(log, k8sCli)
 	actionResolver := action.NewResolver(actionService, actionConverter)
 
+	policyConverter := policy.NewConverter()
+	policyResolver := policy.NewResolver(policyService, policyConverter)
+
 	return &RootResolver{
-		mutationResolver: actionResolver,
-		queryResolver:    actionResolver,
+		combinedResolver{
+			actionResolver: actionResolver,
+			policyResolver: policyResolver,
+		},
 	}
 }
 
 func (r RootResolver) Mutation() graphql.MutationResolver {
-	return r.mutationResolver
+	return r.combinedResolver
 }
 
 func (r RootResolver) Query() graphql.QueryResolver {
-	return r.queryResolver
+	return r.combinedResolver
+}
+
+type actionResolver = action.Resolver
+type policyResolver = policy.Resolver
+
+type combinedResolver struct {
+	*actionResolver
+	*policyResolver
 }
