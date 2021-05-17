@@ -20,10 +20,9 @@ capact hub implementations get cap.interface.database.postgresql.install -oyaml
 ### Options
 
 ```
-  -h, --help                        help for get
-      --interface-revision string   Specific interface revision
-  -o, --output string               Output format. One of:
-                                    json | yaml | table (default "table")
+  -h, --help            help for get
+  -o, --output string   Output format. One of:
+                        json | yaml | table (default "table")
 ```
 
 ### Options inherited from parent commands

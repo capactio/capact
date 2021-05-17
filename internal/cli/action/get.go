@@ -41,9 +41,11 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 	} else {
 		for _, name := range opts.ActionNames {
 			act := findAction(acts, name)
-			if act != nil {
-				actions = append(actions, act)
+			if act == nil {
+				continue
 			}
+
+			actions = append(actions, act)
 		}
 	}
 

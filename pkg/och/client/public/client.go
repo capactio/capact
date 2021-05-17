@@ -129,6 +129,34 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 	return resp.Interface.LatestRevision.Revision, nil
 }
 
+func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpublicapi.ImplementationRevisionFilter) ([]*gqlpublicapi.ImplementationRevision, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`query {
+		implementations {
+			%s
+		}		
+	}`, ImplementationFields))
+
+	var resp struct {
+		Implementations []gqlpublicapi.Implementation `json:"implementations"`
+	}
+
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to fetch OCH Implementations")
+	}
+
+	var revs []*gqlpublicapi.ImplementationRevision
+
+	for _, impl := range resp.Implementations {
+		revs = append(revs, impl.Revisions...)
+	}
+
+	return revs, nil
+}
+
 func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
 	getOpts := &ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)

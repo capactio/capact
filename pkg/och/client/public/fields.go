@@ -31,6 +31,15 @@ var AttributeFields = fmt.Sprintf(`
 			}
 			`, GenericMetadataFields)
 
+var ImplementationFields = fmt.Sprintf(`
+			path
+			name
+			prefix
+			revisions {
+				%s
+			}
+`, ImplementationRevisionFields)
+
 var ImplementationRevisionFields = fmt.Sprintf(`
 			metadata {
 					%s

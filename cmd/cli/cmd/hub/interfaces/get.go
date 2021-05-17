@@ -20,9 +20,13 @@ import (
 )
 
 type getOptions struct {
-	pathPattern string
-	output      string
+	interfacePaths []string
+	output         string
 }
+
+var (
+	allPathPrefix = "cap.interface.*"
+)
 
 func NewGet() *cobra.Command {
 	var opts getOptions
@@ -31,20 +35,19 @@ func NewGet() *cobra.Command {
 		Use:   "get",
 		Short: "Get provides the ability to list and search for OCH Interfaces",
 		Example: heredoc.WithCLIName(`
-			# Show all interfaces in table format
+			# Show all interfaces in table format:
 			<cli> hub interfaces get
 			
-			# Show all interfaces in JSON format which are located under the "cap.interface.templating" prefix 
-			<cli> hub interfaces get -o json --path-pattern "cap.interface.*"
+			# Show "cap.interface.database.postgresql.install" interface in JSON format:
+			<cli> hub interfaces get -o json cap.interface.database.postgresql.install
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.interfacePaths = args
 			return listInterfaces(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
 	flags := get.Flags()
-
-	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path for a given Interface, e.g. cap.interface.*")
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
 	return get
@@ -58,11 +61,26 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
-		PathPattern: &opts.pathPattern,
+	var interfaces []*gqlpublicapi.Interface
+
+	ifaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
+		PathPattern: &allPathPrefix,
 	})
 	if err != nil {
 		return err
+	}
+
+	if len(opts.interfacePaths) == 0 {
+		interfaces = ifaces
+	} else {
+		for _, name := range opts.interfacePaths {
+			iface := findInterface(ifaces, name)
+			if iface == nil {
+				continue
+			}
+
+			interfaces = append(interfaces, iface)
+		}
 	}
 
 	format, pattern := extractOutputFormat(opts.output)
@@ -72,6 +90,16 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 	}
 
 	return printInterfaces(pattern, interfaces, w)
+}
+
+func findInterface(ifaces []*gqlpublicapi.Interface, name string) *gqlpublicapi.Interface {
+	for i := range ifaces {
+		if ifaces[i].Path == name {
+			return ifaces[i]
+		}
+	}
+
+	return nil
 }
 
 func extractOutputFormat(output string) (format string, pattern string) {

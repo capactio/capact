@@ -9,21 +9,20 @@ capact hub interfaces get [flags]
 ### Examples
 
 ```
-# Show all interfaces in table format
+# Show all interfaces in table format:
 capact hub interfaces get
 
-# Show all interfaces in JSON format which are located under the "cap.interface.templating" prefix 
-capact hub interfaces get -o json --path-pattern "cap.interface.*"
+# Show "cap.interface.database.postgresql.install" interface in JSON format:
+capact hub interfaces get -o json cap.interface.database.postgresql.install
 
 ```
 
 ### Options
 
 ```
-  -h, --help                  help for get
-  -o, --output string         Output format. One of:
-                              json | yaml | table (default "table")
-      --path-pattern string   Pattern of the path for a given Interface, e.g. cap.interface.* (default "cap.interface.*")
+  -h, --help            help for get
+  -o, --output string   Output format. One of:
+                        json | yaml | table (default "table")
 ```
 
 ### Options inherited from parent commands

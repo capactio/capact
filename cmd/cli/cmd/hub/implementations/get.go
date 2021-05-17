@@ -20,9 +20,8 @@ import (
 )
 
 type getOptions struct {
-	interfacePath     string
-	output            string
-	interfaceRevision string
+	implementationPaths []string
+	output              string
 }
 
 func NewGet() *cobra.Command {
@@ -39,14 +38,12 @@ func NewGet() *cobra.Command {
 			<cli> hub implementations get cap.interface.database.postgresql.install -oyaml
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			opts.interfacePath = args[0]
+			opts.implementationPaths = args
 			return getImpl(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
 	flags := get.Flags()
-
-	flags.StringVar(&opts.interfaceRevision, "interface-revision", "", "Specific interface revision")
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
 	return get
@@ -60,25 +57,46 @@ func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	interfaces, err := cli.ListImplementationRevisionsForInterface(ctx, gqlpublicapi.InterfaceReference{
-		Path:     opts.interfacePath,
-		Revision: opts.interfaceRevision,
-	})
+	var implementationRevisions []*gqlpublicapi.ImplementationRevision
+
+	impls, err := cli.ListImplementationRevisions(ctx, nil)
 	if err != nil {
 		return err
 	}
 
-	printInterfaces, err := selectPrinter(opts.output)
+	if len(opts.implementationPaths) == 0 {
+		implementationRevisions = impls
+	} else {
+		for _, name := range opts.implementationPaths {
+			found := findImplementations(impls, name)
+			implementationRevisions = append(implementationRevisions, found...)
+		}
+	}
+
+	printImplRev, err := selectPrinter(opts.output)
 	if err != nil {
 		return err
 	}
 
-	return printInterfaces(interfaces, w)
+	return printImplRev(implementationRevisions, w)
+}
+
+func findImplementations(impls []*gqlpublicapi.ImplementationRevision, name string) []*gqlpublicapi.ImplementationRevision {
+	// we can have multiple revisions for an Implementation
+	var res []*gqlpublicapi.ImplementationRevision
+
+	for i := range impls {
+		if impls[i].Metadata.Path == name {
+			res = append(res, impls[i])
+		}
+	}
+
+	return res
 }
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface
 
-type printer func(in []gqlpublicapi.ImplementationRevision, w io.Writer) error
+type printer func(in []*gqlpublicapi.ImplementationRevision, w io.Writer) error
 
 func selectPrinter(format string) (printer, error) {
 	switch format {
@@ -93,7 +111,7 @@ func selectPrinter(format string) (printer, error) {
 	return nil, fmt.Errorf("unknow output format %q", format)
 }
 
-func printJSON(in []gqlpublicapi.ImplementationRevision, w io.Writer) error {
+func printJSON(in []*gqlpublicapi.ImplementationRevision, w io.Writer) error {
 	out, err := prettyjson.Marshal(in)
 	if err != nil {
 		return err
@@ -103,7 +121,7 @@ func printJSON(in []gqlpublicapi.ImplementationRevision, w io.Writer) error {
 	return err
 }
 
-func printYAML(in []gqlpublicapi.ImplementationRevision, w io.Writer) error {
+func printYAML(in []*gqlpublicapi.ImplementationRevision, w io.Writer) error {
 	out, err := yaml.Marshal(in)
 	if err != nil {
 		return err
@@ -112,9 +130,9 @@ func printYAML(in []gqlpublicapi.ImplementationRevision, w io.Writer) error {
 	return err
 }
 
-func printTable(in []gqlpublicapi.ImplementationRevision, w io.Writer) error {
+func printTable(in []*gqlpublicapi.ImplementationRevision, w io.Writer) error {
 	table := tablewriter.NewWriter(w)
-	table.SetHeader([]string{"PATH", "LATEST REVISION", "ATTRIBUTES"})
+	table.SetHeader([]string{"PATH", "REVISION", "ATTRIBUTES"})
 	table.SetAutoWrapText(true)
 	table.SetColumnSeparator(" ")
 	table.SetBorder(false)
