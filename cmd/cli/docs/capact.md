@@ -60,4 +60,5 @@ capact [flags]
 * [capact logout](capact_logout.md)	 - Logout from the Hub (Gateway) server
 * [capact upgrade](capact_upgrade.md)	 - Upgrades Capact
 * [capact validate](capact_validate.md)	 - Validate OCF manifests
+* [capact version](capact_version.md)	 - Show version information about this binary
 
