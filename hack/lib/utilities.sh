@@ -270,8 +270,10 @@ capact::install_upgrade::charts() {
 
     capact::install_upgrade::argo
 
-    if [ "${CLUSTER_TYPE}" != "KIND" ]; then
-      capact::install_upgrade::cert_manager
+    capact::install_upgrade::cert_manager
+
+    if [ "${CLUSTER_TYPE}" == "KIND" ]; then
+      kubectl -n "${CAPACT_NAMESPACE}" apply -f "${KIND_CONFIG_DIR}/ca-config.yaml"
     fi
 
     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
@@ -420,6 +422,7 @@ capact::install_upgrade::cert_manager() {
     # shellcheck disable=SC2086
     helm upgrade cert-manager "${K8S_DEPLOY_DIR}/charts/cert-manager" \
         --install \
+        --wait \
         --namespace="${CAPACT_NAMESPACE}" \
         -f "${values_overrides}" \
         ${CUSTOM_CERT_MANAGER_SET_FLAGS:-}
@@ -447,8 +450,8 @@ host::update::capact_hosts() {
 # Required envs:
 #  - REPO_DIR
 host::install:trust_self_signed_cert() {
-  shout "- Trusting self-signed TLS certificate if not already trusted..."
-  CERT_FILE="capact.local.crt"
+  shout "- Trusting self-signed CA certificate if not already trusted..."
+  CERT_FILE="capact-local-ca.crt"
   CERT_PATH="${REPO_DIR}/hack/cluster-config/kind/${CERT_FILE}"
   OS="$(host::os)"
 

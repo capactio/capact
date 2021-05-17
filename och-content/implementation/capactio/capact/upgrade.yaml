@@ -64,6 +64,7 @@ spec:
                 - name: kubed-helm-release
                 - name: monitoring-helm-release
                 - name: neo4j-helm-release
+                - name: cert-manager-helm-release
             steps:
               - - name: apply-crds
                   template: apply-capact-crd
@@ -186,6 +187,17 @@ spec:
                         value: 'app.kubernetes.io/component=controller'
                       - name: timeout
                         value: '90s'
+
+              - - name: cert-manager-upgrade
+                  capact-action: helm.upgrade
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.gen-global-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+                      - name: helm-release
+                        from: "{{inputs.artifacts.cert-manager-helm-release}}"
 
               - - name: argo-upgrade
                   capact-action: helm.upgrade
