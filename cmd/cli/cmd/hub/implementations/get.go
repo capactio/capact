@@ -82,7 +82,6 @@ func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 }
 
 func findImplementations(impls []*gqlpublicapi.ImplementationRevision, name string) []*gqlpublicapi.ImplementationRevision {
-	// we can have multiple revisions for an Implementation
 	var res []*gqlpublicapi.ImplementationRevision
 
 	for i := range impls {

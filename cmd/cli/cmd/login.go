@@ -10,7 +10,6 @@ import (
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/internal/cli/heredoc"
-	"capact.io/capact/pkg/engine/api/graphql"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 
@@ -132,7 +131,8 @@ func loginClientSide(serverURL string, creds *credstore.Credentials) error {
 		return err
 	}
 
-	_, err = cli.ListActions(context.Background(), &graphql.ActionFilter{})
+	// Only test the credentials, the actual response is irrelevant.
+	_, err = cli.GetAction(context.Background(), "logintest")
 	if err != nil {
 		return errors.Wrap(err, "while executing get action to test credentials")
 	}
