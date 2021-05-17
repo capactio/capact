@@ -8,10 +8,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var (
-	ConfigPath = "$HOME/.config/capact"
-)
-
 const (
 	defaultContextKey              = "defaultContext"
 	credentialsStoreBackendKey     = "credentialsStore.backend"
@@ -29,21 +25,21 @@ func Init(configPath string) error {
 		return errors.Wrapf(err, "while binding %s key", credentialsStoreFilePassphrase)
 	}
 
-	if configPath != "" {
-		viper.SetConfigFile(configPath)
-	} else {
-		path, err := getConfigPath()
+	if configPath == "" {
+		configPath, err = getDefaultConfigPath()
 		if err != nil {
 			return errors.Wrap(err, "while getting default config path")
 		}
-		viper.AddConfigPath(path)
 	}
 
+	viper.SetConfigFile(configPath)
 	viper.SetConfigType("yaml")
 
 	err = viper.ReadInConfig()
 	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-		err = os.MkdirAll(configPath, 0700)
+		dir := path.Dir(configPath)
+
+		err = os.MkdirAll(dir, 0700)
 		if err != nil {
 			return errors.Wrap(err, "while creating directory for config file")
 		}
@@ -64,13 +60,13 @@ func Init(configPath string) error {
 	return nil
 }
 
-func getConfigPath() (string, error) {
+func getDefaultConfigPath() (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(homeDir, ".config", "capact"), nil
+	return path.Join(homeDir, ".config", "capact", "config.yaml"), nil
 }
 
 func SetAsDefaultContext(server string, override bool) error {
