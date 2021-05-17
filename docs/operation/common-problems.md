@@ -24,7 +24,7 @@ In this section, you can find common [Action](./../terminology.md#action) failur
 
 Symptoms:
 
-- [Action status](diagnostics.md#check-action-status) is empty.
+- [Action status](diagnostics.md#checking-action-status) is empty.
 
 Debugging steps:
 
@@ -56,14 +56,14 @@ The action may fail for a variety of reasons. First what you need to do is to ch
 
 Debugging steps:
 
-- [Check the Action status message](diagnostics.md#check-action-status-message). If status message contains: `while fetching latest Interface revision string: cannot find the latest revision for Interface "cap.interfac.db.install" (giving up - exceeded 15 retries)`:
+- [Check the Action status message](diagnostics.md#checking-action-status-message). If status message contains: `while fetching latest Interface revision string: cannot find the latest revision for Interface "cap.interfac.db.install" (giving up - exceeded 15 retries)`:
 
-    - [Ensure that Public OCH is populated and manifests can be fetched](diagnostics.md#check-if-public-och-is-populated).
+    - [Ensure that Public OCH is populated and manifests can be fetched](diagnostics.md#checking-if-public-och-is-populated).
 	- Ensure that **ActionRef** is not misspelled.
 
 - [Check the Engine logs](diagnostics.md#engine-logs). You can grep logs using Action name. This will narrow-down the number of log entries. The common problem can be that the Engine doesn't have proper permission to schedule Action execution, e.g. cannot create ServiceAccount, Secret, Argo Workflow. Ensure that the `k8s-engine-role` ClusterRole in the `capact-system` Namespace has all necessary permissions.
 
-- [Check the Action execution](diagnostics.md#check-action-execution-status).
+- [Check the Action execution](diagnostics.md#checking-action-execution-status).
 
 ### Clean up Action execution pods
 
@@ -107,13 +107,13 @@ Actions may define theirs dependencies via Interfaces. Depending on cluster Poli
 
 Symptoms:
 
-- [Rendered Action workflow](diagnostics.md#check-rendered-action-workflow) contains Implementation which should not be used. 
+- [Rendered Action workflow](diagnostics.md#checking-rendered-action-workflow) contains Implementation which should not be used. 
 
 - Executed Action create resources in the unexpected destination. For example, deployed PostgreSQL on a cluster instead of provisioning RDS instance on AWS side.
 
 Debugging steps:
 
-- [Check if proper policy exists and has proper configuration](diagnostics.md#check-cluster-policy). Read the [Policy configuration](./../policy-configuration.md) document to get familiar with the syntax and available set of features.
+- [Check if proper policy exists and has proper configuration](diagnostics.md#checking-cluster-policy). Read the [Policy configuration](./../policy-configuration.md) document to get familiar with the syntax and available set of features.
 
 - If you use cloud solutions, such as GCP or AWS, you need to specify TypeInstance ID in the cluster Policy. This TypeInstance must hold a subscription which allows to provision a given service on the hyperscaler side. If TypeInstance doesn't exist, Engine will ignore this configuration. [Check if TypeInstance with a given ID exists](diagnostics.md#checking-if-typeinstance-exists) 
 
