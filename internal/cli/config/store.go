@@ -36,7 +36,7 @@ func Init(configPath string) error {
 	viper.SetConfigType("yaml")
 
 	err = viper.ReadInConfig()
-	if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok || os.IsNotExist(err) {
 		dir := path.Dir(configPath)
 
 		err = os.MkdirAll(dir, 0700)
@@ -44,11 +44,6 @@ func Init(configPath string) error {
 			return errors.Wrap(err, "while creating directory for config file")
 		}
 
-		err = viper.WriteConfig()
-		if err != nil {
-			return errors.Wrap(err, "while writing config file")
-		}
-	} else if os.IsNotExist(err) {
 		err = viper.WriteConfig()
 		if err != nil {
 			return errors.Wrap(err, "while writing config file")
