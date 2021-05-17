@@ -1,6 +1,6 @@
 ## capact hub implementations get
 
-Lists the currently available Implementations on the Hub server
+Displays one or multiple Implementations available on the Hub server
 
 ```
 capact hub implementations get [flags]
@@ -9,10 +9,10 @@ capact hub implementations get [flags]
 ### Examples
 
 ```
-# Show all implementations in table format
-capact hub implementations get cap.interface.database.postgresql.install
+# Show all Implementation Revisions in table format
+capact hub implementations get
 
-# Show all implementations in YAML format			
+# Show "cap.interface.database.postgresql.install" Implementation Revisions in YAML format			
 capact hub implementations get cap.interface.database.postgresql.install -oyaml
 
 ```

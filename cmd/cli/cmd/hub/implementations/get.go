@@ -29,12 +29,12 @@ func NewGet() *cobra.Command {
 
 	get := &cobra.Command{
 		Use:   "get",
-		Short: "Lists the currently available Implementations on the Hub server",
+		Short: "Displays one or multiple Implementations available on the Hub server",
 		Example: heredoc.WithCLIName(`
-			# Show all implementations in table format
-			<cli> hub implementations get cap.interface.database.postgresql.install
+			# Show all Implementation Revisions in table format
+			<cli> hub implementations get
 			
-			# Show all implementations in YAML format			
+			# Show "cap.interface.database.postgresql.install" Implementation Revisions in YAML format			
 			<cli> hub implementations get cap.interface.database.postgresql.install -oyaml
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {

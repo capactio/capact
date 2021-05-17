@@ -33,13 +33,13 @@ func NewGet() *cobra.Command {
 
 	get := &cobra.Command{
 		Use:   "get",
-		Short: "Get provides the ability to list and search for OCH Interfaces",
+		Short: "Displays one or multiple Interfaces available on the Hub server",
 		Example: heredoc.WithCLIName(`
-			# Show all interfaces in table format:
+			# Show all Interfaces in table format:
 			<cli> hub interfaces get
 			
-			# Show "cap.interface.database.postgresql.install" interface in JSON format:
-			<cli> hub interfaces get -o json cap.interface.database.postgresql.install
+			# Show "cap.interface.database.postgresql.install" Interface in JSON format:
+			<cli> hub interfaces get cap.interface.database.postgresql.install -ojson
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.interfacePaths = args

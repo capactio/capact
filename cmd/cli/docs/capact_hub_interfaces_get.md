@@ -1,6 +1,6 @@
 ## capact hub interfaces get
 
-Get provides the ability to list and search for OCH Interfaces
+Displays one or multiple Interfaces available on the Hub server
 
 ```
 capact hub interfaces get [flags]
@@ -9,11 +9,11 @@ capact hub interfaces get [flags]
 ### Examples
 
 ```
-# Show all interfaces in table format:
+# Show all Interfaces in table format:
 capact hub interfaces get
 
-# Show "cap.interface.database.postgresql.install" interface in JSON format:
-capact hub interfaces get -o json cap.interface.database.postgresql.install
+# Show "cap.interface.database.postgresql.install" Interface in JSON format:
+capact hub interfaces get cap.interface.database.postgresql.install -ojson
 
 ```
 

@@ -17,5 +17,5 @@ This command consists of multiple subcommands to interact with Implementations s
 ### SEE ALSO
 
 * [capact hub](capact_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
-* [capact hub implementations get](capact_hub_implementations_get.md)	 - Lists the currently available Implementations on the Hub server
+* [capact hub implementations get](capact_hub_implementations_get.md)	 - Displays one or multiple Implementations available on the Hub server
 

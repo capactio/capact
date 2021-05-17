@@ -11,8 +11,6 @@ import (
 const (
 	// TODO: current hack to do not play with `.config` directory. Needs to be fixed!
 	// defined here to avoid import cycle
-	ConfigStoreName = "capactconfig"
-
 	CredStoreName = "capacthub"
 )
 

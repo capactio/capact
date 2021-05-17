@@ -70,9 +70,6 @@ func ListHubServer() ([]string, error) {
 
 	var out []string
 	for _, k := range keys {
-		if k == ConfigStoreName {
-			continue
-		}
 		dec, err := b64.StdEncoding.DecodeString(k)
 		if err != nil {
 			return nil, err
