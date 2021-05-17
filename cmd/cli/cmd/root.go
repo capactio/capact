@@ -1,23 +1,24 @@
 package cmd
 
 import (
-	"fmt"
 	"log"
-	"os"
-	"path"
 	"strings"
 
 	"capact.io/capact/cmd/cli/cmd/policy"
 
 	"capact.io/capact/cmd/cli/cmd/action"
-	"capact.io/capact/cmd/cli/cmd/config"
+	configcmd "capact.io/capact/cmd/cli/cmd/config"
 	"capact.io/capact/cmd/cli/cmd/hub"
 	"capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
+)
+
+var (
+	configPath string
 )
 
 func NewRoot() *cobra.Command {
@@ -69,6 +70,8 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Path to the YAML config file")
+
 	rootCmd.AddCommand(
 		NewValidate(),
 		NewDocs(),
@@ -78,7 +81,7 @@ func NewRoot() *cobra.Command {
 		NewCompletion(),
 		NewVersion(),
 		hub.NewHub(),
-		config.NewConfig(),
+		configcmd.NewConfig(),
 		action.NewAction(),
 		policy.NewCmd(),
 	)
@@ -89,39 +92,12 @@ func NewRoot() *cobra.Command {
 }
 
 func initConfig() {
-	configPath, err := getConfigPath()
-	if err != nil {
-		handleError(err)
-	}
-
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(configPath)
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			if err := os.MkdirAll(configPath, 0700); err != nil {
-				handleError(err)
-			}
-
-			if err := viper.SafeWriteConfig(); err != nil {
-				handleError(err)
-			}
-		} else {
-			handleError(err)
-		}
-	}
+	err := config.Init(configPath)
+	exitOnError(err)
 }
 
-func getConfigPath() (string, error) {
-	homeDir, err := os.UserHomeDir()
+func exitOnError(err error) {
 	if err != nil {
-		return "", err
+		log.Fatal(err)
 	}
-
-	return path.Join(homeDir, ".config", "capact"), nil
-}
-
-func handleError(err error) {
-	fmt.Println(err)
-	os.Exit(1)
 }

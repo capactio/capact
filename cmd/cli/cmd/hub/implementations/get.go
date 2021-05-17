@@ -38,7 +38,6 @@ func NewGet() *cobra.Command {
 			# Show all implementations in YAML format			
 			<cli> hub implementations get cap.interface.database.postgresql.install -oyaml
 		`, cli.Name),
-		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.interfacePath = args[0]
 			return getImpl(cmd.Context(), opts, os.Stdout)

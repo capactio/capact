@@ -8,6 +8,12 @@ This command consists of multiple subcommands to interact with Implementations s
   -h, --help   help for implementations
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact hub](capact_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.

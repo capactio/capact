@@ -23,6 +23,12 @@ capact config set-context localhost:8080
   -h, --help   help for set-context
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact config](capact_config.md)	 - Manage configuration

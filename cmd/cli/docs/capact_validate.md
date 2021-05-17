@@ -29,6 +29,12 @@ capact validate ./och-content/**/*.yaml
   -s, --schemas string   Path to the local directory with OCF JSONSchemas. If not provided, built-in JSONSchemas are used.
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI

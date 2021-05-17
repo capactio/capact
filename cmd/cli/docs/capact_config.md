@@ -12,6 +12,12 @@ Display or change configuration settings for the Hub
   -h, --help   help for config
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI

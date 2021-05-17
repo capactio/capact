@@ -20,6 +20,12 @@ capact config get-contexts
   -h, --help   help for get-contexts
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact config](capact_config.md)	 - Manage configuration

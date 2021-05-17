@@ -1,6 +1,6 @@
 ## capact action get
 
-Lists the available Actions
+Displays one or multiple Actions
 
 ```
 capact action get [flags]
@@ -24,6 +24,12 @@ capact action get funny-stallman -ojson
   -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
   -o, --output string      Output format. One of:
                            json | yaml | table (default "table")
+```
+
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
 ```
 
 ### SEE ALSO

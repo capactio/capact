@@ -36,6 +36,12 @@ capact upgrade --version 0.1.0
   -w, --wait                                Waits for the upgrade process until it finish or the defined "--timeout" occurs.
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI

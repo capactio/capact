@@ -15,7 +15,7 @@ func NewGet() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "get",
-		Short: "Lists the available Actions",
+		Short: "Displays one or multiple Actions",
 		Example: heredoc.WithCLIName(`
 			# Show all Actions in table format
 			<cli> action get
@@ -23,12 +23,8 @@ func NewGet() *cobra.Command {
 			# Show the Action "funny-stallman" in JSON format
 			<cli> action get funny-stallman -ojson
 		`, cli.Name),
-		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 0 {
-				opts.ActionName = args[0]
-			}
-
+			opts.ActionNames = args
 			return action.Get(cmd.Context(), opts, os.Stdout)
 		},
 	}

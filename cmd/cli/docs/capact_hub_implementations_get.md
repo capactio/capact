@@ -26,6 +26,12 @@ capact hub implementations get cap.interface.database.postgresql.install -oyaml
                                     json | yaml | table (default "table")
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact hub implementations](capact_hub_implementations.md)	 - This command consists of multiple subcommands to interact with Implementations stored on the Hub server

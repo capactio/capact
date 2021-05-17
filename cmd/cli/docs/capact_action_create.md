@@ -21,6 +21,12 @@ capact action create INTERFACE [flags]
                                               id: "ABCD-1234-EFGH-4567"
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact action](capact_action.md)	 - This command consists of multiple subcommands to interact with target Actions

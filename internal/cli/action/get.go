@@ -12,13 +12,12 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/olekukonko/tablewriter"
-	"github.com/pkg/errors"
 )
 
 type GetOptions struct {
-	ActionName string
-	Namespace  string
-	Output     string
+	ActionNames []string
+	Namespace   string
+	Output      string
 }
 
 func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
@@ -29,25 +28,22 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return err
 	}
 
-	var acts []*gqlengine.Action
+	var actions []*gqlengine.Action
 
 	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
+	acts, err := actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
+	if err != nil {
+		return err
+	}
 
-	if opts.ActionName != "" {
-		act, err := actionCli.GetAction(ctxWithNs, opts.ActionName)
-		if err != nil {
-			return err
-		}
-
-		if act == nil {
-			return errors.Errorf("Action %s not found", opts.ActionName)
-		}
-
-		acts = append(acts, act)
+	if len(opts.ActionNames) == 0 {
+		actions = acts
 	} else {
-		acts, err = actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
-		if err != nil {
-			return err
+		for _, name := range opts.ActionNames {
+			act := findAction(acts, name)
+			if act != nil {
+				actions = append(actions, act)
+			}
 		}
 	}
 
@@ -56,7 +52,17 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return err
 	}
 
-	return printAction(opts.Namespace, acts, w)
+	return printAction(opts.Namespace, actions, w)
+}
+
+func findAction(acts []*gqlengine.Action, name string) *gqlengine.Action {
+	for i := range acts {
+		if acts[i].Name == name {
+			return acts[i]
+		}
+	}
+
+	return nil
 }
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface

@@ -25,6 +25,12 @@ capact login localhost:8080 -u user
   -u, --username string   Username
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI
