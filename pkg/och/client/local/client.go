@@ -208,7 +208,7 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return errors.Wrap(err, "while executing query to get TypeInstance")
+		return errors.Wrap(err, "while executing query to delete TypeInstance")
 	}
 
 	return nil
