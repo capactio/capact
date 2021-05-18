@@ -21,7 +21,8 @@ func NewCmd() *cobra.Command {
 		NewCreate(),
 		NewDelete(),
 		NewGet(),
-		NewUpdate(),
+		NewEdit(),
+		NewApply(),
 	)
 	return root
 }
@@ -62,4 +63,10 @@ func mapTypeInstanceToUpdateType(in *gqllocalapi.TypeInstance) gqllocalapi.Updat
 	}
 
 	return out
+}
+
+func panicOnError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

@@ -13,7 +13,7 @@ capact typeinstance get [TYPE_INSTANCE_ID...] [flags]
 capact typeinstance get c49b 4793
 
 # Save TypeInstances with IDs c49b and 4793 to file in the update format which later can be submitted for update by: 
-# capact typeinstance update --from-file /tmp/typeinstances.yaml
+# capact typeinstance apply --from-file /tmp/typeinstances.yaml
 capact typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
 
 ```

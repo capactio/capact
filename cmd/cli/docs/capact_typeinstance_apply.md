@@ -1,6 +1,6 @@
-## capact typeinstance update
+## capact typeinstance apply
 
-Updates a given TypeInstance(s)
+Apply a given TypeInstance(s)
 
 ### Synopsis
 
@@ -9,17 +9,14 @@ CAUTION: Race updates may occur as TypeInstance locking is not used by CLI.
 
 
 ```
-capact typeinstance update [-f file]... | TYPE_INSTANCE_ID [flags]
+capact typeinstance apply -f file... [flags]
 ```
 
 ### Examples
 
 ```
-# Apply TypeInstances from the given file
-capact typeinstance update -f /tmp/typeinstances.yaml 
-
-# Update TypeInstance in editor mode 
-capact typeinstance update TYPE_INSTANCE_ID
+# Apply TypeInstances from the given file.
+capact typeinstance apply -f /tmp/typeinstances.yaml
 
 ```
 
@@ -27,7 +24,7 @@ capact typeinstance update TYPE_INSTANCE_ID
 
 ```
   -f, --from-file strings   The TypeInstances input in YAML format (can specify multiple)
-  -h, --help                help for update
+  -h, --help                help for apply
   -o, --output string       Output format. One of: json | table | yaml (default "table")
 ```
 

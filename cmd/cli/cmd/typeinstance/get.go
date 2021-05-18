@@ -43,7 +43,7 @@ func NewGet() *cobra.Command {
 			<cli> typeinstance get c49b 4793
 			
 			# Save TypeInstances with IDs c49b and 4793 to file in the update format which later can be submitted for update by: 
-			# <cli> typeinstance update --from-file /tmp/typeinstances.yaml
+			# <cli> typeinstance apply --from-file /tmp/typeinstances.yaml
 			<cli> typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -91,15 +91,29 @@ func getTI(ctx context.Context, opts GetOptions) ([]gqllocalapi.TypeInstance, er
 		})
 	}
 
+	var (
+		out  []gqllocalapi.TypeInstance
+		errs []error
+	)
+
 	// TODO: make it client-side
-	var out []gqllocalapi.TypeInstance
 	for _, id := range opts.RequestedTypeInstancesIDs {
 		ti, err := hubCli.FindTypeInstance(ctx, id)
 		if err != nil {
-			return nil, err
+			errs = append(errs, err)
+			continue
+		}
+		if ti == nil {
+			errs = append(errs, fmt.Errorf("TypeInstance %s not found", id))
+			continue
 		}
 
 		out = append(out, *ti)
+	}
+
+	// TODO: this will be changed after merging unified printers which will have PrintErrors method.
+	for _, err := range errs {
+		fmt.Fprintf(os.Stderr, "Error from server: %v", err.Error())
 	}
 
 	return out, nil
