@@ -31,7 +31,7 @@ Policy is defined in a form of YAML file. It contains two main features:
 
 ### Definition of rules for Interface
 
-You can specify which Implementations should be selected for using `interface` property for every rule. There are three different Interface selectors:
+You can specify which Implementations should be selected for a given Interface using `interface` property. There are three different Interface selectors:
 
 - Interface with exact revision:
 

@@ -3,7 +3,6 @@
 package controller
 
 import (
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 	"context"
 	"io/ioutil"
 	"path/filepath"

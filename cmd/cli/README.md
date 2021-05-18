@@ -7,7 +7,9 @@
 
 ## Overview
 
-The Capact CLI is a command-line tool, which manages Capact resources. It supports validating OCF manifests against manifest JSON schemas.
+Capact CLI is a command-line tool, which manages Capact resources. It supports validating OCF manifests against manifest JSON schemas.
+
+Capact CLI uses GraphQL API for managing various Capact resources, such as Action, TypeInstances or Policy.
 
 ## Prerequisites
 
