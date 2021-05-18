@@ -66,7 +66,7 @@ func (s *Service) Update(ctx context.Context, in clusterpolicy.ClusterPolicy) (c
 	s.log.Info("Updating Policy")
 	err = s.k8sCli.Update(ctx, cfgMap)
 	if err != nil {
-		errContext := "while updating item"
+		errContext := "while updating Policy ConfigMap"
 		s.log.Error(errContext, zap.Error(err))
 		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, errContext)
 	}
