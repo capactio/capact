@@ -11,6 +11,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"github.com/hokaccha/go-prettyjson"
@@ -34,7 +35,7 @@ func NewGet() *cobra.Command {
 			# Show all Implementation Revisions in table format
 			<cli> hub implementations get
 			
-			# Show "cap.interface.database.postgresql.install" Implementation Revisions in YAML format			
+			# Show "cap.implementation.gcp.cloudsql.postgresql.install" Implementation Revisions in YAML format			
 			<cli> hub implementations get cap.interface.database.postgresql.install -oyaml
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,7 +58,10 @@ func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	var implementationRevisions []*gqlpublicapi.ImplementationRevision
+	var (
+		implementationRevisions []*gqlpublicapi.ImplementationRevision
+		errors                  []error
+	)
 
 	impls, err := cli.ListImplementationRevisions(ctx, nil)
 	if err != nil {
@@ -67,9 +71,16 @@ func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 	if len(opts.implementationPaths) == 0 {
 		implementationRevisions = impls
 	} else {
-		for _, name := range opts.implementationPaths {
-			found := findImplementations(impls, name)
-			implementationRevisions = append(implementationRevisions, found...)
+		implMap := implementationSliceToMap(impls)
+
+		for _, path := range opts.implementationPaths {
+			foundImpls, found := implMap[path]
+			if !found {
+				errors = append(errors, errNotFound(path))
+				continue
+			}
+
+			implementationRevisions = append(implementationRevisions, foundImpls...)
 		}
 	}
 
@@ -78,19 +89,27 @@ func getImpl(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	return printImplRev(implementationRevisions, w)
+	if err := printImplRev(implementationRevisions, w); err != nil {
+		return err
+	}
+
+	cliprinter.PrintErrors(errors)
+	return nil
 }
 
-func findImplementations(impls []*gqlpublicapi.ImplementationRevision, name string) []*gqlpublicapi.ImplementationRevision {
-	var res []*gqlpublicapi.ImplementationRevision
+func implementationSliceToMap(impls []*gqlpublicapi.ImplementationRevision) map[string][]*gqlpublicapi.ImplementationRevision {
+	res := make(map[string][]*gqlpublicapi.ImplementationRevision)
 
 	for i := range impls {
-		if impls[i].Metadata.Path == name {
-			res = append(res, impls[i])
-		}
+		impl := impls[i]
+		res[impl.Metadata.Path] = append(res[impl.Metadata.Path], impl)
 	}
 
 	return res
+}
+
+func errNotFound(name string) error {
+	return fmt.Errorf(`NotFound: Implementation "%s" not found`, name)
 }
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface

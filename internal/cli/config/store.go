@@ -48,7 +48,7 @@ func Init(configPath string) error {
 		if err != nil {
 			return errors.Wrap(err, "while writing config file")
 		}
-	} else {
+	} else if err != nil {
 		return errors.Wrap(err, "while reading configuration")
 	}
 

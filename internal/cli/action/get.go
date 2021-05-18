@@ -8,8 +8,10 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
+	"k8s.io/apimachinery/pkg/util/duration"
 
 	"github.com/olekukonko/tablewriter"
 )
@@ -28,20 +30,29 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return err
 	}
 
-	var actions []*gqlengine.Action
+	var (
+		actions []*gqlengine.Action
+		errors  []error
+	)
 
 	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
-	acts, err := actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
-	if err != nil {
-		return err
-	}
 
 	if len(opts.ActionNames) == 0 {
+		acts, err := actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
+		if err != nil {
+			return err
+		}
+
 		actions = acts
 	} else {
 		for _, name := range opts.ActionNames {
-			act := findAction(acts, name)
+			act, err := actionCli.GetAction(ctxWithNs, name)
+			if err != nil {
+				return err
+			}
+
 			if act == nil {
+				errors = append(errors, errNotFound(name))
 				continue
 			}
 
@@ -54,17 +65,16 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return err
 	}
 
-	return printAction(opts.Namespace, actions, w)
-}
-
-func findAction(acts []*gqlengine.Action, name string) *gqlengine.Action {
-	for i := range acts {
-		if acts[i].Name == name {
-			return acts[i]
-		}
+	if err := printAction(opts.Namespace, actions, w); err != nil {
+		return err
 	}
 
+	cliprinter.PrintErrors(errors)
 	return nil
+}
+
+func errNotFound(name string) error {
+	return fmt.Errorf(`NotFound: Action "%s" not found`, name)
 }
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface
@@ -103,7 +113,7 @@ func printGetTable(namespace string, in []*gqlengine.Action, w io.Writer) error 
 			act.ActionRef.Path,
 			toString(act.Run),
 			string(act.Status.Phase),
-			time.Since(act.CreatedAt.Time).String(),
+			duration.HumanDuration(time.Since(act.CreatedAt.Time)),
 		})
 	}
 

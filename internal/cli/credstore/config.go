@@ -9,8 +9,6 @@ import (
 )
 
 const (
-	// TODO: current hack to do not play with `.config` directory. Needs to be fixed!
-	// defined here to avoid import cycle
 	CredStoreName = "capacthub"
 )
 
@@ -21,7 +19,7 @@ func Config(prefix string) keyring.Config {
 		KWalletAppID:             fmt.Sprintf("%s-vault", prefix),
 		KWalletFolder:            fmt.Sprintf("%s-vault", prefix),
 		WinCredPrefix:            fmt.Sprintf("%s-vault", prefix),
-		FileDir:                  fmt.Sprintf("~/.capact/%s_vault", prefix),
+		FileDir:                  fmt.Sprintf("~/.config/capact/%s_vault", prefix),
 		KeychainTrustApplication: true,
 		FilePasswordFunc:         FileKeyringPassphrasePrompt,
 	}

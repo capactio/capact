@@ -12,7 +12,7 @@ capact hub implementations get [flags]
 # Show all Implementation Revisions in table format
 capact hub implementations get
 
-# Show "cap.interface.database.postgresql.install" Implementation Revisions in YAML format			
+# Show "cap.implementation.gcp.cloudsql.postgresql.install" Implementation Revisions in YAML format			
 capact hub implementations get cap.interface.database.postgresql.install -oyaml
 
 ```

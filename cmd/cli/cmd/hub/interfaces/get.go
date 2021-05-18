@@ -11,6 +11,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"github.com/hokaccha/go-prettyjson"
@@ -61,7 +62,10 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	var interfaces []*gqlpublicapi.Interface
+	var (
+		interfaces []*gqlpublicapi.Interface
+		errors     []error
+	)
 
 	ifaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
 		PathPattern: &allPathPrefix,
@@ -73,9 +77,12 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 	if len(opts.interfacePaths) == 0 {
 		interfaces = ifaces
 	} else {
-		for _, name := range opts.interfacePaths {
-			iface := findInterface(ifaces, name)
-			if iface == nil {
+		ifaceMap := interfaceSliceToMap(ifaces)
+
+		for _, path := range opts.interfacePaths {
+			iface, found := ifaceMap[path]
+			if !found {
+				errors = append(errors, errNotFound(path))
 				continue
 			}
 
@@ -89,17 +96,27 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 		return err
 	}
 
-	return printInterfaces(pattern, interfaces, w)
-}
-
-func findInterface(ifaces []*gqlpublicapi.Interface, name string) *gqlpublicapi.Interface {
-	for i := range ifaces {
-		if ifaces[i].Path == name {
-			return ifaces[i]
-		}
+	if err := printInterfaces(pattern, interfaces, w); err != nil {
+		return err
 	}
 
+	cliprinter.PrintErrors(errors)
 	return nil
+}
+
+func interfaceSliceToMap(ifaces []*gqlpublicapi.Interface) map[string]*gqlpublicapi.Interface {
+	res := make(map[string]*gqlpublicapi.Interface)
+
+	for i := range ifaces {
+		iface := ifaces[i]
+		res[iface.Path] = iface
+	}
+
+	return res
+}
+
+func errNotFound(name string) error {
+	return fmt.Errorf(`NotFound: Interface "%s" not found`, name)
 }
 
 func extractOutputFormat(output string) (format string, pattern string) {
