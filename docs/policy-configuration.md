@@ -31,35 +31,40 @@ Policy is defined in a form of YAML file. It contains two main features:
 
 ### Definition of rules for Interface
 
-You can specify which Implementations should be selected for:
+You can specify which Implementations should be selected for a given Interface using `interface` property. There are three different Interface selectors:
 
-- Interface with exact revision in a form of `{path}:{revision}` key, such as:
-
-    ```yaml
-    rules:
-        cap.interface.database.postgresql.install:0.1.0: # exact 0.1.0 revision
-            oneOf:
-            - implementationConstraints:
-                # (...)
-    ```
-
-- Interface with any revision, using path as a key:
+- Interface with exact revision:
 
     ```yaml
     rules:
-        cap.interface.database.postgresql.install: # any revision
-            oneOf:
-            - implementationConstraints:
-                # (...)
+    - interface:
+        path: cap.interface.database.postgresql.install
+        revision: 0.1.0 # exact revision
+      oneOf:
+        - implementationConstraints:
+            # (...)
     ```
-- any Interface, using `cap.*` as a key:
+
+- Interface with any revision:
+
+    ```yaml
+    rules:
+    - interface:
+        path: cap.interface.database.postgresql.install
+        # any revision
+      oneOf:
+        - implementationConstraints:
+            # (...)
+    ```
+- any Interface, using `cap.*` as an Interface path:
     
     ```yaml
     rules:
-        cap.*: # any Interface
-            oneOf:
-            - implementationConstraints:
-                # (...)
+    - interface:
+        path: cap.* # any Interface
+      oneOf:
+        - implementationConstraints:
+            # (...)
     ```
 
 Engine will search for rules for a given Interface in the same order as specified in the list above. If an entry for a given Interface is found, then Engine uses it to fetch Implementations from OCH.
@@ -73,50 +78,55 @@ You can select Implementations based on the following Implementation constraints
 - `path`, which specifies the exact path for the Implementation. If path found, then **any** revision of the Implementation is used. 
 
     ```yaml
-    cap.interface.database.postgresql.install:
-        oneOf:
-          - implementationConstraints:
-                path: "cap.implementation.bitnami.postgresql.install" # any revision can be used
+    - interface:
+        path: cap.interface.database.postgresql.install
+      oneOf:
+        - implementationConstraints:
+            path: "cap.implementation.bitnami.postgresql.install" # any revision can be used
     ```
 
 - `attributes`, which specifies which Attributes a given Implementation must contain.
 
     ```yaml
-    cap.interface.database.postgresql.install:
-        oneOf:
-          - implementationConstraints:
-                attributes:
-                  - path: "cap.attribute.cloud.provider.gcp"
-                    revision: "0.1.0"
-                  - path: "cap.attribute.workload.stateful"
-                    # any revision
+    - interface:
+        path: cap.interface.database.postgresql.install
+      oneOf:
+        - implementationConstraints:
+            attributes:
+              - path: "cap.attribute.cloud.provider.gcp"
+                revision: "0.1.0"
+              - path: "cap.attribute.workload.stateful"
+                # any revision
     ```
 
 - `requires`, which specifies which Type references should be included in the `spec.requires` field for the Implementation. 
 
     ```yaml
-    cap.interface.database.postgresql.install:
-        oneOf:
-          - implementationConstraints:
-                requires:
-                    - path: "cap.core.type.platform.kubernetes" # any revision
-                    - path: "cap.type.gcp.auth.service-account"
-                      revision: "0.1.0" # exact revision 
+    - interface:
+        path: cap.interface.database.postgresql.install
+      oneOf:
+        - implementationConstraints:
+            requires:
+              - path: "cap.core.type.platform.kubernetes" # any revision
+              - path: "cap.type.gcp.auth.service-account"
+                revision: "0.1.0" # exact revision 
     ```
 
 - Empty constraints, which means any Implementation for a given Interface.
     
     ```yaml
-    cap.interface.database.postgresql.install:
-        oneOf:
-          - implementationConstraints: {} # any Implementation that implements the Interface
+    - interface:
+        path: cap.interface.database.postgresql.install
+      oneOf:
+        - implementationConstraints: {} # any Implementation that implements the Interface
     ```
 
 You can also deny all Implementations for a given Interface with the following syntax:
 
 ```yaml
-cap.interface.database.postgresql.install:
-    oneOf: [] # deny all Implementations for a given Interface
+- interface:
+    path: cap.interface.database.postgresql.install
+  oneOf: [] # deny all Implementations for a given Interface
 ```
 
 ### TypeInstance injection
@@ -125,16 +135,17 @@ Along with Implementation constraints, Cluster Admin may configure TypeInstances
 
 ```yaml
 rules:
- cap.interface.database.postgresql.install: 
-   oneOf:
-     - implementationConstraints:
-         requires:
+  - interface:
+      path: cap.interface.database.postgresql.install 
+    oneOf:
+      - implementationConstraints:
+          requires:
            - path: "cap.type.gcp.auth.service-account"
-       injectTypeInstances:
-         - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
-           typeRef:
-             path: "cap.type.gcp.auth.service-account"
-             revision: "0.1.0"
+        injectTypeInstances:
+          - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
+            typeRef:
+              path: "cap.type.gcp.auth.service-account"
+              revision: "0.1.0"
 ```
 
 The rule defines that Engine should select Implementation, which requires GCP Service Account TypeInstance. To inject the TypeInstance in a proper place, the Implementation must define `alias` for a given requirement:
@@ -146,7 +157,6 @@ The rule defines that Engine should select Implementation, which requires GCP Se
         - name: service-account
           alias: gcp-sa # required for TypeInstance injection based on Policy
           revision: 0.1.0
-
 ```
 
 If the `alias` property is defined for an item from `requires` section, Engine injects a workflow step which downloads a given TypeInstance by ID and outputs it under the `alias`. For this example, in the Implementation workflow, the TypeInstance value is available under `{{workflow.outputs.artifacts.gcp-sa}}`.
@@ -158,10 +168,10 @@ Even if the Implementation satisfies the constraints, and the `alias` is not def
 The following YAML snippet presents full Policy example with additional comments:
 
 ```yaml
-apiVersion: 0.1.0 # Defines syntax version for policy
-
 rules: # Configures the following behavior for Engine during rendering Action
- cap.interface.database.postgresql.install:0.1.0: # Rules for Interface with exact path in exact revision   
+ - interface: # Rules for Interface with exact path in exact revision
+     path: "cap.interface.database.postgresql.install"
+     revision: "0.1.0"   
    oneOf: # Engine follows the order of the Implementation selection,
           # finishing when at least one matching Implementation is found
      - implementationConstraints: # In first place, find and use an Implementation which:
@@ -188,8 +198,9 @@ rules: # Configures the following behavior for Engine during rendering Action
          
       # If not found any of such Implementations defined in `oneOf`, return error.
    
-  cap.*: # For any other Interface
-         # (looked up in third place, if there is no key under `rules` for a given Interface `path:revision` or `path`)
+  - interface:
+      path: "cap.*" # For any other Interface
+      # (looked up in third place, if there is no entry under `rules` for a given Interface `path:revision` or `path`)
     oneOf: # Engine follows the order of the Implementation selection,
            # finishing when at least one matching Implementation is found
       - implementationConstraints: # In first place, select Implementation which:
@@ -204,19 +215,37 @@ rules: # Configures the following behavior for Engine during rendering Action
 
 ## Configuration
 
-By default, the Policy is stored in Kubernetes ConfigMap named `capact-engine-cluster-policy` in the `capact-system`. To view or modify it, use Kubernetes API and tooling. In the future, we will expose dedicated Engine GraphQL API to make it easier to manage it.
+You can view and update the Policy using dedicated commands in Capact CLI. You can also modify Policy during Capact installation or upgrade. This section describes all Policy configuration options.
 
 ### View current Policy
 
 To view current Policy rules, use the following command:
 
 ```bash
-kubectl get configmap -n capact-system capact-engine-cluster-policy -oyaml
+capact policy get
 ```
 
-### Modify Policy
+You can use additional flags to configure the command behavior, such as output format. Run `capact policy get -h` to see all available flags.
 
-While you can use `kubectl` to edit the ConfigMap with Policy directly, its content will be overridden every time you upgrade Capact installation. Thus, it is recommended to update the Policy during Capact installation or upgrade. This guide shows how to do it.
+### Modify Policy using CLI
+
+> **NOTE:** If you update Policy using CLI, Policy rules will be restored to default every time you upgrade Capact installation. To avoid such scenario, update the Policy during Capact installation or upgrade. To learn how to do it, read the section [Modify Policy with Capact installation/upgrade overrides](#modify-policy-with-capact-installationupgrade-overrides).
+
+To update Policy interactively using CLI, run:
+
+```yaml
+capact policy edit
+```
+
+You can also update the Policy from YAML file, using command:
+
+```yaml
+capact policy apply -f {path}
+```
+
+To get familiar with an example content of the file, see the [Example](#example) section.
+
+### Modify Policy with Capact installation/upgrade overrides
 
 1. Prepare a `cluster-policy.overrides.yaml` file with the following content:
 
@@ -224,8 +253,9 @@ While you can use `kubectl` to edit the ConfigMap with Policy directly, its cont
     engine:
         clusterPolicyRules:
             # Your rules here, for example:
-            cap.*:
-                oneOf: 
+            - interface:
+                path: "cap.*"
+              oneOf: 
                 - implementationConstraints: # Prefer Implementations which require Kubernetes TypeInstance
                     requires:
                         - path: "cap.core.type.platform.kubernetes"

@@ -35,7 +35,7 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 		}
 	}`, actionFields))
 
-	enrichWithNamespace(ctx, req)
+	c.enrichWithNamespace(ctx, req)
 	req.Var("in", in)
 
 	var resp struct {
@@ -55,7 +55,7 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 		}
 	}`, actionFields))
 
-	enrichWithNamespace(ctx, req)
+	c.enrichWithNamespace(ctx, req)
 	req.Var("name", name)
 
 	var resp struct {
@@ -75,7 +75,7 @@ func (c *Client) ListActions(ctx context.Context, filter *enginegraphql.ActionFi
 		}
 	}`, actionFields))
 
-	enrichWithNamespace(ctx, req)
+	c.enrichWithNamespace(ctx, req)
 	req.Var("filter", filter)
 
 	var resp struct {
@@ -97,7 +97,7 @@ func (c *Client) RunAction(ctx context.Context, name string) error {
 		}
 	}`, actionFields))
 
-	enrichWithNamespace(ctx, req)
+	c.enrichWithNamespace(ctx, req)
 	req.Var("name", name)
 
 	var resp struct {
@@ -119,7 +119,7 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 		}
 	}`, actionFields))
 
-	enrichWithNamespace(ctx, req)
+	c.enrichWithNamespace(ctx, req)
 	req.Var("name", name)
 
 	var resp struct {
@@ -132,80 +132,47 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 	return nil
 }
 
-func enrichWithNamespace(ctx context.Context, req *graphql.Request) {
+func (c *Client) UpdatePolicy(ctx context.Context, policy *enginegraphql.PolicyInput) (*enginegraphql.Policy, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`mutation($in: PolicyInput!) {
+		updatePolicy(
+			in: $in
+		) {
+			%s
+		}
+	}`, policyFields))
+	req.Var("in", policy)
+
+	var resp struct {
+		Policy *enginegraphql.Policy `json:"updatePolicy"`
+	}
+	if err := c.client.Run(ctx, req, nil); err != nil {
+		return nil, errors.Wrap(err, "while executing mutation to update Policy")
+	}
+
+	return resp.Policy, nil
+}
+
+func (c *Client) GetPolicy(ctx context.Context) (*enginegraphql.Policy, error) {
+	req := graphql.NewRequest(fmt.Sprintf(`query {
+		policy{
+			%s
+		}
+	}`, policyFields))
+
+	var resp struct {
+		Policy *enginegraphql.Policy `json:"policy"`
+	}
+	if err := c.client.Run(ctx, req, &resp); err != nil {
+		return nil, errors.Wrap(err, "while executing query to get Policy")
+	}
+
+	return resp.Policy, nil
+}
+
+func (c *Client) enrichWithNamespace(ctx context.Context, req *graphql.Request) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
 		return
 	}
 	req.Header.Add(namespace.NamespaceHeaderName, ns)
 }
-
-const actionFields = `
-    name
-    createdAt
-    input {
-        parameters
-        typeInstances {
-            id
-            name
-            optional
-            typeRef {
-                path
-                revision
-            }
-        }
-    }
-    output {
-        typeInstances {
-            name
-            typeRef {
-                path
-                revision
-            }
-            id
-            name
-        }
-    }
-    actionRef {
-        path
-        revision
-    }
-    cancel
-    run
-    dryRun
-    renderedAction
-    renderingAdvancedMode {
-        enabled
-        typeInstancesForRenderingIteration {
-            name
-            typeRef {
-                path
-                revision
-            }
-        }
-    }
-    renderedActionOverride
-    status {
-        phase
-        timestamp
-        message
-        runner {
-            status
-        }
-        canceledBy {
-            username
-            groups
-            extra
-        }
-        runBy {
-            username
-            groups
-            extra
-        }
-        createdBy {
-            username
-            groups
-            extra
-        }
-    }
-`

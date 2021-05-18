@@ -1,0 +1,20 @@
+## capact policy get
+
+Displays the details of current Policy
+
+```
+capact policy get [flags]
+```
+
+### Options
+
+```
+  -h, --help            help for get
+  -o, --output string   Output format. One of:
+                        json | yaml (default "yaml")
+```
+
+### SEE ALSO
+
+* [capact policy](capact_policy.md)	 - This command consists of multiple subcommands to interact with Policy
+
