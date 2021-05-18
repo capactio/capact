@@ -60,7 +60,10 @@ affinity: {}
 clusterPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #
-#  cap.interface.database.postgresql.install:0.1.0: # Rules for exact path and revision (looked up in first place)
+#  - interface:
+#      # Rules for exact path and revision (looked up in first place)
+#      path: "cap.interface.database.postgresql.install"
+#      revision: "0.1.0"
 #    oneOf:
 #      - implementationConstraints:
 #          requires:
@@ -70,7 +73,7 @@ clusterPolicyRules:
 #            - path: "cap.attribute.cloud.provider.gcp"
 #              # any revision
 #        injectTypeInstances:
-#          - id: {uuid}
+#          - id: "{uuid}"
 #            typeRef:
 #              path: "cap.type.gcp.auth.service-account"
 #              revision: "0.1.0"
@@ -80,7 +83,9 @@ clusterPolicyRules:
 #             # any revision
 #      - implementationConstraints:
 #          path: cap.implementation.bitnami.postgresql.install
-#  cap.interface.database.postgresql.install: # Rules for exact path in any revision (looked up in second place)
+#  - interface:
+#      # Rules for exact path in any revision (looked up in second place)
+#      path: "cap.interface.database.postgresql.install"
 #    oneOf:
 #      - implementationConstraints:
 #          requires:
@@ -90,28 +95,31 @@ clusterPolicyRules:
 #            - path: "cap.attribute.cloud.provider.gcp"
 #              # any revision
 
-  cap.*: # any other Interface (looked up in third place, if there is no rule for `path:revision` or `path`)
-    oneOf:
-      - implementationConstraints: # prefer Implementation for Kubernetes
-          requires:
-            - path: "cap.core.type.platform.kubernetes"
-              # any revision
-      - implementationConstraints: {} # fallback to any Implementation
+        - interface:
+            # any other Interface (looked up in third place, if there is no rule for `path` and `revision` or `path`)
+            path: "cap.*"
+          oneOf:
+            - implementationConstraints: # prefer Implementation for Kubernetes
+                requires:
+                  - path: "cap.core.type.platform.kubernetes"
+                    # any revision
+            - implementationConstraints: {} # fallback to any Implementation
 
 testSetup:
   enabled: false
   clusterPolicyRules:
-      cap.interface.capactio.capact.validation.action.passing: # Rules for exact path and revision (looked up in first place)
-        oneOf:
-          - implementationConstraints:
-              requires:
-                - path: "cap.type.capactio.capact.validation.single-key"
-              attributes:
-                - path: "cap.attribute.capactio.capact.validation.policy.most-preferred"
-            injectTypeInstances:
-              - id: "{typeInstanceUUID}"
-                typeRef:
-                  path: "cap.type.capactio.capact.validation.single-key"
-                  revision: "0.1.0"
-          - implementationConstraints:
-              path: cap.implementation.capactio.capact.validation.action.passing-a
+    - interface:
+        path: "cap.interface.capactio.capact.validation.action.passing"
+      oneOf:
+        - implementationConstraints:
+            requires:
+              - path: "cap.type.capactio.capact.validation.single-key"
+            attributes:
+              - path: "cap.attribute.capactio.capact.validation.policy.most-preferred"
+          injectTypeInstances:
+            - id: "{typeInstanceUUID}"
+              typeRef:
+                path: "cap.type.capactio.capact.validation.single-key"
+                revision: "0.1.0"
+        - implementationConstraints:
+            path: cap.implementation.capactio.capact.validation.action.passing-a

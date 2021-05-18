@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	policypkg "capact.io/capact/internal/k8s-engine/policy"
+
 	"go.uber.org/zap"
 
 	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
@@ -41,7 +43,6 @@ const (
 	k8sJobRunnerInputDataMountPath = "/mnt"
 	k8sJobRunnerVolumeName         = "input-volume"
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
-	clusterPolicyConfigMapKey      = "cluster-policy.yaml"
 )
 
 type OCHImplementationGetter interface {
@@ -56,6 +57,10 @@ type ActionValidator interface {
 	Validate(action *types.Action, namespace string) error
 }
 
+type PolicyService interface {
+	Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error)
+}
+
 type TypeInstanceLocker interface {
 	LockTypeInstances(ctx context.Context, in *ochlocalapi.LockTypeInstancesInput) error
 	UnlockTypeInstances(ctx context.Context, in *ochlocalapi.UnlockTypeInstancesInput) error
@@ -65,21 +70,21 @@ type TypeInstanceLocker interface {
 type ActionService struct {
 	k8sCli             client.Client
 	builtinRunner      BuiltinRunnerConfig
-	clusterPolicyCfg   ClusterPolicyConfig
 	argoRenderer       ArgoRenderer
 	actionValidator    ActionValidator
+	policyService      PolicyService
 	typeInstanceLocker TypeInstanceLocker
 	log                *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, typeInstanceLocker TypeInstanceLocker, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, policyService PolicyService, typeInstanceLocker TypeInstanceLocker, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		builtinRunner:      cfg.BuiltinRunner,
-		clusterPolicyCfg:   cfg.ClusterPolicy,
 		argoRenderer:       argoRenderer,
 		actionValidator:    actionValidator,
+		policyService:      policyService,
 		typeInstanceLocker: typeInstanceLocker,
 		log:                log,
 	}
@@ -270,7 +275,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 	})
 }
 
-// ResolveImplementationForAction returns specific implementation for interface from a given Action.
+// RenderAction returns rendered Implementation for Interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
 	ref, userInput, err := a.getUserInputData(ctx, action)
 	if err != nil {
@@ -360,25 +365,14 @@ func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []typ
 }
 
 func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
-	key := client.ObjectKey{
-		Namespace: a.clusterPolicyCfg.Namespace,
-		Name:      a.clusterPolicyCfg.Name,
-	}
-
-	policyCfgMap := &corev1.ConfigMap{}
-	if err := a.k8sCli.Get(ctx, key, policyCfgMap); err != nil {
-		if apierrors.IsNotFound(err) {
-			a.log.Info("ConfigMap with cluster policy not found. Fallback to empty Cluster Policy", zap.Any("key", key))
+	policy, err := a.policyService.Get(ctx)
+	if err != nil {
+		if errors.Is(err, policypkg.ErrPolicyConfigMapNotFound) {
+			a.log.Info("ConfigMap with cluster policy not found. Fallback to empty Cluster Policy")
 			return clusterpolicy.ClusterPolicy{}, nil
 		}
 
 		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
-	}
-
-	policy, err := clusterpolicy.FromYAMLString(policyCfgMap.Data[clusterPolicyConfigMapKey])
-	if err != nil {
-		return clusterpolicy.ClusterPolicy{},
-			errors.Wrapf(err, "while unmarshaling policy from ConfigMap '%s/%s' from %q key", key.Namespace, key.Name, clusterPolicyConfigMapKey)
 	}
 
 	return policy, nil

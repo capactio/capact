@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"capact.io/capact/internal/k8s-engine/policy"
+
 	"capact.io/capact/internal/graphqlutil"
 	"capact.io/capact/internal/k8s-engine/controller"
 	domaingraphql "capact.io/capact/internal/k8s-engine/graphql"
@@ -36,6 +38,7 @@ var (
 
 const (
 	GraphQLServerName = "engine-graphql"
+	PolicyServiceName = "policy-svc"
 )
 
 // Config holds application related configuration
@@ -65,7 +68,7 @@ type Config struct {
 
 	BuiltinRunner controller.BuiltinRunnerConfig
 
-	ClusterPolicy controller.ClusterPolicyConfig
+	Policy policy.Config
 
 	Renderer        renderer.Config
 	OCHActionsImage string
@@ -108,10 +111,20 @@ func main() {
 	exitOnError(err, "while creating Argo client")
 	actionValidator := validate.NewActionValidator(wfCli)
 
-	actionSvc := controller.NewActionService(logger, mgr.GetClient(), argoRenderer, actionValidator, ochClient, controller.Config{
-		BuiltinRunner: cfg.BuiltinRunner,
-		ClusterPolicy: cfg.ClusterPolicy,
-	})
+	policySvcLogger := logger.Named(PolicyServiceName)
+	policyService := policy.NewService(policySvcLogger, mgr.GetClient(), cfg.Policy)
+
+	actionSvc := controller.NewActionService(
+		logger,
+		mgr.GetClient(),
+		argoRenderer,
+		actionValidator,
+		policyService,
+		ochClient,
+		controller.Config{
+			BuiltinRunner: cfg.BuiltinRunner,
+		},
+	)
 
 	actionCtrl := controller.NewActionReconciler(ctrl.Log, actionSvc, cfg.MaxRetryForFailedAction)
 	err = actionCtrl.SetupWithManager(mgr, cfg.MaxConcurrentReconciles)
@@ -128,7 +141,7 @@ func main() {
 	gqlLogger := logger.Named(GraphQLServerName)
 
 	execSchema := graphql.NewExecutableSchema(graphql.Config{
-		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli),
+		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli, policyService),
 	})
 	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, GraphQLServerName)
 

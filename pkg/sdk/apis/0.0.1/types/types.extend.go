@@ -10,7 +10,7 @@ type ImplementationRef ManifestRef
 // AttributeRef holds the full path and revision to the Attribute
 type AttributeRef ManifestRef
 
-// ManifestRef holds the full path and the revision to the Implementation.
+// ManifestRef holds the full path and the revision to a given manifest.
 type ManifestRef struct {
 	Path     string  `json:"path"`               // Path of a given manifest
 	Revision *string `json:"revision,omitempty"` // Version of the manifest content in the SemVer format.

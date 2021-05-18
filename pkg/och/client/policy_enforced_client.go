@@ -104,15 +104,17 @@ func (e *PolicyEnforcedClient) Policy() clusterpolicy.ClusterPolicy {
 	return e.policy
 }
 
-func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraphql.InterfaceReference) clusterpolicy.Rules {
-	ruleKeysToCheck := []clusterpolicy.InterfacePath{
-		clusterpolicy.InterfacePath(fmt.Sprintf("%s:%s", interfaceRef.Path, interfaceRef.Revision)),
-		clusterpolicy.InterfacePath(interfaceRef.Path),
+func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraphql.InterfaceReference) clusterpolicy.RulesForInterface {
+	rulesMap := e.rulesMapForPolicy(e.Policy())
+
+	ruleKeysToCheck := []string{
+		fmt.Sprintf("%s:%s", interfaceRef.Path, interfaceRef.Revision),
+		interfaceRef.Path,
 		clusterpolicy.AnyInterfacePath,
 	}
 
 	for _, ruleKey := range ruleKeysToCheck {
-		rules, exists := e.Policy().Rules[ruleKey]
+		rules, exists := rulesMap[ruleKey]
 		if !exists {
 			continue
 		}
@@ -120,13 +122,13 @@ func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraph
 		return rules
 	}
 
-	return clusterpolicy.Rules{}
+	return clusterpolicy.RulesForInterface{}
 }
 
 func (e *PolicyEnforcedClient) findImplementationsForRules(
 	ctx context.Context,
 	interfaceRef ochpublicgraphql.InterfaceReference,
-	rules clusterpolicy.Rules,
+	rules clusterpolicy.RulesForInterface,
 	currentTypeInstances []*ochpublicgraphql.TypeInstanceValue,
 ) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error) {
 	for _, rule := range rules.OneOf {
@@ -263,4 +265,17 @@ func (e *PolicyEnforcedClient) constantTypeInstanceValues() []*ochpublicgraphql.
 			},
 		},
 	}
+}
+
+func (e *PolicyEnforcedClient) rulesMapForPolicy(policy clusterpolicy.ClusterPolicy) map[string]clusterpolicy.RulesForInterface {
+	rulesMap := map[string]clusterpolicy.RulesForInterface{}
+	for _, rule := range policy.Rules {
+		key := rule.Interface.Path
+		if rule.Interface.Revision != nil {
+			key = fmt.Sprintf("%s:%s", key, *rule.Interface.Revision)
+		}
+		rulesMap[key] = rule
+	}
+
+	return rulesMap
 }

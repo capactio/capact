@@ -5,6 +5,10 @@
 
 # To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
 
+#
+# Action
+#
+
 # Example variables: {"actionName": "sample"}
 query Action($actionName: String!) {
     action(name: $actionName) {
@@ -149,6 +153,38 @@ mutation Run($actionName: String!) {
 }
 
 #
+# Policy
+#
+
+query Policy {
+    policy {
+        ...PolicyFields
+    }
+}
+
+mutation UpdatePolicy {
+    updatePolicy(in: {
+        rules: [{
+            interface:{
+                path:"cap.*"
+            }
+            oneOf: [
+                {
+                    implementationConstraints: {
+                        requires:{
+                            path: "cap.core.type.platform.kubernetes"
+                        }
+                    }
+                },
+                {},
+            ]
+        }]
+    }) {
+        ...PolicyFields
+    }
+}
+
+#
 # Fragments with all possible fields for Engine entities
 #
 
@@ -218,6 +254,35 @@ fragment ActionFields on Action {
             username
             groups
             extra
+        }
+    }
+}
+
+fragment PolicyFields on Policy {
+    rules {
+        interface {
+            path
+            revision
+        }
+        oneOf {
+            implementationConstraints {
+                requires {
+                    path
+                    revision
+                }
+                attributes {
+                    path
+                    revision
+                }
+                path
+            }
+            injectTypeInstances {
+                id
+                typeRef {
+                    path
+                    revision
+                }
+            }
         }
     }
 }

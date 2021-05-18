@@ -148,10 +148,52 @@ type OutputTypeInstanceDetails struct {
 
 func (OutputTypeInstanceDetails) IsTypeInstanceDetails() {}
 
+type Policy struct {
+	Rules []*RulesForInterface `json:"rules"`
+}
+
+type PolicyInput struct {
+	Rules []*RulesForInterfaceInput `json:"rules"`
+}
+
+type PolicyRuleImplementationConstraintsInput struct {
+	// Refers a specific required TypeInstance by path and optional revision.
+	Requires []*ManifestReferenceInput `json:"requires"`
+	// Refers a specific Attribute by path and optional revision.
+	Attributes []*ManifestReferenceInput `json:"attributes"`
+	// Refers a specific Implementation with exact path.
+	Path *string `json:"path"`
+}
+
+type PolicyRuleInput struct {
+	ImplementationConstraints *PolicyRuleImplementationConstraintsInput `json:"implementationConstraints"`
+	InjectTypeInstances       []*TypeInstanceReferenceInput             `json:"injectTypeInstances"`
+}
+
+type RulesForInterface struct {
+	Interface *ManifestReferenceWithOptionalRevision `json:"interface"`
+	OneOf     []*PolicyRule                          `json:"oneOf"`
+}
+
+type RulesForInterfaceInput struct {
+	Interface *ManifestReferenceInput `json:"interface"`
+	OneOf     []*PolicyRuleInput      `json:"oneOf"`
+}
+
 // Additional Action status from the Runner
 type RunnerStatus struct {
 	// Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 	Status interface{} `json:"status"`
+}
+
+type TypeInstanceReference struct {
+	ID      string                                 `json:"id"`
+	TypeRef *ManifestReferenceWithOptionalRevision `json:"typeRef"`
+}
+
+type TypeInstanceReferenceInput struct {
+	ID      string                  `json:"id"`
+	TypeRef *ManifestReferenceInput `json:"typeRef"`
 }
 
 // Stores user information
