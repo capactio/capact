@@ -93,7 +93,7 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
 1. Update the cluster policy ConfigMap:
 
    ```bash
-   capact policy update --from-file=/tmp/policy.yaml
+   capact policy apply -f /tmp/policy.yaml
    ```
 
 **Next steps:** Navigate back to the [main README](./README.md) and follow next steps.

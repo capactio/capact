@@ -234,13 +234,13 @@ You can use additional flags to configure the command behavior, such as output f
 To update Policy interactively using CLI, run:
 
 ```yaml
-capact policy update
+capact policy edit
 ```
 
 You can also update the Policy from YAML file, using command:
 
 ```yaml
-capact policy update --from-file={path}
+capact policy apply -f {path}
 ```
 
 To get familiar with an example content of the file, see the [Example](#example) section.
