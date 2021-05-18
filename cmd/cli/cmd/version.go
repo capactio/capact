@@ -13,7 +13,7 @@ import (
 
 // Build information. Populated at build-time.
 var (
-	showBuildInfo bool
+	showShort bool
 
 	Version   string
 	Revision  string
@@ -38,24 +38,24 @@ func NewVersion() *cobra.Command {
 		Use:   "version",
 		Short: "Show version information about this binary",
 		Run: func(cmd *cobra.Command, args []string) {
-			if showBuildInfo {
-				printBuildInfo()
+			if showShort {
+				printShortVersion()
 			} else {
 				printVersion()
 			}
 		},
 	}
 
-	cmd.Flags().BoolVar(&showBuildInfo, "build-info", false, "Show detailed build information")
+	cmd.Flags().BoolVar(&showShort, "short", false, "Show short version information")
 
 	return cmd
 }
 
-func printVersion() {
+func printShortVersion() {
 	fmt.Printf("%s %s on %s\n", cli.Name, Version, Platform)
 }
 
-func printBuildInfo() {
+func printVersion() {
 	m := map[string]string{
 		"program":   cli.Name,
 		"version":   Version,
