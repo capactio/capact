@@ -8,6 +8,12 @@ This command consists of multiple subcommands to interact with Policy
   -h, --help   help for policy
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI

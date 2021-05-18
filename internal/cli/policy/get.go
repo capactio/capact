@@ -14,10 +14,7 @@ type GetOptions struct {
 }
 
 func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	engineCli, err := client.NewCluster(server)
 	if err != nil {

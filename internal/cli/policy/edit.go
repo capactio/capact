@@ -15,10 +15,7 @@ import (
 )
 
 func Edit(ctx context.Context, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	engineCli, err := client.NewCluster(server)
 	if err != nil {
