@@ -2,7 +2,7 @@ package policy
 
 import "github.com/spf13/cobra"
 
-func NewPolicy() *cobra.Command {
+func NewCmd() *cobra.Command {
 	och := &cobra.Command{
 		Use:     "policy",
 		Aliases: []string{"pol"},
@@ -11,7 +11,8 @@ func NewPolicy() *cobra.Command {
 
 	och.AddCommand(
 		NewGet(),
-		NewUpdate(),
+		NewEdit(),
+		NewApply(),
 	)
 	return och
 }

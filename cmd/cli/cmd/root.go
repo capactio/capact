@@ -75,7 +75,7 @@ func NewRoot() *cobra.Command {
 		hub.NewHub(),
 		config.NewConfig(),
 		action.NewAction(),
-		policy.NewPolicy(),
+		policy.NewCmd(),
 	)
 
 	return rootCmd

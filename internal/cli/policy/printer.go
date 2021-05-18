@@ -9,6 +9,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// TODO: Migrate to pkg/printer once the PR https://github.com/Project-Voltron/go-voltron/pull/296 is merged
+
 type PrintFormat string
 
 const (

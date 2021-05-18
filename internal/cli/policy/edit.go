@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
@@ -15,11 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type UpdateOptions struct {
-	PolicyFilePath string
-}
-
-func Update(ctx context.Context, opts UpdateOptions, w io.Writer) error {
+func Edit(ctx context.Context, w io.Writer) error {
 	server, err := config.GetDefaultContext()
 	if err != nil {
 		return err
@@ -30,24 +25,14 @@ func Update(ctx context.Context, opts UpdateOptions, w io.Writer) error {
 		return err
 	}
 
-	var policyInput *graphql.PolicyInput
+	existingPolicy, err := engineCli.GetPolicy(ctx)
+	if err != nil {
+		return err
+	}
 
-	switch opts.PolicyFilePath {
-	case "":
-		existingPolicy, err := engineCli.GetPolicy(ctx)
-		if err != nil {
-			return err
-		}
-
-		policyInput, err = askForPolicyInput(existingPolicy)
-		if err != nil {
-			return err
-		}
-	default:
-		policyInput, err = loadPolicyInputFromFile(opts.PolicyFilePath)
-		if err != nil {
-			return err
-		}
+	policyInput, err := askForPolicyInput(existingPolicy)
+	if err != nil {
+		return err
 	}
 
 	_, err = engineCli.UpdatePolicy(ctx, policyInput)
@@ -61,15 +46,9 @@ func Update(ctx context.Context, opts UpdateOptions, w io.Writer) error {
 	return nil
 }
 
-func loadPolicyInputFromFile(path string) (*graphql.PolicyInput, error) {
-	bytes, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return toPolicyInput(bytes)
-}
-
+// TODO: Do not require additional confirmation to enter the editor
+// Once this feature is implemented: https://github.com/AlecAivazis/survey/issues/313
+// Currently we would need to use `survey` internals, which doesn't seem to be the right way to do it.
 func askForPolicyInput(existingPolicy *graphql.Policy) (*graphql.PolicyInput, error) {
 	policyStr, err := toYAMLString(existingPolicy)
 	if err != nil {
@@ -81,8 +60,7 @@ func askForPolicyInput(existingPolicy *graphql.Policy) (*graphql.PolicyInput, er
 		Message:       "Edit current Policy using YAML syntax",
 		Default:       heredoc.Doc(policyStr),
 		AppendDefault: true,
-
-		HideDefault: true,
+		HideDefault:   true,
 	}
 
 	err = survey.AskOne(prompt, &editor, survey.WithValidator(validatePolicy))
