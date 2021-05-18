@@ -250,6 +250,10 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 }
 
 func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	if action == nil || action.Status.Rendering == nil {
+		return errors.New("Action or Action rendering status is nil")
+	}
+
 	if action.Status.Rendering.TypeInstancesToLock == nil {
 		return nil
 	}
@@ -263,7 +267,7 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 }
 
 func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
-	if action.Status.Rendering.TypeInstancesToLock == nil {
+	if action == nil || action.Status.Rendering == nil || action.Status.Rendering.TypeInstancesToLock == nil {
 		return nil
 	}
 
