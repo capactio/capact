@@ -61,4 +61,5 @@ capact [flags]
 * [capact policy](capact_policy.md)	 - This command consists of multiple subcommands to interact with Policy
 * [capact upgrade](capact_upgrade.md)	 - Upgrades Capact
 * [capact validate](capact_validate.md)	 - Validate OCF manifests
+* [capact version](capact_version.md)	 - Show version information about this binary
 
