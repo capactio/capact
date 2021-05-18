@@ -13,20 +13,20 @@ import (
 
 // Build information. Populated at build-time.
 var (
+	showBuildInfo bool
+
 	Version   string
 	Revision  string
 	Branch    string
 	BuildDate string
-	BuildUser string
 	GoVersion = runtime.Version()
 	Platform  = runtime.GOOS + "/" + runtime.GOARCH
 
-	versionInfoTmpl = `
+	buildInfoTmpl = `
 {{.program}}
   version:          {{.version}}
   branch:           {{.branch}}
   revision:         {{.revision}}
-  build user:       {{.buildUser}}
   build date:       {{.buildDate}}
   go version:       {{.goVersion}}
   platform:         {{.platform}}
@@ -34,28 +34,39 @@ var (
 )
 
 func NewVersion() *cobra.Command {
-	return &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "version",
 		Short: "Show version information about this binary",
 		Run: func(cmd *cobra.Command, args []string) {
-			printVersion()
+			if showBuildInfo {
+				printBuildInfo()
+			} else {
+				printVersion()
+			}
 		},
 	}
+
+	cmd.Flags().BoolVar(&showBuildInfo, "build-info", false, "Show detailed build information")
+
+	return cmd
 }
 
 func printVersion() {
+	fmt.Printf("%s %s on %s\n", cli.Name, Version, Platform)
+}
+
+func printBuildInfo() {
 	m := map[string]string{
 		"program":   cli.Name,
 		"version":   Version,
 		"revision":  Revision,
 		"branch":    Branch,
-		"buildUser": BuildUser,
 		"buildDate": BuildDate,
 		"goVersion": GoVersion,
 		"platform":  Platform,
 	}
 
-	t := template.Must(template.New("version").Parse(versionInfoTmpl))
+	t := template.Must(template.New("version").Parse(buildInfoTmpl))
 
 	var buf bytes.Buffer
 	if err := t.ExecuteTemplate(&buf, "version", m); err != nil {

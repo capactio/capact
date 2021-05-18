@@ -9,7 +9,8 @@ capact version [flags]
 ### Options
 
 ```
-  -h, --help   help for version
+      --build-info   Show detailed build information
+  -h, --help         help for version
 ```
 
 ### SEE ALSO

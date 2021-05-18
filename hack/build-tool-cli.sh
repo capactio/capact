@@ -27,7 +27,6 @@ readonly CAPACT_CMD_CLI_PKG
 GO_BUILD_VERSION_LDFLAGS="
   -X ${CAPACT_CMD_CLI_PKG}/cmd.Version=$(git describe --tags)
   -X ${CAPACT_CMD_CLI_PKG}/cmd.Revision=${GITHUB_SHA:-$(git rev-parse HEAD)}
-  -X ${CAPACT_CMD_CLI_PKG}/cmd.BuildUser=${GITHUB_ACTOR:-${USER:-}}
   -X ${CAPACT_CMD_CLI_PKG}/cmd.BuildDate=$(date +"%Y%m%d-%T")
   -X ${CAPACT_CMD_CLI_PKG}/cmd.Branch=$(git rev-parse --abbrev-ref HEAD)
 "
