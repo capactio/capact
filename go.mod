@@ -42,6 +42,7 @@ require (
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
+	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0

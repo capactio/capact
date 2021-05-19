@@ -7,13 +7,18 @@ import (
 	"capact.io/capact/cmd/cli/cmd/policy"
 
 	"capact.io/capact/cmd/cli/cmd/action"
-	"capact.io/capact/cmd/cli/cmd/config"
+	configcmd "capact.io/capact/cmd/cli/cmd/config"
 	"capact.io/capact/cmd/cli/cmd/hub"
 	"capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 
 	"github.com/common-nighthawk/go-figure"
 	"github.com/spf13/cobra"
+)
+
+var (
+	configPath string
 )
 
 func NewRoot() *cobra.Command {
@@ -65,6 +70,8 @@ func NewRoot() *cobra.Command {
 		},
 	}
 
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "", "Path to the YAML config file")
+
 	rootCmd.AddCommand(
 		NewValidate(),
 		NewDocs(),
@@ -74,10 +81,23 @@ func NewRoot() *cobra.Command {
 		NewCompletion(),
 		NewVersion(),
 		hub.NewHub(),
-		config.NewConfig(),
+		configcmd.NewConfig(),
 		action.NewAction(),
 		policy.NewCmd(),
 	)
 
+	cobra.OnInitialize(initConfig)
+
 	return rootCmd
+}
+
+func initConfig() {
+	err := config.Init(configPath)
+	exitOnError(err)
+}
+
+func exitOnError(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
 }

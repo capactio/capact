@@ -1,48 +1,91 @@
 package config
 
 import (
-	"capact.io/capact/internal/cli/credstore"
+	"os"
+	"path"
 
-	"github.com/99designs/keyring"
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
-func SetAsDefaultContext(server string, override bool) error {
-	ks, err := keyring.Open(credstore.Config(credstore.ConfigStoreName))
+const (
+	defaultContextKey              = "defaultContext"
+	credentialsStoreBackendKey     = "credentialsStore.backend"
+	credentialsStoreFilePassphrase = "credentialsStore.filePassphrase"
+)
+
+func Init(configPath string) error {
+	err := viper.BindEnv(credentialsStoreBackendKey, "CAPACT_CREDENTIALS_STORE_BACKEND")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "while binding %s key", credentialsStoreBackendKey)
 	}
 
-	currentServer, err := getDefaultContext(ks)
+	err = viper.BindEnv(credentialsStoreFilePassphrase, "CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE")
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "while binding %s key", credentialsStoreFilePassphrase)
 	}
-	if currentServer == "" || override {
-		return ks.Set(keyring.Item{
-			Key:  credstore.ConfigStoreName,
-			Data: []byte(server),
-		})
+
+	if configPath == "" {
+		configPath, err = getDefaultConfigPath()
+		if err != nil {
+			return errors.Wrap(err, "while getting default config path")
+		}
+	}
+
+	viper.SetConfigFile(configPath)
+	viper.SetConfigType("yaml")
+
+	err = viper.ReadInConfig()
+	if _, ok := err.(viper.ConfigFileNotFoundError); ok || os.IsNotExist(err) {
+		dir := path.Dir(configPath)
+
+		err = os.MkdirAll(dir, 0700)
+		if err != nil {
+			return errors.Wrap(err, "while creating directory for config file")
+		}
+
+		err = viper.WriteConfig()
+		if err != nil {
+			return errors.Wrap(err, "while writing config file")
+		}
+	} else if err != nil {
+		return errors.Wrap(err, "while reading configuration")
 	}
 
 	return nil
 }
 
-func GetDefaultContext() (string, error) {
-	ks, err := keyring.Open(credstore.Config(credstore.ConfigStoreName))
+func getDefaultConfigPath() (string, error) {
+	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	return getDefaultContext(ks)
+	return path.Join(homeDir, ".config", "capact", "config.yaml"), nil
 }
 
-func getDefaultContext(ks keyring.Keyring) (string, error) {
-	item, err := ks.Get(credstore.ConfigStoreName)
-	switch {
-	case err == nil:
-		return string(item.Data), nil
-	case err == keyring.ErrKeyNotFound:
-		return "", nil
-	default:
-		return "", err
+func SetAsDefaultContext(server string, override bool) error {
+	currentDefaultContext := GetDefaultContext()
+
+	if currentDefaultContext == "" || override {
+		viper.Set(defaultContextKey, server)
+
+		if err := viper.WriteConfig(); err != nil {
+			return errors.Wrap(err, "while writing config file")
+		}
 	}
+
+	return nil
+}
+
+func GetDefaultContext() string {
+	return viper.GetString(defaultContextKey)
+}
+
+func GetCredentialsStoreBackend() string {
+	return viper.GetString(credentialsStoreBackendKey)
+}
+
+func GetCredentialsStoreFilePassphrase() string {
+	return viper.GetString(credentialsStoreFilePassphrase)
 }

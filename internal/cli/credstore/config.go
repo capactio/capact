@@ -2,21 +2,14 @@ package credstore
 
 import (
 	"fmt"
-	"os"
 
+	"capact.io/capact/internal/cli/config"
 	"github.com/99designs/keyring"
 	"github.com/AlecAivazis/survey/v2"
 )
 
 const (
-	// TODO: current hack to do not play with `.config` directory. Needs to be fixed!
-	// defined here to avoid import cycle
-	ConfigStoreName = "capactconfig"
-
-	CredStoreName   = "capacthub"
-	OverrideBackend = "CAPACT_CREDENTIALS_STORE_BACKEND"
-	// #nosec G101
-	FileBackendPassphrase = "CAPACT_FILE_PASSPHRASE"
+	CredStoreName = "capacthub"
 )
 
 func Config(prefix string) keyring.Config {
@@ -26,18 +19,21 @@ func Config(prefix string) keyring.Config {
 		KWalletAppID:             fmt.Sprintf("%s-vault", prefix),
 		KWalletFolder:            fmt.Sprintf("%s-vault", prefix),
 		WinCredPrefix:            fmt.Sprintf("%s-vault", prefix),
-		FileDir:                  fmt.Sprintf("~/.capact/%s_vault", prefix),
+		FileDir:                  fmt.Sprintf("~/.config/capact/%s_vault", prefix),
 		KeychainTrustApplication: true,
 		FilePasswordFunc:         FileKeyringPassphrasePrompt,
 	}
-	if backend := os.Getenv(OverrideBackend); backend != "" {
+
+	backend := config.GetCredentialsStoreBackend()
+	if backend != "" {
 		cfg.AllowedBackends = []keyring.BackendType{keyring.BackendType(backend)}
 	}
+
 	return cfg
 }
 
 func FileKeyringPassphrasePrompt(promptMessage string) (string, error) {
-	password := os.Getenv(FileBackendPassphrase)
+	password := config.GetCredentialsStoreFilePassphrase()
 	if password != "" {
 		return password, nil
 	}

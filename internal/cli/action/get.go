@@ -8,52 +8,56 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
+	"k8s.io/apimachinery/pkg/util/duration"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/olekukonko/tablewriter"
 )
 
 type GetOptions struct {
-	ActionName string `survey:"name"`
-	Namespace  string
-	Output     string
+	ActionNames []string
+	Namespace   string
+	Output      string
 }
 
 func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
-	var qs []*survey.Question
-
-	if opts.ActionName == "" {
-		qs = append(qs, actionNameQuestion(""))
-	}
-
-	if opts.Namespace == "" {
-		qs = append(qs, namespaceQuestion())
-	}
-
-	if err := survey.Ask(qs, &opts); err != nil {
-		return err
-	}
-
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	actionCli, err := client.NewCluster(server)
 	if err != nil {
 		return err
 	}
 
-	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
-	act, err := actionCli.GetAction(ctxWithNs, opts.ActionName)
-	if err != nil {
-		return err
-	}
+	var (
+		actions []*gqlengine.Action
+		errors  []error
+	)
 
-	if act == nil {
-		return fmt.Errorf("Action %q not found in workspace %q", opts.ActionName, opts.Namespace)
+	ctxWithNs := namespace.NewContext(ctx, opts.Namespace)
+
+	if len(opts.ActionNames) == 0 {
+		acts, err := actionCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{})
+		if err != nil {
+			return err
+		}
+
+		actions = acts
+	} else {
+		for _, name := range opts.ActionNames {
+			act, err := actionCli.GetAction(ctxWithNs, name)
+			if err != nil {
+				return err
+			}
+
+			if act == nil {
+				errors = append(errors, errNotFound(name))
+				continue
+			}
+
+			actions = append(actions, act)
+		}
 	}
 
 	printAction, err := selectPrinter(opts.Output)
@@ -61,21 +65,30 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return err
 	}
 
-	return printAction(opts.Namespace, act, w)
+	if err := printAction(opts.Namespace, actions, w); err != nil {
+		return err
+	}
+
+	cliprinter.PrintErrors(errors)
+	return nil
+}
+
+func errNotFound(name string) error {
+	return fmt.Errorf(`NotFound: Action "%s" not found`, name)
 }
 
 // TODO: all funcs should be extracted to `printers` package and return Printer Interface
 
-type printer func(namespace string, in *gqlengine.Action, w io.Writer) error
+type printer func(namespace string, in []*gqlengine.Action, w io.Writer) error
 
 func selectPrinter(format string) (printer, error) {
 	switch format {
 	case "json":
-		return func(_ string, in *gqlengine.Action, w io.Writer) error {
+		return func(_ string, in []*gqlengine.Action, w io.Writer) error {
 			return printJSON(in, w)
 		}, nil
 	case "yaml":
-		return func(_ string, in *gqlengine.Action, w io.Writer) error {
+		return func(_ string, in []*gqlengine.Action, w io.Writer) error {
 			return printYAML(in, w)
 		}, nil
 	case "table":
@@ -85,22 +98,26 @@ func selectPrinter(format string) (printer, error) {
 	return nil, fmt.Errorf("Unknown output format %q", format)
 }
 
-func printGetTable(namespace string, in *gqlengine.Action, w io.Writer) error {
+func printGetTable(namespace string, in []*gqlengine.Action, w io.Writer) error {
 	table := tablewriter.NewWriter(w)
 	table.SetHeader([]string{"NAMESPACE", "NAME", "PATH", "RUN", "STATUS", "AGE"})
 	table.SetBorder(false)
 	table.SetColumnSeparator(" ")
 
-	data := []string{
-		namespace,
-		in.Name,
-		in.ActionRef.Path,
-		toString(in.Run),
-		string(in.Status.Phase),
-		time.Since(in.CreatedAt.Time).String(),
+	var data [][]string
+
+	for _, act := range in {
+		data = append(data, []string{
+			namespace,
+			act.Name,
+			act.ActionRef.Path,
+			toString(act.Run),
+			string(act.Status.Phase),
+			duration.HumanDuration(time.Since(act.CreatedAt.Time)),
+		})
 	}
 
-	table.Append(data)
+	table.AppendBulk(data)
 	table.Render()
 
 	return nil

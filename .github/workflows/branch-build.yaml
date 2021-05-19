@@ -226,7 +226,7 @@ jobs:
     if: github.ref == 'refs/heads/master'
 
     env:
-      CAPACT_FILE_PASSPHRASE: "no-pass"
+      CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE: "no-pass"
       CAPACT_CREDENTIALS_STORE_BACKEND: "file"
     steps:
       - name: Checkout code

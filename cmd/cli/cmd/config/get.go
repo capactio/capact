@@ -34,10 +34,7 @@ func getRun(w io.Writer) error {
 		return err
 	}
 
-	def, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	def := config.GetDefaultContext()
 
 	printTable(def, out, w)
 

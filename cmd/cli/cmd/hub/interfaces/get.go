@@ -11,6 +11,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"github.com/hokaccha/go-prettyjson"
@@ -19,53 +20,74 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-type searchOptions struct {
-	pathPattern string
-	output      string
+type getOptions struct {
+	interfacePaths []string
+	output         string
 }
 
-func NewSearch() *cobra.Command {
-	var opts searchOptions
+var (
+	allPathPrefix = "cap.interface.*"
+)
 
-	search := &cobra.Command{
-		Use:   "search",
-		Short: "Search provides the ability to list and search for OCH Interfaces",
+func NewGet() *cobra.Command {
+	var opts getOptions
+
+	get := &cobra.Command{
+		Use:   "get",
+		Short: "Displays one or multiple Interfaces available on the Hub server",
 		Example: heredoc.WithCLIName(`
-			# Show all interfaces in table format
-			<cli> hub interfaces search
+			# Show all Interfaces in table format:
+			<cli> hub interfaces get
 			
-			# Show all interfaces in JSON format which are located under the "cap.interface.templating" prefix 
-			<cli> hub interfaces search -o json --path-pattern "cap.interface.*"
+			# Show "cap.interface.database.postgresql.install" Interface in JSON format:
+			<cli> hub interfaces get cap.interface.database.postgresql.install -ojson
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts.interfacePaths = args
 			return listInterfaces(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
-	flags := search.Flags()
-
-	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "Pattern of the path for a given Interface, e.g. cap.interface.*")
+	flags := get.Flags()
 	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
 
-	return search
+	return get
 }
 
-func listInterfaces(ctx context.Context, opts searchOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
+	server := config.GetDefaultContext()
 
 	cli, err := client.NewHub(server)
 	if err != nil {
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
-		PathPattern: &opts.pathPattern,
+	var (
+		interfaces []*gqlpublicapi.Interface
+		errors     []error
+	)
+
+	ifaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
+		PathPattern: &allPathPrefix,
 	})
 	if err != nil {
 		return err
+	}
+
+	if len(opts.interfacePaths) == 0 {
+		interfaces = ifaces
+	} else {
+		ifaceMap := interfaceSliceToMap(ifaces)
+
+		for _, path := range opts.interfacePaths {
+			iface, found := ifaceMap[path]
+			if !found {
+				errors = append(errors, errNotFound(path))
+				continue
+			}
+
+			interfaces = append(interfaces, iface)
+		}
 	}
 
 	format, pattern := extractOutputFormat(opts.output)
@@ -74,7 +96,27 @@ func listInterfaces(ctx context.Context, opts searchOptions, w io.Writer) error 
 		return err
 	}
 
-	return printInterfaces(pattern, interfaces, w)
+	if err := printInterfaces(pattern, interfaces, w); err != nil {
+		return err
+	}
+
+	cliprinter.PrintErrors(errors)
+	return nil
+}
+
+func interfaceSliceToMap(ifaces []*gqlpublicapi.Interface) map[string]*gqlpublicapi.Interface {
+	res := make(map[string]*gqlpublicapi.Interface)
+
+	for i := range ifaces {
+		iface := ifaces[i]
+		res[iface.Path] = iface
+	}
+
+	return res
+}
+
+func errNotFound(name string) error {
+	return fmt.Errorf(`NotFound: Interface "%s" not found`, name)
 }
 
 func extractOutputFormat(output string) (format string, pattern string) {

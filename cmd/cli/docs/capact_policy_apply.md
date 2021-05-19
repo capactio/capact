@@ -21,6 +21,12 @@ capact policy apply -f /tmp/policy.yaml
   -h, --help              help for apply
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact policy](capact_policy.md)	 - This command consists of multiple subcommands to interact with Policy

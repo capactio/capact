@@ -36,6 +36,12 @@ capact action watch @latest
       --status string                Filter by status (Pending, Running, Succeeded, Skipped, Failed, Error)
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact action](capact_action.md)	 - This command consists of multiple subcommands to interact with target Actions

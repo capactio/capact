@@ -11,7 +11,7 @@ func NewInterfaces() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewSearch(),
+		NewGet(),
 		NewBrowse(),
 	)
 	return cmd

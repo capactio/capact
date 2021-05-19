@@ -23,10 +23,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 		return nil, err
 	}
 
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return nil, err
-	}
+	server := config.GetDefaultContext()
 
 	actionCli, err := client.NewCluster(server)
 	if err != nil {

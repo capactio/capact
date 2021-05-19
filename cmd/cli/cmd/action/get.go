@@ -3,23 +3,28 @@ package action
 import (
 	"os"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/action"
+	"capact.io/capact/internal/cli/heredoc"
+
 	"github.com/spf13/cobra"
 )
-
-// TODO (platten): It would be good to merge this together with search. Kind of how you can do `kubectl get pod` or `kubectl get po PODNAME`
 
 func NewGet() *cobra.Command {
 	var opts action.GetOptions
 
 	cmd := &cobra.Command{
-		Use:   "get ACTION",
-		Short: "Displays the details of an Action from the workflow engine",
-		Args:  cobra.MaximumNArgs(1),
+		Use:   "get",
+		Short: "Displays one or multiple Actions",
+		Example: heredoc.WithCLIName(`
+			# Show all Actions in table format
+			<cli> action get
+			
+			# Show the Action "funny-stallman" in JSON format
+			<cli> action get funny-stallman -ojson
+		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) > 0 {
-				opts.ActionName = args[0]
-			}
+			opts.ActionNames = args
 			return action.Get(cmd.Context(), opts, os.Stdout)
 		},
 	}

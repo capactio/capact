@@ -26,6 +26,12 @@ capact action delete --name-regex='upgrade-*' --namespace=foo
       --phase string        Deletes Actions only in the given phase. Supported only when the --name-regex flag is used. Allowed values: INITIAL, BEING_RENDERED, ADVANCED_MODE_RENDERING_ITERATION, READY_TO_RUN, RUNNING, BEING_CANCELED, CANCELED, SUCCEEDED, FAILED
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact action](capact_action.md)	 - This command consists of multiple subcommands to interact with target Actions

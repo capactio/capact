@@ -31,10 +31,7 @@ func Apply(ctx context.Context, opts ApplyOptions, w io.Writer) error {
 		return err
 	}
 
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	engineCli, err := client.NewCluster(server)
 	if err != nil {

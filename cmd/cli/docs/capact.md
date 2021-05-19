@@ -47,7 +47,8 @@ capact [flags]
 ### Options
 
 ```
-  -h, --help   help for capact
+  -c, --config string   Path to the YAML config file
+  -h, --help            help for capact
 ```
 
 ### SEE ALSO

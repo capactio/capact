@@ -8,6 +8,12 @@ This command consists of multiple subcommands to interact with Hub server.
   -h, --help   help for hub
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI

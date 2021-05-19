@@ -42,10 +42,7 @@ func NewBrowse() *cobra.Command {
 }
 
 func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) error {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	cli, err := client.NewHub(server)
 	if err != nil {

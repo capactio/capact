@@ -52,10 +52,7 @@ func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
 
 	okCheck := color.New(color.FgGreen).FprintfFunc()
 
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	actionCli, err := client.NewCluster(server)
 	if err != nil {

@@ -1,9 +1,20 @@
 ## capact action get
 
-Displays the details of an Action from the workflow engine
+Displays one or multiple Actions
 
 ```
-capact action get ACTION [flags]
+capact action get [flags]
+```
+
+### Examples
+
+```
+# Show all Actions in table format
+capact action get
+
+# Show the Action "funny-stallman" in JSON format
+capact action get funny-stallman -ojson
+
 ```
 
 ### Options
@@ -13,6 +24,12 @@ capact action get ACTION [flags]
   -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
   -o, --output string      Output format. One of:
                            json | yaml | table (default "table")
+```
+
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
 ```
 
 ### SEE ALSO

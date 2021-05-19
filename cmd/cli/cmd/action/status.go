@@ -96,10 +96,7 @@ func printUploadedTypeInstances(name string) error {
 	serviceClient := apiClient.NewWorkflowServiceClient()
 	namespace := argocli.Namespace()
 
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return err
-	}
+	server := config.GetDefaultContext()
 
 	actionCli, err := client.NewCluster(server)
 	if err != nil {

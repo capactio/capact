@@ -72,10 +72,7 @@ type Upgrade struct {
 }
 
 func New(w io.Writer) (*Upgrade, error) {
-	server, err := config.GetDefaultContext()
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting default context")
-	}
+	server := config.GetDefaultContext()
 
 	hubCli, err := client.NewHub(server)
 	if err != nil {

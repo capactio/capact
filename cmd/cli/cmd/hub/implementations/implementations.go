@@ -12,7 +12,7 @@ func NewImplementations() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		NewSearch(),
+		NewGet(),
 	)
 	return cmd
 }
