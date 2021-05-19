@@ -4,14 +4,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func NewAction() *cobra.Command {
-	och := &cobra.Command{
+func NewCmd() *cobra.Command {
+	root := &cobra.Command{
 		Use:     "action",
 		Aliases: []string{"act"},
 		Short:   "This command consists of multiple subcommands to interact with target Actions",
 	}
 
-	och.AddCommand(
+	root.AddCommand(
 		NewCreate(),
 		NewDelete(),
 		NewRun(),
@@ -19,5 +19,5 @@ func NewAction() *cobra.Command {
 		NewStatus(),
 		NewWatch(),
 	)
-	return och
+	return root
 }

@@ -3,7 +3,6 @@ package interfaces
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 
@@ -14,15 +13,11 @@ import (
 	cliprinter "capact.io/capact/internal/cli/printer"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
-	"github.com/hokaccha/go-prettyjson"
-	"github.com/olekukonko/tablewriter"
 	"github.com/spf13/cobra"
-	"sigs.k8s.io/yaml"
 )
 
 type getOptions struct {
 	interfacePaths []string
-	output         string
 }
 
 var (
@@ -31,6 +26,8 @@ var (
 
 func NewGet() *cobra.Command {
 	var opts getOptions
+
+	resourcePrinter := cliprinter.NewForResource(os.Stdout, cliprinter.WithJSON(), cliprinter.WithYAML(), cliprinter.WithTable(tableDataOnGet))
 
 	get := &cobra.Command{
 		Use:   "get",
@@ -44,17 +41,17 @@ func NewGet() *cobra.Command {
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.interfacePaths = args
-			return listInterfaces(cmd.Context(), opts, os.Stdout)
+			return listInterfaces(cmd.Context(), opts, resourcePrinter)
 		},
 	}
 
 	flags := get.Flags()
-	flags.StringVarP(&opts.output, "output", "o", "table", "Output format. One of:\njson | yaml | table")
+	resourcePrinter.RegisterFlags(flags)
 
 	return get
 }
 
-func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
+func listInterfaces(ctx context.Context, opts getOptions, printer *cliprinter.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 
 	cli, err := client.NewHub(server)
@@ -90,18 +87,8 @@ func listInterfaces(ctx context.Context, opts getOptions, w io.Writer) error {
 		}
 	}
 
-	format, pattern := extractOutputFormat(opts.output)
-	printInterfaces, err := selectPrinter(format)
-	if err != nil {
-		return err
-	}
-
-	if err := printInterfaces(pattern, interfaces, w); err != nil {
-		return err
-	}
-
 	cliprinter.PrintErrors(errors)
-	return nil
+	return printer.Print(interfaces)
 }
 
 func interfaceSliceToMap(ifaces []*gqlpublicapi.Interface) map[string]*gqlpublicapi.Interface {
@@ -119,71 +106,24 @@ func errNotFound(name string) error {
 	return fmt.Errorf(`NotFound: Interface "%s" not found`, name)
 }
 
-func extractOutputFormat(output string) (format string, pattern string) {
-	split := strings.SplitN(output, "=", 2)
-	if len(split) == 1 {
-		return output, ""
-	}
-	return split[0], split[1]
-}
+func tableDataOnGet(in interface{}) (cliprinter.TableData, error) {
+	out := cliprinter.TableData{}
 
-// TODO: all funcs should be extracted to `printers` package and return Printer Interface
-
-type printer func(pattern string, in []*gqlpublicapi.Interface, w io.Writer) error
-
-func selectPrinter(format string) (printer, error) {
-	switch format {
-	case "json":
-		return printJSON, nil
-	case "yaml":
-		return printYAML, nil
-	case "table":
-		return printTable, nil
+	interfaces, ok := in.([]*gqlpublicapi.Interface)
+	if !ok {
+		return cliprinter.TableData{}, fmt.Errorf("got unexpected input type, expected []*gqlpublicapi.Interface, got %T", in)
 	}
 
-	return nil, fmt.Errorf("Unknown output format %q", format)
-}
-
-func printJSON(_ string, in []*gqlpublicapi.Interface, w io.Writer) error {
-	out, err := prettyjson.Marshal(in)
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write(out)
-	return err
-}
-
-func printYAML(_ string, in []*gqlpublicapi.Interface, w io.Writer) error {
-	out, err := yaml.Marshal(in)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(out)
-	return err
-}
-
-func printTable(_ string, in []*gqlpublicapi.Interface, w io.Writer) error {
-	table := tablewriter.NewWriter(w)
-	table.SetHeader([]string{"PATH", "LATEST REVISION", "IMPLEMENTATIONS"})
-	table.SetAutoWrapText(true)
-	table.SetColumnSeparator(" ")
-	table.SetBorder(false)
-	table.SetRowLine(true)
-
-	var data [][]string
-	for _, i := range in {
-		data = append(data, []string{
+	out.Headers = []string{"PATH", "LATEST REVISION", "IMPLEMENTATIONS"}
+	for _, i := range interfaces {
+		out.MultipleRows = append(out.MultipleRows, []string{
 			i.Path,
 			i.LatestRevision.Revision,
 			implList(i.LatestRevision.ImplementationRevisions)},
 		)
 	}
 
-	table.AppendBulk(data)
-	table.Render()
-
-	return nil
+	return out, nil
 }
 
 func implList(revisions []*gqlpublicapi.ImplementationRevision) string {

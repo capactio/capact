@@ -4,22 +4,25 @@ import (
 	"os"
 
 	"capact.io/capact/internal/cli/policy"
+	"capact.io/capact/internal/cli/printer"
+
 	"github.com/spf13/cobra"
 )
 
 func NewGet() *cobra.Command {
-	var opts policy.GetOptions
+	resourcePrinter := printer.NewForResource(os.Stdout, printer.WithJSON(), printer.WithYAML(), printer.WithDefaultOutputFormat(printer.YAMLFormat))
 
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "Displays the details of current Policy",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return policy.Get(cmd.Context(), opts, os.Stdout)
+			return policy.Get(cmd.Context(), resourcePrinter)
 		},
 	}
 
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.Output, "output", "o", "yaml", "Output format. One of:\njson | yaml")
+	resourcePrinter.RegisterFlags(flags)
+
 	return cmd
 }

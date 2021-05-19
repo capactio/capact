@@ -5,7 +5,7 @@ import (
 )
 
 // TODO: Add support for target configuration (instead of relying on current default context in kubectl)
-func NewConfig() *cobra.Command {
+func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
 		Short: "Manage configuration",

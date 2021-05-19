@@ -80,9 +80,9 @@ func NewRoot() *cobra.Command {
 		NewUpgrade(),
 		NewCompletion(),
 		NewVersion(),
-		hub.NewHub(),
-		configcmd.NewConfig(),
-		action.NewAction(),
+		hub.NewCmd(),
+		configcmd.NewCmd(),
+		action.NewCmd(),
 		policy.NewCmd(),
 	)
 

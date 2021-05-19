@@ -3,25 +3,16 @@ package policy
 import (
 	"context"
 	"fmt"
-	"io"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
+	"capact.io/capact/internal/cli/printer"
 )
 
-type GetOptions struct {
-	Output string
-}
-
-func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
+func Get(ctx context.Context, printer *printer.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 
 	engineCli, err := client.NewCluster(server)
-	if err != nil {
-		return err
-	}
-
-	printPolicy, err := selectPrinter(opts.Output)
 	if err != nil {
 		return err
 	}
@@ -35,5 +26,5 @@ func Get(ctx context.Context, opts GetOptions, w io.Writer) error {
 		return fmt.Errorf("Policy is empty")
 	}
 
-	return printPolicy(policy, w)
+	return printer.Print(policy)
 }
