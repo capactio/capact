@@ -737,6 +737,7 @@ enum FilterRule {
 input TypeInstanceFilter {
   attributes: [AttributeFilterInput]
   typeRef: TypeRefFilterInput
+  createdBy: String
 }
 
 input TypeRefFilterInput {
@@ -855,6 +856,8 @@ type Query {
             (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)
           )
         )
+        AND
+        ($filter.createdBy IS NULL OR tir.createdBy = $filter.createdBy)
         AND
         (
         	$filter.attributes IS NULL
@@ -1753,7 +1756,7 @@ func (ec *executionContext) _Query_typeInstances(ctx context.Context, field grap
 			return ec.resolvers.Query().TypeInstances(rctx, args["filter"].(*TypeInstanceFilter))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeInstanceTypeReference)\nMATCH (ti:TypeInstance)-[:CONTAINS]->(tir)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nRETURN DISTINCT ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH [x IN $filter.attributes WHERE x.rule = \"EXCLUDE\" | x ] AS excluded,\n  [x IN $filter.attributes WHERE x.rule = \"INCLUDE\" | x ] AS included\n\nCALL {\n  WITH excluded\n  UNWIND excluded AS f\n  MATCH (ex:AttributeReference {path: f.path})\n  WHERE (f.revision IS NULL) OR (ex.revision = f.revision)\n  RETURN collect(ex) as excludedAttributes\n}\n\nMATCH (tir:TypeInstanceResourceVersion)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)\nOPTIONAL MATCH (meta)-[:CHARACTERIZED_BY]->(attr:AttributeReference)\nMATCH (ti:TypeInstance)-[:OF_TYPE]->(typeRef:TypeInstanceTypeReference)\nMATCH (ti:TypeInstance)-[:CONTAINS]->(tir)\nWHERE\n$filter = {} OR\n(\n  (\n    $filter.typeRef IS NULL\n    OR\n    (\n      ($filter.typeRef.revision IS NULL AND typeRef.path = $filter.typeRef.path)\n      OR\n      (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)\n    )\n  )\n  AND\n  ($filter.createdBy IS NULL OR tir.createdBy = $filter.createdBy)\n  AND\n  (\n  \t$filter.attributes IS NULL\n    OR\n    (\n      all(inc IN included WHERE\n        (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(attr:AttributeReference {path: inc.path})\n        AND\n        (inc.revision IS NULL OR attr.revision = inc.revision)\n      )\n      AND\n      none(exc IN excludedAttributes WHERE (tir)-[:DESCRIBED_BY]->(meta:TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(exc))\n    )\n  )\n)\n\nRETURN DISTINCT ti")
 			if err != nil {
 				return nil, err
 			}
@@ -4648,6 +4651,14 @@ func (ec *executionContext) unmarshalInputTypeInstanceFilter(ctx context.Context
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
 			it.TypeRef, err = ec.unmarshalOTypeRefFilterInput2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐTypeRefFilterInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

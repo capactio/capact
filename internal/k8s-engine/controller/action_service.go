@@ -536,5 +536,5 @@ func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (
 }
 
 func ownerIDKey(a *v1alpha1.Action) string {
-	return fmt.Sprintf("%s/%s", a.Namespace, a.Name)
+	return fmt.Sprintf("%s/%s-%s", a.Namespace, a.Name, a.UID)
 }

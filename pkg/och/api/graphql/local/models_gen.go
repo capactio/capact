@@ -67,6 +67,7 @@ type TypeInstance struct {
 type TypeInstanceFilter struct {
 	Attributes []*AttributeFilterInput `json:"attributes"`
 	TypeRef    *TypeRefFilterInput     `json:"typeRef"`
+	CreatedBy  *string                 `json:"createdBy"`
 }
 
 // CURRENTLY NOT IMPLEMENTED

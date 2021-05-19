@@ -66,7 +66,7 @@ APP_NEO4J_ENDPOINT=bolt://localhost:7687 APP_NEO4J_PASSWORD=okon APP_OCH_MODE=pu
 
 ### GraphQL Playground
 
-Once you ran OCH locally, you can access the OCH GraphQL Playground under [http://localhost:3000/graphql](http://localhost:3000/graphql).
+Once you ran OCH locally, you can access the OCH GraphQL Playground under [http://localhost:8080/graphql](http://localhost:3000/graphql).
 
 For example, to list all Interfaces on the public OCH make the following GraphQL query:
 

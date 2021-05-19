@@ -183,6 +183,7 @@ enum FilterRule {
 input TypeInstanceFilter {
   attributes: [AttributeFilterInput]
   typeRef: TypeRefFilterInput
+  createdBy: String
 }
 
 input TypeRefFilterInput {
@@ -301,6 +302,8 @@ type Query {
             (typeRef.path = $filter.typeRef.path AND typeRef.revision = $filter.typeRef.revision)
           )
         )
+        AND
+        ($filter.createdBy IS NULL OR tir.createdBy = $filter.createdBy)
         AND
         (
         	$filter.attributes IS NULL
