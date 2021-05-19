@@ -9,6 +9,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
+	cliprinter "capact.io/capact/internal/cli/printer"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -19,7 +20,7 @@ func NewDelete() *cobra.Command {
 		Use:   "delete TYPE_INSTANCE_ID...",
 		Short: "Delete a given TypeInstance(s)",
 		Example: heredoc.WithCLIName(`
-			# Delete TypeInstances with IDs c49b and 4793
+			# Delete TypeInstances with IDs 'c49b' and '4793'
 			<cli> typeinstance delete c49b 4793
 		`, cli.Name),
 		Args: cobra.MinimumNArgs(1),
@@ -41,12 +42,16 @@ func deleteTI(ctx context.Context, ids []string, w io.Writer) error {
 
 	okCheck := color.New(color.FgGreen).FprintfFunc()
 
+	var errs []error
 	for _, id := range ids {
 		err := hubCli.DeleteTypeInstance(ctx, id)
 		if err != nil {
-			return err
+			errs = append(errs, err)
 		}
 		okCheck(w, "TypeInstance %s deleted successfully\n", id)
 	}
+
+	cliprinter.PrintErrors(errs)
+
 	return nil
 }

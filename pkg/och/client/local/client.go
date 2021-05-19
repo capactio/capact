@@ -109,7 +109,7 @@ func (c *Client) UpdateTypeInstances(ctx context.Context, in []ochlocalgraphql.U
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return nil, errors.Wrap(err, "while executing query to update TypeInstances")
+		return nil, errors.Wrap(err, "while executing mutation to update TypeInstances")
 	}
 
 	return resp.TypeInstances, nil
@@ -208,7 +208,7 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
 	if err != nil {
-		return errors.Wrap(err, "while executing query to delete TypeInstance")
+		return errors.Wrap(err, "while executing mutation to delete TypeInstance")
 	}
 
 	return nil

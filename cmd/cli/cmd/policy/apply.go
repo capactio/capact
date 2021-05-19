@@ -25,6 +25,8 @@ func NewApply() *cobra.Command {
 		},
 	}
 	flags := cmd.Flags()
-	flags.StringVarP(&opts.PolicyFilePath, "filepath", "f", "", "The path to new Policy in YAML format")
+	flags.StringVarP(&opts.PolicyFilePath, cli.FromFileFlagName, "f", "", "The path to new Policy in YAML format")
+	panicOnError(cmd.MarkFlagRequired(cli.FromFileFlagName)) // this cannot happen
+
 	return cmd
 }

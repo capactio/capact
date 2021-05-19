@@ -11,7 +11,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
-	"capact.io/capact/internal/cli/printer"
+	cliprinter "capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
 
 	"github.com/spf13/cobra"
@@ -28,21 +28,21 @@ func NewGet() *cobra.Command {
 	var opts GetOptions
 	out := os.Stdout
 
-	resourcePrinter := printer.NewForResource(
+	resourcePrinter := cliprinter.NewForResource(
 		out,
-		printer.WithJSON(),
-		printer.WithYAML(),
-		printer.WithTable(tableDataOnGet),
+		cliprinter.WithJSON(),
+		cliprinter.WithYAML(),
+		cliprinter.WithTable(tableDataOnGet),
 	)
 
 	cmd := &cobra.Command{
 		Use:   "get [TYPE_INSTANCE_ID...]",
 		Short: "Displays one or multiple TypeInstances",
 		Example: heredoc.WithCLIName(`
-			# Display TypeInstances with IDs c49b and 4793
+			# Display TypeInstances with IDs 'c49b' and '4793'
 			<cli> typeinstance get c49b 4793
 			
-			# Save TypeInstances with IDs c49b and 4793 to file in the update format which later can be submitted for update by: 
+			# Save TypeInstances with IDs 'c49b' and '4793' to file in the update format which later can be submitted for update by: 
 			# <cli> typeinstance apply --from-file /tmp/typeinstances.yaml
 			<cli> typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
 		`, cli.Name),
@@ -85,10 +85,7 @@ func getTI(ctx context.Context, opts GetOptions) ([]gqllocalapi.TypeInstance, er
 	}
 
 	if len(opts.RequestedTypeInstancesIDs) == 0 {
-		return hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
-			Attributes: nil,
-			TypeRef:    nil,
-		})
+		return hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
 	}
 
 	var (
@@ -111,16 +108,12 @@ func getTI(ctx context.Context, opts GetOptions) ([]gqllocalapi.TypeInstance, er
 		out = append(out, *ti)
 	}
 
-	// TODO: this will be changed after merging unified printers which will have PrintErrors method.
-	for _, err := range errs {
-		fmt.Fprintf(os.Stderr, "Error from server: %v", err.Error())
-	}
-
+	cliprinter.PrintErrors(errs)
 	return out, nil
 }
 
-func tableDataOnGet(inRaw interface{}) (printer.TableData, error) {
-	out := printer.TableData{}
+func tableDataOnGet(inRaw interface{}) (cliprinter.TableData, error) {
+	out := cliprinter.TableData{}
 
 	switch in := inRaw.(type) {
 	case []gqllocalapi.TypeInstance:
@@ -128,7 +121,7 @@ func tableDataOnGet(inRaw interface{}) (printer.TableData, error) {
 		for _, ti := range in {
 			out.MultipleRows = append(out.MultipleRows, []string{
 				ti.ID,
-				ti.TypeRef.Path,
+				fmt.Sprintf("%s:%s", ti.TypeRef.Path, ti.TypeRef.Revision),
 				toTypeInstanceIDs(ti.Uses),
 				toTypeInstanceIDs(ti.UsedBy),
 				strconv.FormatInt(int64(ti.LatestResourceVersion.ResourceVersion), 10),
@@ -136,9 +129,9 @@ func tableDataOnGet(inRaw interface{}) (printer.TableData, error) {
 			})
 		}
 	case gqllocalapi.UpdateTypeInstancesInput: // this is a rare case when someone specify only `--export` or `--export -o=table`
-		return printer.TableData{}, fmt.Errorf("cannot use --export with table output")
+		return cliprinter.TableData{}, fmt.Errorf("cannot use --export with table output")
 	default:
-		return printer.TableData{}, fmt.Errorf("got unexpected input type, expected []gqllocalapi.TypeInstance, got %T", inRaw)
+		return cliprinter.TableData{}, fmt.Errorf("got unexpected input type, expected []gqllocalapi.TypeInstance, got %T", inRaw)
 	}
 
 	return out, nil

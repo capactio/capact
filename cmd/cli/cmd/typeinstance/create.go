@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -14,7 +13,6 @@ import (
 	"capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"k8s.io/apimachinery/pkg/util/yaml"
@@ -49,8 +47,8 @@ func NewCreate() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringSliceVarP(&opts.TypeInstancesFiles, fromFileFlagName, "f", []string{}, "The TypeInstances input in YAML format (can specify multiple)")
-	panicOnError(cmd.MarkFlagRequired(fromFileFlagName)) // this cannot happen
+	flags.StringSliceVarP(&opts.TypeInstancesFiles, cli.FromFileFlagName, "f", []string{}, "The TypeInstances input in YAML format (can specify multiple)")
+	panicOnError(cmd.MarkFlagRequired(cli.FromFileFlagName)) // this cannot happen
 
 	resourcePrinter.RegisterFlags(flags)
 
@@ -135,42 +133,15 @@ func tableDataOnCreate(in interface{}) (printer.TableData, error) {
 }
 
 func validateInput(in *gqllocalapi.CreateTypeInstancesInput) error {
-	var err *multierror.Error
-
-	hasMoreThatOneTI, hasRelationsBetweenTI := len(in.TypeInstances) > 1, len(in.UsesRelations) > 0
-
-	// It is done on server-side but we iterate over all TI anyway, so we can check it also here
-	// and do not send create request when we already know that it's wrong.
-	neededRelationsAliases := map[string]struct{}{}
-	if hasRelationsBetweenTI {
-		for _, rel := range in.UsesRelations {
-			neededRelationsAliases[rel.To] = struct{}{}
-			neededRelationsAliases[rel.From] = struct{}{}
-		}
-	}
-
 	// Single TypeInstance can be without alias. Submitting multiple TypeInstances without alias (even if relations are not defined)
 	// are hard to represent relations between input and returned IDs.
-	if hasMoreThatOneTI || hasRelationsBetweenTI {
+	if len(in.TypeInstances) > 1 {
 		for _, ti := range in.TypeInstances {
 			if ti.Alias == nil || *ti.Alias == "" {
 				return fmt.Errorf("when submitting more than one TypeInstance, all must have alias property set to easily relate it with returned ID")
 			}
-			delete(neededRelationsAliases, *ti.Alias)
 		}
 	}
 
-	if len(neededRelationsAliases) > 0 {
-		return fmt.Errorf("relations are specified for %q but TypeInstance with such alias was not found", toMapKeys(neededRelationsAliases))
-	}
-
-	return err.ErrorOrNil()
-}
-
-func toMapKeys(in map[string]struct{}) string {
-	var out []string
-	for key := range in {
-		out = append(out, key)
-	}
-	return strings.Join(out, ", ")
+	return nil
 }

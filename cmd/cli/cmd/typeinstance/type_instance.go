@@ -7,7 +7,6 @@ import (
 
 const (
 	decodeBufferSize = 4096
-	fromFileFlagName = "from-file"
 )
 
 func NewCmd() *cobra.Command {

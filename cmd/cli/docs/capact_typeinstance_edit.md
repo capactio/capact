@@ -19,6 +19,12 @@ capact typeinstance edit TYPE_INSTANCE_ID [flags]
   -o, --output string   Output format. One of: json | table | yaml (default "table")
 ```
 
+### Options inherited from parent commands
+
+```
+  -c, --config string   Path to the YAML config file
+```
+
 ### SEE ALSO
 
 * [capact typeinstance](capact_typeinstance.md)	 - This command consists of multiple subcommands to interact with target TypeInstances

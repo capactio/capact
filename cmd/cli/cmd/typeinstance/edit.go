@@ -3,6 +3,7 @@ package typeinstance
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 
 	"capact.io/capact/internal/cli/client"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
 )
@@ -40,7 +42,7 @@ func NewEdit() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.EditTypeInstanceID = args[0]
-			return editTI(cmd.Context(), opts, resourcePrinter)
+			return editTI(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
@@ -50,7 +52,7 @@ func NewEdit() *cobra.Command {
 	return cmd
 }
 
-func editTI(ctx context.Context, opts editOptions, resourcePrinter *printer.ResourcePrinter) error {
+func editTI(ctx context.Context, opts editOptions, w io.Writer) error {
 	server := config.GetDefaultContext()
 
 	hubCli, err := client.NewHub(server)
@@ -63,12 +65,15 @@ func editTI(ctx context.Context, opts editOptions, resourcePrinter *printer.Reso
 		return err
 	}
 
-	updatedTI, err := hubCli.UpdateTypeInstances(ctx, typeInstanceToUpdate)
+	_, err = hubCli.UpdateTypeInstances(ctx, typeInstanceToUpdate)
 	if err != nil {
 		return err
 	}
 
-	return resourcePrinter.Print(updatedTI)
+	okCheck := color.New(color.FgGreen).FprintfFunc()
+	okCheck(w, "TypeInstance %s updated successfully\n", opts.EditTypeInstanceID)
+
+	return nil
 }
 
 func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]gqllocalapi.UpdateTypeInstancesInput, error) {
@@ -93,11 +98,12 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 	}
 
 	rawEdited := ""
-	if err := survey.AskOne(prompt, &rawEdited); err != nil {
+	if err := survey.AskOne(prompt, &rawEdited, survey.WithValidator(isValidUpdateTypeInstancesInput)); err != nil {
 		return nil, err
 	}
 
 	edited := gqllocalapi.UpdateTypeInstancesInput{}
+
 	if err := yaml.Unmarshal([]byte(rawEdited), &edited); err != nil {
 		return nil, err
 	}
@@ -105,4 +111,14 @@ func typeInstanceViaEditor(ctx context.Context, cli client.Hub, tiID string) ([]
 	return []gqllocalapi.UpdateTypeInstancesInput{
 		edited,
 	}, nil
+}
+
+func isValidUpdateTypeInstancesInput(val interface{}) error {
+	str, ok := val.(string)
+	if !ok {
+		return fmt.Errorf("cannot enforce UpdateTypeInstancesInput syntax validation on response of type %T", val)
+	}
+
+	out := gqllocalapi.UpdateTypeInstancesInput{}
+	return yaml.UnmarshalStrict([]byte(str), &out)
 }

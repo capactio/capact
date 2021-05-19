@@ -60,6 +60,7 @@ capact [flags]
 * [capact login](capact_login.md)	 - Login to a Hub (Gateway) server
 * [capact logout](capact_logout.md)	 - Logout from the Hub (Gateway) server
 * [capact policy](capact_policy.md)	 - This command consists of multiple subcommands to interact with Policy
+* [capact typeinstance](capact_typeinstance.md)	 - This command consists of multiple subcommands to interact with target TypeInstances
 * [capact upgrade](capact_upgrade.md)	 - Upgrades Capact
 * [capact validate](capact_validate.md)	 - Validate OCF manifests
 * [capact version](capact_version.md)	 - Show version information about this binary

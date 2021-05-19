@@ -10,7 +10,6 @@ import (
 	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"capact.io/capact/pkg/och/client"
-	"capact.io/capact/pkg/och/client/public"
 )
 
 type Hub interface {

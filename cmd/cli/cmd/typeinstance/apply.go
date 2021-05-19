@@ -51,8 +51,8 @@ func NewApply() *cobra.Command {
 	}
 
 	flags := cmd.Flags()
-	flags.StringSliceVarP(&opts.TypeInstancesFiles, fromFileFlagName, "f", []string{}, "The TypeInstances input in YAML format (can specify multiple)")
-	panicOnError(cmd.MarkFlagRequired(fromFileFlagName)) // this cannot happen
+	flags.StringSliceVarP(&opts.TypeInstancesFiles, cli.FromFileFlagName, "f", []string{}, "The TypeInstances input in YAML format (can specify multiple)")
+	panicOnError(cmd.MarkFlagRequired(cli.FromFileFlagName)) // this cannot happen
 
 	resourcePrinter.RegisterFlags(flags)
 
@@ -79,6 +79,7 @@ func applyTI(ctx context.Context, opts applyOptions, resourcePrinter *printer.Re
 
 	return resourcePrinter.Print(updatedTI)
 }
+
 func typeInstancesFromFile(typeInstancesFiles []string) ([]gqllocalapi.UpdateTypeInstancesInput, error) {
 	var typeInstanceToUpdate []gqllocalapi.UpdateTypeInstancesInput
 
