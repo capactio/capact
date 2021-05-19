@@ -197,12 +197,14 @@ args:
                   typeInstances:
                   - alias: postgresql
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: postgres-install-cloudsql-run-cloudsql-instance
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.gcp.cloudsql.instance
                       revision: 0.1.0

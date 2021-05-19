@@ -601,30 +601,35 @@ args:
                   typeInstances:
                   - alias: jira-config
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-install-db-postgresql
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-install-db-postgres-install-cloudsql-run-cloudsql-instance
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.gcp.cloudsql.instance
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-create-db-database
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-helm-install-helm-release
                     attributes: []
+                    createdBy: owner
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0

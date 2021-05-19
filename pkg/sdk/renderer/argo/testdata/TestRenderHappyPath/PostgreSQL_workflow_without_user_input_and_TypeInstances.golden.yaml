@@ -183,12 +183,14 @@ args:
                   typeInstances:
                   - alias: postgresql
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: postgres-install-helm-install-helm-release
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0

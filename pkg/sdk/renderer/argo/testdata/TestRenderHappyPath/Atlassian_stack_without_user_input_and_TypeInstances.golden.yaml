@@ -1108,48 +1108,56 @@ args:
                   typeInstances:
                   - alias: stack-install-install-shared-db-postgresql
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: stack-install-install-shared-db-postgres-install-helm-install-helm-release
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-jira-install-jira-config
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.productivity.jira.config
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-jira-install-jira-install-create-db-database
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: jira-install-jira-install-jira-install-helm-install-helm-release
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
                   - alias: confluence-install-confluence-install-confluence-config
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.productivity.confluence.config
                       revision: 0.1.0
                     value: null
                   - alias: confluence-install-confluence-install-main-create-db-database
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: confluence-install-confluence-install-main-helm-install-helm-release
                     attributes: []
+                    createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0

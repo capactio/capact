@@ -116,17 +116,17 @@ func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
 }
 
 func (r *dedicatedRenderer) AddOutputTypeInstancesStep(workflow *Workflow) error {
+	if r.ownerID == nil {
+		return NewMissingOwnerIDError()
+	}
+
 	if len(r.typeInstancesToOutput.relations) != 0 || len(r.typeInstancesToOutput.typeInstances) != 0 {
-		if err := r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.typeInstancesToOutput); err != nil {
+		if err := r.typeInstanceHandler.AddUploadTypeInstancesStep(workflow, r.typeInstancesToOutput, *r.ownerID); err != nil {
 			return err
 		}
 	}
 
 	if len(r.typeInstancesToUpdate) > 0 {
-		if r.ownerID == nil {
-			return NewMissingOwnerIDError()
-		}
-
 		if err := r.typeInstanceHandler.AddUpdateTypeInstancesStep(workflow, r.typeInstancesToUpdate, *r.ownerID); err != nil {
 			return err
 		}

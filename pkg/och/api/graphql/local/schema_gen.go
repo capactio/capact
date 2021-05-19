@@ -72,6 +72,7 @@ type ComplexityRoot struct {
 	}
 
 	TypeInstance struct {
+		CreatedBy               func(childComplexity int) int
 		FirstResourceVersion    func(childComplexity int) int
 		ID                      func(childComplexity int) int
 		LatestResourceVersion   func(childComplexity int) int
@@ -106,6 +107,7 @@ type ComplexityRoot struct {
 	}
 
 	TypeInstanceResourceVersion struct {
+		CreatedBy       func(childComplexity int) int
 		Metadata        func(childComplexity int) int
 		ResourceVersion func(childComplexity int) int
 		Spec            func(childComplexity int) int
@@ -278,6 +280,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.TypeInstances(childComplexity, args["filter"].(*TypeInstanceFilter)), true
 
+	case "TypeInstance.createdBy":
+		if e.complexity.TypeInstance.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.TypeInstance.CreatedBy(childComplexity), true
+
 	case "TypeInstance.firstResourceVersion":
 		if e.complexity.TypeInstance.FirstResourceVersion == nil {
 			break
@@ -415,6 +424,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeInstanceInstrumentationMetricsDashboard.URL(childComplexity), true
+
+	case "TypeInstanceResourceVersion.createdBy":
+		if e.complexity.TypeInstanceResourceVersion.CreatedBy == nil {
+			break
+		}
+
+		return e.complexity.TypeInstanceResourceVersion.CreatedBy(childComplexity), true
 
 	case "TypeInstanceResourceVersion.metadata":
 		if e.complexity.TypeInstanceResourceVersion.Metadata == nil {
@@ -574,6 +590,7 @@ type TypeInstance {
   id: ID! @id
 
   lockedBy: LockOwnerID
+  createdBy: String
 
   """
   Common properties for all TypeInstances which cannot be changed
@@ -604,6 +621,8 @@ type TypeInstance {
 
 type TypeInstanceResourceVersion {
   resourceVersion: Int! @index
+  createdBy: String
+
   metadata: TypeInstanceResourceVersionMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeInstanceResourceVersionSpec!
@@ -740,6 +759,7 @@ input CreateTypeInstanceInput {
   """
   alias: String
 
+  createdBy: String
   typeRef: TypeInstanceTypeReferenceInput!
   attributes: [AttributeReferenceInput!]
   value: Any
@@ -775,6 +795,8 @@ input UpdateTypeInstanceInput {
   The attributes property is optional. If not provided, previous value is used.
   """
   attributes: [AttributeReferenceInput!]
+
+  createdBy: String
 
   """
   The value property is optional. If not provided, previous value is used.
@@ -878,7 +900,7 @@ type Mutation {
       CREATE (ti:TypeInstance {id: apoc.create.uuid()})
       CREATE (ti)-[:OF_TYPE]->(typeRef)
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy $in.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
@@ -933,7 +955,7 @@ type Mutation {
         ORDER BY latestRevision.resourceVersion DESC LIMIT 1
       }
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       // Handle the ` + "`" + `spec.value` + "`" + ` property
@@ -1474,7 +1496,7 @@ func (ec *executionContext) _Mutation_createTypeInstance(ctx context.Context, fi
 			return ec.resolvers.Mutation().CreateTypeInstance(rctx, args["in"].(CreateTypeInstanceInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "WITH apoc.convert.toJson($in.value) as value\nMERGE (typeRef:TypeInstanceTypeReference {path: $in.typeRef.path, revision: $in.typeRef.revision})\n\nCREATE (ti:TypeInstance {id: apoc.create.uuid()})\nCREATE (ti)-[:OF_TYPE]->(typeRef)\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy $in.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\nCREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:SPECIFIED_BY]->(spec: TypeInstanceResourceVersionSpec {value: value})\n\nFOREACH (attr in $in.attributes |\n  MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n  CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n)\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -1540,7 +1562,7 @@ func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, f
 			return ec.resolvers.Mutation().UpdateTypeInstances(rctx, args["in"].([]*UpdateTypeInstancesInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -1988,6 +2010,38 @@ func (ec *executionContext) _TypeInstance_lockedBy(ctx context.Context, field gr
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOLockOwnerID2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstance_createdBy(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstance",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstance_typeRef(ctx context.Context, field graphql.CollectedField, obj *TypeInstance) (ret graphql.Marshaler) {
@@ -2904,6 +2958,38 @@ func (ec *executionContext) _TypeInstanceResourceVersion_resourceVersion(ctx con
 	res := resTmp.(int)
 	fc.Result = res
 	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TypeInstanceResourceVersion_createdBy(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersion) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "TypeInstanceResourceVersion",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CreatedBy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeInstanceResourceVersion_metadata(ctx context.Context, field graphql.CollectedField, obj *TypeInstanceResourceVersion) (ret graphql.Marshaler) {
@@ -4450,6 +4536,14 @@ func (ec *executionContext) unmarshalInputCreateTypeInstanceInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "typeRef":
 			var err error
 
@@ -4687,6 +4781,14 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attributes"))
 			it.Attributes, err = ec.unmarshalOAttributeReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -4941,6 +5043,8 @@ func (ec *executionContext) _TypeInstance(ctx context.Context, sel ast.Selection
 			}
 		case "lockedBy":
 			out.Values[i] = ec._TypeInstance_lockedBy(ctx, field, obj)
+		case "createdBy":
+			out.Values[i] = ec._TypeInstance_createdBy(ctx, field, obj)
 		case "typeRef":
 			out.Values[i] = ec._TypeInstance_typeRef(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -5108,6 +5212,8 @@ func (ec *executionContext) _TypeInstanceResourceVersion(ctx context.Context, se
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "createdBy":
+			out.Values[i] = ec._TypeInstanceResourceVersion_createdBy(ctx, field, obj)
 		case "metadata":
 			out.Values[i] = ec._TypeInstanceResourceVersion_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {

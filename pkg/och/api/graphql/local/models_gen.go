@@ -28,6 +28,7 @@ type AttributeReferenceInput struct {
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
 	Alias      *string                         `json:"alias"`
+	CreatedBy  *string                         `json:"createdBy"`
 	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
 	Attributes []*AttributeReferenceInput      `json:"attributes"`
 	Value      interface{}                     `json:"value"`
@@ -49,8 +50,9 @@ type LockTypeInstancesInput struct {
 }
 
 type TypeInstance struct {
-	ID       string  `json:"id"`
-	LockedBy *string `json:"lockedBy"`
+	ID        string  `json:"id"`
+	LockedBy  *string `json:"lockedBy"`
+	CreatedBy *string `json:"createdBy"`
 	// Common properties for all TypeInstances which cannot be changed
 	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`
@@ -94,6 +96,7 @@ type TypeInstanceInstrumentationMetricsDashboard struct {
 
 type TypeInstanceResourceVersion struct {
 	ResourceVersion int                                  `json:"resourceVersion"`
+	CreatedBy       *string                              `json:"createdBy"`
 	Metadata        *TypeInstanceResourceVersionMetadata `json:"metadata"`
 	Spec            *TypeInstanceResourceVersionSpec     `json:"spec"`
 }
