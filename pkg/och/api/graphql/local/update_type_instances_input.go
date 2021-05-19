@@ -8,6 +8,7 @@ type UpdateTypeInstancesInput struct {
 	// you can update only those TypeInstances which are not locked.
 	OwnerID      *string                  `json:"ownerID,omitempty"`
 	ID           string                   `json:"id"`
+	CreatedBy    *string                  `json:"createdBy,omitempty"`
 	TypeInstance *UpdateTypeInstanceInput `json:"typeInstance"`
 }
 

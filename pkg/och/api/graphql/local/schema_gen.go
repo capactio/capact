@@ -796,8 +796,6 @@ input UpdateTypeInstanceInput {
   """
   attributes: [AttributeReferenceInput!]
 
-  createdBy: String
-
   """
   The value property is optional. If not provided, previous value is used.
   """
@@ -810,6 +808,7 @@ input UpdateTypeInstancesInput {
   you can update only those TypeInstances which are not locked.
   """
   ownerID: LockOwnerID
+  createdBy: String
 
   id: ID!
   typeInstance: UpdateTypeInstanceInput!
@@ -955,7 +954,7 @@ type Mutation {
         ORDER BY latestRevision.resourceVersion DESC LIMIT 1
       }
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.typeInstance.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       // Handle the ` + "`" + `spec.value` + "`" + ` property
@@ -1562,7 +1561,7 @@ func (ec *executionContext) _Mutation_updateTypeInstances(ctx context.Context, f
 			return ec.resolvers.Mutation().UpdateTypeInstances(rctx, args["in"].([]*UpdateTypeInstancesInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
-			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
+			statement, err := ec.unmarshalOString2ᚖstring(ctx, "CALL {\n  UNWIND $in AS item\n  RETURN collect(item.id) as allInputIDs\n}\n\n// Check if all TypeInstances were found\nWITH *\nCALL {\n  WITH allInputIDs\n  MATCH (ti:TypeInstance)\n  WHERE ti.id IN allInputIDs\n  WITH collect(ti.id) as foundIDs\n  RETURN foundIDs\n}\nCALL apoc.util.validate(size(foundIDs) < size(allInputIDs), apoc.convert.toJson({code: 404, ids: foundIDs}), null)\n\n// Check if given TypeInstances are not already locked by others\nWITH *\nCALL {\n    WITH *\n    UNWIND $in AS item\n    MATCH (tic:TypeInstance {id: item.id})\n    WHERE tic.lockedBy IS NOT NULL AND (item.ownerID IS NULL OR tic.lockedBy <> item.ownerID)\n    WITH collect(tic.id) as lockedIDs\n    RETURN lockedIDs\n}\nCALL apoc.util.validate(size(lockedIDs) > 0, apoc.convert.toJson({code: 409, ids: lockedIDs}), null)\n\nUNWIND $in as item\nMATCH (ti: TypeInstance {id: item.id})\nCALL {\n  WITH ti\n  MATCH (ti)-[:CONTAINS]->(latestRevision:TypeInstanceResourceVersion)\n  RETURN latestRevision\n  ORDER BY latestRevision.resourceVersion DESC LIMIT 1\n}\n\nCREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.typeInstance.createdBy})\nCREATE (ti)-[:CONTAINS]->(tir)\n\n// Handle the `spec.value` property\nCREATE (spec: TypeInstanceResourceVersionSpec)\nCREATE (tir)-[:SPECIFIED_BY]->(spec)\n\nWITH ti, tir, spec, latestRevision, item\nCALL apoc.do.when(\n    item.typeInstance.value IS NOT NULL,\n  '\n    SET spec.value = apoc.convert.toJson(item.typeInstance.value) RETURN spec\n  ',\n  '\n    MATCH (latestRevision)-[:SPECIFIED_BY]->(latestSpec: TypeInstanceResourceVersionSpec)\n    SET spec.value = latestSpec.value RETURN spec\n  ',\n  {spec:spec, latestRevision: latestRevision, item: item}) YIELD value\n\n// Handle the `metadata.attributes` property\nCREATE (metadata: TypeInstanceResourceVersionMetadata)\nCREATE (tir)-[:DESCRIBED_BY]->(metadata)\n\nWITH ti, tir, latestRevision, metadata, item\nCALL apoc.do.when(\n  item.typeInstance.attributes IS NOT NULL,\n  '\n    FOREACH (attr in item.typeInstance.attributes |\n      MERGE (attrRef: AttributeReference {path: attr.path, revision: attr.revision})\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attrRef)\n    )\n\n    RETURN metadata\n  ',\n  '\n    OPTIONAL MATCH (latestRevision)-[:DESCRIBED_BY]->(TypeInstanceResourceVersionMetadata)-[:CHARACTERIZED_BY]->(latestAttrRef: AttributeReference)\n    WHERE latestAttrRef IS NOT NULL\n    WITH *, COLLECT(latestAttrRef) AS latestAttrRefs\n    FOREACH (attr in latestAttrRefs |\n      CREATE (metadata)-[:CHARACTERIZED_BY]->(attr)\n    )\n\n    RETURN metadata\n  ',\n  {metadata: metadata, latestRevision: latestRevision, item: item}\n) YIELD value\n\nRETURN ti")
 			if err != nil {
 				return nil, err
 			}
@@ -4784,14 +4783,6 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstanceInput(ctx context.Co
 			if err != nil {
 				return it, err
 			}
-		case "createdBy":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
-			it.CreatedBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
 		case "value":
 			var err error
 
@@ -4817,6 +4808,14 @@ func (ec *executionContext) unmarshalInputUpdateTypeInstancesInput(ctx context.C
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ownerID"))
 			it.OwnerID, err = ec.unmarshalOLockOwnerID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "createdBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("createdBy"))
+			it.CreatedBy, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}

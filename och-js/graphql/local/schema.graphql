@@ -242,8 +242,6 @@ input UpdateTypeInstanceInput {
   """
   attributes: [AttributeReferenceInput!]
 
-  createdBy: String
-
   """
   The value property is optional. If not provided, previous value is used.
   """
@@ -256,6 +254,7 @@ input UpdateTypeInstancesInput {
   you can update only those TypeInstances which are not locked.
   """
   ownerID: LockOwnerID
+  createdBy: String
 
   id: ID!
   typeInstance: UpdateTypeInstanceInput!
@@ -401,7 +400,7 @@ type Mutation {
         ORDER BY latestRevision.resourceVersion DESC LIMIT 1
       }
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.typeInstance.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       // Handle the `spec.value` property
