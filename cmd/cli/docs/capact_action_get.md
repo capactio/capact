@@ -22,8 +22,7 @@ capact action get funny-stallman -ojson
 ```
   -h, --help               help for get
   -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
-  -o, --output string      Output format. One of:
-                           json | yaml | table (default "table")
+  -o, --output string      Output format. One of: json | table | yaml (default "table")
 ```
 
 ### Options inherited from parent commands

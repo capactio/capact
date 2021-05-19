@@ -10,8 +10,7 @@ capact policy get [flags]
 
 ```
   -h, --help            help for get
-  -o, --output string   Output format. One of:
-                        json | yaml (default "yaml")
+  -o, --output string   Output format. One of: json | yaml (default "yaml")
 ```
 
 ### Options inherited from parent commands

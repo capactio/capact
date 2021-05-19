@@ -2,14 +2,12 @@ package action
 
 import (
 	"fmt"
-	"io"
 	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/docker/docker/pkg/namesgenerator"
-	"github.com/hokaccha/go-prettyjson"
 	"k8s.io/apimachinery/pkg/util/validation"
 	"sigs.k8s.io/yaml"
 )
@@ -65,25 +63,6 @@ func actionNameQuestion(defaultName string) *survey.Question {
 		},
 		Validate: survey.ComposeValidators(survey.Required, isDNSSubdomain),
 	}
-}
-
-func printJSON(in interface{}, w io.Writer) error {
-	out, err := prettyjson.Marshal(in)
-	if err != nil {
-		return err
-	}
-
-	_, err = w.Write(out)
-	return err
-}
-
-func printYAML(in interface{}, w io.Writer) error {
-	out, err := yaml.Marshal(in)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(out)
-	return err
 }
 
 // generateDNSName returns a DNS-1123 subdomain compliant random name
