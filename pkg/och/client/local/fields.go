@@ -15,8 +15,8 @@ var typeInstanceWithUsesFields = fmt.Sprintf(`
 var typeInstanceFields = fmt.Sprintf(`
 	  id
 	  typeRef {
-		path
-		revision
+			path
+			revision
 	  }
 	  lockedBy
 
@@ -43,13 +43,14 @@ var typeInstanceFields = fmt.Sprintf(`
 
 const typeInstanceResourceVersion = `
 	  resourceVersion
+		createdBy
 	  metadata {
-		attributes {
-		  path
-		  revision
-		}
+			attributes {
+			  path
+			  revision
+			}
 	  }
 	  spec {
-		value
+			value
 	  }
 `

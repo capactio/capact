@@ -191,6 +191,7 @@ fragment TypeInstance on TypeInstance {
 
 fragment TypeInstanceResourceVersion on TypeInstanceResourceVersion {
   resourceVersion
+  createdBy
   metadata {
     attributes {
       path
