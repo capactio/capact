@@ -47,10 +47,16 @@ type (
 		GetReportedRunnerStatus(ctx context.Context, action *v1alpha1.Action) (*GetReportedRunnerStatusOutput, error)
 		GetRunnerJobStatus(ctx context.Context, action *v1alpha1.Action) (*GetRunnerJobStatusOutput, error)
 	}
+
+	actionTypeInstanceGetter interface {
+		GetTypeInstancesFromAction(ctx context.Context, action *v1alpha1.Action) ([]v1alpha1.OutputTypeInstanceDetails, error)
+	}
+
 	actionService interface {
 		actionRenderer
 		actionStarter
 		actionStatusGetter
+		actionTypeInstanceGetter
 	}
 )
 
@@ -291,7 +297,33 @@ func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1a
 		return ctrl.Result{}, errors.Wrap(err, "while unlocking TypeInstances")
 	}
 
+	if action.Status.Output == nil {
+		action.Status.Output = &v1alpha1.ActionOutput{}
+	}
+
+	if action.Status.Output.TypeInstances == nil {
+		if err := r.fillOutputTypeInstances(ctx, action); err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "while filling output TypeInstances")
+		}
+
+		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
+		}
+		return ctrl.Result{Requeue: true}, nil
+	}
+
 	return ctrl.Result{}, nil
+}
+
+func (r *ActionReconciler) fillOutputTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
+	typeInstances, err := r.svc.GetTypeInstancesFromAction(ctx, action)
+	if err != nil {
+		return errors.Wrap(err, "while getting TypeInstances from Action")
+	}
+
+	action.Status.Output.TypeInstances = &typeInstances
+
+	return nil
 }
 
 func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Action, currentPhase v1alpha1.ActionPhase, errMsg string) (ctrl.Result, error) {
