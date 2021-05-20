@@ -150,7 +150,7 @@ var _ = Describe("Action", func() {
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
 		})
 
-		FIt("Should populate output.typeInstances in Action", func() {
+		It("Should populate output.typeInstances in Action", func() {
 			actionPath := "cap.interface.capactio.capact.validation.action.passing"
 
 			By("Preparing input Type Instances")
