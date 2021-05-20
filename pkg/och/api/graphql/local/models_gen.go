@@ -50,9 +50,8 @@ type LockTypeInstancesInput struct {
 }
 
 type TypeInstance struct {
-	ID        string  `json:"id"`
-	LockedBy  *string `json:"lockedBy"`
-	CreatedBy *string `json:"createdBy"`
+	ID       string  `json:"id"`
+	LockedBy *string `json:"lockedBy"`
 	// Common properties for all TypeInstances which cannot be changed
 	TypeRef                 *TypeInstanceTypeReference     `json:"typeRef"`
 	Uses                    []*TypeInstance                `json:"uses"`

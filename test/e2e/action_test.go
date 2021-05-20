@@ -22,6 +22,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
+	"capact.io/capact/pkg/engine/api/graphql"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engine "capact.io/capact/pkg/engine/client"
 )
@@ -59,23 +60,21 @@ var _ = Describe("Action", func() {
 			testValue := "Implementation A"
 
 			By("Preparing input Type Instances")
-			var typeInstances []*enginegraphql.InputTypeInstanceData
 
 			// TypeInstance which will be downloaded
 			download := getTypeInstanceInputForDownload(testValue)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, ochClient, download)
 			defer downloadTICleanup()
 
-			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "testInput", ID: downloadTI.ID})
-
 			// TypeInstance which will be downloaded and updated
 			update := getTypeInstanceInputForUpdate()
 			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
 			defer updateTICleanup()
 
-			typeInstances = append(typeInstances,
-				&enginegraphql.InputTypeInstanceData{Name: "testUpdate", ID: updateTI.ID})
+			typeInstances := []*enginegraphql.InputTypeInstanceData{
+				{Name: "testUpdate", ID: updateTI.ID},
+				{Name: "testInput", ID: downloadTI.ID},
+			}
 
 			inputData := &enginegraphql.ActionInputData{
 				TypeInstances: typeInstances,
@@ -124,7 +123,6 @@ var _ = Describe("Action", func() {
 
 			By("5. Check Uploaded TypeInstances")
 			assertUploadedTypeInstance(ctx, ochClient, testValue)
-
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -151,6 +149,63 @@ var _ = Describe("Action", func() {
 				getActionStatusFunc(ctx, engineClient, failingActionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
+		})
+
+		FIt("Should populate output.typeInstances in Action", func() {
+			actionPath := "cap.interface.capactio.capact.validation.action.passing"
+
+			By("Preparing input Type Instances")
+
+			// TypeInstance which will be downloaded
+			download := getTypeInstanceInputForDownload("dummy")
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, ochClient, download)
+			defer downloadTICleanup()
+
+			// TypeInstance which will be downloaded and updated
+			update := getTypeInstanceInputForUpdate()
+			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			defer updateTICleanup()
+
+			typeInstances := []*enginegraphql.InputTypeInstanceData{
+				{Name: "testInput", ID: downloadTI.ID},
+				{Name: "testUpdate", ID: updateTI.ID},
+			}
+
+			inputData := &enginegraphql.ActionInputData{
+				TypeInstances: typeInstances,
+			}
+
+			By("Creating and running Action")
+
+			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
+			defer func() {
+				err := engineClient.DeleteAction(ctx, action.Name)
+				Expect(err).ToNot(HaveOccurred())
+			}()
+			runActionAndWaitForSucceeded(ctx, engineClient, action.Name)
+
+			By("Checking, if TypeInstances are populated")
+
+			Eventually(func() ([]*enginegraphql.OutputTypeInstanceDetails, error) {
+				action, err := engineClient.GetAction(ctx, action.Name)
+				if err != nil {
+					return nil, err
+				}
+
+				if action.Output == nil {
+					return nil, errors.New(".output.typeInstances not populated")
+				}
+
+				return action.Output.TypeInstances, nil
+			}, 10*time.Second).Should(And(ContainElement(
+				&graphql.OutputTypeInstanceDetails{
+					ID: updateTI.ID,
+					TypeRef: &enginegraphql.ManifestReference{
+						Path:     updateTI.TypeRef.Path,
+						Revision: updateTI.TypeRef.Revision,
+					},
+				},
+			)), HaveLen(2))
 		})
 
 		DescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}, expectedStatus enginegraphql.ActionStatusPhase) {

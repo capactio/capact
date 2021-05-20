@@ -36,7 +36,6 @@ type TypeInstance {
   id: ID! @id
 
   lockedBy: LockOwnerID
-  createdBy: String
 
   """
   Common properties for all TypeInstances which cannot be changed
@@ -348,7 +347,7 @@ type Mutation {
       CREATE (ti:TypeInstance {id: apoc.create.uuid()})
       CREATE (ti)-[:OF_TYPE]->(typeRef)
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy $in.createdBy})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: $in.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)
@@ -403,7 +402,7 @@ type Mutation {
         ORDER BY latestRevision.resourceVersion DESC LIMIT 1
       }
 
-      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.typeInstance.createdBy})
+      CREATE (tir: TypeInstanceResourceVersion {resourceVersion: latestRevision.resourceVersion + 1, createdBy: item.createdBy})
       CREATE (ti)-[:CONTAINS]->(tir)
 
       // Handle the `spec.value` property
