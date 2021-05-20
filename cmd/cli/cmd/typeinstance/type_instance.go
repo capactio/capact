@@ -41,10 +41,12 @@ func mapTypeInstanceToUpdateType(in *gqllocalapi.TypeInstance) gqllocalapi.Updat
 
 	mapAttrs := func() []*gqllocalapi.AttributeReferenceInput {
 		if in.LatestResourceVersion.Metadata == nil || in.LatestResourceVersion.Metadata.Attributes == nil {
-			return nil
+			return []*gqllocalapi.AttributeReferenceInput{}
 		}
 
-		var out []*gqllocalapi.AttributeReferenceInput
+		// An empty slice json.Marshal into "[]"
+		// whereas a nil slice json.Marshal into "null"
+		out := []*gqllocalapi.AttributeReferenceInput{}
 		for _, attr := range in.LatestResourceVersion.Metadata.Attributes {
 			out = append(out, &gqllocalapi.AttributeReferenceInput{
 				Path:     attr.Path,

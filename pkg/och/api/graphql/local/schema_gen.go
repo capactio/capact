@@ -741,7 +741,7 @@ input CreateTypeInstanceInput {
   alias: String
 
   typeRef: TypeInstanceTypeReferenceInput!
-  attributes: [AttributeReferenceInput!]!
+  attributes: [AttributeReferenceInput!]
   value: Any
 }
 
@@ -4462,7 +4462,7 @@ func (ec *executionContext) unmarshalInputCreateTypeInstanceInput(ctx context.Co
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("attributes"))
-			it.Attributes, err = ec.unmarshalNAttributeReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInputᚄ(ctx, v)
+			it.Attributes, err = ec.unmarshalOAttributeReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5488,27 +5488,6 @@ func (ec *executionContext) marshalNAttributeReference2ᚖcapactᚗioᚋcapact�
 		return graphql.Null
 	}
 	return ec._AttributeReference(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNAttributeReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInputᚄ(ctx context.Context, v interface{}) ([]*AttributeReferenceInput, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*AttributeReferenceInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNAttributeReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalNAttributeReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋlocalᚐAttributeReferenceInput(ctx context.Context, v interface{}) (*AttributeReferenceInput, error) {
