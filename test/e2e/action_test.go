@@ -22,7 +22,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 
-	"capact.io/capact/pkg/engine/api/graphql"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	engine "capact.io/capact/pkg/engine/client"
 )
@@ -198,7 +197,7 @@ var _ = Describe("Action", func() {
 
 				return action.Output.TypeInstances, nil
 			}, 10*time.Second).Should(And(ContainElement(
-				&graphql.OutputTypeInstanceDetails{
+				&enginegraphql.OutputTypeInstanceDetails{
 					ID: updateTI.ID,
 					TypeRef: &enginegraphql.ManifestReference{
 						Path:     updateTI.TypeRef.Path,
