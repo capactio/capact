@@ -203,7 +203,7 @@ input CreateTypeInstanceInput {
   alias: String
 
   typeRef: TypeInstanceTypeReferenceInput!
-  attributes: [AttributeReferenceInput!]
+  attributes: [AttributeReferenceInput!]!
   value: Any
 }
 

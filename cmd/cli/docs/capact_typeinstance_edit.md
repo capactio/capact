@@ -15,8 +15,7 @@ capact typeinstance edit TYPE_INSTANCE_ID [flags]
 ### Options
 
 ```
-  -h, --help            help for edit
-  -o, --output string   Output format. One of: json | table | yaml (default "table")
+  -h, --help   help for edit
 ```
 
 ### Options inherited from parent commands

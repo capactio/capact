@@ -24,6 +24,8 @@ type GetOptions struct {
 	ExportToUpdateFormat      bool
 }
 
+var ErrTableFormatWithExportFlag = fmt.Errorf("cannot use --export with table output")
+
 func NewGet() *cobra.Command {
 	var opts GetOptions
 	out := os.Stdout
@@ -48,6 +50,10 @@ func NewGet() *cobra.Command {
 		`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts.RequestedTypeInstancesIDs = args
+
+			if opts.ExportToUpdateFormat && resourcePrinter.PrintFormat() == cliprinter.TableFormat {
+				return ErrTableFormatWithExportFlag
+			}
 
 			tis, err := getTI(cmd.Context(), opts)
 			if err != nil {
@@ -128,8 +134,8 @@ func tableDataOnGet(inRaw interface{}) (cliprinter.TableData, error) {
 				strconv.FormatBool(ti.LockedBy != nil),
 			})
 		}
-	case gqllocalapi.UpdateTypeInstancesInput: // this is a rare case when someone specify only `--export` or `--export -o=table`
-		return cliprinter.TableData{}, fmt.Errorf("cannot use --export with table output")
+	case gqllocalapi.UpdateTypeInstancesInput: // this shouldn't happen because of previous options validation
+		return cliprinter.TableData{}, ErrTableFormatWithExportFlag
 	default:
 		return cliprinter.TableData{}, fmt.Errorf("got unexpected input type, expected []gqllocalapi.TypeInstance, got %T", inRaw)
 	}

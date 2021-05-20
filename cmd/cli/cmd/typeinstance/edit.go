@@ -8,7 +8,6 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
-	"capact.io/capact/internal/cli/printer"
 	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
 
 	"github.com/AlecAivazis/survey/v2"
@@ -25,13 +24,6 @@ type editOptions struct {
 func NewEdit() *cobra.Command {
 	var opts editOptions
 
-	resourcePrinter := printer.NewForResource(
-		os.Stdout,
-		printer.WithJSON(),
-		printer.WithYAML(),
-		printer.WithTable(tableDataOnGet),
-	)
-
 	cmd := &cobra.Command{
 		Use:   "edit TYPE_INSTANCE_ID",
 		Short: "Edit a given TypeInstance via editor",
@@ -45,9 +37,6 @@ func NewEdit() *cobra.Command {
 			return editTI(cmd.Context(), opts, os.Stdout)
 		},
 	}
-
-	flags := cmd.Flags()
-	resourcePrinter.RegisterFlags(flags)
 
 	return cmd
 }

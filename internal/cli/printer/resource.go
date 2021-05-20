@@ -66,6 +66,10 @@ func (r *ResourcePrinter) RegisterFlags(flags *pflag.FlagSet) {
 	flags.VarP(&r.output, "output", "o", fmt.Sprintf("Output format. One of: %s", r.availablePrinters()))
 }
 
+func (r *ResourcePrinter) PrintFormat() PrintFormat {
+	return r.output
+}
+
 func (r *ResourcePrinter) Print(in interface{}) error {
 	printer, found := r.printers[r.output]
 	if !found {
