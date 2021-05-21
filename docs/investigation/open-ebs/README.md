@@ -25,6 +25,12 @@ Following solutions where tested and compared
 * OpenEBS MayaStor
 * NFS on OpenEBS cStor
 
+### Installation
+
+* [OpenEBS control plane](https://docs.openebs.io/docs/next/installation.html)
+* [cStor-operators](https://github.com/openebs/cstor-operators/blob/master/docs/quick.md)
+* NFS - any server, just set StorageClass to cStor
+
 ### Local Volumes
 
 Local Volumes as the name suggests don't offer replication and multi zone support. The biggest advantage of Local Volume is performance.
