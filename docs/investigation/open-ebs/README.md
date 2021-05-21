@@ -25,10 +25,14 @@ Following solutions where tested and compared
 * OpenEBS MayaStor
 * NFS on OpenEBS cStor
 
+For cStor and MayaStore it was tested if created volume is available from multiple zones.
+For NFS on cStor it was tested if volume can be accessed by multiple pods.
+
 ### Installation
 
 * [OpenEBS control plane](https://docs.openebs.io/docs/next/installation.html)
 * [cStor-operators](https://github.com/openebs/cstor-operators/blob/master/docs/quick.md)
+* [MayaStore](https://mayastor.gitbook.io/introduction/quickstart/deploy-mayastor)
 * NFS - any server, just set StorageClass to cStor
 
 ### Local Volumes
