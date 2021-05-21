@@ -17,8 +17,8 @@ capact policy apply -f /tmp/policy.yaml
 ### Options
 
 ```
-  -f, --filepath string   The path to new Policy in YAML format
-  -h, --help              help for apply
+  -f, --from-file string   The path to new Policy in YAML format
+  -h, --help               help for apply
 ```
 
 ### Options inherited from parent commands

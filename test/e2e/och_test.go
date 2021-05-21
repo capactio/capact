@@ -486,7 +486,7 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id1,id2 already locked by different owner")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
         				#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
 
 			when("update them without owner")
@@ -503,7 +503,7 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id1,id2 already locked by different owner")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
         				#1: graphql: failed to update TypeInstances: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
 
 			when("update one property with Foo owner, and second without owner")
@@ -521,7 +521,7 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id2 already locked by different owner")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(heredoc.Docf(`while executing query to update TypeInstances: All attempts fail:
+			Expect(err.Error()).To(Equal(heredoc.Docf(`while executing mutation to update TypeInstances: All attempts fail:
         				#1: graphql: failed to update TypeInstances: TypeInstances with IDs "%s" are locked by different owner`, createdTIIDs[1])))
 
 			scenario("id3 does not exist")
@@ -535,7 +535,7 @@ var _ = Describe("GraphQL API", func() {
 
 			then("should failed with error id3 not found")
 			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(heredoc.Doc(`while executing query to update TypeInstances: All attempts fail:
+			Expect(err.Error()).To(Equal(heredoc.Doc(`while executing mutation to update TypeInstances: All attempts fail:
         			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`)))
 		})
 	})

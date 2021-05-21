@@ -9,6 +9,7 @@ import (
 	"capact.io/capact/cmd/cli/cmd/action"
 	configcmd "capact.io/capact/cmd/cli/cmd/config"
 	"capact.io/capact/cmd/cli/cmd/hub"
+	"capact.io/capact/cmd/cli/cmd/typeinstance"
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
@@ -84,6 +85,7 @@ func NewRoot() *cobra.Command {
 		configcmd.NewCmd(),
 		action.NewCmd(),
 		policy.NewCmd(),
+		typeinstance.NewCmd(),
 	)
 
 	cobra.OnInitialize(initConfig)
