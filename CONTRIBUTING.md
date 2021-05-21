@@ -23,15 +23,28 @@ We use GitHub to host code, track issues and feature requests, and accept pull r
 
 To report an issue, follow the steps:
 
-1. Search for 
-1. Navigate to [New issue](https://github.com/Project-Voltron/go-voltron/issues/new) page on Capact GitHub repository.
-1. Select a proper issue template, according whether you report bug or request a new feature.
-1. Describe
+1. Search [open and closed issues](https://github.com/Project-Voltron/voltron/issues?q=is%3Aissue) to see if your issue is not a duplicate. 
+1. Navigate to [**New issue**](https://github.com/Project-Voltron/go-voltron/issues/new) page on Capact GitHub repository.
+1. Select an issue template, which is the most accurate for the issue type you report.
+1. Describe the issue clearly according to the selected issue template.
 
 ### Crate a pull request
 
+To create a new pull request, follow the steps:
 
-Read and adhere to our [development guidelines](./docs/development-guidelines.md), to make sure your pull request is accepted.
+1. Make sure an issue related to the change [is reported](#report-an-issue).
+1. Fork the repository.
+1. Clone the fork on your local machine.
+1. Create your branch from the `main` branch on the forked repository.
+1. Do the proposed changes.
+   
+    - Learn how to [develop to the project](./docs/development.md).
+    - Adhere to our [development guidelines](./docs/development-guidelines.md).
+    - Make sure the changes are tested locally.
+  
+1. Commit and push the changes.
+1. Create a new pull request on the [**Compare changes**](https://github.com/Project-Voltron/voltron/compare) page.
+1. Wait for the [repository maintainers](./CODEOWNERS) to review and approve the pull request.
 
 ## Support Channels
 
