@@ -35,14 +35,20 @@ To create a new pull request, follow the steps:
 1. Make sure an issue related to the change [is reported](#report-an-issue).
 1. Fork the repository.
 1. Clone the fork on your local machine.
-1. Create your branch from the `main` branch on the forked repository.
+    
+    To learn how to configure it, read the [Prepare the fork](./docs/git-workflow.md#prepare-the-fork) section in the **Git workflow** guide.
+
+1. Create a branch from the `main` branch on the forked repository.
 1. Do the proposed changes.
    
     - Learn how to [develop to the project](./docs/development.md).
     - Adhere to our [development guidelines](./docs/development-guidelines.md).
     - Make sure the changes are tested locally.
-  
+
 1. Commit and push the changes.
+   
+    To learn how to do it, follow the [Contribute](./docs/git-workflow.md#contribute) section in the **Git workflow** guide. 
+
 1. Create a new pull request on the [**Compare changes**](https://github.com/Project-Voltron/voltron/compare) page.
 1. Wait for the [repository maintainers](./CODEOWNERS) to review and approve the pull request.
 
