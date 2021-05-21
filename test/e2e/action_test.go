@@ -91,13 +91,11 @@ var _ = Describe("Action", func() {
 			assertUploadedTypeInstance(ctx, ochClient, testValue)
 
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElement(
-				[]*enginegraphql.OutputTypeInstanceDetails{
-					{
-						ID: updateTI.ID,
-						TypeRef: &enginegraphql.ManifestReference{
-							Path:     updateTI.TypeRef.Path,
-							Revision: updateTI.TypeRef.Revision,
-						},
+				&enginegraphql.OutputTypeInstanceDetails{
+					ID: updateTI.ID,
+					TypeRef: &enginegraphql.ManifestReference{
+						Path:     updateTI.TypeRef.Path,
+						Revision: updateTI.TypeRef.Revision,
 					},
 				},
 			), HaveLen(2)))
@@ -137,17 +135,7 @@ var _ = Describe("Action", func() {
 			assertUploadedTypeInstance(ctx, ochClient, testValue)
 
 			By("6. Check output TypeInstances in Action status")
-			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, Equal(
-				[]*enginegraphql.OutputTypeInstanceDetails{
-					{
-						ID: updateTI.ID,
-						TypeRef: &enginegraphql.ManifestReference{
-							Path:     updateTI.TypeRef.Path,
-							Revision: updateTI.TypeRef.Revision,
-						},
-					},
-				},
-			))
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, HaveLen(1))
 		})
 
 		It("should have failed status after a failed workflow", func() {
