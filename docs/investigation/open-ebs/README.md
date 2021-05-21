@@ -112,6 +112,19 @@ cStor also doesn't work because of issues with running iSCI initiator.  Accordin
 
 The only option is to use one of Local Volume providers like in Backup and Restore investigation.
 
+## Costs
+
+There are two options for deploying OpenEBS. In both cases additional storage is required. At least 3 volumes in separate availability zones.
+For better availability on each node we may create Raid volumes from 3 EBS. In total it will require 9 volumes.
+
+### Co-hosting on worker nodes
+
+There are no immediate additional costs. OpenEBS deploys quite a few new PODs. This may require bigger nodes.
+
+### Dedicated nodes for storage
+
+To achieve full HA at least 3 nodes are required in separate availability zones.
+
 ## Conclusions
 
 OpenEBS is a project which seems to in a process of transition. Currently it has so many options that it's not clear which one should be used.
