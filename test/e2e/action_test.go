@@ -17,6 +17,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -89,6 +90,18 @@ var _ = Describe("Action", func() {
 			By("2.1. Check uploaded TypeInstances")
 			assertUploadedTypeInstance(ctx, ochClient, testValue)
 
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElement(
+				[]*enginegraphql.OutputTypeInstanceDetails{
+					{
+						ID: updateTI.ID,
+						TypeRef: &enginegraphql.ManifestReference{
+							Path:     updateTI.TypeRef.Path,
+							Revision: updateTI.TypeRef.Revision,
+						},
+					},
+				},
+			), HaveLen(2)))
+
 			By("2.1. Check updated TypeInstances")
 			updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
 			Expect(err).ToNot(HaveOccurred())
@@ -122,6 +135,19 @@ var _ = Describe("Action", func() {
 
 			By("5. Check Uploaded TypeInstances")
 			assertUploadedTypeInstance(ctx, ochClient, testValue)
+
+			By("6. Check output TypeInstances in Action status")
+			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, Equal(
+				[]*enginegraphql.OutputTypeInstanceDetails{
+					{
+						ID: updateTI.ID,
+						TypeRef: &enginegraphql.ManifestReference{
+							Path:     updateTI.TypeRef.Path,
+							Revision: updateTI.TypeRef.Revision,
+						},
+					},
+				},
+			))
 		})
 
 		It("should have failed status after a failed workflow", func() {
@@ -148,63 +174,6 @@ var _ = Describe("Action", func() {
 				getActionStatusFunc(ctx, engineClient, failingActionName),
 				cfg.PollingTimeout, cfg.PollingInterval,
 			).Should(Equal(enginegraphql.ActionStatusPhaseFailed))
-		})
-
-		It("Should populate output.typeInstances in Action", func() {
-			actionPath := "cap.interface.capactio.capact.validation.action.passing"
-
-			By("Preparing input Type Instances")
-
-			// TypeInstance which will be downloaded
-			download := getTypeInstanceInputForDownload("dummy")
-			downloadTI, downloadTICleanup := createTypeInstance(ctx, ochClient, download)
-			defer downloadTICleanup()
-
-			// TypeInstance which will be downloaded and updated
-			update := getTypeInstanceInputForUpdate()
-			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
-			defer updateTICleanup()
-
-			typeInstances := []*enginegraphql.InputTypeInstanceData{
-				{Name: "testInput", ID: downloadTI.ID},
-				{Name: "testUpdate", ID: updateTI.ID},
-			}
-
-			inputData := &enginegraphql.ActionInputData{
-				TypeInstances: typeInstances,
-			}
-
-			By("Creating and running Action")
-
-			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
-			defer func() {
-				err := engineClient.DeleteAction(ctx, action.Name)
-				Expect(err).ToNot(HaveOccurred())
-			}()
-			runActionAndWaitForSucceeded(ctx, engineClient, action.Name)
-
-			By("Checking, if TypeInstances are populated")
-
-			Eventually(func() ([]*enginegraphql.OutputTypeInstanceDetails, error) {
-				action, err := engineClient.GetAction(ctx, action.Name)
-				if err != nil {
-					return nil, err
-				}
-
-				if action.Output == nil {
-					return nil, errors.New(".output.typeInstances not populated")
-				}
-
-				return action.Output.TypeInstances, nil
-			}, 10*time.Second).Should(And(ContainElement(
-				&enginegraphql.OutputTypeInstanceDetails{
-					ID: updateTI.ID,
-					TypeRef: &enginegraphql.ManifestReference{
-						Path:     updateTI.TypeRef.Path,
-						Revision: updateTI.TypeRef.Revision,
-					},
-				},
-			)), HaveLen(2))
 		})
 
 		DescribeTable("Should lock and unlock updated TypeInstances", func(inputParameters map[string]interface{}, expectedStatus enginegraphql.ActionStatusPhase) {
@@ -432,6 +401,23 @@ func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client
 
 	err = ochClient.DeleteTypeInstance(ctx, ti.ID)
 	Expect(err).ToNot(HaveOccurred())
+}
+
+func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *engine.Client, actionName string,
+	match types.GomegaMatcher,
+) {
+	Eventually(func() ([]*enginegraphql.OutputTypeInstanceDetails, error) {
+		action, err := engineClient.GetAction(ctx, actionName)
+		if err != nil {
+			return nil, err
+		}
+
+		if action.Output == nil {
+			return nil, errors.New(".output.typeInstances not populated")
+		}
+
+		return action.Output.TypeInstances, nil
+	}, 10*time.Second).Should(match)
 }
 
 func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error {

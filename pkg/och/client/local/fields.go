@@ -3,54 +3,54 @@ package local
 import "fmt"
 
 var typeInstanceWithUsesFields = fmt.Sprintf(`
-	  %s
-	  uses {
 		%s
-	  }
-	  usedBy {
-		%s
-	  }
+		uses {
+			%s
+		}
+		usedBy {
+			%s
+		}
 `, typeInstanceFields, typeInstanceFields, typeInstanceFields)
 
 var typeInstanceFields = fmt.Sprintf(`
-	  id
-	  typeRef {
+		id
+		typeRef {
 			path
 			revision
-	  }
-	  lockedBy
+		}
+		lockedBy
 
-	  latestResourceVersion {
-		%s
-	  }
+		latestResourceVersion {
+			%s
+		}
+
+		firstResourceVersion {
+			%s
+		}
 	
-	  firstResourceVersion {
-		%s
-	  }
+		previousResourceVersion {
+			%s
+		}
 	
-	  previousResourceVersion {
-		%s
-	  }
+		resourceVersions {
+			%s
+		}
 	
-	  resourceVersions {
-		%s
-	  }
-	
-	  resourceVersion(resourceVersion: 1) {
-		%s
-	  }
+		resourceVersion(resourceVersion: 1) {
+			%s
+		}
 `, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion)
 
 const typeInstanceResourceVersion = `
-	  resourceVersion
+		resourceVersion
 		createdBy
-	  metadata {
+		metadata {
 			attributes {
-			  path
-			  revision
+				path
+				revision
 			}
-	  }
-	  spec {
+		}
+		spec {
 			value
-	  }
+		}
 `
