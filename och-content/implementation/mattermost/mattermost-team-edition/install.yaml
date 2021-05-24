@@ -1,0 +1,274 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.mattermost.mattermost-team-edition
+  name: install
+  displayName: Install Mattermost Team Edition
+  description: Action which installs Mattermost Team Edition via Helm chart
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  appVersion: "10,11,12,13"
+
+  outputTypeInstanceRelations:
+    mattermost-config:
+      uses:
+        - mattermost-helm-release
+        - postgresql
+        - database
+        - database-user
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
+
+  implements:
+    - path: cap.interface.productivity.mattermost.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+        - name: create-user
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: mattermost-install
+        templates:
+          - name: mattermost-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+            outputs:
+              artifacts:
+                - name: mattermost-config
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
+            steps:
+              # Install DB
+              - - name: install-db
+                  capact-when: postgresql == nil
+                  capact-action: postgresql.install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                            defaultDBName: postgres
+                  capact-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
+
+              - - name: create-user
+                  capact-action: postgresql.create-user
+                  capact-outputTypeInstances:
+                    - name: database-user
+                      from: user
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: user-input
+                        raw:
+                          data: |
+                            name: mattermost
+
+              - - name: render-create-db-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: mattermost
+                            owner: "<@ name @>"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: |
+
+              - - name: create-db
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
+                    - name: database
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
+
+              # Install Mattermost
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "mattermost-team-edition"
+                              repo: "https://helm.mattermost.com"
+                              version: "4.0.0"
+                            values:
+                              image:
+                                repository: <@ input.image.repository | default("mattermost/mattermost-team-edition") @>
+                                tag: <@ input.image.tag | default("5.29.0") @>
+                                imagePullPolicy: <@ input.image.imagePullPolicy | default("IfNotPresent") @>
+                              initContainerImage:
+                                repository: <@ input.initContainerImage.repository | default("appropriate/curl") @>
+                                tag: <@ input.initContainerImage.tag | default("latest") @>
+                                imagePullPolicy: <@ input.initContainerImage.imagePullPolicy | default("IfNotPresent") @>
+                              revisionHistoryLimit: <@ input.revisionHistoryLimit | default(1) @>
+                              persistence:
+                                data:
+                                  enabled: <@ input.persistence.data.enabled | default(true) @>
+                                  size: <@ input.persistence.data.size | default("10Gi") @>
+                                  accessMode: <@ input.persistence.data.accessMode | default("ReadWriteOnce") @>
+                                plugins:
+                                  enabled: <@ input.persistence.plugins.enabled | default(true) @>
+                                  size: <@ input.persistence.plugins.size | default("1Gi") @>
+                                  accessMode: <@ input.persistence.plugins.accessMode | default("ReadWriteOnce") @>
+                              service:
+                                type: <@ input.service.type | default("ClusterIP") @>
+                                externalPort: <@ input.service.externalPort | default(8065) @>
+                                internalPort: <@ input.service.internalPort | default(8065) @>
+                                annotations: <@ input.service.annotations | default({}) @>
+                                loadBalancerSourceRanges: <@ input.service.loadBalancerSourceRanges | default([]) @>
+                              ingress:
+                                enabled: <@ input.ingress.enabled | default(true) @>
+                                path: <@ input.ingress.path | default("/") @>
+                                annotations: <@ input.ingress.annotations | default({}) @>
+                                hosts: 
+                                  - <@ input.ingress.host | default("mattermost.example.com") @>
+                                tls:
+                                  - hosts:
+                                      - <@ input.ingress.host | default("mattermost.example.com") @>
+                              route:
+                                enabled: <@ input.route.enabled | default(false) @>
+                              externalDB:
+                                enabled: true
+                                externalDriverType: "postgres"
+                                externalConnectionString: "postgres://<@ user.name @>:<@ user.password @>@<@ psql.host @>:<@ psql.port @>/<@ db.name @>?sslmode=disable"
+                              mysql:
+                                enabled: false
+                              extraPodAnnotations: <@ input.extraPodAnnotations | default({}) @>
+                              extraEnvVars: <@ input.extraEnvVars | default([]) @>
+                              extraInitContainers: <@ input.extraInitContainers | default([]) @>
+                              extraVolumes: <@ input.extraVolumes | default([]) @>
+                              extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
+                              nodeSelector: <@ input.nodeSelector | default({}) @>
+                              affinity: <@ input.affinity | default({}) @>
+                              tolerations: <@ input.tolerations | default([]) @>
+                              configJSON: <@ input.configJSON | default({}) @>
+                            output:
+                              goTemplate: |
+                                host: "{{ index .Values.ingress.hosts 0 }}"
+                                version: "{{ .Values.image.tag }}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: fill-psql
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: psql
+
+              - - name: fill-user
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-psql.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: user
+
+              - - name: fill-db
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-user.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: db
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: mattermost-config
+                      from: additional
+                    - name: mattermost-helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-db.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+signature:
+  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
