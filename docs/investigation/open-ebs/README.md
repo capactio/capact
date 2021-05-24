@@ -129,7 +129,7 @@ To achieve full HA at least 3 nodes are required in separate availability zones.
 
 ## Conclusions
 
-OpenEBS is a project which seems to in a process of transition. Currently, it has so many options that it's not clear which one should be used.
+OpenEBS is a project which seems to be in a process of transition. Currently, it has so many options that it's not clear which one should be used.
 Documentation is messy. It contains information for old projects and points to GitHub for the latest docs. 
 Many projects are in alpha, beta stages.
 
