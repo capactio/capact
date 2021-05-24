@@ -28,6 +28,7 @@ type AttributeReferenceInput struct {
 type CreateTypeInstanceInput struct {
 	// Used to define the relationships, between the created TypeInstances
 	Alias      *string                         `json:"alias"`
+	CreatedBy  *string                         `json:"createdBy"`
 	TypeRef    *TypeInstanceTypeReferenceInput `json:"typeRef"`
 	Attributes []*AttributeReferenceInput      `json:"attributes"`
 	Value      interface{}                     `json:"value"`
@@ -65,6 +66,7 @@ type TypeInstance struct {
 type TypeInstanceFilter struct {
 	Attributes []*AttributeFilterInput `json:"attributes"`
 	TypeRef    *TypeRefFilterInput     `json:"typeRef"`
+	CreatedBy  *string                 `json:"createdBy"`
 }
 
 // CURRENTLY NOT IMPLEMENTED
@@ -94,6 +96,7 @@ type TypeInstanceInstrumentationMetricsDashboard struct {
 
 type TypeInstanceResourceVersion struct {
 	ResourceVersion int                                  `json:"resourceVersion"`
+	CreatedBy       *string                              `json:"createdBy"`
 	Metadata        *TypeInstanceResourceVersionMetadata `json:"metadata"`
 	Spec            *TypeInstanceResourceVersionSpec     `json:"spec"`
 }

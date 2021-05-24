@@ -121,6 +121,7 @@ func main() {
 		actionValidator,
 		policyService,
 		ochClient,
+		ochClient,
 		controller.Config{
 			BuiltinRunner: cfg.BuiltinRunner,
 		},

@@ -4,6 +4,28 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var hiddenFlags = []string{
+	"as",
+	"as-group",
+	"certificate-authority",
+	"client-certificate",
+	"client-key",
+	"cluster",
+	"context",
+	"help",
+	"insecure-skip-tls-verify",
+	"kubeconfig",
+	"no-utf8",
+	"node-field-selector",
+	"password",
+	"request-timeout",
+	"server",
+	"token",
+	"user",
+	"username",
+	"node-field-selector",
+}
+
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "action",
@@ -16,7 +38,6 @@ func NewCmd() *cobra.Command {
 		NewDelete(),
 		NewRun(),
 		NewGet(),
-		NewStatus(),
 		NewWatch(),
 	)
 	return root

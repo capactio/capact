@@ -275,6 +275,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 					Options: []RendererOption{
 						WithTypeInstances(tt.inputTypeInstances),
 						WithPolicy(tt.policy),
+						WithOwnerID("owner"),
 					},
 				},
 			)

@@ -947,9 +947,6 @@ type ActionInput {
 Describes output of an Action
 """
 type ActionOutput {
-  """
-  CURRENTLY NOT IMPLEMENTED.
-  """
   typeInstances: [OutputTypeInstanceDetails!]!
 }
 

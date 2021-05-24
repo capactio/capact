@@ -74,7 +74,6 @@ type ActionInputData struct {
 
 // Describes output of an Action
 type ActionOutput struct {
-	// CURRENTLY NOT IMPLEMENTED.
 	TypeInstances []*OutputTypeInstanceDetails `json:"typeInstances"`
 }
 

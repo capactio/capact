@@ -78,7 +78,7 @@ export const schema = makeAugmentedSchema({
                CREATE (ti:TypeInstance {id: apoc.create.uuid()})
                CREATE (ti)-[:OF_TYPE]->(typeRef)
                
-               CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1})
+               CREATE (tir: TypeInstanceResourceVersion {resourceVersion: 1, createdBy: typeInstance.createdBy})
                CREATE (ti)-[:CONTAINS]->(tir)
                
                CREATE (tir)-[:DESCRIBED_BY]->(metadata: TypeInstanceResourceVersionMetadata)

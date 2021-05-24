@@ -82,7 +82,9 @@ var _ = BeforeSuite(func(done Done) {
 	}
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(), &argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, &typeInstanceLockerFake{}, cfg),
+		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(),
+			&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, &typeInstanceLockerFake{},
+			&typeInstanceGetterFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
@@ -137,8 +139,14 @@ func (l *typeInstanceLockerFake) UnlockTypeInstances(ctx context.Context, in *gr
 	return nil
 }
 
-type policyServiceFake struct {}
+type policyServiceFake struct{}
 
 func (p policyServiceFake) Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
 	return clusterpolicy.ClusterPolicy{}, nil
+}
+
+type typeInstanceGetterFake struct{}
+
+func (g *typeInstanceGetterFake) ListTypeInstances(ctx context.Context, f *graphql.TypeInstanceFilter) ([]graphql.TypeInstance, error) {
+	return []graphql.TypeInstance{}, nil
 }

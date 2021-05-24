@@ -66,6 +66,10 @@ type TypeInstanceLocker interface {
 	UnlockTypeInstances(ctx context.Context, in *ochlocalapi.UnlockTypeInstancesInput) error
 }
 
+type TypeInstanceGetter interface {
+	ListTypeInstances(ctx context.Context, filter *ochlocalapi.TypeInstanceFilter) ([]ochlocalapi.TypeInstance, error)
+}
+
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
 	k8sCli             client.Client
@@ -74,11 +78,12 @@ type ActionService struct {
 	actionValidator    ActionValidator
 	policyService      PolicyService
 	typeInstanceLocker TypeInstanceLocker
+	typeInstanceGetter TypeInstanceGetter
 	log                *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, policyService PolicyService, typeInstanceLocker TypeInstanceLocker, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, policyService PolicyService, typeInstanceLocker TypeInstanceLocker, typeInstanceGetter TypeInstanceGetter, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		builtinRunner:      cfg.BuiltinRunner,
@@ -86,6 +91,7 @@ func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRende
 		actionValidator:    actionValidator,
 		policyService:      policyService,
 		typeInstanceLocker: typeInstanceLocker,
+		typeInstanceGetter: typeInstanceGetter,
 		log:                log,
 	}
 }
@@ -445,6 +451,33 @@ func jobFinishStatus(j *batchv1.Job) (batchv1.JobConditionType, bool) {
 	return "", false
 }
 
+func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *v1alpha1.Action) ([]v1alpha1.OutputTypeInstanceDetails, error) {
+	ownerID := ownerIDKey(action)
+
+	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &ochlocalapi.TypeInstanceFilter{
+		CreatedBy: &ownerID,
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "while listing TypeInstances")
+	}
+
+	var res []v1alpha1.OutputTypeInstanceDetails
+
+	for _, ti := range typeInstances {
+		res = append(res, v1alpha1.OutputTypeInstanceDetails{
+			CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{
+				ID: ti.ID,
+				TypeRef: &v1alpha1.ManifestReference{
+					Path:     v1alpha1.NodePath(ti.TypeRef.Path),
+					Revision: &ti.TypeRef.Revision,
+				},
+			},
+		})
+	}
+
+	return res, nil
+}
+
 // objectMetaFromAction uses given Action Name and Namespace, to set the same values on new ObjectMeta.
 // Additionally, sets ownerReference to a given Action.
 //
@@ -536,5 +569,5 @@ func (a *ActionService) extractRunnerInterfaceAndArgs(action *v1alpha1.Action) (
 }
 
 func ownerIDKey(a *v1alpha1.Action) string {
-	return fmt.Sprintf("%s/%s", a.Namespace, a.Name)
+	return fmt.Sprintf("%s/%s-%s", a.Namespace, a.Name, a.UID)
 }

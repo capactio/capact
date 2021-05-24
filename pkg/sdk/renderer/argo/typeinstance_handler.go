@@ -112,7 +112,7 @@ type UpdateTypeInstance struct {
 
 type UpdateTypeInstances []UpdateTypeInstance
 
-func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow, output *OutputTypeInstances) error {
+func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow, output *OutputTypeInstances, ownerID string) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
 
@@ -123,7 +123,8 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 
 	for _, ti := range output.typeInstances {
 		payload.TypeInstances = append(payload.TypeInstances, &graphqllocal.CreateTypeInstanceInput{
-			Alias: ti.ArtifactName,
+			Alias:     ti.ArtifactName,
+			CreatedBy: &ownerID,
 			TypeRef: &graphqllocal.TypeInstanceTypeReferenceInput{
 				Path:     ti.TypeInstance.TypeRef.Path,
 				Revision: ti.TypeInstance.TypeRef.Revision,
@@ -230,8 +231,9 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 		})
 
 		payload = append(payload, graphqllocal.UpdateTypeInstancesInput{
-			ID:      ti.ID,
-			OwnerID: &ownerID,
+			ID:        ti.ID,
+			OwnerID:   &ownerID,
+			CreatedBy: &ownerID,
 			TypeInstance: &graphqllocal.UpdateTypeInstanceInput{
 				Attributes: []*graphqllocal.AttributeReferenceInput{},
 			},
