@@ -135,4 +135,4 @@ Many projects are in alpha, beta stages.
 
 The most feature rich solution cStor is the slowest. Documentation is recommending to use cstor-operators for installing it, but this project is in beta stage.
 
-From the other hand, the community is very friendly and fast to answer questions on Slack. Although I didn't get clear answer for my last question.
+On the other hand, the community is very friendly and fast to answer questions on Slack. Although I didn't get clear answer for my last question.
