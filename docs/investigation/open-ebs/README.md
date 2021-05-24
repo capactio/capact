@@ -110,7 +110,7 @@ Running backup and restore in general worked ok and was quite fast. I had an iss
 
 MayaStor simply doesn't work on kind. It's written in the docs.
 
-cStor also doesn't work because of issues with running iSCI initiator.  According to Docker team it [is](https://www.docker.com/blog/road-to-containing-iscsi/) possible to run initiator in the container, but it requires configuring it on the host and is quite invasive. There were also issues with the Node Disk Manager, but there is a workaround for it. It requires creating a file disk and exposing it via /dev/loop. This also requires modifying exclude filter in NDM.
+cStor also doesn't work because of issues with running iSCSI initiator.  According to Docker team it [is](https://www.docker.com/blog/road-to-containing-iscsi/) possible to run initiator in the container, but it requires configuring it on the host and is quite invasive. There were also issues with the Node Disk Manager, but there is a workaround for it. It requires creating a file disk and exposing it via /dev/loop. This also requires modifying exclude filter in NDM.
 
 The only option is to use one of Local Volume providers like in Backup and Restore investigation.
 
