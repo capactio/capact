@@ -8,7 +8,7 @@ This document describes the process of contribution to this project. Any type of
 
 - [Contribution process](#contribution-process)
   * [Report an issue](#report-an-issue)
-  * [Crate a pull request](#crate-a-pull-request)
+  * [Create a pull request](#create-a-pull-request)
 - [Support Channels](#support-channels)
 - [Code of Conduct](#code-of-conduct)
 - [License](#license)
@@ -24,21 +24,17 @@ We use GitHub to host code, track issues and feature requests, and accept pull r
 To report an issue, follow the steps:
 
 1. Search [open and closed issues](https://github.com/Project-Voltron/voltron/issues?q=is%3Aissue) to see if your issue is not a duplicate. 
-1. Navigate to [**New issue**](https://github.com/Project-Voltron/go-voltron/issues/new) page on Capact GitHub repository.
+1. Navigate to [New issue](https://github.com/Project-Voltron/go-voltron/issues/new) page on the Capact GitHub repository.
 1. Select an issue template, which is the most accurate for the issue type you report.
 1. Describe the issue clearly according to the selected issue template.
 
-### Crate a pull request
+### Create a pull request
 
 To create a new pull request, follow the steps:
 
 1. Make sure an issue related to the change [is reported](#report-an-issue).
-1. Fork the repository.
-1. Clone the fork on your local machine.
-    
-    To learn how to configure it, read the [Prepare the fork](./docs/git-workflow.md#prepare-the-fork) section in the **Git workflow** guide.
-
-1. Create a branch from the `main` branch on the forked repository.
+1. Fork the repository and configure the fork on your local machine. To learn how to do it, read the [Prepare the fork](./docs/git-workflow.md#prepare-the-fork) section in the **Git workflow** guide.
+1. Create a branch from the `main` repository branch. To learn how to do it, follow the [Contribute](./docs/git-workflow.md#contribute) section in the **Git workflow** guide.
 1. Do the proposed changes.
    
     - Learn how to [develop to the project](./docs/development.md).
