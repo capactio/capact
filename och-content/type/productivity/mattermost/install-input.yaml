@@ -160,11 +160,6 @@ spec:
                 "type": "string",
                 "default": "/"
               },
-              "annotations": {
-                "$id": "#/properties/ingress/properties/annotations",
-                "type": "object",
-                "properties": {}
-              },
               "host": {
                 "$id": "#/properties/ingress/properties/host",
                 "type": "string",

@@ -183,12 +183,14 @@ spec:
                               ingress:
                                 enabled: <@ input.ingress.enabled | default(true) @>
                                 path: <@ input.ingress.path | default("/") @>
-                                annotations: <@ input.ingress.annotations | default({}) @>
+                                annotations:
+                                  "cert-manager.io/cluster-issuer": letsencrypt
                                 hosts: 
                                   - <@ input.ingress.host | default("mattermost.example.com") @>
                                 tls:
                                   - hosts:
                                       - <@ input.ingress.host | default("mattermost.example.com") @>
+                                    secretName: mattermost-team-edition-tls-<@ random_word(length=5) @>
                               route:
                                 enabled: <@ input.route.enabled | default(false) @>
                               externalDB:
