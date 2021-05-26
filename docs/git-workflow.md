@@ -28,6 +28,8 @@ A fork is a copy of the repository from which you raise pull requests to propose
 
 To create the fork, click **Fork** button in the upper-right corner of the repository's main page.
 
+![Fork](./assets/github-fork.png)
+
 ## Configure the fork
 
 >**NOTE:** The document refers to the original repository as the upstream repository and to the forked repository as the origin repository.
@@ -35,6 +37,9 @@ To create the fork, click **Fork** button in the upper-right corner of the repos
 To make it easy to synchronize the changes from the upstream repository, configure a new Git `remote` and set the synchronization of the `main` branch to the new `remote`.  
 
 1. Clone the fork to your local machine. Use the **Code** button on the repository's main page to view the command to use.
+
+   ![Code](./assets/github-clone.png)
+
 1. Navigate to the location of the cloned repository.
 1. To see the current configured remote repositories, run the following command:
    
@@ -61,6 +66,12 @@ To make it easy to synchronize the changes from the upstream repository, configu
     git remote add upstream https://github.com/capactio/community.git
     ```
    
+1. Disable pushing changes directly to the upstream:
+   
+   ```bash
+   git remote set-url --push upstream no_push
+   ```   
+
 1. Fetch all remote branches:
 
     ```bash
@@ -99,6 +110,13 @@ After you set up your fork, start contributing. Follow these steps:
     git checkout -b {branch-name}
     ```
 
+1. Change proper files according to what you want to contribute.
+1. Select changes to commit. To include all changes you made within the repository, use:
+   
+   ```bash
+   git add -A
+   ```
+
 1. Commit changes:
 
     ```bash
@@ -125,12 +143,8 @@ After you set up your fork, start contributing. Follow these steps:
 To keep the branch up to date, execute the set of following commands:
 
 ```bash
-# Switch to the main branch
-git checkout main
 # Update the main branch by pulling all changes
-git pull
-# Switch back to your branch
-git checkout -
+git pull upstream main:main
 # Reapply your commits one by one on the top of the main branch
 git rebase main
 ```

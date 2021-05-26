@@ -75,8 +75,8 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement at
-[team-dev@capact.io](mailto:team-dev@capact.io).
+reported to the community members responsible for enforcement at
+[community@capact.io](mailto:community@capact.io).
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
@@ -84,7 +84,7 @@ reporter of any incident.
 
 ## Enforcement Guidelines
 
-Community leaders will follow these Community Impact Guidelines in determining
+Community members will follow these Community Impact Guidelines in determining
 the consequences for any action they deem in violation of this Code of Conduct:
 
 ### 1. Correction

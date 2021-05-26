@@ -40,13 +40,30 @@ To create a new pull request, follow the steps:
     - Learn how to [develop to the project](./docs/development.md).
     - Adhere to our [development guidelines](./docs/development-guidelines.md).
     - Make sure the changes are tested locally.
+    
+    > **NOTE:** Remember that large pull requests with multiple files changed are very difficult to review. Discuss the planned changes upfront in the related issue and consider splitting one large pull request into smaller ones.
 
 1. Commit and push the changes.
    
     To learn how to do it, follow the [Contribute](./docs/git-workflow.md#contribute) section in the **Git workflow** guide. 
 
-1. Create a new pull request on the [**Compare changes**](https://github.com/Project-Voltron/voltron/compare) page.
-1. Wait for the [repository maintainers](./CODEOWNERS) to review and approve the pull request.
+1. Create a new pull request on the [Compare changes](https://github.com/Project-Voltron/voltron/compare) page.
+    
+    Make sure the option [Allow edits from maintainers](https://docs.github.com/en/github/collaborating-with-pull-requests/working-with-forks/allowing-changes-to-a-pull-request-branch-created-from-a-fork) is selected.
+
+### Get your pull request approved
+
+Once you create a pull request:
+
+1. Make sure all automated pull request tests pass. 
+   
+   To read more, see the [Capact CI and CD](./docs/ci.md) document.
+
+1. Wait for the [repository maintainers](./CODEOWNERS) to review and approve the pull request. 
+   
+    One or more reviewers are assigned automatically. These reviewers will do a thorough code review, looking for correctness, bugs, opportunities for improvement, documentation and comments, and style. Respond to the review comments and commit changes to the same branch on your fork.
+
+You can contact the reviewers by mentioning GitHub username (`@username`) in the pull request comments.  
 
 ## Support Channels
 
