@@ -375,10 +375,10 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
    ```yaml
    cat > /tmp/policy.yaml << ENDOFFILE
-   apiVersion: 0.1.0
    rules:
-     cap.interface.database.postgresql.install:
-      oneOf:
+     - interface:
+         path: cap.interface.database.postgresql.install
+       oneOf:
         - implementationConstraints:
             attributes:
               - path: "cap.attribute.cloud.provider.gcp"
@@ -389,7 +389,8 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
               typeRef:
                 path: "cap.type.gcp.auth.service-account"
                 revision: "0.1.0"
-     cap.*:
+     - interface:
+         path: cap.*
        oneOf:
          - implementationConstraints:
              requires:
@@ -403,7 +404,7 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 1. Update the cluster policy ConfigMap:
 
    ```bash
-   kubectl create configmap -n capact-system capact-engine-cluster-policy --from-file=cluster-policy.yaml=/tmp/policy.yaml -o yaml --dry-run=client | kubectl apply -f -
+   capact policy apply -f /tmp/policy.yaml
    ``` 
 
 1. Create a Kubernetes Namespace:

@@ -27,7 +27,8 @@ This directory contains the project's documentation.
 
 - [`development.md`](./development.md) - Documents how to develop the project.
 - [`development-guidelines.md`](./development-guidelines.md) - Documents the development guidelines which should be respected.
+- [`git-workflow.md`](./git-workflow.md) - Documents the best practices for the Git workflow while contributing to Capact. 
 - [`ci.md`](./ci.md) - Documents jobs created to automate the process of testing, building and deploying newly merged functionality.
-- [`release.md](./release.md) - Documents the Capact release process. 
+- [`release.md`](./release.md) - Documents the Capact release process. 
 
 
