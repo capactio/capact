@@ -172,23 +172,22 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     watch capact action get -n $NAMESPACE mattermost-install
     ```
 
-1. Get the Argo Workflow logs to check the uploaded TypeInstance ID: 
+1. Get the ID of the `cap.type.productivity.mattermost.config` TypeInstance:
     
     ```bash
-    capact action get -n $NAMESPACE mattermost-install -ojson | jq -r '.Actions[].output'
+    capact action get -n $NAMESPACE mattermost-install -ojson | jq -r '.Actions[].output.typeInstances | map(select(.typeRef.path == "cap.type.productivity.mattermost.config"))'
     ```
 
-1. Get the TypeInstance details: 
+1. Get the TypeInstance value: 
 
-    Use the ID from the previous step and fetch the TypeInstance details.
-
+    Use the ID from the previous step and fetch the TypeInstance value:
     ```bash
-    capact typeinstance get <type-instance-id>
+    capact typeinstance get <type-instance-id> -ojson | jq -r '.[0].latestResourceVersion.spec.value'
     ```
 
 1. Open the Mattermost console using the **host** you provided in the input parameters for Mattermost install Action.
 
-    ![jira-installation](./assets/jira-installation.png)
+    ![mattermost-website](./assets/mattermost-website.png)
 
 🎉 Hooray! You now have your own Mattermost instance installed. Be productive!
 
@@ -302,6 +301,8 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
    The cluster policy was updated to prefer GCP solutions for the PostgreSQL Interface. As a result, during the render process, the Capact Engine will select a Cloud SQL Implementation which is available in our OCH server.
    
    Repeat the steps 4–11 from [Install all Mattermost components in a Kubernetes cluster](#install-all-mattermost-components-in-a-kubernetes-cluster) in the `gcp-scenario` Namespace.
+
+![gcp-clodusql.png](./assets/gcp-cloudsql.png)
 
 🎉 Hooray! You now have your own Mattermost instance installed. Be productive!
 
