@@ -1,4 +1,4 @@
-package client
+package cmd
 
 import (
 	"testing"
@@ -13,15 +13,15 @@ func TestNormalizeServerEndpoint(t *testing.T) {
 	}{
 		{
 			input:            "https://capact.local",
-			expectedEndpoint: "https://capact.local/graphql",
+			expectedEndpoint: "https://capact.local",
 		},
 		{
 			input:            "http://capact.local",
-			expectedEndpoint: "http://capact.local/graphql",
+			expectedEndpoint: "http://capact.local",
 		},
 		{
 			input:            "capact.local",
-			expectedEndpoint: "https://capact.local/graphql",
+			expectedEndpoint: "https://capact.local",
 		},
 	}
 
