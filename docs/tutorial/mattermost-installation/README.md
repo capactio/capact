@@ -77,13 +77,11 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     
     ```bash
     export CAPACT_GATEWAY_HOST=$(kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}')
-
     export CAPACT_GATEWAY_USERNAME=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}')
-
     export CAPACT_GATEWAY_PASSWORD=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}')
     ```
 
-    Login using `Capact CLI`:
+    Login using Capact CLI:
     ```bash
     capact login "$CAPACT_GATEWAY_HOST" -u "$CAPACT_GATEWAY_USERNAME" -p "$CAPACT_GATEWAY_PASSWORD"
     ```
@@ -180,10 +178,10 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
 
     Use the ID from the previous step and fetch the TypeInstance value:
     ```bash
-    capact typeinstance get <type-instance-id> -ojson | jq -r '.[0].latestResourceVersion.spec.value'
+    capact typeinstance get {type-instance-id} -ojson | jq -r '.[0].latestResourceVersion.spec.value'
     ```
 
-1. Open the Mattermost console using the **host** you provided in the input parameters for Mattermost install Action.
+1. Open the Mattermost console using the **host** from the TypeInstance value, you got in the previous step.
 
     ![mattermost-website](./assets/mattermost-website.png)
 
@@ -227,7 +225,8 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
     ```yaml
     # /tmp/gcp-sa-ti.yaml
     typeInstances:
-      - typeRef:
+      - alias: gcp-sa
+        typeRef:
           path: cap.type.gcp.auth.service-account
           revision: 0.1.0
         attributes:
@@ -240,7 +239,13 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
     ```
 
     ```bash
-    capact typeinstances apply --from-file /tmp/gcp-sa-ti.yaml
+    capact typeinstance create --from-file /tmp/gcp-sa-ti.yaml
+    ```
+    ```bash
+      ALIAS               ASSIGNED ID               
+    +--------+--------------------------------------+
+      gcp-sa   3bd8c7a1-6477-43b6-a1a5-0fc725694ef6  
+    +--------+--------------------------------------+
     ```
 
 1. Export the TypeInstance UUID:
@@ -248,7 +253,7 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
    The response from the previous step contains the TypeInstance ID. Export it as environment variable:
    
    ```bash
-   export TI_ID={TYPE_INSTANCE_ID}
+   export TI_ID={TYPE_INSTANCE_ASSIGNED ID}
    ```
 
 1. Create a file with the new cluster policy:
@@ -281,7 +286,7 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
 
     >**NOTE**: If you are not familiar with the syntax above, check the [policy configuration document](../../policy-configuration.md).  
 
-1. Update the cluster policy ConfigMap:
+1. Update the cluster policy:
 
    ```bash
    capact policy apply -f /tmp/policy.yaml
