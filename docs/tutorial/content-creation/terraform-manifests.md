@@ -80,9 +80,9 @@ To read more how to populate content, see the [Populate the manifests into OCH](
 
 ## Running Action
 
-If the MinIO is populated with Terraform content and all manifests are ready, trigger the Jira installation, which will use CloudSQL provisioned with Terraform Runner.
+If the MinIO is populated with Terraform content and all manifests are ready, trigger the Mattermost installation, which will use CloudSQL provisioned with Terraform Runner.
 
-To read how to do it, see the [Install Jira with an external CloudSQL database](../jira-installation/README.md#install-jira-with-an-external-cloudsql-database) section in Jira installation tutorial.
+To read how to do it, see the [Install Mattermost with an external CloudSQL database](../mattermost-installation/README.md#install-mattermost-with-an-external-cloudsql-database) section in Jira installation tutorial.
 To make sure the Terraform-based Implementation is selected, you may use additional, Attribute-based `implementationConstraint` in Cluster Policy:
 
 ```yaml

@@ -17,8 +17,6 @@ This tutorial shows the basic concepts of Capact on the Mattermost installation 
 - [Behind the scenes](#behind-the-scenes)
   * [OCF manifests](#ocf-manifests)
   * [Content development](#content-development)
-- [Clustered Jira Setup](#clustered-jira-setup)
-- [Troubleshooting](#troubleshooting)
 - [Additional resources](#additional-resources)
 
 <!-- tocstop -->

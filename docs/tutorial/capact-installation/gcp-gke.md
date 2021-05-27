@@ -226,7 +226,7 @@ This guide explains how to deploy Capact on a cluster using your own domain.
     }
    ```
 
-   **✨ Now you are ready to start a journey with the Capact project. Check out our [Jira installation tutorial](../jira-installation/README.md)!**
+   **✨ Now you are ready to start a journey with the Capact project. Check out our [Mattermost installation tutorial](../mattermost-installation/README.md)!**
 
 ### Clean-up
 
