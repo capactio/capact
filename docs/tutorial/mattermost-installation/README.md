@@ -331,8 +331,8 @@ A user consumes content stored in Open Capability Hub (OCH). The content is defi
 To see all the manifest that OCH stores, navigate to the [OCH content structure](../../../och-content).
 
 To see the Mattermost installation manifests, click on the following links:
- - [Mattermost installation Interface](../../../och-content/interface/productivity/mattermost/install.yaml) - a generic description of Mattermost installation (action name, input, and output - a concept similar to interfaces in programming languages),
- - [Mattermost installation Implementation](../../../och-content/implementation/mattermost/mattermost-team-edition/install.yaml) - represents the dynamic workflow for Mattermost Installation.
+ - [Mattermost installation Interface](../../../och-content/interface/productivity/mattermost/install.yaml) — a generic description of Mattermost installation (action name, input, and output — a concept similar to interfaces in programming languages),
+ - [Mattermost installation Implementation](../../../och-content/implementation/mattermost/mattermost-team-edition/install.yaml) — represents the dynamic workflow for Mattermost Installation.
 
 #### Content development
 
