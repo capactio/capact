@@ -20,7 +20,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Rocketchat configuration",
+        "title": "The schema for Mattermost configuration",
         "required": [
             "version"
         ],

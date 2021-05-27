@@ -3,11 +3,11 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.bitbucket
-  displayName: "Bitbucket"
-  description: Defines installation parameters for Bitbucket
-  documentationURL: https://confluence.atlassian.com/bitbucketserver
-  supportURL: https://support.atlassian.com/bitbucket-server/
+  prefix: cap.type.productivity.mattermost
+  displayName: "Mattermost install input"
+  description: Defines installation parameters for Mattermost
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com
   maintainers:
     - email: team-dev@capact.io
       name: Capact Dev Team
@@ -210,6 +210,11 @@ spec:
           },
           "affinity": {
             "$id": "#/properties/affinity",
+            "type": "object",
+            "properties": {}
+          },
+          "resources": {
+            "$id": "#/properties/resources",
             "type": "object",
             "properties": {}
           },

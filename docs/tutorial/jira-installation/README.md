@@ -1,6 +1,6 @@
-# Jira installation
+# Mattermost installation
 
-This tutorial shows the basic concepts of Capact on the Jira installation example.
+This tutorial shows the basic concepts of Capact on the Mattermost installation example.
 
 ###  Table of Contents
 
@@ -8,16 +8,16 @@ This tutorial shows the basic concepts of Capact on the Jira installation exampl
 
 - [Goal](#goal)
 - [Prerequisites](#prerequisites)
-- [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster)
+- [Install all Mattermost components in a Kubernetes cluster](#install-all-mattermost-components-in-a-kubernetes-cluster)
   * [Instructions](#instructions)
   * [Clean-up](#clean-up)
-- [Install Jira with an external CloudSQL database](#install-jira-with-an-external-cloudsql-database)
+- [Install Mattermost with an external CloudSQL database](#install-mattermost-with-an-external-cloudsql-database)
   * [Instructions](#instructions-1)
   * [Clean-up](#clean-up-1)
 - [Behind the scenes](#behind-the-scenes)
   * [OCF manifests](#ocf-manifests)
   * [Content development](#content-development)
-- [Clustered Jira setup](#clustered-jira-setup)
+- [Clustered Jira Setup](#clustered-jira-setup)
 - [Troubleshooting](#troubleshooting)
 - [Additional resources](#additional-resources)
 
@@ -25,17 +25,17 @@ This tutorial shows the basic concepts of Capact on the Jira installation exampl
 
 ### Goal
 
-This instruction will guide you through the installation of Jira on a Kubernetes cluster using Capact. 
+This instruction will guide you through the installation of Mattermost on a Kubernetes cluster using Capact. 
 
-Jira depends on the PostgreSQL database. Depending on the cluster configuration, with the Capact project, you can install Jira with a managed Cloud SQL database or a locally deployed PostgreSQL Helm chart.
+Mattermost depends on the PostgreSQL database. Depending on the cluster configuration, with the Capact project, you can install Mattermost with a managed Cloud SQL database or a locally deployed PostgreSQL Helm chart.
 
 The diagrams below show possible scenarios:
 
-**Install all Jira components in a Kubernetes cluster**
+**Install all Mattermost components in a Kubernetes cluster**
 
 ![in-cluster](./assets/install-in-cluster.svg)
 
-**Install Jira with an external Cloud SQL database**
+**Install Mattermost with an external Cloud SQL database**
 
 ![in-gcp](./assets/install-gcp.svg)
 
@@ -44,260 +44,153 @@ The diagrams below show possible scenarios:
 * [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases) installed.
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 * GKE cluster with a fresh Capact installation. See the [installation tutorial](../capact-installation/README.md). 
-* For the scenario with Cloud SQL, Access to Google Cloud Platform.  
+* For the scenario with Cloud SQL, access to Google Cloud Platform.  
 
-### Install all Jira components in a Kubernetes cluster
+### Install all Mattermost components in a Kubernetes cluster
 
 By default, the Capact Engine [cluster policy](../../../deploy/kubernetes/charts/capact/charts/engine/values.yaml) prefers Kubernetes solutions. 
 
 ```yaml
-apiVersion: 0.1.0 # Defines syntax version for policy
-
 rules: # Configures the following behavior for Engine during rendering Action
-  cap.*:
-    oneOf:
-      - implementationConstraints: # prefer Implementation for Kubernetes
-          requires:
-            - path: "cap.core.type.platform.kubernetes"
-              # any revision
-      - implementationConstraints: {} # fallback to any Implementation
+- interface:
+    path: cap.*
+  oneOf:
+  - implementationConstraints: # prefer Implementation for Kubernetes
+      requires:
+      - path: "cap.core.type.platform.kubernetes"
+        # any revision
+  - implementationConstraints: {} # fallback to any Implementation
 ```
 
-As a result, all external solutions, such as Cloud SQL, have a lower priority, and they are not selected. The below scenario shows how to install Jira with a locally deployed PostgreSQL Helm chart.
+As a result, all external solutions, such as Cloud SQL, have a lower priority, and they are not selected. The below scenario shows how to install Mattermost with a locally deployed PostgreSQL Helm chart.
 
 #### Instructions
 
 1. Create a Kubernetes Namespace:
 
-	```bash
+    ```bash
     export NAMESPACE=local-scenario
-	kubectl create namespace $NAMESPACE
-	```
+    kubectl create namespace $NAMESPACE
+    ```
  
-1. Open the GraphQL console:
+1. Login to Capact in the CLI:
 
     To obtain the Gateway URL and authorization information, run:
     
     ```bash
-    helm get notes -n capact-system capact    
+    export CAPACT_GATEWAY_HOST=$(kubectl -n capact-system get ingress capact-gateway -ojsonpath='{.spec.rules[0].host}')
+
+    export CAPACT_GATEWAY_USERNAME=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_USERNAME" | tail -1 | awk -F ' ' '{print $2}')
+
+    export CAPACT_GATEWAY_PASSWORD=$(kubectl -n capact-system get deployment capact-gateway -oyaml | grep -A1 "name: APP_AUTH_PASSWORD" | tail -1 | awk -F ' ' '{print $2}')
     ```
-   
-   Navigate to the GraphQL console and add the required `Authorization` header based on the received response.
-   
-   ![gql-auth](./assets/graphql-auth.png)
 
-1. List all `cap.interface.productivity.*` Interfaces:
+    Login using `Capact CLI`:
+    ```bash
+    capact login "$CAPACT_GATEWAY_HOST" -u "$CAPACT_GATEWAY_USERNAME" -p "$CAPACT_GATEWAY_PASSWORD"
+    ```
 
-	<details><summary>Query</summary>
+1. List all Interfaces:
 
-	```graphql
-    query GetInterfaces {
-      interfaces(filter: { pathPattern: "cap.interface.productivity.*" }) {
-        path
-        revisions {
-          metadata {
-            path
-            displayName
-          }
-          revision
-        }
-      }
-    }
-	```
+    ```bash
+    capact hub interfaces get
+    ```
+    ```bash
+                               PATH                             LATEST REVISION                           IMPLEMENTATIONS                          
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.analytics.elasticsearch.install             0.1.0             cap.implementation.elastic.elasticsearch.install                 
+                                                                                  cap.implementation.aws.elasticsearch.provision                   
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.atlassian.stack.install                     0.1.0             cap.implementation.atlassian.stack.install-parallel              
+                                                                                  cap.implementation.atlassian.stack.install                       
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.automation.concourse.change-db-password     0.1.0             cap.implementation.concourse.concourse.change-db-password        
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.automation.concourse.install                0.1.0             cap.implementation.concourse.concourse.install                   
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.aws.elasticsearch.provision                 0.1.0             cap.implementation.aws.elasticsearch.provision                   
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.aws.rds.postgresql.provision                0.1.0             cap.implementation.aws.rds.postgresql.provision                  
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+      cap.interface.database.postgresql.install                 0.1.0             cap.implementation.bitnami.postgresql.install                    
+                                                                                  cap.implementation.aws.rds.postgresql.install                    
+                                                                                  cap.implementation.gcp.cloudsql.postgresql.install               
+                                                                                  cap.implementation.gcp.cloudsql.postgresql.install               
+    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
+    ```
 
-	</details>
+    The table represents all available Actions that you can execute on this Capact. There is also a list of the Implementations available for a given Interface. You can see, that for the `cap.interface.database.postgresql.install` we have:
+    - a Kubernetes deployment using the Bitnami Helm chart,
+    - an AWS RDS instance,
+    - a GCP Cloud SQL instance.
 
-	![list-interface](./assets/list-interface.png)
+1. Create an Action with the `cap.interface.productivity.mattermost.install` Interface:
 
-	The response on the right-hand side represents all available Actions that you can execute for the **productivity** category. As you can see, you can install instances of Jira and Confluence. For manifests, there might be more revisions. Different revisions mean that the installation input/output parameters differ. It might be due to a new feature or one removed in a non-backward-compatible way.
+    Create input parameters for the Action, where you provide the ingress host for the Mattermost.
+    ```bash
+    cat <<EOF > /tmp/mattermost-install.yaml
+    ingress:
+      host: mattermost.capact.local
+    EOF
+    ```
 
-
-1. Create an Action with the `cap.interface.productivity.jira.install` Interface:
-
-	Before running the GraphQL mutation, you must add the `Namespace` header in the **HTTP HEADERS** section.
-
-    <details><summary>Headers</summary>
-	
-	```json
-	{
-	 "Authorization": "....",
-	 "Namespace": "local-scenario"
-	}
-	```
- 
-    </details>
-    
-    Additionally, you must change the **host** value in input parameters.
- 	
-	<details><summary>Mutation</summary>
-
-	```graphql
-    mutation CreateAction {
-      createAction(
-        in: {
-          name: "jira-instance"
-          actionRef: { path: "cap.interface.productivity.jira.install" }
-          input: {
-            parameters: "{ \"host\": \"{REPLACE_WITH_HOST_NAME}\" }"
-          }
-        }
-      ) {
-        name
-        createdAt
-        renderedAction
-        run
-        status {
-          phase
-          timestamp
-          message
-          runner {
-            status
-          }
-        }
-      }
-    }
-	```
-
-	</details>
-
-	![create-action](./assets/create-action.png)
+    ```bash
+    capact action create -n $NAMESPACE --name mattermost-install cap.interface.productivity.mattermost.install --parameters-from-file /tmp/mattermost-install.yaml
+    ```
 
 1. Get the status of the Action from the previous step:
 
-	<details><summary>Query</summary>
+    ```bash
+    capact action get -n $NAMESPACE mattermost-install
+    ```
+    ```bash
+       NAMESPACE            NAME                              PATH                         RUN       STATUS      AGE  
+    +--------------+--------------------+-----------------------------------------------+-------+--------------+-----+
+      gcp-scenario   mattermost-install   cap.interface.productivity.mattermost.install   false   READY_TO_RUN   19s  
+    +--------------+--------------------+-----------------------------------------------+-------+--------------+-----+
+    ```
 
-	```graphql
-	query GetAction {
-	  action(name: "jira-instance") {
-	    name
-	    createdAt
-	    renderedAction
-	    run
-	    status {
-	      phase
-	      timestamp
-	      message
-	      runner {
-	        status
-	      }
-	    }
-	  }
-	}
-	```
-
-	</details>
-
-	![get-action](./assets/get-action.png)
-
-	In the previous step, when you created the Action, you saw the phase `INITIAL` in the response. Now the Action is in `READY_TO_RUN`. It means that the Action was processed by the Engine, and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
+    In the `STATUS` column you can see the current status of the Action. When the Action workflow is being rendered by the Engine, you will see the `BEING_RENDERED` status. After the Action finished rendering and the status is `READY_TO_RUN`, you can go to the next step.
 
 1. Run the rendered Action:
 
-	In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, you need to send a `runAction` mutation:
+    After the Action is in `READY_TO_RUN` status, you can run it. To do this, execute the following command:
 
-	<details><summary>Mutation</summary>
-
-	```graphql
-	mutation RunAction {
-	  runAction(name: "jira-instance") {
-	    name
-	    createdAt
-	    run
-	  }
-	}
-	```
-
-	</details>
-
-	![run-action](./assets/run-action.png)
+    ```bash
+    capact action run -n $NAMESPACE mattermost-install
+    ```
 
 1. Check the Action execution:
     
-    **Using [Argo CLI](https://github.com/argoproj/argo-workflows/releases/tag/v2.12.8)**
-    
     ```bash
-    argo watch jira-instance -n $NAMESPACE
+    capact action watch -n $NAMESPACE mattermost-install
     ```
-    
-    **Using Argo UI**
-    
-    By default, the Argo UI doesn't have a dedicated Ingress. You need to port-forward the Service to your local machine: 
-    
-    ```bash
-    kubectl -n capact-system port-forward svc/argo-server 2746
-    ```
-   
-    Navigate to [http://localhost:2746](http://localhost:2746) to open Argo UI, and check the currently running `jira-install` workflow.
 
 1. Wait until the Action is in the phase `SUCCEEDED`:
 
-	<details><summary>Query</summary>
-
-	```graphql
-	query GetAction {
-	  action(name: "jira-instance") {
-	    name
-	    createdAt
-	    renderedAction
-	    run
-	    status {
-	      phase
-	      timestamp
-	      message
-	      runner {
-	        status
-	      }
-	    }
-	  }
-	}
-	```
-
-	</details>
+    ```bash
+    watch capact action get -n $NAMESPACE mattermost-install
+    ```
 
 1. Get the Argo Workflow logs to check the uploaded TypeInstance ID: 
     
-    **Using Argo CLI**
-    
     ```bash
-    argo logs jira-instance -n $NAMESPACE | grep -e 'upload_type_instances*'
+    capact action get -n $NAMESPACE mattermost-install -ojson | jq -r '.Actions[].output'
     ```
-
-    **Using Argo UI**
-    
-    From the **Workflows** view, select `jira-instance`. Next, select the last step called `upload-output-type-instances-step` and get its logs. The logs contain the uploaded TypeInstance ID.
-
-	![get-logs](./assets/get-logs.png)
 
 1. Get the TypeInstance details: 
 
     Use the ID from the previous step and fetch the TypeInstance details.
 
-	<details><summary>Query</summary>
+    ```bash
+    capact typeinstance get <type-instance-id>
+    ```
 
-	```graphql
-    query GetTypeInstance {
-      typeInstance(id: "{JIRA_CONFIG_ID}") {
-        typeRef {
-          path
-        }
-        latestResourceVersion {
-          spec {
-            value
-          }
-        }
-      }
-    }
-	```
-
-	</details>
-
-	![get-type-instance](./assets/get-type-instance.png)
-
-1. Open the Jira console using the **host** value from the previous step.
+1. Open the Mattermost console using the **host** you provided in the input parameters for Mattermost install Action.
 
     ![jira-installation](./assets/jira-installation.png)
 
-🎉 Hooray! You now have your own Jira instance installed. Be productive!
+🎉 Hooray! You now have your own Mattermost instance installed. Be productive!
 
 #### Clean-up 
 
@@ -306,13 +199,13 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
 When you are done, remove the Action and Helm charts:
 
 ```bash
-kubectl delete action jira-instance -n $NAMESPACE
-helm delete -n $NAMESPACE $(helm list -f="jira-software-*|postgresql-*" -q -n $NAMESPACE)
+capact action delete -n $NAMESPACE mattermost-install
+helm delete -n $NAMESPACE $(helm list -f="mattermost-*|postgresql-*" -q -n $NAMESPACE)
 ```
 
-### Install Jira with an external CloudSQL database
+### Install Mattermost with an external CloudSQL database
 
-To change the Jira installation, we need to adjust our cluster policy to prefer GCP solutions. Read more about policy configuration [here](../../policy-configuration.md).
+To change the Mattermost installation, we need to adjust our cluster policy to prefer GCP solutions. Read more about policy configuration [here](../../policy-configuration.md).
 
 #### Instructions
 
@@ -332,35 +225,25 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
    
    	7. Click **Done**.
 
-
-1. Convert the GCP Service Account JSON to the JavaScript format:
-
-   ```bash
-   cat {PATH_TO_GCP_SA_FILE} | sed -E 's/(^ *)"([^"]*)":/\1\2:/'
-   ```
-
 1. Create a TypeInstance with the GCP Service Account:
 
-   	Before running the GraphQL mutation, you must replace the **value** parameter with the output from the previous step. 
-   
-    ```graphql
-    mutation CreateTypeInstance {
-      createTypeInstance(
-        in: {
-          typeRef: { path: "cap.type.gcp.auth.service-account", revision: "0.1.0" },
-          attributes: [
-            { path: "cap.attribute.cloud.provider.gcp", revision: "0.1.0" }
-          ],
-          value: {} # Replace the empty object with SA in the JS format
+    ```yaml
+    # /tmp/gcp-sa-ti.yaml
+    typeInstances:
+      - typeRef:
+          path: cap.type.gcp.auth.service-account
+          revision: 0.1.0
+        attributes:
+          - path: cap.attribute.cloud.provider.gcp
+            revision: 0.1.0
+        value: { # Put here your GCP Service Account JSON.
+          "type": "service_account",
+          [...]
         }
-      ) {
-        id
-        typeRef {
-          path
-          revision
-        }
-      }
-    }
+    ```
+
+    ```bash
+    capact typeinstances apply --from-file /tmp/gcp-sa-ti.yaml
     ```
 
 1. Export the TypeInstance UUID:
@@ -373,33 +256,33 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
 1. Create a file with the new cluster policy:
 
-   ```yaml
-   cat > /tmp/policy.yaml << ENDOFFILE
-   rules:
-     - interface:
-         path: cap.interface.database.postgresql.install
-       oneOf:
-        - implementationConstraints:
-            attributes:
-              - path: "cap.attribute.cloud.provider.gcp"
-            requires:
-              - path: "cap.type.gcp.auth.service-account"
-          injectTypeInstances:
-            - id: ${TI_ID}
-              typeRef:
-                path: "cap.type.gcp.auth.service-account"
-                revision: "0.1.0"
-     - interface:
-         path: cap.*
-       oneOf:
+    ```yaml
+    cat > /tmp/policy.yaml << ENDOFFILE
+    rules:
+      - interface:
+          path: cap.interface.database.postgresql.install
+        oneOf:
          - implementationConstraints:
+             attributes:
+               - path: "cap.attribute.cloud.provider.gcp"
              requires:
-               - path: "cap.core.type.platform.kubernetes"
-         - implementationConstraints: {} # fallback to any Implementation
-   ENDOFFILE
-   ```
-   
-   >**NOTE**: If you are not familiar with the syntax above, check the [policy configuration document](../../policy-configuration.md).  
+               - path: "cap.type.gcp.auth.service-account"
+           injectTypeInstances:
+             - id: ${TI_ID}
+               typeRef:
+                 path: "cap.type.gcp.auth.service-account"
+                 revision: "0.1.0"
+      - interface:
+          path: cap.*
+        oneOf:
+          - implementationConstraints:
+              requires:
+                - path: "cap.core.type.platform.kubernetes"
+          - implementationConstraints: {} # fallback to any Implementation
+    ENDOFFILE
+    ```
+
+    >**NOTE**: If you are not familiar with the syntax above, check the [policy configuration document](../../policy-configuration.md).  
 
 1. Update the cluster policy ConfigMap:
 
@@ -409,18 +292,18 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 
 1. Create a Kubernetes Namespace:
 
-	```bash
+    ```bash
     export NAMESPACE=gcp-scenario
-	kubectl create namespace $NAMESPACE
-	```
+    kubectl create namespace $NAMESPACE
+    ```
 
-1. Install Jira with the new cluster policy:
+1. Install Mattermost with the new cluster policy:
 
    The cluster policy was updated to prefer GCP solutions for the PostgreSQL Interface. As a result, during the render process, the Capact Engine will select a Cloud SQL Implementation which is available in our OCH server.
    
-   Repeat the steps from [Install all Jira components in a Kubernetes cluster](#install-all-jira-components-in-a-kubernetes-cluster) in the `gcp-scenario` Namespace. Start with the 4th step, and remember to update the Namespace value in the GraphQL **HTTP HEADERS** section.
+   Repeat the steps 4–11 from [Install all Mattermost components in a Kubernetes cluster](#install-all-mattermost-components-in-a-kubernetes-cluster) in the `gcp-scenario` Namespace.
 
-🎉 Hooray! You now have your own Jira instance installed. Be productive!
+🎉 Hooray! You now have your own Mattermost instance installed. Be productive!
 
 #### Clean-up
 
@@ -429,7 +312,8 @@ To change the Jira installation, we need to adjust our cluster policy to prefer 
 When you are done, remove the Cloud SQL manually and delete the Action:
 
 ```bash
-kubectl delete action jira-instance -n $NAMESPACE
+kubectl delete action mattermost-instance -n $NAMESPACE
+helm delete -n $NAMESPACE $(helm list -f="mattermost-*" -q -n $NAMESPACE)
 ```
 
 ### Behind the scenes
@@ -442,9 +326,9 @@ A user consumes content stored in Open Capability Hub (OCH). The content is defi
 
 To see all the manifest that OCH stores, navigate to the [OCH content structure](../../../och-content).
 
-To see the Jira installation manifests, click on the following links:
- - [Jira installation Interface](../../../och-content/interface/productivity/jira/install.yaml) - a generic description of Jira installation (action name, input, and output - a concept similar to interfaces in programming languages),
- - [Jira installation Implementation](../../../och-content/implementation/atlassian/jira/install.yaml) - represents the dynamic workflow for Jira Installation.
+To see the Mattermost installation manifests, click on the following links:
+ - [Mattermost installation Interface](../../../och-content/interface/productivity/mattermost/install.yaml) - a generic description of Mattermost installation (action name, input, and output - a concept similar to interfaces in programming languages),
+ - [Mattermost installation Implementation](../../../och-content/implementation/mattermost/mattermost-team-edition/install.yaml) - represents the dynamic workflow for Mattermost Installation.
 
 #### Content development
 
@@ -460,40 +344,6 @@ In the future, we plan to extend the Capact CLI with additional features, such a
 - manifests scaffolding,
 - manifests submission,
 - signing manifests.
-
-
-### Clustered Jira Setup
-
-Jira can be deployed in a clustered version. Such setup requires shared storage.
-When running Capact locally, NFS server can be used.
-Check out Ganesha Server [README](https://github.com/kubernetes-sigs/nfs-ganesha-server-and-external-provisioner) file to see how to install NFS server.
-When running on AWS, NFS also can be used or EFS(Elastic File Storage). Checkout [EFS CSI driver](https://docs.aws.amazon.com/eks/latest/userguide/efs-csi.html) guide to see how to deploy it.
-
-When shared storage is available then set StorageClass for `sharedHome` variable.
-
-### Troubleshooting
-
-1. Jira pod is restarting during setup
-
-   This may mean that it's running out for memory. Increase requested resources by setting following input parameters:
-
-   ```yaml
-   jira:
-     resources:
-       container:
-         requests:
-           memory: "8G"
-           cpu: 4
-   ```
-
-1. Health check for Cluster Scheduler fails
-
-   Read more about it on [Atlassian Support page](https://confluence.atlassian.com/jirakb/healthcheck-scheduler-738722403.html)
-   You need to delete the first pod. It's the one with `-0` at the end
-
-   ```bash
-   kubect delete pod <pod name>
-   ```
 
 ###  Additional resources
 

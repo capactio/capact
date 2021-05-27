@@ -80,6 +80,8 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters
+                - name: postgresql
+                  optional: true
             outputs:
               artifacts:
                 - name: mattermost-config
@@ -89,6 +91,9 @@ spec:
               - - name: install-db
                   capact-when: postgresql == nil
                   capact-action: postgresql.install
+                  capact-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
                   arguments:
                     artifacts:
                       - name: input-parameters
@@ -97,9 +102,6 @@ spec:
                             superuser:
                               username: superuser
                             defaultDBName: postgres
-                  capact-outputTypeInstances:
-                    - name: postgresql
-                      from: postgresql
 
               - - name: create-user
                   capact-action: postgresql.create-user
@@ -206,6 +208,7 @@ spec:
                               extraVolumeMounts: <@ input.extraVolumeMounts | default([]) @>
                               nodeSelector: <@ input.nodeSelector | default({}) @>
                               affinity: <@ input.affinity | default({}) @>
+                              affinity: <@ input.resources | default({}) @>
                               tolerations: <@ input.tolerations | default([]) @>
                               configJSON: <@ input.configJSON | default({}) @>
                             output:
