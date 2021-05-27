@@ -6,6 +6,7 @@ This directory contains the project's documentation.
 
 - [`terminology.md`](./terminology.md) - Aggregates terms used across the documentation of this project.
 - [`tutorial`](./tutorial) - Contains various tutorials to show how to use the Capact project.
+- [`operation`](./operation) - Contains documentation describing basic day 2 operations of Capact and common problems troubleshooting.
 
 ## Functionality description
 

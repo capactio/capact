@@ -15,7 +15,7 @@ func NewCompletion() *cobra.Command {
 		Use:   "completion [bash|zsh|fish|powershell]",
 		Short: "Generate shell completion scripts",
 		Long: heredoc.WithCLIName(`
-			Generate shell completion scripts for Capact CLI commands.
+			Generate shell completion scripts for <cli> CLI commands.
 			
 			If you need to set up completions manually, follow the instructions below. The exact
 			config file locations might vary based on your system. Make sure to restart your

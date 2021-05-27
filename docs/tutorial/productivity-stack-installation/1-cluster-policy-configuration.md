@@ -7,32 +7,30 @@ Configure preference for AWS solutions for Atlassian stack dependencies. Follow 
    - Add the **AdministratorAccess** permissions. 
    - Note the access key and secret key.
 
-1. Follow the tutorial ["Connect to Capact Gateway from local machine"](../eks-installation/README.md#connect-to-capact-gateway-from-local-machine) to be able to connect to Gateway.
-1. Execute `helm get notes capact -n capact-system` on Bastion host and copy required headers.
-1. Navigate to the `https://gateway.${CAPACT_DOMAIN_NAME}:8081` address in your web browser.
+1. Create a file with the AWS Credentials:
+   
+    ```bash
+    cat > /tmp/aws-ti.yaml << ENDOFFILE
+    typeInstances:
+    
+      - alias: aws-sa
+        attributes:
+          - path: cap.attribute.cloud.provider.aws
+            revision: 0.1.0
+        typeRef:
+          path: cap.type.aws.auth.credentials
+          revision: 0.1.0
+        value:
+          accessKeyID: {ACCESS_KEY}
+          secretAccessKey: {SECRET_KEY}
+
+    ENDOFFILE
+    ```
+
 1. Create AWS Credentials TypeInstance:
 
-    ```graphql
-    mutation CreateTypeInstance {
-      createTypeInstance(
-        in: {
-          typeRef: { path: "cap.type.aws.auth.credentials", revision: "0.1.0" }
-          value: {
-            accessKeyID: "{ACCESS_KEY}",
-            secretAccessKey:"{SECRET_KEY}",
-          }
-          attributes: [
-            { path: "cap.attribute.cloud.provider.aws", revision: "0.1.0" }
-          ]
-        }
-      ) {
-        id
-        typeRef {
-            path
-            revision
-          }
-      }
-    }
+    ```bash
+    capact typeinstance create --from-file /tmp/aws-ti.yaml
     ```
 
 1. Export the ID of the newly created TypeInstance:
