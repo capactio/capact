@@ -4,7 +4,7 @@ Generate shell completion scripts
 
 ### Synopsis
 
-Generate shell completion scripts for Capact CLI commands.
+Generate shell completion scripts for capact CLI commands.
 
 If you need to set up completions manually, follow the instructions below. The exact
 config file locations might vary based on your system. Make sure to restart your

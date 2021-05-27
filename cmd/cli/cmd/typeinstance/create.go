@@ -36,6 +36,30 @@ func NewCreate() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "create",
 		Short: "Creates a new TypeInstance(s)",
+		Long: heredoc.Doc(`
+			Create one or multiple TypeInstances from a given file.
+
+			Syntax:
+				
+				typeInstances:
+				  - alias: parent # required when submitting more than one TypeInstance
+				    attributes: # optional
+				      - path: cap.attribute.cloud.provider.aws
+				        revision: 0.1.0
+				    typeRef: # required
+				      path: cap.type.aws.auth.credentials
+				      revision: 0.1.0
+				    value: # required
+				      accessKeyID: fake-123
+				      secretAccessKey: fake-456
+				
+				usesRelations: # optional
+				  - from: parent
+				    to: 123-4313 # ID of already existing TypeInstance, or TypeInstance alias from a given request
+
+
+			NOTE: Supported syntax are YAML and JSON.
+		`),
 		Example: heredoc.WithCLIName(`
 			# Create TypeInstances defined in a given file
 			<cli> typeinstance create -f ./tmp/typeinstances.yaml
@@ -65,6 +89,11 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 		}
 
 		typeInstanceToCreate = mergeCreateTypeInstances(typeInstanceToCreate, out)
+	}
+
+	// HACK: UsesRelations are required on GQL side so at least empty array needs to be send
+	if typeInstanceToCreate.UsesRelations == nil {
+		typeInstanceToCreate.UsesRelations = []*gqllocalapi.TypeInstanceUsesRelationInput{}
 	}
 
 	server := config.GetDefaultContext()
