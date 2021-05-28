@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"capact.io/capact/internal/cli/credstore"
@@ -50,7 +49,7 @@ func NewCluster(server string) (ClusterClient, error) {
 }
 
 func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterClient, error) {
-	endpoint := normalizeServerEndpoint(server)
+	endpoint := fmt.Sprintf("%s/graphql", server)
 
 	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(creds.Username, creds.Secret))
@@ -61,12 +60,4 @@ func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterCl
 		TypeInstanceClient: local.NewClient(gqlClient),
 		EngineClient:       client.New(endpoint, httpClient),
 	}, nil
-}
-
-func normalizeServerEndpoint(server string) string {
-	if strings.HasPrefix(server, "http://") || strings.HasPrefix(server, "https://") {
-		return fmt.Sprintf("%s/graphql", server)
-	}
-
-	return fmt.Sprintf("https://%s/graphql", server)
 }

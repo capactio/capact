@@ -47,6 +47,7 @@ func deleteTI(ctx context.Context, ids []string, w io.Writer) error {
 		err := hubCli.DeleteTypeInstance(ctx, id)
 		if err != nil {
 			errs = append(errs, err)
+			continue
 		}
 		okCheck(w, "TypeInstance %s deleted successfully\n", id)
 	}

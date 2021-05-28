@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
+	"strings"
 
 	capactCLI "capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -44,7 +46,7 @@ func NewLogin() *cobra.Command {
 			if len(args) > 0 {
 				opts.serverAddress = args[0]
 			}
-			return runLogin(opts, os.Stdout)
+			return runLogin(cmd.Context(), opts, os.Stdout)
 		},
 	}
 
@@ -56,7 +58,7 @@ func NewLogin() *cobra.Command {
 	return login
 }
 
-func runLogin(opts loginOptions, w io.Writer) error {
+func runLogin(ctx context.Context, opts loginOptions, w io.Writer) error {
 	answers := struct {
 		Server   string `survey:"server-address"`
 		Username string
@@ -103,11 +105,13 @@ func runLogin(opts loginOptions, w io.Writer) error {
 		return err
 	}
 
+	answers.Server = normalizeServerEndpoint(answers.Server)
+
 	creds := credstore.Credentials{
 		Username: answers.Username,
 		Secret:   answers.Password,
 	}
-	if err := loginClientSide(answers.Server, &creds); err != nil {
+	if err := loginClientSide(ctx, answers.Server, &creds); err != nil {
 		return errors.Wrap(err, "while verifying provided credentials")
 	}
 
@@ -125,17 +129,25 @@ func runLogin(opts loginOptions, w io.Writer) error {
 	return nil
 }
 
-func loginClientSide(serverURL string, creds *credstore.Credentials) error {
+func loginClientSide(ctx context.Context, serverURL string, creds *credstore.Credentials) error {
 	cli, err := client.NewClusterWithCreds(serverURL, creds)
 	if err != nil {
 		return err
 	}
 
 	// Only test the credentials, the actual response is irrelevant.
-	_, err = cli.GetAction(context.Background(), "logintest")
+	_, err = cli.GetAction(ctx, "logintest")
 	if err != nil {
 		return errors.Wrap(err, "while executing get action to test credentials")
 	}
 
 	return nil
+}
+
+func normalizeServerEndpoint(server string) string {
+	if strings.HasPrefix(server, "http://") || strings.HasPrefix(server, "https://") {
+		return server
+	}
+
+	return fmt.Sprintf("https://%s", server)
 }
