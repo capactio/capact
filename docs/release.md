@@ -172,6 +172,6 @@ If you release major or minor version, create a dedicated release branch.
 
 ## Create GitHub release
     
-1. Navigate to the [New GitHub release](https://github.com/Project-Voltron/go-voltron/releases/new) page.
+1. Navigate to the [New GitHub release](https://github.com/capactio/capact/releases/new) page.
 1. Copy the release notes from the pull request created in the [Create a pre-release pull request](#create-a-pre-release-pull-request) section.
 1. Create the new GitHub release with the copied notes.

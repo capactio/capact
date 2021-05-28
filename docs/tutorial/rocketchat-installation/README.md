@@ -221,7 +221,7 @@ helm delete $(helm list -f="rocketchat-*|mongodb-*" -q
 
 ###  Additional resources
 
-If you want to learn more about the project, check the [`go-voltron`](https://github.com/Project-Voltron/go-voltron) repository.
+If you want to learn more about the project, check the [`capact`](https://github.com/capactio/capact) repository.
 
 Here are some useful links:
 

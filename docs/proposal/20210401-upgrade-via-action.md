@@ -273,11 +273,11 @@ The CLI executes the upgrade Action in the following way:
 
 - Helm Chart:
   - Use a GitHub Page and dedicated [chart-releaser-action](https://github.com/helm/chart-releaser-action/blob/master/action.yml), or
-  - Clone the `go-voltron` repository. Referencing locally available Helm chart is not supported by Helm Runner.
+  - Clone the `capact` repository. Referencing locally available Helm chart is not supported by Helm Runner.
 
 - CRDs:
   - Use the GitHub raw object, or
-  - Clone the `go-voltron` repository. Referencing locally available Helm chart is not supported by Helm Runner.
+  - Clone the `capact` repository. Referencing locally available Helm chart is not supported by Helm Runner.
 
 ### Capact upgrade Action
 

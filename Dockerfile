@@ -29,7 +29,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 COPY --from=builder /bin/$COMPONENT /app
 
-LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
 
 CMD ["/app"]
@@ -47,7 +47,7 @@ RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
     chmod 700 /root/.ssh && \
     ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 
-LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
 
 CMD ["/app"]
@@ -62,7 +62,7 @@ COPY --from=builder /bin/$COMPONENT /app.test
 RUN apk add --no-cache 'git=>2.30' && \
     go get github.com/onsi/ginkgo/ginkgo
 
-LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
 
 CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
@@ -93,7 +93,7 @@ WORKDIR /workspace
 RUN /bin/terraform init && \
     rm /workspace/providers.tf
 
-LABEL source=git@github.com:Project-Voltron/go-voltron.git
+LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
 
 CMD ["/app"]
