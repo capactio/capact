@@ -41,7 +41,7 @@ The diagrams below show possible scenarios:
 
 * [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases) installed.
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
-* GKE cluster with a fresh Capact installation. See the [installation tutorial](../capact-installation/README.md). 
+* Cluster with Capact installation. See the [installation tutorial](../capact-installation/README.md). 
 * For the scenario with Cloud SQL, access to Google Cloud Platform.  
 
 ### Install all Mattermost components in a Kubernetes cluster
@@ -130,6 +130,13 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     EOF
     ```
 
+    > **NOTE:** The host must be in a subdomain of the Capact domain, so the ingress controller and Cert Manager can handle the Ingress properly it.
+    >
+    > If you use a local Capact installation, then you have to add an entry in `/etc/hosts` for it e.g.:
+    > ```
+    > 127.0.0.1 mattermost.capact.local
+    > ```
+
     ```bash
     capact action create -n $NAMESPACE --name mattermost-install cap.interface.productivity.mattermost.install --parameters-from-file /tmp/mattermost-install.yaml
     ```
@@ -156,16 +163,10 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
     capact action run -n $NAMESPACE mattermost-install
     ```
 
-1. Check the Action execution:
+1. Check the Action execution and wait till it is finished:
     
     ```bash
     capact action watch -n $NAMESPACE mattermost-install
-    ```
-
-1. Wait until the Action is in the phase `SUCCEEDED`:
-
-    ```bash
-    watch capact action get -n $NAMESPACE mattermost-install
     ```
 
 1. Get the ID of the `cap.type.productivity.mattermost.config` TypeInstance:
@@ -239,24 +240,11 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
     ```
 
     ```bash
+    export TI_ID=$(capact typeinstance create -f /tmp/gcp-sa-ti.yaml -ojson | jq -r '.[].id')
     capact typeinstance create --from-file /tmp/gcp-sa-ti.yaml
     ```
-    ```bash
-      ALIAS               ASSIGNED ID               
-    +--------+--------------------------------------+
-      gcp-sa   3bd8c7a1-6477-43b6-a1a5-0fc725694ef6  
-    +--------+--------------------------------------+
-    ```
 
-1. Export the TypeInstance UUID:
-
-   The response from the previous step contains the TypeInstance ID. Export it as environment variable:
-   
-   ```bash
-   export TI_ID={TYPE_INSTANCE_ASSIGNED ID}
-   ```
-
-1. Create a file with the new cluster policy:
+1. Update the cluster policy:
 
     ```yaml
     cat > /tmp/policy.yaml << ENDOFFILE
@@ -284,13 +272,11 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
     ENDOFFILE
     ```
 
-    >**NOTE**: If you are not familiar with the syntax above, check the [policy configuration document](../../policy-configuration.md).  
+    ```bash
+    capact policy apply -f /tmp/policy.yaml
+    ``` 
 
-1. Update the cluster policy:
-
-   ```bash
-   capact policy apply -f /tmp/policy.yaml
-   ``` 
+    >**NOTE**: If you are not familiar with the policy syntax above, check the [policy configuration document](../../policy-configuration.md).  
 
 1. Create a Kubernetes Namespace:
 
@@ -351,7 +337,7 @@ In the future, we plan to extend the Capact CLI with additional features, such a
 
 ###  Additional resources
 
-If you want to learn more about the project, check the [`go-voltron`](https://github.com/Project-Voltron/go-voltron) repository.
+If you want to learn more about the project, check the [`capact`](https://github.com/capactio/capact) repository.
 
 Here are some useful links:
 

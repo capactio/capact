@@ -210,7 +210,8 @@ spec:
                               affinity: <@ input.affinity | default({}) @>
                               affinity: <@ input.resources | default({}) @>
                               tolerations: <@ input.tolerations | default([]) @>
-                              configJSON: <@ input.configJSON | default({}) @>
+
+                              configJSON: <@ input.configJSON | default({'ServiceSettings': {'SiteURL': 'https://'+input.ingress.host}}) @>
                             output:
                               goTemplate: |
                                 host: "{{ index .Values.ingress.hosts 0 }}"
