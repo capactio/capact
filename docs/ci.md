@@ -10,7 +10,7 @@ This document describes jobs created to automate the process of testing, buildin
 - [Repository secrets](#repository-secrets)
 - [Pipelines](#pipelines)
   * [Pull request](#pull-request)
-  * [Master branch](#master-branch)
+  * [Main branch](#main-branch)
   * [Recreate a long-running cluster](#recreate-a-long-running-cluster)
     + [Let's encrypt certificates](#lets-encrypt-certificates)
   * [Execute integration tests on a long-running cluster](#execute-integration-tests-on-a-long-running-cluster)
@@ -43,7 +43,7 @@ The following secrets are defined:
 
 <p align="center"><img alt="ci-pr-build" src="./assets/ci-pr-build.svg" /></p>
 
-The job is defined in the [`pr-build.yaml`](../.github/workflows/pr-build.yaml) file. It runs on pull requests created to the `master` branch.
+The job is defined in the [`pr-build.yaml`](../.github/workflows/pr-build.yaml) file. It runs on pull requests created to the `main` branch.
 
 Steps:
 
@@ -52,13 +52,13 @@ Steps:
 1. Run integration tests.
 1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
 
-###  Master branch
+###  Main branch
 
 > **NOTE:** To reduce the CI build time, we disable the `entry-tests`, `build-tools` and `integration-tests` jobs. They will be enabled when the project is open-sourced.
 
 <p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
 
-The job is defined in the [`.github/workflows/branch-build.yaml`](../.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `master` branch but skips execution for files which do not affect the building process, e.g. documentation, OCH content, etc.
+The job is defined in the [`.github/workflows/branch-build.yaml`](../.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation, OCH content, etc.
 
 Steps:
 
@@ -67,7 +67,7 @@ Steps:
 1. If [Capact Helm Charts](../deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
-1. Update the existing long-running cluster via [CLI](../cmd/capact/docs/capact_upgrade.md).
+1. Update the existing long-running cluster via [CLI](../cmd/cli/docs/capact_upgrade.md).
 1. Delete all Actions which are in the `SUCCEEDED` phase and whose names have the `capact-upgrade-` prefix. 
 1. If any step failed, send a Slack notification.
 

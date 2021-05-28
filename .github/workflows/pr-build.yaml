@@ -17,7 +17,7 @@ on:
       - "Dockerfile"
       - "!**.md"
     branches:
-      - "master"
+      - "main"
 
 jobs:
   cancel-previous-workflows:

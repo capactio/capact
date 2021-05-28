@@ -40,7 +40,7 @@ export RELEASE_BRANCH=release-0.3
 
 1. Checkout the destination branch for the pull request.
 
-    - For major and minor release versions, set the destination branch to `master`. 
+    - For major and minor release versions, set the destination branch to `main`. 
     - For patch releases, set the destination to corresponding release branch. For example, for `0.3.1` release, checkout the `release-0.3` branch.
 
     ```bash
@@ -57,7 +57,7 @@ export RELEASE_BRANCH=release-0.3
 
     ```yaml
     branches:
-      - "master"
+      - "main"
       - "release-0.2"
       # (...)
       - "release-{major}.{minor}" # append the new release branch item
@@ -126,10 +126,10 @@ If you release major or minor version, create a dedicated release branch.
     sed -i.bak "s/overrideTag: \"latest\"/overrideTag: \"${CAPACT_IMAGE_TAG}\"/g" "deploy/kubernetes/charts/capact/values.yaml"
     ```
 
-1. Replace Populator target branch from `master` to the release branch:
+1. Replace Populator target branch from `main` to the release branch:
   
    ```bash
-   sed -i.bak "s/branch: master/branch: ${RELEASE_BRANCH}/g" "deploy/kubernetes/charts/capact/charts/och-public/values.yaml"
+   sed -i.bak "s/branch: main/branch: ${RELEASE_BRANCH}/g" "deploy/kubernetes/charts/capact/charts/och-public/values.yaml"
    ```
 
 1. Review and commit the changes:

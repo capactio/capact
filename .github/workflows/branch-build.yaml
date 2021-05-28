@@ -16,7 +16,7 @@ on:
       - "Dockerfile"
       - "!**.md"
     branches:
-      - "master"
+      - "main"
       - "release-0.2"
       - "release-0.3"
 
@@ -164,7 +164,7 @@ jobs:
           export_default_credentials: true
       - name: Release Helm Charts if were changed
         env:
-          MASTER_BUILD: "true"
+          MAIN_BUILD: "true"
         run: |
           make release-charts
 
@@ -223,7 +223,7 @@ jobs:
     name: Update cluster
     runs-on: ubuntu-latest
     needs: [ release-helm-chart, build-app, build-tests ]
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     env:
       CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE: "no-pass"
@@ -260,7 +260,7 @@ jobs:
           ./capact upgrade \
             --action-name-prefix 'capact-upgrade-' \
             --version @latest \
-            --helm-repo-url @master \
+            --helm-repo-url @latest \
             --override-capact-image-repo ${DOCKER_REPOSITORY} \
             --override-capact-image-tag ${DOCKER_TAG} \
             --enable-test-setup ${USE_TEST_SETUP} \
@@ -289,7 +289,7 @@ jobs:
           SLACK_COLOR: 'red'
           SLACK_TITLE: 'Message'
           SLACK_CHANNEL: 'capact-dev-private'
-          SLACK_MESSAGE: 'Master branch build failed :ahhhhhhhhh:'
+          SLACK_MESSAGE: 'Main branch build failed :ahhhhhhhhh:'
           SLACK_ICON_EMOJI: ':this-is-fine:'
           SLACK_FOOTER: "Hopefully it is not an error, it's gorgeous feature"
           SLACK_WEBHOOK: ${{ secrets.SLACK_PRIV_DEV_TEAM_WEBHOOK }}

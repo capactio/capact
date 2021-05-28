@@ -36,7 +36,7 @@ const (
 
 	capactioHelmRepoMaster    = "https://storage.googleapis.com/capactio-master-charts"
 	CapactioHelmRepoOfficial  = "https://storage.googleapis.com/capactio-awesome-charts"
-	CapactioHelmRepoMasterTag = "@master"
+	CapactioHelmRepoLatestTag = "@latest"
 
 	capactUpgradeInterfacePath = "cap.interface.capactio.capact.upgrade"
 	capactTypeRefPath          = "cap.type.capactio.capact.config"
@@ -220,7 +220,7 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 }
 
 func (u *Upgrade) resolveInputParameters(opts *Options) error {
-	if opts.Parameters.Override.HelmRepoURL == CapactioHelmRepoMasterTag {
+	if opts.Parameters.Override.HelmRepoURL == CapactioHelmRepoLatestTag {
 		opts.Parameters.Override.HelmRepoURL = capactioHelmRepoMaster
 	}
 

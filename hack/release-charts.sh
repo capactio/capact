@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This is a helper script for Helm Chart releasing.
-# Set MASTER_BUILD to `true` to change the Helm chart version to commit SHA and push them to the master branch.
+# Set MAIN_BUILD to `true` to change the Helm chart version to commit SHA and push them to the main branch.
 #
 
 set -o nounset
@@ -57,7 +57,7 @@ main() {
   fi
 
   local CAPACTIO_BUCKET="${CAPACTIO_OFFICIAL_BUCKET}"
-  if [ "${MASTER_BUILD:-}" = "true" ]; then
+  if [ "${MAIN_BUILD:-}" = "true" ]; then
     CAPACTIO_BUCKET="${CAPACTIO_MASTER_BUCKET}"
     setChartVersionToCommitSHA
   fi
