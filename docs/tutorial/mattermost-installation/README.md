@@ -39,7 +39,7 @@ The diagrams below show possible scenarios:
 
 ###  Prerequisites
 
-* [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases) installed.
+* [Capact CLI](https://github.com/capactio/capact/releases) installed.
 * [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/) installed.
 * Cluster with Capact installation. See the [installation tutorial](../capact-installation/README.md). 
 * For the scenario with Cloud SQL, access to Google Cloud Platform.  
@@ -241,12 +241,11 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
 
     ```bash
     export TI_ID=$(capact typeinstance create -f /tmp/gcp-sa-ti.yaml -ojson | jq -r '.[].id')
-    capact typeinstance create --from-file /tmp/gcp-sa-ti.yaml
     ```
 
 1. Update the cluster policy:
 
-    ```yaml
+    ```bash
     cat > /tmp/policy.yaml << ENDOFFILE
     rules:
       - interface:
