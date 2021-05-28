@@ -16,7 +16,7 @@ readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
 readonly CAPACTIO_OFFICIAL_BUCKET="capactio-awesome-charts"
-readonly CAPACTIO_MASTER_BUCKET="capactio-master-charts"
+readonly CAPACTIO_LATEST_BUCKET="capactio-master-charts"
 
 readonly charts=(
   "argo"
@@ -58,7 +58,7 @@ main() {
 
   local CAPACTIO_BUCKET="${CAPACTIO_OFFICIAL_BUCKET}"
   if [ "${MAIN_BUILD:-}" = "true" ]; then
-    CAPACTIO_BUCKET="${CAPACTIO_MASTER_BUCKET}"
+    CAPACTIO_BUCKET="${CAPACTIO_LATEST_BUCKET}"
     setChartVersionToCommitSHA
   fi
 

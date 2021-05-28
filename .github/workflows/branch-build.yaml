@@ -151,7 +151,7 @@ jobs:
   release-helm-chart:
     name: Release Helm Charts
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - name: Checkout code

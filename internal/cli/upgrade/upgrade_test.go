@@ -14,7 +14,7 @@ import (
 // TestGetLatestVersion tests that the latest version of Helm chart is returned.
 // The httptest.Server was not used as the logic is based on the URL, so the HTTP client has to be mocked to validate that:
 //
-// - for master URLs Helm charts the latest entry is selected base on the `Created` field,
+// - for the @latest URL Helm charts the latest entry is selected base on the `Created` field,
 // - for all other URLs the latest entry is selected based on SemVer.
 //
 func TestGetLatestVersion(t *testing.T) {
@@ -24,12 +24,12 @@ func TestGetLatestVersion(t *testing.T) {
 		expectedVersion string
 	}{
 		{
-			name:            "Master URL should sort by Created timestamp",
-			url:             capactioHelmRepoMaster,
+			name:            "Latest URL should sort by Created timestamp",
+			url:             capactioHelmRepoLatest,
 			expectedVersion: "0.2.0-7a347a9",
 		},
 		{
-			name:            "Master URL should sort by Created timestamp",
+			name:            "Official URL should sort by version",
 			url:             CapactioHelmRepoOfficial,
 			expectedVersion: "0.2.1",
 		},
