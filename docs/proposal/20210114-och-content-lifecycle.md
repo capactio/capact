@@ -114,7 +114,7 @@ The following section describes the DB Populator algorithm for populating the OC
     - Create node with populated content details:
 
        ```
-       CREATE (n:ContentMetadata:published { repository: 'git@github.com:Project-Voltron/go-voltron.git', commit: 'f2cd6a3' })
+       CREATE (n:ContentMetadata:published { repository: 'git@github.com:capactio/capact.git', commit: 'f2cd6a3' })
        ```
 
 1. Every some period of time, check if OCF manifest changed in Git repository.
@@ -130,7 +130,7 @@ The following section describes the DB Populator algorithm for populating the OC
     - Create node with populated content details:
 
        ```
-       CREATE (n:ContentMetadata:unpublished { repository: 'git@github.com:Project-Voltron/go-voltron.git', commit: 'b259e25' })
+       CREATE (n:ContentMetadata:unpublished { repository: 'git@github.com:capactio/capact.git', commit: 'b259e25' })
        ```
 
 1. In one transaction:
@@ -200,7 +200,7 @@ The following section describes the DB Populator algorithm for populating the OC
     - Generate random Node IDs
     - Create Pointer Node with "published" label.
       ```
-      CREATE (n:Pointer:published { repository: 'git@github.com:Project-Voltron/go-voltron.git', commit: 'f2cd6a3' })
+      CREATE (n:Pointer:published { repository: 'git@github.com:capactio/capact.git', commit: 'f2cd6a3' })
       ```
     - Point the pointer for every node, which has dedicated GraphQL query (Type, Attribute, InterfaceGroup, Interface,
       Implementation, RepoMetadata)
@@ -229,7 +229,7 @@ The following section describes the DB Populator algorithm for populating the OC
     - Create "pointer" Node with "unpublished" label
 
       ```
-      CREATE (n:Pointer:unpublished { repository: 'git@github.com:Project-Voltron/go-voltron.git', commit: 'b259e25' })
+      CREATE (n:Pointer:unpublished { repository: 'git@github.com:capactio/capact.git', commit: 'b259e25' })
       ```
 
     - Point the pointer for every new node, which has dedicated GraphQL query (Type, Attribute, InterfaceGroup,

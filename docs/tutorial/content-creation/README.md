@@ -41,12 +41,12 @@ To develop and test the created content, you will need to have a Capact environm
 * [Docker](https://docs.docker.com/engine/install/)
 * [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
 * [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-* [Capact CLI](https://github.com/Project-Voltron/go-voltron/releases)
+* [Capact CLI](https://github.com/capactio/capact/releases)
 * [populator](../../../cmd/populator/docs/populator_register-ocf-manifests.md) - For now, you need to compile it from source
 
 Also, clone the Capact repository with the current OCF content.
 ```bash
-git clone https://github.com/Project-Voltron/go-voltron.git
+git clone https://github.com/capactio/capact.git
 ```
 
 Some other materials worth reading before are:
@@ -636,7 +636,7 @@ You can read more about the Capact CLI [here](../../../cmd/cli/README.md).
 
 ## Populate the manifests into OCH
 
-After we have the manifests ready, we can start our local Capact environment. In the root of the cloned `go-voltron` repository run:
+After we have the manifests ready, we can start our local Capact environment. In the root of the cloned `capact` repository run:
 ```
 ENABLE_POPULATOR=false make dev-cluster
 ```

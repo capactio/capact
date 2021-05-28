@@ -1844,7 +1844,7 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
 
   # TODO: Reimplement the resolver:
   # implementationRevisionsForRequirements(filter: ImplementationRevisionFilter): [ImplementationRevision!]!
-  # See the initial implementation: https://github.com/Project-Voltron/go-voltron/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
+  # See the initial implementation: https://github.com/capactio/capact/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
 }
 
 type InterfaceSpec @additionalLabels(labels: ["published"]){

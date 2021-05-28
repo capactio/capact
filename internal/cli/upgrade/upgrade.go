@@ -34,9 +34,9 @@ const (
 	capactSystemNS = "capact-system"
 	capactName     = "capact"
 
-	capactioHelmRepoMaster    = "https://storage.googleapis.com/capactio-master-charts"
+	capactioHelmRepoLatest    = "https://storage.googleapis.com/capactio-master-charts"
 	CapactioHelmRepoOfficial  = "https://storage.googleapis.com/capactio-awesome-charts"
-	CapactioHelmRepoMasterTag = "@master"
+	CapactioHelmRepoLatestTag = "@latest"
 
 	capactUpgradeInterfacePath = "cap.interface.capactio.capact.upgrade"
 	capactTypeRefPath          = "cap.type.capactio.capact.config"
@@ -220,8 +220,8 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 }
 
 func (u *Upgrade) resolveInputParameters(opts *Options) error {
-	if opts.Parameters.Override.HelmRepoURL == CapactioHelmRepoMasterTag {
-		opts.Parameters.Override.HelmRepoURL = capactioHelmRepoMaster
+	if opts.Parameters.Override.HelmRepoURL == CapactioHelmRepoLatestTag {
+		opts.Parameters.Override.HelmRepoURL = capactioHelmRepoLatest
 	}
 
 	if opts.Parameters.Version == LatestVersionTag {
@@ -413,7 +413,7 @@ func validateTypeInstance(ti *gqllocalapi.TypeInstance) error {
 }
 
 // getLatestVersion loads an index file and returns version of the latest chart:
-//	- for master Helm charts sort by Created field
+//	- for the @latest Helm charts sort by Created field
 //  - for all others repos sort by SemVer
 //
 // Assumption that all charts are versioned in the same way.
@@ -424,9 +424,9 @@ func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
 		in.SortEntries()
 	}
 
-	// `master` charts are versioned via SHA commit, so we need to sort
+	// `main` (@latest) charts are versioned via SHA commit, so we need to sort
 	// them via Created time.
-	if repoURL == capactioHelmRepoMaster {
+	if repoURL == capactioHelmRepoLatest {
 		sortFn = func(in *repo.IndexFile) {
 			sort.Sort(ByCreatedTime(in.Entries[capactName]))
 		}

@@ -43,7 +43,7 @@ To use manifests from private git repo, private key, encoded in base64 format, i
 For example command to download manifests from Capact repo would look like this:
 ```shell
 export SSHKEY=`base64 -w0 ~/.ssh/id_rsa`
-./populator register ocf-manifests git@github.com:Project-Voltron/go-voltron.git?sshkey=$SSHKEY
+./populator register ocf-manifests git@github.com:capactio/capact.git?sshkey=$SSHKEY
 ```
 
 For better performance populator starts HTTP server to serve manifests converted to JSON files.

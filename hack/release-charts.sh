@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # This is a helper script for Helm Chart releasing.
-# Set MASTER_BUILD to `true` to change the Helm chart version to commit SHA and push them to the master branch.
+# Set MAIN_BUILD to `true` to change the Helm chart version to commit SHA and push them to the main branch.
 #
 
 set -o nounset
@@ -16,7 +16,7 @@ readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
 readonly CAPACTIO_OFFICIAL_BUCKET="capactio-awesome-charts"
-readonly CAPACTIO_MASTER_BUCKET="capactio-master-charts"
+readonly CAPACTIO_LATEST_BUCKET="capactio-master-charts"
 
 readonly charts=(
   "argo"
@@ -57,8 +57,8 @@ main() {
   fi
 
   local CAPACTIO_BUCKET="${CAPACTIO_OFFICIAL_BUCKET}"
-  if [ "${MASTER_BUILD:-}" = "true" ]; then
-    CAPACTIO_BUCKET="${CAPACTIO_MASTER_BUCKET}"
+  if [ "${MAIN_BUILD:-}" = "true" ]; then
+    CAPACTIO_BUCKET="${CAPACTIO_LATEST_BUCKET}"
     setChartVersionToCommitSHA
   fi
 
