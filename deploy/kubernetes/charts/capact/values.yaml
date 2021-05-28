@@ -1,7 +1,7 @@
 # Default values for Capact.
 global:
   containerRegistry:
-    path: gcr.io/projectvoltron
+    path: ghcr.io/capactio
     # Overrides the image tag for all Capact component. Default is the sub-chart appVersion.
     overrideTag: "latest"
   domainName: "dev.cluster.projectvoltron.dev"

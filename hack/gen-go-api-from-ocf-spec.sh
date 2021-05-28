@@ -21,7 +21,7 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
 
 OCF_VERSION="${OCF_VERSION:-$DEFAULT_OCF_VERSION}"
-JSON_GO_GEN_IMAGE="gcr.io/projectvoltron/pr/infra/json-go-gen:${JSON_GO_GEN_IMAGE_TAG}"
+JSON_GO_GEN_IMAGE="ghcr.io/capactio/pr/infra/json-go-gen:${JSON_GO_GEN_IMAGE_TAG}"
 
 REPORT_FILE_DIR="${REPO_ROOT_DIR}/tmp"
 REPORT_FILENAME="${REPORT_FILE_DIR}/gen_go_api_issues.txt"

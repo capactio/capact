@@ -187,7 +187,7 @@ main() {
   export CAPACT_REGION="${CAPACT_REGION}"
   export CAPACT_DOMAIN_NAME="${CAPACT_DOMAIN_NAME}"
   export DOCKER_TAG="${CAPACT_DOCKER_TAG}"
-  export DOCKER_REPOSITORY="${CAPACT_DOCKER_REPOSITORY:-gcr.io/projectvoltron}"
+  export DOCKER_REPOSITORY="${CAPACT_DOCKER_REPOSITORY:-ghcr.io/capactio}"
   export EKS_EFS_ENABLED="${EKS_EFS_ENABLED:-false}"
   export EKS_AZ_COUNT="${EKS_AZ_COUNT:-1}"
 

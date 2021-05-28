@@ -353,7 +353,7 @@ spec:
                   globalName: helm-release
                   path: "/out/helm-release"
             container:
-              image: gcr.io/projectvoltron/helm-runner:0.1.0
+              image: ghcr.io/capactio/helm-runner:0.1.0
               args:
                 - "--install"
                 - "--parameters-path"
@@ -377,7 +377,7 @@ spec:
                 - name: helm-release
                   path: "/in/helm-release.yaml"
             container:
-              image: gcr.io/projectvoltron/helm-runner:0.1.0 # The same image handles `helm uninstall`, based on input arguments
+              image: ghcr.io/capactio/helm-runner:0.1.0 # The same image handles `helm uninstall`, based on input arguments
               args:
                 - "--uninstall"
                 - "--input-path"

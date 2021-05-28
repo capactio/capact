@@ -74,7 +74,7 @@ action:
               - name: helm-release
                 path: "/out/helm-release"
           container:
-            image: gcr.io/projectvoltron/helm-runner:0.1.0
+            image: ghcr.io/capactio/helm-runner:0.1.0
             env:
               - name: RUNNER_CONTEXT_PATH
                 value: "{{inputs.artifacts.runner-context.path}}"
@@ -82,7 +82,7 @@ action:
                 value: "{{inputs.artifacts.input-parameters.path}}"
 ```
 
-As you see, for this definition, as a part of Argo workflow, Kubernetes Engine runs the `gcr.io/projectvoltron/helm-runner:0.1.0` OCI image on Kubernetes and handles dedicated input and output data for this runner. The `helm-values` and `helm-release` arguments need to be described under dedicated Interface for Helm Runner.
+As you see, for this definition, as a part of Argo workflow, Kubernetes Engine runs the `ghcr.io/capactio/helm-runner:0.1.0` OCI image on Kubernetes and handles dedicated input and output data for this runner. The `helm-values` and `helm-release` arguments need to be described under dedicated Interface for Helm Runner.
 
 ## Architecture
 
@@ -199,6 +199,6 @@ The Argo Workflow Runner implementation is defined in the [pkg/runner/argo](http
 
 The implemented dry run functionality only executes the Argo Workflow manifest static validation, and sends a request to the server with the `dry-run` flag, which renders the manifest with the server's representation without creating it.
 
-The Argo Workflow Runner is published to the `gcr.io/projectvoltron/argo-runner` registry.
+The Argo Workflow Runner is published to the [ghcr.io/capactio/argo-runner](https://github.com/orgs/capactio/packages/container/package/argo-runner) registry.
 
 > **CAUTION:** As the Argo Workflow does not get created, the nested Action Runners are not executed with the `dry-run` flag.

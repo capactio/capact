@@ -33,8 +33,8 @@ readonly DEFAULT_OCF_VERSION="0.0.1"
 # Infra
 #
 
-readonly JSON_GO_GEN_IMAGE_TAG="PR-274"
-readonly GRAPHQL_SCHEMA_LINTER_IMAGE_TAG="PR-274"
+readonly JSON_GO_GEN_IMAGE_TAG="PR-310"
+readonly GRAPHQL_SCHEMA_LINTER_IMAGE_TAG="PR-310"
 
 #
 # Development

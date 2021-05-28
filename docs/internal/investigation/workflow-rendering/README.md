@@ -86,11 +86,6 @@ index 583d6fd7..0ea36620 100644
 
 </details>
 
-You can also use the pre-built controller image for that:
-```
-kubectl -n capact-system set image deployment/argo-workflow-controller controller=gcr.io/projectvoltron/argo/workflow-controller:rendering-poc
-```
-
 ## Usage
 
 You can generate the workflows in this proof of concept:

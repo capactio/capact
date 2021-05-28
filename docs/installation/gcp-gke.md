@@ -131,8 +131,8 @@ This guide explains how to deploy Capact on a cluster using your own domain.
    1. Export the project name, the domain name, and the DNS zone name as environment variables. Run these commands:
    
       ```bash
-      export GCP_PROJECT={YOUR_GCP_PROJECT} # e.g. projectvoltron
-      export DNS_NAME={YOUR_ZONE_DOMAIN} # your custom domain, e.g. dogfooddemo.ga. 
+      export GCP_PROJECT={YOUR_GCP_PROJECT} # e.g. capact
+      export DNS_NAME={YOUR_ZONE_DOMAIN} # your custom domain, e.g. capact.ga. 
       export DNS_ZONE={YOUR_DNS_ZONE} # e.g. own-domain
       ```
 
@@ -178,7 +178,7 @@ This guide explains how to deploy Capact on a cluster using your own domain.
    
    ```bash
    CUSTOM_CAPACT_SET_FLAGS="--set global.domainName=$DOMAIN --set global.gateway.auth.password=$GATEWAY_PASSWORD" \
-   DOCKER_REPOSITORY="gcr.io/projectvoltron" \
+   DOCKER_REPOSITORY="ghcr.io/capactio" \
    OVERRIDE_DOCKER_TAG="ce38bb3" \
    ./hack/ci/cluster-components-install-upgrade.sh
    ```

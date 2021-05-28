@@ -180,7 +180,7 @@ spec:
                 - name: in
                   path: /file
             container:
-              image: gcr.io/projectvoltron/yq:4 # Original image: mikefarah/yq:4
+              image: ghcr.io/capactio/yq:4 # Original image: mikefarah/yq:4
               command: ["sh", "-c"]
               args: ["sleep 1 && yq eval -j -i /file"]
             outputs:

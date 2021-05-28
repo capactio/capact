@@ -209,7 +209,7 @@ We have images for:
 The default build and push configuration can be change via environment variables. For example:
 
 ```bash
-export DOCKER_REPOSITORY=gcr.io/projectvoltron/
+export DOCKER_REPOSITORY=ghcr.io/capactio/
 export DOCKER_TAG=latest
 ```
 

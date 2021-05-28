@@ -4,7 +4,7 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.velero
   name: backup
-  displayName: Velero backup 
+  displayName: Velero backup
   description: Action which runs velero backup and restore
   maintainers:
     - email: team-dev@capact.io
@@ -57,7 +57,7 @@ spec:
                 - name: env
                   path: /env.yaml
             container:
-              image: gcr.io/projectvoltron/velero-runner:latest
+              image: ghcr.io/capactio/velero-runner:latest
               env:
                 - name: VELERO_CONFIGPATH
                   value: /env.yaml

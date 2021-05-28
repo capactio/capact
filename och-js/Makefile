@@ -1,4 +1,4 @@
-DOCKER_REPOSITORY ?= gcr.io/projectvoltron
+DOCKER_REPOSITORY ?= ghcr.io/capactio
 DOCKER_TAG ?= latest
 APP ?= och-js
 

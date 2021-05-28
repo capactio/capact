@@ -50,7 +50,7 @@ Steps:
 1. Lint and test submitted code.
 1. Check documentation if the `*.md` files were modified. 
 1. Run integration tests.
-1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) using this pattern: `ghcr.io/capactio/pr/{service_name}:PR-{pr_number}`.
 
 ### Main branch
 
@@ -63,7 +63,7 @@ The job is defined in the [`.github/workflows/branch-build.yaml`](https://github
 Steps:
 
 1. Lint and test code.
-1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) using this pattern: `ghcr.io/capactio/{service_name}:{first_7_chars_of_commit_sha}`.
 1. If [Capact Helm Charts](https://github.com/capactio/capact/tree/main/deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
@@ -75,7 +75,7 @@ Steps:
 
 <p align="center"><img alt="ci-recreate-cluster" src="./assets/ci-recreate-cluster.svg" /></p>
 
-The job is defined in the [`.github/workflows/recreate_cluster.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
+The job is defined in the [`.github/workflows/recreate_cluster.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
 
 > **CAUTION:** This job removes the old GKE cluster.
 

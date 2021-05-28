@@ -2,7 +2,7 @@ argo:
   images:
     # Overrides .images.namespace if defined.
     # NOTE: argocli and argoexec was mirrored to our repository
-    namespace: "gcr.io/projectvoltron/argoproj"
+    namespace: "ghcr.io/capactio/argoproj"
     tag: v2.12.10
     pullPolicy: IfNotPresent
 

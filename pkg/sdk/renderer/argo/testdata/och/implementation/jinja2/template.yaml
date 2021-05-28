@@ -39,7 +39,7 @@ spec:
                 - "--format=yaml"
                 - "-o"
                 - "/render.yml"
-              image: gcr.io/projectvoltron/jinja2:v2.11.2
+              image: ghcr.io/capactio/jinja2:v2.11.2
             outputs:
               artifacts:
                 - path: "/render.yml"

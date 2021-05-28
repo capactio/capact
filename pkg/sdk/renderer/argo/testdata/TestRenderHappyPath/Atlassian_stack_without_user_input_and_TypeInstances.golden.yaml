@@ -103,7 +103,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -133,7 +133,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-252
+        image: ghcr.io/capactio/pr/helm-runner:PR-252
         name: ""
         resources: {}
       inputs:
@@ -229,7 +229,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -413,7 +413,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -436,7 +436,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -500,7 +500,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -530,7 +530,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-252
+        image: ghcr.io/capactio/pr/helm-runner:PR-252
         name: ""
         resources: {}
       inputs:
@@ -668,7 +668,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -852,7 +852,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -875,7 +875,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -939,7 +939,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -969,7 +969,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-252
+        image: ghcr.io/capactio/pr/helm-runner:PR-252
         name: ""
         resources: {}
       inputs:
