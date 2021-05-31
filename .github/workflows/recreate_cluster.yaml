@@ -14,7 +14,6 @@ on:
         required: false
       oldClusterToDelete:
         description: Name of the old cluster to delete. If not provided, the delete step will be skipped.
-        default: capact-dev
         required: false
 
 jobs:
