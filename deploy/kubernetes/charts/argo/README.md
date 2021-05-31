@@ -37,12 +37,12 @@ To replace the Argo images, we followed these steps:
     
     1. Tag image:
         ```
-        docker tag argoproj/workflow-controller:latest ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        docker tag argoproj/workflow-controller:latest ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disable-global-artifacts-validation
         ```
     
     1. Push image
         ```
-        docker push ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        docker push ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disable-global-artifacts-validation
         ```
     
     > **NOTE:** More info can be found [here](https://github.com/Project-Voltron/argo-workflows/pull/1).

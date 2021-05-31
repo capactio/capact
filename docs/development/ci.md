@@ -1,5 +1,7 @@
 #  Capact CI and CD
 
+> ⚠️ **DEPRECATION:** The [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry is deprecated. We support this registry in the read-only mode until November 2021. At that time this registry will likely be garbage collected and no longer available. New Docker images are pushed to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container).
+
 This document describes jobs created to automate the process of testing, building, and deploying newly merged functionality.
 
 ##  Table of Contents
@@ -31,7 +33,6 @@ The following secrets are defined:
 
 | Secret name                       | Description                                                                                                                                                                                           |
 |-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCR_CREDS**                     | Holds credentials which allow CI jobs to push Docker images to our GCR. Has all roles that are defined [here](https://cloud.google.com/container-registry/docs/access-control#permissions_and_roles). |
 | **GCS_CREDS**                     | Holds credentials which allow CI jobs to manage GCS bucket. Has the `roles/storage.objectAdmin` role.                                                                                                 |
 | **LONG_RUNNING_GATEWAY_PASSWORD** | Holds the Gateway password for the long-running cluster.                                                                                                                                                  |
 | **GKE_CREDS**                     | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `roles/container.admin` role.                                                                             |
@@ -58,7 +59,7 @@ Steps:
 
 <p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
 
-The job is defined in the [`.github/workflows/branch-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation, OCH content, etc.
+The job is defined in the [`.github/workflows/branch-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation.
 
 Steps:
 
@@ -110,18 +111,16 @@ Currently, [`decrypt.yaml`](https://github.com/capactio/capact/tree/main/.github
 
 To create a new pipeline you must follow the rules of the syntax used by GitHub Actions. The new workflow must be defined in the [`.github/workflows`](https://github.com/capactio/capact/tree/main/.github/workflows) directory. All scripts for CI/CD purposes must be defined in the [`/hack/ci/`](https://github.com/capactio/capact/tree/main/hack/ci) directory.
 
-The following steps show how to checkout the code, set up the Go environment, and authorize to GCR and GKE in case they are necessary.
+The following steps show how to checkout the code, set up the Go environment, and authorize to GHCR and GKE in case they are necessary.
 
 ```yaml
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Authorize to GCR
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          export_default_credentials: true
-          service_account_key: ${{ secrets.GCR_CREDS }}
+      - name: Authorize to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Authorize to GKE
         uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:

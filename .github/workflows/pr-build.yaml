@@ -30,60 +30,60 @@ jobs:
         with:
           access_token: ${{ github.token }}
 
-#  entry-tests:
-#    name: Lint and test code
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#      - name: Setup environment
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - name: Setup Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{env.GO_VERSION}}
-#      - name: Run linting
-#        run: |
-#          make test-lint
-#      - name: Run unit tests
-#        run: make test-unit
-#      - name: Check generated files
-#        run: |
-#          make test-generated
-#
-#  documentation-sanity:
-#    name: Check documentation
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#      - name: Run LanguageTool
-#        uses: reviewdog/action-languagetool@v1
-#        with:
-#          github_token: ${{ secrets.github_token }}
-#          reporter: github-pr-review
-#          level: info
-#          patterns: "**.md"
-#          custom_api_endpoint: ''
-#          ### Flags for LanguageTool ###
-#          # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
-#          language: 'en-US'
-#          enabled_rules: ''
-#          disabled_rules: 'WHITESPACE_RULE,EN_QUOTES,DASH_RULE,WORD_CONTAINS_UNDERSCORE,UPPERCASE_SENTENCE_START,ARROWS,COMMA_PARENTHESIS_WHITESPACE,UNLIKELY_OPENING_PUNCTUATION,SENTENCE_WHITESPACE,CURRENCY,EN_UNPAIRED_BRACKETS,PHRASE_REPETITION,PUNCTUATION_PARAGRAPH_END,METRIC_UNITS_EN_US,ENGLISH_WORD_REPEAT_BEGINNING_RULE,DOUBLE_PUNCTUATION'
-#          enabled_categories: ''
-#          disabled_categories: 'TYPOS,TYPOGRAPHY,CASING'
-#          enabled_only: 'false'
-#      - name: Run misspell check
-#        uses: reviewdog/action-misspell@v1
-#        with:
-#          github_token: ${{ secrets.github_token }}
-#          reporter: github-pr-review
-#          level: info
-#          locale: "US"
+  entry-tests:
+    name: Lint and test code
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run linting
+        run: |
+          make test-lint
+      - name: Run unit tests
+        run: make test-unit
+      - name: Check generated files
+        run: |
+          make test-generated
+
+  documentation-sanity:
+    name: Check documentation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run LanguageTool
+        uses: reviewdog/action-languagetool@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          patterns: "**.md"
+          custom_api_endpoint: ''
+          ### Flags for LanguageTool ###
+          # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
+          language: 'en-US'
+          enabled_rules: ''
+          disabled_rules: 'WHITESPACE_RULE,EN_QUOTES,DASH_RULE,WORD_CONTAINS_UNDERSCORE,UPPERCASE_SENTENCE_START,ARROWS,COMMA_PARENTHESIS_WHITESPACE,UNLIKELY_OPENING_PUNCTUATION,SENTENCE_WHITESPACE,CURRENCY,EN_UNPAIRED_BRACKETS,PHRASE_REPETITION,PUNCTUATION_PARAGRAPH_END,METRIC_UNITS_EN_US,ENGLISH_WORD_REPEAT_BEGINNING_RULE,DOUBLE_PUNCTUATION'
+          enabled_categories: ''
+          disabled_categories: 'TYPOS,TYPOGRAPHY,CASING'
+          enabled_only: 'false'
+      - name: Run misspell check
+        uses: reviewdog/action-misspell@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          locale: "US"
 
   prepare-matrix:
     name: Prepare components build matrix
@@ -116,9 +116,6 @@ jobs:
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
-    permissions:
-      packages: write
-      contents: read
 
     steps:
       - name: Checkout code
@@ -184,36 +181,36 @@ jobs:
           . ./hack/ci/setup-env.sh
       - run: make build-tool-${{ matrix.tool }}
 
-#  integration-tests:
-#    name: Integration tests
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    needs: [ entry-tests, build-app, build-tests ]
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#      - name: Setup environment
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - name: Setup Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{env.GO_VERSION}}
-#      - name: Run K8s Controller integration tests
-#        run: |
-#          make test-k8s-controller
-#      - name: Run cross-functional integration tests
-#        env:
-#          BUILD_IMAGES: "false"
-#          ARTIFACTS: "output/"
-#          DISABLE_MONITORING_INSTALLATION: "true"
-#          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.head_ref }}"
-#        run: |
-#          make test-integration
-#      - name: Upload artifacts
-#        uses: actions/upload-artifact@v2
-#        if: ${{ always() }}
-#        with:
-#          name: cluster_dump_${{github.sha}}
-#          path: "output"
-#          retention-days: 5 # Default 90 days
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [ entry-tests, build-app, build-tests ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+      - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
+          ARTIFACTS: "output/"
+          DISABLE_MONITORING_INSTALLATION: "true"
+          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.head_ref }}"
+        run: |
+          make test-integration
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: cluster_dump_${{github.sha}}
+          path: "output"
+          retention-days: 5 # Default 90 days
