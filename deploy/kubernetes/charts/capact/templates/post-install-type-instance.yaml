@@ -65,7 +65,7 @@ spec:
             - name: HELM_RELEASES_NS_LOOKUP
               value: "{{ .Release.Namespace }}"
             - name: HELM_REPOSITORY_PATH
-              value: "https://capactio-awesome-charts.storage.googleapis.com"
+              value: "https://capactio-stable-charts.storage.googleapis.com"
             - name: CAPACT_RELEASE_NAME
               value: "capact"
             - name: LOCAL_OCH_ENDPOINT

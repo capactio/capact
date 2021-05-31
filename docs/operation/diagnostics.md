@@ -193,7 +193,7 @@ To check the logs since a given time, use the `--since-time` flag, for example:
 - Check if [OCH Populator logs](#och-populator-logs) contain a message similar to: `{"level":"info","ts":1620895282.3582015,"caller":"register/ocf_manifests.go:107","msg":"Populated new data","duration (seconds)":235.525841306}`. It means that manifests were populated successfully. If you get an error similar to: `error: container och-public-populator is not valid for pod capact-och-public-84cc74bc66-pmkhp` it means that the Public OCH Populator is disabled. To enable it, run:
 
   ```bash
-  helm repo add capactio https://storage.googleapis.com/capactio-awesome-charts
+  helm repo add capactio https://storage.googleapis.com/capactio-stable-charts
   helm upgrade capact capactio/capact -n capact-system --reuse-values --set och-public.populator.enabled=true
   ```
 

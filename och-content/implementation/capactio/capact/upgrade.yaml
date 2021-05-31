@@ -71,7 +71,7 @@ spec:
                   arguments:
                     parameters:
                      - name: crdURL
-                       value: https://storage.googleapis.com/capactio-master-charts/crds/core.capact.io_actions.yaml
+                       value: https://storage.googleapis.com/capactio-latest-charts/crds/core.capact.io_actions.yaml
 
                 - name: gen-global-helm-args
                   capact-action: jinja2.template

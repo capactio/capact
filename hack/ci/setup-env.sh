@@ -8,8 +8,8 @@ export NAME="dev"
 cat <<EOT >> "$GITHUB_ENV"
 GO_VERSION=^1.16.3
 SKIP_DEPS_INSTALLATION=false
-PROJECT_ID=projectvoltron
-RECREATE_CLUSTER_GCS_BUCKET=projectvoltron_cluster_recreate
+PROJECT_ID=capact
+RECREATE_CLUSTER_GCS_BUCKET=capact-stage-cluster-recreate
 GET_IP_SERVICE=ifconfig.me
 TF_VAR_region=europe-west1
 TF_VAR_cluster_name=capact-${NAME}

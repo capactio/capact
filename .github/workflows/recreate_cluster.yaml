@@ -37,7 +37,7 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          service_account_key: ${{ secrets.GKE_CREDS }}        
+          service_account_key: ${{ secrets.CAPACT_GKE_CREDS }}
       - name: Setup terraform
         run: |
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
@@ -61,12 +61,12 @@ jobs:
           terraform apply -auto-approve
           gsutil cp *.tfstate gs://${RECREATE_CLUSTER_GCS_BUCKET}/tf/${TF_VAR_cluster_name}
       - name: Get cluster credentials
-        run: | 
+        run: |
           gcloud config set project ${PROJECT_ID}
-          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}         
+          gcloud container clusters get-credentials ${TF_VAR_cluster_name} --zone=${TF_VAR_region}
       - name: Network enable
         id: network-enable
-        run: | 
+        run: |
           AUTHORIZED=$(printf "%s/32" $(curl ${GET_IP_SERVICE}))
           gcloud container clusters update ${TF_VAR_cluster_name} --zone ${TF_VAR_region} --enable-master-authorized-networks \
           --master-authorized-networks ${AUTHORIZED}
@@ -83,7 +83,7 @@ jobs:
           ./hack/ci/install-cert-manager.sh
           . ./hack/ci/compare-cert.sh
       - name: Store secrets
-        run: | 
+        run: |
           ./hack/ci/backup-cert.sh
 
       - name: Network cleanup

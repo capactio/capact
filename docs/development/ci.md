@@ -31,12 +31,12 @@ All sensitive data is stored in [GitHub secrets](https://docs.github.com/en/free
 
 The following secrets are defined:
 
-| Secret name                       | Description                                                                                                                                                                                           |
-|-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCS_CREDS**                     | Holds credentials which allow CI jobs to manage GCS bucket. Has the `roles/storage.objectAdmin` role.                                                                                                 |
-| **LONG_RUNNING_GATEWAY_PASSWORD** | Holds the Gateway password for the long-running cluster.                                                                                                                                                  |
-| **GKE_CREDS**                     | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `roles/container.admin` role.                                                                             |
-| **GIT_CRYPT_KEY**                 | Holds a symmetric key used to decrypt files encrypted with [git crypt](https://github.com/AGWA/git-crypt).                                                                                            |
+| Secret name                       | Description                                                                                                                                                                                                                                        |
+|-----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **CAPACT_GCS_CREDS**              | Holds credentials which allow CI jobs to manage GCS bucket. Has the `roles/storage.objectAdmin` role.                                                                                                                                              |
+| **CAPACT_GKE_CREDS**              | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `Compute Admin`, `Compute Network Admin`, `Kubernetes Engine Admin`, `Kubernetes Engine Cluster Admin`, `Service Account User`, `Storage Admin` roles. |
+| **STAGE_CAPACT_GATEWAY_PASSWORD** | Holds the Gateway password for the long-running cluster.                                                                                                                                                                                           |
+| **GIT_CRYPT_KEY**                 | Holds a symmetric key used to decrypt files encrypted with [git crypt](https://github.com/AGWA/git-crypt).                                                                                                                                         |
 
 ##  Pipelines
 
@@ -67,10 +67,10 @@ Steps:
 1. Build Docker images for applications, tests and infra tools, and push them to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) using this pattern: `ghcr.io/capactio/{service_name}:{first_7_chars_of_commit_sha}`.
 1. If [Capact Helm Charts](https://github.com/capactio/capact/tree/main/deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
-   1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
+   1. Package and push charts to the [`capactio-latest-charts`](https://storage.googleapis.com/capactio-latest-charts) GCS.   
 2. Update the existing long-running cluster via [CLI](../cli/commands/capact_upgrade.md).
-3. Delete all Actions which are in the `SUCCEEDED` phase and whose names have the `capact-upgrade-` prefix. 
-4. If any step failed, send a Slack notification.
+1. Delete all Actions which are in the `SUCCEEDED` phase and whose names have the `capact-upgrade-` prefix. 
+1. If any step failed, send a Slack notification.
 
 ###  Recreate a long-running cluster
 
@@ -124,7 +124,7 @@ The following steps show how to checkout the code, set up the Go environment, an
       - name: Authorize to GKE
         uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
-          service_account_key: ${{ secrets.GKE_CREDS }}
+          service_account_key: ${{ secrets.CAPACT_GKE_CREDS }}
           export_default_credentials: true
 
       - name: Setup env

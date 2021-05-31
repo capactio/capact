@@ -13,9 +13,7 @@ type TypeInstancesConfig struct {
 	LocalOCHEndpoint     string `envconfig:"default=http://capact-och-local.capact-system/graphql"`
 	HelmReleasesNSLookup LookupNS
 	CapactReleaseName    string `envconfig:"default=capact"`
-	// The `capactio-awesome-charts` bucket name is by design. We do not know if we will have to change our GCP project too,
-	// so it will be easier to have the `capactio-charts` name not taken.
-	HelmRepositoryPath string `envconfig:"default=https://capactio-awesome-charts.storage.googleapis.com"`
+	HelmRepositoryPath string `envconfig:"default=https://capactio-stable-charts.storage.googleapis.com"`
 }
 
 type LookupNS map[string]struct{}

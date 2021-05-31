@@ -43,7 +43,7 @@ variable "google_compute_subnetwork_secondary_ip_range_name1" {
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_cidr1" {
-  default = "10.0.0.0/14" 
+  default = "10.0.0.0/14"
   type    = string
 }
 
@@ -53,19 +53,19 @@ variable "google_compute_subnetwork_secondary_ip_range_name2" {
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_cidr2" {
-  default = "10.4.0.0/20" 
+  default = "10.4.0.0/20"
   type    = string
 }
 
 variable "google_container_cluster_private_cluster_config_master_ipv4_cidr_block" {
-  default = "172.16.10.0/28" 
+  default = "172.16.10.0/28"
   type    = string
 }
 
 
 
 variable "project" {
-  default = "projectvoltron"
+  default = "capact"
   type    = string
 }
 
