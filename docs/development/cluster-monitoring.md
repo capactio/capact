@@ -23,7 +23,7 @@ You need to configure the `gcloud` CLI, so it's able to access `capact` project 
 Set the following environment variables in your shell:
 ```bash
 export REGION=europe-west1
-export CLUSTER_NAME=capact-dev
+export CLUSTER_NAME=capact-stage
 ```
 
 Get the kubeconfig for the long-running Capact GKE cluster:
