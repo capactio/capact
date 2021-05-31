@@ -1,11 +1,22 @@
 package cmd
 
 import (
+	"fmt"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
+	"path/filepath"
+	"strings"
 )
 
-const docsTargetDir = "./cmd/cli/docs"
+const (
+	docsTargetDir = "./docs/cli/commands"
+
+	frontmatterFormat = `---
+title: %s
+---
+
+`
+)
 
 func NewDocs() *cobra.Command {
 	return &cobra.Command{
@@ -16,7 +27,16 @@ func NewDocs() *cobra.Command {
 			root := NewRoot()
 			root.DisableAutoGenTag = true
 
-			return doc.GenMarkdownTree(root, docsTargetDir)
+			defaultLinkHandler := func(s string) string { return s }
+			return doc.GenMarkdownTreeCustom(root, docsTargetDir, frontmatterFilePrepender, defaultLinkHandler)
 		},
 	}
+}
+
+
+func frontmatterFilePrepender(filePath string) string {
+	fileName := filepath.Base(filePath)
+	fileNameWithoutExt := strings.TrimSuffix(fileName, filepath.Ext(fileName))
+	title := strings.Replace(fileNameWithoutExt, "_", " ", -1)
+	return fmt.Sprintf(frontmatterFormat, title)
 }
