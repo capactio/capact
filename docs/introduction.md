@@ -20,19 +20,19 @@ Capact aims to be a platform-agnostic solution. However, the very first Capact i
 
 ### Example
 
-To explain Capact in action, let's focus on Jira installation. Jira requires PostgreSQL.
+To explain Capact in action, let's focus on [Mattermost](https://mattermost.org/) installation. Mattermost requires PostgreSQL.
 
 From User perspective, the flow is easy.
 
 1. User navigates to the Capact Action Catalog.
-2. Once User clicks Install button for Jira in the App Catalog, PostgreSQL is configured according to Cluster Admin and User preferences:
+2. Once User clicks Install button for Mattermost in the App Catalog, PostgreSQL is configured according to Cluster Admin and User preferences:
    
-   - Cluster Admin can configure Capact to prefer cloud-based GCP solutions. In this case, if User Installs Jira on cluster, Capact will provision GCP CloudSQL for PostgreSQL database and use it.
+   - Cluster Admin can configure Capact to prefer cloud-based GCP solutions. In this case, if User Installs Mattermost on cluster, Capact will provision GCP CloudSQL for PostgreSQL database and use it.
    - If on-premise solutions are preferred, PostgreSQL will be installed on the same Kubernetes cluster with Helm.
-   - If User provides an existing PostgreSQL database installation, deployed anywhere, Capact will use it for Jira installation.
+   - If User provides an existing PostgreSQL database installation, deployed anywhere, Capact will use it for Mattermost installation.
    
-3. Once the database is configured, Capact Engine runs the action that deploys Jira on the cluster.
-4. After deploying Jira, the Capact Engine may run additional actions that install and configure other components, such as the identity provider and load balancer.
+3. Once the database is configured, Capact Engine runs the action that deploys Mattermost on the cluster.
+4. After deploying Mattermost, the Capact Engine may run additional actions that install and configure other components, such as the identity provider and load balancer.
 
 ## Components
 
