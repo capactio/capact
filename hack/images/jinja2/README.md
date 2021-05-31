@@ -1,4 +1,4 @@
-# Jinja-cli
+# jinja Docker Image 
 
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)

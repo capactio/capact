@@ -191,7 +191,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -214,7 +214,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -244,7 +244,7 @@ args:
           value: '{{outputs.artifacts.tfstate.path}}'
         - name: RUNNER_LOGGER_DEV_MODE
           value: "true"
-        image: gcr.io/projectvoltron/terraform-runner:PR-252
+        image: ghcr.io/capactio/terraform-runner:PR-252
         name: ""
         resources: {}
       inputs:
@@ -276,7 +276,7 @@ args:
         command:
         - sh
         - -c
-        image: gcr.io/projectvoltron/yq:4
+        image: ghcr.io/capactio/yq:4
         name: ""
         resources: {}
       inputs:
@@ -408,7 +408,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -431,7 +431,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -495,7 +495,7 @@ args:
         - --format=yaml
         - -o
         - /render.yml
-        image: gcr.io/projectvoltron/jinja2:v2.11.2
+        image: ghcr.io/capactio/jinja2:v2.11.2
         name: ""
         resources: {}
       inputs:
@@ -525,7 +525,7 @@ args:
           value: '{{outputs.artifacts.helm-release.path}}'
         - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
           value: '{{outputs.artifacts.additional.path}}'
-        image: gcr.io/projectvoltron/pr/helm-runner:PR-252
+        image: ghcr.io/capactio/pr/helm-runner:PR-252
         name: ""
         resources: {}
       inputs:

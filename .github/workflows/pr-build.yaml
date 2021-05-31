@@ -62,8 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run LanguageTool
-        # This image was build from this branch https://github.com/mszostok/action-languagetool/tree/update-lang-tool
-        uses: docker://gcr.io/projectvoltron/infra/action-languagetool:1.5.0
+        uses: reviewdog/action-languagetool@v1
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
@@ -121,19 +120,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          export_default_credentials: true
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
       - run: make build-app-image-${{ matrix.APP }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-app-image-${{ matrix.APP }}
 
   build-tests:
@@ -147,19 +139,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          export_default_credentials: true
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
       - run: make build-test-image-${{ matrix.TEST }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-test-image-${{ matrix.TEST }}
 
   build-infra:
@@ -173,19 +158,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          service_account_key: ${{ secrets.GCR_CREDS }}
-          export_default_credentials: true
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - run: gcloud auth configure-docker --project ${PROJECT_ID} -q
       - run: make build-infra-image-${{ matrix.INFRA }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-infra-image-${{ matrix.INFRA }}
 
   build-tools:
@@ -201,10 +179,6 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
       - run: make build-tool-${{ matrix.tool }}
 
   integration-tests:

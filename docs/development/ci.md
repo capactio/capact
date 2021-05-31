@@ -1,5 +1,7 @@
 #  Capact CI and CD
 
+> ⚠️ **DEPRECATION:** The [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry is deprecated. We support this registry in the read-only mode until November 2021. At that time this registry will likely be garbage collected and no longer available. New Docker images are pushed to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container).
+
 This document describes jobs created to automate the process of testing, building, and deploying newly merged functionality.
 
 ##  Table of Contents
@@ -31,7 +33,6 @@ The following secrets are defined:
 
 | Secret name                       | Description                                                                                                                                                                                           |
 |-----------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **GCR_CREDS**                     | Holds credentials which allow CI jobs to push Docker images to our GCR. Has all roles that are defined [here](https://cloud.google.com/container-registry/docs/access-control#permissions_and_roles). |
 | **GCS_CREDS**                     | Holds credentials which allow CI jobs to manage GCS bucket. Has the `roles/storage.objectAdmin` role.                                                                                                 |
 | **LONG_RUNNING_GATEWAY_PASSWORD** | Holds the Gateway password for the long-running cluster.                                                                                                                                                  |
 | **GKE_CREDS**                     | Holds credentials which allow CI jobs to create and manage the GKE private cluster. Has the `roles/container.admin` role.                                                                             |
@@ -50,7 +51,7 @@ Steps:
 1. Lint and test submitted code.
 1. Check documentation if the `*.md` files were modified. 
 1. Run integration tests.
-1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/pr/{service_name}:PR-{pr_number}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) using this pattern: `ghcr.io/capactio/pr/{service_name}:PR-{pr_number}`.
 
 ### Main branch
 
@@ -58,12 +59,12 @@ Steps:
 
 <p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
 
-The job is defined in the [`.github/workflows/branch-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation, OCH content, etc.
+The job is defined in the [`.github/workflows/branch-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation.
 
 Steps:
 
 1. Lint and test code.
-1. Build Docker images for applications, tests and infra tools, and push them to [gcr.io/projectvoltron](https://gcr.io/projectvoltron) using this pattern: `gcr.io/projectvoltron/{service_name}:{first_7_chars_of_commit_sha}`.
+1. Build Docker images for applications, tests and infra tools, and push them to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) using this pattern: `ghcr.io/capactio/{service_name}:{first_7_chars_of_commit_sha}`.
 1. If [Capact Helm Charts](https://github.com/capactio/capact/tree/main/deploy/kubernetes/charts) were changed:
    1. Change **version** in all `Chart.yaml` to `{current_version}-{first_7_chars_of_commit_sha}`.
    1. Package and push charts to the [`capactio-master-charts`](https://storage.googleapis.com/capactio-master-charts) GCS.   
@@ -75,7 +76,7 @@ Steps:
 
 <p align="center"><img alt="ci-recreate-cluster" src="./assets/ci-recreate-cluster.svg" /></p>
 
-The job is defined in the [`.github/workflows/recreate_cluster.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
+The job is defined in the [`.github/workflows/recreate_cluster.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
 
 > **CAUTION:** This job removes the old GKE cluster.
 
@@ -110,18 +111,16 @@ Currently, [`decrypt.yaml`](https://github.com/capactio/capact/tree/main/.github
 
 To create a new pipeline you must follow the rules of the syntax used by GitHub Actions. The new workflow must be defined in the [`.github/workflows`](https://github.com/capactio/capact/tree/main/.github/workflows) directory. All scripts for CI/CD purposes must be defined in the [`/hack/ci/`](https://github.com/capactio/capact/tree/main/hack/ci) directory.
 
-The following steps show how to checkout the code, set up the Go environment, and authorize to GCR and GKE in case they are necessary.
+The following steps show how to checkout the code, set up the Go environment, and authorize to GHCR and GKE in case they are necessary.
 
 ```yaml
     steps:    
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Authorize to GCR
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          export_default_credentials: true
-          service_account_key: ${{ secrets.GCR_CREDS }}
+      - name: Authorize to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
       - name: Authorize to GKE
         uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:

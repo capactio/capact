@@ -218,7 +218,7 @@ spec:
   templates:
     - name: downloads-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+        image: ghcr.io/capactio/type-instance-fetcher:0.0.1
       outputs:
         # export a global artifact. The artifact will be programatically available in the completed
         # workflow object under: workflow.outputs.artifacts
@@ -229,7 +229,7 @@ spec:
   
     - name: mysql-create-db
       container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+        image: ghcr.io/capactio/actions/mysql-create-db:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -266,7 +266,7 @@ spec:
           globalName: mysql-config
     - name: mysql-create-db
       container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+        image: ghcr.io/capactio/actions/mysql-create-db:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -318,7 +318,7 @@ spec:
   templates:
     - name: downloads-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+        image: ghcr.io/capactio/type-instance-fetcher:0.0.1
       outputs:
         artifacts:
         - name: mysql-config
@@ -327,7 +327,7 @@ spec:
   
     - name: mysql-create-db
       container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+        image: ghcr.io/capactio/actions/mysql-create-db:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -603,7 +603,7 @@ spec:
   templates:
     - name: downloads-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+        image: ghcr.io/capactio/type-instance-fetcher:0.0.1
       outputs:
         # export a global artifact. The artifact will be programatically available in the completed
         # workflow object under: workflow.outputs.artifacts
@@ -615,7 +615,7 @@ spec:
   
     - name: mysql-create-db
       container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+        image: ghcr.io/capactio/actions/mysql-create-db:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -821,7 +821,7 @@ spec:
     # Download artifacts from Local OCH
     - name: downloads-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-fetcher:0.0.1
+        image: ghcr.io/capactio/type-instance-fetcher:0.0.1
       outputs:
         artifacts:
         - name: mysql-config
@@ -830,7 +830,7 @@ spec:
     # Steps from Implementation workflow
     - name: mysql-delete-db
       container:
-        image: gcr.io/projectvoltron/actions/mysql-create-db:0.0.1
+        image: ghcr.io/capactio/actions/mysql-create-db:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -838,7 +838,7 @@ spec:
     # Deletes artifacts from Local OCH 
     - name: delete-instances
       container:
-        image: gcr.io/projectvoltron/type-instance-deleter:0.0.1
+        image: ghcr.io/capactio/type-instance-deleter:0.0.1
       arguments:
         artifacts:
         - name: mysql-config

@@ -8,16 +8,16 @@ To replace the Argo images, we followed these steps:
 
     ```bash
     docker pull argoproj/argocli:v2.12.10
-    docker tag argoproj/argocli:v2.12.10 gcr.io/projectvoltron/argoproj/argocli:v2.12.10
-    docker push gcr.io/projectvoltron/argoproj/argocli:v2.12.10
+    docker tag argoproj/argocli:v2.12.10 ghcr.io/capactio/argoproj/argocli:v2.12.10
+    docker push ghcr.io/capactio/argoproj/argocli:v2.12.10
     ```
 
 1. Mirror `argoproj/argoexec`.
 
     ```bash
     docker pull argoproj/argoexec:v2.12.10
-    docker tag argoproj/argoexec:v2.12.10 gcr.io/projectvoltron/argoproj/argoexec:v2.12.10
-    docker push gcr.io/projectvoltron/argoproj/argoexec:v2.12.10
+    docker tag argoproj/argoexec:v2.12.10 ghcr.io/capactio/argoproj/argoexec:v2.12.10
+    docker push ghcr.io/capactio/argoproj/argoexec:v2.12.10
     ```
 
 1. Build and push `argoproj/workflow-controller` based on our fork.
@@ -37,12 +37,12 @@ To replace the Argo images, we followed these steps:
     
     1. Tag image:
         ```
-        docker tag argoproj/workflow-controller:latest gcr.io/projectvoltron/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        docker tag argoproj/workflow-controller:latest ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disable-global-artifacts-validation
         ```
     
     1. Push image
         ```
-        docker push gcr.io/projectvoltron/argoproj/workflow-controller:v2.12.10-disabled-global-art-validation
+        docker push ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disable-global-artifacts-validation
         ```
     
     > **NOTE:** More info can be found [here](https://github.com/Project-Voltron/argo-workflows/pull/1).

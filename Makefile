@@ -7,7 +7,7 @@ export GOPROXY = https://proxy.golang.org
 # enable the BuildKit builder in the Docker CLI.
 export DOCKER_BUILDKIT = 1
 
-export DOCKER_REPOSITORY ?= gcr.io/projectvoltron
+export DOCKER_REPOSITORY ?= ghcr.io/capactio
 export DOCKER_TAG ?= latest
 
 all: generate build-all-images test-ocf-manifests test-unit test-lint ## Default: generate all, build all, test all and lint

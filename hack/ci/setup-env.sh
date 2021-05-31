@@ -29,10 +29,10 @@ if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]
 then
   PR_NUMBER=$(echo "$GITHUB_REF" | awk 'BEGIN { FS = "/" } ; { print $3 }')
   echo "DOCKER_TAG=PR-${PR_NUMBER}" >> "$GITHUB_ENV"
-  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron/pr" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=ghcr.io/capactio/pr" >> "$GITHUB_ENV"
 else
   echo "DOCKER_TAG=${GITHUB_SHA:0:7}" >> "$GITHUB_ENV"
-  echo "DOCKER_REPOSITORY=gcr.io/projectvoltron" >> "$GITHUB_ENV"
+  echo "DOCKER_REPOSITORY=ghcr.io/capactio" >> "$GITHUB_ENV"
 fi
 
 function returnInfraMatrixIfNeeded() {
