@@ -49,16 +49,18 @@ jobs:
         run: |
           gcloud config set project ${PROJECT_ID}
           cd hack/ci/terraform
-          gsutil cp gs://${RECREATE_CLUSTER_GCS_BUCKET}/tf/${OLD_CLUSTER_NAME}/*.tfstate .
-          terraform init
+          terraform init \
+              -backend-config="bucket=$RECREATE_CLUSTER_GCS_BUCKET" \
+              -backend-config="prefix=tf/$OLD_CLUSTER_NAME"
           terraform destroy -auto-approve
       - name: Create cluster
         run: |
           gcloud config set project ${PROJECT_ID}
           cd hack/ci/terraform
-          terraform init
+          terraform init \
+              -backend-config="bucket=$RECREATE_CLUSTER_GCS_BUCKET" \
+              -backend-config="prefix=tf/$TF_VAR_cluster_name"
           terraform apply -auto-approve
-          gsutil cp *.tfstate gs://${RECREATE_CLUSTER_GCS_BUCKET}/tf/${TF_VAR_cluster_name}
       - name: Get cluster credentials
         run: |
           gcloud config set project ${PROJECT_ID}
@@ -74,8 +76,10 @@ jobs:
         env:
           OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
           USE_TEST_SETUP: "true"
+          GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
         run: |
           export CUSTOM_NGINX_SET_FLAGS="--set ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
+          export CUSTOM_CAPACT_SET_FLAGS="--set global.gateway.auth.password=$GATEWAY_PASSWORD"
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Configure Cert Manager in cluster
         run: |

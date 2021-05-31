@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 echo "Setting up CI environmental variables..."
-export NAME="dev"
+export NAME="stage"
 
 # LOAD_BALANCER_EXTERNAL_IP is a reserved IP in "External IP addresses" on GCP. It needs to be in the same region.
 # Remember when changing LOAD_BALANCER_EXTERNAL_IP to update record A in the Cloud DNS for gateway
