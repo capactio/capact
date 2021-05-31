@@ -6,13 +6,15 @@ This document describes how to identify and resolve common Capact problems that 
 
 <!-- toc -->
 
-- [Action](#action)
-  * [Action does not have status](#action-does-not-have-status)
-  * [Action stuck in the `BeingRendered` phase](#action-stuck-in-the-beingrendered-phase)
-  * [Action in the `Failed` phase](#action-in-the-failed-phase)
-  * [Clean up Action execution pods](#clean-up-action-execution-pods)
-  * [Wrong Implementation was selected](#wrong-implementation-was-selected)
-- [Unreachable Gateway](#unreachable-gateway)
+- [Common problems](#common-problems)
+  - [Table of contents](#table-of-contents)
+  - [Action](#action)
+    - [Action does not have status](#action-does-not-have-status)
+    - [Action stuck in the `BeingRendered` phase](#action-stuck-in-the-beingrendered-phase)
+    - [Action in the `Failed` phase](#action-in-the-failed-phase)
+    - [Clean up Action execution pods](#clean-up-action-execution-pods)
+    - [Wrong Implementation was selected](#wrong-implementation-was-selected)
+  - [Unreachable Gateway](#unreachable-gateway)
 
 <!-- tocstop -->
 
@@ -113,7 +115,7 @@ Symptoms:
 
 Debugging steps:
 
-- [Check if proper policy exists and has proper configuration](diagnostics.md#checking-cluster-policy). Read the [Policy configuration](./../policy-configuration.md) document to get familiar with the syntax and available set of features.
+- [Check if proper policy exists and has proper configuration](diagnostics.md#checking-cluster-policy). Read the [Policy configuration](../feature/policy-configuration.md) document to get familiar with the syntax and available set of features.
 
 - If you use cloud solutions, such as GCP or AWS, you need to specify TypeInstance ID in the cluster Policy. This TypeInstance must hold a subscription which allows to provision a given service on the hyperscaler side. If TypeInstance doesn't exist, Engine will ignore this configuration. [Check if TypeInstance with a given ID exists](diagnostics.md#checking-if-typeinstance-exists) 
 

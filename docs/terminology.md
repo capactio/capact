@@ -1,3 +1,6 @@
+---
+sidebar_position: 2
+---
 # Terminology
 
 This document lists and explains all terms used through the Capact documentation.
@@ -35,27 +38,28 @@ Action, which handles execution of other Action. Runner is usually defined in fo
 
 There is also a built-in Runner, which is built-in into platform-specific Engine implementation. It is defined with only abstract Interface and doesn't have Implementation manifest.
 
-To learn more about runners, see the dedicated [`runner.md`](./runner.md) document.
+To learn more about runners, see the dedicated [`runner.md`](./architecture/runner.md) document.
 
 ## Components
 
 There are the following components in the system:
 
-- [OCF](./e2e-architecture.md#ocf)
-- [UI](./e2e-architecture.md#ui)
-- [CLI](./e2e-architecture.md#cli)
-- [Gateway](./e2e-architecture.md#gateway)
-- [Engine](./e2e-architecture.md#engine)
-- [OCH](./e2e-architecture.md#och)
-- [SDK](./e2e-architecture.md#sdk)
+- [OCF](./architecture/e2e-architecture.md#ocf)
+- [UI](./architecture/e2e-architecture.md#ui)
+- [CLI](./architecture/e2e-architecture.md#cli)
+- [Gateway](./architecture/e2e-architecture.md#gateway)
+- [Engine](./architecture/e2e-architecture.md#engine)
+- [OCH](./architecture/e2e-architecture.md#och)
+- [SDK](./architecture/e2e-architecture.md#sdk)
 
 ## Entities
 
 There are the following entities in the system:
 
-- [Attribute](../ocf-spec/0.0.1/README.md#attribute)
-- [Implementation](../ocf-spec/0.0.1/README.md#implementation)
-- [Interface](../ocf-spec/0.0.1/README.md#interface)
-- [RepoMetadata](../ocf-spec/0.0.1/README.md#repo-metadata)
-- [Type](../ocf-spec/0.0.1/README.md#type)
-- [Vendor](../ocf-spec/0.0.1/README.md#vendor)
+- [Attribute](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#attribute)
+- [Implementation](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#implementation)
+- [Interface](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#interface)
+- [RepoMetadata](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#repo-metadata)
+- [Type](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#type)
+- [Vendor](https://github.com/capactio/capact/tree/main/ocf-spec/0.0.1/README.md#vendor)
+
