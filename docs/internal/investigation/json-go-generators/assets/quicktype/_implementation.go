@@ -4,7 +4,7 @@
 //    implementation, err := UnmarshalImplementation(bytes)
 //    bytes, err = implementation.Marshal()
 
-package types
+package quicktype
 
 import "encoding/json"
 
