@@ -6,33 +6,35 @@ Here you can find the list of basic diagnostic actions that may help you look fo
 
 <!-- toc -->
 
-- [Engine](#engine)
-  * [Engine health](#engine-health)
-  * [Engine logs](#engine-logs)
-  * [Checking Action status](#checking-action-status)
-  * [Checking Action status message](#checking-action-status-message)
-  * [Checking rendered Action workflow](#checking-rendered-action-workflow)
-  * [Checking Action execution status](#checking-action-execution-status)
-  * [Checking cluster Policy](#checking-cluster-policy)
-- [Gateway](#gateway)
-  * [Gateway health](#gateway-health)
-  * [Gateway logs](#gateway-logs)
-- [Public OCH](#public-och)
-  * [Public OCH health](#public-och-health)
-  * [Public OCH logs](#public-och-logs)
-  * [OCH Populator logs](#och-populator-logs)
-  * [Checking if Public OCH is populated](#checking-if-public-och-is-populated)
-- [Local OCH](#local-och)
-  * [Local OCH health](#local-och-health)
-  * [Local OCH logs](#local-och-logs)
-  * [Checking if TypeInstance exists](#checking-if-typeinstance-exists)
-- [Pod restart](#pod-restart)
+- [Basic diagnostics](#basic-diagnostics)
+  - [Table of contents](#table-of-contents)
+  - [Engine](#engine)
+    - [Engine health](#engine-health)
+    - [Engine logs](#engine-logs)
+    - [Checking Action status](#checking-action-status)
+    - [Checking Action status message](#checking-action-status-message)
+    - [Checking rendered Action workflow](#checking-rendered-action-workflow)
+    - [Checking Action execution status](#checking-action-execution-status)
+    - [Checking cluster Policy](#checking-cluster-policy)
+  - [Gateway](#gateway)
+    - [Gateway health](#gateway-health)
+    - [Gateway logs](#gateway-logs)
+  - [Public OCH](#public-och)
+    - [Public OCH health](#public-och-health)
+    - [Public OCH logs](#public-och-logs)
+    - [OCH Populator logs](#och-populator-logs)
+    - [Checking if Public OCH is populated](#checking-if-public-och-is-populated)
+  - [Local OCH](#local-och)
+    - [Local OCH health](#local-och-health)
+    - [Local OCH logs](#local-och-logs)
+    - [Checking if TypeInstance exists](#checking-if-typeinstance-exists)
+  - [Pod restart](#pod-restart)
 
 <!-- tocstop -->
 
 ## Engine 
 
-This section describes [Engine](./../e2e-architecture.md#engine) related diagnostic.
+This section describes [Engine](../architecture/e2e-architecture.md#engine) related diagnostic.
 
 ### Engine health
 
@@ -118,7 +120,7 @@ kubectl get cm -n capact-system capact-engine-cluster-policy -oyaml
 
 ## Gateway
 
-This section describes [Gateway](./../e2e-architecture.md#gateway) related diagnostic.
+This section describes [Gateway](../architecture/e2e-architecture.md#gateway) related diagnostic.
 
 ### Gateway health
 
@@ -146,7 +148,7 @@ To check the logs since a given time, use the `--since-time` flag, for example:
 
 ## Public OCH
 
-This section describes Public [OCH](./../e2e-architecture.md#och) related diagnostic.
+This section describes Public [OCH](../architecture/e2e-architecture.md#och) related diagnostic.
 
 ### Public OCH health
 
@@ -228,7 +230,7 @@ To check the logs since a given time, use the `--since-time` flag, for example:
 
 ## Local OCH
 
-This section describes Local [OCH](./../e2e-architecture.md#och) related diagnostic.
+This section describes Local [OCH](../architecture/e2e-architecture.md#och) related diagnostic.
 
 ### Local OCH health
 

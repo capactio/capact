@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/cobra/doc"
 	"path/filepath"
 	"strings"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/cobra/doc"
 )
 
 const (
@@ -32,7 +33,6 @@ func NewDocs() *cobra.Command {
 		},
 	}
 }
-
 
 func frontmatterFilePrepender(filePath string) string {
 	fileName := filepath.Base(filePath)
