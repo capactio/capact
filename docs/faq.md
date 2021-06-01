@@ -1,4 +1,4 @@
-# Capact FAQ
+# Frequently asked questions
 
 <!-- toc -->
 
