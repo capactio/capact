@@ -1,20 +1,28 @@
 # Frequently asked questions
 
-<!-- toc -->
+<!-- vim-markdown-toc GFM -->
 
-- [How does it compare to](#how-does-it-compare-to)
-  * [Kubevela with Crossplane](#kubevela-with-crossplane)
-  * [Helm](#helm)
-  * [Operator Framework](#operator-framework)
-  * [Terraform, Ansible, Chef, etc.](#terraform-ansible-chef-etc)
-  * [Pulumi](#pulumi)
-- [Where did the name Capact come from](#where-did-the-name-capact-come-from)
+* [How do I start using Capact?](#how-do-i-start-using-capact)
+* [How do I troubleshoot Capact installation?](#how-do-i-troubleshoot-capact-installation)
+* [How Capact compares to...](#how-capact-compares-to)
+	* [Kubevela with Crossplane](#kubevela-with-crossplane)
+	* [Helm](#helm)
+	* [Operator Framework](#operator-framework)
+	* [Terraform, Ansible, Chef, etc.](#terraform-ansible-chef-etc)
+	* [Pulumi](#pulumi)
+* [What is the origin of name "Capact"?](#what-is-the-origin-of-name-capact)
 
-<!-- tocstop -->
+<!-- vim-markdown-toc -->
 
 ## How do I start using Capact?
 
-Have a look at our [tutorials](./tutorial/README.md). You can learn there how to deploy Capact on [AWS](./tutorial/capact-installation/aws-eks.md) and [GCP](./tutorial/capact-installation/gcp-gke.md). You can learn [How to use it](./tutorial/mattermost-installation/README.md) and how to create [a new content](./tutorial/content-creation/README.md) for Capact.
+You can learn there how to deploy Capact on [AWS](./installation/aws-eks.md) and [GCP](./installation/gcp-gke.md). You can learn [How to use it](./example/mattermost-installation.md) and how to create [a new content](./content-development/guide.md) for Capact.
+
+## How do I troubleshoot Capact installation?
+
+First checkout our [Common problems](./operation/common-problems.md) page where we describe most popular problems you may encounter. Next see our [Basic diagnostics](./operation/diagnostics.md) where you can learn how to gather more information about Capact and your actions status.
+
+If you found a bug and want to report it or if you want to contribute a fix or a feature please read our [Contribution guide](https://github.com/capactio/.github/blob/main/CONTRIBUTING.md)
 
 ## How Capact compares to...
 
@@ -28,13 +36,13 @@ There are two main differences between them:
 1. Kubevela uses declarative API to describe application, its configuration and dependencies. Capact is using workflow-based approach. We believe that it makes Capact more flexible, especially for day-2 operations.
     For example, with Capact you can create an advanced workflow for doing a backup. In the workflow first you pause an application, create volume snapshot, create DB snapshot, copy snapshot to S3 bucket and rotate the previous backups.
 
-1. Capact has interchangeable dependencies as a built-in feature. Dependencies are described using Interfaces. You can configure Implementation preferences for any Interface  with [Policies](./policy-configuration.md) to select Implementation based on a Interface while managing applications. For example, if your application depends on SQL database, for local development, you can prefer to use in-cluster PostgreSQL installed by Helm, but for production environment you prefer managed solution such as AWS RDS.
+1. Capact has interchangeable dependencies as a built-in feature. Dependencies are described using Interfaces. You can configure Implementation preferences for any Interface  with [Policies](./feature/policy-configuration.md) to select Implementation based on a Interface while managing applications. For example, if your application depends on SQL database, for local development, you can prefer to use in-cluster PostgreSQL installed by Helm, but for production environment you prefer managed solution such as AWS RDS.
 
 ### Helm
 
 Helm is a package manager for Kubernetes. Capact uses [Helm runner](https://github.com/capactio/capact/tree/main/cmd/helm-runner/README.md) to install applications in Kubernetes. Capact goes beyond Kubernetes and can deploy and manage diverse workloads like AWS RDS or EC2 instances. In a way, Capact extends Helm.
 
-For example, if you are deploying an application which is using a database you may use RDS PostgreSQL and pass required values to the Helm chart. We are doing it in many of our examples. See our [Productivity stack installation](./tutorial/productivity-stack-installation/README.md) tutorial for more details.
+Depending on set [Policies](./feature/policy-configuration.md) Capact can use different solutions. For example if you are deploying an application which is using a database you may use RDS PostgreSQL and pass required values to the Helm chart or use in-cluster PostgreSQL also installed by Helm. We do it in many of our examples. See our [Productivity stack installation](./example/productivity-stack-installation/0-intro.md) tutorial for more details.
 
 ### Operator Framework
 
@@ -44,11 +52,11 @@ Operator Framework is a toolkit to manage Kubernetes application. It makes it ea
 
 In general, all these tools are used to describe and enforce the desired state of the environment. As Capact is a layer above of the tools, they can be used as a part of a Capact workflow and even can be mixed. We already have [Terraform runner](https://github.com/capactio/capact/tree/main/cmd/terraform-runner/README.md). Ansible and other runners are also possible.
 
-For example, when running Capact manifests, you can deploy AWS RDS and EKS defined as Terraform modules. Then, using Helm runner, you can deploy Mattermost in your Kubernetes cluster. All this can be done in one OCF manifest. See our [Mattermost example](./tutorial/mattermost-installation/README.md) for more details.
+For example, when running Capact manifests, you can deploy AWS RDS and EKS defined as Terraform modules. Then, using Helm runner, you can deploy Mattermost in your Kubernetes cluster. All this can be done in one OCF manifest. See our [Mattermost example](./example/mattermost-installation.md) for more details.
 
 ### Pulumi
 
-Capact supports Terraform runner to use Terraform modules to manage your infrastucture. Pulumi is similar to Terraform, however, Instead of having its configuration language, you can use programming languages like Python, Go, JavaScript and others. There could be a Pulumi runner for Capact, which allows you to use Pulimi content in OCF manifests.
+Capact supports Terraform runner to use Terraform modules to manage your infrastucture. Pulumi is similar to Terraform, however, Instead of having its configuration language, you can use programming languages like Python, Go, JavaScript and others. There could be a Pulumi runner for Capact, which allows you to use Pulumi content in OCF manifests.
 
 ## What is the origin of name "Capact"?
 
