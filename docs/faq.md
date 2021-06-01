@@ -21,7 +21,7 @@ Have a look at our [tutorials](./tutorial/README.md). You can learn there how to
 ### Kubevela with Crossplane
 
 Kubevela is a tool to describe and ship applications. Kubevela's core is built on top of Crossplane and it uses Open Application Model (OAM). 
-There are many similarities between Capact and Kubevela. Both can deploy and manage diverse workload types such as container, databases, EC2 instances across hybrid environments. Both work as glue which can connect different tools like Terraform and Helm.
+There are many similarities between Capact and Kubevela. Both can deploy and manage diverse workload types such as container, databases, EC2 instances across hybrid environments. Both solutions work as glue which can connect different tools like Terraform and Helm.
 
 There are two main differences between them:
 
