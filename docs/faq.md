@@ -12,7 +12,7 @@
 
 <!-- tocstop -->
 
-## How do I start using Capact
+## How do I start using Capact?
 
 Have a look at our [tutorials](./tutorial/README.md). You can learn there how to deploy Capact on [AWS](./tutorial/capact-installation/aws-eks.md) and [GCP](./tutorial/capact-installation/gcp-gke.md). You can learn [How to use it](./tutorial/mattermost-installation/README.md) and how to create [a new content](./tutorial/content-creation/README.md) for Capact.
 
