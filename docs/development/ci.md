@@ -42,7 +42,7 @@ The following secrets are defined:
 
 ###  Pull request
 
-<p align="center"><img alt="ci-pr-build" src="./assets/ci-pr-build.svg" /></p>
+![PR build](./assets/ci-pr-build.svg)
 
 The job is defined in the [`pr-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/pr-build.yaml) file. It runs on pull requests created to the `main` branch.
 
@@ -57,7 +57,7 @@ Steps:
 
 > **NOTE:** To reduce the CI build time, we disable the `entry-tests`, `build-tools` and `integration-tests` jobs. They will be enabled when the project is open-sourced.
 
-<p align="center"><img alt="ci-default-branch-build" src="./assets/ci-default-branch-build.svg" /></p>
+![Default branch build](./assets/ci-default-branch-build.svg)
 
 The job is defined in the [`.github/workflows/branch-build.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/branch-build.yaml) file. It runs on every new commit pushed to the `main` branch but skips execution for files which do not affect the building process, e.g. documentation.
 
@@ -74,7 +74,7 @@ Steps:
 
 ###  Recreate a long-running cluster
 
-<p align="center"><img alt="ci-recreate-cluster" src="./assets/ci-recreate-cluster.svg" /></p>
+![Recreate cluster](./assets/ci-recreate-cluster.svg)
 
 The job is defined in the [`.github/workflows/recreate_cluster.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/recreate_cluster.yaml) file. It is executed on a manual trigger using the [`workflow_dispatch`](https://github.blog/changelog/2020-07-06-github-actions-manual-triggers-with-workflow_dispatch/) event. It uses already existing images available in the [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container) registry. As a result, you need to provide a git SHA from which the cluster should be recreated. Optionally, you can override the Docker image version used via the **DOCKER_TAG** parameter.
 
@@ -86,7 +86,7 @@ The `recreate` job checks if the certificate exists in the GCS bucket. If it doe
 
 ###  Execute integration tests on a long-running cluster
 
-<p align="center"><img alt="ci-integration-tests" src="./assets/ci-integration-tests.svg" /></p>
+![Integration tests](./assets/ci-integration-tests.svg)
 
 The job is defined in the [`.github/workflows/cluster_integration_tests.yaml`](https://github.com/capactio/capact/tree/main/.github/workflows/cluster_integration_tests.yaml) file. It runs periodically according to cron defined in the job definition. It executes integration tests using the `helm test` command.
 
