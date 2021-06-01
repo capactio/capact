@@ -33,7 +33,7 @@ To read the full documentation, navigate to the [capact.io/docs](https://capact.
 
 ## How do I troubleshoot Capact installation?
 
-First checkout our [Common problems](./operation/common-problems.md) page where we describe most popular problems you may encounter. Next see our [Basic diagnostics](./operation/diagnostics.md) where you can learn how to gather more information about Capact and your actions status.
+First, check out [a list of common problems](./operation/common-problems.md) that you may encounter. Next, read the [Basic diagnostics](./operation/diagnostics.md) guide and execute diagnostic actions which may help you finding bug causes.
 
 If you found a bug and want to report it or if you want to contribute a fix or a feature please read our [Contribution guide](https://github.com/capactio/.github/blob/main/CONTRIBUTING.md)
 
