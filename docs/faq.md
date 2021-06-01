@@ -41,7 +41,7 @@ If you found a bug, please report it or contribute a fix. To do so, read our [Co
 
 ### Kubevela with Crossplane
 
-Kubevela is a tool to describe and ship applications. Kubevela's core is built on top of Crossplane and it uses Open Application Model (OAM). 
+Kubevela is a tool to describe and ship applications. Kubevela's core is built on top of Crossplane and it uses Open Application Model (OAM). In Crossplane you define application resources with [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/).
 There are many similarities between Capact and Kubevela. Both can deploy and manage diverse workload types such as container, databases, EC2 instances across hybrid environments. Both solutions work as glue which can connect different tools like Terraform and Helm.
 
 There are two main differences between them:
