@@ -50,6 +50,6 @@ For example, when running Capact manifests, you can deploy AWS RDS and EKS defin
 
 Capact supports Terraform runner to use Terraform modules to manage your infrastucture. Pulumi is similar to Terraform, however, Instead of having its configuration language, you can use programming languages like Python, Go, JavaScript and others. There could be a Pulumi runner for Capact, which allows you to use Pulimi content in OCF manifests.
 
-## Where did the name Capact come from?
+## What is the origin of name "Capact"?
 
 Capact comes from the word capabilities. We wanted to use a noun which shows that this tool has infinite possibilities ;)
