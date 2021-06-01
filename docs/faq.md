@@ -16,7 +16,15 @@
 
 ## How do I start using Capact?
 
-You can learn there how to deploy Capact on [AWS](./installation/aws-eks.md) and [GCP](./installation/gcp-gke.md). You can learn [How to use it](./example/mattermost-installation.md) and how to create [a new content](./content-development/guide.md) for Capact.
+To get started with Capact, check out these links:
+
+- **Introduction:** To learn what is Capact, read the [Introduction](./introduction.md) document.
+- **Installation:** To learn how to install Capact, follow the [local](./installation/local.md), [AWS](./installation/aws-eks.md) and [GCP](./installation/gcp-gke.md) installation tutorials.
+- **Examples:** To read how to use Capact based on real life examples, see the [Mattermost installation](./example/mattermost-installation.md).
+- **Content Development**:  To learn how to create content for Capact, see the [Content development guide](./content-development/guide.md).
+- **Development:** To run Capact on your local machine and start contributing to Capact, read the [`development`](./development) documents.
+
+To read the full documentation, navigate to the [capact.io/docs](https://capact.io/docs) website.
 
 ## How do I troubleshoot Capact installation?
 
