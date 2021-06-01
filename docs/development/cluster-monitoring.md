@@ -36,12 +36,12 @@ This command adds a new context to your local kubeconfig file. The name of the c
 kubectl config get-contexts
 ```
 ```bash
-CURRENT   NAME                                                 CLUSTER                                              AUTHINFO                                             NAMESPACE
-          gke_projectvoltron_europe-west1_capact-dev        gke_projectvoltron_europe-west1_capact-dev        gke_projectvoltron_europe-west1_capact-dev        
-*         kind-kind-dev-capact                                kind-kind-dev-capact                                kind-kind-dev-capact
+CURRENT   NAME                                         CLUSTER                                      AUTHINFO                                     NAMESPACE
+*         gke_capact_europe-west1_capact-stage         gke_capact_europe-west1_capact-stage         gke_capact_europe-west1_capact-stage         capact-system
+          kind-kind-dev-capact                         kind-kind-dev-capact                         kind-kind-dev-capact                         local-scenario
 ```
 ```bash
-kubectl config use-context gke_projectvoltron_europe-west1_capact-dev
+kubectl config use-context gke_capact_europe-west1_capact-stage
 ```
 
 Now run the script to add your public IP address to the authorized control plane networks, so you will be able to make queries to the GKE API server:

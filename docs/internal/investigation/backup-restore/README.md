@@ -407,7 +407,7 @@ support for volume-snapshots but not yet complete. For now, we can use `restic` 
 ## Helm charts support 
 
 The idea is to pass helm release name and backup the whole release. There is
-a plugin for Helm2 and updated version for Helm3 https://github.com/Project-Voltron/velero-plugin-helm,
+a plugin for Helm2 and updated version for Helm3 https://github.com/capactio/velero-plugin-helm,
 but it looks like it still needs some fixes as it doesn't work.
 
 ## Summary

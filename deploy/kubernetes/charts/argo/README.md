@@ -24,7 +24,7 @@ To replace the Argo images, we followed these steps:
 
     1. Clone forked version of Argo workflows and checkout to `disable-global-artifacts-validation`:
         ```bash
-        git clone git@github.com:Project-Voltron/argo-workflows.git
+        git clone git@github.com:capactio/argo-workflows.git
         cd argo-workflows
         git checkout disable-global-artifacts-validation
         ```
@@ -45,4 +45,4 @@ To replace the Argo images, we followed these steps:
         docker push ghcr.io/capactio/argoproj/workflow-controller:v2.12.10-disable-global-artifacts-validation
         ```
     
-    > **NOTE:** More info can be found [here](https://github.com/Project-Voltron/argo-workflows/pull/1).
+    > **NOTE:** More info can be found [here](https://github.com/capactio/argo-workflows/pull/1).
