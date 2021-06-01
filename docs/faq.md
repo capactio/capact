@@ -32,7 +32,7 @@ There are two main differences between them:
 
 ### Helm
 
-Helm is a package manager for Kubernets. Capact is using [Helm runner](../cmd/helm-runner/README.md) to install applications in Kubernets. Capact goes beyond Kubernetes and can deploy and manage diverse workloads like AWS RDS or EC2 instances. In some way Capact extends a Helm.
+Helm is a package manager for Kubernetes. Capact uses [Helm runner](https://github.com/capactio/capact/tree/main/cmd/helm-runner/README.md) to install applications in Kubernetes. Capact goes beyond Kubernetes and can deploy and manage diverse workloads like AWS RDS or EC2 instances. In a way, Capact extends Helm.
 
 For example, if you are deploying an application which is using a database you may use RDS PostgreSQL and pass required values to the Helm chart. We are doing it in many of our examples. See our [Productivity stack installation](./tutorial/productivity-stack-installation/README.md) tutorial for more details.
 
