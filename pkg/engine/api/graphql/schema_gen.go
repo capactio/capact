@@ -800,7 +800,6 @@ type TypeInstanceReference {
   typeRef: ManifestReferenceWithOptionalRevision!
 }
 
-
 input TypeInstanceReferenceInput {
   id: ID!
   typeRef: ManifestReferenceInput!
