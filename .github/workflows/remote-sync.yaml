@@ -13,7 +13,7 @@ jobs:
         with:
           source_repo: "git@github.com:capactio/capact.git"
           source_branch: "refs/remotes/source/*"
-          destination_repo: "git@github.com:structsure/go-voltron.git"
+          destination_repo: "git@github.com:structsure/capact.git"
           destination_branch: "refs/heads/*"
           source_ssh_private_key: ${{ secrets.SOURCE_SSH_PRIVATE_KEY }}
           destination_ssh_private_key: ${{ secrets.DESTINATION_SSH_PRIVATE_KEY }}
