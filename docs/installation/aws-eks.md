@@ -6,16 +6,14 @@ This tutorial shows how to set up a private Amazon Elastic Kubernetes Service (A
 
 <!-- toc -->
 
-- [Amazon Web Services Installation](#amazon-web-services-installation)
-  - [Table of Contents](#table-of-contents)
-  - [Architecture](#architecture)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Access API server from the bastion host](#access-api-server-from-the-bastion-host)
-  - [Use Capact CLI from the bastion host](#use-capact-cli-from-the-bastion-host)
-  - [Connect to Capact Gateway from local machine](#connect-to-capact-gateway-from-local-machine)
-  - [Cleanup](#cleanup)
-  - [Limitations and bugs](#limitations-and-bugs)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Access API server from the bastion host](#access-api-server-from-the-bastion-host)
+- [Use Capact CLI from the bastion host](#use-capact-cli-from-the-bastion-host)
+- [Connect to Capact Gateway from local machine](#connect-to-capact-gateway-from-local-machine)
+- [Cleanup](#cleanup)
+- [Limitations and bugs](#limitations-and-bugs)
 
 <!-- tocstop -->
 

@@ -4,19 +4,17 @@
 
 <!-- toc -->
 
-- [Policy configuration](#policy-configuration)
-  - [Table of Contents](#table-of-contents)
-  - [Introduction](#introduction)
-  - [Syntax](#syntax)
-    - [Definition of rules for Interface](#definition-of-rules-for-interface)
-    - [Selecting Implementations](#selecting-implementations)
-    - [TypeInstance injection](#typeinstance-injection)
-    - [Example](#example)
-  - [Configuration](#configuration)
-    - [View current Policy](#view-current-policy)
-    - [Modify Policy using CLI](#modify-policy-using-cli)
-    - [Modify Policy with Capact installation/upgrade overrides](#modify-policy-with-capact-installationupgrade-overrides)
-    - [Reloading policy by Engine](#reloading-policy-by-engine)
+- [Introduction](#introduction)
+- [Syntax](#syntax)
+  * [Definition of rules for Interface](#definition-of-rules-for-interface)
+  * [Selecting Implementations](#selecting-implementations)
+  * [TypeInstance injection](#typeinstance-injection)
+  * [Example](#example)
+- [Configuration](#configuration)
+  * [View current Policy](#view-current-policy)
+  * [Modify Policy using CLI](#modify-policy-using-cli)
+  * [Modify Policy with Capact installation/upgrade overrides](#modify-policy-with-capact-installationupgrade-overrides)
+  * [Reloading policy by Engine](#reloading-policy-by-engine)
 
 <!-- tocstop -->
 

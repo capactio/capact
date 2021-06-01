@@ -8,14 +8,12 @@ This tutorial shows how to set up a private Google Kubernetes Engine (GKE) clust
 
 <!-- toc -->
 
-- [Google Cloud Platform Installation](#google-cloud-platform-installation)
-  - [Table of Contents](#table-of-contents)
-  - [Prerequisites](#prerequisites)
-  - [Instructions](#instructions)
-    - [Create GKE private cluster](#create-gke-private-cluster)
-    - [Install Capact](#install-capact)
-    - [Clean-up](#clean-up)
-    - [Change the source of OCH manifests](#change-the-source-of-och-manifests)
+- [Prerequisites](#prerequisites)
+- [Instructions](#instructions)
+  * [Create GKE private cluster](#create-gke-private-cluster)
+  * [Install Capact](#install-capact)
+  * [Clean-up](#clean-up)
+  * [Change the source of OCH manifests](#change-the-source-of-och-manifests)
 
 <!-- tocstop -->
 

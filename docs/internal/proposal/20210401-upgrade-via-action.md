@@ -261,7 +261,7 @@ The CLI executes the upgrade Action in the following way:
 1. Creates input TypeInstances based on the `capact-config.uses` relation.
 1. Creates input parameters from user input (via CLI flags).
 1. Generates the Action upgrade name.
-1. Gets the latest Helm chart based on `index.yaml` from the `capact-master-charts` repository.
+1. Gets the latest Helm chart based on `index.yaml` from the `capact-latest-charts` repository.
 1. Creates the `cap.interface.capactio.capact.upgrade` Action.
 1. Waits until the Action is ready to run.
 1. Executes the Action.
