@@ -38,7 +38,7 @@ For example, if you are deploying an application which is using a database you m
 
 ### Operator Framework
 
-Operator Framework is a toolkit to manage Kubernetes application. It makes it easy to do day1 and day2 operations. Capact being a glue connecting different tools could use Operators to manage Kubernets applications. For now, we are using only Helm, but in future we could also support Operator Framework.
+Operator Framework is a toolkit to manage Kubernetes application. It makes it easy to do day-1 and day-2 operations. Capact is a glue connecting different tools and it could use Operators to manage Kubernetes applications. For now, we have a runner that supports Helm from the Kubernetes ecosystem, but in future we could also support Operator Framework.
 
 ### Terraform, Ansible, Chef, etc.
 
