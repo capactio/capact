@@ -22,6 +22,7 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
+    export DOCKER_REPOSITORY=${OVERRIDE_DOCKER_REPOSITORY:-${DOCKER_REPOSITORY}}
     capact::install_upgrade::charts
 }
 
