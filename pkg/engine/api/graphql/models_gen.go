@@ -168,9 +168,19 @@ type PolicyRuleImplementationConstraintsInput struct {
 	Path *string `json:"path"`
 }
 
+type PolicyRuleInjectData struct {
+	TypeInstances   []*TypeInstanceReference `json:"typeInstances"`
+	AdditionalInput interface{}              `json:"additionalInput"`
+}
+
+type PolicyRuleInjectDataInput struct {
+	TypeInstances   []*TypeInstanceReferenceInput `json:"typeInstances"`
+	AdditionalInput *JSON                         `json:"additionalInput"`
+}
+
 type PolicyRuleInput struct {
 	ImplementationConstraints *PolicyRuleImplementationConstraintsInput `json:"implementationConstraints"`
-	InjectTypeInstances       []*TypeInstanceReferenceInput             `json:"injectTypeInstances"`
+	Inject                    *PolicyRuleInjectDataInput                `json:"inject"`
 }
 
 type RulesForInterface struct {

@@ -43,6 +43,7 @@ type TypeInstanceReference {
   typeRef: ManifestReferenceWithOptionalRevision!
 }
 
+
 input TypeInstanceReferenceInput {
   id: ID!
   typeRef: ManifestReferenceInput!
@@ -318,7 +319,12 @@ input RulesForInterfaceInput {
 
 input PolicyRuleInput {
   implementationConstraints: PolicyRuleImplementationConstraintsInput
-  injectTypeInstances: [TypeInstanceReferenceInput!]
+  inject: PolicyRuleInjectDataInput
+}
+
+input PolicyRuleInjectDataInput {
+  typeInstances: [TypeInstanceReferenceInput!]
+  additionalInput: JSON
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -349,7 +355,12 @@ type RulesForInterface {
 
 type PolicyRule {
   implementationConstraints: PolicyRuleImplementationConstraints
-  injectTypeInstances: [TypeInstanceReference!]
+  inject: PolicyRuleInjectData
+}
+
+type PolicyRuleInjectData {
+  typeInstances: [TypeInstanceReference!]
+  additionalInput: Any
 }
 
 type PolicyRuleImplementationConstraints {

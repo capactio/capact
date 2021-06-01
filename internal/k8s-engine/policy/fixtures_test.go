@@ -54,12 +54,14 @@ func fixModel() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},

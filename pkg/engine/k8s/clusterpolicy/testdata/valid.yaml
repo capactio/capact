@@ -13,11 +13,14 @@ rules:
               revision: "0.1.1"
             - path: "cap.core.attribute.workload.stateful"
               revision: "0.1.0"
-        injectTypeInstances:
-          - id: sample-uuid
-            typeRef:
-              path: "cap.type.gcp.auth.service-account"
-              revision: "0.1.0"
+        inject:
+          typeInstances:
+            - id: sample-uuid
+              typeRef:
+                path: "cap.type.gcp.auth.service-account"
+                revision: "0.1.0"
+          additionalInput:
+            snapshot: true
       - implementationConstraints:
           attributes:
             - path: cap.attribute.cloud.provider.aws

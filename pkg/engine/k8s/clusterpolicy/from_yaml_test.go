@@ -75,13 +75,18 @@ func fixValidPolicy() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "sample-uuid",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "sample-uuid",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
+							},
+							AdditionalInput: map[string]interface{}{
+								"snapshot": true,
 							},
 						},
 					},

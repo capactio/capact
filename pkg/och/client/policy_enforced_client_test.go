@@ -36,7 +36,9 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				},
 			}),
 			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{},
+				Inject: &clusterpolicy.InjectData{
+					TypeInstances: []clusterpolicy.TypeInstanceToInject{},
+				},
 			},
 			expectedTypeInstances: nil,
 		},
@@ -67,12 +69,14 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				},
 			}),
 			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path:     "cap.type.gcp.auth.service-account",
-							Revision: ptr.String("0.1.1"),
+				Inject: &clusterpolicy.InjectData{
+					TypeInstances: []clusterpolicy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path:     "cap.type.gcp.auth.service-account",
+								Revision: ptr.String("0.1.1"),
+							},
 						},
 					},
 				},
@@ -94,12 +98,14 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				},
 			}),
 			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path:     "cap.type.gcp.auth.service-account",
-							Revision: ptr.String("0.1.1"),
+				Inject: &clusterpolicy.InjectData{
+					TypeInstances: []clusterpolicy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path:     "cap.type.gcp.auth.service-account",
+								Revision: ptr.String("0.1.1"),
+							},
 						},
 					},
 				},
@@ -126,11 +132,13 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				},
 			}),
 			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path: "cap.type.gcp.auth.service-account",
+				Inject: &clusterpolicy.InjectData{
+					TypeInstances: []clusterpolicy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path: "cap.type.gcp.auth.service-account",
+							},
 						},
 					},
 				},

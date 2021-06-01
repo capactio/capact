@@ -1,6 +1,8 @@
 package policy
 
 import (
+	"encoding/json"
+
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -53,13 +55,24 @@ func (c *Converter) policyRulesToGraphQL(in []clusterpolicy.Rule) []*graphql.Pol
 				Attributes: c.manifestRefsToGraphQL(rule.ImplementationConstraints.Attributes),
 				Path:       rule.ImplementationConstraints.Path,
 			},
-			InjectTypeInstances: c.typeInstancesToInjectToGraphQL(rule.InjectTypeInstances),
+			Inject: c.policyInjectDataToGraphQL(rule.Inject),
 		}
 
 		gqlRules = append(gqlRules, gqlRule)
 	}
 
 	return gqlRules
+}
+
+func (c *Converter) policyInjectDataToGraphQL(data *clusterpolicy.InjectData) *graphql.PolicyRuleInjectData {
+	if data == nil {
+		return nil
+	}
+
+	return &graphql.PolicyRuleInjectData{
+		TypeInstances:   c.typeInstancesToInjectToGraphQL(data.TypeInstances),
+		AdditionalInput: data.AdditionalInput,
+	}
 }
 
 func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) []clusterpolicy.Rule {
@@ -77,13 +90,33 @@ func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) [
 
 		rule := clusterpolicy.Rule{
 			ImplementationConstraints: implConstraints,
-			InjectTypeInstances:       c.typeInstancesToInjectFromGraphQLInput(gqlRule.InjectTypeInstances),
+			Inject:                    c.policyInjectDataFromGraphQLInput(gqlRule.Inject),
 		}
 
 		rules = append(rules, rule)
 	}
 
 	return rules
+}
+
+func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleInjectDataInput) *clusterpolicy.InjectData {
+	if input == nil {
+		return nil
+	}
+
+	var additionalInput interface{}
+
+	if input.AdditionalInput != nil {
+		if err := json.Unmarshal([]byte(*input.AdditionalInput), &additionalInput); err != nil {
+			// TODO: handle the error better
+			additionalInput = nil
+		}
+	}
+
+	return &clusterpolicy.InjectData{
+		TypeInstances:   c.typeInstancesToInjectFromGraphQLInput(input.TypeInstances),
+		AdditionalInput: additionalInput,
+	}
 }
 
 func (c *Converter) manifestRefToGraphQL(in types.ManifestRef) *graphql.ManifestReferenceWithOptionalRevision {

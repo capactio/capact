@@ -27,7 +27,12 @@ type RulesForInterface struct {
 
 type Rule struct {
 	ImplementationConstraints ImplementationConstraints `json:"implementationConstraints,omitempty"`
-	InjectTypeInstances       []TypeInstanceToInject    `json:"injectTypeInstances,omitempty"`
+	Inject                    *InjectData               `json:"inject,omitempty"`
+}
+
+type InjectData struct {
+	TypeInstances   []TypeInstanceToInject `json:"typeInstances,omitempty"`
+	AdditionalInput interface{}            `json:"additionalInput,omitempty"`
 }
 
 type ImplementationConstraints struct {

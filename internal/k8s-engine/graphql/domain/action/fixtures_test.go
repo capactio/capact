@@ -427,7 +427,7 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 			},
 			StringData: map[string]string{
 				"parameters.json":  `{"param":"one"}`,
-				"user-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"injectTypeInstances":null}]}]}`,
+				"user-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":null}]}]}`,
 			},
 		},
 	}

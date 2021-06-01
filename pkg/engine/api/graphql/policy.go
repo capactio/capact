@@ -4,7 +4,7 @@ package graphql
 
 type PolicyRule struct {
 	ImplementationConstraints *PolicyRuleImplementationConstraints `json:"implementationConstraints,omitempty"`
-	InjectTypeInstances       []*TypeInstanceReference             `json:"injectTypeInstances,omitempty"`
+	Inject                    *PolicyRuleInjectData                `json:"inject,omitempty"`
 }
 
 type PolicyRuleImplementationConstraints struct {

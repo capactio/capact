@@ -63,12 +63,12 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 }
 
 func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) []types.InputTypeInstanceRef {
-	if len(policyRule.InjectTypeInstances) == 0 {
+	if policyRule.Inject == nil || len(policyRule.Inject.TypeInstances) == 0 {
 		return nil
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
-	for _, typeInstance := range policyRule.InjectTypeInstances {
+	for _, typeInstance := range policyRule.Inject.TypeInstances {
 		alias, found := e.findAliasForTypeInstance(typeInstance, implRev)
 		if !found {
 			// Implementation doesn't require such TypeInstance, skip injecting it

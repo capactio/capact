@@ -30,12 +30,14 @@ func fixGQLInput() graphql.PolicyInput {
 								},
 							},
 						},
-						InjectTypeInstances: []*graphql.TypeInstanceReferenceInput{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: &graphql.ManifestReferenceInput{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &graphql.PolicyRuleInjectDataInput{
+							TypeInstances: []*graphql.TypeInstanceReferenceInput{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: &graphql.ManifestReferenceInput{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
@@ -84,12 +86,14 @@ func fixGQL() graphql.Policy {
 								},
 							},
 						},
-						InjectTypeInstances: []*graphql.TypeInstanceReference{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &graphql.PolicyRuleInjectData{
+							TypeInstances: []*graphql.TypeInstanceReference{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: &graphql.ManifestReferenceWithOptionalRevision{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
@@ -139,12 +143,14 @@ func fixModel() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},

@@ -127,13 +127,18 @@ type ComplexityRoot struct {
 
 	PolicyRule struct {
 		ImplementationConstraints func(childComplexity int) int
-		InjectTypeInstances       func(childComplexity int) int
+		Inject                    func(childComplexity int) int
 	}
 
 	PolicyRuleImplementationConstraints struct {
 		Attributes func(childComplexity int) int
 		Path       func(childComplexity int) int
 		Requires   func(childComplexity int) int
+	}
+
+	PolicyRuleInjectData struct {
+		AdditionalInput func(childComplexity int) int
+		TypeInstances   func(childComplexity int) int
 	}
 
 	Query struct {
@@ -557,12 +562,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PolicyRule.ImplementationConstraints(childComplexity), true
 
-	case "PolicyRule.injectTypeInstances":
-		if e.complexity.PolicyRule.InjectTypeInstances == nil {
+	case "PolicyRule.inject":
+		if e.complexity.PolicyRule.Inject == nil {
 			break
 		}
 
-		return e.complexity.PolicyRule.InjectTypeInstances(childComplexity), true
+		return e.complexity.PolicyRule.Inject(childComplexity), true
 
 	case "PolicyRuleImplementationConstraints.attributes":
 		if e.complexity.PolicyRuleImplementationConstraints.Attributes == nil {
@@ -584,6 +589,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.PolicyRuleImplementationConstraints.Requires(childComplexity), true
+
+	case "PolicyRuleInjectData.additionalInput":
+		if e.complexity.PolicyRuleInjectData.AdditionalInput == nil {
+			break
+		}
+
+		return e.complexity.PolicyRuleInjectData.AdditionalInput(childComplexity), true
+
+	case "PolicyRuleInjectData.typeInstances":
+		if e.complexity.PolicyRuleInjectData.TypeInstances == nil {
+			break
+		}
+
+		return e.complexity.PolicyRuleInjectData.TypeInstances(childComplexity), true
 
 	case "Query.action":
 		if e.complexity.Query.Action == nil {
@@ -780,6 +799,7 @@ type TypeInstanceReference {
   id: ID!
   typeRef: ManifestReferenceWithOptionalRevision!
 }
+
 
 input TypeInstanceReferenceInput {
   id: ID!
@@ -1056,7 +1076,12 @@ input RulesForInterfaceInput {
 
 input PolicyRuleInput {
   implementationConstraints: PolicyRuleImplementationConstraintsInput
-  injectTypeInstances: [TypeInstanceReferenceInput!]
+  inject: PolicyRuleInjectDataInput
+}
+
+input PolicyRuleInjectDataInput {
+  typeInstances: [TypeInstanceReferenceInput!]
+  additionalInput: JSON
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -1087,7 +1112,12 @@ type RulesForInterface {
 
 type PolicyRule {
   implementationConstraints: PolicyRuleImplementationConstraints
-  injectTypeInstances: [TypeInstanceReference!]
+  inject: PolicyRuleInjectData
+}
+
+type PolicyRuleInjectData {
+  typeInstances: [TypeInstanceReference!]
+  additionalInput: Any
 }
 
 type PolicyRuleImplementationConstraints {
@@ -2994,7 +3024,7 @@ func (ec *executionContext) _PolicyRule_implementationConstraints(ctx context.Co
 	return ec.marshalOPolicyRuleImplementationConstraints2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleImplementationConstraints(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PolicyRule_injectTypeInstances(ctx context.Context, field graphql.CollectedField, obj *PolicyRule) (ret graphql.Marshaler) {
+func (ec *executionContext) _PolicyRule_inject(ctx context.Context, field graphql.CollectedField, obj *PolicyRule) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3012,7 +3042,7 @@ func (ec *executionContext) _PolicyRule_injectTypeInstances(ctx context.Context,
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.InjectTypeInstances, nil
+		return obj.Inject, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3021,9 +3051,9 @@ func (ec *executionContext) _PolicyRule_injectTypeInstances(ctx context.Context,
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*TypeInstanceReference)
+	res := resTmp.(*PolicyRuleInjectData)
 	fc.Result = res
-	return ec.marshalOTypeInstanceReference2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceReferenceᚄ(ctx, field.Selections, res)
+	return ec.marshalOPolicyRuleInjectData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleInjectData(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _PolicyRuleImplementationConstraints_requires(ctx context.Context, field graphql.CollectedField, obj *PolicyRuleImplementationConstraints) (ret graphql.Marshaler) {
@@ -3120,6 +3150,70 @@ func (ec *executionContext) _PolicyRuleImplementationConstraints_path(ctx contex
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalONodePath2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PolicyRuleInjectData_typeInstances(ctx context.Context, field graphql.CollectedField, obj *PolicyRuleInjectData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PolicyRuleInjectData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.TypeInstances, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.([]*TypeInstanceReference)
+	fc.Result = res
+	return ec.marshalOTypeInstanceReference2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceReferenceᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _PolicyRuleInjectData_additionalInput(ctx context.Context, field graphql.CollectedField, obj *PolicyRuleInjectData) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "PolicyRuleInjectData",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.AdditionalInput, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_action(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4934,6 +5028,34 @@ func (ec *executionContext) unmarshalInputPolicyRuleImplementationConstraintsInp
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputPolicyRuleInjectDataInput(ctx context.Context, obj interface{}) (PolicyRuleInjectDataInput, error) {
+	var it PolicyRuleInjectDataInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "typeInstances":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeInstances"))
+			it.TypeInstances, err = ec.unmarshalOTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceReferenceInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "additionalInput":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalInput"))
+			it.AdditionalInput, err = ec.unmarshalOJSON2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputPolicyRuleInput(ctx context.Context, obj interface{}) (PolicyRuleInput, error) {
 	var it PolicyRuleInput
 	var asMap = obj.(map[string]interface{})
@@ -4948,11 +5070,11 @@ func (ec *executionContext) unmarshalInputPolicyRuleInput(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "injectTypeInstances":
+		case "inject":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("injectTypeInstances"))
-			it.InjectTypeInstances, err = ec.unmarshalOTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐTypeInstanceReferenceInputᚄ(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inject"))
+			it.Inject, err = ec.unmarshalOPolicyRuleInjectDataInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleInjectDataInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5518,8 +5640,8 @@ func (ec *executionContext) _PolicyRule(ctx context.Context, sel ast.SelectionSe
 			out.Values[i] = graphql.MarshalString("PolicyRule")
 		case "implementationConstraints":
 			out.Values[i] = ec._PolicyRule_implementationConstraints(ctx, field, obj)
-		case "injectTypeInstances":
-			out.Values[i] = ec._PolicyRule_injectTypeInstances(ctx, field, obj)
+		case "inject":
+			out.Values[i] = ec._PolicyRule_inject(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5548,6 +5670,32 @@ func (ec *executionContext) _PolicyRuleImplementationConstraints(ctx context.Con
 			out.Values[i] = ec._PolicyRuleImplementationConstraints_attributes(ctx, field, obj)
 		case "path":
 			out.Values[i] = ec._PolicyRuleImplementationConstraints_path(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var policyRuleInjectDataImplementors = []string{"PolicyRuleInjectData"}
+
+func (ec *executionContext) _PolicyRuleInjectData(ctx context.Context, sel ast.SelectionSet, obj *PolicyRuleInjectData) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, policyRuleInjectDataImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PolicyRuleInjectData")
+		case "typeInstances":
+			out.Values[i] = ec._PolicyRuleInjectData_typeInstances(ctx, field, obj)
+		case "additionalInput":
+			out.Values[i] = ec._PolicyRuleInjectData_additionalInput(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7044,6 +7192,21 @@ func (ec *executionContext) unmarshalOPolicyRuleImplementationConstraintsInput2�
 		return nil, nil
 	}
 	res, err := ec.unmarshalInputPolicyRuleImplementationConstraintsInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOPolicyRuleInjectData2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleInjectData(ctx context.Context, sel ast.SelectionSet, v *PolicyRuleInjectData) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._PolicyRuleInjectData(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPolicyRuleInjectDataInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleInjectDataInput(ctx context.Context, v interface{}) (*PolicyRuleInjectDataInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPolicyRuleInjectDataInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 

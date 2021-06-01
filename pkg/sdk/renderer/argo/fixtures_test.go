@@ -30,12 +30,14 @@ func fixGCPClusterPolicy() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
@@ -108,12 +110,14 @@ func fixAWSClusterPolicy() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "517cf827-233c-4bf1-8fc9-48534424dd58",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.aws.auth.credentials",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "517cf827-233c-4bf1-8fc9-48534424dd58",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.aws.auth.credentials",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
@@ -158,12 +162,14 @@ func fixClusterPolicyForFallback() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "gcp-sa-uuid",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "gcp-sa-uuid",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
@@ -203,12 +209,14 @@ func fixTerraformPolicy() clusterpolicy.ClusterPolicy {
 						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
 							Path: ptr.String("cap.implementation.terraform.gcp.cloudsql.postgresql.install"),
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &clusterpolicy.InjectData{
+							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
