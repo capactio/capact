@@ -42,11 +42,9 @@ Operator Framework is a toolkit to manage Kubernetes application. It makes it ea
 
 ### Terraform, Ansible, Chef, etc.
 
-All this tools, of course, differ a lot, but in general, all are used to describe and enforce the desired state of the environment.
-Capact builds on top of them, these tools can be used as a part of a workflow and even can be mixed. We already have [Terraform](../cmd/terraform-runner/README.md) runner. Ansible and other runners are also possible.
+In general, all these tools are used to describe and enforce the desired state of the environment. As Capact is a layer above of the tools, they can be used as a part of a Capact workflow and even can be mixed. We already have [Terraform runner](https://github.com/capactio/capact/tree/main/cmd/terraform-runner/README.md). Ansible and other runners are also possible.
 
-For example, when running Capact manifests using Terraform, you can deploy AWS RDS and EKS. Then, using Helm, you can deploy Mattermost in your Kubernetes cluster. All this can be done in one manifest. See our [Mattermost example](./tutorial/mattermost-installation/README.md) for more details.
-
+For example, when running Capact manifests, you can deploy AWS RDS and EKS defined as Terraform modules. Then, using Helm runner, you can deploy Mattermost in your Kubernetes cluster. All this can be done in one OCF manifest. See our [Mattermost example](./tutorial/mattermost-installation/README.md) for more details.
 
 ### Pulumi
 
