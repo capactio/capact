@@ -52,4 +52,4 @@ Capact supports Terraform runner to use Terraform modules to manage your infrast
 
 ## What is the origin of name "Capact"?
 
-Capact comes from the word capabilities. We wanted to use a noun which shows that this tool has infinite possibilities ;)
+Capact is a combination of two shortened words: "**cap**ability" and "**act**ion". Capact makes it easy to manage system capabilities via running Actions. Once you start using Capact, the possibilities are virtually endless.
