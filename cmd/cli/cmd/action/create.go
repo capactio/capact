@@ -30,6 +30,7 @@ func NewCreate() *cobra.Command {
 						typeInstances:
 						  - name: "config"
 						    id: "ABCD-1234-EFGH-4567"`))
+	flags.StringVar(&opts.UserPolicyFilePath, "user-policy-from-file", "", "The one-time user policy used in the Action")
 	flags.BoolVarP(&opts.Interactive, "interactive", "i", false, "Toggle interactive prompting in the terminal")
 	flags.BoolVar(&opts.DryRun, "dry-run", false, "Specifies whether the Action performs server-side test without actually running the Action")
 	// TODO: add support for creating an action directly from an implementation

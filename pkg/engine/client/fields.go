@@ -1,6 +1,8 @@
 package client
 
-const actionFields = `
+import "fmt"
+
+var actionFields = fmt.Sprintf(`
     name
     createdAt
     input {
@@ -13,6 +15,9 @@ const actionFields = `
                 path
                 revision
             }
+        }
+        policy {
+            %s
         }
     }
     output {
@@ -68,7 +73,7 @@ const actionFields = `
             extra
         }
     }
-`
+`, policyFields)
 
 const policyFields = `
 	rules {

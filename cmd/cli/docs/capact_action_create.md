@@ -23,6 +23,7 @@ capact action create INTERFACE [flags]
                                           typeInstances:
                                             - name: "config"
                                               id: "ABCD-1234-EFGH-4567"
+      --user-policy-from-file string      The one-time user policy used in the Action
 ```
 
 ### Options inherited from parent commands

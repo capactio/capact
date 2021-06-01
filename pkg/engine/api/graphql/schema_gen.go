@@ -60,6 +60,7 @@ type ComplexityRoot struct {
 
 	ActionInput struct {
 		Parameters    func(childComplexity int) int
+		Policy        func(childComplexity int) int
 		TypeInstances func(childComplexity int) int
 	}
 
@@ -282,6 +283,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActionInput.Parameters(childComplexity), true
+
+	case "ActionInput.policy":
+		if e.complexity.ActionInput.Policy == nil {
+			break
+		}
+
+		return e.complexity.ActionInput.Policy(childComplexity), true
 
 	case "ActionInput.typeInstances":
 		if e.complexity.ActionInput.TypeInstances == nil {
@@ -832,6 +840,11 @@ input ActionInputData {
   Required and optional TypeInstances for Action
   """
   typeInstances: [InputTypeInstanceData!]
+
+  """
+  Contains the optional one-time user policy, which is merged with other Capact policies
+  """
+  policy: PolicyInput
 }
 
 """
@@ -941,6 +954,12 @@ type ActionInput {
   """
   parameters: Any
   typeInstances: [InputTypeInstanceDetails!]!
+
+  """
+  Contains the one-time user policy, which is merged with other Capact policies
+  """
+  policy: Policy
+
 }
 
 """
@@ -1793,6 +1812,38 @@ func (ec *executionContext) _ActionInput_typeInstances(ctx context.Context, fiel
 	res := resTmp.([]*InputTypeInstanceDetails)
 	fc.Result = res
 	return ec.marshalNInputTypeInstanceDetails2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceDetailsᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ActionInput_policy(ctx context.Context, field graphql.CollectedField, obj *ActionInput) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "ActionInput",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Policy, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*Policy)
+	fc.Result = res
+	return ec.marshalOPolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicy(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ActionOutput_typeInstances(ctx context.Context, field graphql.CollectedField, obj *ActionOutput) (ret graphql.Marshaler) {
@@ -4737,6 +4788,14 @@ func (ec *executionContext) unmarshalInputActionInputData(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
+		case "policy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("policy"))
+			it.Policy, err = ec.unmarshalOPolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -5072,6 +5131,8 @@ func (ec *executionContext) _ActionInput(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "policy":
+			out.Values[i] = ec._ActionInput_policy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6954,6 +7015,21 @@ func (ec *executionContext) marshalONodePath2ᚖstring(ctx context.Context, sel 
 		return graphql.Null
 	}
 	return graphql.MarshalString(*v)
+}
+
+func (ec *executionContext) marshalOPolicy2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicy(ctx context.Context, sel ast.SelectionSet, v *Policy) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Policy(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyInput(ctx context.Context, v interface{}) (*PolicyInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPolicyInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOPolicyRuleImplementationConstraints2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyRuleImplementationConstraints(ctx context.Context, sel ast.SelectionSet, v *PolicyRuleImplementationConstraints) graphql.Marshaler {

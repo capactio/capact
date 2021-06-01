@@ -1,6 +1,8 @@
 package action
 
 import (
+	"fmt"
+
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"io/ioutil"
@@ -21,9 +23,11 @@ type CreateOptions struct {
 
 	ParametersFilePath    string
 	TypeInstancesFilePath string
+	UserPolicyFilePath    string
 
 	parameters    *gqlengine.JSON
 	typeInstances []*gqlengine.InputTypeInstanceData
+	policy        *gqlengine.PolicyInput
 }
 
 func (c *CreateOptions) SetDefaults() {
@@ -37,11 +41,16 @@ func (c *CreateOptions) SetDefaults() {
 }
 
 func (c *CreateOptions) Resolve() error {
+	if err := c.resolveFromFiles(); err != nil {
+		return err
+	}
+
 	if c.Interactive {
 		return c.resolveWithSurvey()
 	}
 
-	return c.resolveWithDefaults()
+	c.SetDefaults()
+	return nil
 }
 
 func (c *CreateOptions) resolveWithSurvey() error {
@@ -73,12 +82,18 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		}
 		c.typeInstances = ti
 	}
+
+	if c.UserPolicyFilePath == "" {
+		policy, err := askForUserPolicy(c.InterfacePath)
+		if err != nil {
+			return err
+		}
+		c.policy = policy
+	}
 	return nil
 }
 
-func (c *CreateOptions) resolveWithDefaults() error {
-	c.SetDefaults()
-
+func (c *CreateOptions) resolveFromFiles() error {
 	if c.ParametersFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.ParametersFilePath)
 		if err != nil {
@@ -102,6 +117,17 @@ func (c *CreateOptions) resolveWithDefaults() error {
 		}
 	}
 
+	if c.UserPolicyFilePath != "" {
+		rawInput, err := ioutil.ReadFile(c.UserPolicyFilePath)
+		if err != nil {
+			return err
+		}
+		c.policy, err = toUserPolicy(rawInput)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -109,6 +135,7 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,
 		TypeInstances: c.typeInstances,
+		Policy:        c.policy,
 	}
 }
 
@@ -162,6 +189,38 @@ func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
 	return toTypeInstance([]byte(editor))
 }
 
+func askForUserPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
+	providePolicy := false
+	askAboutPolicy := &survey.Confirm{Message: "Do you want to provide one-time user policy?", Default: false}
+	if err := survey.AskOne(askAboutPolicy, &providePolicy); err != nil {
+		return nil, err
+	}
+
+	if !providePolicy {
+		return nil, nil
+	}
+
+	editor := ""
+	prompt := &survey.Editor{
+		Message: "Please type one-time user policy in YAML format",
+		Default: heredoc.Doc(fmt.Sprintf(`
+      rules:
+        - interface:
+            path: "%s"
+          oneOf:
+            - implementationConstraints:
+                path: ""
+    `, ifacePath)),
+		AppendDefault: true,
+		HideDefault:   true,
+	}
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+		return nil, err
+	}
+
+	return toUserPolicy([]byte(editor))
+}
+
 func toTypeInstance(rawInput []byte) ([]*gqlengine.InputTypeInstanceData, error) {
 	var resp struct {
 		TypeInstances []*gqlengine.InputTypeInstanceData `json:"typeInstances"`
@@ -182,4 +241,14 @@ func toInputParameters(rawInput []byte) (*gqlengine.JSON, error) {
 
 	gqlJSON := gqlengine.JSON(converted)
 	return &gqlJSON, nil
+}
+
+func toUserPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {
+	policy := &gqlengine.PolicyInput{}
+
+	if err := yaml.Unmarshal(rawInput, policy); err != nil {
+		return nil, err
+	}
+
+	return policy, nil
 }

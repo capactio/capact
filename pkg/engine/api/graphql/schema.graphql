@@ -102,6 +102,11 @@ input ActionInputData {
   Required and optional TypeInstances for Action
   """
   typeInstances: [InputTypeInstanceData!]
+
+  """
+  Contains the optional one-time user policy, which is merged with other Capact policies
+  """
+  policy: PolicyInput
 }
 
 """
@@ -211,6 +216,12 @@ type ActionInput {
   """
   parameters: Any
   typeInstances: [InputTypeInstanceDetails!]!
+
+  """
+  Contains the one-time user policy, which is merged with other Capact policies
+  """
+  policy: Policy
+
 }
 
 """

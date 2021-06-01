@@ -108,6 +108,19 @@ spec:
                     required:
                     - secretRef
                     type: object
+                  policy:
+                    description: Describes the one-time User policy.
+                    properties:
+                      secretRef:
+                        description: 'Required field: - Secret.Data["parameters.json"] - input parameters data in JSON format'
+                        properties:
+                          name:
+                            description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names TODO: Add other useful fields. apiVersion, kind, uid?'
+                            type: string
+                        type: object
+                    required:
+                    - secretRef
+                    type: object
                   typeInstances:
                     description: TypeInstances contains input TypeInstances passed for Action rendering. It contains both required and optional input TypeInstances.
                     items:
@@ -329,6 +342,10 @@ spec:
                           - typeReference
                           type: object
                         type: array
+                      userPolicy:
+                        description: Parameters holds value of the User policy.
+                        type: object
+                        x-kubernetes-preserve-unknown-fields: true
                     type: object
                   typeInstancesToLock:
                     description: TypeInstancesToLock contains IDs of TypeInstance, which have to be locked before running the Action.

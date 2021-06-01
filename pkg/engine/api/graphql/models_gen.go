@@ -62,6 +62,8 @@ type ActionInput struct {
 	// Validated against JSON schema from Interface
 	Parameters    interface{}                 `json:"parameters"`
 	TypeInstances []*InputTypeInstanceDetails `json:"typeInstances"`
+	// Contains the one-time user policy, which is merged with other Capact policies
+	Policy *Policy `json:"policy"`
 }
 
 // Client input that modifies input of a given Action
@@ -70,6 +72,8 @@ type ActionInputData struct {
 	Parameters *JSON `json:"parameters"`
 	// Required and optional TypeInstances for Action
 	TypeInstances []*InputTypeInstanceData `json:"typeInstances"`
+	// Contains the optional one-time user policy, which is merged with other Capact policies
+	Policy *PolicyInput `json:"policy"`
 }
 
 // Describes output of an Action

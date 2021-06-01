@@ -346,6 +346,22 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 					ID:   "in-id2",
 				},
 			},
+			Policy: &graphql.PolicyInput{
+				Rules: []*graphql.RulesForInterfaceInput{
+					{
+						Interface: &graphql.ManifestReferenceInput{
+							Path: "cap.interface.dummy",
+						},
+						OneOf: []*graphql.PolicyRuleInput{
+							{
+								ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
+									Path: ptr.String("cap.implementation.dummy"),
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 		DryRun: ptr.Bool(true),
 		ActionRef: &graphql.ManifestReferenceInput{
@@ -389,6 +405,11 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 							ID:   "in-id2",
 						},
 					},
+					Policy: &v1alpha1.UserPolicy{
+						SecretRef: corev1.LocalObjectReference{
+							Name: name,
+						},
+					},
 				},
 				AdvancedRendering: &v1alpha1.AdvancedRendering{
 					Enabled: true,
@@ -405,7 +426,8 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				Name: name,
 			},
 			StringData: map[string]string{
-				"parameters.json": `{"param":"one"}`,
+				"parameters.json":  `{"param":"one"}`,
+				"user-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"injectTypeInstances":null}]}]}`,
 			},
 		},
 	}

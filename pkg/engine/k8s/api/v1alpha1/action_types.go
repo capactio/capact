@@ -143,6 +143,17 @@ type ActionInput struct {
 	// Parameters holds details about Action input parameters.
 	// +optional
 	Parameters *InputParameters `json:"parameters,omitempty"`
+
+	// Describes the one-time User policy.
+	// +optional
+	Policy *UserPolicy `json:"policy,omitempty"`
+}
+
+type UserPolicy struct {
+
+	// Required field:
+	// - Secret.Data["parameters.json"] - input parameters data in JSON format
+	SecretRef v1.LocalObjectReference `json:"secretRef"`
 }
 
 // InputParameters holds details about Action input parameters.
@@ -286,6 +297,17 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
+func (r *RenderingStatus) SetUserPolicy(policy []byte) {
+	if policy == nil {
+		return
+	}
+
+	if r.Input == nil {
+		r.Input = &ResolvedActionInput{}
+	}
+	r.Input.SetUserPolicy(policy)
+}
+
 func (r *RenderingStatus) SetTypeInstancesToLock(typeInstances []string) {
 	r.TypeInstancesToLock = typeInstances
 }
@@ -301,10 +323,19 @@ type ResolvedActionInput struct {
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
 	Parameters *runtime.RawExtension `json:"parameters,omitempty"`
+
+	// Parameters holds value of the User policy.
+	// +optional
+	// +kubebuilder:pruning:PreserveUnknownFields
+	UserPolicy *runtime.RawExtension `json:"userPolicy,omitempty"`
 }
 
 func (r *ResolvedActionInput) SetParameters(params []byte) {
 	r.Parameters = &runtime.RawExtension{Raw: params}
+}
+
+func (r *ResolvedActionInput) SetUserPolicy(params []byte) {
+	r.UserPolicy = &runtime.RawExtension{Raw: params}
 }
 
 // InputTypeInstanceDetails describes input TypeInstance.

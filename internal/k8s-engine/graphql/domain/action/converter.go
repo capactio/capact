@@ -14,9 +14,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-const ParametersSecretDataKey = "parameters.json"
-const LatestRevision = "latest"
-const secretKind = "Secret"
+const (
+	ParametersSecretDataKey = "parameters.json"
+	UserPolicySecretDataKey = "user-policy.json"
+	LatestRevision          = "latest"
+	secretKind              = "Secret"
+)
 
 type Converter struct{}
 
@@ -39,7 +42,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 		}
 	}
 
-	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, in.Name)
+	inputParamsSecret, _ := c.inputParamsFromGraphQL(in.Input, in.Name)
 	var inputParamsSecretName *string
 	if inputParamsSecret != nil {
 		inputParamsSecretName = &in.Name
@@ -164,9 +167,22 @@ func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.Adv
 	}
 }
 
-func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) *v1.Secret {
+func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) (*v1.Secret, error) {
 	if in == nil || in.Parameters == nil {
-		return nil
+		return nil, nil
+	}
+
+	data := map[string]string{
+		ParametersSecretDataKey: string(*in.Parameters),
+	}
+
+	if in.Policy != nil {
+		policyData, err := json.Marshal(in.Policy)
+		if err != nil {
+			return nil, errors.Wrap(err, "while marshaling policy to JSON")
+		}
+
+		data[UserPolicySecretDataKey] = string(policyData)
 	}
 
 	return &v1.Secret{
@@ -177,10 +193,8 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		StringData: map[string]string{
-			ParametersSecretDataKey: string(*in.Parameters),
-		},
-	}
+		StringData: data,
+	}, nil
 }
 
 func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *graphql.ActionInput {
@@ -205,6 +219,10 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 			})
 		}
 		result.TypeInstances = gqlTypeInstances
+	}
+
+	if in.UserPolicy != nil {
+		result.Parameters = c.runtimeExtensionToJSONRawMessage(in.UserPolicy)
 	}
 
 	return result
@@ -252,6 +270,12 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 
 	if in.Parameters != nil && inputParamsSecretName != nil {
 		actionInput.Parameters = &v1alpha1.InputParameters{
+			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
+		}
+	}
+
+	if in.Policy != nil && inputParamsSecretName != nil {
+		actionInput.Policy = &v1alpha1.UserPolicy{
 			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
 		}
 	}
