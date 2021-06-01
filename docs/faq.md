@@ -26,7 +26,7 @@ There are many similarities between Capact and Kubevela. Both can deploy and man
 There are two main differences between them:
 
 1. Kubevela uses declarative API to describe application, its configuration and dependencies. Capact is using workflow-based approach. We believe that it makes Capact more flexible, especially for day-2 operations.
-For example, you may create an advanced workflow for taking a backup. Where you first pause an application, create volume snapshot, create DB snapshot, copy snapshot to s3 bucket and rotate the previous backups.
+    For example, with Capact you can create an advanced workflow for doing a backup. In the workflow first you pause an application, create volume snapshot, create DB snapshot, copy snapshot to S3 bucket and rotate the previous backups.
 
 1. Capact is using [Policies](./policy-configuration.md) to select implementation when deploying and managing application. For example, you may use SQL database in your application. For local development, you may choose to use PostgreSQL installed by Helm, but for production you will be using RDS. This again gives you more flexibility.
 
