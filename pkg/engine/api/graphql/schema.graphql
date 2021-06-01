@@ -107,7 +107,7 @@ input ActionInputData {
   """
   Contains the optional one-time user policy, which is merged with other Capact policies
   """
-  policy: PolicyInput
+  userPolicy: PolicyInput
 }
 
 """
@@ -221,8 +221,7 @@ type ActionInput {
   """
   Contains the one-time user policy, which is merged with other Capact policies
   """
-  policy: Policy
-
+  userPolicy: Policy
 }
 
 """

@@ -23,10 +23,11 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	c := action.NewConverter()
 
 	// when
-	actualModel := c.FromGraphQLInput(gqlInput)
+	actualModel, err := c.FromGraphQLInput(gqlInput)
+	require.NoError(t, err)
 
 	// then
-	assert.Equal(t, expectedModel, actualModel)
+	assert.Equal(t, expectedModel, *actualModel)
 }
 
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {

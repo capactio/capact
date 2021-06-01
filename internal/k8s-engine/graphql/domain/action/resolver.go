@@ -10,7 +10,7 @@ import (
 )
 
 type actionConverter interface {
-	FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate
+	FromGraphQLInput(in graphql.ActionDetailsInput) (*model.ActionToCreateOrUpdate, error)
 	ToGraphQL(in v1alpha1.Action) graphql.Action
 	FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error)
 	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
@@ -78,9 +78,12 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.New("input cannot be empty")
 	}
 
-	actionToCreate := r.conv.FromGraphQLInput(*in)
+	actionToCreate, err := r.conv.FromGraphQLInput(*in)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
+	}
 
-	out, err := r.svc.Create(ctx, actionToCreate)
+	out, err := r.svc.Create(ctx, *actionToCreate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating Action")
 	}
@@ -132,9 +135,12 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 }
 
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
-	actionToUpdate := r.conv.FromGraphQLInput(in)
+	actionToUpdate, err := r.conv.FromGraphQLInput(in)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
+	}
 
-	out, err := r.svc.Update(ctx, actionToUpdate)
+	out, err := r.svc.Update(ctx, *actionToUpdate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while updating Action")
 	}

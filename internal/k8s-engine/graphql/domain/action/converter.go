@@ -27,7 +27,7 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate {
+func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.ActionToCreateOrUpdate, error) {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
 		advancedRendering = &v1alpha1.AdvancedRendering{
@@ -42,7 +42,11 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 		}
 	}
 
-	inputParamsSecret, _ := c.inputParamsFromGraphQL(in.Input, in.Name)
+	inputParamsSecret, err := c.inputParamsFromGraphQL(in.Input, in.Name)
+	if err != nil {
+		return nil, err
+	}
+
 	var inputParamsSecretName *string
 	if inputParamsSecret != nil {
 		inputParamsSecretName = &in.Name
@@ -56,7 +60,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 		}
 	}
 
-	return model.ActionToCreateOrUpdate{
+	return &model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       v1alpha1.ActionKind,
@@ -74,7 +78,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 			},
 		},
 		InputParamsSecret: inputParamsSecret,
-	}
+	}, nil
 }
 
 func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
@@ -176,8 +180,8 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		ParametersSecretDataKey: string(*in.Parameters),
 	}
 
-	if in.Policy != nil {
-		policyData, err := json.Marshal(in.Policy)
+	if in.UserPolicy != nil {
+		policyData, err := json.Marshal(in.UserPolicy)
 		if err != nil {
 			return nil, errors.Wrap(err, "while marshaling policy to JSON")
 		}
@@ -274,8 +278,8 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 		}
 	}
 
-	if in.Policy != nil && inputParamsSecretName != nil {
-		actionInput.Policy = &v1alpha1.UserPolicy{
+	if in.UserPolicy != nil && inputParamsSecretName != nil {
+		actionInput.UserPolicy = &v1alpha1.UserPolicy{
 			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
 		}
 	}

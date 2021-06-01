@@ -368,12 +368,12 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 }
 
 func (a *ActionService) getUserPolicyData(ctx context.Context, action *v1alpha1.Action) (*clusterpolicy.ClusterPolicy, []byte, error) {
-	if action.Spec.Input == nil || action.Spec.Input.Policy == nil {
+	if action.Spec.Input == nil || action.Spec.Input.UserPolicy == nil {
 		return nil, nil, nil
 	}
 
 	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: action.Spec.Input.Policy.SecretRef.Name, Namespace: action.Namespace}
+	key := client.ObjectKey{Name: action.Spec.Input.UserPolicy.SecretRef.Name, Namespace: action.Namespace}
 	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
 		return nil, nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}

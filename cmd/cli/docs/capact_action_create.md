@@ -18,12 +18,12 @@ capact action create INTERFACE [flags]
   -i, --interactive                       Toggle interactive prompting in the terminal
       --name string                       The Action name. By default, a random name is generated.
   -n, --namespace string                  Kubernetes namespace where the Action is to be created
-      --parameters-from-file string       The Action input parameters in YAML format
-      --type-instances-from-file string   The Action input TypeInstances in YAML format. Example:
+      --parameters-from-file string       Path to the Action input parameters file in YAML format
+      --type-instances-from-file string   Path to the Action input TypeInstances file in YAML format. Example:
                                           typeInstances:
                                             - name: "config"
                                               id: "ABCD-1234-EFGH-4567"
-      --user-policy-from-file string      The one-time user policy used in the Action
+      --user-policy-from-file string      Path to the one-time user policy file in YAML format
 ```
 
 ### Options inherited from parent commands

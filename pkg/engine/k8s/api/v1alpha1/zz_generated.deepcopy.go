@@ -53,8 +53,8 @@ func (in *ActionInput) DeepCopyInto(out *ActionInput) {
 		*out = new(InputParameters)
 		**out = **in
 	}
-	if in.Policy != nil {
-		in, out := &in.Policy, &out.Policy
+	if in.UserPolicy != nil {
+		in, out := &in.UserPolicy, &out.UserPolicy
 		*out = new(UserPolicy)
 		**out = **in
 	}

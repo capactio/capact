@@ -135,7 +135,7 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,
 		TypeInstances: c.typeInstances,
-		Policy:        c.policy,
+		UserPolicy:    c.policy,
 	}
 }
 
