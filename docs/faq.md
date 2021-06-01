@@ -1,4 +1,9 @@
-# Frequently asked questions
+---
+sidebar_label: "FAQ"
+sidebar_position: 3
+---
+
+# Frequently Asked Questions
 
 <!-- vim-markdown-toc GFM -->
 
