@@ -16,14 +16,14 @@ You need to have the following tools installed on your operating system:
 - [`jq`](https://stedolan.github.io/jq/download/) - most distributions have this in repositories
 - [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
 
-You need to configure the `gcloud` CLI, so it's able to access `projectvoltron` project on GCP. You can follow [this](https://cloud.google.com/sdk/docs/authorizing) guide to configure it.
+You need to configure the `gcloud` CLI, so it's able to access `capact` project on GCP. You can follow [this](https://cloud.google.com/sdk/docs/authorizing) guide to configure it.
 
 ## Setup access to GKE cluster
 
 Set the following environment variables in your shell:
 ```bash
 export REGION=europe-west1
-export CLUSTER_NAME=capact-dev
+export CLUSTER_NAME=capact-stage
 ```
 
 Get the kubeconfig for the long-running Capact GKE cluster:
@@ -36,12 +36,12 @@ This command adds a new context to your local kubeconfig file. The name of the c
 kubectl config get-contexts
 ```
 ```bash
-CURRENT   NAME                                                 CLUSTER                                              AUTHINFO                                             NAMESPACE
-          gke_projectvoltron_europe-west1_capact-dev        gke_projectvoltron_europe-west1_capact-dev        gke_projectvoltron_europe-west1_capact-dev        
-*         kind-kind-dev-capact                                kind-kind-dev-capact                                kind-kind-dev-capact
+CURRENT   NAME                                         CLUSTER                                      AUTHINFO                                     NAMESPACE
+*         gke_capact_europe-west1_capact-stage         gke_capact_europe-west1_capact-stage         gke_capact_europe-west1_capact-stage         capact-system
+          kind-kind-dev-capact                         kind-kind-dev-capact                         kind-kind-dev-capact                         local-scenario
 ```
 ```bash
-kubectl config use-context gke_projectvoltron_europe-west1_capact-dev
+kubectl config use-context gke_capact_europe-west1_capact-stage
 ```
 
 Now run the script to add your public IP address to the authorized control plane networks, so you will be able to make queries to the GKE API server:

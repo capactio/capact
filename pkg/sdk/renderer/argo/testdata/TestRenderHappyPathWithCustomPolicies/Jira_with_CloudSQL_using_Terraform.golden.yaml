@@ -129,7 +129,7 @@ args:
                   command: "apply"
                   module:
                     name: "cloudsql"
-                    source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.gcp.cloudsql.postgresql.install/0.1.0/cloudsql.tgz"
+                    source: "https://storage.googleapis.com/capactio-terraform-modules/terraform.gcp.cloudsql.postgresql.install/0.1.0/cloudsql.tgz"
                   env:
                   - GOOGLE_PROJECT=<@ gcp.project_id @>
                   - GOOGLE_APPLICATION_CREDENTIALS=/additional

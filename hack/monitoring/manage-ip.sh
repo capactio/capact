@@ -7,8 +7,9 @@ set -o nounset # treat unset variables as an error and exit immediately.
 set -o errexit # exit immediately when a command fails.
 set -E         # needs to be set if we want the ERR trap
 
-CLUSTER_NAME=${CLUSTER_NAME:-capact-dev}
+CLUSTER_NAME=${CLUSTER_NAME:-capact-stage}
 REGION=${REGION:-europe-west1}
+GCP_PROJECT=${GCP_PROJECT:-capact}
 
 usage() {
   echo "usage: manage-ip.sh add|remove"
@@ -23,7 +24,7 @@ ip::add() {
   local authorized
 
   added_ip="$(ip::get)/32"
-  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
+  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" --project "${GCP_PROJECT}"\
     | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock')
   authorized=$(echo "${authorized}" \
     | tr '\n' ',' \
@@ -33,7 +34,7 @@ ip::add() {
 
   echo "Setting authorized networks to ${authorized}..."
 
-  gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" \
+  gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --project "${GCP_PROJECT}"\
     --enable-master-authorized-networks \
     --master-authorized-networks "${authorized}"
 }
@@ -44,7 +45,7 @@ ip::remove() {
 
   removed_ip="$(ip::get)/32"
 
-  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" \
+  authorized=$(gcloud container clusters describe "${CLUSTER_NAME}" --zone "${REGION}" --project "${GCP_PROJECT}"\
     | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks[*].cidrBlock' \
     | grep -v "${removed_ip}" || true)
   authorized=$(echo "${authorized}" \
@@ -54,11 +55,11 @@ ip::remove() {
 
   if [ -z "${authorized}" ]; then
     echo "Setting authorized networks to empty list..."
-    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --no-enable-master-authorized-networks
-    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --enable-master-authorized-networks
+    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --project "${GCP_PROJECT}" --no-enable-master-authorized-networks
+    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --project "${GCP_PROJECT}" --enable-master-authorized-networks
   else
     echo "Setting authorized networks to ${authorized}..."
-    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" \
+    gcloud container clusters update "${CLUSTER_NAME}" --region "${REGION}" --project "${GCP_PROJECT}"\
       --enable-master-authorized-networks \
       --master-authorized-networks "${authorized}"
   fi

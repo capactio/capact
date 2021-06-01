@@ -12,7 +12,7 @@ This directory contains source Terraform module which is used in the `cap.implem
 
 1. Set environmental variables:
    ```bash
-   export BUCKET="projectvoltron_terraform"
+   export BUCKET="capactio-terraform-modules"
    export MANIFEST_PATH="terraform.aws.rds.postgresql.provision"
    export MANIFEST_REVISION="0.1.0"
    ```

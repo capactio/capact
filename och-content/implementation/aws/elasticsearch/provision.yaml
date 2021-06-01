@@ -137,7 +137,7 @@ spec:
                             variables: |+
                               region = "<@ input.region @>"
                               domain_name = "<@ input.domain_name @>"
-  
+
                               advanced_security_options_enabled = true
                               advanced_security_options_internal_user_database_enabled = true
                               advanced_security_options_master_user_username = "<@ basicAuth.username @>"
@@ -346,7 +346,7 @@ spec:
                             command: "apply"
                             module:
                               name: "elasticsearch"
-                              source: "https://storage.googleapis.com/projectvoltron_terraform/terraform.aws.elasticsearch.provision/0.1.0/module.tgz"
+                              source: "https://storage.googleapis.com/capactio-terraform-modules/terraform.aws.elasticsearch.provision/0.1.0/module.tgz"
                             env:
                             - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
                             - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>

@@ -1,9 +1,13 @@
+terraform {
+  backend "gcs" {}
+}
+
 provider "google" {
   region  = "europe-west1"
 }
 
 variable "cluster_name" {
-  default = "capact-dev"
+  default = "capact-stage"
   type    = string
 }
 
@@ -18,17 +22,17 @@ variable "region" {
 }
 
 variable "node_pool_name" {
-  default = "dev-node-pool"
+  default = "stage-node-pool"
   type    = string
 }
 
 variable "google_compute_network_name" {
-  default = "dev-vpc-network"
+  default = "stage-vpc-network"
   type    = string
 }
 
 variable "google_compute_subnetwork_name" {
-  default = "dev-subnetwork"
+  default = "stage-subnetwork"
   type    = string
 }
 
@@ -38,34 +42,34 @@ variable "google_compute_subnetwork_ip_cidr_range" {
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_name1" {
-  default = "gke-dev-pods"
+  default = "gke-stage-pods"
   type    = string
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_cidr1" {
-  default = "10.0.0.0/14" 
+  default = "10.0.0.0/14"
   type    = string
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_name2" {
-  default = "gke-dev-services"
+  default = "gke-stage-services"
   type    = string
 }
 
 variable "google_compute_subnetwork_secondary_ip_range_cidr2" {
-  default = "10.4.0.0/20" 
+  default = "10.4.0.0/20"
   type    = string
 }
 
 variable "google_container_cluster_private_cluster_config_master_ipv4_cidr_block" {
-  default = "172.16.10.0/28" 
+  default = "172.16.10.0/28"
   type    = string
 }
 
 
 
 variable "project" {
-  default = "projectvoltron"
+  default = "capact"
   type    = string
 }
 

@@ -22,7 +22,7 @@ entries:
     name: capact
     type: application
     urls:
-    - https://storage.googleapis.com/capactio-master-charts/capact-0.2.0-7a347a9.tgz
+    - https://storage.googleapis.com/capactio-latest-charts/capact-0.2.0-7a347a9.tgz
     version: 0.2.0-7a347a9
   - apiVersion: v2
     appVersion: 0.0.1
@@ -45,6 +45,6 @@ entries:
     name: capact
     type: application
     urls:
-    - https://storage.googleapis.com/capactio-master-charts/capact-0.1.0-8a9cd65.tgz
+    - https://storage.googleapis.com/capactio-latest-charts/capact-0.1.0-8a9cd65.tgz
     version: 0.2.1
 generated: "2021-04-28T07:56:53.438217713Z"

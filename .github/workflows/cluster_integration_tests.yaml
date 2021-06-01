@@ -17,7 +17,7 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
-          service_account_key: ${{ secrets.GKE_CREDS }}
+          service_account_key: ${{ secrets.CAPACT_GKE_CREDS }}
       - name: Get cluster credentials
         run: |
           gcloud config set project ${PROJECT_ID}

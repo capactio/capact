@@ -28,7 +28,7 @@ spec:
                     "path":"ghcr.io/capactio",
                     "overrideTag":"latest"
                   },
-                  "domainName":"dev.cluster.projectvoltron.dev",
+                  "domainName":"stage.cluster.capact.dev",
                   "database":{
                     "endpoint":"bolt://neo4j-neo4j.neo4j:7687",
                     "username":"neo4j",

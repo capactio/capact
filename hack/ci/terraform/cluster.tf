@@ -6,7 +6,7 @@ resource "google_container_cluster" gcc-cls {
   subnetwork         = google_compute_subnetwork.gcs_compute_subnetwork.name
   initial_node_count = 1
   monitoring_service = "monitoring.googleapis.com/kubernetes"
-  logging_service    = "logging.googleapis.com/kubernetes" 
+  logging_service    = "logging.googleapis.com/kubernetes"
   remove_default_node_pool = true
 
     ip_allocation_policy {

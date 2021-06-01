@@ -4,7 +4,7 @@ global:
     path: ghcr.io/capactio
     # Overrides the image tag for all Capact component. Default is the sub-chart appVersion.
     overrideTag: "latest"
-  domainName: "dev.cluster.projectvoltron.dev"
+  domainName: "stage.cluster.capact.dev"
 
   database:
     endpoint: bolt://neo4j-neo4j:7687

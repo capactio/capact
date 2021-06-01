@@ -139,7 +139,7 @@ jobs:
           fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
-          service_account_key: ${{ secrets.GCS_CREDS }}
+          service_account_key: ${{ secrets.CAPACT_GCS_CREDS }}
           export_default_credentials: true
       - name: Release Helm Charts if were changed
         env:
@@ -229,9 +229,9 @@ jobs:
           CLI_OS=linux make build-tool-cli && mv ./bin/capact-linux-amd64 ./capact
       - name: Log into Capact long-running cluster
         env:
-          GATEWAY_PASSWORD: ${{ secrets.LONG_RUNNING_GATEWAY_PASSWORD }}
+          GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
         run: |
-          ./capact login https://gateway.dev.cluster.projectvoltron.dev -u graphql -p $GATEWAY_PASSWORD
+          ./capact login https://gateway.stage.cluster.capact.dev -u graphql -p $GATEWAY_PASSWORD
       - name: Upgrade Capact long-running cluster
         env:
           USE_TEST_SETUP: "true"

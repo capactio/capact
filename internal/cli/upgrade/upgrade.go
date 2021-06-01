@@ -34,8 +34,8 @@ const (
 	capactSystemNS = "capact-system"
 	capactName     = "capact"
 
-	capactioHelmRepoLatest    = "https://storage.googleapis.com/capactio-master-charts"
-	CapactioHelmRepoOfficial  = "https://storage.googleapis.com/capactio-awesome-charts"
+	capactioHelmRepoLatest    = "https://storage.googleapis.com/capactio-latest-charts"
+	CapactioHelmRepoOfficial  = "https://storage.googleapis.com/capactio-stable-charts"
 	CapactioHelmRepoLatestTag = "@latest"
 
 	capactUpgradeInterfacePath = "cap.interface.capactio.capact.upgrade"

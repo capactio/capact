@@ -72,7 +72,7 @@ replace (
 	// Remove when the is resolved:
 	// - https://github.com/argoproj/argo-workflows/issues/4772
 	// - we can compile argo without static files
-	github.com/argoproj/argo/v2 => github.com/Project-Voltron/argo-workflows/v2 v2.12.10-0.20210323093745-be9145c858b1
+	github.com/argoproj/argo/v2 => github.com/capactio/argo-workflows/v2 v2.12.10-0.20210323093745-be9145c858b1
 
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
 
