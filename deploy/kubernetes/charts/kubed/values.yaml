@@ -1,7 +1,7 @@
 kubed:
   config:
-    clusterName: dev
-    configSourceNamespace: argo
+    clusterName: stage
+    configSourceNamespace: capact-system
   # Do not send usage analytics
   enableAnalytics: false
   operator:
