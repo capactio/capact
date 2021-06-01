@@ -13,7 +13,7 @@ type TypeInstancesConfig struct {
 	LocalOCHEndpoint     string `envconfig:"default=http://capact-och-local.capact-system/graphql"`
 	HelmReleasesNSLookup LookupNS
 	CapactReleaseName    string `envconfig:"default=capact"`
-	HelmRepositoryPath string `envconfig:"default=https://capactio-stable-charts.storage.googleapis.com"`
+	HelmRepositoryPath   string `envconfig:"default=https://capactio-stable-charts.storage.googleapis.com"`
 }
 
 type LookupNS map[string]struct{}
