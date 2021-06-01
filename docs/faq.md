@@ -35,7 +35,7 @@ To read the full documentation, navigate to the [capact.io/docs](https://capact.
 
 First, check out [a list of common problems](./operation/common-problems.md) that you may encounter. Next, read the [Basic diagnostics](./operation/diagnostics.md) guide and execute diagnostic actions which may help you finding bug causes.
 
-If you found a bug and want to report it or if you want to contribute a fix or a feature please read our [Contribution guide](https://github.com/capactio/.github/blob/main/CONTRIBUTING.md)
+If you found a bug, please report it or contribute a fix. To do so, read our [Contribution guide](https://github.com/capactio/.github/blob/main/CONTRIBUTING.md). We are open for any type of contributions! 
 
 ## How Capact compares to...
 
