@@ -5,7 +5,7 @@ sidebar_position: 3
 
 # Frequently Asked Questions
 
-<!-- vim-markdown-toc GFM -->
+<!-- toc -->
 
 * [How do I start using Capact?](#how-do-i-start-using-capact)
 * [How do I troubleshoot Capact installation?](#how-do-i-troubleshoot-capact-installation)
@@ -17,7 +17,7 @@ sidebar_position: 3
 	* [Pulumi](#pulumi)
 * [What is the origin of name "Capact"?](#what-is-the-origin-of-name-capact)
 
-<!-- vim-markdown-toc -->
+<!-- tocstop -->
 
 ## How do I start using Capact?
 
