@@ -16,7 +16,6 @@ sidebar_position: 3
 	* [Terraform, Ansible, Chef, etc.](#terraform-ansible-chef-etc)
 	* [Pulumi](#pulumi)
 * [What is the origin of name "Capact"?](#what-is-the-origin-of-name-capact)
-* [Where can I learn more about Capact?](#where-can-i-learn-more-about-capact)
 
 <!-- tocstop -->
 
@@ -24,7 +23,7 @@ sidebar_position: 3
 
 To get started with Capact, check out these links:
 
-- **Introduction:** To learn what is Capact, read the [Introduction](./introduction.md) document.
+- **Introduction:** To learn what is Capact, read the [Introduction](./introduction.md) document. See also the [Terminology](./terminology.md) to understand all terms used through the Capact documentation.
 - **Installation:** To learn how to install Capact, follow the [local](./installation/local.md), [AWS](./installation/aws-eks.md) and [GCP](./installation/gcp-gke.md) installation tutorials.
 - **Examples:** To read how to use Capact based on real life examples, see the [Mattermost installation](./example/mattermost-installation.md).
 - **Content Development**:  To learn how to create content for Capact, see the [Content development guide](./content-development/guide.md).
@@ -80,7 +79,3 @@ Capact supports Terraform runner to use Terraform modules to manage your infrast
 ## What is the origin of name "Capact"?
 
 Capact is a combination of two shortened words: "**cap**ability" and "**act**ion". Capact makes it easy to manage system capabilities via running Actions. In the end, everything boils down to actions. Actions can provision infrastructure, can deploy applications, can process data. Once you start using Capact, the possibilities are virtually endless.
-
-## Where can I learn more about Capact?
-
-You can start on the [Introduction](./introduction.md) page. Check out also the [Terminology](./terminology.md) page to understand all terms used through the Capact documentation.
