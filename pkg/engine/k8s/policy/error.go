@@ -1,4 +1,4 @@
-package clusterpolicy
+package policy
 
 import (
 	"fmt"

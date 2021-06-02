@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"time"
 
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -20,9 +20,9 @@ const (
 )
 
 type PolicyEnforcedOCHClient interface {
-	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicapi.InterfaceReference) ([]ochpublicapi.ImplementationRevision, clusterpolicy.Rule, error)
-	ListTypeInstancesToInjectBasedOnPolicy(policyRule clusterpolicy.Rule, implRev ochpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
-	SetPolicy(policy clusterpolicy.ClusterPolicy)
+	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicapi.InterfaceReference) ([]ochpublicapi.ImplementationRevision, policy.Rule, error)
+	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev ochpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
+	SetPolicy(policy policy.Policy)
 	FindInterfaceRevision(ctx context.Context, ref ochpublicapi.InterfaceReference) (*ochpublicapi.InterfaceRevision, error)
 }
 

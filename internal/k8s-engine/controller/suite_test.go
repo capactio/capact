@@ -22,7 +22,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	graphql "capact.io/capact/pkg/och/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
@@ -141,8 +141,8 @@ func (l *typeInstanceLockerFake) UnlockTypeInstances(ctx context.Context, in *gr
 
 type policyServiceFake struct{}
 
-func (p policyServiceFake) Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
-	return clusterpolicy.ClusterPolicy{}, nil
+func (p policyServiceFake) Get(ctx context.Context) (policy.Policy, error) {
+	return policy.Policy{}, nil
 }
 
 type typeInstanceGetterFake struct{}

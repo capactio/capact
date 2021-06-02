@@ -4,18 +4,18 @@ import (
 	"context"
 
 	"capact.io/capact/pkg/engine/api/graphql"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"github.com/pkg/errors"
 )
 
 type Service interface {
-	Update(ctx context.Context, in clusterpolicy.ClusterPolicy) (clusterpolicy.ClusterPolicy, error)
-	Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error)
+	Update(ctx context.Context, in policy.Policy) (policy.Policy, error)
+	Get(ctx context.Context) (policy.Policy, error)
 }
 
 type policyConverter interface {
-	FromGraphQLInput(in graphql.PolicyInput) clusterpolicy.ClusterPolicy
-	ToGraphQL(in clusterpolicy.ClusterPolicy) graphql.Policy
+	FromGraphQLInput(in graphql.PolicyInput) policy.Policy
+	ToGraphQL(in policy.Policy) graphql.Policy
 }
 
 type Resolver struct {

@@ -1,4 +1,4 @@
-package clusterpolicy
+package policy
 
 import (
 	"sort"
@@ -23,16 +23,16 @@ func (m SupportedAPIVersionMap) ToStringSlice() []string {
 	return strSlice
 }
 
-func FromYAMLString(in string) (ClusterPolicy, error) {
+func FromYAMLString(in string) (Policy, error) {
 	bytes := []byte(in)
 	err := Validate(bytes)
 	if err != nil {
-		return ClusterPolicy{}, err
+		return Policy{}, err
 	}
 
-	var policy ClusterPolicy
+	var policy Policy
 	if err := yaml.Unmarshal(bytes, &policy); err != nil {
-		return ClusterPolicy{}, errors.Wrap(err, "while unmarshaling policy from YAML bytes")
+		return Policy{}, errors.Wrap(err, "while unmarshaling policy from YAML bytes")
 	}
 
 	return policy, nil

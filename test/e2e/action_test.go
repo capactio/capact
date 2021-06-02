@@ -27,8 +27,8 @@ import (
 	engine "capact.io/capact/pkg/engine/client"
 )
 
-const clusterPolicyConfigMapKey = "cluster-policy.yaml"
-const clusterPolicyTokenToReplace = "{typeInstanceUUID}"
+const globalPolicyConfigMapKey = "cluster-policy.yaml"
+const globalPolicyTokenToReplace = "{typeInstanceUUID}"
 
 func getActionName() string {
 	return fmt.Sprintf("e2e-test-%d-%s", GinkgoParallelNode(), strconv.Itoa(rand.Intn(10000)))
@@ -122,7 +122,7 @@ var _ = Describe("Action", func() {
 
 			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
 			typeInstanceID := typeInstance.ID
-			cfgMapCleanupFn := updateClusterPolicyConfigMap(clusterPolicyTokenToReplace, typeInstanceID)
+			cfgMapCleanupFn := updateGlobalPolicyConfigMap(globalPolicyTokenToReplace, typeInstanceID)
 			defer cfgMapCleanupFn()
 
 			By("4. Expecting Implementation B is picked based on test policy...")
@@ -360,12 +360,12 @@ func createTypeInstance(ctx context.Context, ochClient *ochclient.Client, in *oc
 	return createdTypeInstance, cleanupFn
 }
 
-func updateClusterPolicyConfigMap(stringToFind, stringToReplace string) func() {
-	err := replaceInClusterPolicyConfigMap(stringToFind, stringToReplace)
+func updateGlobalPolicyConfigMap(stringToFind, stringToReplace string) func() {
+	err := replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace)
 	Expect(err).ToNot(HaveOccurred())
 
 	cleanupFn := func() {
-		err := replaceInClusterPolicyConfigMap(stringToReplace, stringToFind)
+		err := replaceInGlobalPolicyConfigMap(stringToReplace, stringToFind)
 		if err != nil {
 			log(errors.Wrap(err, "while cleaning up ConfigMap with cluster policy").Error())
 		}
@@ -408,7 +408,7 @@ func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *
 	}, 10*time.Second).Should(match)
 }
 
-func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error {
+func replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace string) error {
 	k8sCfg, err := config.GetConfig()
 	if err != nil {
 		return err
@@ -421,16 +421,16 @@ func replaceInClusterPolicyConfigMap(stringToFind, stringToReplace string) error
 
 	cfgMapCli := clientset.CoreV1().ConfigMaps(cfg.ClusterPolicy.Namespace)
 
-	clusterPolicyCfgMap, err := cfgMapCli.Get(cfg.ClusterPolicy.Name, metav1.GetOptions{})
+	globalPolicyCfgMap, err := cfgMapCli.Get(cfg.ClusterPolicy.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	oldContent := clusterPolicyCfgMap.Data[clusterPolicyConfigMapKey]
+	oldContent := globalPolicyCfgMap.Data[globalPolicyConfigMapKey]
 	newContent := strings.ReplaceAll(oldContent, stringToFind, stringToReplace)
-	clusterPolicyCfgMap.Data[clusterPolicyConfigMapKey] = newContent
+	globalPolicyCfgMap.Data[globalPolicyConfigMapKey] = newContent
 
-	_, err = cfgMapCli.Update(clusterPolicyCfgMap)
+	_, err = cfgMapCli.Update(globalPolicyCfgMap)
 	if err != nil {
 		return err
 	}

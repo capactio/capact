@@ -11,7 +11,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 
 	graphqldomain "capact.io/capact/internal/k8s-engine/graphql/domain/action"
 	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
@@ -58,7 +58,7 @@ type ActionValidator interface {
 }
 
 type PolicyService interface {
-	Get(ctx context.Context) (clusterpolicy.ClusterPolicy, error)
+	Get(ctx context.Context) (policy.Policy, error)
 }
 
 type TypeInstanceLocker interface {
@@ -308,7 +308,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		Revision: action.Spec.ActionRef.Revision,
 	}
 
-	policy, err := a.getClusterPolicyWithFallbackToEmpty(ctx)
+	policy, err := a.getPolicyWithFallbackToEmpty(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +367,7 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getUserPolicyData(ctx context.Context, action *v1alpha1.Action) (*clusterpolicy.ClusterPolicy, []byte, error) {
+func (a *ActionService) getUserPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.Policy, []byte, error) {
 	if action.Spec.Input == nil || action.Spec.Input.UserPolicy == nil {
 		return nil, nil, nil
 	}
@@ -380,7 +380,7 @@ func (a *ActionService) getUserPolicyData(ctx context.Context, action *v1alpha1.
 
 	policyData := secret.Data[graphqldomain.UserPolicySecretDataKey]
 
-	policy := &clusterpolicy.ClusterPolicy{}
+	policy := &policy.Policy{}
 	if err := json.Unmarshal(policyData, policy); err != nil {
 		return nil, nil, errors.Wrap(err, "while unmarshaling Policy data")
 	}
@@ -401,18 +401,18 @@ func (a *ActionService) getUserInputTypeInstances(action *v1alpha1.Action) []typ
 	return refs
 }
 
-func (a *ActionService) getClusterPolicyWithFallbackToEmpty(ctx context.Context) (clusterpolicy.ClusterPolicy, error) {
-	policy, err := a.policyService.Get(ctx)
+func (a *ActionService) getPolicyWithFallbackToEmpty(ctx context.Context) (policy.Policy, error) {
+	p, err := a.policyService.Get(ctx)
 	if err != nil {
 		if errors.Is(err, policypkg.ErrPolicyConfigMapNotFound) {
 			a.log.Info("ConfigMap with cluster policy not found. Fallback to empty Cluster Policy")
-			return clusterpolicy.ClusterPolicy{}, nil
+			return policy.Policy{}, nil
 		}
 
-		return clusterpolicy.ClusterPolicy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
+		return policy.Policy{}, errors.Wrap(err, "while getting K8s ConfigMap with cluster policy")
 	}
 
-	return policy, nil
+	return p, nil
 }
 
 type GetReportedRunnerStatusOutput struct {

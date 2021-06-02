@@ -3,7 +3,7 @@ package policy_test
 import (
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/api/graphql"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
@@ -119,18 +119,18 @@ func fixGQL() graphql.Policy {
 	}
 }
 
-func fixModel() clusterpolicy.ClusterPolicy {
-	return clusterpolicy.ClusterPolicy{
-		APIVersion: clusterpolicy.CurrentAPIVersion,
-		Rules: clusterpolicy.RulesList{
+func fixModel() policy.Policy {
+	return policy.Policy{
+		APIVersion: policy.CurrentAPIVersion,
+		Rules: policy.RulesList{
 			{
 				Interface: types.ManifestRef{
 					Path:     "cap.interface.database.postgresql.install",
 					Revision: ptr.String("0.1.0"),
 				},
-				OneOf: []clusterpolicy.Rule{
+				OneOf: []policy.Rule{
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+						ImplementationConstraints: policy.ImplementationConstraints{
 							Requires: &[]types.ManifestRef{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
@@ -143,8 +143,8 @@ func fixModel() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						Inject: &clusterpolicy.InjectData{
-							TypeInstances: []clusterpolicy.TypeInstanceToInject{
+						Inject: &policy.InjectData{
+							TypeInstances: []policy.TypeInstanceToInject{
 								{
 									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
 									TypeRef: types.ManifestRef{
@@ -156,7 +156,7 @@ func fixModel() clusterpolicy.ClusterPolicy {
 						},
 					},
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+						ImplementationConstraints: policy.ImplementationConstraints{
 							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
 						},
 					},
@@ -166,9 +166,9 @@ func fixModel() clusterpolicy.ClusterPolicy {
 				Interface: types.ManifestRef{
 					Path: "cap.*",
 				},
-				OneOf: []clusterpolicy.Rule{
+				OneOf: []policy.Rule{
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{},
+						ImplementationConstraints: policy.ImplementationConstraints{},
 					},
 				},
 			},

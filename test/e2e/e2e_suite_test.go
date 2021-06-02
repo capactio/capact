@@ -24,7 +24,7 @@ type GatewayConfig struct {
 	Password string
 }
 
-type ClusterPolicyConfig struct {
+type GlobalPolicyConfig struct {
 	Name      string `envconfig:"default=capact-engine-cluster-policy"`
 	Namespace string `envconfig:"default=capact-system"`
 }
@@ -35,7 +35,7 @@ type Config struct {
 	PollingInterval         time.Duration `envconfig:"default=2s"`
 	PollingTimeout          time.Duration `envconfig:"default=5m"`
 	Gateway                 GatewayConfig
-	ClusterPolicy           ClusterPolicyConfig
+	ClusterPolicy           GlobalPolicyConfig
 	OCHLocalDeployNamespace string `envconfig:"default=capact-system"`
 	OCHLocalDeployName      string `envconfig:"default=capact-och-local"`
 }

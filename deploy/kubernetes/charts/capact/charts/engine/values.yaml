@@ -57,7 +57,7 @@ tolerations: []
 
 affinity: {}
 
-clusterPolicyRules:
+globalPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #
 #  - interface:
@@ -108,7 +108,7 @@ clusterPolicyRules:
 
 testSetup:
   enabled: false
-  clusterPolicyRules:
+  globalPolicyRules:
     - interface:
         path: "cap.interface.capactio.capact.validation.action.passing"
       oneOf:
