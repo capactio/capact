@@ -1,6 +1,8 @@
 #  Capact CI and CD
 
-> ⚠️ **DEPRECATION:** The [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry is deprecated. We support this registry in the read-only mode until November 2021. At that time this registry will likely be garbage collected and no longer available. New Docker images are pushed to [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container).
+> ⚠️ **DEPRECATION:** The [gcr.io/projectvoltron](https://gcr.io/projectvoltron) registry is deprecated. We support this registry in the read-only mode until November 2021. At that time this registry will likely be garbage collected and no longer available. There still be an option to clone repository from a given version and build images locally.
+>
+> New Docker images are available in [ghcr.io/capactio](https://github.com/orgs/capactio/packages?ecosystem=container).
 
 This document describes jobs created to automate the process of testing, building, and deploying newly merged functionality.
 
@@ -122,7 +124,7 @@ The following steps show how to checkout the code, set up the Go environment, an
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Authorize to GKE
-        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        uses: google-github-actions/setup-gcloud@master
         with:
           service_account_key: ${{ secrets.CAPACT_GKE_CREDS }}
           export_default_credentials: true

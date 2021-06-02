@@ -14,7 +14,7 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: google-github-actions/setup-gcloud@master
         with:
           export_default_credentials: true
           service_account_key: ${{ secrets.CAPACT_GKE_CREDS }}

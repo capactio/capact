@@ -6,15 +6,13 @@ This document describes how to identify and resolve common Capact problems that 
 
 <!-- toc -->
 
-- [Common problems](#common-problems)
-  - [Table of contents](#table-of-contents)
-  - [Action](#action)
-    - [Action does not have status](#action-does-not-have-status)
-    - [Action stuck in the `BeingRendered` phase](#action-stuck-in-the-beingrendered-phase)
-    - [Action in the `Failed` phase](#action-in-the-failed-phase)
-    - [Clean up Action execution pods](#clean-up-action-execution-pods)
-    - [Wrong Implementation was selected](#wrong-implementation-was-selected)
-  - [Unreachable Gateway](#unreachable-gateway)
+- [Action](#action)
+  * [Action does not have status](#action-does-not-have-status)
+  * [Action stuck in the `BeingRendered` phase](#action-stuck-in-the-beingrendered-phase)
+  * [Action in the `Failed` phase](#action-in-the-failed-phase)
+  * [Clean up Action execution pods](#clean-up-action-execution-pods)
+  * [Wrong Implementation was selected](#wrong-implementation-was-selected)
+- [Unreachable Gateway](#unreachable-gateway)
 
 <!-- tocstop -->
 
