@@ -24,9 +24,9 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 
 	// when
 	actualModel, err := c.FromGraphQLInput(gqlInput)
-	require.NoError(t, err)
 
 	// then
+	require.NoError(t, err)
 	assert.Equal(t, expectedModel, *actualModel)
 }
 
@@ -43,10 +43,11 @@ func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	c := action.NewConverter()
 
 	// when
-	gqlAction := c.ToGraphQL(k8sAction)
+	gqlAction, err := c.ToGraphQL(k8sAction)
 
 	// then
-	assert.Equal(t, expectedGQLAction, gqlAction)
+	require.NoError(t, err)
+	assert.Equal(t, expectedGQLAction, *gqlAction)
 }
 
 func TestConverter_FilterFromGraphQL_HappyPath(t *testing.T) {

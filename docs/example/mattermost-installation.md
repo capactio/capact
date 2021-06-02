@@ -248,16 +248,17 @@ To change the Mattermost installation, we need to adjust our cluster policy to p
       - interface:
           path: cap.interface.database.postgresql.install
         oneOf:
-         - implementationConstraints:
-             attributes:
-               - path: "cap.attribute.cloud.provider.gcp"
-             requires:
-               - path: "cap.type.gcp.auth.service-account"
-           injectTypeInstances:
-             - id: ${TI_ID}
-               typeRef:
-                 path: "cap.type.gcp.auth.service-account"
-                 revision: "0.1.0"
+          - implementationConstraints:
+              attributes:
+                - path: "cap.attribute.cloud.provider.gcp"
+              requires:
+                - path: "cap.type.gcp.auth.service-account"
+            inject:
+              typeInstances:
+                - id: ${TI_ID}
+                  typeRef:
+                    path: "cap.type.gcp.auth.service-account"
+                    revision: "0.1.0"
       - interface:
           path: cap.*
         oneOf:

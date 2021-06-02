@@ -96,6 +96,7 @@ To make sure the Terraform-based Implementation is selected, you may use additio
                - path: "cap.attribute.infra.iac.terraform" # Add this line
              requires:
                - path: "cap.type.gcp.auth.service-account"
-           injectTypeInstances:
+           inject:
+            typeInstances:
              # (...)
 ```

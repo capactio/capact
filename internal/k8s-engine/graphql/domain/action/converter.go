@@ -81,7 +81,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.Acti
 	}, nil
 }
 
-func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
+func (c *Converter) ToGraphQL(in v1alpha1.Action) (*graphql.Action, error) {
 	var run bool
 	if in.Spec.Run != nil {
 		run = *in.Spec.Run
@@ -99,19 +99,23 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 
 	var renderedAction interface{}
 	var actionInput *graphql.ActionInput
+	var err error
 	if in.Status.Rendering != nil {
 		if in.Status.Rendering.Action != nil {
 			renderedAction = c.runtimeExtensionToJSONRawMessage(in.Status.Rendering.Action)
 		}
 
-		actionInput = c.actionInputToGraphQL(in.Status.Rendering.Input)
+		actionInput, err = c.actionInputToGraphQL(in.Status.Rendering.Input)
+		if err != nil {
+			return nil, errors.Wrap(err, "while converting ActionInput from CR to GraphQL")
+		}
 	}
 
 	actionOutput := c.actionOutputToGraphQL(in.Status.Output)
 
 	actionRef := c.manifestRefToGraphQL(&in.Spec.ActionRef)
 
-	return graphql.Action{
+	return &graphql.Action{
 		Name:                   in.Name,
 		CreatedAt:              graphql.Timestamp{Time: in.CreationTimestamp.Time},
 		Input:                  actionInput,
@@ -124,7 +128,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 		RenderingAdvancedMode:  c.advancedRenderingToGraphQL(&in),
 		RenderedActionOverride: c.runtimeExtensionToJSONRawMessage(in.Spec.RenderedActionOverride),
 		Status:                 c.statusToGraphQL(&in.Status),
-	}
+	}, nil
 }
 
 func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error) {
@@ -201,9 +205,9 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 	}, nil
 }
 
-func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *graphql.ActionInput {
+func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) (*graphql.ActionInput, error) {
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	result := &graphql.ActionInput{}
@@ -226,10 +230,16 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 	}
 
 	if in.UserPolicy != nil {
-		result.Parameters = c.runtimeExtensionToJSONRawMessage(in.UserPolicy)
+		policyData := c.runtimeExtensionToJSONRawMessage(in.UserPolicy)
+
+		if policyData != nil {
+			if err := json.Unmarshal(*policyData, &result.UserPolicy); err != nil {
+				return nil, err
+			}
+		}
 	}
 
-	return result
+	return result, nil
 }
 
 func (c *Converter) actionOutputToGraphQL(in *v1alpha1.ActionOutput) *graphql.ActionOutput {
