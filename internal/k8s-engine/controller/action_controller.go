@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"context"
-	"fmt"
-
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"context"
+	"fmt"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -21,6 +22,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
+
+// TODO: move to pkg
+const finalizer = "action.core.capact.io/finalizer"
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
@@ -71,6 +75,7 @@ func NewActionReconciler(log logr.Logger, svc actionService, maxRetriesForAction
 
 // +kubebuilder:rbac:groups=core.capact.io,resources=actions,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=core.capact.io,resources=actions/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=core.capact.io,resources=actions/finalizers,verbs=update
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create
 // +kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
@@ -99,9 +104,7 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if action.IsBeingDeleted() {
-		// TODO: currently cannot reach this state.
-		// Add finalizer and handle deletion properly (cancel running actions, remove ArgoWorkflows)
-		return ctrl.Result{}, nil
+		return ctrl.Result{}, r.handleFinalizer(ctx, action)
 	}
 
 	if action.IsUninitialized() {
@@ -152,7 +155,37 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
+func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1.Action) error {
+	if !controllerutil.ContainsFinalizer(action, finalizer) {
+		return nil // our finalizer was already removed
+	}
+
+	switch {
+	case action.IsExecuted():
+
+		// do nothing right now.
+		// handle deletion properly (cancel running actions, remove ArgoWorkflows)
+		// do not remove finalizer
+		return nil
+
+	case action.IsCompleted():
+		// we need to ensure that type instance are not locked
+		if err := r.svc.UnlockTypeInstances(ctx, action); err != nil {
+			return errors.Wrap(err, "while unlocking TypeInstances")
+		}
+	default:
+
+		// we do not need to clean up anything
+
+	}
+
+	controllerutil.RemoveFinalizer(action, finalizer)
+	return r.k8sCli.Update(ctx, action)
+}
+
 func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	//controllerutil.AddFinalizer(action, finalizer)
+
 	action.Status = r.successStatus(action, v1alpha1.BeingRenderedActionPhase, "Rendering runner action")
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
@@ -178,14 +211,22 @@ func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Ac
 		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
 	}
 
-	// requeue to check if runner should be executed
-	return ctrl.Result{Requeue: true}, nil
+	// Requeue is not needed.
+	// Currently, user needs to approve rendered action, so we will be notified on Action update.
+	return ctrl.Result{}, nil
 }
 
 // executeAction executes action (run, dryRun, cancel etc) and set v1alpha1.RunningActionPhase.
 //
 // TODO: add support v1alpha1.BeingCanceledActionPhase phase.
 func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
+	if !controllerutil.ContainsFinalizer(action, finalizer) {
+		controllerutil.AddFinalizer(action, finalizer)
+		if err := r.k8sCli.Update(ctx, action); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
 		msg := fmt.Sprintf("Cannot create runner ServiceAccount: %s", err)
@@ -198,7 +239,7 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 	}
 
 	if err := r.svc.LockTypeInstances(ctx, action); err != nil {
-		msg := "Cannot lock TypeInstances"
+		msg := fmt.Sprintf("Cannot lock TypeInstances: %s", err)
 		return r.handleRetry(ctx, action, v1alpha1.ReadyToRunActionPhase, msg)
 	}
 
@@ -212,8 +253,10 @@ func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.A
 		return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
 	}
 
-	// requeue to check execution status
-	return ctrl.Result{Requeue: true}, nil
+	// requeue is not needed, we will be automatically notified when:
+	// - ConfigMap with status will be modified
+	// - K8s Job will be completed
+	return ctrl.Result{}, nil
 }
 
 // handleRunningAction checks execution status. If completed, sets final state v1alpha1.SucceededActionPhase,
@@ -241,7 +284,7 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
 
 	// status didn't change, no need to requeue
@@ -340,7 +383,7 @@ func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Act
 	case retry < r.maxRetries:
 		errMsg = fmt.Sprintf("%s (will retry - %d/%d)", errMsg, retry, r.maxRetries)
 		action.Status = r.failStatus(action, currentPhase, errMsg)
-		result = ctrl.Result{Requeue: true} // AddRateLimited
+		result = ctrl.Result{Requeue: true} // TODO: check if we should use RequeueAfter to trigger proper AddRateLimited
 	default:
 		errMsg = fmt.Sprintf("%s (giving up - exceeded %d retries)", errMsg, r.maxRetries)
 		action.Status = r.failStatus(action, v1alpha1.FailedActionPhase, errMsg)
