@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
@@ -13,13 +14,18 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
 	"github.com/fatih/color"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
+
+const deletionCheckPollInterval = time.Second
 
 type DeleteOptions struct {
 	ActionNames []string
 	Namespace   string
 	NameRegex   string
 	Phase       string
+	Timeout     time.Duration
+	Wait        bool
 }
 
 func (d *DeleteOptions) Validate() error {
@@ -78,10 +84,71 @@ func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
 		if err != nil {
 			return err
 		}
-		okCheck(w, "Action '%s/%s' deleted successfully\n", opts.Namespace, name)
+		okCheck(w, "Action '%s/%s' deletion scheduled successfully\n", opts.Namespace, name)
+	}
+
+	if !opts.Wait {
+		return nil
+	}
+
+	fmt.Fprintf(w, "Wait until deletion process completes...\n")
+
+	return waitUntilDeleted(ctxWithNs, actionCli, actionsToDelete, opts.Timeout)
+}
+
+func waitUntilDeleted(ctxWithNs context.Context, actCli client.ClusterClient, names []string, timeout time.Duration) error {
+	toBeDeletedNameRegex := mapToStrictOrRegex(names)
+
+	var lastErr error
+	err := wait.Poll(deletionCheckPollInterval, timeout, func() (done bool, err error) {
+		out, err := actCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{
+			NameRegex: &toBeDeletedNameRegex,
+		})
+		if err != nil { // may be network issue, ignoring
+			lastErr = err
+			return false, nil
+		}
+		if len(out) != 0 {
+			lastErr = fmt.Errorf("%s actions are still not deleted", strings.Join(toNamesList(out), ", "))
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			return lastErr
+		}
+		return err
 	}
 
 	return nil
+}
+
+func toNamesList(in []*gqlengine.Action) []string {
+	var names []string
+	for _, i := range in {
+		names = append(names, i.Name)
+	}
+	return names
+}
+
+func mapToStrictOrRegex(in []string) string {
+	out := strings.Join(in, "$|^")
+	return fmt.Sprintf("(^%s$)", out)
+}
+
+func isActionNotFound(ctx context.Context, actCli client.ClusterClient, name string) (bool, error) {
+	act, err := actCli.GetAction(ctx, name)
+	if err != nil { // may be network issue, ignoring
+		return false, err
+	}
+
+	if act != nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func AllowedPhases() string {
@@ -109,10 +176,6 @@ func listActionsForDeletion(ctxWithNs context.Context, actionCli client.ClusterC
 	if err != nil {
 		return nil, err
 	}
-	var names []string
-	for _, i := range out {
-		names = append(names, i.Name)
-	}
 
-	return names, nil
+	return toNamesList(out), nil
 }

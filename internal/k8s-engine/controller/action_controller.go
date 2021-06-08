@@ -23,8 +23,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 )
 
-// TODO: move to pkg
-const finalizer = "action.core.capact.io/finalizer"
+// instantRequeueDelayAfterUpdate is needed as we cannot requeue item immediately as cache will not be updated so fast.
+const instantRequeueDelayAfterUpdate = 30 * time.Second
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
@@ -104,7 +104,16 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if action.IsBeingDeleted() {
-		return ctrl.Result{}, r.handleFinalizer(ctx, action)
+		log.Info("Deleting runner action")
+		ignored, err := r.handleFinalizer(ctx, action, log)
+		if err != nil {
+			return reportOnError(err, "Delete runner action")
+		}
+
+		// if deletion was ignored, continue control loop
+		if !ignored {
+			return ctrl.Result{}, nil
+		}
 	}
 
 	if action.IsUninitialized() {
@@ -155,43 +164,58 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	return ctrl.Result{}, nil
 }
 
-func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1.Action) error {
-	if !controllerutil.ContainsFinalizer(action, finalizer) {
-		return nil // our finalizer was already removed
+func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1.Action, log logr.Logger) (bool, error) {
+	if !controllerutil.ContainsFinalizer(action, v1alpha1.ActionFinalizer) {
+		return true, nil // our finalizer was already removed
 	}
 
 	switch {
 	case action.IsExecuted():
 
-		// do nothing right now.
-		// handle deletion properly (cancel running actions, remove ArgoWorkflows)
-		// do not remove finalizer
-		return nil
+		// Current decision:
+		log.Info("Ignoring delete request. Wait until Action execution will be finished.", "phase", string(action.Status.Phase))
+
+		// Deletion in this state is complicated as such Action can be in the middle of e.g. data migration, system shutdown,
+		// creating resources on hyperscaler side, etc.
+		// In the future we can revisit this approach based on user feedback and e.g. cancel running actions, maybe even rollback
+		// already executed steps, etc.
+		return true, nil
 
 	case action.IsCompleted():
-		// we need to ensure that type instance are not locked
+
+		// Ensure that TypeInstances are unlocked.
 		if err := r.svc.UnlockTypeInstances(ctx, action); err != nil {
-			return errors.Wrap(err, "while unlocking TypeInstances")
+			return false, errors.Wrap(err, "while unlocking TypeInstances")
 		}
+
 	default:
 
-		// we do not need to clean up anything
+		// Currently, we do not need to clean up anything as we use ownerReference.
 
 	}
 
-	controllerutil.RemoveFinalizer(action, finalizer)
-	return r.k8sCli.Update(ctx, action)
+	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
+	return false, r.k8sCli.Update(ctx, action)
 }
 
+// initAction can be extracted to mutation webhook.
 func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
-	//controllerutil.AddFinalizer(action, finalizer)
+	if !controllerutil.ContainsFinalizer(action, v1alpha1.ActionFinalizer) {
+		controllerutil.AddFinalizer(action, v1alpha1.ActionFinalizer)
+
+		if err := r.k8sCli.Update(ctx, action); err != nil {
+			return ctrl.Result{}, errors.Wrap(err, "while adding action finalizer")
+		}
+
+		return ctrl.Result{}, nil
+	}
 
 	action.Status = r.successStatus(action, v1alpha1.BeingRenderedActionPhase, "Rendering runner action")
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
 	}
 	// requeue to start the rendering process
-	return ctrl.Result{Requeue: true}, nil
+	return ctrl.Result{RequeueAfter: instantRequeueDelayAfterUpdate}, nil
 }
 
 // renderAction renders a given action. If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
@@ -220,13 +244,6 @@ func (r *ActionReconciler) renderAction(ctx context.Context, action *v1alpha1.Ac
 //
 // TODO: add support v1alpha1.BeingCanceledActionPhase phase.
 func (r *ActionReconciler) executeAction(ctx context.Context, action *v1alpha1.Action) (ctrl.Result, error) {
-	if !controllerutil.ContainsFinalizer(action, finalizer) {
-		controllerutil.AddFinalizer(action, finalizer)
-		if err := r.k8sCli.Update(ctx, action); err != nil {
-			return ctrl.Result{}, err
-		}
-	}
-
 	sa, err := r.svc.EnsureWorkflowSAExists(ctx, action)
 	if err != nil {
 		msg := fmt.Sprintf("Cannot create runner ServiceAccount: %s", err)
@@ -282,7 +299,7 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 
 		action.Status = *newStatus
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
-			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
+			return ctrl.Result{}, errors.Wrap(err, "while updating status of running action")
 		}
 		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
 	}
@@ -340,6 +357,8 @@ func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1a
 		return ctrl.Result{}, errors.Wrap(err, "while unlocking TypeInstances")
 	}
 
+	// TODO: "while updating status of executed action: Action.core.capact.io \"capact-upgrade-c6bkd\"
+	// is invalid: status.output.typeInstances: Invalid value: \"null\": status.output.typeInstances in body must be of type array: \"null\""
 	if action.Status.Output == nil {
 		action.Status.Output = &v1alpha1.ActionOutput{}
 	}
@@ -350,9 +369,9 @@ func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1a
 		}
 
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
-			return ctrl.Result{}, errors.Wrap(err, "while updating status of executed action")
+			return ctrl.Result{}, errors.Wrap(err, "while updating status of finished action")
 		}
-		return ctrl.Result{Requeue: true}, nil
+		return ctrl.Result{}, nil
 	}
 
 	return ctrl.Result{}, nil

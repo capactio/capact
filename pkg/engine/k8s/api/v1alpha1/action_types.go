@@ -411,3 +411,6 @@ const (
 	SucceededActionPhase                      ActionPhase = "Succeeded"
 	FailedActionPhase                         ActionPhase = "Failed"
 )
+
+// ActionFinalizer is the name of the Action finalizer
+const ActionFinalizer = "action.core.capact.io/finalizer"

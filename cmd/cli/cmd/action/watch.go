@@ -9,8 +9,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: Would be great to have this as a `-w` parameter with the status/details action
-
 func NewWatch() *cobra.Command {
 	cmd := commands.NewWatchCommand()
 	cmd.Use = "watch ACTION"
@@ -19,8 +17,8 @@ func NewWatch() *cobra.Command {
     Watch an Action until it has completed execution
 
     NOTE:   An action needs to be created and run in order to run this command.
-            Furthermore, 'kubectl' has to be configured with the context and default
-            namespace set to be the same as the one which the Gateway points to. 
+            This command call the Kubernetes API directly. As a result, KUBECONFIG has to be configured
+            with the same cluster as the one which the Gateway points to.
     `
 	cmd.Example = heredoc.WithCLIName(`
         # Watch an Action:
@@ -32,7 +30,7 @@ func NewWatch() *cobra.Command {
 
 	client.AddKubectlFlagsToCmd(cmd)
 
-	for _, hide := range hiddenFlags {
+	for _, hide := range argoHiddenFlags {
 		// set flags exits
 		_ = cmd.PersistentFlags().MarkHidden(hide)
 	}

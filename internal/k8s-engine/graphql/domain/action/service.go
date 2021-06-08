@@ -202,7 +202,7 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 	}
 
 	if !item.IsWaitingToRun() {
-		log.Info("Action not ready to run")
+		log.Info("Action not runnable", zap.String("phase", string(item.Status.Phase)))
 		return ErrActionNotReadyToRun
 	}
 

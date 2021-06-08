@@ -35,7 +35,8 @@ main() {
     export DOCKER_REPOSITORY="local"
     export CLUSTER_TYPE="KIND"
     capact::update::images_on_kind
-
+#    export DOCKER_REPOSITORY="ghcr.io/capactio"
+#    export DOCKER_TAG="669208d"
     capact::install_upgrade::charts
 
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
@@ -54,3 +55,28 @@ main() {
 }
 
 main
+
+retry() {
+  echo "Waiting for all Thar worker nodes to become 'Ready' in ${CLUSTER_NAME} cluster"
+  KUBECTL="kubectl --kubeconfig ${KUBECONFIG_FILE}"
+  MAX_ATTEMPTS=30
+  attempts=0
+  while true; do
+    ((attempts+=1))
+    if [ "${attempts}" -gt ${MAX_ATTEMPTS} ]; then
+      echo "* Retry limit (${MAX_ATTEMPTS}) reached!" >&2
+      exit 1
+    fi
+    sleep 5
+    nodes=$(${KUBECTL} get nodes --no-headers)
+    exit_on_error ${?} "* Failed to get node information for ${CLUSTER_NAME} cluster"
+
+    found=$(${KUBECTL} get nodes --no-headers -o name | wc -l)
+    ready=$(echo -n "${nodes}" | grep -c -w "Ready")
+    echo "ready: ${ready}"
+
+    if [ "${found}" -eq "${actual_num_nodes}" ] && [ "${ready}" -eq "${actual_num_nodes}" ]; then
+      break
+    fi
+  done
+}

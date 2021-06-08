@@ -327,6 +327,10 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 			lastErr = err
 			return false, nil
 		}
+
+		if act == nil { // action was deleted, no reason to wait further
+			return true, nil
+		}
 		switch act.Status.Phase {
 		case gqlengine.ActionStatusPhaseSucceeded:
 			return true, nil

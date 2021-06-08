@@ -62,7 +62,7 @@ spec:
                 - name: argo-helm-release
                 - name: ingress-nginx-helm-release
                 - name: kubed-helm-release
-                - name: monitoring-helm-release
+#                - name: monitoring-helm-release
                 - name: neo4j-helm-release
                 - name: cert-manager-helm-release
             steps:
@@ -223,16 +223,16 @@ spec:
               - - name: synchronize-minio-secret
                   template: synchronize-minio-secret
 
-              - - name: monitoring-upgrade
-                  capact-action: helm.upgrade
-                  arguments:
-                    artifacts:
-                      - name: input-parameters
-                        from: "{{steps.gen-global-helm-args.outputs.artifacts.render}}"
-                      - name: runner-context
-                        from: "{{workflow.outputs.artifacts.runner-context}}"
-                      - name: helm-release
-                        from: "{{inputs.artifacts.monitoring-helm-release}}"
+#              - - name: monitoring-upgrade
+#                  capact-action: helm.upgrade
+#                  arguments:
+#                    artifacts:
+#                      - name: input-parameters
+#                        from: "{{steps.gen-global-helm-args.outputs.artifacts.render}}"
+#                      - name: runner-context
+#                        from: "{{workflow.outputs.artifacts.runner-context}}"
+#                      - name: helm-release
+#                        from: "{{inputs.artifacts.monitoring-helm-release}}"
 
               - - name: capact-upgrade
                   capact-action: helm.upgrade

@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var hiddenFlags = []string{
+var argoHiddenFlags = []string{
 	"as",
 	"as-group",
 	"certificate-authority",
