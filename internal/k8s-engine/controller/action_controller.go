@@ -187,7 +187,7 @@ func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1
 
 		// Ensure that TypeInstances are unlocked.
 		err := r.svc.UnlockTypeInstances(ctx, action)
-		if ignoreLockedByDifferentOwner(err) != nil {
+		if r.ignoreLockedByDifferentOwner(err) != nil {
 			return false, errors.Wrap(err, "while unlocking TypeInstances")
 		}
 
@@ -198,16 +198,6 @@ func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1
 
 	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
 	return false, r.k8sCli.Update(ctx, action)
-}
-
-// ignoreLockedByDifferentOwner ignores GraphQL error which says that TI are locked by different owner.
-// In our case it means that TI were already unlocked by a given Action and someone else locked them.
-// TODO: fix that after adding proper error types to GraphQL responses.
-func ignoreLockedByDifferentOwner(err error) error {
-	if strings.Contains(err.Error(), "locked by different owner") {
-		return nil
-	}
-	return err
 }
 
 // initAction can be extracted to mutation webhook.
@@ -313,7 +303,7 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of running action")
 		}
-		return ctrl.Result{RequeueAfter: 30 * time.Second}, nil
+		return ctrl.Result{RequeueAfter: instantRequeueDelayAfterUpdate}, nil
 	}
 
 	// status didn't change, no need to requeue
@@ -369,8 +359,6 @@ func (r *ActionReconciler) handleFinishedAction(ctx context.Context, action *v1a
 		return ctrl.Result{}, errors.Wrap(err, "while unlocking TypeInstances")
 	}
 
-	// TODO: "while updating status of executed action: Action.core.capact.io \"capact-upgrade-c6bkd\"
-	// is invalid: status.output.typeInstances: Invalid value: \"null\": status.output.typeInstances in body must be of type array: \"null\""
 	if action.Status.Output == nil {
 		action.Status.Output = &v1alpha1.ActionOutput{}
 	}
@@ -414,7 +402,7 @@ func (r *ActionReconciler) handleRetry(ctx context.Context, action *v1alpha1.Act
 	case retry < r.maxRetries:
 		errMsg = fmt.Sprintf("%s (will retry - %d/%d)", errMsg, retry, r.maxRetries)
 		action.Status = r.failStatus(action, currentPhase, errMsg)
-		result = ctrl.Result{Requeue: true} // TODO: check if we should use RequeueAfter to trigger proper AddRateLimited
+		result = ctrl.Result{Requeue: true}
 	default:
 		errMsg = fmt.Sprintf("%s (giving up - exceeded %d retries)", errMsg, r.maxRetries)
 		action.Status = r.failStatus(action, v1alpha1.FailedActionPhase, errMsg)
@@ -452,6 +440,16 @@ func (r *ActionReconciler) newStatusForAction(action *v1alpha1.Action, eventType
 	}
 
 	return *statusCpy
+}
+
+// ignoreLockedByDifferentOwner ignores GraphQL error which says that TI are locked by different owner.
+// In our case it means that TI were already unlocked by a given Action and someone else locked them.
+// TODO: fix that after adding proper error types to GraphQL responses.
+func (r *ActionReconciler) ignoreLockedByDifferentOwner(err error) error {
+	if strings.Contains(err.Error(), "locked by different owner") {
+		return nil
+	}
+	return err
 }
 
 func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentReconciles int) error {

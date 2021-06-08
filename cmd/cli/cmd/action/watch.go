@@ -17,7 +17,7 @@ func NewWatch() *cobra.Command {
     Watch an Action until it has completed execution
 
     NOTE:   An action needs to be created and run in order to run this command.
-            This command call the Kubernetes API directly. As a result, KUBECONFIG has to be configured
+            This command calls the Kubernetes API directly. As a result, KUBECONFIG has to be configured
             with the same cluster as the one which the Gateway points to.
     `
 	cmd.Example = heredoc.WithCLIName(`
