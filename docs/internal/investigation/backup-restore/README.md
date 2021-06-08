@@ -299,7 +299,7 @@ Velero also allows to set [scheduled job](https://velero.io/docs/v1.5/api-types/
 * Cannot restore only data volumes. It always restores a pod which attached a volume https://github.com/vmware-tanzu/velero/issues/504
 * Cannot do partial restores. It's all or nothing approach https://github.com/vmware-tanzu/velero/issues/904
 * Can use only one selector
-  If we want to backup for example Jira and PostgreSQL together we need to set them the same label first.
+  If we want to backup for example Mattermost and PostgreSQL together we need to set them the same label first.
   Another option is to create two backups.
 * Cannot overwrite existing objects. 
   This means that we need to delete the current objects to do a restore.

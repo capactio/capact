@@ -716,7 +716,7 @@ kubectl describe actions.core.capact.io mattermost
 The output is:
 
 ```bash
-Name:         install-confluence
+Name:         mattermost
 Namespace:    default
 Labels:       <none>
 Annotations:  <none>

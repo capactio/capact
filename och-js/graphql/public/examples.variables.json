@@ -1,9 +1,9 @@
 {
-  "interfaceGroupPath": "cap.interface.productivity.jira",
+  "interfaceGroupPath": "cap.interface.productivity.mattermost",
   "interfaceGroupPathPattern": "cap.interface.*",
-  "interfacePath": "cap.interface.productivity.jira.install",
+  "interfacePath": "cap.interface.productivity.mattermost.install",
   "interfacesPathPattern": "cap.interface.*",
-  "implementationPath": "cap.implementation.atlassian.jira.install",
+  "implementationPath": "cap.implementation.mattermost.mattermost-team-edition.install",
   "implementationsPathPattern": "cap.implementation.gcp.*",
   "typePath": "cap.core.type.networking.hostname",
   "typesPathPattern": "cap.core.type.*",

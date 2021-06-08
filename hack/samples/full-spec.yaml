@@ -4,7 +4,7 @@ metadata:
   name: "full-spec"
 spec:
   actionRef:
-    path: "cap.interface.productivity.jira.install"
+    path: "cap.interface.productivity.mattermost.install"
     revision: "0.1.0"
   input:
     parameters:
