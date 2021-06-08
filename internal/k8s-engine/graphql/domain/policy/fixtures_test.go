@@ -96,6 +96,7 @@ func fixGQL() graphql.Policy {
 									},
 								},
 							},
+							AdditionalInput: map[string]interface{}(nil),
 						},
 					},
 					{

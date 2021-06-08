@@ -322,7 +322,7 @@ input PolicyRuleInput {
 
 input PolicyRuleInjectDataInput {
   typeInstances: [TypeInstanceReferenceInput!]
-  additionalInput: JSON
+  additionalInput: Any
 }
 
 input PolicyRuleImplementationConstraintsInput {

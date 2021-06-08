@@ -175,7 +175,7 @@ type PolicyRuleInjectData struct {
 
 type PolicyRuleInjectDataInput struct {
 	TypeInstances   []*TypeInstanceReferenceInput `json:"typeInstances"`
-	AdditionalInput *JSON                         `json:"additionalInput"`
+	AdditionalInput interface{}                   `json:"additionalInput"`
 }
 
 type PolicyRuleInput struct {

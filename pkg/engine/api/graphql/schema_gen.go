@@ -1079,7 +1079,7 @@ input PolicyRuleInput {
 
 input PolicyRuleInjectDataInput {
   typeInstances: [TypeInstanceReferenceInput!]
-  additionalInput: JSON
+  additionalInput: Any
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -5044,7 +5044,7 @@ func (ec *executionContext) unmarshalInputPolicyRuleInjectDataInput(ctx context.
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalInput"))
-			it.AdditionalInput, err = ec.unmarshalOJSON2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐJSON(ctx, v)
+			it.AdditionalInput, err = ec.unmarshalOAny2interface(ctx, v)
 			if err != nil {
 				return it, err
 			}

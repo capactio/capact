@@ -32,7 +32,7 @@ type Rule struct {
 
 type InjectData struct {
 	TypeInstances   []TypeInstanceToInject `json:"typeInstances,omitempty"`
-	AdditionalInput interface{}            `json:"additionalInput,omitempty"`
+	AdditionalInput map[string]interface{} `json:"additionalInput,omitempty"`
 }
 
 type ImplementationConstraints struct {

@@ -1,11 +1,10 @@
 package policy
 
 import (
-	"encoding/json"
-
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/pkg/errors"
 )
 
 type Converter struct{}
@@ -14,20 +13,25 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) policy.Policy {
+func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (*policy.Policy, error) {
 	var rules policy.RulesList
 
 	for _, gqlRule := range in.Rules {
+		policyRules, err := c.policyRulesFromGraphQLInput(gqlRule.OneOf)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting Policy rules")
+		}
+
 		rules = append(rules, policy.RulesForInterface{
 			Interface: c.manifestRefFromGraphQLInput(gqlRule.Interface),
-			OneOf:     c.policyRulesFromGraphQLInput(gqlRule.OneOf),
+			OneOf:     policyRules,
 		})
 	}
 
-	return policy.Policy{
+	return &policy.Policy{
 		APIVersion: policy.CurrentAPIVersion,
 		Rules:      rules,
-	}
+	}, nil
 }
 
 func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
@@ -75,7 +79,7 @@ func (c *Converter) policyInjectDataToGraphQL(data *policy.InjectData) *graphql.
 	}
 }
 
-func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) []policy.Rule {
+func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) ([]policy.Rule, error) {
 	var rules []policy.Rule
 
 	for _, gqlRule := range in {
@@ -88,35 +92,41 @@ func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) [
 			}
 		}
 
+		injectData, err := c.policyInjectDataFromGraphQLInput(gqlRule.Inject)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting Policy inject data")
+		}
+
 		rule := policy.Rule{
 			ImplementationConstraints: implConstraints,
-			Inject:                    c.policyInjectDataFromGraphQLInput(gqlRule.Inject),
+			Inject:                    injectData,
 		}
 
 		rules = append(rules, rule)
 	}
 
-	return rules
+	return rules, nil
 }
 
-func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleInjectDataInput) *policy.InjectData {
+func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleInjectDataInput) (*policy.InjectData, error) {
 	if input == nil {
-		return nil
+		return nil, nil
 	}
 
-	var additionalInput interface{}
+	var additionalInput map[string]interface{}
 
 	if input.AdditionalInput != nil {
-		if err := json.Unmarshal([]byte(*input.AdditionalInput), &additionalInput); err != nil {
-			// TODO: handle the error better
-			additionalInput = nil
+		var ok bool
+		additionalInput, ok = input.AdditionalInput.(map[string]interface{})
+		if !ok {
+			return nil, ErrCannotConvertAdditionalInput
 		}
 	}
 
 	return &policy.InjectData{
 		TypeInstances:   c.typeInstancesToInjectFromGraphQLInput(input.TypeInstances),
 		AdditionalInput: additionalInput,
-	}
+	}, nil
 }
 
 func (c *Converter) manifestRefToGraphQL(in types.ManifestRef) *graphql.ManifestReferenceWithOptionalRevision {

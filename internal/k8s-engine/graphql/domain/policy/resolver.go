@@ -14,7 +14,7 @@ type Service interface {
 }
 
 type policyConverter interface {
-	FromGraphQLInput(in graphql.PolicyInput) policy.Policy
+	FromGraphQLInput(in graphql.PolicyInput) (*policy.Policy, error)
 	ToGraphQL(in policy.Policy) graphql.Policy
 }
 
@@ -31,9 +31,12 @@ func NewResolver(svc Service, conv policyConverter) *Resolver {
 }
 
 func (r *Resolver) UpdatePolicy(ctx context.Context, in graphql.PolicyInput) (*graphql.Policy, error) {
-	policy := r.conv.FromGraphQLInput(in)
+	pol, err := r.conv.FromGraphQLInput(in)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting policy from GraphQL input")
+	}
 
-	policy, err := r.svc.Update(ctx, policy)
+	policy, err := r.svc.Update(ctx, *pol)
 	if err != nil {
 		return nil, errors.Wrap(err, "while updating Policy")
 	}
