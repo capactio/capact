@@ -29,7 +29,7 @@ The diagram below shows the scenario:
 
 ###  Prerequisites
 
-* Capact cluster installed, for example on [AWS EKS](../installation/aws-eks.md).See also [GCP cluster installation guide](../installation/gcp-gke.md).
+* Capact cluster installed, for example on [AWS EKS](../installation/aws-eks.md). See also [GCP cluster installation guide](../installation/gcp-gke.md).
 
 > **NOTE:** For AWS EKS Capact installation, all operation need to be run from the bastion host.
 
@@ -78,60 +78,75 @@ The following tools are required:
    ```bash
    kubectl label node <NODE NAME> node.capact.io/type=storage
    ```
-   
-1. Create an Action with the `cap.interface.productivity.rocketchat.install` interface:
 
-    Open interactive actions browser, and type there `rocket` to find correct action.
+1. Export Capact cluster domain name as environment variable:
+
+   ```bash
+   export CAPACT_DOMAIN_NAME={domain_name} # e.g. demo.cluster.capact.dev
+   ``` 
+
+1. Create a file with installation parameters:
 
     ```bash
-    capact hub interfaces browse
+    cat > /tmp/rocketchat-params.yaml << ENDOFFILE
+    host: chat.${CAPACT_DOMAIN_NAME}
+    replicaCount: 3
+    resources:
+      requests:
+        memory: "2G"
+        cpu: "1"
+      limits:
+        memory: "4G"
+        cpu: "1"
+    affinity:
+      nodeAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          nodeSelectorTerms:
+          - matchExpressions:
+            - key: node.capact.io/type
+              operator: NotIn
+              values:
+              - storage    
+    ENDOFFILE
     ```
 
-    Press enter, this will start a wizard:
+1. Create an Action:
 
-    * set the name `rocket`
-    * accept `default` namespace
-    * type `y` to provide input parameters
-    * in the editor provide following data(remember to update a domain)
-
-      ```yaml
-      host: chat.demo.capact.dev
-      replicas: 3
-      affinity:
-        nodeAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            nodeSelectorTerms:
-            - matchExpressions:
-              - key: node.capact.io/type
-                operator: NotIn
-                values:
-                - storage
-      ```
-    * type `n` when asked about providing type instances
+    ```bash
+    capact action create cap.interface.productivity.rocketchat.install \
+    --name rocketchat \
+    --parameters-from-file /tmp/rocketchat-params.yaml
+    ```
 
 1. Get the status of the Action from the previous step:
 
    ```bash
-   capact action get rocket
+   capact action get rocketchat
    ```
 
    Wait until the Action is in `READY_TO_RUN` state. It means that the Action was processed by the Engine, and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
 
-1. Run the rendered Action:
-
-   In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, you need to run the action:
+1. Run the Action.
+   
+   In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, execute:
 
    ```bash
-   capact action run rocket
+   capact action run rocketchat
    ```
 
-1. Check the Action execution:
-    
+1. Watch the Action:
+
    ```bash
-   capact action watch rocket
+   capact action watch rocketchat
    ```
 
    Wait until the Action is finished.
+
+1. Once the Action is succeeded, view output TypeInstances:
+
+   ```bash
+   capact action status rocketchat
+   ```
 
 1. Open the RocketChat UI using the **host** value from the previous step.
 
@@ -217,7 +232,7 @@ Here we are simulating scenario when Kubernetes lost a connection to one of the 
 When you are done, remove the Action and Helm charts:
 
 ```bash
-capact action delete rocket
+capact action delete rocketchat
 helm delete $(helm list -f="rocketchat-*|mongodb-*" -q
 ```
 
