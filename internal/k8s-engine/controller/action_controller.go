@@ -1,12 +1,14 @@
 package controller
 
 import (
-	"capact.io/capact/internal/ptr"
-	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"context"
 	"fmt"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"strings"
 	"time"
+
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -184,18 +186,28 @@ func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1
 	case action.IsCompleted():
 
 		// Ensure that TypeInstances are unlocked.
-		if err := r.svc.UnlockTypeInstances(ctx, action); err != nil {
+		err := r.svc.UnlockTypeInstances(ctx, action)
+		if ignoreLockedByDifferentOwner(err) != nil {
 			return false, errors.Wrap(err, "while unlocking TypeInstances")
 		}
 
 	default:
 
-		// Currently, we do not need to clean up anything as we use ownerReference.
-
+		// Currently, we do not need to clean up anything as we use ownerReference for other resources.
 	}
 
 	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
 	return false, r.k8sCli.Update(ctx, action)
+}
+
+// ignoreLockedByDifferentOwner ignores GraphQL error which says that TI are locked by different owner.
+// In our case it means that TI were already unlocked by a given Action and someone else locked them.
+// TODO: fix that after adding proper error types to GraphQL responses.
+func ignoreLockedByDifferentOwner(err error) error {
+	if strings.Contains(err.Error(), "locked by different owner") {
+		return nil
+	}
+	return err
 }
 
 // initAction can be extracted to mutation webhook.

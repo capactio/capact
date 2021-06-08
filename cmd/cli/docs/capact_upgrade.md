@@ -37,7 +37,7 @@ capact upgrade --version 0.1.0
       --override-capact-image-tag string    Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.
       --timeout duration                    Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
       --version string                      Capact version. (default "@latest")
-  -w, --wait                                Waits for the upgrade process until it finish or the defined "--timeout" occurs.
+  -w, --wait                                Waits for the upgrade process until it finish or the defined "--timeout" occurs. (default true)
 ```
 
 ### Options inherited from parent commands

@@ -138,19 +138,6 @@ func mapToStrictOrRegex(in []string) string {
 	return fmt.Sprintf("(^%s$)", out)
 }
 
-func isActionNotFound(ctx context.Context, actCli client.ClusterClient, name string) (bool, error) {
-	act, err := actCli.GetAction(ctx, name)
-	if err != nil { // may be network issue, ignoring
-		return false, err
-	}
-
-	if act != nil {
-		return false, nil
-	}
-
-	return true, nil
-}
-
 func AllowedPhases() string {
 	var out []string
 	for _, p := range gqlengine.AllActionStatusPhase {
