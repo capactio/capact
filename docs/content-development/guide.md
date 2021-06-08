@@ -29,9 +29,9 @@ This guide shows the first steps on how to develop OCF content for Capact. We wi
 - define new **Types** and **Interfaces**,
 - create **Implementation** for the **Interfaces**,
 - use other **Interfaces** in your **Implementations**,
-- test the new manifests on a local development Capact cluster
+- test the new manifests on a local development Capact cluster.
 
-As an example, we will create OCF manifests to deploy Confluence with a PostgreSQL database.
+As an example, we will create OCF manifests to deploy Mattermost with a PostgreSQL database.
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ Some other materials worth reading before are:
 - [Mattermost installation tutorial](../example/mattermost-installation.md) - Learn how to execute actions in Capact.
 - [Argo Workflows documentation](https://argoproj.github.io/argo-workflows/) - Capact action syntax is based on Argo workflows, so it's highly recommended you understand what is Argo and how to create Argo workflows.
 - [Capact runners](../architecture/runner.md) - Understand, what are Capact runners.
-- [Capact CLI](../cli/commands/capact.md) - Learn how to validate your manifests syntax.
+- [Capact CLI validate command](../cli/commands/capact_validate.md) - Learn how to validate your manifests syntax.
 
 ## Types, Interfaces and Implementations
 
@@ -65,28 +65,28 @@ An actual object of a **Type** is called a **TypeInstance**.
 
 Of course, there are multiple ways to create a PostgreSQL instance: you can create it on a public cloud or on-premise, and you could deploy it as a virtual machine or as a Kubernetes StatefulSet. To cover these scenarios, Capact allows defining multiple **Implementations** of some **Interfaces**. For example:
 - `aws.postgresql.install` **Implementation** of the `postgresql.install` **Interface** will deploy AWS RDS instances, whereas
-- `bitnami.postgresql.install` **Implementation** will deploys a PostgreSQL Helm chart on Kubernetes.
+- `bitnami.postgresql.install` **Implementation** will deploy a PostgreSQL Helm chart on Kubernetes.
 
 ## Define your Types and Interfaces
 
-Let's try to create manifests required to define a capability to install Confluence servers. We will need to create the following entities:
-- `confluence.config` **Type** - Represents a Confluence server.
-- `confluence.install-input` **Type** - Represents input parameters needed to install a Confluence server.
-- `confluence` **InterfaceGroup** - Groups **Interfaces** from the `confluence` group, e.g. if you have `confluence.install` and `confluence.uninstall` **Interfaces**.
-- `confluence.install` **Interface** - An operation, which installs Confluence servers. You can think of it as a function:
-```
-confluence.install(confluence.install-input) -> confluence.config
-```
+Let's try to create manifests required to define a capability to install [Mattermost](https://mattermost.com/) server. We will need to create the following entities:
+- `mattermost.config` **Type** - Represents a Mattermost server.
+- `mattermost.install-input` **Type** - Represents input parameters needed to install a Mattermost server.
+- `mattermost` **InterfaceGroup** - Groups **Interfaces** from the `mattermost` group, e.g. if you have `mattermost.install` and `mattermost.upgrade` **Interfaces**.
+- `mattermost.install` **Interface** - An operation, which installs Mattermost servers. You can think of it as a function:
+  ```
+  mattermost.install(mattermost.install-input) -> mattermost.config
+  ```
 
 ### Create the Interface Group manifest
 
-First, we need to create an **InterfaceGroup** manifest, which groups **Interfaces** coresponding to some application.
-Let's create a InterfaceGroup called `cap.interface.productivity.confluence`, which will group **Interfaces** operating on Confluence instances.
+First, we need to create an **InterfaceGroup** manifest, which groups **Interfaces** corresponding to some application.
+Let's create a InterfaceGroup called `cap.interface.productivity.mattermost`, which will group **Interfaces** operating on Mattermost instances.
 
-In `och-content/interface/productivity/`, create a file called `confluence.yaml`, with the following content:
+In `och-content/interface/productivity/`, create a file called `mattermost.yaml`, with the following content:
 
 <details>
-  <summary>och-content/interface/productivity/confluence.yaml</summary>
+  <summary>och-content/interface/productivity/mattermost.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
@@ -94,12 +94,12 @@ revision: 0.1.0
 kind: InterfaceGroup
 metadata:
   prefix: cap.interface.productivity
-  name: Confluence
-  displayName: "Confluence Server"
-  description: "Confluence is a document collaboration tool"
-  documentationURL: https://support.atlassian.com/bitbucket-cloud/
-  supportURL: https://support.atlassian.com/bitbucket-cloud/
-  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
+  name: mattermost
+  displayName: "Mattermost"
+  description: "Mattermost is an open source collaboration tool for developers."
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  iconURL: https://docs.mattermost.com/_static/images/Mattermost-Logo-Blue.svg
   maintainers:
     - email: your.email@example.com
       name: your-name
@@ -114,26 +114,26 @@ signature:
 
 ### Create the Interface manifest
 
-After we have the **InterfaceGroup**, let's create the **Interface** for installing Confluence.
-Create the directory `och-content/interface/productivity/confluence`.
+After we have the **InterfaceGroup**, let's create the **Interface** for installing Mattermost.
+Create the directory `och-content/interface/productivity/mattermost`.
 
 Inside this directory, create a file `install.yaml` with the following content:
 
 <details>
-  <summary>och-content/interface/productivity/confluence/install.yaml</summary>
+  <summary>och-content/interface/productivity/mattermost/install.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.confluence
+  prefix: cap.interface.productivity.mattermost
   name: install
-  displayName: "Install Confluence"
-  description: "Confluence is a document collaboration tool"
-  documentationURL: https://support.atlassian.com/confluence/
-  supportURL: https://support.atlassian.com/confluence/
-  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
+  displayName: "Install Mattermost Team Edition"
+  description: "Install action for Mattermost Team Edition"
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  iconURL: https://docs.mattermost.com/_static/images/Mattermost-Logo-Blue.svg
   maintainers:
     - email: your.email@example.com
       name: your-name
@@ -141,25 +141,25 @@ metadata:
 
 spec:
   input:
-    parameters:
-      input-parameters:   # the Interface requires an input-parameter of Type "cap.type.productivity.confluence.install-input"
+    parameters: # the Interface requires `input-parameters` of Type "cap.type.productivity.mattermost.install-input"
+      input-parameters: 
         jsonSchema:
           value: |-
             {
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.productivity.confluence.install-input",
+                  "name": "cap.type.productivity.mattermost.install-input",
                   "revision": "0.1.0"
                 }
               },
               "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
             }
   output:
-    typeInstances:
-      confluence-config:    # the Interface outputs TypeInstances of Type "cap.type.productivity.confluence.config"
+    typeInstances: # the Interface outputs TypeInstance of Type "cap.type.productivity.mattermost.config"
+      mattermost-config: 
         typeRef:
-          path: cap.type.productivity.confluence.config
+          path: cap.type.productivity.mattermost.config
           revision: 0.1.0
 
 signature:
@@ -173,14 +173,14 @@ The `spec.input` property defines inputs, required by the **Interface**. There a
 
 The `spec.output` property defines the **TypeInstance**, which this **Interface** returns.
 
-Although Confluence needs a database, we don't specify it as an input argument here. That is because, we leave selecting a database to the **Implementation**.
+Although Mattermost needs a database, we don't specify it as an input argument here. That is because, we leave selecting a database to the **Implementation**.
 
 ### Create the Type manifests
 
-Now we need to define the two **Types**, which we use in our **Interface**: `cap.type.productivity.confluence.install-input` and `cap.type.productivity.confluence.config`.
+Now we need to define the two **Types**, which we use in our **Interface**: `cap.type.productivity.mattermost.install-input` and `cap.type.productivity.mattermost.config`.
 
 <details>
-  <summary>och-content/type/productivity/confluence/install-input.yaml</summary>
+  <summary>och-content/type/productivity/mattermost/install-input.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
@@ -188,12 +188,11 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.confluence
-  displayName: Confluence installation input
-  description: Defines installation parameters for Confluence
-  documentationURL: https://support.atlassian.com/confluence-cloud/
-  supportURL: https://www.atlassian.com/software/confluence
-  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
+  prefix: cap.type.productivity.mattermost
+  displayName: "Mattermost install input"
+  description: Defines installation parameters for Mattermost
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com
   maintainers:
     - email: your.email@example.com
       name: your-name
@@ -205,7 +204,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Jira configuration",
+        "title": "The schema for Mattermost configuration",
         "required": [
             "host"
         ],
@@ -229,7 +228,7 @@ signature:
 </details>
 
 <details>
-  <summary>och-content/type/productivity/confluence/config.yaml</summary>
+  <summary>och-content/type/productivity/mattermost/config.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
@@ -237,12 +236,12 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: config
-  prefix: cap.type.productivity.confluence
-  displayName: Confluence instance config
-  description: Defines configuration for Confluence instance
-  documentationURL: https://support.atlassian.com/confluence-cloud/
-  supportURL: https://www.atlassian.com/software/confluence
-  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
+  prefix: cap.type.productivity.mattermost
+  displayName: Mattermost config
+  description: Defines configuration for Mattermost instance
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  iconURL: https://docs.mattermost.com/_static/images/Mattermost-Logo-Blue.svg
   maintainers:
     - email: your.email@example.com
       name: your-name
@@ -254,7 +253,7 @@ spec:
       {
         "$schema": "http://json-schema.org/draft-07/schema",
         "type": "object",
-        "title": "The schema for Jira configuration",
+        "title": "The schema for Mattermost configuration",
         "required": [
             "version"
         ],
@@ -291,11 +290,11 @@ The **Type** values are described using [JSON Schema](https://json-schema.org/).
 
 ## Runners
 
-The Action execution is handled by runners. For now we provide the following runners:
+The Action execution is handled by runners. Currently, we provide the following runners:
 - [Argo Workflow Runner](https://github.com/capactio/capact/tree/main/cmd/argo-runner/README.md)
 - [Helm Runner](https://github.com/capactio/capact/tree/main/cmd/helm-runner/README.md)
-- [CloudSQL Runner](https://github.com/capactio/capact/tree/main/cmd/cloudsql-runner/README.md)
 - [Terraform Runner](https://github.com/capactio/capact/tree/main/cmd/terraform-runner/README.md)
+- [CloudSQL Runner](https://github.com/capactio/capact/tree/main/cmd/cloudsql-runner/README.md) (deprecated in favor of Terraform Runner)
 
 To check the schema of the runner input, you have to look in the [`och-content/type/runner`](https://github.com/capactio/capact/tree/main/och-content/type/runner) directory. You can find there the JSON schema and an example input for the runner.
 
@@ -306,24 +305,24 @@ You can read more about runners in [this document](../architecture/runner.md).
 > The syntax used to describe the workflows in **Implementations** is based on [Argo](https://argoproj.github.io/argo/).
 > It's highly recommended you read their documentation and understand what is Argo and how to create Argo workflows, before writing OCF Implementations.
 
-After we defined the **Interfaces** and the **Types**, we can write an **Implementation** of `confluence.install`. Our **Implementation** will use a PostgreSQL database, which will be provided by another **Interface**, which is already available in Capact. We also allow users to provide his own PostgreSQL instance **TypeInstance**.
+After we defined the **Interfaces**, and the **Types**, we can write an **Implementation** of `mattermost.install`. Our **Implementation** will use a PostgreSQL database, which will be provided by another **Interface**, which is already available in Capact. We also allow users to provide his own PostgreSQL instance **TypeInstance**.
 
-Create a file `och-content/implementation/atlassian/confluence/install.yaml` with the following content:
+Create a file `och-content/implementation/mattermost/mattermost-team-edition/install.yaml` with the following content:
 
 <details>
-  <summary>och-content/implementation/atlassian/confluence/install.yaml</summary>
+  <summary>och-content/implementation/mattermost/mattermost-team-edition/install.yaml</summary>
 
 ```yaml
 ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.confluence
+  prefix: cap.implementation.mattermost.mattermost-team-edition
   name: install
-  displayName: Install Confluence
-  description: Action which installs Confluence via Helm chart
-  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/confluence-server
-  supportURL: https://mox.sh/helm/
+  displayName: Install Mattermost Team Edition
+  description: Action which installs Mattermost Team Edition via Helm chart
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
   license:
     name: "Apache 2.0"
   maintainers:
@@ -332,45 +331,26 @@ metadata:
       url: your-website
 
 spec:
-  appVersion: "2.x.x"
+  appVersion: "10,11,12,13"
 
-  # Here we define an additional, optional input TypeInstance of Type "cap.type.database.postgresql.config".
+  outputTypeInstanceRelations:
+    mattermost-config:
+      uses:
+        - mattermost-helm-release
+        - postgresql
+        - database
+        - database-user
+
   additionalInput:
     typeInstances:
       postgresql:
         typeRef:
           path: cap.type.database.postgresql.config
           revision: 0.1.0
-        verbs: [ "get" ]
+        verbs: ["get"]
 
-  # We can also define additional output TypeInstances, which our Implementation creates.
-  # You can use in case your Implementation creates some additional resources,
-  # which are not specified in the Interface, but they should be uploaded to OCH.
-  #additionalOutput:
-  #  typeInstances:
-  #    some-additional-resource:
-  #      typeRef:
-  #        path: cap.type.instance
-  #        revision: 0.1.0
-  
-  # We specify which TypeInstances are uploaded to OCH as TypeInstances, along with theirs relations.
-  # We can specify here both required and optional output TypeInstances for a given manifest.
-  # You can also specify TypeInstances, which are defined in capact-outputTypeInstances in steps, to create proper relations.
-  # If a given Argo artifact is not mentioned here, it won't be created in OCH as TypeInstance.
-  outputTypeInstanceRelations:
-      confluence-config:
-        uses:
-          - confluence-helm-release
-          - postgresql
-          - database
-          - user
-  # If a given TypeInstance should be uploaded to OCH, but it doesn't have any dependencies,
-  # you can specify it such as:
-  #   some-additional-resource: {}
-
-  # Here we say, we implement the Interface, we defined before.
   implements:
-    - path: cap.interface.productivity.confluence.install
+    - path: cap.interface.productivity.mattermost.install
       revision: 0.1.0
 
   requires:
@@ -379,18 +359,21 @@ spec:
         - name: kubernetes
           revision: 0.1.0
 
-  # In this section we need to import all Interfaces, we will use in our Implementation.
-  # These can be Capact runner or other actions.
   imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
       methods:
         - name: run
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.runner.helm
-      alias: helm
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
       methods:
-        - name: install
+        - name: template
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.database.postgresql
       alias: postgresql
@@ -401,44 +384,30 @@ spec:
           revision: 0.1.0
         - name: create-user
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.jinja2
-      alias: jinja2
-      methods:
-        - name: template
-          revision: 0.1.0
 
   action:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: main
+        entrypoint: mattermost-install
         templates:
-          - name: main
+          - name: mattermost-install
             inputs:
               artifacts:
-                # Capact Engine injects the 'input-parameters' artifacts into the workflow entrypoint.
-                # It contains the Interface parameters, in our case it is `confluence.install-input`.
                 - name: input-parameters
-                # You need to specify all optional TypeInstances that can be consumed by the workflow.
-                # Later, the user or other workflow can inject own TypeInstance which fulfills schema for this TypeInstance.
-                # You as a Workflow developer, can refer to them in the `capact-when` statements.
-                - name: postgresql # Same name as defined under the `additionalInput.typeInstances` property.
+                - name: postgresql
                   optional: true
-            # Under `outputs`, you need to specify all outputs defined under Interface that this workflow implements.
-            # As a result, others can refer to the Action output via "{{ steps.<step_name>.outputs.artifacts.<artifact_name> }}".
-            # Same as we do with the postgres step in this workflow.
             outputs:
-                - name: confluence-config # Same name as defined in Interface
-                  from: "{{steps.helm-run.outputs.artifacts.additional}}" # Instructs Argo which artifact holds the Confluence config
+              artifacts:
+                - name: mattermost-config
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
             steps:
-              # If the postgresql input argument was not provided, then create it
-              # using the imported 'postgresql.install' Interface.
-              # Otherwise, it is replaced with the "mock" step emitting the input argument which satisfied this step as a step output.
+              # Install DB
               - - name: install-db
-                  capact-action: postgresql.install
                   capact-when: postgresql == nil
+                  capact-action: postgresql.install
                   capact-outputTypeInstances:
-                    - name: postgresql                # We have to define the output TypeInstance 'postgresql' from this step
+                    - name: postgresql
                       from: postgresql
                   arguments:
                     artifacts:
@@ -447,51 +416,51 @@ spec:
                           data: |
                             superuser:
                               username: superuser
-                              password: okon
                             defaultDBName: postgres
 
-              # Create the user for Confluence in our PostgreSQL instance
-              # using the imported 'postgresql.create-user' Interface
               - - name: create-user
                   capact-action: postgresql.create-user
                   capact-outputTypeInstances:
-                    - name: user
+                    - name: database-user
                       from: user
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" # Refer to output from `install-db` step. 
-                                                                                  # Accessing the `install-db` output is possible even if the step was 
-                                                                                  # satisfied by the input argument and replaced with the "mock" step.
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: user-input
                         raw:
                           data: |
-                            name: confluence
-                            # We are not passing a password. It will be generated.
+                            name: mattermost
 
-              # Create the database for Confluence in our PostgreSQL instance
-              # using the imported 'postgresql.create-db' Interface
+              - - name: render-create-db-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            name: mattermost
+                            owner: "<@ name @>"
+                      - name: input-parameters
+                        from: "{{steps.create-user.outputs.artifacts.user}}"
+                      - name: configuration
+                        raw:
+                          data: |
+
               - - name: create-db
                   capact-action: postgresql.create-db
                   capact-outputTypeInstances:
-                    - name: database                  # Defining the output TypeInstance 'database'
+                    - name: database
                       from: database
                   arguments:
                     artifacts:
                       - name: postgresql
-                        from: "{{steps.install-db.outputs.artifacts.postgresql}}" 
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: database-input
-                        raw:
-                          data: |
-                            name: confluencedb 
-                            owner: superuser
+                        from: "{{steps.render-create-db-args.outputs.artifacts.render}}"
 
-              # Here we prepare the input for the Helm runner. In the next three steps,
-              # we use Jinja2 to render the input and fill the required parameters.
-              # In the future there might be a better way to do this.
-
-              # In this step only <@ host @> variable will be rendered
-              - - name: render-helm-args
+              # Install Mattermost
+              - - name: create-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -500,70 +469,82 @@ spec:
                           data: |
                             generateName: true
                             chart:
-                              name: "confluence-server"
-                              repo: "https://helm.mox.sh"
-                            output:
-                              goTemplate:
-                                version: "{{ .Values.image.tag }}"
-                                host: "{{ template \"confluence-server.fullname\" . }}"
+                              name: "mattermost-team-edition"
+                              repo: "https://helm.mattermost.com"
+                              version: "4.0.0"
                             values:
-                              postgresql:
-                                enabled: false
-                              databaseConnection:
-                                host: "<@ host @>"
-                                user: "<@ user.name @>"
-                                password: "<@ user.password @>"
-                                database: "<@ db.name @>"
                               ingress:
                                 enabled: true
-                                hosts:
-                                - host: confluence.capact.local
-                                  paths: ['/']
+                                path: "/"
+                                annotations:
+                                  "cert-manager.io/cluster-issuer": letsencrypt
+                                hosts: 
+                                  - <@ host | default("mattermost.example.com") @>
+                                tls:
+                                  - hosts:
+                                      - <@ host | default("mattermost.example.com") @>
+                                    secretName: mattermost-team-edition-tls-<@ random_word(length=5) @>
+                            output:
+                              goTemplate: |
+                                host: "{{ index .Values.ingress.hosts 0 }}"
+                                version: "{{ .Values.image.tag }}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: fill-psql
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
                       - name: configuration
                         raw:
-                          data: ""
+                          data: |
+                            prefix: psql
 
-              # In this step variables with the prefix "db" will be rendered
-              - - name: fill-db-params-in-helm-args
+              - - name: fill-user
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.render-helm-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.create-db.outputs.artifacts.database}}"
-                      - name: configuration
-                        raw:
-                          data: "prefix: db"
-
-              # In this step variables with the prefix "user" will be rendered
-              - - name: fill-user-params-in-helm-args
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.fill-db-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-psql.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{steps.create-user.outputs.artifacts.user}}"
                       - name: configuration
                         raw:
-                          data: "prefix: user"
+                          data: |
+                            prefix: user
 
-              # Execute the Helm runner, with the input parameters created in the previous step.
-              # This will create the Helm chart and deploy our Confluence instance
-              - - name: helm-run
+              - - name: fill-db
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-user.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.create-db.outputs.artifacts.database}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: db
+
+              - - name: helm-install
                   capact-action: helm.install
                   capact-outputTypeInstances:
-                    - name: confluence-config         # Defining the output TypeInstance 'confluence-config'
+                    - name: mattermost-config
                       from: additional
-                    - name: confluence-helm-release   # Defining the output TypeInstance 'confluence-helm-release'
+                    - name: mattermost-helm-release
                       from: helm-release
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-user-params-in-helm-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-db.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
@@ -577,15 +558,15 @@ Let's take a look on the **Implementation** YAML. **Implementation** has the fol
 | Property                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `appVersion`                  | Application versions, which this **Implementation** supports.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `additionalInput`             | Additional input for the **Implementation**, compared to the **Interface**. In our case, here we define the `postgresql.config`, as our **Implementation** uses a PostgreSQL instance for Confluence.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `additionalInput`             | Additional input for the **Implementation**, compared to the **Interface**. In our case, here we define the `postgresql.config`, as our **Implementation** uses a PostgreSQL instance for Mattermost.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `additionalOutput`            | This section defines any additional **TypeInstances**, which are created in this **Implementation**, compared to the **Interface**. In our **Implementation**, we create a database in the database instance with the `postgresql.create-db` **Interface**, which outputs an `postgresql.database` **TypeInstance**. We have to write this down in `additionalOutput`, so Capact will resolve this **TypeInstance** metadata for uploading it to OCH.                                                                                                                                                                                      |
 | `outputTypeInstanceRelations` | Specifies all output TypeInstances to upload to OCH with theirs relationships between them. Only the TypeInstances created in this Implementation have to be mentioned here. If a TypeInstances in created in another action and brought into the context with `capact-outputTypeInstances`, then it should not be defined here.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `implements`                  | Defines which **Interfaces** are implemented by this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| `requires`                    | List of system prerequisites that need to be present in the environment managed by Capact to use this **Implementation**. In our example, we will deploy Confluence as a Helm chart on Kubernetes, which means we need a Kubernetes cluster. Requirement items can specify `alias` and be used inside workflow under `{{workflow.outputs.artifacts.{alias}}}`, where `{alias-name}` is the alias. A TypeInstance with alias is injected into the workflow based on Policy configuration. To learn more, see the [TypeInstance Injection](../feature/policy-configuration.md#typeinstance-injection) paragraph in Policy Configuration document. |
+| `requires`                    | List of system prerequisites that need to be present in the environment managed by Capact to use this **Implementation**. In our example, we will deploy Mattermost as a Helm chart on Kubernetes, which means we need a Kubernetes cluster. Requirement items can specify `alias` and be used inside workflow under `{{workflow.outputs.artifacts.{alias}}}`, where `{alias-name}` is the alias. A TypeInstance with alias is injected into the workflow based on Policy configuration. To learn more, see the [TypeInstance Injection](../feature/policy-configuration.md#typeinstance-injection) paragraph in Policy Configuration document. |
 | `imports`                     | Here we define all other **Interfaces**, we use in our **Implementation**. We can then refer to them as `'<alias>.<method-name>'`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `action`                      | Holds information about the actions that is executed. In the case of the Argo workflow Runner, in this section we define the Argo workflow, which is executed in this **Implementation**.                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
-> You can notice, that `confluence-config` (which is the `additional` output TypeInstance from `helm.install`) is defined in the `outputTypeInstanceRelations`, although it was created in `helm.install`. The `additional` from `helm.install` is specially, because `helm.install` does not know the Type of TypeInstances, so it's not defined in `helm.install` Implementation, but must be defined in the caller Implementation. In the future, we will improve the syntax, so it will be more clear, which TypeInstances need a separate entry in `outputTypeInstanceRelations` and which don't.
+> You can notice, that `mattermost-config` (which is the `additional` output TypeInstance from `helm.install`) is defined in the `outputTypeInstanceRelations`, although it was created in `helm.install`. The `additional` from `helm.install` is specially, because `helm.install` does not know the Type of TypeInstances, so it's not defined in `helm.install` Implementation, but must be defined in the caller Implementation. In the future, we will improve the syntax, so it will be more clear, which TypeInstances need a separate entry in `outputTypeInstanceRelations` and which don't.
 
 The workflow syntax is based on [Argo](https://argoproj.github.io/argo/), with a few extensions introduced by Capact. These extensions are:
 
@@ -596,11 +577,11 @@ The workflow syntax is based on [Argo](https://argoproj.github.io/argo/), with a
 | `.templates.steps[][].capact-outputTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations**. The `from` property must match the name of the output from the called Action. You can then use it in the Implementations `outputTypeInstanceRelations`, when defining relations between TypeInstances.                            |
 | `.templates.steps[][].capact-updateTypeInstance` | A list of **TypeInstances**, from the called action, which are brought into the context of this **Implementations** and will be used to update existing TypeInstance. The `from` property must match the name of the output from the called Action.                                                                                                    |
 
-Let's go through the **Implementation** and try to understand, what is happening in each step of the action. Our Confluence installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no **TypeInstance** for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` **Interface** to create an PostgreSQL instance.
+Let's go through the **Implementation** and try to understand, what is happening in each step of the action. Our Mattermost installation uses a PostgreSQL database. We defined an additional input `postgresql` of type `cap.type.database.postgresql.config`. Additional inputs are optional, so we need to handle the scenario, where no **TypeInstance** for `postgresql`  was provided. The first workflow step `install-db` is conditionally using the `postgresql.install` **Interface** to create an PostgreSQL instance.
 
 > The `input-parameters` for `postgresql.install` are hardcoded in this example. In a real workflow, they should be generated or taken from the `input-parameters` for this **Implementation**.
 
-In the next step we are creating a database for the Confluence server. If you look at the **Interface** definition of [`cap.interface.database.postgresql.create-db`](https://github.com/capactio/capact/tree/main/och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` **TypeInstance** of **Type** [`cap.type.database.postgresql.config`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/database-input.yaml), and outputs a `database` **TypeInstance** of **Type** [`cap.type.database.postgresql.database`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the **Interface** via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented **Interface** in the `capact-outputTypeInstances` field.
+In the next step we are creating a database for the Mattermost server. If you look at the **Interface** definition of [`cap.interface.database.postgresql.create-db`](https://github.com/capactio/capact/tree/main/och-content/interface/database/postgresql/create-db.yaml), you will see, that it requires a `postgresql` **TypeInstance** of **Type** [`cap.type.database.postgresql.config`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/config.yaml) and input parameters [`cap.type.database.postgresql.database-input`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/database-input.yaml), and outputs a `database` **TypeInstance** of **Type** [`cap.type.database.postgresql.database`](https://github.com/capactio/capact/tree/main/och-content/type/database/postgresql/database.yaml). In the step, we are providing the inputs to the **Interface** via the `.arguments.artifacts` field. We also have to map the output of this step to our output definitions in `additionalOutput` and the implemented **Interface** in the `capact-outputTypeInstances` field.
 
 The `render-helm-args`, `fill-db-params-in-helm-args` and `fill-user-params-in-helm-args` steps are used to prepare the input parameters for the `helm.install` **Interface**. Jinja template engine is used here to render the Helm runner arguments with the required data from the `postgresql` and `database` **TypeInstances**. Those steps don't create any **TypeInstances** and serve only the purpose of creating the input parameters for the Helm runner.
 You can check the schema of the Helm runner args in the [Type manifest](https://github.com/capactio/capact/tree/main/och-content/type/runner/helm/run-input.yaml).
@@ -609,7 +590,7 @@ You can check the schema of the Helm runner args in the [Type manifest](https://
 >
 > In the future we might improve the ways, on how to process artifacts in the workflow.
 
-The last step launches the Helm runner, deploys the Confluence server and creates the `confluence-config` and `confluence-helm-release` **TypeInstances**. The `confluence-config` **TypeInstance** data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
+The last step launches the Helm runner, deploys the Mattermost server and creates the `mattermost-config` and `mattermost-helm-release` **TypeInstances**. The `mattermost-config` **TypeInstance** data was provided by the Helm runner in the `additional` output artifacts from this step. Check the Helm runner documentation, on how the `additional` output is created.
 
 Note the `runner-context` argument, which provided the context for the runner. Capact Engine injects a global artifact `workflow.outputs.artifacts.runner-context` into the workflow, so if you use a runner, which needs the runner context, you can to do it using:
 ```yaml
@@ -656,85 +637,61 @@ APP_JSON_PUBLISH_ADDR=<your-local-docker-ip-address> APP_MANIFESTS_PATH=och-cont
 APP_JSON_PUBLISH_ADDR=http://172.17.0.1 APP_MANIFESTS_PATH=och-content populator register ocf-manifests .
 ```
 
-## Run your new action
+## Create and run your Action
 
-Now we will create the action, to trigger the Confluence installation. Open https://gateway.capact.local/ in your browser.
-Then copy the following queries, variables and HTTP headers to the GraphQL playground:
+Use the Capact CLI to run your Action.
 
-<details>
-  <summary>GraphQL queries</summary>
+1. Export Capact cluster domain name as environment variable:
 
-```graphql
-mutation CreateAction($in: ActionDetailsInput!) {
-  createAction(in: $in) {
-    name
-    status {
-      phase
-      message
-    }
-  }
-}
+   ```bash
+   export CAPACT_DOMAIN_NAME={domain_name} # e.g. capact.local
+   ``` 
 
-query GetAction($actionName: String!) {
-  action(name: $actionName) {
-    name
-    status {
-      phase
-      message
-    }
-  }
-}
+1. Create a file with installation parameters:
 
-mutation RunAction($actionName: String!) {
-  runAction(name: $actionName) {
-    name
-    status {
-      phase
-      message
-    }
-  }
-}
+    ```bash
+    cat > /tmp/mattermost-params.yaml << ENDOFFILE
+    host: mattermost.${CAPACT_DOMAIN_NAME}
+    ENDOFFILE
+    ```
 
-mutation DeleteAction($actionName: String!) {
-  deleteAction(name: $actionName) {
-    name
-  }
-}
-```
-</details>
+1. Create an Action:
 
-<details>
-  <summary>Query variables</summary>
+    ```bash
+    capact action create cap.interface.productivity.mattermost.install \
+    --name mattermost-install \
+    --parameters-from-file /tmp/mattermost-params.yaml
+    ```
 
-```json
-{
-  "actionName": "install-confluence",
-  "in": {
-    "name": "install-confluence",
-    "actionRef": {
-      "path": "cap.interface.productivity.confluence.install",
-      "revision": "0.1.0"
-    }
-  }
-}
-```
-</details>
+1. Get the status of the Action from the previous step:
 
-<details>
-  <summary>HTTP headers</summary>
+   ```bash
+   capact action get mattermost
+   ```
 
-```json
-{
-  "Authorization": "Basic Z3JhcGhxbDp0MHBfczNjcjN0"
-}
-```
-</details>
+   Wait until the Action is in `READY_TO_RUN` state. It means that the Action was processed by the Engine, and the Interface was resolved to a specific Implementation. As a user, you can verify that the rendered Action is what you expected. If the rendering is taking more time, you will see the `BEING_RENDERED` phase.
 
-![graphql-playground](./assets/graphql-playground.png)
+1. Run the Action.
 
-Execute the `CreateAction` mutation. This will create the Action resource in Capact. You can use the `GetAction` query to check the status of the Action. Wait till it is in the `READY_TO_RUN` phase.
+   In the previous step, the Action was in the `READY_TO_RUN` phase. It is not executed automatically, as the Engine waits for the user's approval. To execute it, execute:
 
-After it is in the `READY_TO_RUN` phase, you can see the workflow, which will be executed in the `renderedAction` field. To run the Action, execute the `RunAction` mutation. Use the `GetAction` query to monitor the status of the Action.
+   ```bash
+   capact action run mattermost
+   ```
+
+1. Watch the Action:
+
+   ```bash
+   capact action watch mattermost
+   ```
+
+   Wait until the Action is finished.
+
+1. Once the Action is succeeded, view output TypeInstances:
+
+   ```bash
+   capact action status mattermost
+   ```
 
 ### View the Action workflow in Argo UI
 
@@ -744,15 +701,21 @@ To get access to the Argo UI, execute the following command to set up port-forwa
 kubectl port-forward -n capact-system svc/argo-server 2746
 ```
 
-Now you can access the Argo UI with your browser by opening http://127.0.0.1:2746.
+Now you can access the Argo UI with your browser by opening [http://127.0.0.1:2746](http://127.0.0.1:2746).
 
 ![argo-ui](./assets/argo-ui.png)
 
 ### View the Action Custom Resource
 
-You can get useful information about your action using `kubectl`. You can check the `actions.core.capact.io` custom resource to get information about your action:
+You can also get useful information about your Action using `kubectl`. You can check the `actions.core.capact.io` Custom Resource to get information about your Action:
+
 ```bash
-$ kubectl describe actions.core.capact.io install-confluence
+kubectl describe actions.core.capact.io mattermost
+```
+
+The output is:
+
+```bash
 Name:         install-confluence
 Namespace:    default
 Labels:       <none>
@@ -768,16 +731,16 @@ Events:
   Type     Reason                Age                  From               Message
   ----     ------                ----                 ----               -------
   Normal   BeingRendered         3m2s                 action-controller  Rendering runner action
-  Warning  Render runner action  2s (x15 over 2m58s)  action-controller  while resolving Implementation for Action: while rendering Action: No implementation found for "cap.interface.productivity.confluence.install"
+  Warning  Render runner action  2s (x15 over 2m58s)  action-controller  while resolving Implementation for Action: while rendering Action: No implementation found for "cap.interface.productivity.mattermost.install"
 ```
 
-In the case above, we can see that the action rendering is failing, because the Capact Engine is not able to find the `cap.interface.productivity.confluence.install` **Implementation** in OCH.
+In the case above, we can see that the action rendering is failing, because the Capact Engine is not able to find the **Implementation** for `cap.interface.productivity.mattermost.install` **Interface** in OCH.
 
 ## Update TypeInstance
 
-During the Confluence installation a database user "confluence" was created. You may want to change the password for this user. Let's do this.
+During the Mattermost installation a database user "mattermost" was created. You may want to change the password for this user. Let's do this.
 
-First we need to create an Interface and a Type for user input:
+First we need to create an Interface, and a Type for user input:
 
 **Type**
 
@@ -833,7 +796,7 @@ signature:
 
 **Interface**
 
-It accepts a user input defined earlier and two TypeInstaces:
+It accepts a user input defined earlier and two TypeInstances:
 * postgresql - it's needed to get a database address
 * user - a database user to changes a password
 
@@ -1046,7 +1009,7 @@ signature:
 > to ensure Argo will be able to get the output artifacts from the container.
 > It's [a known issue](https://github.com/argoproj/argo-workflows/issues/1256) with the PNS executor, which Capact uses for executing Argo workflows.
 
-We only updated the user password. Now you need to update the Confluence settings. At this point you should know how to do this.
+We only updated the user password. Now you need to update the Mattermost settings. At this point you should know how to do this.
 
 Before using the new Interface you again need to populate data with the populator and run a new action. You can use the same GraphQL
 queries as before. Just change Query Variables:
@@ -1078,5 +1041,5 @@ queries as before. Just change Query Variables:
 
 ## Summary
 
-In this guide we went through different OCF manifests and their syntax. We created manifests which added a capability to install Confluence server instances. We also showed, how you can test the manifests you are creating and where to check for useful information, when debugging your action.
+In this guide we went through different OCF manifests and their syntax. We created manifests which added a capability to install Mattermost server instances. We also showed, how you can test the manifests you are creating and where to check for useful information, when debugging your action.
 

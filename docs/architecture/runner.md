@@ -98,7 +98,7 @@ The following diagram visualizes how Engine runs an Action using built-in Argo W
 
 4. Argo Workflow Runner reads the input data from the filesystem and based on it creates the Argo Workflow custom resource.
 
-5. Argo Workflow Controller watches Argo Workflows and executes them in a given Namespace. As a result, the actual Action is executed, e.g. Jira installation, cluster benchmarks, etc.
+5. Argo Workflow Controller watches Argo Workflows and executes them in a given Namespace. As a result, the actual Action is executed, e.g. Mattermost installation, cluster benchmarks, etc.
 
 ### Input data
 

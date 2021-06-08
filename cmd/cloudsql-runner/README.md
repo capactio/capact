@@ -1,5 +1,7 @@
 # CloudSQL runner
 
+> **NOTE**: This runner is deprecated in favor of [Terraform Runner](../terraform-runner).
+
 - [Overview](#overview)
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
