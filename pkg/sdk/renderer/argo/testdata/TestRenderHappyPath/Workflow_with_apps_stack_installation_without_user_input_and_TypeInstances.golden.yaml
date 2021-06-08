@@ -28,16 +28,16 @@ args:
               name: postgresql
             - from: '{{inputs.artifacts.input-parameters}}'
               name: input-parameters
-          name: jira-install
-          template: jira-install
+          name: app1-install
+          template: app1-install
         - arguments:
             artifacts:
             - from: '{{steps.install-shared-db.outputs.artifacts.postgresql}}'
               name: postgresql
             - from: '{{inputs.artifacts.input-parameters}}'
               name: input-parameters
-          name: confluence-install
-          template: confluence-install
+          name: app2-install
+          template: app2-install
     - arguments: {}
       inputs:
         artifacts:
@@ -200,7 +200,7 @@ args:
         - name: input-parameters
         - name: postgresql
       metadata: {}
-      name: jira-install
+      name: app1-install
       outputs: {}
       steps:
       - - arguments:
@@ -208,19 +208,19 @@ args:
             - name: template
               raw:
                 data: |
-                  host: {{ jiraHost }}
+                  host: {{ app1Host }}
             - from: '{{inputs.artifacts.input-parameters}}'
               name: input-parameters
-          name: extract-jira-host
-          template: jira-install-extract-jira-host-template
+          name: extract-app1-host
+          template: app1-install-extract-app1-host-template
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
-            - from: '{{steps.extract-jira-host.outputs.artifacts.render}}'
+            - from: '{{steps.extract-app1-host.outputs.artifacts.render}}'
               name: input-parameters
-          name: jira-install
-          template: jira-install-jira-install-jira-install
+          name: app1-install
+          template: app1-install-app1-install-app1-install
     - arguments: {}
       container:
         args:
@@ -239,7 +239,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-extract-jira-host-template
+      name: app1-install-extract-app1-host-template
       outputs:
         artifacts:
         - name: render
@@ -251,27 +251,29 @@ args:
         - name: postgresql
           optional: true
       metadata: {}
-      name: jira-install-jira-install-jira-install
+      name: app1-install-app1-install-app1-install
       outputs:
         artifacts:
         - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-          name: jira-config
+          name: app1-config
       steps:
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
           name: install-db
-          template: mock-jira-install-jira-install-jira-install-install-db
+          template: mock-app1-install-app1-install-app1-install-install-db
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: postgresql
             - name: database-input
               raw:
-                data: "name: jiradb \nowner: superuser\n"
+                data: |
+                  name: app1db
+                  owner: superuser
           name: create-db
-          template: jira-install-jira-install-jira-install-create-db-main
+          template: app1-install-app1-install-app1-install-create-db-main
       - - arguments:
             artifacts:
             - name: template
@@ -279,12 +281,12 @@ args:
                 data: |
                   generateName: true
                   chart:
-                    name: "jira-software"
+                    name: "app1-software"
                     repo: "https://helm.mox.sh"
                   output:{% raw %}
                     goTemplate:
                       version: "{{ .Values.image.tag }}"
-                      host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                      host: '{{ template "app1-software.fullname" . }}'{% endraw %}
                   values:
                     postgresql:
                       enabled: false
@@ -296,12 +298,12 @@ args:
                     ingress:
                       enabled: true
                       hosts:
-                      - host: jira-cloud.capact.local
+                      - host: app1-cloud.capact.local
                         paths: ['/']
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
           name: create-helm-args
-          template: jira-install-jira-install-jira-install-create-helm-args-template
+          template: app1-install-app1-install-app1-install-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
@@ -309,31 +311,31 @@ args:
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-install
-          template: jira-install-jira-install-jira-install-helm-install-helm
+          template: app1-install-app1-install-app1-install-helm-install-helm
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: postgresql
           name: output-postgresql
-          template: output-jira-install-jira-install-postgresql
+          template: output-app1-install-app1-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.create-db.outputs.artifacts.database}}'
               name: database
           name: output-database
-          template: output-jira-install-jira-install-database
+          template: output-app1-install-app1-install-database
       - - arguments:
             artifacts:
             - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-              name: jira-config
-          name: output-jira-config
-          template: output-jira-install-jira-install-jira-config
+              name: app1-config
+          name: output-app1-config
+          template: output-app1-install-app1-install-app1-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
-              name: jira-helm-release
-          name: output-jira-helm-release
-          template: output-jira-install-jira-install-jira-helm-release
+              name: app1-helm-release
+          name: output-app1-helm-release
+          template: output-app1-install-app1-install-app1-helm-release
     - arguments: {}
       container:
         args:
@@ -349,7 +351,7 @@ args:
         - name: postgresql
           path: output/postgresql
       metadata: {}
-      name: mock-jira-install-jira-install-jira-install-install-db
+      name: mock-app1-install-app1-install-app1-install-install-db
       outputs:
         artifacts:
         - name: postgresql
@@ -360,7 +362,7 @@ args:
         - name: postgresql
         - name: database-input
       metadata: {}
-      name: jira-install-jira-install-jira-install-create-db-main
+      name: app1-install-app1-install-app1-install-create-db-main
       outputs:
         artifacts:
         - from: '{{steps.create-db.outputs.artifacts.database}}'
@@ -384,7 +386,7 @@ args:
             - from: '{{inputs.artifacts.postgresql}}'
               name: input-parameters
           name: render-create-db-script
-          template: jira-install-jira-install-jira-install-create-db-main-render-create-db-script-template
+          template: app1-install-app1-install-app1-install-create-db-main-render-create-db-script-template
       - - arguments:
             artifacts:
             - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
@@ -392,19 +394,19 @@ args:
             - from: '{{inputs.artifacts.database-input}}'
               name: input-parameters
           name: fill-params-in-create-db-script
-          template: jira-install-jira-install-jira-install-create-db-main-fill-params-in-create-db-script-template
+          template: app1-install-app1-install-app1-install-create-db-main-fill-params-in-create-db-script-template
       - - arguments:
             artifacts:
             - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
               name: script
           name: create-db
-          template: jira-install-jira-install-jira-install-create-db-create-psql-db
+          template: app1-install-app1-install-app1-install-create-db-create-psql-db
       - - arguments:
             artifacts:
             - from: '{{steps.create-db.outputs.artifacts.database}}'
               name: database
           name: output-database
-          template: output-jira-install-jira-install-jira-install-create-db-database
+          template: output-app1-install-app1-install-app1-install-create-db-database
     - arguments: {}
       container:
         args:
@@ -423,7 +425,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-jira-install-jira-install-create-db-main-render-create-db-script-template
+      name: app1-install-app1-install-app1-install-create-db-main-render-create-db-script-template
       outputs:
         artifacts:
         - name: render
@@ -446,7 +448,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-jira-install-jira-install-create-db-main-fill-params-in-create-db-script-template
+      name: app1-install-app1-install-app1-install-create-db-main-fill-params-in-create-db-script-template
       outputs:
         artifacts:
         - name: render
@@ -466,7 +468,7 @@ args:
         - name: script
           path: /script.sh
       metadata: {}
-      name: jira-install-jira-install-jira-install-create-db-create-psql-db
+      name: app1-install-app1-install-app1-install-create-db-create-psql-db
       outputs:
         artifacts:
         - name: database
@@ -486,10 +488,10 @@ args:
         - name: database
           path: /typeinstance
       metadata: {}
-      name: output-jira-install-jira-install-jira-install-create-db-database
+      name: output-app1-install-app1-install-app1-install-create-db-database
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-jira-install-create-db-database
+        - globalName: app1-install-app1-install-app1-install-create-db-database
           name: database
           path: /typeinstance
     - arguments: {}
@@ -510,7 +512,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: jira-install-jira-install-jira-install-create-helm-args-template
+      name: app1-install-app1-install-app1-install-create-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -540,13 +542,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: jira-install-jira-install-jira-install-helm-install-helm
+      name: app1-install-app1-install-app1-install-helm-install-helm
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-jira-install-helm-install-helm-release
+        - globalName: app1-install-app1-install-app1-install-helm-install-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: jira-install-jira-install-jira-install-helm-install-additional
+        - globalName: app1-install-app1-install-app1-install-helm-install-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -564,10 +566,10 @@ args:
         - name: postgresql
           path: /typeinstance
       metadata: {}
-      name: output-jira-install-jira-install-postgresql
+      name: output-app1-install-app1-install-postgresql
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-postgresql
+        - globalName: app1-install-app1-install-postgresql
           name: postgresql
           path: /typeinstance
     - arguments: {}
@@ -585,10 +587,10 @@ args:
         - name: database
           path: /typeinstance
       metadata: {}
-      name: output-jira-install-jira-install-database
+      name: output-app1-install-app1-install-database
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-database
+        - globalName: app1-install-app1-install-database
           name: database
           path: /typeinstance
     - arguments: {}
@@ -603,14 +605,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-config
+        - name: app1-config
           path: /typeinstance
       metadata: {}
-      name: output-jira-install-jira-install-jira-config
+      name: output-app1-install-app1-install-app1-config
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-jira-config
-          name: jira-config
+        - globalName: app1-install-app1-install-app1-config
+          name: app1-config
           path: /typeinstance
     - arguments: {}
       container:
@@ -624,14 +626,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: jira-helm-release
+        - name: app1-helm-release
           path: /typeinstance
       metadata: {}
-      name: output-jira-install-jira-install-jira-helm-release
+      name: output-app1-install-app1-install-app1-helm-release
       outputs:
         artifacts:
-        - globalName: jira-install-jira-install-jira-helm-release
-          name: jira-helm-release
+        - globalName: app1-install-app1-install-app1-helm-release
+          name: app1-helm-release
           path: /typeinstance
     - arguments: {}
       inputs:
@@ -639,7 +641,7 @@ args:
         - name: input-parameters
         - name: postgresql
       metadata: {}
-      name: confluence-install
+      name: app2-install
       outputs: {}
       steps:
       - - arguments:
@@ -647,19 +649,19 @@ args:
             - name: template
               raw:
                 data: |
-                  host: {{ confluenceHost }}
+                  host: {{ app2Host }}
             - from: '{{inputs.artifacts.input-parameters}}'
               name: input-parameters
-          name: extract-confluence-host
-          template: confluence-install-extract-confluence-host-template
+          name: extract-app2-host
+          template: app2-install-extract-app2-host-template
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
-            - from: '{{steps.extract-confluence-host.outputs.artifacts.render}}'
+            - from: '{{steps.extract-app2-host.outputs.artifacts.render}}'
               name: input-parameters
-          name: confluence-install
-          template: confluence-install-confluence-install-main
+          name: app2-install
+          template: app2-install-app2-install-main
     - arguments: {}
       container:
         args:
@@ -678,7 +680,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: confluence-install-extract-confluence-host-template
+      name: app2-install-extract-app2-host-template
       outputs:
         artifacts:
         - name: render
@@ -690,27 +692,29 @@ args:
         - name: postgresql
           optional: true
       metadata: {}
-      name: confluence-install-confluence-install-main
+      name: app2-install-app2-install-main
       outputs:
         artifacts:
         - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-          name: confluence-config
+          name: app2-config
       steps:
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.postgresql}}'
               name: postgresql
           name: install-db
-          template: mock-confluence-install-confluence-install-main-install-db
+          template: mock-app2-install-app2-install-main-install-db
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: postgresql
             - name: database-input
               raw:
-                data: "name: confluencedb \nowner: superuser\n"
+                data: |
+                  name: app2db
+                  owner: superuser
           name: create-db
-          template: confluence-install-confluence-install-main-create-db-main
+          template: app2-install-app2-install-main-create-db-main
       - - arguments:
             artifacts:
             - name: template
@@ -718,12 +722,12 @@ args:
                 data: |
                   generateName: true
                   chart:
-                    name: "confluence-server"
+                    name: "app2-server"
                     repo: "https://helm.mox.sh"
                   output:{% raw %}
                     goTemplate:
                       version: "{{ .Values.image.tag }}"
-                      host: '{{ template "confluence-server.fullname" . }}'{% endraw %}
+                      host: '{{ template "app2-server.fullname" . }}'{% endraw %}
                   values:
                     postgresql:
                       enabled: false
@@ -735,12 +739,12 @@ args:
                     ingress:
                       enabled: true
                       hosts:
-                      - host: confluence.capact.local
+                      - host: app2.capact.local
                         paths: ['/']
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: input-parameters
           name: create-helm-args
-          template: confluence-install-confluence-install-main-create-helm-args-template
+          template: app2-install-app2-install-main-create-helm-args-template
       - - arguments:
             artifacts:
             - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
@@ -748,31 +752,31 @@ args:
             - from: '{{workflow.outputs.artifacts.runner-context}}'
               name: runner-context
           name: helm-install
-          template: confluence-install-confluence-install-main-helm-install-helm
+          template: app2-install-app2-install-main-helm-install-helm
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
               name: postgresql
           name: output-postgresql
-          template: output-confluence-install-confluence-install-postgresql
+          template: output-app2-install-app2-install-postgresql
       - - arguments:
             artifacts:
             - from: '{{steps.create-db.outputs.artifacts.database}}'
               name: database
           name: output-database
-          template: output-confluence-install-confluence-install-database
+          template: output-app2-install-app2-install-database
       - - arguments:
             artifacts:
             - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-              name: confluence-config
-          name: output-confluence-config
-          template: output-confluence-install-confluence-install-confluence-config
+              name: app2-config
+          name: output-app2-config
+          template: output-app2-install-app2-install-app2-config
       - - arguments:
             artifacts:
             - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
-              name: confluence-helm-release
-          name: output-confluence-helm-release
-          template: output-confluence-install-confluence-install-confluence-helm-release
+              name: app2-helm-release
+          name: output-app2-helm-release
+          template: output-app2-install-app2-install-app2-helm-release
     - arguments: {}
       container:
         args:
@@ -788,7 +792,7 @@ args:
         - name: postgresql
           path: output/postgresql
       metadata: {}
-      name: mock-confluence-install-confluence-install-main-install-db
+      name: mock-app2-install-app2-install-main-install-db
       outputs:
         artifacts:
         - name: postgresql
@@ -799,7 +803,7 @@ args:
         - name: postgresql
         - name: database-input
       metadata: {}
-      name: confluence-install-confluence-install-main-create-db-main
+      name: app2-install-app2-install-main-create-db-main
       outputs:
         artifacts:
         - from: '{{steps.create-db.outputs.artifacts.database}}'
@@ -823,7 +827,7 @@ args:
             - from: '{{inputs.artifacts.postgresql}}'
               name: input-parameters
           name: render-create-db-script
-          template: confluence-install-confluence-install-main-create-db-main-render-create-db-script-template
+          template: app2-install-app2-install-main-create-db-main-render-create-db-script-template
       - - arguments:
             artifacts:
             - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
@@ -831,19 +835,19 @@ args:
             - from: '{{inputs.artifacts.database-input}}'
               name: input-parameters
           name: fill-params-in-create-db-script
-          template: confluence-install-confluence-install-main-create-db-main-fill-params-in-create-db-script-template
+          template: app2-install-app2-install-main-create-db-main-fill-params-in-create-db-script-template
       - - arguments:
             artifacts:
             - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
               name: script
           name: create-db
-          template: confluence-install-confluence-install-main-create-db-create-psql-db
+          template: app2-install-app2-install-main-create-db-create-psql-db
       - - arguments:
             artifacts:
             - from: '{{steps.create-db.outputs.artifacts.database}}'
               name: database
           name: output-database
-          template: output-confluence-install-confluence-install-main-create-db-database
+          template: output-app2-install-app2-install-main-create-db-database
     - arguments: {}
       container:
         args:
@@ -862,7 +866,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: confluence-install-confluence-install-main-create-db-main-render-create-db-script-template
+      name: app2-install-app2-install-main-create-db-main-render-create-db-script-template
       outputs:
         artifacts:
         - name: render
@@ -885,7 +889,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: confluence-install-confluence-install-main-create-db-main-fill-params-in-create-db-script-template
+      name: app2-install-app2-install-main-create-db-main-fill-params-in-create-db-script-template
       outputs:
         artifacts:
         - name: render
@@ -905,7 +909,7 @@ args:
         - name: script
           path: /script.sh
       metadata: {}
-      name: confluence-install-confluence-install-main-create-db-create-psql-db
+      name: app2-install-app2-install-main-create-db-create-psql-db
       outputs:
         artifacts:
         - name: database
@@ -925,10 +929,10 @@ args:
         - name: database
           path: /typeinstance
       metadata: {}
-      name: output-confluence-install-confluence-install-main-create-db-database
+      name: output-app2-install-app2-install-main-create-db-database
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-main-create-db-database
+        - globalName: app2-install-app2-install-main-create-db-database
           name: database
           path: /typeinstance
     - arguments: {}
@@ -949,7 +953,7 @@ args:
         - name: input-parameters
           path: /values.yml
       metadata: {}
-      name: confluence-install-confluence-install-main-create-helm-args-template
+      name: app2-install-app2-install-main-create-helm-args-template
       outputs:
         artifacts:
         - name: render
@@ -979,13 +983,13 @@ args:
         - name: runner-context
           path: /runner-context
       metadata: {}
-      name: confluence-install-confluence-install-main-helm-install-helm
+      name: app2-install-app2-install-main-helm-install-helm
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-main-helm-install-helm-release
+        - globalName: app2-install-app2-install-main-helm-install-helm-release
           name: helm-release
           path: /helm-release.yaml
-        - globalName: confluence-install-confluence-install-main-helm-install-additional
+        - globalName: app2-install-app2-install-main-helm-install-additional
           name: additional
           path: /additional.yaml
     - arguments: {}
@@ -1003,10 +1007,10 @@ args:
         - name: postgresql
           path: /typeinstance
       metadata: {}
-      name: output-confluence-install-confluence-install-postgresql
+      name: output-app2-install-app2-install-postgresql
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-postgresql
+        - globalName: app2-install-app2-install-postgresql
           name: postgresql
           path: /typeinstance
     - arguments: {}
@@ -1024,10 +1028,10 @@ args:
         - name: database
           path: /typeinstance
       metadata: {}
-      name: output-confluence-install-confluence-install-database
+      name: output-app2-install-app2-install-database
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-database
+        - globalName: app2-install-app2-install-database
           name: database
           path: /typeinstance
     - arguments: {}
@@ -1042,14 +1046,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-config
+        - name: app2-config
           path: /typeinstance
       metadata: {}
-      name: output-confluence-install-confluence-install-confluence-config
+      name: output-app2-install-app2-install-app2-config
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-confluence-config
-          name: confluence-config
+        - globalName: app2-install-app2-install-app2-config
+          name: app2-config
           path: /typeinstance
     - arguments: {}
       container:
@@ -1063,14 +1067,14 @@ args:
         resources: {}
       inputs:
         artifacts:
-        - name: confluence-helm-release
+        - name: app2-helm-release
           path: /typeinstance
       metadata: {}
-      name: output-confluence-install-confluence-install-confluence-helm-release
+      name: output-app2-install-app2-install-app2-helm-release
       outputs:
         artifacts:
-        - globalName: confluence-install-confluence-install-confluence-helm-release
-          name: confluence-helm-release
+        - globalName: app2-install-app2-install-app2-helm-release
+          name: app2-helm-release
           path: /typeinstance
     - arguments: {}
       inputs: {}
@@ -1090,18 +1094,18 @@ args:
               name: stack-install-install-shared-db-postgresql
             - from: '{{workflow.outputs.artifacts.stack-install-install-shared-db-postgres-install-helm-install-helm-release}}'
               name: stack-install-install-shared-db-postgres-install-helm-install-helm-release
-            - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-config}}'
-              name: jira-install-jira-install-jira-config
-            - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-install-create-db-database}}'
-              name: jira-install-jira-install-jira-install-create-db-database
-            - from: '{{workflow.outputs.artifacts.jira-install-jira-install-jira-install-helm-install-helm-release}}'
-              name: jira-install-jira-install-jira-install-helm-install-helm-release
-            - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-confluence-config}}'
-              name: confluence-install-confluence-install-confluence-config
-            - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-main-create-db-database}}'
-              name: confluence-install-confluence-install-main-create-db-database
-            - from: '{{workflow.outputs.artifacts.confluence-install-confluence-install-main-helm-install-helm-release}}'
-              name: confluence-install-confluence-install-main-helm-install-helm-release
+            - from: '{{workflow.outputs.artifacts.app1-install-app1-install-app1-config}}'
+              name: app1-install-app1-install-app1-config
+            - from: '{{workflow.outputs.artifacts.app1-install-app1-install-app1-install-create-db-database}}'
+              name: app1-install-app1-install-app1-install-create-db-database
+            - from: '{{workflow.outputs.artifacts.app1-install-app1-install-app1-install-helm-install-helm-release}}'
+              name: app1-install-app1-install-app1-install-helm-install-helm-release
+            - from: '{{workflow.outputs.artifacts.app2-install-app2-install-app2-config}}'
+              name: app2-install-app2-install-app2-config
+            - from: '{{workflow.outputs.artifacts.app2-install-app2-install-main-create-db-database}}'
+              name: app2-install-app2-install-main-create-db-database
+            - from: '{{workflow.outputs.artifacts.app2-install-app2-install-main-helm-install-helm-release}}'
+              name: app2-install-app2-install-main-helm-install-helm-release
             - name: payload
               raw:
                 data: |
@@ -1120,42 +1124,42 @@ args:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-jira-install-jira-config
+                  - alias: app1-install-app1-install-app1-config
                     attributes: []
                     createdBy: default/action
                     typeRef:
-                      path: cap.type.productivity.jira.config
+                      path: cap.type.productivity.app1.config
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-jira-install-jira-install-create-db-database
+                  - alias: app1-install-app1-install-app1-install-create-db-database
                     attributes: []
                     createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
-                  - alias: jira-install-jira-install-jira-install-helm-install-helm-release
+                  - alias: app1-install-app1-install-app1-install-helm-install-helm-release
                     attributes: []
                     createdBy: default/action
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
-                  - alias: confluence-install-confluence-install-confluence-config
+                  - alias: app2-install-app2-install-app2-config
                     attributes: []
                     createdBy: default/action
                     typeRef:
-                      path: cap.type.productivity.confluence.config
+                      path: cap.type.productivity.app2.config
                       revision: 0.1.0
                     value: null
-                  - alias: confluence-install-confluence-install-main-create-db-database
+                  - alias: app2-install-app2-install-main-create-db-database
                     attributes: []
                     createdBy: default/action
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
-                  - alias: confluence-install-confluence-install-main-helm-install-helm-release
+                  - alias: app2-install-app2-install-main-helm-install-helm-release
                     attributes: []
                     createdBy: default/action
                     typeRef:
@@ -1165,17 +1169,17 @@ args:
                   usesRelations:
                   - from: stack-install-install-shared-db-postgresql
                     to: stack-install-install-shared-db-postgres-install-helm-install-helm-release
-                  - from: jira-install-jira-install-jira-config
-                    to: jira-install-jira-install-jira-install-helm-install-helm-release
-                  - from: jira-install-jira-install-jira-config
+                  - from: app1-install-app1-install-app1-config
+                    to: app1-install-app1-install-app1-install-helm-install-helm-release
+                  - from: app1-install-app1-install-app1-config
                     to: stack-install-install-shared-db-postgresql
-                  - from: jira-install-jira-install-jira-install-create-db-database
+                  - from: app1-install-app1-install-app1-install-create-db-database
                     to: stack-install-install-shared-db-postgresql
-                  - from: confluence-install-confluence-install-confluence-config
-                    to: confluence-install-confluence-install-main-helm-install-helm-release
-                  - from: confluence-install-confluence-install-confluence-config
+                  - from: app2-install-app2-install-app2-config
+                    to: app2-install-app2-install-main-helm-install-helm-release
+                  - from: app2-install-app2-install-app2-config
                     to: stack-install-install-shared-db-postgresql
-                  - from: confluence-install-confluence-install-main-create-db-database
+                  - from: app2-install-app2-install-main-create-db-database
                     to: stack-install-install-shared-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
@@ -1228,18 +1232,18 @@ args:
           path: /upload/typeInstances/stack-install-install-shared-db-postgresql
         - name: stack-install-install-shared-db-postgres-install-helm-install-helm-release
           path: /upload/typeInstances/stack-install-install-shared-db-postgres-install-helm-install-helm-release
-        - name: jira-install-jira-install-jira-config
-          path: /upload/typeInstances/jira-install-jira-install-jira-config
-        - name: jira-install-jira-install-jira-install-create-db-database
-          path: /upload/typeInstances/jira-install-jira-install-jira-install-create-db-database
-        - name: jira-install-jira-install-jira-install-helm-install-helm-release
-          path: /upload/typeInstances/jira-install-jira-install-jira-install-helm-install-helm-release
-        - name: confluence-install-confluence-install-confluence-config
-          path: /upload/typeInstances/confluence-install-confluence-install-confluence-config
-        - name: confluence-install-confluence-install-main-create-db-database
-          path: /upload/typeInstances/confluence-install-confluence-install-main-create-db-database
-        - name: confluence-install-confluence-install-main-helm-install-helm-release
-          path: /upload/typeInstances/confluence-install-confluence-install-main-helm-install-helm-release
+        - name: app1-install-app1-install-app1-config
+          path: /upload/typeInstances/app1-install-app1-install-app1-config
+        - name: app1-install-app1-install-app1-install-create-db-database
+          path: /upload/typeInstances/app1-install-app1-install-app1-install-create-db-database
+        - name: app1-install-app1-install-app1-install-helm-install-helm-release
+          path: /upload/typeInstances/app1-install-app1-install-app1-install-helm-install-helm-release
+        - name: app2-install-app2-install-app2-config
+          path: /upload/typeInstances/app2-install-app2-install-app2-config
+        - name: app2-install-app2-install-main-create-db-database
+          path: /upload/typeInstances/app2-install-app2-install-main-create-db-database
+        - name: app2-install-app2-install-main-helm-install-helm-release
+          path: /upload/typeInstances/app2-install-app2-install-main-helm-install-helm-release
         - name: payload
           path: /upload/payload
       metadata: {}

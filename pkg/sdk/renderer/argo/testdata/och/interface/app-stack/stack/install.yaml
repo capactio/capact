@@ -2,13 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.atlassian.stack
+  prefix: cap.interface.app-stack.stack
   name: install
-  path: cap.interface.atlassian.stack.install
-  displayName: "Install"
-  description: "Install action for Jira and Confluence with shared database"
-  documentationURL: https://support.atlassian.com
-  supportURL: https://www.atlassian.com
+  path: cap.interface.app-stack.stack.install
+  displayName: "Install App stack"
+  description: "Install App stack"
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
     - email: team-dev@capact.io
       name: Capact Dev Team
@@ -24,7 +24,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.atlassian.stack.install-input",
+                  "name": "cap.type.app-stack.stack.install-input",
                   "revision": "0.1.0"
                 }
               },

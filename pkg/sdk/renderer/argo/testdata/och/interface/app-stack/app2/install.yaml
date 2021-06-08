@@ -2,14 +2,13 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.jira
+  prefix: cap.interface.app-stack.app2
   name: install
-  path: cap.interface.productivity.jira.install
-  displayName: "Install"
-  description: "Install action for Jira"
-  documentationURL: https://support.atlassian.com/jira-software-cloud/resources/
-  supportURL: https://www.atlassian.com/software/jira
-  iconURL: https://www.atlassian.com/pl/dam/jcr:e33efd9e-e0b8-4d61-a24d-68a48ef99ed5/Jira%20Software@2x-blue.png
+  path: cap.interface.app-stack.app2.install
+  displayName: "Install App 2"
+  description: "App 2"
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
     - email: team-dev@capact.io
       name: Capact Dev Team
@@ -25,7 +24,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.productivity.jira.install-input",
+                  "name": "cap.type.productivity.app2.install-input",
                   "revision": "0.1.0"
                 }
               },
@@ -33,9 +32,9 @@ spec:
             }
   output:
     typeInstances:
-      - name: jira-config
+      - name: app2-config
         typeRef:
-          path: cap.type.productivity.jira.config
+          path: cap.type.productivity.app2.config
           revision: 0.1.0
 
 signature:

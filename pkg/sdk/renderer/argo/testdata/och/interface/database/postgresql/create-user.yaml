@@ -2,14 +2,14 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Interface
 metadata:
-  prefix: cap.interface.productivity.confluence
-  name: install
-  path: cap.interface.productivity.confluence.install
-  displayName: "Install Confluence"
-  description: "Confluence is a document collaboration tool"
-  documentationURL: https://support.atlassian.com/confluence/
-  supportURL: https://support.atlassian.com/confluence/
-  iconURL: https://wac-cdn.atlassian.com/dam/jcr:d6e2d2db-e58a-40f7-9d1a-d6d22a335c96/Confluence-blue.svg
+  path: cap.interface.database.postgresql.create-user
+  prefix: cap.interface.database.postgresql
+  name: create-user
+  displayName: Create user
+  description: Create database user for PostgreSQL
+  documentationURL: https://www.postgresql.org/docs/
+  supportURL: https://www.postgresql.org/
+  iconURL: https://www.postgresql.org/media/img/about/press/elephant.png
   maintainers:
     - email: team-dev@capact.io
       name: Capact Dev Team
@@ -17,6 +17,12 @@ metadata:
 
 spec:
   input:
+    typeInstances:
+      - name: postgresql
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
     parameters:
       - name: input-parameters
         jsonSchema:
@@ -25,7 +31,7 @@ spec:
               "$schema": "http://json-schema.org/draft-07/schema",
               "$ocfRefs": {
                 "inputType": {
-                  "name": "cap.type.productivity.confluence.install-input",
+                  "name": "cap.type.database.postgresql.user-input",
                   "revision": "0.1.0"
                 }
               },
@@ -33,9 +39,9 @@ spec:
             }
   output:
     typeInstances:
-      - name: confluence-config
+      - name: user
         typeRef:
-          path: cap.type.productivity.confluence.config
+          path: cap.type.database.postgresql.user
           revision: 0.1.0
 
 signature:

@@ -2,12 +2,12 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: cap.implementation.atlassian.stack
+  prefix: cap.implementation.app-stack.stack
   name: install-parallel
-  displayName: Example how to install Jira and Confluence with shared database in parallel.
-  description: Action which installs Jira via Helm chart
-  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
-  supportURL: https://mox.sh/helm/
+  displayName: Example how to install App stack with shared database in parallel.
+  description: Action which installs App stack via Helm charts
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   license:
     name: "Apache 2.0"
   maintainers:
@@ -16,10 +16,10 @@ metadata:
       url: https://capact.io
 
 spec:
-  appVersion: "8.x.x"
+  appVersion: "1.x.x"
 
   implements:
-    - path: cap.interface.atlassian.stack.install
+    - path: cap.interface.app-stack.stack.install
       revision: 0.1.0
 
   requires:
@@ -41,13 +41,13 @@ spec:
       methods:
         - name: install
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.productivity.jira
-      alias: jira
+    - interfaceGroupPath: cap.interface.app-stack.app1
+      alias: app1
       methods:
         - name: install
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.productivity.confluence
-      alias: confluence
+    - interfaceGroupPath: cap.interface.app-stack.app2
+      alias: app2
       methods:
         - name: install
           revision: 0.1.0
@@ -80,8 +80,8 @@ spec:
                               password: okon
                             defaultDBName: postgres
 
-              - - name: jira-install
-                  template: jira-install
+              - - name: app1-install
+                  template: app1-install
                   arguments:
                     artifacts:
                       - name: postgresql
@@ -89,8 +89,8 @@ spec:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
 
-                - name: confluence-install
-                  template: confluence-install
+                - name: app2-install
+                  template: app2-install
                   arguments:
                     artifacts:
                       - name: postgresql
@@ -98,54 +98,54 @@ spec:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
 
-          - name: jira-install
+          - name: app1-install
             inputs:
               artifacts:
                 - name: input-parameters
                 - name: postgresql
             steps:
-              - - name: extract-jira-host
+              - - name: extract-app1-host
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         raw:
                           data: |
-                            host: {{ jiraHost }}
+                            host: {{ app1Host }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-              - - name: jira-install
-                  capact-action: jira.install
+              - - name: app1-install
+                  capact-action: app1.install
                   arguments:
                     artifacts:
                       - name: postgresql
                         from: "{{inputs.artifacts.postgresql}}"
                       - name: input-parameters
-                        from: "{{steps.extract-jira-host.outputs.artifacts.render}}"
+                        from: "{{steps.extract-app1-host.outputs.artifacts.render}}"
 
-          - name: confluence-install
+          - name: app2-install
             inputs:
               artifacts:
                 - name: input-parameters
                 - name: postgresql
             steps:
-              - - name: extract-confluence-host
+              - - name: extract-app2-host
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
                         raw:
                           data: |
-                            host: {{ confluenceHost }}
+                            host: {{ app2Host }}
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-              - - name: confluence-install
-                  capact-action: confluence.install
+              - - name: app2-install
+                  capact-action: app2.install
                   arguments:
                     artifacts:
                       - name: postgresql
                         from: "{{inputs.artifacts.postgresql}}"
                       - name: input-parameters
-                        from: "{{steps.extract-confluence-host.outputs.artifacts.render}}"
+                        from: "{{steps.extract-app2-host.outputs.artifacts.render}}"
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

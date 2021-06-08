@@ -1,17 +1,16 @@
 ---
 metadata:
   attributes: []
-  description: Action which installs Jira via Helm chart
-  displayName: Install Jira
-  documentationURL: https://github.com/javimox/helm-charts/tree/master/charts/jira-software
-  iconURL: https://mox.sh/helm/
+  description: Action which installs App1 via Helm chart
+  displayName: Install App1
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
   maintainers:
     - email: team-dev@capact.io
       name: Capact Dev Team
   name: install
-  path: cap.implementation.atlassian.jira.install
-  prefix: cap.implementation.atlassian.jira
-  supportURL: https://mox.sh/helm/
+  path: cap.implementation.app-stack.app1.install
+  prefix: cap.implementation.app-stack.app1
 revision: 0.1.0
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
@@ -25,11 +24,11 @@ spec:
         verbs:
           - GET
   outputTypeInstanceRelations:
-    - typeInstanceName: jira-config
-      uses: [jira-helm-release, postgresql]
+    - typeInstanceName: app1-config
+      uses: [app1-helm-release, postgresql]
   appVersion: 8.x.x
   implements:
-    - path: cap.interface.productivity.jira.install
+    - path: cap.interface.app-stack.app1.install
       revision: 0.1.0
   imports:
     - alias: helm
@@ -72,7 +71,7 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: jira-install
+        entrypoint: app1-install
         templates:
           - inputs:
               artifacts:
@@ -81,9 +80,9 @@ spec:
                   optional: true
             outputs:
               artifacts:
-                - name: jira-config
+                - name: app1-config
                   from: "{{steps.helm-install.outputs.artifacts.additional}}"
-            name: jira-install
+            name: app1-install
             steps:
               - - capact-action: postgresql.install
                   name: install-db
@@ -97,9 +96,9 @@ spec:
                         raw:
                           data: |
                             superuser:
-                              username: jira
+                              username: app1
                               password: okon
-                            defaultDBName: jira
+                            defaultDBName: app1
 
               - - name: create-db
                   capact-action: postgresql.create-db
@@ -113,7 +112,7 @@ spec:
                       - name: database-input
                         raw:
                           data: |
-                            name: jiradb 
+                            name: app1db
                             owner: superuser
 
               - - capact-action: jinja2.template
@@ -125,12 +124,12 @@ spec:
                           data: |
                             generateName: true
                             chart:
-                              name: "jira-software"
+                              name: "app1-software"
                               repo: "https://helm.mox.sh"
                             output:{% raw %}
                               goTemplate:
                                 version: "{{ .Values.image.tag }}"
-                                host: '{{ template "jira-software.fullname" . }}'{% endraw %}
+                                host: '{{ template "app1-software.fullname" . }}'{% endraw %}
                             values:
                               postgresql:
                                 enabled: false
@@ -142,14 +141,14 @@ spec:
                               ingress:
                                 enabled: true
                                 hosts:
-                                - host: jira-cloud.capact.local
+                                - host: app1-cloud.capact.local
                                   paths: ['/']
                       - name: input-parameters
                         from: "{{steps.install-db.outputs.artifacts.postgresql}}"
               - - capact-outputTypeInstances:
-                    - name: jira-config
+                    - name: app1-config
                       from: additional
-                    - name: jira-helm-release
+                    - name: app1-helm-release
                       from: helm-release
                   capact-action: helm.install
                   name: helm-install

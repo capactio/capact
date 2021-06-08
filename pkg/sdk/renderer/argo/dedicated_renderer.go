@@ -698,12 +698,12 @@ func (r *dedicatedRenderer) getOutputTypeInstanceTemplate(step *WorkflowStep, ou
 //   - name: stack-install
 //     steps:
 //     - - name: entrypoint										# Step which execute template with arguments.
-//         template: jira-install								# We record input arguments under template name.
+//         template: app-install								# We record input arguments under template name.
 //         arguments:
 //           artifacts:
 //             - name: postgresql
 //               from: "{{steps.install-db.outputs.artifacts.postgresql}}"
-//   - name: jira-install
+//   - name: app-install
 //     inputs:
 //      artifacts:
 //        - name: input-parameters
@@ -801,7 +801,7 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 	}
 }
 
-// TODO: current limitation: we handle properly only one artifacts `capact-when: postgres == nil` but not `capact-when: postgres == nil && jira-config == nil`
+// TODO: current limitation: we handle properly only one artifacts `capact-when: postgres == nil` but not `capact-when: postgres == nil && app-config == nil`
 func (r *dedicatedRenderer) emitWorkflowInputAsStepOutput(tplName string, step *WorkflowStep, inputArgName string, reference string) (*WorkflowStep, *Template) {
 	var artifactPath = fmt.Sprintf("output/%s", inputArgName)
 
