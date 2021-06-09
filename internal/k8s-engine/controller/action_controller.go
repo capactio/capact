@@ -446,9 +446,14 @@ func (r *ActionReconciler) newStatusForAction(action *v1alpha1.Action, eventType
 // In our case it means that TI were already unlocked by a given Action and someone else locked them.
 // TODO: fix that after adding proper error types to GraphQL responses.
 func (r *ActionReconciler) ignoreLockedByDifferentOwner(err error) error {
+	if err == nil {
+		return nil
+	}
+
 	if strings.Contains(err.Error(), "locked by different owner") {
 		return nil
 	}
+
 	return err
 }
 
