@@ -292,7 +292,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	_, userPolicyData, err := a.getUserPolicyData(ctx, action)
+	_, actionPolicyData, err := a.getActionPolicyData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
@@ -345,7 +345,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status.SetAction(actionBytes)
 	status.SetInputParameters(userInput)
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
-	status.SetUserPolicy(userPolicyData)
+	status.SetActionPolicy(actionPolicyData)
 
 	return status, nil
 }
@@ -367,18 +367,18 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getUserPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.Policy, []byte, error) {
-	if action.Spec.Input == nil || action.Spec.Input.UserPolicy == nil {
+func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.Policy, []byte, error) {
+	if action.Spec.Input == nil || action.Spec.Input.ActionPolicy == nil {
 		return nil, nil, nil
 	}
 
 	secret := &corev1.Secret{}
-	key := client.ObjectKey{Name: action.Spec.Input.UserPolicy.SecretRef.Name, Namespace: action.Namespace}
+	key := client.ObjectKey{Name: action.Spec.Input.ActionPolicy.SecretRef.Name, Namespace: action.Namespace}
 	if err := a.k8sCli.Get(ctx, key, secret); err != nil {
 		return nil, nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
-	policyData := secret.Data[graphqldomain.UserPolicySecretDataKey]
+	policyData := secret.Data[graphqldomain.ActionPolicySecretDataKey]
 
 	policy := &policy.Policy{}
 	if err := json.Unmarshal(policyData, policy); err != nil {

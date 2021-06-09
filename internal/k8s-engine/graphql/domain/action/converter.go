@@ -15,10 +15,10 @@ import (
 )
 
 const (
-	ParametersSecretDataKey = "parameters.json"
-	UserPolicySecretDataKey = "user-policy.json"
-	LatestRevision          = "latest"
-	secretKind              = "Secret"
+	ParametersSecretDataKey   = "parameters.json"
+	ActionPolicySecretDataKey = "action-policy.json"
+	LatestRevision            = "latest"
+	secretKind                = "Secret"
 )
 
 type Converter struct{}
@@ -184,13 +184,13 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		ParametersSecretDataKey: string(*in.Parameters),
 	}
 
-	if in.UserPolicy != nil {
-		policyData, err := json.Marshal(in.UserPolicy)
+	if in.ActionPolicy != nil {
+		policyData, err := json.Marshal(in.ActionPolicy)
 		if err != nil {
 			return nil, errors.Wrap(err, "while marshaling policy to JSON")
 		}
 
-		data[UserPolicySecretDataKey] = string(policyData)
+		data[ActionPolicySecretDataKey] = string(policyData)
 	}
 
 	return &v1.Secret{
@@ -229,11 +229,11 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) (*gra
 		result.TypeInstances = gqlTypeInstances
 	}
 
-	if in.UserPolicy != nil {
-		policyData := c.runtimeExtensionToJSONRawMessage(in.UserPolicy)
+	if in.ActionPolicy != nil {
+		policyData := c.runtimeExtensionToJSONRawMessage(in.ActionPolicy)
 
 		if policyData != nil {
-			if err := json.Unmarshal(*policyData, &result.UserPolicy); err != nil {
+			if err := json.Unmarshal(*policyData, &result.ActionPolicy); err != nil {
 				return nil, err
 			}
 		}
@@ -288,8 +288,8 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 		}
 	}
 
-	if in.UserPolicy != nil && inputParamsSecretName != nil {
-		actionInput.UserPolicy = &v1alpha1.UserPolicy{
+	if in.ActionPolicy != nil && inputParamsSecretName != nil {
+		actionInput.ActionPolicy = &v1alpha1.ActionPolicy{
 			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
 		}
 	}

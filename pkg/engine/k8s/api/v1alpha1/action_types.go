@@ -146,15 +146,15 @@ type ActionInput struct {
 
 	// Describes the one-time User policy.
 	// +optional
-	UserPolicy *UserPolicy `json:"policy,omitempty"`
+	ActionPolicy *ActionPolicy `json:"policy,omitempty"`
 }
 
-type UserPolicy struct {
+type ActionPolicy struct {
 
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
 	//
 	// Required field:
-	// - Secret.Data["user-policy.json"] - stores the one-time user policy in JSON format
+	// - Secret.Data["action-policy.json"] - stores the one-time user policy in JSON format
 	//
 	// Restricted field:
 	// - Secret.Data["args.yaml"] - used by Engine, stores runner rendered arguments
@@ -177,7 +177,7 @@ type InputParameters struct {
 	// - Secret.Data["args.yaml"] - used by Engine, stores runner rendered arguments
 	// - Secret.Data["context.yaml"] - used by Engine, stores runner context
 	// - Secret.Data["status"] - stores the runner status
-	// - Secret.Data["user-policy.json"] - stores the one-time user policy in JSON format
+	// - Secret.Data["action-policy.json"] - stores the one-time user policy in JSON format
 	//
 	// TODO: this should be changed to an object which contains both the Secret name and key
 	// name under which the input is stored.
@@ -307,7 +307,7 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
-func (r *RenderingStatus) SetUserPolicy(policy []byte) {
+func (r *RenderingStatus) SetActionPolicy(policy []byte) {
 	if policy == nil {
 		return
 	}
@@ -315,7 +315,7 @@ func (r *RenderingStatus) SetUserPolicy(policy []byte) {
 	if r.Input == nil {
 		r.Input = &ResolvedActionInput{}
 	}
-	r.Input.SetUserPolicy(policy)
+	r.Input.SetActionPolicy(policy)
 }
 
 func (r *RenderingStatus) SetTypeInstancesToLock(typeInstances []string) {
@@ -337,15 +337,15 @@ type ResolvedActionInput struct {
 	// Parameters holds value of the User policy.
 	// +optional
 	// +kubebuilder:pruning:PreserveUnknownFields
-	UserPolicy *runtime.RawExtension `json:"userPolicy,omitempty"`
+	ActionPolicy *runtime.RawExtension `json:"actionPolicy,omitempty"`
 }
 
 func (r *ResolvedActionInput) SetParameters(params []byte) {
 	r.Parameters = &runtime.RawExtension{Raw: params}
 }
 
-func (r *ResolvedActionInput) SetUserPolicy(params []byte) {
-	r.UserPolicy = &runtime.RawExtension{Raw: params}
+func (r *ResolvedActionInput) SetActionPolicy(params []byte) {
+	r.ActionPolicy = &runtime.RawExtension{Raw: params}
 }
 
 // InputTypeInstanceDetails describes input TypeInstance.

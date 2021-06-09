@@ -23,7 +23,7 @@ type CreateOptions struct {
 
 	ParametersFilePath    string
 	TypeInstancesFilePath string
-	UserPolicyFilePath    string
+	ActionPolicyFilePath  string
 
 	parameters    *gqlengine.JSON
 	typeInstances []*gqlengine.InputTypeInstanceData
@@ -83,8 +83,8 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		c.typeInstances = ti
 	}
 
-	if c.UserPolicyFilePath == "" {
-		policy, err := askForUserPolicy(c.InterfacePath)
+	if c.ActionPolicyFilePath == "" {
+		policy, err := askForActionPolicy(c.InterfacePath)
 		if err != nil {
 			return err
 		}
@@ -117,12 +117,12 @@ func (c *CreateOptions) resolveFromFiles() error {
 		}
 	}
 
-	if c.UserPolicyFilePath != "" {
-		rawInput, err := ioutil.ReadFile(c.UserPolicyFilePath)
+	if c.ActionPolicyFilePath != "" {
+		rawInput, err := ioutil.ReadFile(c.ActionPolicyFilePath)
 		if err != nil {
 			return err
 		}
-		c.policy, err = toUserPolicy(rawInput)
+		c.policy, err = toActionPolicy(rawInput)
 		if err != nil {
 			return err
 		}
@@ -135,7 +135,7 @@ func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,
 		TypeInstances: c.typeInstances,
-		UserPolicy:    c.policy,
+		ActionPolicy:  c.policy,
 	}
 }
 
@@ -189,7 +189,7 @@ func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
 	return toTypeInstance([]byte(editor))
 }
 
-func askForUserPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
+func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 	providePolicy := false
 	askAboutPolicy := &survey.Confirm{Message: "Do you want to provide one-time user policy?", Default: false}
 	if err := survey.AskOne(askAboutPolicy, &providePolicy); err != nil {
@@ -218,7 +218,7 @@ func askForUserPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 		return nil, err
 	}
 
-	return toUserPolicy([]byte(editor))
+	return toActionPolicy([]byte(editor))
 }
 
 func toTypeInstance(rawInput []byte) ([]*gqlengine.InputTypeInstanceData, error) {
@@ -243,7 +243,7 @@ func toInputParameters(rawInput []byte) (*gqlengine.JSON, error) {
 	return &gqlJSON, nil
 }
 
-func toUserPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {
+func toActionPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {
 	policy := &gqlengine.PolicyInput{}
 
 	if err := yaml.Unmarshal(rawInput, policy); err != nil {

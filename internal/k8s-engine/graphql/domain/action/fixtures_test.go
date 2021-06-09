@@ -352,7 +352,7 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 					ID:   "in-id2",
 				},
 			},
-			UserPolicy: &graphql.PolicyInput{
+			ActionPolicy: &graphql.PolicyInput{
 				Rules: []*graphql.RulesForInterfaceInput{
 					{
 						Interface: &graphql.ManifestReferenceInput{
@@ -423,7 +423,7 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 							ID:   "in-id2",
 						},
 					},
-					UserPolicy: &v1alpha1.UserPolicy{
+					ActionPolicy: &v1alpha1.ActionPolicy{
 						SecretRef: corev1.LocalObjectReference{
 							Name: name,
 						},
@@ -444,8 +444,8 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				Name: name,
 			},
 			StringData: map[string]string{
-				"parameters.json":  `{"param":"one"}`,
-				"user-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`,
+				"parameters.json":    `{"param":"one"}`,
+				"action-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`,
 			},
 		},
 	}

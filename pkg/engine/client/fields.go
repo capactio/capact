@@ -16,7 +16,7 @@ var actionFields = fmt.Sprintf(`
 				revision
 			}
 		}
-		userPolicy {
+		actionPolicy {
 			%s
 		}
 	}

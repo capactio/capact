@@ -59,9 +59,9 @@ type ComplexityRoot struct {
 	}
 
 	ActionInput struct {
+		ActionPolicy  func(childComplexity int) int
 		Parameters    func(childComplexity int) int
 		TypeInstances func(childComplexity int) int
-		UserPolicy    func(childComplexity int) int
 	}
 
 	ActionOutput struct {
@@ -282,6 +282,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Action.Status(childComplexity), true
 
+	case "ActionInput.actionPolicy":
+		if e.complexity.ActionInput.ActionPolicy == nil {
+			break
+		}
+
+		return e.complexity.ActionInput.ActionPolicy(childComplexity), true
+
 	case "ActionInput.parameters":
 		if e.complexity.ActionInput.Parameters == nil {
 			break
@@ -295,13 +302,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ActionInput.TypeInstances(childComplexity), true
-
-	case "ActionInput.userPolicy":
-		if e.complexity.ActionInput.UserPolicy == nil {
-			break
-		}
-
-		return e.complexity.ActionInput.UserPolicy(childComplexity), true
 
 	case "ActionOutput.typeInstances":
 		if e.complexity.ActionOutput.TypeInstances == nil {
@@ -863,7 +863,7 @@ input ActionInputData {
   """
   Contains the optional one-time user policy, which is merged with other Capact policies
   """
-  userPolicy: PolicyInput
+  actionPolicy: PolicyInput
 }
 
 """
@@ -977,7 +977,7 @@ type ActionInput {
   """
   Contains the one-time user policy, which is merged with other Capact policies
   """
-  userPolicy: Policy
+  actionPolicy: Policy
 }
 
 """
@@ -1842,7 +1842,7 @@ func (ec *executionContext) _ActionInput_typeInstances(ctx context.Context, fiel
 	return ec.marshalNInputTypeInstanceDetails2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐInputTypeInstanceDetailsᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ActionInput_userPolicy(ctx context.Context, field graphql.CollectedField, obj *ActionInput) (ret graphql.Marshaler) {
+func (ec *executionContext) _ActionInput_actionPolicy(ctx context.Context, field graphql.CollectedField, obj *ActionInput) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1860,7 +1860,7 @@ func (ec *executionContext) _ActionInput_userPolicy(ctx context.Context, field g
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.UserPolicy, nil
+		return obj.ActionPolicy, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -4880,11 +4880,11 @@ func (ec *executionContext) unmarshalInputActionInputData(ctx context.Context, o
 			if err != nil {
 				return it, err
 			}
-		case "userPolicy":
+		case "actionPolicy":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("userPolicy"))
-			it.UserPolicy, err = ec.unmarshalOPolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyInput(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("actionPolicy"))
+			it.ActionPolicy, err = ec.unmarshalOPolicyInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐPolicyInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5251,8 +5251,8 @@ func (ec *executionContext) _ActionInput(ctx context.Context, sel ast.SelectionS
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "userPolicy":
-			out.Values[i] = ec._ActionInput_userPolicy(ctx, field, obj)
+		case "actionPolicy":
+			out.Values[i] = ec._ActionInput_actionPolicy(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

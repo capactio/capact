@@ -13,6 +13,7 @@ capact action create INTERFACE [flags]
 ### Options
 
 ```
+      --action-policy-from-file string    Path to the one-time Action policy file in YAML format
       --dry-run                           Specifies whether the Action performs server-side test without actually running the Action
   -h, --help                              help for create
   -i, --interactive                       Toggle interactive prompting in the terminal
@@ -23,7 +24,6 @@ capact action create INTERFACE [flags]
                                           typeInstances:
                                             - name: "config"
                                               id: "ABCD-1234-EFGH-4567"
-      --user-policy-from-file string      Path to the one-time user policy file in YAML format
 ```
 
 ### Options inherited from parent commands
