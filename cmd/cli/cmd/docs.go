@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	docsTargetDir = "./docs/cli/commands"
+	docsTargetDir = "./cmd/cli/docs"
 
 	frontmatterFormat = `---
 title: %s
