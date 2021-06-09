@@ -191,7 +191,7 @@ func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
 
 func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 	providePolicy := false
-	askAboutPolicy := &survey.Confirm{Message: "Do you want to provide one-time user policy?", Default: false}
+	askAboutPolicy := &survey.Confirm{Message: "Do you want to provide one-time Action policy?", Default: false}
 	if err := survey.AskOne(askAboutPolicy, &providePolicy); err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 
 	editor := ""
 	prompt := &survey.Editor{
-		Message: "Please type one-time user policy in YAML format",
+		Message: "Please type one-time Action policy in YAML format",
 		Default: heredoc.Doc(fmt.Sprintf(`
       rules:
         - interface:

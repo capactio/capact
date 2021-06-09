@@ -154,7 +154,7 @@ type ActionPolicy struct {
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
 	//
 	// Required field:
-	// - Secret.Data["action-policy.json"] - stores the one-time user policy in JSON format
+	// - Secret.Data["action-policy.json"] - stores the one-time Action policy in JSON format
 	//
 	// Restricted field:
 	// - Secret.Data["args.yaml"] - used by Engine, stores runner rendered arguments
@@ -177,7 +177,7 @@ type InputParameters struct {
 	// - Secret.Data["args.yaml"] - used by Engine, stores runner rendered arguments
 	// - Secret.Data["context.yaml"] - used by Engine, stores runner context
 	// - Secret.Data["status"] - stores the runner status
-	// - Secret.Data["action-policy.json"] - stores the one-time user policy in JSON format
+	// - Secret.Data["action-policy.json"] - stores the one-time Action policy in JSON format
 	//
 	// TODO: this should be changed to an object which contains both the Secret name and key
 	// name under which the input is stored.
