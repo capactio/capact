@@ -136,6 +136,22 @@ spec:
                         raw:
                           data: |
 
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+                      - name: template
+                        raw:
+                          data: |
+                            replicas: <@ input.replicas | default(3) @>
+
               - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
@@ -157,6 +173,8 @@ spec:
                               advanced_security_options_internal_user_database_enabled = true
                               advanced_security_options_master_user_username = "<@ basicAuth.username @>"
                               advanced_security_options_master_user_password = "<@ basicAuth.password @>"
+
+                              cluster_config_instance_count = "<@ input.replicas @>"
 
                               <% if additionalinput.elasticsearch_version -%>
                               elasticsearch_version = "<@ additionalinput.elasticsearch_version @>"
@@ -245,8 +263,6 @@ spec:
                               <% if additionalinput.cluster_config_instance_type -%>
                               cluster_config_instance_type = "<@ additionalinput.cluster_config_instance_type @>"
                               <%- endif %>
-
-                              cluster_config_instance_count = "<@ input.replicas | default(3) @>"
 
                               <% if additionalinput.cluster_config_dedicated_master_enabled -%>
                               cluster_config_dedicated_master_enabled = "<@ additionalinput.cluster_config_dedicated_master_enabled @>"
@@ -381,7 +397,7 @@ spec:
                       - name: template
                         from: "{{steps.create-module-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |
@@ -392,7 +408,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-input-params.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.aws-credentials}}"
                       - name: configuration
