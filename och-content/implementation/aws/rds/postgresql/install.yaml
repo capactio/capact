@@ -4,7 +4,7 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.aws.rds.postgresql
   name: install
-  displayName: Install AWS RDS for PostgreSQL database using Terraform
+  displayName: Provision AWS RDS for PostgreSQL database using Terraform
   description: Action which provisions AWS RDS for PostgreSQL database using Terraform
   documentationURL: https://aws.amazon.com/rds/postgresql/
   supportURL: https://aws.amazon.com/rds/postgresql/
@@ -17,12 +17,31 @@ metadata:
   attributes:
     cap.attribute.cloud.provider.aws:
       revision: 0.1.0
+    cap.attribute.infra.iac.terraform:
+      revision: 0.1.0
 
 spec:
-  appVersion: "10, 11, 12"
+  appVersion: "10, 11, 12, 13"
 
-  # All output TypeInstances to upload are defined on lower level workflows.
-  outputTypeInstanceRelations: {}
+  additionalInput:
+    parameters:
+      typeRef:
+        path: cap.type.aws.rds.postgresql.install-input
+        revision: 0.1.0
+      
+  additionalOutput:
+    typeInstances:
+      rds-instance:
+        typeRef:
+          path: cap.type.aws.rds.instance
+          revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    postgresql:
+      uses:
+        - terraform-release
+        - rds-instance
+    rds-instance: {}
 
   implements:
     - path: cap.interface.database.postgresql.install
@@ -32,6 +51,7 @@ spec:
     cap.type.aws.auth:
       allOf:
         - name: credentials
+          alias: aws-credentials
           revision: 0.1.0
     cap.core.type.platform:
       oneOf:
@@ -39,10 +59,10 @@ spec:
           revision: 0.1.0
 
   imports:
-    - interfaceGroupPath: cap.interface.aws.rds.postgresql
-      alias: rds
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
       methods:
-        - name: provision
+        - name: apply
           revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
@@ -59,49 +79,195 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: postgres-install
+        entrypoint: rds-provision
         templates:
-          - name: postgres-install
+          - name: rds-provision
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+                - name: additional-parameters
+                  optional: true
             outputs:
               artifacts:
                 - name: postgresql
-                  from: "{{steps.provision.outputs.artifacts.postgresql}}"
+                  from: "{{steps.render-postgresql.outputs.artifacts.render}}"
+                - name: rds-instance
+                  from: "{{steps.render-rds.outputs.artifacts.render}}"
             steps:
-              - - name: fill-params
+              - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: additionalinput
+                      - name: template
+                        raw:
+                          data: |
+                            variables: |+
+                              user_name = "<@ input.superuser.username | default('postgres') @>"
+                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+
+                              region = "<@ additionalinput.region | default('eu-west-1') @>"
+                              ingress_rule_cidr_blocks = "<@ additionalinput.ingress_rule_cidr_blocks | default('0.0.0.0/0') @>"
+                              tier = "<@ additionalinput.tier | default('db.t3.micro') @>"
+                              publicly_accessible = <@ additionalinput.publicly_accessible | default(true) | tojson @>
+                              engine_version = "<@ additionalinput.engine_version | default('11.10') @>"
+                              major_engine_version = "<@ additionalinput.major_engine_version | default('11') @>"
+                              performance_insights_enabled = <@ additionalinput.performance_insights_enabled | default(true) | tojson @>
+
+                              <% if additionalinput.engine -%>
+                              engine = "<@ additionalinput.engine @>"
+                              <%- endif %>
+
+                              <% if additionalinput.res_name -%>
+                              res_name = "<@ additionalinput.res_name @>"
+                              <%- endif %>
+
+                              <% if additionalinput.allocated_storage -%>
+                              allocated_storage = <@ additionalinput.allocated_storage @>
+                              <%- endif %>
+
+                              <% if additionalinput.max_allocated_storage -%>
+                              max_allocated_storage = <@ additionalinput.max_allocated_storage @>
+                              <%- endif %>
+
+                              <% if additionalinput.storage_encrypted -%>
+                              storage_encrypted = <@ additionalinput.storage_encrypted | tojson @>
+                              <%- endif %>
+
+                              <% if additionalinput.multi_az -%>
+                              multi_az = <@ additionalinput.multi_az | tojson @>
+                              <%- endif %>
+
+                              <% if additionalinput.deletion_protection -%>
+                              deletion_protection = <@ additionalinput.deletion_protection | tojson @>
+                              <%- endif %>
+
+                              <% if additionalinput.backup_retention_period -%>
+                              backup_retention_period = <@ additionalinput.backup_retention_period @>
+                              <%- endif %>
+
+                              <% if additionalinput.performance_insights_retention_period -%>
+                              performance_insights_retention_period = <@ additionalinput.performance_insights_retention_period @>
+                              <%- endif %>
+
+                              <% if additionalinput.monitoring_interval -%>
+                              monitoring_interval = <@ additionalinput.monitoring_interval @>
+                              <%- endif %>
+
+                              <% if additionalinput.skip_final_snapshot -%>
+                              skip_final_snapshot = <@ additionalinput.skip_final_snapshot | tojson @>
+                              <%- endif %>
+
+                              <% if additionalinput.maintenance_window -%>
+                              maintenance_window = "<@ additionalinput.maintenance_window @>"
+                              <%- endif %>
+
+                              <% if additionalinput.backup_window -%>
+                              backup_window = "<@ additionalinput.backup_window @>"
+                              <%- endif %>
+
+                            command: "apply"
+                            module:
+                              name: "rds"
+                              source: "https://storage.googleapis.com/capactio-terraform-modules/terraform.aws.rds.postgresql.provision/0.1.0/module.tgz"
+                            env:
+                            - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
+                            - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
+                            output:
+                              goTemplate:
+                                host: "{{ .instance_ip_addr }}"
+                                port: "{{ .port }}"
+                                defaultDBName: "{{ .defaultDBName }}"
+                                superuser:
+                                  username: "{{ .username }}"
+                                  password: "{{ .password }}"
+                                identifier: "{{ .identifier }}"
+                                availability_zone: "{{ .availability_zone }}"
+                                class: "{{ .class }}"
+
+              - - name: fill-input-in-module-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: fill-aws-params-in-module-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: aws
+
+              - - name: terraform-apply
+                  capact-action: terraform.apply
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: terraform-release
+                      from: terraform-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: render-postgresql
+                  capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
+                    - name: postgresql
+                      from: render
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
                       - name: configuration
                         raw:
                           data: ""
                       - name: template
                         raw:
                           data: |
+                            host: "<@ host @>"
+                            port: <@ port @>
+                            defaultDBName: "<@ defaultDBName @>"
                             superuser:
                               username: "<@ superuser.username @>"
-                              password: "<@ superuser.password | default(random_word(length=16)) @>"
-                            region: "eu-west-1"
-                            tier: "db.t3.micro"
-                            ingress_rule_cidr_blocks: "0.0.0.0/0"
-                            publicly_accessible: true
-                            performance_insights_enabled: true
-                            engine_version: "11.10"
-                            major_engine_version: "11"
+                              password: "<@ superuser.password @>"
 
-              - - name: provision
-                  capact-action: rds.provision
+              - - name: render-rds
                   capact-outputTypeInstances: # Defines which artifacts are output TypeInstances
-                    - name: postgresql
-                      from: postgresql
+                    - name: rds-instance
+                      from: render
+                  capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-params.outputs.artifacts.render}}"
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          data: |
+                            identifier: "<@ identifier @>"
+                            availability_zone: "<@ availability_zone @>"
+                            class: "<@ class @>"
 
 signature:
   och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

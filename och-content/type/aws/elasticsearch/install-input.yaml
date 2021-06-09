@@ -4,7 +4,7 @@ kind: Type
 metadata:
   name: instance
   prefix: cap.type.aws.elasticsearch
-  displayName: provision-input
+  displayName: install-input
   description: Defined the input parameters for provisioning AWS Elasticsearch domain
   documentationURL: https://aws.amazon.com/elasticsearch-service/
   supportURL: https://aws.amazon.com/elasticsearch-service/
@@ -185,11 +185,6 @@ spec:
             "$id": "#/properties/cluster_config_dedicated_master_type",
             "type": "string",
             "description": "Instance type of the dedicated master nodes in the cluster"
-          },
-          "cluster_config_dedicated_master_count": {
-            "$id": "#/properties/cluster_config_dedicated_master_count",
-            "type": "string",
-            "description": "Number of dedicated master nodes in the cluster"
           },
           "cluster_config_availability_zone_count": {
             "$id": "#/properties/cluster_config_availability_zone_count",

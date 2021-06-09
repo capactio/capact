@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Implementation
 metadata:
   prefix: cap.implementation.aws.elasticsearch
-  name: provision
+  name: install
   displayName: Provision AWS Elasticsearch domain using Terraform
   description: Action which provisions AWS Elasticsearch domain using Terraform
   documentationURL: https://aws.amazon.com/elasticsearch-service/
@@ -23,6 +23,19 @@ metadata:
 spec:
   appVersion: "6.x, 7.x"
 
+  additionalInput:
+    parameters:
+      typeRef:
+        path: cap.type.aws.elasticsearch
+        revision: 0.1.0
+
+  additionalOutput:
+    typeInstances:
+      elasticsearch-domain:
+        typeRef:
+          path: cap.type.aws.elasticsearch.domain
+          revision: 0.1.1
+
   outputTypeInstanceRelations:
     elasticsearch:
       uses:
@@ -31,7 +44,7 @@ spec:
     elasticsearch-domain: {}
 
   implements:
-    - path: cap.interface.aws.elasticsearch.provision
+    - path: cap.interface.analytics.elasticsearch.install
       revision: 0.1.0
 
   requires:
@@ -72,6 +85,8 @@ spec:
             inputs:
               artifacts:
                 - name: input-parameters # Entrypoint template gets the user parameters in 'input-parameters' artifacts.
+                - name: additional-parameters
+                  optional: true
             outputs:
               artifacts:
                 - name: elasticsearch
@@ -126,221 +141,219 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{inputs.artifacts.additional-parameters}}"
                       - name: configuration
                         raw:
                           data: |
-                            prefix: input
+                            prefix: additionalinput
                       - name: template
                         raw:
                           data: |
                             variables: |+
-                              region = "<@ input.region @>"
-                              domain_name = "<@ input.domain_name @>"
+                              region = "<@ additionalinput.region | default("eu-west-1") @>"
+                              domain_name = "elastic-<@ random_word(length=12) @>"
 
                               advanced_security_options_enabled = true
                               advanced_security_options_internal_user_database_enabled = true
                               advanced_security_options_master_user_username = "<@ basicAuth.username @>"
                               advanced_security_options_master_user_password = "<@ basicAuth.password @>"
 
-                              <% if input.elasticsearch_version -%>
-                              elasticsearch_version = "<@ input.elasticsearch_version @>"
+                              <% if additionalinput.elasticsearch_version -%>
+                              elasticsearch_version = "<@ additionalinput.elasticsearch_version @>"
                               <%- endif %>
 
-                              <% if input.access_policies -%>
-                              access_policies = "<@ input.access_policies @>"
+                              <% if additionalinput.access_policies -%>
+                              access_policies = "<@ additionalinput.access_policies @>"
                               <%- endif %>
 
-                              <% if input.advanced_security_options -%>
-                              advanced_security_options = "<@ input.advanced_security_options @>"
+                              <% if additionalinput.advanced_security_options -%>
+                              advanced_security_options = "<@ additionalinput.advanced_security_options @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options -%>
-                              domain_endpoint_options = "<@ input.domain_endpoint_options @>"
+                              <% if additionalinput.domain_endpoint_options -%>
+                              domain_endpoint_options = "<@ additionalinput.domain_endpoint_options @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options_enforce_https -%>
-                              domain_endpoint_options_enforce_https = "<@ input.domain_endpoint_options_enforce_https @>"
+                              <% if additionalinput.domain_endpoint_options_enforce_https -%>
+                              domain_endpoint_options_enforce_https = "<@ additionalinput.domain_endpoint_options_enforce_https @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options_tls_security_policy -%>
-                              domain_endpoint_options_tls_security_policy = "<@ input.domain_endpoint_options_tls_security_policy @>"
+                              <% if additionalinput.domain_endpoint_options_tls_security_policy -%>
+                              domain_endpoint_options_tls_security_policy = "<@ additionalinput.domain_endpoint_options_tls_security_policy @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options_custom_endpoint_enabled -%>
-                              domain_endpoint_options_custom_endpoint_enabled = "<@ input.domain_endpoint_options_custom_endpoint_enabled @>"
+                              <% if additionalinput.domain_endpoint_options_custom_endpoint_enabled -%>
+                              domain_endpoint_options_custom_endpoint_enabled = "<@ additionalinput.domain_endpoint_options_custom_endpoint_enabled @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options_custom_endpoint -%>
-                              domain_endpoint_options_custom_endpoint = "<@ input.domain_endpoint_options_custom_endpoint @>"
+                              <% if additionalinput.domain_endpoint_options_custom_endpoint -%>
+                              domain_endpoint_options_custom_endpoint = "<@ additionalinput.domain_endpoint_options_custom_endpoint @>"
                               <%- endif %>
 
-                              <% if input.domain_endpoint_options_custom_endpoint_certificate_arn -%>
-                              domain_endpoint_options_custom_endpoint_certificate_arn = "<@ input.domain_endpoint_options_custom_endpoint_certificate_arn @>"
+                              <% if additionalinput.domain_endpoint_options_custom_endpoint_certificate_arn -%>
+                              domain_endpoint_options_custom_endpoint_certificate_arn = "<@ additionalinput.domain_endpoint_options_custom_endpoint_certificate_arn @>"
                               <%- endif %>
 
-                              <% if input.advanced_options -%>
-                              advanced_options = "<@ input.advanced_options @>"
+                              <% if additionalinput.advanced_options -%>
+                              advanced_options = "<@ additionalinput.advanced_options @>"
                               <%- endif %>
 
-                              <% if input.ebs_options -%>
-                              ebs_options = "<@ input.ebs_options @>"
+                              <% if additionalinput.ebs_options -%>
+                              ebs_options = "<@ additionalinput.ebs_options @>"
                               <%- endif %>
 
-                              <% if input.ebs_enabled -%>
-                              ebs_enabled = "<@ input.ebs_enabled @>"
+                              <% if additionalinput.ebs_enabled -%>
+                              ebs_enabled = "<@ additionalinput.ebs_enabled @>"
                               <%- endif %>
 
-                              <% if input.ebs_options_volume_type -%>
-                              ebs_options_volume_type = "<@ input.ebs_options_volume_type @>"
+                              <% if additionalinput.ebs_options_volume_type -%>
+                              ebs_options_volume_type = "<@ additionalinput.ebs_options_volume_type @>"
                               <%- endif %>
 
-                              <% if input.ebs_options_volume_size -%>
-                              ebs_options_volume_size = "<@ input.ebs_options_volume_size @>"
+                              <% if additionalinput.ebs_options_volume_size -%>
+                              ebs_options_volume_size = "<@ additionalinput.ebs_options_volume_size @>"
                               <%- endif %>
 
-                              <% if input.ebs_options_iops -%>
-                              ebs_options_iops = "<@ input.ebs_options_iops @>"
+                              <% if additionalinput.ebs_options_iops -%>
+                              ebs_options_iops = "<@ additionalinput.ebs_options_iops @>"
                               <%- endif %>
 
-                              <% if input.encrypt_at_rest -%>
-                              encrypt_at_rest = "<@ input.encrypt_at_rest @>"
+                              <% if additionalinput.encrypt_at_rest -%>
+                              encrypt_at_rest = "<@ additionalinput.encrypt_at_rest @>"
                               <%- endif %>
 
-                              <% if input.encrypt_at_rest_enabled -%>
-                              encrypt_at_rest_enabled = "<@ input.encrypt_at_rest_enabled @>"
+                              <% if additionalinput.encrypt_at_rest_enabled -%>
+                              encrypt_at_rest_enabled = "<@ additionalinput.encrypt_at_rest_enabled @>"
                               <%- endif %>
 
-                              <% if input.encrypt_at_rest_kms_key_id -%>
-                              encrypt_at_rest_kms_key_id = "<@ input.encrypt_at_rest_kms_key_id @>"
+                              <% if additionalinput.encrypt_at_rest_kms_key_id -%>
+                              encrypt_at_rest_kms_key_id = "<@ additionalinput.encrypt_at_rest_kms_key_id @>"
                               <%- endif %>
 
-                              <% if input.node_to_node_encryption -%>
-                              node_to_node_encryption = "<@ input.node_to_node_encryption @>"
+                              <% if additionalinput.node_to_node_encryption -%>
+                              node_to_node_encryption = "<@ additionalinput.node_to_node_encryption @>"
                               <%- endif %>
 
-                              <% if input.node_to_node_encryption_enabled -%>
-                              node_to_node_encryption_enabled = "<@ input.node_to_node_encryption_enabled @>"
+                              <% if additionalinput.node_to_node_encryption_enabled -%>
+                              node_to_node_encryption_enabled = "<@ additionalinput.node_to_node_encryption_enabled @>"
                               <%- endif %>
 
-                              <% if input.cluster_config -%>
-                              cluster_config = "<@ input.cluster_config @>"
+                              <% if additionalinput.cluster_config -%>
+                              cluster_config = "<@ additionalinput.cluster_config @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_instance_type -%>
-                              cluster_config_instance_type = "<@ input.cluster_config_instance_type @>"
+                              <% if additionalinput.cluster_config_instance_type -%>
+                              cluster_config_instance_type = "<@ additionalinput.cluster_config_instance_type @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_instance_count -%>
-                              cluster_config_instance_count = "<@ input.cluster_config_instance_count @>"
+                              cluster_config_instance_count = "<@ input.replicas | default(3) @>"
+
+                              <% if additionalinput.cluster_config_dedicated_master_enabled -%>
+                              cluster_config_dedicated_master_enabled = "<@ additionalinput.cluster_config_dedicated_master_enabled @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_dedicated_master_enabled -%>
-                              cluster_config_dedicated_master_enabled = "<@ input.cluster_config_dedicated_master_enabled @>"
+                              <% if additionalinput.cluster_config_dedicated_master_type -%>
+                              cluster_config_dedicated_master_type = "<@ additionalinput.cluster_config_dedicated_master_type @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_dedicated_master_type -%>
-                              cluster_config_dedicated_master_type = "<@ input.cluster_config_dedicated_master_type @>"
+                              <% if additionalinput.cluster_config_dedicated_master_count -%>
+                              cluster_config_dedicated_master_count = "<@ additionalinput.cluster_config_dedicated_master_count @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_dedicated_master_count -%>
-                              cluster_config_dedicated_master_count = "<@ input.cluster_config_dedicated_master_count @>"
+                              <% if additionalinput.cluster_config_availability_zone_count -%>
+                              cluster_config_availability_zone_count = "<@ additionalinput.cluster_config_availability_zone_count @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_availability_zone_count -%>
-                              cluster_config_availability_zone_count = "<@ input.cluster_config_availability_zone_count @>"
+                              <% if additionalinput.cluster_config_zone_awareness_enabled -%>
+                              cluster_config_zone_awareness_enabled = "<@ additionalinput.cluster_config_zone_awareness_enabled @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_zone_awareness_enabled -%>
-                              cluster_config_zone_awareness_enabled = "<@ input.cluster_config_zone_awareness_enabled @>"
+                              <% if additionalinput.cluster_config_warm_enabled -%>
+                              cluster_config_warm_enabled = "<@ additionalinput.cluster_config_warm_enabled @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_warm_enabled -%>
-                              cluster_config_warm_enabled = "<@ input.cluster_config_warm_enabled @>"
+                              <% if additionalinput.cluster_config_warm_count -%>
+                              cluster_config_warm_count = "<@ additionalinput.cluster_config_warm_count @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_warm_count -%>
-                              cluster_config_warm_count = "<@ input.cluster_config_warm_count @>"
+                              <% if additionalinput.cluster_config_warm_type -%>
+                              cluster_config_warm_type = "<@ additionalinput.cluster_config_warm_type @>"
                               <%- endif %>
 
-                              <% if input.cluster_config_warm_type -%>
-                              cluster_config_warm_type = "<@ input.cluster_config_warm_type @>"
+                              <% if additionalinput.snapshot_options -%>
+                              snapshot_options = "<@ additionalinput.snapshot_options @>"
                               <%- endif %>
 
-                              <% if input.snapshot_options -%>
-                              snapshot_options = "<@ input.snapshot_options @>"
+                              <% if additionalinput.snapshot_options_automated_snapshot_start_hour -%>
+                              snapshot_options_automated_snapshot_start_hour = "<@ additionalinput.snapshot_options_automated_snapshot_start_hour @>"
                               <%- endif %>
 
-                              <% if input.snapshot_options_automated_snapshot_start_hour -%>
-                              snapshot_options_automated_snapshot_start_hour = "<@ input.snapshot_options_automated_snapshot_start_hour @>"
+                              <% if additionalinput.vpc_options -%>
+                              vpc_options = "<@ additionalinput.vpc_options @>"
                               <%- endif %>
 
-                              <% if input.vpc_options -%>
-                              vpc_options = "<@ input.vpc_options @>"
+                              <% if additionalinput.vpc_options_security_group_ids -%>
+                              vpc_options_security_group_ids = "<@ additionalinput.vpc_options_security_group_ids @>"
                               <%- endif %>
 
-                              <% if input.vpc_options_security_group_ids -%>
-                              vpc_options_security_group_ids = "<@ input.vpc_options_security_group_ids @>"
+                              <% if additionalinput.vpc_options_subnet_ids -%>
+                              vpc_options_subnet_ids = "<@ additionalinput.vpc_options_subnet_ids @>"
                               <%- endif %>
 
-                              <% if input.vpc_options_subnet_ids -%>
-                              vpc_options_subnet_ids = "<@ input.vpc_options_subnet_ids @>"
+                              <% if additionalinput.log_publishing_options -%>
+                              log_publishing_options = "<@ additionalinput.log_publishing_options @>"
                               <%- endif %>
 
-                              <% if input.log_publishing_options -%>
-                              log_publishing_options = "<@ input.log_publishing_options @>"
+                              <% if additionalinput.log_publishing_options_log_type -%>
+                              log_publishing_options_log_type = "<@ additionalinput.log_publishing_options_log_type @>"
                               <%- endif %>
 
-                              <% if input.log_publishing_options_log_type -%>
-                              log_publishing_options_log_type = "<@ input.log_publishing_options_log_type @>"
+                              <% if additionalinput.log_publishing_options_cloudwatch_log_group_arn -%>
+                              log_publishing_options_cloudwatch_log_group_arn = "<@ additionalinput.log_publishing_options_cloudwatch_log_group_arn @>"
                               <%- endif %>
 
-                              <% if input.log_publishing_options_cloudwatch_log_group_arn -%>
-                              log_publishing_options_cloudwatch_log_group_arn = "<@ input.log_publishing_options_cloudwatch_log_group_arn @>"
+                              <% if additionalinput.log_publishing_options_enabled -%>
+                              log_publishing_options_enabled = "<@ additionalinput.log_publishing_options_enabled @>"
                               <%- endif %>
 
-                              <% if input.log_publishing_options_enabled -%>
-                              log_publishing_options_enabled = "<@ input.log_publishing_options_enabled @>"
+                              <% if additionalinput.log_publishing_options_retention -%>
+                              log_publishing_options_retention = "<@ additionalinput.log_publishing_options_retention @>"
                               <%- endif %>
 
-                              <% if input.log_publishing_options_retention -%>
-                              log_publishing_options_retention = "<@ input.log_publishing_options_retention @>"
+                              <% if additionalinput.cognito_options -%>
+                              cognito_options = "<@ additionalinput.cognito_options @>"
                               <%- endif %>
 
-                              <% if input.cognito_options -%>
-                              cognito_options = "<@ input.cognito_options @>"
+                              <% if additionalinput.cognito_options_enabled -%>
+                              cognito_options_enabled = "<@ additionalinput.cognito_options_enabled @>"
                               <%- endif %>
 
-                              <% if input.cognito_options_enabled -%>
-                              cognito_options_enabled = "<@ input.cognito_options_enabled @>"
+                              <% if additionalinput.cognito_options_user_pool_id -%>
+                              cognito_options_user_pool_id = "<@ additionalinput.cognito_options_user_pool_id @>"
                               <%- endif %>
 
-                              <% if input.cognito_options_user_pool_id -%>
-                              cognito_options_user_pool_id = "<@ input.cognito_options_user_pool_id @>"
+                              <% if additionalinput.cognito_options_identity_pool_id -%>
+                              cognito_options_identity_pool_id = "<@ additionalinput.cognito_options_identity_pool_id @>"
                               <%- endif %>
 
-                              <% if input.cognito_options_identity_pool_id -%>
-                              cognito_options_identity_pool_id = "<@ input.cognito_options_identity_pool_id @>"
+                              <% if additionalinput.cognito_options_role_arn -%>
+                              cognito_options_role_arn = "<@ additionalinput.cognito_options_role_arn @>"
                               <%- endif %>
 
-                              <% if input.cognito_options_role_arn -%>
-                              cognito_options_role_arn = "<@ input.cognito_options_role_arn @>"
+                              <% if additionalinput.tags -%>
+                              tags = "<@ additionalinput.tags @>"
                               <%- endif %>
 
-                              <% if input.tags -%>
-                              tags = "<@ input.tags @>"
+                              <% if additionalinput.timeouts -%>
+                              timeouts = "<@ additionalinput.timeouts @>"
                               <%- endif %>
 
-                              <% if input.timeouts -%>
-                              timeouts = "<@ input.timeouts @>"
+                              <% if additionalinput.timeouts_update -%>
+                              timeouts_update = "<@ additionalinput.timeouts_update @>"
                               <%- endif %>
 
-                              <% if input.timeouts_update -%>
-                              timeouts_update = "<@ input.timeouts_update @>"
-                              <%- endif %>
-
-                              <% if input.create_service_link_role -%>
-                              create_service_link_role = "<@ input.create_service_link_role @>"
+                              <% if additionalinput.create_service_link_role -%>
+                              create_service_link_role = "<@ additionalinput.create_service_link_role @>"
                               <%- endif %>
 
                             command: "apply"
@@ -360,6 +373,19 @@ spec:
                                 vpc_id: "{{ .vpc_options_vpc_id }}"
                                 availability_zones: "{{ .vpc_options_availability_zones }}"
                                 elasticsearch_version: "{{ .elasticsearch_version }}"
+
+              - - name: fill-input-params
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
 
               - - name: fill-aws-params
                   capact-action: jinja2.template

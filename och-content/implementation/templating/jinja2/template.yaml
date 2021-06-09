@@ -38,6 +38,7 @@ spec:
                   path: "/template.yml"
                 - name: input-parameters
                   path: "/values.yml"
+                  optional: true
                 - name: configuration
                   path: "/configuration.yaml"
             outputs:
@@ -45,7 +46,8 @@ spec:
                 - name: render
                   path: "/render.yml"
             container:
-              image: ghcr.io/capactio/pr/infra/jinja2:PR-310
+              #image: ghcr.io/capactio/pr/infra/jinja2:PR-310
+              image: rg.fr-par.scw.cloud/capact-cross/jinja2:dev
               args:
                 - /template.yml
                 - /values.yml

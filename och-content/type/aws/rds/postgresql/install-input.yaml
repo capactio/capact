@@ -3,7 +3,7 @@ revision: 0.1.0
 kind: Type
 metadata:
   prefix: cap.type.aws.rds.postgresql
-  name: provision-input
+  name: install-input
   displayName: AWS RDS for PostgreSQL provisioning input
   description: Defines input for AWS RDS for PostgreSQL provisioning
   documentationURL: https://capact.io
@@ -21,10 +21,6 @@ spec:
         "title": "The schema for Provision parameters",
         "examples": [
           {
-            "superuser": {
-              "username": "postgres",
-              "password": "password123"
-            },
             "region": "eu-west-1",
             "ingress_rule_cidr_blocks": "0.0.0.0/0",
             "publicly_accessible": true,
@@ -33,11 +29,6 @@ spec:
         ],
         "required": [],
         "properties": {
-          "accessKeyID": {
-            "$id": "#/properties/accessKeyID",
-            "type": "string",
-            "title": "Access key ID"
-          },
           "engine": {
             "id": "#/properties/engine",
             "type": "string",
@@ -156,29 +147,6 @@ spec:
             "description": "Determines whether a final DB snapshot is created before the DB instance is deleted. If true is specified, no DBSnapshot is created. If false is specified, a DB snapshot is created before the DB instance is deleted, using the value from final_snapshot_identifier",
             "type": "boolean",
             "default": false
-          },
-          "superuser": {
-            "$id": "#/properties/superuser",
-            "type": "object",
-            "title": "Defines superuser details",
-            "required": [
-                "username",
-                "password"
-            ],
-            "properties": {
-              "username": {
-                "$id": "#/properties/superuser/properties/username",
-                "type": "string",
-                "title": "Create the specified user with superuser power and a database with the same name.",
-                "default": "postgres"
-              },
-              "password": {
-                "$id": "#/properties/superuser/properties/password",
-                "type": "string",
-                "title": "Sets the superuser password for PostgreSQL"
-              }
-            },
-            "additionalProperties": false
           }
         },
         "additionalProperties": false
