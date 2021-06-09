@@ -7,6 +7,7 @@ import (
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	hubclient "capact.io/capact/pkg/hub/client"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
@@ -15,14 +16,19 @@ import (
 )
 
 const (
-	userInputName = "input-parameters"
-	runnerContext = "runner-context"
+	userInputName       = "input-parameters"
+	additionalInputName = "additional-parameters"
+	runnerContext       = "runner-context"
 )
 
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
 	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
-	SetPolicy(policy policy.Policy)
+	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) map[string]interface{}
+	SetGlobalPolicy(policy policy.Policy)
+	SetActionPolicy(policy policy.Policy)
+	SetWorkflowStepPolicy(policy policy.Policy)
+	SetPolicyOrder(policy.MergeOrder)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicapi.InterfaceReference) (*hubpublicapi.InterfaceRevision, error)
 }
 
@@ -30,16 +36,16 @@ type Renderer struct {
 	maxDepth      int
 	renderTimeout time.Duration
 
-	policyEnforcedCli   PolicyEnforcedHubClient
 	typeInstanceHandler *TypeInstanceHandler
+	hubClient           hubclient.HubClient
 }
 
-func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedHubClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
+func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
 	r := &Renderer{
 		typeInstanceHandler: typeInstanceHandler,
-		policyEnforcedCli:   policyEnforcedCli,
 		maxDepth:            cfg.MaxDepth,
 		renderTimeout:       cfg.RenderTimeout,
+		hubClient:           hubClient,
 	}
 
 	return r
@@ -50,8 +56,11 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		input = &RenderInput{}
 	}
 
+	// policyEnforcedClient cannot be global because policy is calculated from global policy, action policy and worklfow step policies
+	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient)
+
 	// 0. Populate render options
-	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, r.policyEnforcedCli, r.typeInstanceHandler, input.Options...)
+	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, policyEnforcedClient, r.typeInstanceHandler, input.Options...)
 
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, r.renderTimeout)
 	defer cancel()
@@ -60,13 +69,13 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	interfaceRef := interfaceRefToHub(input.InterfaceRef)
 
 	// 1.1 Get Interface
-	iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, interfaceRef)
+	iface, err := policyEnforcedClient.FindInterfaceRevision(ctx, interfaceRef)
 	if err != nil {
 		return nil, err
 	}
 
 	// 1.2 Get all ImplementationRevisions for a given Interface
-	implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRef)
+	implementations, rule, err := policyEnforcedClient.ListImplementationRevisionForInterface(ctxWithTimeout, interfaceRef)
 	if err != nil {
 		return nil, errors.Wrapf(err, `while listing ImplementationRevisions for Interface "%s:%s"`,
 			interfaceRef.Path, interfaceRef.Revision,
@@ -94,16 +103,23 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// 3.1 Add our own root step and replace entrypoint
-	rootWorkflow = dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
+	rootWorkflow, entrypointStep := dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
 	// 4. Add user input
 	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
-	// 5. List TypeInstances to inject based on policy and inject them if provided
-	typeInstancesToInject := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
+	// 5. List data based on policy and inject them if provided
+	// 5.1 TypeInstances
+	typeInstancesToInject := policyEnforcedClient.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
+	}
+	// 5.2 Additional Input
+	additionalInput := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
+	err = dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalInput)
+	if err != nil {
+		return nil, errors.Wrap(err, "while injecting additional input based on policy")
 	}
 
 	// 6. Add runner context

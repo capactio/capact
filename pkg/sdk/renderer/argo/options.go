@@ -19,9 +19,21 @@ func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
 	}
 }
 
-func WithPolicy(policy policy.Policy) RendererOption {
+func WithGlobalPolicy(policy policy.Policy) RendererOption {
 	return func(r *dedicatedRenderer) {
-		r.policyEnforcedCli.SetPolicy(policy)
+		r.policyEnforcedCli.SetGlobalPolicy(policy)
+	}
+}
+
+func WithActionPolicy(policy policy.Policy) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.policyEnforcedCli.SetActionPolicy(policy)
+	}
+}
+
+func WithPolicyOrder(order policy.MergeOrder) RendererOption {
+	return func(r *dedicatedRenderer) {
+		r.policyEnforcedCli.SetPolicyOrder(order)
 	}
 }
 

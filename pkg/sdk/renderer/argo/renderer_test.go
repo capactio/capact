@@ -10,7 +10,6 @@ import (
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
 
-	"capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
 	"github.com/stretchr/testify/assert"
@@ -33,7 +32,6 @@ func TestRenderHappyPath(t *testing.T) {
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
-	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUID)
@@ -43,7 +41,7 @@ func TestRenderHappyPath(t *testing.T) {
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
-	}, policyEnforcedCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler)
 
 	tests := []struct {
 		name                string
@@ -173,7 +171,7 @@ func TestRenderHappyPath(t *testing.T) {
 					Options: []RendererOption{
 						WithSecretUserInput(tt.userInput),
 						WithTypeInstances(tt.inputTypeInstances),
-						WithPolicy(policy),
+						WithGlobalPolicy(policy),
 						WithOwnerID(ownerID),
 					},
 				},
@@ -254,7 +252,6 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		tc := testIdx
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
-			policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 			genUUID := genUUIDFn(strconv.Itoa(tc))
 			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 			typeInstanceHandler.SetGenUUID(genUUID)
@@ -262,7 +259,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
 				MaxDepth:      50,
-			}, policyEnforcedCli, typeInstanceHandler)
+			}, fakeCli, typeInstanceHandler)
 
 			// when
 			renderOutput, err := argoRenderer.Render(
@@ -272,7 +269,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 					InterfaceRef:           tt.ref,
 					Options: []RendererOption{
 						WithTypeInstances(tt.inputTypeInstances),
-						WithPolicy(tt.policy),
+						WithGlobalPolicy(tt.policy),
 						WithOwnerID("owner"),
 					},
 				},
@@ -291,14 +288,13 @@ func TestRendererMaxDepth(t *testing.T) {
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
-	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, policyEnforcedCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",
@@ -311,7 +307,7 @@ func TestRendererMaxDepth(t *testing.T) {
 			RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
 			InterfaceRef:           interfaceRef,
 			Options: []RendererOption{
-				WithPolicy(policy),
+				WithGlobalPolicy(policy),
 			},
 		},
 	)
@@ -327,14 +323,13 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	require.NoError(t, err)
 
 	policy := policy.NewDenyAll()
-	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, policyEnforcedCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.productivity.mattermost.install",
@@ -347,7 +342,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 			RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
 			InterfaceRef:           interfaceRef,
 			Options: []RendererOption{
-				WithPolicy(policy),
+				WithGlobalPolicy(policy),
 			},
 		},
 	)

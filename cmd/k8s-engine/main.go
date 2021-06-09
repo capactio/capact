@@ -14,6 +14,7 @@ import (
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/engine/api/graphql"
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	policytypes "capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/httputil"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/renderer"
@@ -68,7 +69,8 @@ type Config struct {
 
 	BuiltinRunner controller.BuiltinRunnerConfig
 
-	Policy policy.Config
+	Policy      policy.Config
+	PolicyOrder policytypes.MergeOrder
 
 	Renderer        renderer.Config
 	HubActionsImage string
@@ -103,9 +105,8 @@ func main() {
 	exitOnError(err, "while creating manager")
 
 	hubClient := getHubClient(&cfg)
-	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(hubClient)
 	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
-	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
+	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
@@ -120,6 +121,7 @@ func main() {
 		argoRenderer,
 		actionValidator,
 		policyService,
+		cfg.PolicyOrder,
 		hubClient,
 		hubClient,
 		controller.Config{

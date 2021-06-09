@@ -56,6 +56,8 @@ spec:
               value: {{.Release.Namespace}}
             - name: APP_HUB_ACTIONS_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.argoActions.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+            - name: APP_POLICY_ORDER
+              value: "{{ .Values.policyOrder }}"
           ports:
             - name: http
               containerPort: 8080

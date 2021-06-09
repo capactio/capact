@@ -11,6 +11,15 @@ const (
 	AnyInterfacePath  string = "cap.*"
 )
 
+type OrderItem string
+type MergeOrder []OrderItem
+
+const (
+	Global   OrderItem = "GLOBAL"
+	Action   OrderItem = "ACTION"
+	Workflow OrderItem = "WORKFLOW"
+)
+
 type Policy struct {
 	APIVersion string    `json:"apiVersion"`
 	Rules      RulesList `json:"rules"`

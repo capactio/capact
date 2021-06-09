@@ -77,19 +77,21 @@ type ActionService struct {
 	argoRenderer       ArgoRenderer
 	actionValidator    ActionValidator
 	policyService      PolicyService
+	policyOrder        policy.MergeOrder
 	typeInstanceLocker TypeInstanceLocker
 	typeInstanceGetter TypeInstanceGetter
 	log                *zap.Logger
 }
 
 // NewActionService return new ActionService instance.
-func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, policyService PolicyService, typeInstanceLocker TypeInstanceLocker, typeInstanceGetter TypeInstanceGetter, cfg Config) *ActionService {
+func NewActionService(log *zap.Logger, cli client.Client, argoRenderer ArgoRenderer, actionValidator ActionValidator, policyService PolicyService, policyOrder policy.MergeOrder, typeInstanceLocker TypeInstanceLocker, typeInstanceGetter TypeInstanceGetter, cfg Config) *ActionService {
 	return &ActionService{
 		k8sCli:             cli,
 		builtinRunner:      cfg.BuiltinRunner,
 		argoRenderer:       argoRenderer,
 		actionValidator:    actionValidator,
 		policyService:      policyService,
+		policyOrder:        policyOrder,
 		typeInstanceLocker: typeInstanceLocker,
 		typeInstanceGetter: typeInstanceGetter,
 		log:                log,
@@ -292,7 +294,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, err
 	}
 
-	_, actionPolicyData, err := a.getActionPolicyData(ctx, action)
+	actionPolicy, actionPolicyData, err := a.getActionPolicyData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
@@ -314,18 +316,24 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	}
 
 	ownerID := ownerIDKey(action)
+	options := []argo.RendererOption{
+		argo.WithSecretUserInput(ref),
+		argo.WithPolicyOrder(a.policyOrder),
+		argo.WithGlobalPolicy(policy),
+		argo.WithTypeInstances(typeInstances),
+		argo.WithOwnerID(ownerID),
+	}
+
+	if actionPolicy != nil {
+		options = append(options, argo.WithActionPolicy(*actionPolicy))
+	}
 
 	renderOutput, err := a.argoRenderer.Render(
 		ctx,
 		&argo.RenderInput{
 			RunnerContextSecretRef: runnerCtxSecretRef,
 			InterfaceRef:           interfaceRef,
-			Options: []argo.RendererOption{
-				argo.WithSecretUserInput(ref),
-				argo.WithPolicy(policy),
-				argo.WithTypeInstances(typeInstances),
-				argo.WithOwnerID(ownerID),
-			},
+			Options:                options,
 		},
 	)
 	if err != nil {
@@ -488,7 +496,7 @@ func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *
 		return nil, errors.Wrap(err, "while listing TypeInstances")
 	}
 
-	var res []v1alpha1.OutputTypeInstanceDetails
+	res := []v1alpha1.OutputTypeInstanceDetails{}
 
 	for _, ti := range typeInstances {
 		res = append(res, v1alpha1.OutputTypeInstanceDetails{
