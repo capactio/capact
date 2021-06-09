@@ -187,7 +187,7 @@ func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1
 
 		// Ensure that TypeInstances are unlocked.
 		err := r.svc.UnlockTypeInstances(ctx, action)
-		if r.ignoreLockedByDifferentOwner(err) != nil {
+		if r.ignoreNotActionableTypeInstanceErrors(err) != nil {
 			return false, errors.Wrap(err, "while unlocking TypeInstances")
 		}
 
@@ -442,15 +442,21 @@ func (r *ActionReconciler) newStatusForAction(action *v1alpha1.Action, eventType
 	return *statusCpy
 }
 
-// ignoreLockedByDifferentOwner ignores GraphQL error which says that TI are locked by different owner.
-// In our case it means that TI were already unlocked by a given Action and someone else locked them.
-// TODO: fix that after adding proper error types to GraphQL responses.
-func (r *ActionReconciler) ignoreLockedByDifferentOwner(err error) error {
+// ignoreNotActionableTypeInstanceErrors ignores GraphQL error which says that TI are locked by different owner or do not exist.
+// In our case it means that TI were already unlocked by a given Action and someone else locked them or deleted.
+//
+// TODO: Get rid of ridiculous string assertion after adding proper error types to GraphQL responses.
+//       http://knowyourmeme.com/memes/this-is-fine
+func (r *ActionReconciler) ignoreNotActionableTypeInstanceErrors(err error) error {
 	if err == nil {
 		return nil
 	}
 
 	if strings.Contains(err.Error(), "locked by different owner") {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "not found") {
 		return nil
 	}
 
