@@ -121,24 +121,24 @@ spec:
                                 repository: <@ additionalinput.image.repository | default("bitnami/mongodb") @>
                                 tag: <@ additionalinput.image.tag | default("4.4.2-debian-10-r27") @>
                                 pullPolicy: <@ additionalinput.image.pullPolicy | default("IfNotPresent") @>
-                                debug: <@ additionalinput.image.debug | default(false) @>
+                                debug: <@ additionalinput.image.debug | default(false) | tojson @>
 
                               clusterDomain: <@ additionalinput.clusterDomain | default("cluster.local") @>
                               architecture: <@ additionalinput.architecture | default("replicaset") @>
-                              useStatefulSet: <@ additionalinput.useStatefulSet | default(false) @>
+                              useStatefulSet: <@ additionalinput.useStatefulSet | default(false) | tojson @>
 
                               auth:
                                 enabled: true
                                 username: <@ input.user.username @>
                                 password: <@ input.user.password @>
-                                database: <@ input.database @>
+                                database: <@ input.defaultDBName @>
                                 rootPassword: <@ input.rootPassword @>
                                 replicaSetKey: "<@ input.replicaSetKey @>"
 
                               tls:
-                                enabled: <@ additionalinput.tls.enabled | default(false) @>
-                                caCert: "<@ additionalinput.tls.caCert | default(null) @>"
-                                caKey: "<@ additionalinput.tls.caKey | default(null) @>"
+                                enabled: <@ additionalinput.tls.enabled | default(false) | tojson @>
+                                caCert: "<@ additionalinput.tls.caCert | default('') @>"
+                                caKey: "<@ additionalinput.tls.caKey | default('') @>"
                                 image:
                                   registry: <@ additionalinput.tls.image.registry | default("docker.io") @>
                                   repository: <@ additionalinput.tls.image.repository | default("bitnami/nginx") @>
@@ -146,11 +146,11 @@ spec:
                                   pullPolicy: <@ additionalinput.tls.image.pullPolicy | default("IfNotPresent") @>
 
                               replicaSetName: <@ input.replicaSetName @>
-                              replicaSetHostnames: <@ additionalinput.replicaSetHostnames | default(true) @>
-                              enableIPv6: <@ additionalinput.enableIPv6 | default(false) @>
-                              directoryPerDB: <@ additionalinput.directoryPerDB | default(false) @>
+                              replicaSetHostnames: <@ additionalinput.replicaSetHostnames | default(true) | tojson @>
+                              enableIPv6: <@ additionalinput.enableIPv6 | default(false) | tojson @>
+                              directoryPerDB: <@ additionalinput.directoryPerDB | default(false) | tojson @>
                               systemLogVerbosity: <@ additionalinput.systemLogVerbosity | default(0) @>
-                              disableSystemLog: <@ additionalinput.disableSystemLog | default(false) @>
+                              disableSystemLog: <@ additionalinput.disableSystemLog | default(false) | tojson @>
                               configuration: "<@ additionalinput.configuration | default("") @>"
                               initdbScripts: <@ additionalinput.initdbScripts | default({}) @>
                               extraFlags: <@ additionalinput.extraFlags | default([]) @>
@@ -174,14 +174,14 @@ spec:
                               podAnnotations: <@ additionalinput.podAnnotations | default({}) @>
 
                               podSecurityContext:
-                                enabled: <@ additionalinput.podSecurityContext.enabled | default(true) @>
+                                enabled: <@ additionalinput.podSecurityContext.enabled | default(true) | tojson @>
                                 fsGroup: <@ additionalinput.podSecurityContext.fsGroup | default(1001) @>
                                 sysctls: <@ additionalinput.podSecurityContext.sysctls | default([]) @>
 
                               containerSecurityContext:
-                                enabled: <@ additionalinput.containerSecurityContext.enabled | default(true) @>
+                                enabled: <@ additionalinput.containerSecurityContext.enabled | default(true) | tojson @>
                                 runAsUser: <@ additionalinput.containerSecurityContext.runAsUser | default(1001) @>
-                                runAsNonRoot: <@ additionalinput.containerSecurityContext.runAsNonRoot | default(true) @>
+                                runAsNonRoot: <@ additionalinput.containerSecurityContext.runAsNonRoot | default(true) | tojson @>
 
                               resources:
                                 limits:
@@ -192,7 +192,7 @@ spec:
                                   cpu: <@ additionalinput.resources.requests.cpu | default("500m") @>
 
                               livenessProbe:
-                                enabled: <@ additionalinput.livenessProbe.enabled | default(true) @>
+                                enabled: <@ additionalinput.livenessProbe.enabled | default(true) | tojson @>
                                 initialDelaySeconds: <@ additionalinput.livenessProbe.initialDelaySeconds | default(30) @>
                                 periodSeconds: <@ additionalinput.livenessProbe.periodSeconds | default(10) @>
                                 timeoutSeconds: <@ additionalinput.livenessProbe.timeoutSeconds | default(5) @>
@@ -200,7 +200,7 @@ spec:
                                 successThreshold: <@ additionalinput.livenessProbe.successThreshold | default(1) @>
 
                               readinessProbe:
-                                enabled: <@ additionalinput.readinessProbe.enabled | default(true) @>
+                                enabled: <@ additionalinput.readinessProbe.enabled | default(true) | tojson @>
                                 initialDelaySeconds: <@ additionalinput.readinessProbe.initialDelaySeconds | default(5) @>
                                 periodSeconds: <@ additionalinput.readinessProbe.periodSeconds | default(10) @>
                                 timeoutSeconds: <@ additionalinput.readinessProbe.timeoutSeconds | default(5) @>
@@ -215,11 +215,11 @@ spec:
                               extraVolumes: <@ additionalinput.extraVolumes | default([]) @>
 
                               pdb:
-                                create: <@ additionalinput.pdb.create | default(true) @>
+                                create: <@ additionalinput.pdb.create | default(true) | tojson @>
                                 minAvailable: <@ additionalinput.pdb.minAvailable | default(1) @>
 
                               persistence:
-                                enabled: <@ additionalinput.persistence.enabled | default(true) @>
+                                enabled: <@ additionalinput.persistence.enabled | default(true) | tojson @>
                                 accessModes: <@ additionalinput.persistence.accessModes | default(["ReadWriteOnce"]) @>
                                 size: <@ additionalinput.persistence.size | default("8Gi") @>
                                 annotations: <@ additionalinput.persistence.annotations | default({}) @>
@@ -236,9 +236,9 @@ spec:
                                 annotations: <@ additionalinput.service.annotations | default({}) @>
 
                               externalAccess:
-                                enabled: <@ additionalinput.externalAccess.enabled | default(false) @>
+                                enabled: <@ additionalinput.externalAccess.enabled | default(false) | tojson @>
                                 autoDiscovery:
-                                  enabled: <@ additionalinput.externalAccess.autoDiscovery.enabled | default(false) @>
+                                  enabled: <@ additionalinput.externalAccess.autoDiscovery.enabled | default(false) | tojson @>
                                   image:
                                     registry: <@ additionalinput.externalAccess.autoDiscovery.image.registry | default("docker.io") @>
                                     repository: <@ additionalinput.externalAccess.autoDiscovery.image.repository | default("bitnami/kubectl") @>
@@ -257,7 +257,7 @@ spec:
                                   annotations: <@ additionalinput.externalAccess.service.annotations | default({}) @>
 
                               arbiter:
-                                enabled: <@ additionalinput.arbiter.enabled | default(false) @>
+                                enabled: <@ additionalinput.arbiter.enabled | default(false) | tojson @>
                                 configuration: "<@ additionalinput.arbiter.configuration | default("") @>"
                                 extraFlags: <@ additionalinput.arbiter.extraFlags | default([]) @>
                                 extraEnvVars: <@ additionalinput.arbiter.extraEnvVars | default([]) @>
@@ -275,24 +275,24 @@ spec:
                                 podLabels: <@ additionalinput.arbiter.podLabels | default({}) @>
                                 podAnnotations: <@ additionalinput.arbiter.podAnnotations | default({}) @>
                                 podSecurityContext:
-                                  enabled: <@ additionalinput.arbiter.podSecurityContext.enabled | default(true) @>
+                                  enabled: <@ additionalinput.arbiter.podSecurityContext.enabled | default(true) | tojson @>
                                   fsGroup: <@ additionalinput.arbiter.podSecurityContext.fsGroup | default(1001) @>
                                   sysctls: <@ additionalinput.arbiter.podSecurityContext.sysctls | default([]) @>
                                 containerSecurityContext:
-                                  enabled: <@ additionalinput.arbiter.containerSecurityContext.enabled | default(true) @>
+                                  enabled: <@ additionalinput.arbiter.containerSecurityContext.enabled | default(true) | tojson @>
                                   runAsUser: <@ additionalinput.arbiter.containerSecurityContext.runAsUser | default(1001) @>
                                 resources:
                                   limits: <@ additionalinput.arbiter.resources.limits | default({}) @>
                                   requests: <@ additionalinput.arbiter.resources.requests | default({}) @>
                                 livenessProbe:
-                                  enabled: <@ additionalinput.arbiter.livenessProbe.enabled | default(true) @>
+                                  enabled: <@ additionalinput.arbiter.livenessProbe.enabled | default(true) | tojson @>
                                   initialDelaySeconds: <@ additionalinput.arbiter.livenessProbe.initialDelaySeconds | default(30) @>
                                   periodSeconds: <@ additionalinput.arbiter.livenessProbe.periodSeconds | default(10) @>
                                   timeoutSeconds: <@ additionalinput.arbiter.livenessProbe.timeoutSeconds | default(5) @>
                                   failureThreshold: <@ additionalinput.arbiter.livenessProbe.failureThreshold | default(6) @>
                                   successThreshold: <@ additionalinput.arbiter.livenessProbe.successThreshold | default(1) @>
                                 readinessProbe:
-                                  enabled: <@ additionalinput.arbiter.readinessProbe.enabled | default(true) @>
+                                  enabled: <@ additionalinput.arbiter.readinessProbe.enabled | default(true) | tojson @>
                                   initialDelaySeconds: <@ additionalinput.arbiter.readinessProbe.initialDelaySeconds | default(5) @>
                                   periodSeconds: <@ additionalinput.arbiter.readinessProbe.periodSeconds | default(10) @>
                                   timeoutSeconds: <@ additionalinput.arbiter.readinessProbe.timeoutSeconds | default(5) @>
@@ -305,15 +305,15 @@ spec:
                                 extraVolumeMounts: <@ additionalinput.arbiter.extraVolumeMounts | default([]) @>
                                 extraVolumes: <@ additionalinput.arbiter.extraVolumes | default([]) @>
                                 pdb:
-                                  create: <@ additionalinput.arbiter.pdb.create | default(false) @>
+                                  create: <@ additionalinput.arbiter.pdb.create | default(false) | tojson @>
                                   minAvailable: <@ additionalinput.arbiter.pdb.minAvailable | default(1) @>
 
                               serviceAccount:
-                                create: <@ additionalinput.serviceAccount.create | default(true) @>
+                                create: <@ additionalinput.serviceAccount.create | default(true) | tojson @>
                               rbac:
-                                create: <@ additionalinput.rbac.create | default(false) @>
+                                create: <@ additionalinput.rbac.create | default(false) | tojson @>
                               volumePermissions:
-                                enabled: <@ additionalinput.volumePermissions.enabled | default(false) @>
+                                enabled: <@ additionalinput.volumePermissions.enabled | default(false) | tojson @>
                                 image:
                                   registry: <@ additionalinput.volumePermissions.image.registry | default("docker.io") @>
                                   repository: <@ additionalinput.volumePermissions.image.repository | default("bitnami/minideb") @>
@@ -327,7 +327,7 @@ spec:
                                   runAsUser: <@ additionalinput.volumePermissions.securityContext.runAsUser | default(0) @>
 
                               metrics:
-                                enabled: <@ additionalinput.metrics.enabled | default(false) @>
+                                enabled: <@ additionalinput.metrics.enabled | default(false) | tojson @>
                                 image:
                                   registry: <@ additionalinput.metrics.image.registry | default("docker.io") @>
                                   repository: <@ additionalinput.metrics.image.repository | default("bitnami/mongodb-exporter") @>
@@ -342,25 +342,25 @@ spec:
                                   type: <@ additionalinput.metrics.service.type | default("ClusterIP") @>
                                   port: <@ additionalinput.metrics.service.port | default(9216) @>
                                 livenessProbe:
-                                  enabled: <@ additionalinput.metrics.livenessProbe.enabled | default(true) @>
+                                  enabled: <@ additionalinput.metrics.livenessProbe.enabled | default(true) | tojson @>
                                   initialDelaySeconds: <@ additionalinput.metrics.livenessProbe.initialDelaySeconds | default(15) @>
                                   periodSeconds: <@ additionalinput.metrics.livenessProbe.periodSeconds | default(5) @>
                                   timeoutSeconds: <@ additionalinput.metrics.livenessProbe.timeoutSeconds | default(5) @>
                                   failureThreshold: <@ additionalinput.metrics.livenessProbe.failureThreshold | default(3) @>
                                   successThreshold: <@ additionalinput.metrics.livenessProbe.successThreshold | default(1) @>
                                 readinessProbe:
-                                  enabled: <@ additionalinput.metrics.readinessProbe.enabled | default(true) @>
+                                  enabled: <@ additionalinput.metrics.readinessProbe.enabled | default(true) | tojson @>
                                   initialDelaySeconds: <@ additionalinput.metrics.readinessProbe.initialDelaySeconds | default(5) @>
                                   periodSeconds: <@ additionalinput.metrics.readinessProbe.periodSeconds | default(5) @>
                                   timeoutSeconds: <@ additionalinput.metrics.readinessProbe.timeoutSeconds | default(1) @>
                                   failureThreshold: <@ additionalinput.metrics.readinessProbe.failureThreshold | default(3) @>
                                   successThreshold: <@ additionalinput.metrics.readinessProbe.successThreshold | default(1) @>
                                 serviceMonitor:
-                                  enabled: <@ additionalinput.metrics.serviceMonitor.enabled | default(false) @>
+                                  enabled: <@ additionalinput.metrics.serviceMonitor.enabled | default(false) | tojson @>
                                   interval: <@ additionalinput.metrics.serviceMonitor.interval | default("30s") @>
                                   additionalLabels: <@ additionalinput.metrics.serviceMonitor.additionalLabels | default({}) @>
                                 prometheusRule:
-                                  enabled: <@ additionalinput.metrics.prometheusRule.enabled | default(false) @>
+                                  enabled: <@ additionalinput.metrics.prometheusRule.enabled | default(false) | tojson @>
                                   additionalLabels: <@ additionalinput.metrics.prometheusRule.additionalLabels | default({}) @>
                                   rules: <@ additionalinput.metrics.prometheusRule.rules | default({}) @>
                              
@@ -382,9 +382,9 @@ spec:
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |

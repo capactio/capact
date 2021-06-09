@@ -24,6 +24,23 @@ spec:
         "type": "object",
         "title": "MongoDB install input for Bitnami Helm chart installation",
         "properties": {
+          "user": {
+            "$id": "#/properties/user",
+            "type": "object"
+            "properties": {
+              "username": {
+                "$id": "#/properties/user/properties/username",
+                "type": "string",
+                "title": "MongoDB username",
+                "default": "mongo"
+              },
+              "password": {
+                "$id": "#/properties/user/properites/password",
+                "type": "string",
+                "title": "MongoDB user password",
+              }
+            }
+          },
           "replicas": {
             "$id": "#/properties/replicas",
             "type": "integer",
@@ -40,18 +57,6 @@ spec:
             "type": "string",
             "title": "Name of the replica set",
             "default": "rs0"
-          },
-          "user": {
-            "$id": "#/properties/user",
-            "type": "string",
-            "title": "MongoDB user",
-            "default": "mongo"
-          },
-          "userPassword": {
-            "$id": "#/properties/userPassword",
-            "type": "string",
-            "title": "MongoDB user password",
-            "default": "mongo"
           },
           "rootPassword": {
             "$id": "#/properties/rootPassword",
