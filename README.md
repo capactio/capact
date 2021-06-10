@@ -2,15 +2,17 @@
 
 **Capact** (pronounced: "cape-act", /ˈkeɪp.ækt/) is a simple way to manage applications and infrastructure.
 
+## Documentation
+
+The Capact documentation can be found on the [capact.io/docs](https://capact.io/docs) website.
+
 ## Get started
 
 The section contains useful links for getting started with Capact.
 
-- **Introduction:** To learn what is Capact, read the [Introduction](./docs/introduction.md) document.
-- **Installation:** To learn how to install Capact, follow the [installation](./docs/installation) documents.
-- **Development:** To run Capact on your local machine and start contributing to Capact, read the [`development`](./docs/development) documents.
-
-To read the full documentation, navigate to the [capact.io/docs](https://capact.io/docs) website.
+- **Introduction:** To learn what is Capact, read the [Introduction](https://staging.capact.io/docs/introduction) document.
+- **Installation:** To learn how to install Capact, follow the [Installation](https://staging.capact.io/docs/installation/local) documents.
+- **Development:** To run Capact on your local machine and start contributing to Capact, read the [Development](https://staging.capact.io/docs/development/development-guide) documents.
 
 ## Project structure
 
@@ -22,7 +24,7 @@ The repository has the following structure:
   │
   ├── deploy                  # Deployment configurations and templates
   │
-  ├── docs                    # Documentation related to the project
+  ├── docs                    # Documents that are not published on the Capact website, such as proposals and investigations
   │
   ├── hack                    # Scripts used by the Capact developers
   │
