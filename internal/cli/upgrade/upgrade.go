@@ -48,7 +48,7 @@ const (
 
 var ErrActionNotFinished = errors.New("Action still not finished")
 var ErrActionWithoutStatus = errors.New("Action doesn't have status")
-var ErrActionDelete = errors.New("Action was deleted, final state is unknown")
+var ErrActionDeleted = errors.New("Action has been deleted, final state is unknown")
 
 func NewErrAnotherUpgradeIsRunning(actionName string) error {
 	return errors.Errorf("Another upgrade action %s is currently running", actionName)
@@ -287,6 +287,10 @@ func (u *Upgrade) waitUntilReadyToRun(ctx context.Context, name string, timeout 
 			return false, nil
 		}
 
+		if act == nil {
+			return true, ErrActionDeleted
+		}
+
 		if act.Status == nil {
 			lastErr = ErrActionWithoutStatus
 			return false, nil
@@ -330,9 +334,13 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 		}
 
 		if act == nil {
-			// action was deleted, no reason to wait further
-			// as Action can be delete only once it's completed.
-			return true, ErrActionDelete
+			// Action has been deleted, no reason to wait further
+			// as an Action can be deleted only once it's completed.
+			return true, ErrActionDeleted
+		}
+		if act.Status == nil {
+			// Status not available, this shouldn't happen for running action
+			return false, nil
 		}
 		switch act.Status.Phase {
 		case gqlengine.ActionStatusPhaseSucceeded:

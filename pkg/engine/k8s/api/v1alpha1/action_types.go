@@ -413,4 +413,4 @@ const (
 )
 
 // ActionFinalizer is the name of the Action finalizer
-const ActionFinalizer = "action.core.capact.io/finalizer"
+const ActionFinalizer = "actions.core.capact.io/finalizer"

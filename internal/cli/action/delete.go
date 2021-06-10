@@ -10,10 +10,10 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
+	"capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
-	"github.com/fatih/color"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -51,12 +51,15 @@ var (
 	ErrNotSupportedPhaseOpt     = errors.New("phase filter is supported only when regex option is used")
 )
 
-func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
+func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) (err error) {
+	status := printer.NewStatus(w, "")
+	defer func() {
+		status.End(err == nil)
+	}()
+
 	if err := opts.Validate(); err != nil {
 		return err
 	}
-
-	okCheck := color.New(color.FgGreen).FprintfFunc()
 
 	server := config.GetDefaultContext()
 
@@ -80,19 +83,17 @@ func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
 	}
 
 	for _, name := range actionsToDelete {
-		err = actionCli.DeleteAction(ctxWithNs, name)
-		if err != nil {
+		status.Step("Scheduling Action '%s/%s' deletion", opts.Namespace, name)
+		if err = actionCli.DeleteAction(ctxWithNs, name); err != nil {
 			return err
 		}
-		okCheck(w, "Action '%s/%s' deletion scheduled successfully\n", opts.Namespace, name)
 	}
 
 	if !opts.Wait {
 		return nil
 	}
 
-	fmt.Fprintf(w, "Wait until deletion process completes...\n")
-
+	status.Step("Waiting ≤ %s for deletion process to complete", opts.Timeout)
 	return waitUntilDeleted(ctxWithNs, actionCli, actionsToDelete, opts.Timeout)
 }
 
@@ -109,7 +110,7 @@ func waitUntilDeleted(ctxWithNs context.Context, actCli client.ClusterClient, na
 			return false, nil
 		}
 		if len(out) != 0 {
-			lastErr = fmt.Errorf("%s actions are still not deleted", strings.Join(toNamesList(out), ", "))
+			lastErr = fmt.Errorf("the following Actions are still not deleted: [ %s ]", strings.Join(toNamesList(out), ", "))
 			return false, nil
 		}
 

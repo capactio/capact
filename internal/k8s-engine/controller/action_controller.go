@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -23,10 +21,8 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
-
-// instantRequeueDelayAfterUpdate is needed as we cannot requeue item immediately as cache will not be updated so fast.
-const instantRequeueDelayAfterUpdate = 30 * time.Second
 
 // ActionReconciler reconciles a Action object.
 type ActionReconciler struct {
@@ -216,8 +212,8 @@ func (r *ActionReconciler) initAction(ctx context.Context, action *v1alpha1.Acti
 	if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 		return ctrl.Result{}, errors.Wrap(err, "while updating action object status")
 	}
-	// requeue to start the rendering process
-	return ctrl.Result{RequeueAfter: instantRequeueDelayAfterUpdate}, nil
+	// should be re-queued by status change
+	return ctrl.Result{}, nil
 }
 
 // renderAction renders a given action. If finally rendered, sets status to v1alpha1.ReadyToRunActionPhase phase.
@@ -303,7 +299,8 @@ func (r *ActionReconciler) handleRunningAction(ctx context.Context, action *v1al
 		if err := r.k8sCli.Status().Update(ctx, action); err != nil {
 			return ctrl.Result{}, errors.Wrap(err, "while updating status of running action")
 		}
-		return ctrl.Result{RequeueAfter: instantRequeueDelayAfterUpdate}, nil
+		// should be re-queued by status change
+		return ctrl.Result{}, nil
 	}
 
 	// status didn't change, no need to requeue

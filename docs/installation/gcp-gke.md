@@ -177,7 +177,7 @@ This guide explains how to deploy Capact on a cluster using your own domain.
    ```bash
    CUSTOM_CAPACT_SET_FLAGS="--set global.domainName=$DOMAIN --set global.gateway.auth.password=$GATEWAY_PASSWORD" \
    DOCKER_REPOSITORY="ghcr.io/capactio" \
-   OVERRIDE_DOCKER_TAG="{CAPACT_VERSION}" \
+   OVERRIDE_DOCKER_TAG="{CAPACT_VERSION}" # version tag pattern: `{first_7_chars_of_commit_sha_from_main_branch}`, e.g. `afc9d43` \
    ./hack/ci/cluster-components-install-upgrade.sh
    ```
 
