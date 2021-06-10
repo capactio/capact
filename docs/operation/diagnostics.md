@@ -210,9 +210,6 @@ To check the logs since a given time, use the `--since-time` flag, for example:
     cap.interface.analytics.elasticsearch.install             0.1.0             cap.implementation.elastic.elasticsearch.install
                                                                                 cap.implementation.aws.elasticsearch.provision
   +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
-    cap.interface.atlassian.stack.install                     0.1.0             cap.implementation.atlassian.stack.install
-                                                                                cap.implementation.atlassian.stack.install-parallel
-  +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
     cap.interface.automation.concourse.change-db-password     0.1.0             cap.implementation.concourse.concourse.change-db-password
   +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
   ...

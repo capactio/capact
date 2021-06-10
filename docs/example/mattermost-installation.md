@@ -95,10 +95,7 @@ As a result, all external solutions, such as Cloud SQL, have a lower priority, a
                                PATH                             LATEST REVISION                           IMPLEMENTATIONS                          
     +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
       cap.interface.analytics.elasticsearch.install             0.1.0             cap.implementation.elastic.elasticsearch.install                 
-                                                                                  cap.implementation.aws.elasticsearch.provision                   
-    +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
-      cap.interface.atlassian.stack.install                     0.1.0             cap.implementation.atlassian.stack.install-parallel              
-                                                                                  cap.implementation.atlassian.stack.install                       
+                                                                                  cap.implementation.aws.elasticsearch.provision                                          
     +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
       cap.interface.automation.concourse.change-db-password     0.1.0             cap.implementation.concourse.concourse.change-db-password        
     +---------------------------------------------------------+-----------------+-----------------------------------------------------------------+
