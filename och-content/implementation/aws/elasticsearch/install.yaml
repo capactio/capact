@@ -142,15 +142,14 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
-
                       - name: template
                         raw:
                           data: |
                             replicas: <@ input.replicas | default(3) @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
 
               - - name: create-module-args
                   capact-action: jinja2.template

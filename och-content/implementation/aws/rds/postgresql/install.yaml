@@ -94,6 +94,23 @@ spec:
                 - name: rds-instance
                   from: "{{steps.render-rds.outputs.artifacts.render}}"
             steps:
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            superuser:
+                              username: "<@ input.superuser.username | default('postgres') @>"
+                              password: "<@ input.superuser.password | default(random_word(length=16)) @>"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
               - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
@@ -108,8 +125,8 @@ spec:
                         raw:
                           data: |
                             variables: |+
-                              user_name = "<@ input.superuser.username | default('postgres') @>"
-                              user_password = "<@ input.superuser.password | default(random_word(length=16)) @>"
+                              user_name = "<@ input.superuser.username @>"
+                              user_password = "<@ input.superuser.password @>"
 
                               region = "<@ additionalinput.region | default('eu-west-1') @>"
                               ingress_rule_cidr_blocks = "<@ additionalinput.ingress_rule_cidr_blocks | default('0.0.0.0/0') @>"
@@ -197,7 +214,7 @@ spec:
                       - name: template
                         from: "{{steps.create-module-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{inputs.artifacts.input-parameters}}"
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |
@@ -208,7 +225,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                        from: "{{steps.fill-input-in-module-args.outputs.artifacts.render}}"
                       - name: input-parameters
                         from: "{{workflow.outputs.artifacts.aws-credentials}}"
                       - name: configuration
