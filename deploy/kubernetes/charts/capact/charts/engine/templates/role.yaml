@@ -65,6 +65,12 @@ rules:
 - apiGroups:
   - core.capact.io
   resources:
+  - actions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - core.capact.io
+  resources:
   - actions/status
   verbs:
   - get

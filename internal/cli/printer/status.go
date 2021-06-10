@@ -21,7 +21,9 @@ type Status struct {
 }
 
 func NewStatus(w io.Writer, header string) *Status {
-	fmt.Fprintln(w, header)
+	if header != "" {
+		fmt.Fprintln(w, header)
+	}
 
 	st := &Status{}
 	if cli.IsSmartTerminal(w) {

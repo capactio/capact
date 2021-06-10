@@ -35,7 +35,6 @@ main() {
     export DOCKER_REPOSITORY="local"
     export CLUSTER_TYPE="KIND"
     capact::update::images_on_kind
-
     capact::install_upgrade::charts
 
     if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then

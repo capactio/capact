@@ -6,20 +6,26 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"time"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
+	"capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 
-	"github.com/fatih/color"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
+
+const deletionCheckPollInterval = time.Second
 
 type DeleteOptions struct {
 	ActionNames []string
 	Namespace   string
 	NameRegex   string
 	Phase       string
+	Timeout     time.Duration
+	Wait        bool
 }
 
 func (d *DeleteOptions) Validate() error {
@@ -45,12 +51,15 @@ var (
 	ErrNotSupportedPhaseOpt     = errors.New("phase filter is supported only when regex option is used")
 )
 
-func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
+func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) (err error) {
+	status := printer.NewStatus(w, "")
+	defer func() {
+		status.End(err == nil)
+	}()
+
 	if err := opts.Validate(); err != nil {
 		return err
 	}
-
-	okCheck := color.New(color.FgGreen).FprintfFunc()
 
 	server := config.GetDefaultContext()
 
@@ -74,14 +83,60 @@ func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) error {
 	}
 
 	for _, name := range actionsToDelete {
-		err = actionCli.DeleteAction(ctxWithNs, name)
-		if err != nil {
+		status.Step("Scheduling Action '%s/%s' deletion", opts.Namespace, name)
+		if err = actionCli.DeleteAction(ctxWithNs, name); err != nil {
 			return err
 		}
-		okCheck(w, "Action '%s/%s' deleted successfully\n", opts.Namespace, name)
+	}
+
+	if !opts.Wait {
+		return nil
+	}
+
+	status.Step("Waiting ≤ %s for deletion process to complete", opts.Timeout)
+	return waitUntilDeleted(ctxWithNs, actionCli, actionsToDelete, opts.Timeout)
+}
+
+func waitUntilDeleted(ctxWithNs context.Context, actCli client.ClusterClient, names []string, timeout time.Duration) error {
+	toBeDeletedNameRegex := mapToStrictOrRegex(names)
+
+	var lastErr error
+	err := wait.Poll(deletionCheckPollInterval, timeout, func() (done bool, err error) {
+		out, err := actCli.ListActions(ctxWithNs, &gqlengine.ActionFilter{
+			NameRegex: &toBeDeletedNameRegex,
+		})
+		if err != nil { // may be network issue, ignoring
+			lastErr = err
+			return false, nil
+		}
+		if len(out) != 0 {
+			lastErr = fmt.Errorf("the following Actions are still not deleted: [ %s ]", strings.Join(toNamesList(out), ", "))
+			return false, nil
+		}
+
+		return true, nil
+	})
+	if err != nil {
+		if err == wait.ErrWaitTimeout {
+			return lastErr
+		}
+		return err
 	}
 
 	return nil
+}
+
+func toNamesList(in []*gqlengine.Action) []string {
+	var names []string
+	for _, i := range in {
+		names = append(names, i.Name)
+	}
+	return names
+}
+
+func mapToStrictOrRegex(in []string) string {
+	out := strings.Join(in, "$|^")
+	return fmt.Sprintf("(^%s$)", out)
 }
 
 func AllowedPhases() string {
@@ -109,10 +164,6 @@ func listActionsForDeletion(ctxWithNs context.Context, actionCli client.ClusterC
 	if err != nil {
 		return nil, err
 	}
-	var names []string
-	for _, i := range out {
-		names = append(names, i.Name)
-	}
 
-	return names, nil
+	return toNamesList(out), nil
 }

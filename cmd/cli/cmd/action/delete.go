@@ -3,6 +3,7 @@ package action
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/action"
@@ -38,6 +39,8 @@ func NewDelete() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created")
 	flags.StringVar(&opts.NameRegex, "name-regex", "", "Deletes all Actions whose names are matched by the given regular expression. To check the regex syntax, read: https://golang.org/s/re2syntax")
+	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the deletion process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
+	flags.BoolVarP(&opts.Wait, "wait", "w", true, `Waits for the deletion process until it finish or the defined "--timeout" occurs.`)
 	// TODO: support phases also when exact name is used.
 	flags.StringVar(&opts.Phase, "phase", "", fmt.Sprintf("Deletes Actions only in the given phase. Supported only when the --name-regex flag is used. Allowed values: %s", action.AllowedPhases()))
 
