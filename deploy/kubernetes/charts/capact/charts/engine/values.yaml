@@ -57,7 +57,7 @@ tolerations: []
 
 affinity: {}
 
-clusterPolicyRules:
+globalPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #
 #  - interface:
@@ -72,11 +72,12 @@ clusterPolicyRules:
 #          attributes:
 #            - path: "cap.attribute.cloud.provider.gcp"
 #              # any revision
-#        injectTypeInstances:
-#          - id: "{uuid}"
-#            typeRef:
-#              path: "cap.type.gcp.auth.service-account"
-#              revision: "0.1.0"
+#        inject:
+#         typeInstances:
+#           - id: "{uuid}"
+#             typeRef:
+#               path: "cap.type.gcp.auth.service-account"
+#               revision: "0.1.0"
 #      - implementationConstraints:
 #          attributes:
 #           - path: cap.attribute.cloud.provider.aws
@@ -107,7 +108,7 @@ clusterPolicyRules:
 
 testSetup:
   enabled: false
-  clusterPolicyRules:
+  globalPolicyRules:
     - interface:
         path: "cap.interface.capactio.capact.validation.action.passing"
       oneOf:
@@ -116,10 +117,11 @@ testSetup:
               - path: "cap.type.capactio.capact.validation.single-key"
             attributes:
               - path: "cap.attribute.capactio.capact.validation.policy.most-preferred"
-          injectTypeInstances:
-            - id: "{typeInstanceUUID}"
-              typeRef:
-                path: "cap.type.capactio.capact.validation.single-key"
-                revision: "0.1.0"
+          inject:
+            typeInstances:
+              - id: "{typeInstanceUUID}"
+                typeRef:
+                  path: "cap.type.capactio.capact.validation.single-key"
+                  revision: "0.1.0"
         - implementationConstraints:
             path: cap.implementation.capactio.capact.validation.action.passing-a

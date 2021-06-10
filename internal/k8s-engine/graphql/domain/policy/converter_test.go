@@ -5,6 +5,7 @@ import (
 
 	"capact.io/capact/internal/k8s-engine/graphql/domain/policy"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
@@ -15,9 +16,10 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	c := policy.NewConverter()
 
 	// when
-	actualModel := c.FromGraphQLInput(gqlInput)
+	actualModel, err := c.FromGraphQLInput(gqlInput)
 
 	// then
+	require.NoError(t, err)
 	assert.Equal(t, expectedModel, actualModel)
 }
 

@@ -332,6 +332,12 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 	params := graphql.JSON(`{"param":"one"}`)
 	override := graphql.JSON(`{"foo":"bar"}`)
 
+	additionalInput := map[string]interface{}{
+		"additional-parameters": map[string]interface{}{
+			"snapshot": true,
+		},
+	}
+
 	return graphql.ActionDetailsInput{
 		Name: name,
 		Input: &graphql.ActionInputData{
@@ -344,6 +350,34 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 				{
 					Name: "in2",
 					ID:   "in-id2",
+				},
+			},
+			ActionPolicy: &graphql.PolicyInput{
+				Rules: []*graphql.RulesForInterfaceInput{
+					{
+						Interface: &graphql.ManifestReferenceInput{
+							Path: "cap.interface.dummy",
+						},
+						OneOf: []*graphql.PolicyRuleInput{
+							{
+								ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
+									Path: ptr.String("cap.implementation.dummy"),
+								},
+								Inject: &graphql.PolicyRuleInjectDataInput{
+									TypeInstances: []*graphql.TypeInstanceReferenceInput{
+										{
+											ID: "policy-ti-id",
+											TypeRef: &graphql.ManifestReferenceInput{
+												Path:     "cap.type.dummy",
+												Revision: ptr.String("0.1.0"),
+											},
+										},
+									},
+									AdditionalInput: &additionalInput,
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -389,6 +423,11 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 							ID:   "in-id2",
 						},
 					},
+					ActionPolicy: &v1alpha1.ActionPolicy{
+						SecretRef: corev1.LocalObjectReference{
+							Name: name,
+						},
+					},
 				},
 				AdvancedRendering: &v1alpha1.AdvancedRendering{
 					Enabled: true,
@@ -405,7 +444,8 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				Name: name,
 			},
 			StringData: map[string]string{
-				"parameters.json": `{"param":"one"}`,
+				"parameters.json":    `{"param":"one"}`,
+				"action-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`,
 			},
 		},
 	}

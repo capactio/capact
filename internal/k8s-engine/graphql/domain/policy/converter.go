@@ -2,8 +2,9 @@ package policy
 
 import (
 	"capact.io/capact/pkg/engine/api/graphql"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/pkg/errors"
 )
 
 type Converter struct{}
@@ -12,23 +13,28 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) clusterpolicy.ClusterPolicy {
-	var rules clusterpolicy.RulesList
+func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, error) {
+	var rules policy.RulesList
 
 	for _, gqlRule := range in.Rules {
-		rules = append(rules, clusterpolicy.RulesForInterface{
+		policyRules, err := c.policyRulesFromGraphQLInput(gqlRule.OneOf)
+		if err != nil {
+			return policy.Policy{}, errors.Wrap(err, "while getting Policy rules")
+		}
+
+		rules = append(rules, policy.RulesForInterface{
 			Interface: c.manifestRefFromGraphQLInput(gqlRule.Interface),
-			OneOf:     c.policyRulesFromGraphQLInput(gqlRule.OneOf),
+			OneOf:     policyRules,
 		})
 	}
 
-	return clusterpolicy.ClusterPolicy{
-		APIVersion: clusterpolicy.CurrentAPIVersion,
+	return policy.Policy{
+		APIVersion: policy.CurrentAPIVersion,
 		Rules:      rules,
-	}
+	}, nil
 }
 
-func (c *Converter) ToGraphQL(in clusterpolicy.ClusterPolicy) graphql.Policy {
+func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
 	var gqlRules []*graphql.RulesForInterface
 
 	for _, rule := range in.Rules {
@@ -43,7 +49,7 @@ func (c *Converter) ToGraphQL(in clusterpolicy.ClusterPolicy) graphql.Policy {
 	}
 }
 
-func (c *Converter) policyRulesToGraphQL(in []clusterpolicy.Rule) []*graphql.PolicyRule {
+func (c *Converter) policyRulesToGraphQL(in []policy.Rule) []*graphql.PolicyRule {
 	var gqlRules []*graphql.PolicyRule
 
 	for _, rule := range in {
@@ -53,7 +59,7 @@ func (c *Converter) policyRulesToGraphQL(in []clusterpolicy.Rule) []*graphql.Pol
 				Attributes: c.manifestRefsToGraphQL(rule.ImplementationConstraints.Attributes),
 				Path:       rule.ImplementationConstraints.Path,
 			},
-			InjectTypeInstances: c.typeInstancesToInjectToGraphQL(rule.InjectTypeInstances),
+			Inject: c.policyInjectDataToGraphQL(rule.Inject),
 		}
 
 		gqlRules = append(gqlRules, gqlRule)
@@ -62,28 +68,65 @@ func (c *Converter) policyRulesToGraphQL(in []clusterpolicy.Rule) []*graphql.Pol
 	return gqlRules
 }
 
-func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) []clusterpolicy.Rule {
-	var rules []clusterpolicy.Rule
+func (c *Converter) policyInjectDataToGraphQL(data *policy.InjectData) *graphql.PolicyRuleInjectData {
+	if data == nil {
+		return nil
+	}
+
+	return &graphql.PolicyRuleInjectData{
+		TypeInstances:   c.typeInstancesToInjectToGraphQL(data.TypeInstances),
+		AdditionalInput: data.AdditionalInput,
+	}
+}
+
+func (c *Converter) policyRulesFromGraphQLInput(in []*graphql.PolicyRuleInput) ([]policy.Rule, error) {
+	var rules []policy.Rule
 
 	for _, gqlRule := range in {
-		var implConstraints clusterpolicy.ImplementationConstraints
+		var implConstraints policy.ImplementationConstraints
 		if gqlRule.ImplementationConstraints != nil {
-			implConstraints = clusterpolicy.ImplementationConstraints{
+			implConstraints = policy.ImplementationConstraints{
 				Requires:   c.manifestRefsFromGraphQLInput(gqlRule.ImplementationConstraints.Requires),
 				Attributes: c.manifestRefsFromGraphQLInput(gqlRule.ImplementationConstraints.Attributes),
 				Path:       gqlRule.ImplementationConstraints.Path,
 			}
 		}
 
-		rule := clusterpolicy.Rule{
+		injectData, err := c.policyInjectDataFromGraphQLInput(gqlRule.Inject)
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting Policy inject data")
+		}
+
+		rule := policy.Rule{
 			ImplementationConstraints: implConstraints,
-			InjectTypeInstances:       c.typeInstancesToInjectFromGraphQLInput(gqlRule.InjectTypeInstances),
+			Inject:                    injectData,
 		}
 
 		rules = append(rules, rule)
 	}
 
-	return rules
+	return rules, nil
+}
+
+func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleInjectDataInput) (*policy.InjectData, error) {
+	if input == nil {
+		return nil, nil
+	}
+
+	var additionalInput map[string]interface{}
+
+	if input.AdditionalInput != nil {
+		var ok bool
+		additionalInput, ok = input.AdditionalInput.(map[string]interface{})
+		if !ok {
+			return nil, ErrCannotConvertAdditionalInput
+		}
+	}
+
+	return &policy.InjectData{
+		TypeInstances:   c.typeInstancesToInjectFromGraphQLInput(input.TypeInstances),
+		AdditionalInput: additionalInput,
+	}, nil
 }
 
 func (c *Converter) manifestRefToGraphQL(in types.ManifestRef) *graphql.ManifestReferenceWithOptionalRevision {
@@ -106,7 +149,7 @@ func (c *Converter) manifestRefsToGraphQL(in *[]types.ManifestRef) []*graphql.Ma
 	return out
 }
 
-func (c *Converter) typeInstancesToInjectToGraphQL(in []clusterpolicy.TypeInstanceToInject) []*graphql.TypeInstanceReference {
+func (c *Converter) typeInstancesToInjectToGraphQL(in []policy.TypeInstanceToInject) []*graphql.TypeInstanceReference {
 	var out []*graphql.TypeInstanceReference
 
 	for _, item := range in {
@@ -147,14 +190,14 @@ func (c *Converter) manifestRefsFromGraphQLInput(in []*graphql.ManifestReference
 	return &out
 }
 
-func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.TypeInstanceReferenceInput) []clusterpolicy.TypeInstanceToInject {
+func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.TypeInstanceReferenceInput) []policy.TypeInstanceToInject {
 	if in == nil {
 		return nil
 	}
 
-	var out []clusterpolicy.TypeInstanceToInject
+	var out []policy.TypeInstanceToInject
 	for _, item := range in {
-		out = append(out, clusterpolicy.TypeInstanceToInject{
+		out = append(out, policy.TypeInstanceToInject{
 			ID:      item.ID,
 			TypeRef: c.manifestRefFromGraphQLInput(item.TypeRef),
 		})

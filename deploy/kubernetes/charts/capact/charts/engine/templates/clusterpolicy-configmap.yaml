@@ -10,6 +10,6 @@ data:
 
     rules:
       {{- if .Values.testSetup.enabled }}
-      {{- toYaml .Values.testSetup.clusterPolicyRules | nindent 8 }}
+      {{- toYaml .Values.testSetup.globalPolicyRules | nindent 8 }}
       {{- end }}
-      {{- toYaml .Values.clusterPolicyRules | nindent 8 }}
+      {{- toYaml .Values.globalPolicyRules | nindent 8 }}

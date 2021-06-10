@@ -62,6 +62,8 @@ type ActionInput struct {
 	// Validated against JSON schema from Interface
 	Parameters    interface{}                 `json:"parameters"`
 	TypeInstances []*InputTypeInstanceDetails `json:"typeInstances"`
+	// Contains the one-time Action policy, which is merged with other Capact policies
+	ActionPolicy *Policy `json:"actionPolicy"`
 }
 
 // Client input that modifies input of a given Action
@@ -70,6 +72,8 @@ type ActionInputData struct {
 	Parameters *JSON `json:"parameters"`
 	// Required and optional TypeInstances for Action
 	TypeInstances []*InputTypeInstanceData `json:"typeInstances"`
+	// Contains the optional one-time Action policy, which is merged with other Capact policies
+	ActionPolicy *PolicyInput `json:"actionPolicy"`
 }
 
 // Describes output of an Action
@@ -164,9 +168,19 @@ type PolicyRuleImplementationConstraintsInput struct {
 	Path *string `json:"path"`
 }
 
+type PolicyRuleInjectData struct {
+	TypeInstances   []*TypeInstanceReference `json:"typeInstances"`
+	AdditionalInput interface{}              `json:"additionalInput"`
+}
+
+type PolicyRuleInjectDataInput struct {
+	TypeInstances   []*TypeInstanceReferenceInput `json:"typeInstances"`
+	AdditionalInput interface{}                   `json:"additionalInput"`
+}
+
 type PolicyRuleInput struct {
 	ImplementationConstraints *PolicyRuleImplementationConstraintsInput `json:"implementationConstraints"`
-	InjectTypeInstances       []*TypeInstanceReferenceInput             `json:"injectTypeInstances"`
+	Inject                    *PolicyRuleInjectDataInput                `json:"inject"`
 }
 
 type RulesForInterface struct {

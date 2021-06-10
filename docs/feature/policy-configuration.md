@@ -142,11 +142,12 @@ rules:
       - implementationConstraints:
           requires:
            - path: "cap.type.gcp.auth.service-account"
-        injectTypeInstances:
-          - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
-            typeRef:
-              path: "cap.type.gcp.auth.service-account"
-              revision: "0.1.0"
+        inject:
+          typeInstances:
+            - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
+              typeRef:
+                path: "cap.type.gcp.auth.service-account"
+                revision: "0.1.0"
 ```
 
 The rule defines that Engine should select Implementation, which requires GCP Service Account TypeInstance. To inject the TypeInstance in a proper place, the Implementation must define `alias` for a given requirement:
@@ -162,7 +163,7 @@ The rule defines that Engine should select Implementation, which requires GCP Se
 
 If the `alias` property is defined for an item from `requires` section, Engine injects a workflow step which downloads a given TypeInstance by ID and outputs it under the `alias`. For this example, in the Implementation workflow, the TypeInstance value is available under `{{workflow.outputs.artifacts.gcp-sa}}`.
 
-Even if the Implementation satisfies the constraints, and the `alias` is not defined or `injectTypeInstances[].typeRef` cannot be found in the `requires` section, the TypeInstance is not injected in workflow. In this case Engine doesn't return an error.
+Even if the Implementation satisfies the constraints, and the `alias` is not defined or `inject.typeInstances[].typeRef` cannot be found in the `requires` section, the TypeInstance is not injected in workflow. In this case Engine doesn't return an error.
 
 ### Example
 
@@ -170,35 +171,36 @@ The following YAML snippet presents full Policy example with additional comments
 
 ```yaml
 rules: # Configures the following behavior for Engine during rendering Action
- - interface: # Rules for Interface with exact path in exact revision
-     path: "cap.interface.database.postgresql.install"
-     revision: "0.1.0"   
-   oneOf: # Engine follows the order of the Implementation selection,
-          # finishing when at least one matching Implementation is found
-     - implementationConstraints: # In first place, find and use an Implementation which:
-         attributes: # contains the following Attributes:
-           - path: "cap.attribute.cloud.provider.gcp"
-             revision: "0.1.0" # in exact revision
-         requires: # AND has the following Type references defined in the `spec.requires` property:
-           - path: "cap.type.gcp.auth.service-account"
+  - interface: # Rules for Interface with exact path in exact revision
+      path: "cap.interface.database.postgresql.install"
+      revision: "0.1.0"   
+    oneOf: # Engine follows the order of the Implementation selection,
+           # finishing when at least one matching Implementation is found
+      - implementationConstraints: # In first place, find and use an Implementation which:
+          attributes: # contains the following Attributes:
+            - path: "cap.attribute.cloud.provider.gcp"
+              revision: "0.1.0" # in exact revision
+          requires: # AND has the following Type references defined in the `spec.requires` property:
+            - path: "cap.type.gcp.auth.service-account"
+              # in any revision
+        inject:
+          typeInstances: # For such Implementation, inject the following TypeInstances: 
+            - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
+              typeRef: # Find the alias of the Type reference in `spec.requires` property.
+                      # If it is defined, inject the TypeInstance with ID `9038dcdc-e959-41c4-a690-d8ebf929ac0c` under this alias.
+                path: "cap.type.gcp.auth.service-account"
+                revision: "0.1.0"
+              
+      - implementationConstraints: # In second place find and select Implementation which:
+          attributes: # contains the following attributes
+           - path: cap.attribute.cloud.provider.aws
              # in any revision
-       injectTypeInstances: # For such Implementation, inject the following TypeInstances: 
-         - id: 9038dcdc-e959-41c4-a690-d8ebf929ac0c
-           typeRef: # Find the alias of the Type reference in `spec.requires` property.
-                    # If it is defined, inject the TypeInstance with ID `9038dcdc-e959-41c4-a690-d8ebf929ac0c` under this alias.
-             path: "cap.type.gcp.auth.service-account"
-             revision: "0.1.0"
              
-     - implementationConstraints: # In second place find and select Implementation which:
-         attributes: # contains the following attributes
-          - path: cap.attribute.cloud.provider.aws
-            # in any revision
-            
-     - implementationConstraints: # In third place, find and select Implementation which:
-         path: "cap.implementation.bitnami.postgresql.install" # has exact path
-         
-      # If not found any of such Implementations defined in `oneOf`, return error.
-   
+      - implementationConstraints: # In third place, find and select Implementation which:
+          path: "cap.implementation.bitnami.postgresql.install" # has exact path
+          
+       # If not found any of such Implementations defined in `oneOf`, return error.
+    
   - interface:
       path: "cap.*" # For any other Interface
       # (looked up in third place, if there is no entry under `rules` for a given Interface `path:revision` or `path`)

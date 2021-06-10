@@ -6,12 +6,13 @@ import (
 	"capact.io/capact/internal/k8s-engine/graphql/model"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 
 type actionConverter interface {
-	FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate
-	ToGraphQL(in v1alpha1.Action) graphql.Action
+	FromGraphQLInput(in graphql.ActionDetailsInput) (model.ActionToCreateOrUpdate, error)
+	ToGraphQL(in v1alpha1.Action) (graphql.Action, error)
 	FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error)
 	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
 }
@@ -49,7 +50,10 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 		return nil, errors.Wrap(err, "while finding Action by name")
 	}
 
-	gqlItem := r.conv.ToGraphQL(item)
+	gqlItem, err := r.conv.ToGraphQL(item)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting Action to GraphQL")
+	}
 	return &gqlItem, nil
 }
 
@@ -64,13 +68,21 @@ func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([
 		return nil, errors.Wrap(err, "while listing Actions")
 	}
 
+	var actErrors error
+
 	gqlItems := make([]*graphql.Action, 0, len(items))
 	for _, item := range items {
-		gqlItem := r.conv.ToGraphQL(item)
+		gqlItem, err := r.conv.ToGraphQL(item)
+
+		if err != nil {
+			actErrors = multierror.Append(actErrors, err)
+			continue
+		}
+
 		gqlItems = append(gqlItems, &gqlItem)
 	}
 
-	return gqlItems, nil
+	return gqlItems, actErrors
 }
 
 func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsInput) (*graphql.Action, error) {
@@ -78,14 +90,21 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.New("input cannot be empty")
 	}
 
-	actionToCreate := r.conv.FromGraphQLInput(*in)
+	actionToCreate, err := r.conv.FromGraphQLInput(*in)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
+	}
 
 	out, err := r.svc.Create(ctx, actionToCreate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating Action")
 	}
 
-	gqlItem := r.conv.ToGraphQL(out)
+	gqlItem, err := r.conv.ToGraphQL(out)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting Action to GraphQL")
+	}
+
 	return &gqlItem, nil
 }
 
@@ -127,19 +146,30 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 		return nil, errors.Wrap(err, "while finding Action by name")
 	}
 
-	gqlItem := r.conv.ToGraphQL(item)
+	gqlItem, err := r.conv.ToGraphQL(item)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting Action to GraphQL")
+	}
+
 	return &gqlItem, nil
 }
 
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
-	actionToUpdate := r.conv.FromGraphQLInput(in)
+	actionToUpdate, err := r.conv.FromGraphQLInput(in)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
+	}
 
 	out, err := r.svc.Update(ctx, actionToUpdate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while updating Action")
 	}
 
-	gqlItem := r.conv.ToGraphQL(out)
+	gqlItem, err := r.conv.ToGraphQL(out)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting Action to GraphQL")
+	}
+
 	return &gqlItem, nil
 }
 

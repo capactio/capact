@@ -1,74 +1,79 @@
 package client
 
-const actionFields = `
-    name
-    createdAt
-    input {
-        parameters
-        typeInstances {
-            id
-            name
-            optional
-            typeRef {
-                path
-                revision
-            }
-        }
-    }
-    output {
-        typeInstances {
-            name
-            typeRef {
-                path
-                revision
-            }
-            id
-            name
-        }
-    }
-    actionRef {
-        path
-        revision
-    }
-    cancel
-    run
-    dryRun
-    renderedAction
-    renderingAdvancedMode {
-        enabled
-        typeInstancesForRenderingIteration {
-            name
-            typeRef {
-                path
-                revision
-            }
-        }
-    }
-    renderedActionOverride
-    status {
-        phase
-        timestamp
-        message
-        runner {
-            status
-        }
-        canceledBy {
-            username
-            groups
-            extra
-        }
-        runBy {
-            username
-            groups
-            extra
-        }
-        createdBy {
-            username
-            groups
-            extra
-        }
-    }
-`
+import "fmt"
+
+var actionFields = fmt.Sprintf(`
+	name
+	createdAt
+	input {
+		parameters
+		typeInstances {
+			id
+			name
+			optional
+			typeRef {
+				path
+				revision
+			}
+		}
+		actionPolicy {
+			%s
+		}
+	}
+	output {
+		typeInstances {
+			name
+			typeRef {
+				path
+				revision
+			}
+			id
+			name
+		}
+	}
+	actionRef {
+		path
+		revision
+	}
+	cancel
+	run
+	dryRun
+	renderedAction
+	renderingAdvancedMode {
+		enabled
+		typeInstancesForRenderingIteration {
+			name
+			typeRef {
+				path
+				revision
+			}
+		}
+	}
+	renderedActionOverride
+	status {
+		phase
+		timestamp
+		message
+		runner {
+			status
+		}
+		canceledBy {
+			username
+			groups
+			extra
+		}
+		runBy {
+			username
+			groups
+			extra
+		}
+		createdBy {
+			username
+			groups
+			extra
+		}
+	}
+`, policyFields)
 
 const policyFields = `
 	rules {
@@ -88,12 +93,15 @@ const policyFields = `
 				}
 				path
 			}
-			injectTypeInstances {
-				id
-				typeRef {
-					path
-					revision
+			inject {
+				typeInstances {
+					id
+					typeRef {
+						path
+						revision
+					}
 				}
+				additionalInput
 			}
 		}
 	}

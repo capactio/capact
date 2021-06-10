@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/och/client/fake"
 
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 	"capact.io/capact/pkg/och/client"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
@@ -32,7 +32,7 @@ func TestRenderHappyPath(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
-	policy := clusterpolicy.NewAllowAll()
+	policy := policy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	genUUID := func() string { return "uuid" } // it has to be static because of parallel testing
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
@@ -206,7 +206,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		name               string
 		ref                types.InterfaceRef
 		inputTypeInstances []types.InputTypeInstanceRef
-		policy             clusterpolicy.ClusterPolicy
+		policy             policy.Policy
 	}{
 		{
 			name: "Mattermost with CloudSQL PostgreSQL installation with GCP SA injected",
@@ -219,14 +219,14 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
 				},
 			},
-			policy: fixGCPClusterPolicy(),
+			policy: fixGCPGlobalPolicy(),
 		},
 		{
 			name: "CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy: fixGCPClusterPolicy(),
+			policy: fixGCPGlobalPolicy(),
 		},
 		{
 			name: "Mattermost with CloudSQL using Terraform",
@@ -240,14 +240,14 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy: fixAWSClusterPolicy(),
+			policy: fixAWSGlobalPolicy(),
 		},
 		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy: fixClusterPolicyForFallback(),
+			policy: fixGlobalPolicyForFallback(),
 		},
 	}
 	for testIdx, test := range tests {
@@ -290,7 +290,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
-	policy := clusterpolicy.NewAllowAll()
+	policy := policy.NewAllowAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
@@ -326,7 +326,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	fakeCli, err := fake.NewFromLocal("testdata/och", false)
 	require.NoError(t, err)
 
-	policy := clusterpolicy.NewDenyAll()
+	policy := policy.NewDenyAll()
 	policyEnforcedCli := client.NewPolicyEnforcedClient(fakeCli)
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))

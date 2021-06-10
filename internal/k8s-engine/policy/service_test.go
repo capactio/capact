@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -33,9 +33,9 @@ func TestService_Update(t *testing.T) {
 
 	// change few properties in model
 	model.Rules[0].Interface.Path = "cap.interface.updated.path"
-	model.Rules[1].OneOf = []clusterpolicy.Rule{
+	model.Rules[1].OneOf = []policy.Rule{
 		{
-			ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+			ImplementationConstraints: policy.ImplementationConstraints{
 				Requires: &[]types.ManifestRef{
 					{
 						Path: "cap.core.type.platform.kubernetes",
@@ -106,7 +106,7 @@ func fakeK8sClient(t *testing.T, objects ...runtime.Object) client.Client {
 	return fake.NewFakeClientWithScheme(scheme, objects...)
 }
 
-func getConfigMapAndAssertEqual(t *testing.T, k8sCli client.Client, expected clusterpolicy.ClusterPolicy) {
+func getConfigMapAndAssertEqual(t *testing.T, k8sCli client.Client, expected policy.Policy) {
 	var cfgMap v1.ConfigMap
 
 	err := k8sCli.Get(context.Background(), client.ObjectKey{
@@ -115,7 +115,7 @@ func getConfigMapAndAssertEqual(t *testing.T, k8sCli client.Client, expected clu
 	}, &cfgMap)
 	assert.NoError(t, err)
 
-	actual, err := clusterpolicy.FromYAMLString(cfgMap.Data[clusterPolicyConfigMapKey])
+	actual, err := policy.FromYAMLString(cfgMap.Data[policyConfigMapKey])
 	require.NoError(t, err)
 
 	assert.Equal(t, expected, actual)

@@ -102,6 +102,11 @@ input ActionInputData {
   Required and optional TypeInstances for Action
   """
   typeInstances: [InputTypeInstanceData!]
+
+  """
+  Contains the optional one-time Action policy, which is merged with other Capact policies
+  """
+  actionPolicy: PolicyInput
 }
 
 """
@@ -211,6 +216,11 @@ type ActionInput {
   """
   parameters: Any
   typeInstances: [InputTypeInstanceDetails!]!
+
+  """
+  Contains the one-time Action policy, which is merged with other Capact policies
+  """
+  actionPolicy: Policy
 }
 
 """
@@ -307,7 +317,12 @@ input RulesForInterfaceInput {
 
 input PolicyRuleInput {
   implementationConstraints: PolicyRuleImplementationConstraintsInput
-  injectTypeInstances: [TypeInstanceReferenceInput!]
+  inject: PolicyRuleInjectDataInput
+}
+
+input PolicyRuleInjectDataInput {
+  typeInstances: [TypeInstanceReferenceInput!]
+  additionalInput: Any
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -338,7 +353,12 @@ type RulesForInterface {
 
 type PolicyRule {
   implementationConstraints: PolicyRuleImplementationConstraints
-  injectTypeInstances: [TypeInstanceReference!]
+  inject: PolicyRuleInjectData
+}
+
+type PolicyRuleInjectData {
+  typeInstances: [TypeInstanceReference!]
+  additionalInput: Any
 }
 
 type PolicyRuleImplementationConstraints {

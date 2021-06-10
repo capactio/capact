@@ -276,11 +276,13 @@ fragment PolicyFields on Policy {
                 }
                 path
             }
-            injectTypeInstances {
-                id
-                typeRef {
-                    path
-                    revision
+            inject {
+                typeInstances {
+                    id
+                    typeRef {
+                        path
+                        revision
+                    }
                 }
             }
         }

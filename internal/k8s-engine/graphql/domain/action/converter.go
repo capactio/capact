@@ -14,9 +14,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-const ParametersSecretDataKey = "parameters.json"
-const LatestRevision = "latest"
-const secretKind = "Secret"
+const (
+	ParametersSecretDataKey   = "parameters.json"
+	ActionPolicySecretDataKey = "action-policy.json"
+	LatestRevision            = "latest"
+	secretKind                = "Secret"
+)
 
 type Converter struct{}
 
@@ -24,7 +27,7 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.ActionToCreateOrUpdate {
+func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (model.ActionToCreateOrUpdate, error) {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
 		advancedRendering = &v1alpha1.AdvancedRendering{
@@ -39,7 +42,11 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 		}
 	}
 
-	inputParamsSecret := c.inputParamsFromGraphQL(in.Input, in.Name)
+	inputParamsSecret, err := c.inputParamsFromGraphQL(in.Input, in.Name)
+	if err != nil {
+		return model.ActionToCreateOrUpdate{}, err
+	}
+
 	var inputParamsSecretName *string
 	if inputParamsSecret != nil {
 		inputParamsSecretName = &in.Name
@@ -71,10 +78,10 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) model.Action
 			},
 		},
 		InputParamsSecret: inputParamsSecret,
-	}
+	}, nil
 }
 
-func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
+func (c *Converter) ToGraphQL(in v1alpha1.Action) (graphql.Action, error) {
 	var run bool
 	if in.Spec.Run != nil {
 		run = *in.Spec.Run
@@ -92,12 +99,16 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 
 	var renderedAction interface{}
 	var actionInput *graphql.ActionInput
+	var err error
 	if in.Status.Rendering != nil {
 		if in.Status.Rendering.Action != nil {
 			renderedAction = c.runtimeExtensionToJSONRawMessage(in.Status.Rendering.Action)
 		}
 
-		actionInput = c.actionInputToGraphQL(in.Status.Rendering.Input)
+		actionInput, err = c.actionInputToGraphQL(in.Status.Rendering.Input)
+		if err != nil {
+			return graphql.Action{}, errors.Wrap(err, "while converting ActionInput from CR to GraphQL")
+		}
 	}
 
 	actionOutput := c.actionOutputToGraphQL(in.Status.Output)
@@ -117,7 +128,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) graphql.Action {
 		RenderingAdvancedMode:  c.advancedRenderingToGraphQL(&in),
 		RenderedActionOverride: c.runtimeExtensionToJSONRawMessage(in.Spec.RenderedActionOverride),
 		Status:                 c.statusToGraphQL(&in.Status),
-	}
+	}, nil
 }
 
 func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error) {
@@ -164,9 +175,22 @@ func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.Adv
 	}
 }
 
-func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) *v1.Secret {
+func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) (*v1.Secret, error) {
 	if in == nil || in.Parameters == nil {
-		return nil
+		return nil, nil
+	}
+
+	data := map[string]string{
+		ParametersSecretDataKey: string(*in.Parameters),
+	}
+
+	if in.ActionPolicy != nil {
+		policyData, err := json.Marshal(in.ActionPolicy)
+		if err != nil {
+			return nil, errors.Wrap(err, "while marshaling policy to JSON")
+		}
+
+		data[ActionPolicySecretDataKey] = string(policyData)
 	}
 
 	return &v1.Secret{
@@ -177,15 +201,13 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
-		StringData: map[string]string{
-			ParametersSecretDataKey: string(*in.Parameters),
-		},
-	}
+		StringData: data,
+	}, nil
 }
 
-func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *graphql.ActionInput {
+func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) (*graphql.ActionInput, error) {
 	if in == nil {
-		return nil
+		return nil, nil
 	}
 
 	result := &graphql.ActionInput{}
@@ -207,7 +229,17 @@ func (c *Converter) actionInputToGraphQL(in *v1alpha1.ResolvedActionInput) *grap
 		result.TypeInstances = gqlTypeInstances
 	}
 
-	return result
+	if in.ActionPolicy != nil {
+		policyData := c.runtimeExtensionToJSONRawMessage(in.ActionPolicy)
+
+		if policyData != nil {
+			if err := json.Unmarshal(*policyData, &result.ActionPolicy); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return result, nil
 }
 
 func (c *Converter) actionOutputToGraphQL(in *v1alpha1.ActionOutput) *graphql.ActionOutput {
@@ -252,6 +284,12 @@ func (c *Converter) actionInputFromGraphQL(in *graphql.ActionInputData, inputPar
 
 	if in.Parameters != nil && inputParamsSecretName != nil {
 		actionInput.Parameters = &v1alpha1.InputParameters{
+			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
+		}
+	}
+
+	if in.ActionPolicy != nil && inputParamsSecretName != nil {
+		actionInput.ActionPolicy = &v1alpha1.ActionPolicy{
 			SecretRef: v1.LocalObjectReference{Name: *inputParamsSecretName},
 		}
 	}

@@ -3,12 +3,12 @@ package client_test
 import (
 	"testing"
 
+	"capact.io/capact/pkg/engine/k8s/policy"
 	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
 	"capact.io/capact/pkg/och/client"
 	"github.com/stretchr/testify/assert"
 
 	"capact.io/capact/internal/ptr"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
@@ -19,7 +19,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 		name string
 
 		implRev               gqlpublicapi.ImplementationRevision
-		policyRule            clusterpolicy.Rule
+		policyRule            policy.Rule
 		expectedTypeInstances []types.InputTypeInstanceRef
 	}{
 		{
@@ -35,8 +35,10 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 					},
 				},
 			}),
-			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{},
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					TypeInstances: []policy.TypeInstanceToInject{},
+				},
 			},
 			expectedTypeInstances: nil,
 		},
@@ -66,13 +68,15 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 					},
 				},
 			}),
-			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path:     "cap.type.gcp.auth.service-account",
-							Revision: ptr.String("0.1.1"),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					TypeInstances: []policy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path:     "cap.type.gcp.auth.service-account",
+								Revision: ptr.String("0.1.1"),
+							},
 						},
 					},
 				},
@@ -93,13 +97,15 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 					},
 				},
 			}),
-			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path:     "cap.type.gcp.auth.service-account",
-							Revision: ptr.String("0.1.1"),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					TypeInstances: []policy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path:     "cap.type.gcp.auth.service-account",
+								Revision: ptr.String("0.1.1"),
+							},
 						},
 					},
 				},
@@ -125,12 +131,14 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 					},
 				},
 			}),
-			policyRule: clusterpolicy.Rule{
-				InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-					{
-						ID: "my-uuid",
-						TypeRef: types.ManifestRef{
-							Path: "cap.type.gcp.auth.service-account",
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					TypeInstances: []policy.TypeInstanceToInject{
+						{
+							ID: "my-uuid",
+							TypeRef: types.ManifestRef{
+								Path: "cap.type.gcp.auth.service-account",
+							},
 						},
 					},
 				},

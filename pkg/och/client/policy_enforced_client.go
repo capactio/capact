@@ -5,11 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"capact.io/capact/pkg/engine/k8s/policy"
 	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
 
 	"github.com/pkg/errors"
-
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
 
 	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
 	"capact.io/capact/pkg/och/client/public"
@@ -25,7 +24,7 @@ type OCHClient interface {
 
 type PolicyEnforcedClient struct {
 	ochCli OCHClient
-	policy clusterpolicy.ClusterPolicy
+	policy policy.Policy
 	mu     sync.RWMutex
 }
 
@@ -33,11 +32,11 @@ func NewPolicyEnforcedClient(ochCli OCHClient) *PolicyEnforcedClient {
 	return &PolicyEnforcedClient{ochCli: ochCli}
 }
 
-func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error) {
+func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicgraphql.InterfaceReference) ([]ochpublicgraphql.ImplementationRevision, policy.Rule, error) {
 	if interfaceRef.Revision == "" {
 		interfaceRevision, err := e.ochCli.GetInterfaceLatestRevisionString(ctx, interfaceRef)
 		if err != nil {
-			return nil, clusterpolicy.Rule{}, errors.Wrap(err, "while fetching latest Interface revision string")
+			return nil, policy.Rule{}, errors.Wrap(err, "while fetching latest Interface revision string")
 		}
 
 		interfaceRef.Revision = interfaceRevision
@@ -45,30 +44,30 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 
 	rules := e.findRulesForInterface(interfaceRef)
 	if len(rules.OneOf) == 0 {
-		return nil, clusterpolicy.Rule{}, nil
+		return nil, policy.Rule{}, nil
 	}
 
 	typeInstanceValues, err := e.listCurrentTypeInstanceValues(ctx)
 	if err != nil {
-		return nil, clusterpolicy.Rule{}, err
+		return nil, policy.Rule{}, err
 	}
 	typeInstanceValues = append(typeInstanceValues, e.constantTypeInstanceValues()...)
 
 	implementations, rule, err := e.findImplementationsForRules(ctx, interfaceRef, rules, typeInstanceValues)
 	if err != nil {
-		return nil, clusterpolicy.Rule{}, err
+		return nil, policy.Rule{}, err
 	}
 
 	return implementations, rule, nil
 }
 
-func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule clusterpolicy.Rule, implRev ochpublicgraphql.ImplementationRevision) []types.InputTypeInstanceRef {
-	if len(policyRule.InjectTypeInstances) == 0 {
+func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev ochpublicgraphql.ImplementationRevision) []types.InputTypeInstanceRef {
+	if policyRule.Inject == nil || len(policyRule.Inject.TypeInstances) == 0 {
 		return nil
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
-	for _, typeInstance := range policyRule.InjectTypeInstances {
+	for _, typeInstance := range policyRule.Inject.TypeInstances {
 		alias, found := e.findAliasForTypeInstance(typeInstance, implRev)
 		if !found {
 			// Implementation doesn't require such TypeInstance, skip injecting it
@@ -91,26 +90,26 @@ func (e *PolicyEnforcedClient) FindInterfaceRevision(ctx context.Context, ref oc
 }
 
 // SetPolicy sets policy to use. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetPolicy(policy clusterpolicy.ClusterPolicy) {
+func (e *PolicyEnforcedClient) SetPolicy(policy policy.Policy) {
 	e.mu.Lock()
 	e.policy = policy
 	e.mu.Unlock()
 }
 
 // Policy gets policy which the Client uses. This getter is thread safe.
-func (e *PolicyEnforcedClient) Policy() clusterpolicy.ClusterPolicy {
+func (e *PolicyEnforcedClient) Policy() policy.Policy {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	return e.policy
 }
 
-func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraphql.InterfaceReference) clusterpolicy.RulesForInterface {
+func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraphql.InterfaceReference) policy.RulesForInterface {
 	rulesMap := e.rulesMapForPolicy(e.Policy())
 
 	ruleKeysToCheck := []string{
 		fmt.Sprintf("%s:%s", interfaceRef.Path, interfaceRef.Revision),
 		interfaceRef.Path,
-		clusterpolicy.AnyInterfacePath,
+		policy.AnyInterfacePath,
 	}
 
 	for _, ruleKey := range ruleKeysToCheck {
@@ -122,15 +121,15 @@ func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef ochpublicgraph
 		return rules
 	}
 
-	return clusterpolicy.RulesForInterface{}
+	return policy.RulesForInterface{}
 }
 
 func (e *PolicyEnforcedClient) findImplementationsForRules(
 	ctx context.Context,
 	interfaceRef ochpublicgraphql.InterfaceReference,
-	rules clusterpolicy.RulesForInterface,
+	rules policy.RulesForInterface,
 	currentTypeInstances []*ochpublicgraphql.TypeInstanceValue,
-) ([]ochpublicgraphql.ImplementationRevision, clusterpolicy.Rule, error) {
+) ([]ochpublicgraphql.ImplementationRevision, policy.Rule, error) {
 	for _, rule := range rules.OneOf {
 		filter := e.implementationConstraintsToOCHFilter(rule.ImplementationConstraints)
 		filter.RequirementsSatisfiedBy = currentTypeInstances
@@ -142,7 +141,7 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 			public.WithSortingByPathAscAndRevisionDesc(),
 		)
 		if err != nil {
-			return nil, clusterpolicy.Rule{}, err
+			return nil, policy.Rule{}, err
 		}
 
 		if len(implementations) == 0 {
@@ -152,10 +151,10 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 		return implementations, rule, nil
 	}
 
-	return nil, clusterpolicy.Rule{}, nil
+	return nil, policy.Rule{}, nil
 }
 
-func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance clusterpolicy.TypeInstanceToInject, implRev ochpublicgraphql.ImplementationRevision) (string, bool) {
+func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.TypeInstanceToInject, implRev ochpublicgraphql.ImplementationRevision) (string, bool) {
 	if implRev.Spec == nil || len(implRev.Spec.Requires) == 0 {
 		return "", false
 	}
@@ -178,7 +177,7 @@ func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance clusterpoli
 	return "", false
 }
 
-func (e *PolicyEnforcedClient) implementationConstraintsToOCHFilter(constraints clusterpolicy.ImplementationConstraints) ochpublicgraphql.ImplementationRevisionFilter {
+func (e *PolicyEnforcedClient) implementationConstraintsToOCHFilter(constraints policy.ImplementationConstraints) ochpublicgraphql.ImplementationRevisionFilter {
 	filter := ochpublicgraphql.ImplementationRevisionFilter{}
 
 	// Path
@@ -211,7 +210,7 @@ func (e *PolicyEnforcedClient) implementationConstraintsToOCHFilter(constraints 
 	return filter
 }
 
-func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance clusterpolicy.TypeInstanceToInject, reqItem *ochpublicgraphql.ImplementationRequirementItem) bool {
+func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance policy.TypeInstanceToInject, reqItem *ochpublicgraphql.ImplementationRequirementItem) bool {
 	// check requirement item valid
 	if reqItem == nil || reqItem.TypeRef == nil || reqItem.Alias == nil {
 		return false
@@ -267,9 +266,9 @@ func (e *PolicyEnforcedClient) constantTypeInstanceValues() []*ochpublicgraphql.
 	}
 }
 
-func (e *PolicyEnforcedClient) rulesMapForPolicy(policy clusterpolicy.ClusterPolicy) map[string]clusterpolicy.RulesForInterface {
-	rulesMap := map[string]clusterpolicy.RulesForInterface{}
-	for _, rule := range policy.Rules {
+func (e *PolicyEnforcedClient) rulesMapForPolicy(p policy.Policy) map[string]policy.RulesForInterface {
+	rulesMap := map[string]policy.RulesForInterface{}
+	for _, rule := range p.Rules {
 		key := rule.Interface.Path
 		if rule.Interface.Revision != nil {
 			key = fmt.Sprintf("%s:%s", key, *rule.Interface.Revision)

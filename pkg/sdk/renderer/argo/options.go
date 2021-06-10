@@ -1,7 +1,7 @@
 package argo
 
 import (
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
@@ -19,7 +19,7 @@ func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
 	}
 }
 
-func WithPolicy(policy clusterpolicy.ClusterPolicy) RendererOption {
+func WithPolicy(policy policy.Policy) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.policyEnforcedCli.SetPolicy(policy)
 	}

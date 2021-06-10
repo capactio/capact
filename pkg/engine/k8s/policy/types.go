@@ -1,4 +1,4 @@
-package clusterpolicy
+package policy
 
 import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -11,7 +11,7 @@ const (
 	AnyInterfacePath  string = "cap.*"
 )
 
-type ClusterPolicy struct {
+type Policy struct {
 	APIVersion string    `json:"apiVersion"`
 	Rules      RulesList `json:"rules"`
 }
@@ -27,7 +27,12 @@ type RulesForInterface struct {
 
 type Rule struct {
 	ImplementationConstraints ImplementationConstraints `json:"implementationConstraints,omitempty"`
-	InjectTypeInstances       []TypeInstanceToInject    `json:"injectTypeInstances,omitempty"`
+	Inject                    *InjectData               `json:"inject,omitempty"`
+}
+
+type InjectData struct {
+	TypeInstances   []TypeInstanceToInject `json:"typeInstances,omitempty"`
+	AdditionalInput map[string]interface{} `json:"additionalInput,omitempty"`
 }
 
 type ImplementationConstraints struct {
@@ -48,7 +53,7 @@ type TypeInstanceToInject struct {
 	TypeRef types.ManifestRef `json:"typeRef"`
 }
 
-func (p ClusterPolicy) ToYAMLString() (string, error) {
+func (p Policy) ToYAMLString() (string, error) {
 	bytes, err := yaml.Marshal(&p)
 
 	if err != nil {

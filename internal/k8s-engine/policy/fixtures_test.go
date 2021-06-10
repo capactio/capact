@@ -4,14 +4,14 @@ import (
 	"testing"
 
 	"capact.io/capact/internal/ptr"
-	"capact.io/capact/pkg/engine/k8s/clusterpolicy"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func fixCfgMap(t *testing.T, in clusterpolicy.ClusterPolicy) *v1.ConfigMap {
+func fixCfgMap(t *testing.T, in policy.Policy) *v1.ConfigMap {
 	policyStr, err := in.ToYAMLString()
 	require.NoError(t, err)
 
@@ -25,23 +25,23 @@ func fixCfgMap(t *testing.T, in clusterpolicy.ClusterPolicy) *v1.ConfigMap {
 			Namespace: policyCfgMapNamespace,
 		},
 		Data: map[string]string{
-			clusterPolicyConfigMapKey: policyStr,
+			policyConfigMapKey: policyStr,
 		},
 	}
 }
 
-func fixModel() clusterpolicy.ClusterPolicy {
-	return clusterpolicy.ClusterPolicy{
-		APIVersion: clusterpolicy.CurrentAPIVersion,
-		Rules: clusterpolicy.RulesList{
+func fixModel() policy.Policy {
+	return policy.Policy{
+		APIVersion: policy.CurrentAPIVersion,
+		Rules: policy.RulesList{
 			{
 				Interface: types.ManifestRef{
 					Path:     "cap.interface.database.postgresql.install",
 					Revision: ptr.String("0.1.0"),
 				},
-				OneOf: []clusterpolicy.Rule{
+				OneOf: []policy.Rule{
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+						ImplementationConstraints: policy.ImplementationConstraints{
 							Requires: &[]types.ManifestRef{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
@@ -54,18 +54,20 @@ func fixModel() clusterpolicy.ClusterPolicy {
 								},
 							},
 						},
-						InjectTypeInstances: []clusterpolicy.TypeInstanceToInject{
-							{
-								ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-								TypeRef: types.ManifestRef{
-									Path:     "cap.type.gcp.auth.service-account",
-									Revision: ptr.String("0.1.0"),
+						Inject: &policy.InjectData{
+							TypeInstances: []policy.TypeInstanceToInject{
+								{
+									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
+									TypeRef: types.ManifestRef{
+										Path:     "cap.type.gcp.auth.service-account",
+										Revision: ptr.String("0.1.0"),
+									},
 								},
 							},
 						},
 					},
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{
+						ImplementationConstraints: policy.ImplementationConstraints{
 							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
 						},
 					},
@@ -75,9 +77,9 @@ func fixModel() clusterpolicy.ClusterPolicy {
 				Interface: types.ManifestRef{
 					Path: "cap.*",
 				},
-				OneOf: []clusterpolicy.Rule{
+				OneOf: []policy.Rule{
 					{
-						ImplementationConstraints: clusterpolicy.ImplementationConstraints{},
+						ImplementationConstraints: policy.ImplementationConstraints{},
 					},
 				},
 			},

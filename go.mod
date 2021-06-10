@@ -22,6 +22,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.2
+	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/hcl/v2 v2.9.1
 	github.com/hashicorp/terraform v0.14.8
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
