@@ -27,7 +27,7 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.ActionToCreateOrUpdate, error) {
+func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (model.ActionToCreateOrUpdate, error) {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
 		advancedRendering = &v1alpha1.AdvancedRendering{
@@ -44,7 +44,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.Acti
 
 	inputParamsSecret, err := c.inputParamsFromGraphQL(in.Input, in.Name)
 	if err != nil {
-		return nil, err
+		return model.ActionToCreateOrUpdate{}, err
 	}
 
 	var inputParamsSecretName *string
@@ -60,7 +60,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.Acti
 		}
 	}
 
-	return &model.ActionToCreateOrUpdate{
+	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
 			TypeMeta: metav1.TypeMeta{
 				Kind:       v1alpha1.ActionKind,
@@ -81,7 +81,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (*model.Acti
 	}, nil
 }
 
-func (c *Converter) ToGraphQL(in v1alpha1.Action) (*graphql.Action, error) {
+func (c *Converter) ToGraphQL(in v1alpha1.Action) (graphql.Action, error) {
 	var run bool
 	if in.Spec.Run != nil {
 		run = *in.Spec.Run
@@ -107,7 +107,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) (*graphql.Action, error) {
 
 		actionInput, err = c.actionInputToGraphQL(in.Status.Rendering.Input)
 		if err != nil {
-			return nil, errors.Wrap(err, "while converting ActionInput from CR to GraphQL")
+			return graphql.Action{}, errors.Wrap(err, "while converting ActionInput from CR to GraphQL")
 		}
 	}
 
@@ -115,7 +115,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) (*graphql.Action, error) {
 
 	actionRef := c.manifestRefToGraphQL(&in.Spec.ActionRef)
 
-	return &graphql.Action{
+	return graphql.Action{
 		Name:                   in.Name,
 		CreatedAt:              graphql.Timestamp{Time: in.CreationTimestamp.Time},
 		Input:                  actionInput,

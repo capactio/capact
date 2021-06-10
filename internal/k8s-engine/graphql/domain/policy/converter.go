@@ -13,13 +13,13 @@ func NewConverter() *Converter {
 	return &Converter{}
 }
 
-func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (*policy.Policy, error) {
+func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, error) {
 	var rules policy.RulesList
 
 	for _, gqlRule := range in.Rules {
 		policyRules, err := c.policyRulesFromGraphQLInput(gqlRule.OneOf)
 		if err != nil {
-			return nil, errors.Wrap(err, "while getting Policy rules")
+			return policy.Policy{}, errors.Wrap(err, "while getting Policy rules")
 		}
 
 		rules = append(rules, policy.RulesForInterface{
@@ -28,7 +28,7 @@ func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (*policy.Policy, er
 		})
 	}
 
-	return &policy.Policy{
+	return policy.Policy{
 		APIVersion: policy.CurrentAPIVersion,
 		Rules:      rules,
 	}, nil

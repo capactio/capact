@@ -11,8 +11,8 @@ import (
 )
 
 type actionConverter interface {
-	FromGraphQLInput(in graphql.ActionDetailsInput) (*model.ActionToCreateOrUpdate, error)
-	ToGraphQL(in v1alpha1.Action) (*graphql.Action, error)
+	FromGraphQLInput(in graphql.ActionDetailsInput) (model.ActionToCreateOrUpdate, error)
+	ToGraphQL(in v1alpha1.Action) (graphql.Action, error)
 	FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error)
 	AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput
 }
@@ -54,7 +54,7 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting Action to GraphQL")
 	}
-	return gqlItem, nil
+	return &gqlItem, nil
 }
 
 func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
@@ -79,7 +79,7 @@ func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([
 			continue
 		}
 
-		gqlItems = append(gqlItems, gqlItem)
+		gqlItems = append(gqlItems, &gqlItem)
 	}
 
 	return gqlItems, actErrors
@@ -95,7 +95,7 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
 	}
 
-	out, err := r.svc.Create(ctx, *actionToCreate)
+	out, err := r.svc.Create(ctx, actionToCreate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while creating Action")
 	}
@@ -105,7 +105,7 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 		return nil, errors.Wrap(err, "while converting Action to GraphQL")
 	}
 
-	return gqlItem, nil
+	return &gqlItem, nil
 }
 
 func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action, error) {
@@ -151,7 +151,7 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 		return nil, errors.Wrap(err, "while converting Action to GraphQL")
 	}
 
-	return gqlItem, nil
+	return &gqlItem, nil
 }
 
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
@@ -160,7 +160,7 @@ func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInp
 		return nil, errors.Wrap(err, "while converting GraphQL input to Action")
 	}
 
-	out, err := r.svc.Update(ctx, *actionToUpdate)
+	out, err := r.svc.Update(ctx, actionToUpdate)
 	if err != nil {
 		return nil, errors.Wrap(err, "while updating Action")
 	}
@@ -170,7 +170,7 @@ func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInp
 		return nil, errors.Wrap(err, "while converting Action to GraphQL")
 	}
 
-	return gqlItem, nil
+	return &gqlItem, nil
 }
 
 func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {
