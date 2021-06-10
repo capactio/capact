@@ -20,7 +20,8 @@ const yamlFileRegex = ".yaml$"
 
 var interfaceGroupFilenamesFilter = map[string]struct{}{
 	"postgresql.yaml": {},
-	"jira.yaml":       {},
+	"mattermost.yaml": {},
+	"rocketchat.yaml": {},
 	"argo.yaml":       {},
 	"cloudsql.yaml":   {},
 	"helm.yaml":       {},

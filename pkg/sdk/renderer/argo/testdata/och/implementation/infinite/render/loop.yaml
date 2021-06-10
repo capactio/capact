@@ -34,9 +34,9 @@ spec:
     runnerInterface: argo.run
     args:
       workflow:
-        entrypoint: jira-install
+        entrypoint: app-install
         templates:
-          - name: jira-install
+          - name: app-install
             steps:
               - - capact-action: infinite.loop
                   name: install-db
@@ -46,6 +46,6 @@ spec:
                         raw:
                           data: |
                             superuser:
-                              username: jira
+                              username: app
                               password: okon
-                            defaultDBName: jira
+                            defaultDBName: app

@@ -71,22 +71,22 @@ After Action execution there are a lot of Pods with name pattern `{ACTION_NAME}-
 
 ```bash
 NAME                READY   STATUS      RESTARTS   AGE
-jira-1602179194     0/2     Completed   0          14d
-jira-2270774275     0/2     Completed   0          14d
-jira-823541112      0/2     Completed   0          14d
-jira-470211537      0/2     Completed   0          14d
-jira-1030672350     0/2     Completed   0          14d
-jira-147207013      0/2     Completed   0          14d
-jira-2768336525     0/2     Completed   0          14d
-jira-3634435893     0/2     Completed   0          14d
-jira-4236050029     0/2     Completed   0          14d
-jira-2282111071     0/2     Completed   0          14d
-jira-3762917690     0/2     Completed   0          14d
-jira-4129897782     0/2     Completed   0          14d
-jira-1307838837     0/2     Completed   0          14d
-jira-2309417707     0/2     Completed   0          14d
-jira-1619688498-1   1/1     Running     0          12d
-jira-1619688498-0   1/1     Running     0          12d
+mattermost-1602179194     0/2     Completed   0          14d
+mattermost-2270774275     0/2     Completed   0          14d
+mattermost-823541112      0/2     Completed   0          14d
+mattermost-470211537      0/2     Completed   0          14d
+mattermost-1030672350     0/2     Completed   0          14d
+mattermost-147207013      0/2     Completed   0          14d
+mattermost-2768336525     0/2     Completed   0          14d
+mattermost-3634435893     0/2     Completed   0          14d
+mattermost-4236050029     0/2     Completed   0          14d
+mattermost-2282111071     0/2     Completed   0          14d
+mattermost-3762917690     0/2     Completed   0          14d
+mattermost-4129897782     0/2     Completed   0          14d
+mattermost-1307838837     0/2     Completed   0          14d
+mattermost-2309417707     0/2     Completed   0          14d
+mattermost-1619688498-1   1/1     Running     0          12d
+mattermost-1619688498-0   1/1     Running     0          12d
 ```
 
 Those Pods were created by Argo Workflow and each of them represent executed Action step e.g. create a database, create user in the database etc. For failed Actions they are useful to debug the root cause of an error. For successfully execute Action you can remove them. To remove only Argo Workflow Pods, run:

@@ -20,7 +20,7 @@ query RepoMetadata {
     }
 }
 
-# Example variables: {"interfaceGroupPath": "cap.interface.productivity.jira"}
+# Example variables: {"interfaceGroupPath": "cap.interface.productivity.mattermost"}
 query InterfaceGroup($interfaceGroupPath: NodePath!) {
     interfaceGroup(path: $interfaceGroupPath) {
         ...InterfaceGroup
@@ -63,7 +63,7 @@ query InterfaceGroupsWithInterfacesAndImplementations {
     }
 }
 
-# Example variables: {"interfacePath": "cap.interface.productivity.jira.install"}
+# Example variables: {"interfacePath": "cap.interface.productivity.mattermost.install"}
 query Interface($interfacePath: NodePath!) {
     interface(path: $interfacePath) {
         name

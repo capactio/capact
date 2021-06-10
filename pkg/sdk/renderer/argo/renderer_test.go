@@ -69,9 +69,9 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
-			name: "Jira workflow with user input and gcp TypeInstance",
+			name: "Mattermost workflow with user input and gcp TypeInstance",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.jira.install",
+				Path: "cap.interface.productivity.mattermost.install",
 			},
 			userInput: &UserInputSecretRef{
 				Name: "user-input",
@@ -85,9 +85,9 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
-			name: "Jira workflow with user input and gcp and postgresql TypeInstances",
+			name: "Mattermost workflow with user input and gcp and postgresql TypeInstances",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.jira.install",
+				Path: "cap.interface.productivity.mattermost.install",
 			},
 			userInput: &UserInputSecretRef{
 				Name: "user-input",
@@ -105,9 +105,9 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 		},
 		{
-			name: "Atlassian stack without user input and TypeInstances",
+			name: "Workflow with apps stack installation without user input and TypeInstances",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.atlassian.stack.install",
+				Path: "cap.interface.app-stack.stack.install",
 			},
 		},
 		{
@@ -209,9 +209,9 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		policy             clusterpolicy.ClusterPolicy
 	}{
 		{
-			name: "Jira with CloudSQL PostgreSQL installation with GCP SA injected",
+			name: "Mattermost with CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.jira.install",
+				Path: "cap.interface.productivity.mattermost.install",
 			},
 			inputTypeInstances: []types.InputTypeInstanceRef{
 				{
@@ -229,18 +229,16 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policy: fixGCPClusterPolicy(),
 		},
 		{
-			name: "Jira with CloudSQL using Terraform",
+			name: "Mattermost with CloudSQL using Terraform",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.jira.install",
+				Path: "cap.interface.productivity.mattermost.install",
 			},
 			policy: fixTerraformPolicy(),
 		},
 		{
-			// TODO: Fix the test case in issue CP-354
-			// Invalid `usesRelations` for TypeInstance upload: `jira-install-install-db-postgresql` doesn't exist
-			name: "Jira with AWS RDS install",
+			name: "Mattermost with AWS RDS install",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.jira.install",
+				Path: "cap.interface.productivity.mattermost.install",
 			},
 			policy: fixAWSClusterPolicy(),
 		},
@@ -263,7 +261,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
-				MaxDepth:      20,
+				MaxDepth:      50,
 			}, policyEnforcedCli, typeInstanceHandler)
 
 			// when
@@ -339,7 +337,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	}, policyEnforcedCli, typeInstanceHandler)
 
 	interfaceRef := types.InterfaceRef{
-		Path: "cap.interface.productivity.jira.install",
+		Path: "cap.interface.productivity.mattermost.install",
 	}
 
 	// when
@@ -356,7 +354,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 
 	// then
 	assert.EqualError(t, err,
-		`while picking ImplementationRevision for Interface "cap.interface.productivity.jira.install:": No Implementations found with current policy for given Interface`)
+		`while picking ImplementationRevision for Interface "cap.interface.productivity.mattermost.install:": No Implementations found with current policy for given Interface`)
 	assert.Nil(t, renderOutput)
 }
 
