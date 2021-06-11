@@ -96,6 +96,21 @@ spec:
                       - name: manifest
                         from: "{{steps.render-secret-manifest.outputs.artifacts.render}}"
 
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            replicas: <@ input.replicas | default(3) @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
               # Here we prepare the input for the Helm runner.
               - - name: render-helm-args
                   capact-action: jinja2.template
@@ -109,18 +124,6 @@ spec:
                               name: "elasticsearch"
                               repo: "https://helm.elastic.co"
                               version: "7.11.1"
-                            output:
-                              goTemplate: |
-                                version: "{{ .Values.imageTag }}"
-                              <% if host %>
-                                host: "{{ (index .Values.ingress.hosts 0).host }}"
-                                port: 80
-                              <% else %>
-                                host: "{{ template "elasticsearch.masterService" . }}.{{ .Release.Namespace }}"
-                                port: "{{ .Values.httpPort }}"
-                              <% endif %>
-                                basicAuthSecretName: <@ metadata.name @>
-                                protocol: "http"
                             values:
                               imageTag: 7.4.1
                               replicas: <@ replicas | default('3')@>
@@ -159,6 +162,19 @@ spec:
                                   paths:
                                     - path: '/'
                               <% endif %>
+                            output:
+                              goTemplate: |
+                                version: "{{ .Values.imageTag }}"
+                              <% if host %>
+                                host: "{{ (index .Values.ingress.hosts 0).host }}"
+                                port: 80
+                              <% else %>
+                                host: "{{ template "elasticsearch.masterService" . }}.{{ .Release.Namespace }}"
+                                port: "{{ .Values.httpPort }}"
+                              <% endif %>
+                                basicAuthSecretName: <@ metadata.name @>
+                                protocol: "http"
+
                       - name: input-parameters
                         from:  "{{inputs.artifacts.input-parameters}}"
                       - name: configuration

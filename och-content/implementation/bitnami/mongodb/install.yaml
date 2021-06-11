@@ -79,11 +79,6 @@ spec:
                     artifacts:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
-
                       - name: template
                         raw:
                           data: |
@@ -95,6 +90,17 @@ spec:
                             replicas: <@ input.replicas | default(3) @>
                             replicaSetName: "<@ input.replicaSetName | default('rs0') @>"
                             replicaSetKey: "<@ input.replicaSetKey | default(random_word(length=16)) @>"
+                            replicaSetHostnames: <@ input.replicaSetHostnames | default(true) | tojson @>
+                            directoryPerDB: <@ input.directoryPerDB | default(false) | tojson @>
+                            enableIPv6: <@ input.enableIPv6 | default(false) | tojson @>
+                            systemLogVerbosity: <@ input.systemLogVerbosity | defult(0) @>
+                            disableSystemLog: <@ input.disableSystemLog | default(false) | tojson @>
+                            configuration: "<@ input.configuration | default('') @>"
+                            initdbScripts: <@ input.initdbScripts | deafult({}) | tojson @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
 
               - - name: create-helm-args
                   capact-action: jinja2.template
@@ -146,13 +152,13 @@ spec:
                                   pullPolicy: <@ additionalinput.tls.image.pullPolicy | default("IfNotPresent") @>
 
                               replicaSetName: <@ input.replicaSetName @>
-                              replicaSetHostnames: <@ additionalinput.replicaSetHostnames | default(true) | tojson @>
-                              enableIPv6: <@ additionalinput.enableIPv6 | default(false) | tojson @>
-                              directoryPerDB: <@ additionalinput.directoryPerDB | default(false) | tojson @>
-                              systemLogVerbosity: <@ additionalinput.systemLogVerbosity | default(0) @>
-                              disableSystemLog: <@ additionalinput.disableSystemLog | default(false) | tojson @>
-                              configuration: "<@ additionalinput.configuration | default("") @>"
-                              initdbScripts: <@ additionalinput.initdbScripts | default({}) @>
+                              replicaSetHostnames: <@ input.replicaSetHostnames @>
+                              enableIPv6: <@ input.enableIPv6 @>
+                              directoryPerDB: <@ input.directoryPerDB @>
+                              systemLogVerbosity: <@ input.systemLogVerbosity @>
+                              disableSystemLog: <@ input.disableSystemLog @>
+                              configuration: "<@ input.configuration @>"
+                              initdbScripts: <@ input.initdbScripts @>
                               extraFlags: <@ additionalinput.extraFlags | default([]) @>
                               extraEnvVars: <@ additionalinput.extraEnvVars | default([]) @>
                               annotations: <@ additionalinput.annotations | default({}) @>

@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: instance
+  name: install-input
   prefix: cap.type.aws.elasticsearch
-  displayName: install-input
-  description: Defined the input parameters for provisioning AWS Elasticsearch domain
+  displayName: AWS Elasticsearch additional installation parameters
+  description: Defines additional parameters for installing AWS Elasticsearch domain
   documentationURL: https://aws.amazon.com/elasticsearch-service/
   supportURL: https://aws.amazon.com/elasticsearch-service/
   maintainers:

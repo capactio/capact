@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  prefix: cap.type.aws.rds.postgresql
   name: install-input
-  displayName: AWS RDS for PostgreSQL provisioning input
-  description: Defines input for AWS RDS for PostgreSQL provisioning
+  prefix: cap.type.aws.rds
+  displayName: AWS RDS installation installation input parameters
+  description: Defines input parameters for AWS RDS installation
   documentationURL: https://capact.io
   supportURL: https://capact.io
   maintainers:

@@ -138,49 +138,6 @@ spec:
             },
             "additionalProperties": false
           },
-          "replicaSetHostnames": {
-            "$id": "#/properties/replicaSetHostnames",
-            "type": "boolean",
-            "title": "The replicaSetHostnames schema",
-            "default": true
-          },
-          "enableIPv6": {
-            "$id": "#/properties/enableIPv6",
-            "type": "boolean",
-            "title": "The enableIPv6 schema",
-            "default": false
-          },
-          "directoryPerDB": {
-            "$id": "#/properties/directoryPerDB",
-            "type": "boolean",
-            "title": "The directoryPerDB schema",
-            "default": false
-          },
-          "systemLogVerbosity": {
-            "$id": "#/properties/systemLogVerbosity",
-            "type": "integer",
-            "title": "The systemLogVerbosity schema",
-            "default": 0
-          },
-          "disableSystemLog": {
-            "$id": "#/properties/disableSystemLog",
-            "type": "boolean",
-            "title": "The disableSystemLog schema",
-            "default": false
-          },
-          "configuration": {
-            "$id": "#/properties/configuration",
-            "type": "string",
-            "title": "The configuration schema",
-            "default": ""
-          },
-          "initdbScripts": {
-            "$id": "#/properties/initdbScripts",
-            "type": "object",
-            "title": "The initdbScripts schema",
-            "default": {},
-            "additionalProperties": true
-          },
           "extraFlags": {
             "$id": "#/properties/extraFlags",
             "type": "array",
