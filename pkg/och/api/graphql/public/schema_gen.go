@@ -1991,9 +1991,9 @@ type ImplementationSpec @additionalLabels(labels: ["published"]){
 }
 
 type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
-  typeInstances: [InputTypeInstance!]!
+  typeInstances: [InputTypeInstance!]
     @relation(name: "CONTAINS", direction: "OUT")
-  parameters: ImplementationAdditionalInputParameters!
+  parameters: ImplementationAdditionalInputParameters
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
@@ -4218,14 +4218,11 @@ func (ec *executionContext) _ImplementationAdditionalInput_typeInstances(ctx con
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.([]*InputTypeInstance)
 	fc.Result = res
-	return ec.marshalNInputTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstanceᚄ(ctx, field.Selections, res)
+	return ec.marshalOInputTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstanceᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationAdditionalInput_parameters(ctx context.Context, field graphql.CollectedField, obj *ImplementationAdditionalInput) (ret graphql.Marshaler) {
@@ -4291,14 +4288,11 @@ func (ec *executionContext) _ImplementationAdditionalInput_parameters(ctx contex
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*ImplementationAdditionalInputParameters)
 	fc.Result = res
-	return ec.marshalNImplementationAdditionalInputParameters2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalInputParameters(ctx, field.Selections, res)
+	return ec.marshalOImplementationAdditionalInputParameters2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalInputParameters(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImplementationAdditionalInputParameters_typeRef(ctx context.Context, field graphql.CollectedField, obj *ImplementationAdditionalInputParameters) (ret graphql.Marshaler) {
@@ -13575,14 +13569,8 @@ func (ec *executionContext) _ImplementationAdditionalInput(ctx context.Context, 
 			out.Values[i] = graphql.MarshalString("ImplementationAdditionalInput")
 		case "typeInstances":
 			out.Values[i] = ec._ImplementationAdditionalInput_typeInstances(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "parameters":
 			out.Values[i] = ec._ImplementationAdditionalInput_parameters(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -15523,16 +15511,6 @@ func (ec *executionContext) marshalNImplementationAction2ᚖcapactᚗioᚋcapact
 	return ec._ImplementationAction(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNImplementationAdditionalInputParameters2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalInputParameters(ctx context.Context, sel ast.SelectionSet, v *ImplementationAdditionalInputParameters) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._ImplementationAdditionalInputParameters(ctx, sel, v)
-}
-
 func (ec *executionContext) marshalNImplementationImport2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationImport(ctx context.Context, sel ast.SelectionSet, v *ImplementationImport) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -15823,43 +15801,6 @@ func (ec *executionContext) marshalNInputTypeInstance2ᚕᚖcapactᚗioᚋcapact
 				defer wg.Done()
 			}
 			ret[i] = ec.marshalOInputTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNInputTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*InputTypeInstance) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNInputTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -17113,6 +17054,13 @@ func (ec *executionContext) marshalOImplementationAdditionalInput2ᚖcapactᚗio
 	return ec._ImplementationAdditionalInput(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalOImplementationAdditionalInputParameters2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalInputParameters(ctx context.Context, sel ast.SelectionSet, v *ImplementationAdditionalInputParameters) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ImplementationAdditionalInputParameters(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalOImplementationAdditionalOutput2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐImplementationAdditionalOutput(ctx context.Context, sel ast.SelectionSet, v *ImplementationAdditionalOutput) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -17173,6 +17121,46 @@ func (ec *executionContext) marshalOImplementationRevision2ᚖcapactᚗioᚋcapa
 		return graphql.Null
 	}
 	return ec._ImplementationRevision(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOInputTypeInstance2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstanceᚄ(ctx context.Context, sel ast.SelectionSet, v []*InputTypeInstance) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNInputTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) marshalOInputTypeInstance2ᚖcapactᚗioᚋcapactᚋpkgᚋochᚋapiᚋgraphqlᚋpublicᚐInputTypeInstance(ctx context.Context, sel ast.SelectionSet, v *InputTypeInstance) graphql.Marshaler {

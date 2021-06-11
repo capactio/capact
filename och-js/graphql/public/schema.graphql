@@ -351,9 +351,9 @@ type ImplementationSpec @additionalLabels(labels: ["published"]){
 }
 
 type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
-  typeInstances: [InputTypeInstance!]!
+  typeInstances: [InputTypeInstance!]
     @relation(name: "CONTAINS", direction: "OUT")
-  parameters: ImplementationAdditionalInputParameters!
+  parameters: ImplementationAdditionalInputParameters
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
