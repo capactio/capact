@@ -2,10 +2,10 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: helm-install-input
-  prefix: cap.type.productivity.mattermost
-  displayName: "Mattermost install input"
-  description: Defines installation parameters for Mattermost
+  name: install-input
+  prefix: cap.type.mattermost.helm
+  displayName: Mattermost Helm chart install input
+  description: Defines installation parameters for Mattermost Helm chart
   documentationURL: https://docs.mattermost.com/
   supportURL: https://docs.mattermost.com
   maintainers:

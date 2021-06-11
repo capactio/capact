@@ -3,8 +3,8 @@ revision: 0.1.0
 kind: Type
 metadata:
   name: install-input
-  prefix: cap.type.productivity.rocketchat.helm
-  displayName: Rocket.Chat Helm installation input
+  prefix: cap.type.rocketchat.helm
+  displayName: Rocket.Chat Helm chart installation input
   description: Defines installation parameters for Rocket.Chat Helm chart
   documentationURL: https://docs.rocket.chat/
   supportURL: https://rocket.chat/

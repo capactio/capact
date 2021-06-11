@@ -27,7 +27,7 @@ spec:
         verbs: [ "get" ]
     parameters:
       typeRef:
-        path: cap.type.productivity.rocketchat.helm.install-input
+        path: cap.type.rocketchat.helm.install-input
         revision: 0.1.0
 
   outputTypeInstanceRelations:

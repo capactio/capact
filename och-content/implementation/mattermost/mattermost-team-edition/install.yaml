@@ -35,7 +35,7 @@ spec:
         verbs: ["get"]
     parameters:
       typeRef:
-        path: cap.type.productivity.mattermost.helm-install-input
+        path: cap.type.mattermost.helm.install-input
         revision: 0.1.0
 
   implements:
