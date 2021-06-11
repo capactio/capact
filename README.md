@@ -10,9 +10,9 @@ The Capact documentation can be found on the [capact.io/docs](https://capact.io/
 
 The section contains useful links for getting started with Capact.
 
-- **Introduction:** To learn what is Capact, read the [Introduction](https://staging.capact.io/docs/introduction) document.
-- **Installation:** To learn how to install Capact, follow the [Installation](https://staging.capact.io/docs/installation/local) documents.
-- **Development:** To run Capact on your local machine and start contributing to Capact, read the [Development](https://staging.capact.io/docs/development/development-guide) documents.
+- **Introduction:** To learn what is Capact, read the [Introduction](https://capact.io/docs/introduction) document.
+- **Installation:** To learn how to install Capact, follow the [Installation](https://capact.io/docs/installation/local) documents.
+- **Development:** To run Capact on your local machine and start contributing to Capact, read the [Development](https://capact.io/docs/development/development-guide) documents.
 
 ## Project structure
 

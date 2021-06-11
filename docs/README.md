@@ -6,5 +6,3 @@ There are the following subdirectories, which are not published on the Capact we
 
 - [`proposal`](./proposal) - Contains architectural proposals to enhance the Capact project.
 - [`investigation`](./investigation) - Contains investigations and proof of concepts files.
-
-

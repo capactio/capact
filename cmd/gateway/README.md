@@ -70,4 +70,4 @@ You can set the following environment variables to configure the Gateway:
 
 ## Development
 
-To read more about development, see the [`development.md`](../../docs/development.md) document.
+To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).
