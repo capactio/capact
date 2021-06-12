@@ -26,4 +26,4 @@ See [capact.md](./docs/capact.md) for details how to use the tool.
 
 ## Development
 
-To read more about development, see the [`development.md`](../../docs/development.md) document.
+To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).

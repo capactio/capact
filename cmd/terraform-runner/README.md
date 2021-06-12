@@ -8,7 +8,7 @@
 
 ## Overview
 
-Terraform runner is a [runner](../../docs/runner.md), which downloads and run Terraform modules. Runner is a wrapper for
+Terraform runner is a [runner](https://capact.io/docs/architecture/runner), which downloads and run Terraform modules. Runner is a wrapper for
 the terraform binary. It downloads specified module, runs terraform init and depending on action: apply, destroy or plan.
 After run, it collects the output and converts it into Capact required format.
 
@@ -50,4 +50,4 @@ The following environment variables can be set:
 
 ## Development
 
-To read more about development, see the [`development.md`](../../docs/development.md) document.
+To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).

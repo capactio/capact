@@ -10,7 +10,7 @@
 
 ## Overview
 
-CloudSQL runner is a [runner](../../docs/runner.md), which creates and manages CloudSQL instances and databases on Google Cloud Platform.
+CloudSQL runner is a [runner](https://capact.io/docs/architecture/runner), which creates and manages CloudSQL instances and databases on Google Cloud Platform.
 
 ## Prerequisites
 
@@ -47,4 +47,4 @@ The following environment variables can be set:
 
 ## Development
 
-To read more about development, see the [`development.md`](../../docs/development.md) document.
+To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).

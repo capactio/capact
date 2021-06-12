@@ -4,7 +4,7 @@ The [schema](./schema) directory contains a representation of the OCF entities i
 
 ### RepoMetadata
 
-RepoMetadata stores read-only information about the [Open Capability Hub](../../docs/e2e-architecture.md#och) (OCH), such as OCH version, supported OCF specification version, etc. This entity should be placed in the `core` directory in your OCH content. In the future, it will be embedded into the OCH server.
+RepoMetadata stores read-only information about the [Open Capability Hub](https://capact.io/docs/architecture/e2e-architecture#och) (OCH), such as OCH version, supported OCF specification version, etc. This entity should be placed in the `core` directory in your OCH content. In the future, it will be embedded into the OCH server.
 
 The RepoMetadata format is defined in [repo-metadata.json](./schema/repo-metadata.json).
 
@@ -24,7 +24,7 @@ Type is used in [Interface](#interface) and [Implementation](#implementation) as
 
 The core Types are placed in the `core` directory. In the future, core Types will be embedded into the OCH server.
 
-The [type-features.md](../../docs/type-features.md) describes all Type entity features.
+The [type-features.md](https://capact.io/docs/feature/type-features) describes all Type entity features.
 
 The Type specification is defined in [type.json](./schema/type.json).
 
@@ -44,7 +44,7 @@ The InterfaceGroup specification is defined in [interface-group.json](./schema/i
 
 ### Implementation
 
-Implementation holds the definition of an [action](../../docs/terminology.md#action) and its prerequisites (dependencies). It allows you to define different ways on how a given action should be executed. For example, for **postgres.install** Interface, have **aws.postgresql.install** and **gcp.postgresql.install** Implementations. Implementation must implement at least one Interface.
+Implementation holds the definition of an [action](https://capact.io/docs/terminology#action) and its prerequisites (dependencies). It allows you to define different ways on how a given action should be executed. For example, for **postgres.install** Interface, have **aws.postgresql.install** and **gcp.postgresql.install** Implementations. Implementation must implement at least one Interface.
 
 The Implementation specification is defined in [implementation.json](./schema/implementation.json).
 

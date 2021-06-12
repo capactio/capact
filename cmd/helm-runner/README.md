@@ -8,7 +8,7 @@
 
 ## Overview
 
-Helm runner is a [runner](../../docs/runner.md), which creates and manages Helm releases on Kubernetes.
+Helm runner is a [runner](https://capact.io/docs/architecture/runner), which creates and manages Helm releases on Kubernetes.
 
 ## Prerequisites
 
@@ -79,4 +79,4 @@ The following environment variables can be set:
 
 ## Development
 
-To read more about development, see the [`development.md`](../../docs/development.md) document.
+To read more about development, see the [Development guide](https://capact.io/docs/development/development-guide).
