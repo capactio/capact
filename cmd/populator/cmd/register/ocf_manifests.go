@@ -52,16 +52,16 @@ func runDBPopulate(ctx context.Context, src string) error {
 		return errors.Wrap(err, "while creating zap logger")
 	}
 
-	parent, err := ioutil.TempDir("/tmp", "*-och-parent")
+	parent, err := ioutil.TempDir("/tmp", "*-hub-parent")
 	if err != nil {
 		return errors.Wrap(err, "while creating temporary directory")
 	}
-	dstDir := path.Join(parent, "och")
+	dstDir := path.Join(parent, "hub")
 	defer os.RemoveAll(parent)
 
 	err = getter.Download(ctx, src, dstDir)
 	if err != nil {
-		return errors.Wrap(err, "while downloading och content")
+		return errors.Wrap(err, "while downloading Hub manifests")
 	}
 
 	logger.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))

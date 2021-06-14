@@ -29,8 +29,8 @@ func NewValidate() *cobra.Command {
 			# Validate interface-group.yaml file with custom OCF specification location 
 			<cli> validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
 			
-			# Validate all OCH manifests
-			<cli> validate ./och-content/**/*.yaml`, cli.Name),
+			# Validate all Hub manifests
+			<cli> validate ./hub-manifests/**/*.yaml`, cli.Name),
 		Args: cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			validator := manifest.NewFilesystemValidator(schemaProvider.FileSystem())

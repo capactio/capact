@@ -14,10 +14,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"capact.io/capact/internal/ptr"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
-	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
-	ochclient "capact.io/capact/pkg/och/client"
-	"capact.io/capact/pkg/och/client/public"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	ochclient "capact.io/capact/pkg/hub/client"
+	"capact.io/capact/pkg/hub/client/public"
 )
 
 var _ = Describe("GraphQL API", func() {
@@ -32,7 +32,7 @@ var _ = Describe("GraphQL API", func() {
 
 		Describe("should return ImplementationRevision", func() {
 			const (
-				interfacePath  = "cap.interface.capactio.capact.validation.och.install"
+				interfacePath  = "cap.interface.capactio.capact.validation.hub.install"
 				latestRevision = "2.0.0"
 				revision       = "1.0.0"
 			)

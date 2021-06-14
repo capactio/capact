@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "Vendor manifests are currently not used. They will be part of the OCH federation feature.",
+  "description": "Vendor manifests are currently not used. They will be part of the Hub federation feature.",
   "required": [
     "ocfVersion",
     "kind",
@@ -34,10 +34,10 @@
       "type": "object",
       "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
-        "och"
+        "hub"
       ],
       "properties": {
-        "och": {
+        "hub": {
           "description": "The signature signed with the HUB key.",
           "type": "string"
         }
@@ -67,7 +67,7 @@
               "$id": "#/properties/federation/properties/uri",
               "format": "uri",
               "type": "string",
-              "description": "The URI of the external OCH."
+              "description": "The URI of the external Hub."
             }
           },
           "additionalProperties": false

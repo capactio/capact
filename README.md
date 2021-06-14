@@ -32,9 +32,7 @@ The repository has the following structure:
   │
   ├── ocf-spec                # Open Capability Format Specification
   │
-  ├── och-content             # OCF Manifests for the Open Capability Hub
-  │
-  ├── och-js                  # Node.js implementation of Open Capability Hub
+  ├── hub-js                  # Node.js implementation of Capact Hub
   │
   ├── pkg                     # Public component and SDK code
   │

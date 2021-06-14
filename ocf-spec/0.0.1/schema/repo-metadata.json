@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema",
   "type": "object",
-  "description": "RepoMetadata stores metadata about the Open Capability Hub.",
+  "description": "RepoMetadata stores metadata about the Capact Hub.",
   "required": [
     "ocfVersion",
     "kind",
@@ -34,10 +34,10 @@
       "type": "object",
       "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
-        "och"
+        "hub"
       ],
       "properties": {
-        "och": {
+        "hub": {
           "description": "The signature signed with the HUB key.",
           "type": "string"
         }
@@ -53,7 +53,7 @@
       "additionalProperties": false,
       "required": [
         "ocfVersion",
-        "ochVersion"
+        "hubVersion"
       ],
       "properties": {
         "implementation": {
@@ -88,7 +88,7 @@
                     "latest": {
                       "$id": "#/properties/spec/properties/implementation/properties/appVersion/properties/semVerTaggingStrategy/properties/latest",
                       "type": "object",
-                      "description": "Defines the strategy for which version the tag Latest should be applied. You configure this while running OCH.",
+                      "description": "Defines the strategy for which version the tag Latest should be applied. You configure this while running Hub.",
                       "properties": {
                         "pointsTo": {
                           "$id": "#/properties/spec/properties/implementation/properties/appVersion/properties/semVerTaggingStrategy/properties/latest/properties/pointsTo",
@@ -114,7 +114,7 @@
         "ocfVersion": {
           "$id": "#/properties/spec/properties/ocfVersion",
           "type": "object",
-          "description": "Holds information about supported OCF versions in OCH server.",
+          "description": "Holds information about supported OCF versions in Hub server.",
           "examples": [
             {
               "default": "0.2.0",
@@ -132,12 +132,12 @@
             "default": {
               "$id": "#/properties/spec/properties/ocfVersion/properties/default",
               "type": "string",
-              "description": "The default OCF version that is supported by the OCH. It should be the stored version."
+              "description": "The default OCF version that is supported by the Hub. It should be the stored version."
             },
             "supported": {
               "$id": "#/properties/spec/properties/ocfVersion/properties/supported",
               "type": "array",
-              "description": "The supported OCF version that OCH is able to serve. In general, the OCH takes the stored version and converts it to the supported one. CURRENTLY NOT IMPLEMENTED.",
+              "description": "The supported OCF version that Hub is able to serve. In general, the Hub takes the stored version and converts it to the supported one. CURRENTLY NOT IMPLEMENTED.",
               "additionalItems": false,
               "items": {
                 "type": "string"
@@ -146,10 +146,10 @@
           },
           "additionalProperties": false
         },
-        "ochVersion": {
-          "$id": "#/properties/spec/properties/ochVersion",
+        "hubVersion": {
+          "$id": "#/properties/spec/properties/hubVersion",
           "type": "string",
-          "description": "Defines the OCH version in SemVer2 format."
+          "description": "Defines the Hub version in SemVer2 format."
         }
       }
     }

@@ -15,7 +15,7 @@ import (
 	"capact.io/capact/pkg/engine/api/graphql"
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"capact.io/capact/pkg/httputil"
-	ochclient "capact.io/capact/pkg/och/client"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/renderer"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
@@ -71,7 +71,7 @@ type Config struct {
 	Policy policy.Config
 
 	Renderer        renderer.Config
-	OCHActionsImage string
+	HubActionsImage string
 }
 
 func main() {
@@ -102,9 +102,9 @@ func main() {
 	})
 	exitOnError(err, "while creating manager")
 
-	ochClient := getOCHClient(&cfg)
-	policyEnforcedClient := ochclient.NewPolicyEnforcedClient(ochClient)
-	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.OCHActionsImage)
+	hubClient := getHubClient(&cfg)
+	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(hubClient)
+	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, policyEnforcedClient, typeInstanceHandler)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
@@ -120,8 +120,8 @@ func main() {
 		argoRenderer,
 		actionValidator,
 		policyService,
-		ochClient,
-		ochClient,
+		hubClient,
+		hubClient,
 		controller.Config{
 			BuiltinRunner: cfg.BuiltinRunner,
 		},
@@ -155,10 +155,10 @@ func main() {
 	exitOnError(err, "while running manager")
 }
 
-func getOCHClient(cfg *Config) *ochclient.Client {
+func getHubClient(cfg *Config) *hubclient.Client {
 	httpClient := httputil.NewClient(30*time.Second,
 		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
-	return ochclient.New(cfg.GraphQLGateway.Endpoint, httpClient)
+	return hubclient.New(cfg.GraphQLGateway.Endpoint, httpClient)
 }
 
 func gqlServer(log *uber_zap.Logger, execSchema gqlgen_graphql.ExecutableSchema, addr, name string) httputil.StartableServer {

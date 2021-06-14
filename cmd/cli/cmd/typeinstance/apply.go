@@ -11,7 +11,7 @@ import (
 	"capact.io/capact/internal/cli/config"
 	heredocx "capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/printer"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/pkg/errors"

@@ -11,8 +11,7 @@ on:
       - "**.sh"
       - "Makefile"
       - "deploy/**"
-      - "och-js/**"
-      - "och-content/**"
+      - "hub-js/**"
       - "Dockerfile"
       - "!**.md"
     branches:

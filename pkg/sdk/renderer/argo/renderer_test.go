@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
-	"capact.io/capact/pkg/och/client/fake"
+	"capact.io/capact/pkg/hub/client/fake"
 
-	"capact.io/capact/pkg/och/client"
+	"capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +29,7 @@ import (
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och", false)
+	fakeCli, err := fake.NewFromLocal("testdata/hub", false)
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
@@ -199,7 +199,7 @@ func TestRenderHappyPath(t *testing.T) {
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och", true)
+	fakeCli, err := fake.NewFromLocal("testdata/hub", true)
 	require.NoError(t, err)
 
 	tests := []struct {
@@ -287,7 +287,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 
 func TestRendererMaxDepth(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och", false)
+	fakeCli, err := fake.NewFromLocal("testdata/hub", false)
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
@@ -323,7 +323,7 @@ func TestRendererMaxDepth(t *testing.T) {
 
 func TestRendererDenyAllPolicy(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/och", false)
+	fakeCli, err := fake.NewFromLocal("testdata/hub", false)
 	require.NoError(t, err)
 
 	policy := policy.NewDenyAll()

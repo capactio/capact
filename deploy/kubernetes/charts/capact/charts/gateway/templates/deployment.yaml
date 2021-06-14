@@ -41,7 +41,7 @@ spec:
             - name: APP_LOGGER_DEV_MODE
               value: "true"
             - name: APP_INTROSPECTION_GRAPH_QL_ENDPOINTS
-              value: "http://capact-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/graphql,http://capact-och-local.{{.Release.Namespace}}.svc.cluster.local/graphql,http://capact-och-public.{{.Release.Namespace}}.svc.cluster.local/graphql"
+              value: "http://capact-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/graphql,http://capact-hub-local.{{.Release.Namespace}}.svc.cluster.local/graphql,http://capact-hub-public.{{.Release.Namespace}}.svc.cluster.local/graphql"
             - name: APP_INTROSPECTION_ATTEMPTS
               value: "120"
             - name: APP_INTROSPECTION_RETRY_DELAY

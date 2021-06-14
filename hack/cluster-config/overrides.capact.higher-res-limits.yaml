@@ -9,7 +9,7 @@ gateway:
       cpu: 100m
       memory: 48Mi
 
-och-public:
+hub-public:
   resources:
     limits:
       cpu: 400m

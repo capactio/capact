@@ -1,7 +1,7 @@
 package typeinstance
 
 import (
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	"github.com/spf13/cobra"
 )
 

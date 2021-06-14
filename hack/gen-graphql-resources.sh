@@ -57,8 +57,8 @@ main() {
 
   readonly apiPaths=(
     "/pkg/engine/api/graphql"
-    "/pkg/och/api/graphql/public"
-    "/pkg/och/api/graphql/local"
+    "/pkg/hub/api/graphql/public"
+    "/pkg/hub/api/graphql/local"
   )
 
   for path in "${apiPaths[@]}"; do

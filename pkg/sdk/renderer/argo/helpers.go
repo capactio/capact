@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"strings"
 
-	ochpublicgraphql "capact.io/capact/pkg/och/api/graphql/public"
+	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 )
 
-func interfaceRefToOCH(in types.InterfaceRef) ochpublicgraphql.InterfaceReference {
-	return ochpublicgraphql.InterfaceReference{
+func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReference {
+	return hubpublicgraphql.InterfaceReference{
 		Path:     in.Path,
 		Revision: stringOrEmpty(in.Revision),
 	}
@@ -47,12 +47,12 @@ func getEntrypointWorkflowIndex(w *Workflow) (int, error) {
 	return 0, NewEntrypointWorkflowIndexNotFoundError(w.Entrypoint)
 }
 
-func findTypeInstanceTypeRef(typeInstanceName string, impl *ochpublicgraphql.ImplementationRevision, iface *ochpublicgraphql.InterfaceRevision) (*ochpublicgraphql.TypeReference, error) {
+func findTypeInstanceTypeRef(typeInstanceName string, impl *hubpublicgraphql.ImplementationRevision, iface *hubpublicgraphql.InterfaceRevision) (*hubpublicgraphql.TypeReference, error) {
 	if iface == nil {
 		return nil, NewTypeReferenceNotFoundError(typeInstanceName)
 	}
 
-	var toSearch []*ochpublicgraphql.OutputTypeInstance
+	var toSearch []*hubpublicgraphql.OutputTypeInstance
 
 	if iface.Spec.Output != nil {
 		toSearch = append(toSearch, iface.Spec.Output.TypeInstances...)

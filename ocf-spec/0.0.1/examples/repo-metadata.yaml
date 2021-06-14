@@ -4,7 +4,7 @@ kind: RepoMetadata
 metadata:
   prefix: cap.core
   name: metadata
-  description: OCH repository
+  description: Hub repository
   maintainers:
     - email: foo@example.com
       name: Foo Bar
@@ -13,7 +13,7 @@ metadata:
       name: Foo Bar
       url: https://examples.com/foo/bar
 spec:
-  ochVersion: 0.1.0
+  hubVersion: 0.1.0
   ocfVersion:
     default: 0.2.0
     supported:
@@ -26,4 +26,4 @@ spec:
           pointsTo: Stable # enum: Stable, Edge
 
 signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

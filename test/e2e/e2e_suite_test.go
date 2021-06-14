@@ -11,7 +11,7 @@ import (
 	engineclient "capact.io/capact/pkg/engine/client"
 	"capact.io/capact/pkg/httputil"
 	"capact.io/capact/pkg/iosafety"
-	ochclient "capact.io/capact/pkg/och/client"
+	ochclient "capact.io/capact/pkg/hub/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -36,8 +36,8 @@ type Config struct {
 	PollingTimeout          time.Duration `envconfig:"default=5m"`
 	Gateway                 GatewayConfig
 	ClusterPolicy           GlobalPolicyConfig
-	OCHLocalDeployNamespace string `envconfig:"default=capact-system"`
-	OCHLocalDeployName      string `envconfig:"default=capact-och-local"`
+	HubLocalDeployNamespace string `envconfig:"default=capact-system"`
+	HubLocalDeployName      string `envconfig:"default=capact-hub-local"`
 }
 
 var cfg Config

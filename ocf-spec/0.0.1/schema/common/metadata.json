@@ -18,10 +18,10 @@
       ]
     },
     "prefix": {
-      "$comment": "Value set by user is ignored and this field is always managed by OCH.",
+      "$comment": "Value set by user is ignored and this field is always managed by Hub.",
       "$id": "#/properties/prefix",
       "type": "string",
-      "description": "The prefix value is automatically computed and set when storing manifest in OCH.",
+      "description": "The prefix value is automatically computed and set when storing manifest in Hub.",
       "examples": [
         "cap.type.database.mysql"
       ]

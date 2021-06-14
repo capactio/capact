@@ -10,14 +10,14 @@ export DOCKER_BUILDKIT = 1
 export DOCKER_REPOSITORY ?= ghcr.io/capactio
 export DOCKER_TAG ?= latest
 
-all: generate build-all-images test-ocf-manifests test-unit test-lint ## Default: generate all, build all, test all and lint
+all: generate build-all-images test-unit test-lint ## Default: generate all, build all, test all and lint
 .PHONY: all
 
 ############
 # Building #
 ############
 
-APPS = gateway k8s-engine och-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
+APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
@@ -32,7 +32,7 @@ build-tool-cli: ## Builds the standalone binaries for the capact CLI
 	./hack/build-tool-cli.sh
 .PHONY: build-tool-cli
 
-build-tool-populator: ## Builds the standalone binaries for the OCH Populator
+build-tool-populator: ## Builds the standalone binaries for the Hub Populator
 	./hack/build-tool-populator.sh
 .PHONY: build-tool-populator
 
@@ -50,12 +50,12 @@ push-all-images: $(addprefix push-app-image-,$(APPS))  $(addprefix push-test-ima
 .PHONY: push-all-images
 
 # App images
-build-app-image-och-js: ## Build application image for och-js
-	$(eval APP := och-js)
-	cd och-js && $(MAKE) build-app-image
-.PHONY: build-app-image-och-js
+build-app-image-hub-js: ## Build application image for hub-js
+	$(eval APP := hub-js)
+	cd hub-js && $(MAKE) build-app-image
+.PHONY: build-app-image-hub-js
 
-build-app-image-populator: ## Build application image for OCH database populator
+build-app-image-populator: ## Build application image for Hub Populator
 	$(eval APP := populator)
 	docker build --build-arg COMPONENT=$(APP) --target generic-alpine -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
 .PHONY: build-app-image-populator
@@ -120,10 +120,6 @@ test-unit: ## Execute unit tests
 test-lint: ## Run linters on the codebase
 	./hack/lint.sh
 .PHONY: test-lint
-
-test-ocf-manifests: ## Validate the OCF manifests against the OCF schema
-	./hack/test-ocf-manifests.sh
-.PHONY: test-ocf-manifests
 
 test-integration:
 	./hack/test-integration.sh

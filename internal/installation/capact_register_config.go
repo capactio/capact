@@ -10,7 +10,7 @@ import (
 // TypeInstancesConfig holds configuration for CapactRegister
 type TypeInstancesConfig struct {
 	Logger               logger.Config
-	LocalOCHEndpoint     string `envconfig:"default=http://capact-och-local.capact-system/graphql"`
+	LocalHubEndpoint     string `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
 	HelmReleasesNSLookup LookupNS
 	CapactReleaseName    string `envconfig:"default=capact"`
 	HelmRepositoryPath   string `envconfig:"default=https://capactio-stable-charts.storage.googleapis.com"`

@@ -1,0 +1,82 @@
+metadata:
+  attributes: []
+  description: Install action for Helm Runner
+  displayName: Install
+  documentationURL: https://helm.sh/
+  iconURL:
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+  name: install
+  path: cap.implementation.runner.helm.install
+  prefix: cap.implementation.runner.helm
+  supportURL:
+revision: 0.1.0
+signature:
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+spec:
+  additionalInput:
+    typeInstances: []
+  additionalOutput:
+    typeInstances: []
+  outputTypeInstanceRelations:
+    - typeInstanceName: helm-release
+      uses: []
+  appVersion: 3.x.x
+  implements:
+    - path: cap.core.interface.runner.generic.run
+      revision: 0.1.0
+    - path: cap.interface.runner.helm.install
+      revision: 0.1.0
+  imports:
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: helm
+        templates:
+          - name: helm
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: "/runner-args"
+                - name: runner-context
+                  path: "/runner-context"
+            outputs:
+              artifacts:
+                - name: helm-release
+                  globalName: helm-release
+                  path: "/helm-release.yaml"
+                - name: additional
+                  globalName: additional
+                  path: "/additional.yaml"
+            container:
+              image: ghcr.io/capactio/pr/helm-runner:PR-252
+              env:
+                - name: RUNNER_CONTEXT_PATH
+                  value: "{{inputs.artifacts.runner-context.path}}"
+                - name: RUNNER_ARGS_PATH
+                  value: "{{inputs.artifacts.input-parameters.path}}"
+                - name: RUNNER_LOGGER_DEV_MODE
+                  value: "true"
+                - name: RUNNER_COMMAND
+                  value: "install"
+                - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+                  value: "{{outputs.artifacts.helm-release.path}}"
+                - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+                  value: "{{outputs.artifacts.additional.path}}"

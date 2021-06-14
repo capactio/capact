@@ -74,7 +74,7 @@ dockerfile::run_checks() {
 
 shellcheck::files_to_check() {
   pushd "$REPO_ROOT_DIR" > /dev/null
-  paths=$(find . \( -path ./och-js/node_modules -o -path ./.git -o -path ./hack/eks/terraform/.terraform -o -path ./tmp \) -prune -false -o -name '*.sh')
+  paths=$(find . \( -path ./hub-js/node_modules -o -path ./.git -o -path ./hack/eks/terraform/.terraform -o -path ./tmp \) -prune -false -o -name '*.sh')
   popd > /dev/null
 
   echo "$paths"
@@ -94,8 +94,8 @@ graphql::run_checks() {
 
   docker run --rm -v "$REPO_ROOT_DIR":/repo -w=/repo "${GRAPHQL_SCHEMA_LINTER_IMAGE}" \
     --src ./pkg/engine/api/graphql/schema.graphql \
-    --src ./och-js/graphql/public/schema.graphql \
-    --src ./och-js/graphql/local/schema.graphql \
+    --src ./hub-js/graphql/public/schema.graphql \
+    --src ./hub-js/graphql/local/schema.graphql \
     --linter-args "-c ./ --format compact"
   echo -e "${GREEN}√ run graphql-schema-linter${NC}"
 }

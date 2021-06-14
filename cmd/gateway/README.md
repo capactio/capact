@@ -9,7 +9,7 @@
 
 ## Overview
 
-Capact GraphQL gateway is a component, which aggregates GraphQL APIs from the Capact Engine and Open Capability Hub.
+Capact GraphQL gateway is a component, which aggregates GraphQL APIs from the Capact Engine and Hub.
 
 ## Prerequisites
 
@@ -18,12 +18,12 @@ Capact GraphQL gateway is a component, which aggregates GraphQL APIs from the Ca
 
 ## Usage
 
-As Gateway aggregates multiple GraphQL endpoints for Capact components, an existing Capact installation is needed. You can use `kubectl port-forward` to setup port forwarding to GraphQL endpoints on the OCH and Capact Engine:
+As Gateway aggregates multiple GraphQL endpoints for Capact components, an existing Capact installation is needed. You can use `kubectl port-forward` to set up port forwarding to GraphQL endpoints on the Hub and Capact Engine:
 
 ```
 kubectl port-forward svc/capact-engine-graphql 3000:80 -n capact-system
-kubectl port-forward svc/capact-och-public 3001:80 -n capact-system
-kubectl port-forward svc/capact-och-local 3002:80 -n capact-system
+kubectl port-forward svc/capact-hub-public 3001:80 -n capact-system
+kubectl port-forward svc/capact-hub-local 3002:80 -n capact-system
 ```
 
 To run the Gateway, execute:

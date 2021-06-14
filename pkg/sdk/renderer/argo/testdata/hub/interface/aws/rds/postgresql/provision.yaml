@@ -1,0 +1,45 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.aws.rds.postgresql
+  path: cap.interface.aws.rds.postgresql.provision
+  name: provision
+  displayName: "Provision"
+  description: "Provisioning of AWS RDS for PostgreSQL"
+  documentationURL: https://aws.amazon.com/rds/postgresql/
+  supportURL: https://aws.amazon.com/rds/postgresql/
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  input:
+    parameters:
+      - name: "input-parameters"
+        jsonSchema:
+          value: |-
+            {
+              "$schema": "http://json-schema.org/draft-07/schema",
+              "$ocfRefs": {
+                "inputType": {
+                  "name": "cap.type.aws.rds.postgresql.provision-input",
+                  "revision": "0.1.0"
+                }
+              },
+              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
+            }
+  output:
+    typeInstances:
+      - name: "postgresql"
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+      - name: "rds-instance"
+        typeRef:
+          path: cap.type.aws.rds.instance
+          revision: 0.1.0
+
+signature:
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

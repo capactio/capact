@@ -1,0 +1,109 @@
+---
+metadata:
+  attributes: []
+  description: Action which installs PostgreSQL database via Helm chart
+  displayName: Install PostgreSQL database
+  documentationURL: https://github.com/bitnami/charts
+  iconURL: https://bitnami.com
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+  name: install
+  path: cap.implementation.bitnami.postgresql.install
+  prefix: cap.implementation.bitnami.postgresql
+  supportURL: https://bitnami.com
+revision: 0.1.0
+signature:
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+spec:
+  additionalInput:
+    typeInstances: []
+  outputTypeInstanceRelations:
+    - typeInstanceName: postgresql
+      uses: [psql-helm-release]
+  appVersion: "10,11,12,13"
+  implements:
+    - path: cap.interface.database.postgresql.install
+      revision: 0.1.0
+  imports:
+    - alias: helm
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.helm
+      methods:
+        - name: install
+          revision: 0.1.0
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.templating.jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: postgres-install
+        templates:
+          - inputs:
+              artifacts:
+                - name: input-parameters
+            outputs:
+              artifacts:
+                - name: postgresql
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
+            name: postgres-install
+            steps:
+              - - capact-action: jinja2.template
+                  name: create-helm-args
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "postgresql"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "10.2.6"
+                            values:
+                              postgresqlDatabase: {{ defaultDBName }}
+                              postgresqlUsername: {{ superuser.username }}
+                              postgresqlPassword: {{ superuser.password }}
+                            output:{% raw %}
+                              goTemplate:
+                                host: '{{ template "common.names.fullname" . }}'
+                                port: '{{ template "postgresql.port" . }}'
+                                defaultDBName: '{{ template "postgresql.database" . }}'
+                                superuser:
+                                  username: '{{ template "postgresql.username" . }}'
+                                  password: '{{ template "postgresql.password" . }}'{% endraw %}
+              - - capact-outputTypeInstances:
+                    - name: postgresql
+                      from: additional
+                    - name: psql-helm-release
+                      from: helm-release
+                  capact-action: helm.install
+                  name: helm-install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"

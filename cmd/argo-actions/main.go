@@ -8,7 +8,7 @@ import (
 
 	"capact.io/capact/internal/logger"
 	argoactions "capact.io/capact/pkg/argo-actions"
-	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/hub/client/local"
 
 	"github.com/vrischmann/envconfig"
 	"go.uber.org/zap"
@@ -19,7 +19,7 @@ type Config struct {
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`
 	UploadConfig     argoactions.UploadConfig     `envconfig:"optional"`
 	UpdateConfig     argoactions.UpdateConfig     `envconfig:"optional"`
-	LocalOCHEndpoint string                       `envconfig:"default=http://capact-och-local.capact-system/graphql"`
+	LocalHubEndpoint string                       `envconfig:"default=http://capact-hub-local.capact-system/graphql"`
 	Logger           logger.Config
 }
 
@@ -36,7 +36,7 @@ func main() {
 	logger, err := logger.New(cfg.Logger)
 	exitOnError(err, "while creating zap logger")
 
-	client := local.NewDefaultClient(cfg.LocalOCHEndpoint)
+	client := local.NewDefaultClient(cfg.LocalHubEndpoint)
 
 	switch cfg.Action {
 	case argoactions.DownloadAction:

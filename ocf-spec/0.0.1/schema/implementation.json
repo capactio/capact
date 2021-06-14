@@ -67,10 +67,10 @@
       "type": "object",
       "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
-        "och"
+        "hub"
       ],
       "properties": {
-        "och": {
+        "hub": {
           "description": "The signature signed with the HUB key.",
           "type": "string"
         }
@@ -175,7 +175,7 @@
         "outputTypeInstanceRelations": {
           "$id": "#/properties/spec/properties/outputTypeInstanceRelations",
           "type": "object",
-          "description": "Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to OCH after workflow run.",
+          "description": "Defines all output TypeInstances to upload with relations between them. It relates to both optional and required TypeInstances. No TypeInstance name specified here means it won't be uploaded to Hub after workflow run.",
           "additionalProperties": {
             "$id": "#/properties/spec/properties/outputTypeInstanceRelations/additionalParameters",
             "type": "object",

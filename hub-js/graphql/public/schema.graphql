@@ -1,0 +1,595 @@
+# Neo4j-graphql-js adds some directives during parsing of the schema.
+# To make it work for other GraphQL clients, we need to add them to the schema manually, based on:
+# https://github.com/neo4j-graphql/neo4j-graphql-js/blob/master/src/augment/directives.js
+directive @relation(
+  name: String
+  direction: String
+  from: String
+  to: String
+) on FIELD_DEFINITION | OBJECT
+directive @additionalLabels(labels: [String]) on OBJECT
+directive @cypher(statement: String) on FIELD_DEFINITION
+directive @index on FIELD_DEFINITION
+
+"""
+Arbitrary data
+"""
+scalar Any
+
+"""
+Full path of a given node, e.g. cap.core.type.platform.kubernetes
+"""
+scalar NodePath
+
+"""
+Pattern of the path of a given node, e.g. cap.core.type.platform.*
+"""
+scalar NodePathPattern
+
+"""
+Path for the parent node, e.g. for Interface it is InterfaceGroup path.
+"""
+scalar NodePrefix
+
+"""
+Name of a given node. Name is immutable between different revisions of a given node.
+"""
+scalar NodeName
+
+"""
+Version in semantic versioning, e.g. 1.1.0
+"""
+scalar Version
+
+"""
+Range of versions, e.g. "1.14.x, 1.15.0 - 1.15.3"
+"""
+scalar VersionRange
+
+input InterfaceFilter {
+  pathPattern: NodePathPattern
+}
+
+input ImplementationFilter {
+  pathPattern: NodePathPattern
+}
+
+# TODO: Enable lint rule once the InterfaceRevision.implementationRevisionsForRequirements is implemented
+# lint-disable defined-types-are-used
+"""
+Dedicated input type for filtering ImplementationRevisions in future resolver
+`InterfaceRevision.implementationRevisionsForRequirements`.
+
+Currently used only for Hub Go client package as the server-side resolver is not implemented.
+"""
+input ImplementationRevisionFilter {
+  pathPattern: NodePathPattern
+
+  """
+  If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
+  For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
+  """
+  requirementsSatisfiedBy: [TypeInstanceValue!]
+
+  attributes: [AttributeFilterInput!]
+
+  """
+  If provided, the ImplementationRevisions for a given Interface will be filtered
+  according to provided Type references looked up in the `Implementation.spec.requires` field.
+
+  For every item in the array, the returned ImplementationRevisions must specify
+  such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
+  """
+  requires: [TypeReferenceWithOptionalRevision]
+}
+# lint-enable defined-types-are-used
+
+input TypeInstanceValue {
+  typeRef: TypeReferenceWithOptionalRevision
+
+  """
+  Currently not supported.
+  Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
+  """
+  value: Any
+}
+
+input TypeReferenceWithOptionalRevision {
+  path: NodePath!
+  revision: Version
+}
+
+input AttributeFilterInput {
+  path: NodePath!
+  rule: FilterRule = INCLUDE
+
+  """
+  If not provided, any revision of the Attribute applies to this filter
+  """
+  revision: Version
+}
+
+enum FilterRule {
+  INCLUDE
+  EXCLUDE
+}
+
+input InterfaceGroupFilter {
+  pathPattern: NodePathPattern
+}
+
+input AttributeFilter {
+  pathPattern: NodePathPattern
+}
+
+input TypeFilter {
+  pathPattern: NodePathPattern
+}
+
+type RepoMetadata @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
+
+  latestRevision: RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): RepoMetadataRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:RepoMetadataRevision:published {revision: $revision}) RETURN r"
+    )
+  revisions: [RepoMetadataRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type RepoMetadataRevision @additionalLabels(labels: ["published"]){
+  revision: Version! @index
+
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+}
+
+type RepoMetadataSpec @additionalLabels(labels: ["published"]){
+  hubVersion: Version!
+  ocfVersion: RepoOCFVersion! @relation(name: "SUPPORTS", direction: "OUT")
+  implementation: RepoImplementationConfig!
+    @relation(name: "CONFIGURED", direction: "OUT")
+}
+
+type RepoImplementationConfig @additionalLabels(labels: ["published"]){
+  appVersion: RepoImplementationAppVersionConfig!
+    @relation(name: "APP_VERSION", direction: "OUT")
+}
+
+type RepoImplementationAppVersionConfig @additionalLabels(labels: ["published"]){
+  semVerTaggingStrategy: SemVerTaggingStrategy!
+    @relation(name: "TAGGING_STRATEGY", direction: "OUT")
+}
+
+type SemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+  latest: LatestSemVerTaggingStrategy!
+    @relation(name: "LATEST", direction: "OUT")
+}
+
+type LatestSemVerTaggingStrategy @additionalLabels(labels: ["published"]){
+  pointsTo: SemVerTaggingStrategyTags!
+}
+
+enum SemVerTaggingStrategyTags {
+  STABLE
+  EDGE
+}
+
+type RepoOCFVersion @additionalLabels(labels: ["published"]){
+  supported: [Version!]!
+  default: Version!
+}
+
+type InterfaceGroup @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+  interfaces(filter: InterfaceFilter): [Interface!]!
+    @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type Interface @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
+
+  latestRevision: InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): InterfaceRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:InterfaceRevision:published {revision: $revision}) RETURN ir"
+    )
+  revisions: [InterfaceRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type InterfaceRevision @additionalLabels(labels: ["published"]){
+  revision: Version! @index
+
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+
+  implementationRevisions: [ImplementationRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "IN")
+
+  # TODO: Reimplement the resolver:
+  # implementationRevisionsForRequirements(filter: ImplementationRevisionFilter): [ImplementationRevision!]!
+  # See the initial implementation: https://github.com/capactio/capact/commit/18bded8aed9d4e7b8a90d23ffc17134d920290e0#diff-73bc98d8e409e7044514f7af22931d76cb7da73504c678421c398f0c0501ef92R203
+}
+
+type InterfaceSpec @additionalLabels(labels: ["published"]){
+  input: InterfaceInput! @relation(name: "HAS_INPUT", direction: "OUT")
+  output: InterfaceOutput! @relation(name: "OUTPUTS", direction: "OUT")
+}
+
+type InterfaceInput @additionalLabels(labels: ["published"]){
+  parameters: [InputParameter!]! @relation(name: "HAS", direction: "OUT")
+  typeInstances: [InputTypeInstance]! @relation(name: "HAS", direction: "OUT")
+}
+
+type InputParameter @additionalLabels(labels: ["published"]){
+  name: String!
+  jsonSchema: Any
+}
+
+type InterfaceOutput @additionalLabels(labels: ["published"]){
+  typeInstances: [OutputTypeInstance]!
+    @relation(name: "OUTPUTS", direction: "OUT")
+}
+
+interface TypeInstanceFields {
+  name: String!
+  typeRef: TypeReference!
+}
+
+type InputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  verbs: [TypeInstanceOperationVerb!]!
+    @cypher(
+      statement: """
+      MATCH (this)
+      RETURN [verb IN this.verbs | toUpper(verb)] as verbs
+      """
+    )
+}
+
+enum TypeInstanceOperationVerb {
+  CREATE
+  GET
+  LIST
+  UPDATE
+  DELETE
+}
+
+type OutputTypeInstance implements TypeInstanceFields @additionalLabels(labels: ["published"]){
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+}
+
+type Type @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
+
+  latestRevision: TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r) RETURN r ORDER BY r.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): TypeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r {revision: $revision}) RETURN r"
+    )
+  revisions: [TypeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type TypeRevision @additionalLabels(labels: ["published"]){
+  revision: Version! @index
+
+  metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+}
+
+type TypeSpec @additionalLabels(labels: ["published"]){
+  additionalRefs: [NodePath!]
+  jsonSchema: Any
+}
+
+type Implementation @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
+
+  latestRevision: ImplementationRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published) RETURN ir ORDER BY ir.revision DESC LIMIT 1"
+    )
+  revision(revision: Version!): ImplementationRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(ir:ImplementationRevision:published {revision: $revision}) RETURN ir"
+    )
+  revisions: [ImplementationRevision!]!
+    @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type ImplementationRevision @additionalLabels(labels: ["published"]){
+  revision: Version! @index
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+
+  metadata: ImplementationMetadata!
+    @relation(name: "DESCRIBED_BY", direction: "OUT")
+  spec: ImplementationSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
+  interfaces: [InterfaceRevision!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
+}
+
+type ImplementationSpec @additionalLabels(labels: ["published"]){
+  appVersion: VersionRange! @index
+
+  implements: [InterfaceReference!]!
+    @relation(name: "IMPLEMENTS", direction: "OUT")
+  requires: [ImplementationRequirement!]!
+    @relation(name: "REQUIRES", direction: "OUT")
+  imports: [ImplementationImport!] @relation(name: "IMPORTS", direction: "OUT")
+  action: ImplementationAction! @relation(name: "DOES", direction: "OUT")
+  additionalInput: ImplementationAdditionalInput
+    @relation(name: "USES", direction: "OUT")
+  additionalOutput: ImplementationAdditionalOutput
+    @relation(name: "OUTPUTS", direction: "OUT")
+  outputTypeInstanceRelations: [TypeInstanceRelationItem!]!
+  @relation(name: "RELATIONS", direction: "OUT")
+}
+
+type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
+  typeInstances: [InputTypeInstance!]
+    @relation(name: "CONTAINS", direction: "OUT")
+  parameters: ImplementationAdditionalInputParameters
+    @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type ImplementationAdditionalInputParameters @additionalLabels(labels: ["published"]) {
+  typeRef: TypeReference!
+    @relation(name: "OF_TYPE", direction: "OUT")
+}
+
+type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){
+  typeInstances: [OutputTypeInstance!]!
+    @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type TypeInstanceRelationItem @additionalLabels(labels: ["published"]){
+  typeInstanceName: String!
+
+  """
+  Contains list of Type Instance names, which a given TypeInstance uses (depends on)
+  """
+  uses: [String!]
+}
+
+type InterfaceReference @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  revision: Version! @index
+}
+
+type ImplementationRequirement @additionalLabels(labels: ["published"]){
+  prefix: NodePrefix!
+  oneOf: [ImplementationRequirementItem!]!
+    @relation(name: "ONE_OF", direction: "OUT")
+  anyOf: [ImplementationRequirementItem!]!
+    @relation(name: "ANY_OF", direction: "OUT")
+  allOf: [ImplementationRequirementItem!]!
+    @relation(name: "ALL_OF", direction: "OUT")
+}
+
+type ImplementationRequirementItem @additionalLabels(labels: ["published"]){
+  typeRef: TypeReference! @relation(name: "REFERENCES_TYPE", direction: "OUT")
+
+  """
+  Holds the configuration constraints for the given entry based on Type value.
+  Currently not supported.
+  """
+  valueConstraints: Any
+
+  """
+  If provided, the TypeInstance of the Type, configured in policy, is injected to the workflow under the alias.
+  """
+  alias: String
+}
+
+type TypeReference @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  revision: Version! @index
+}
+
+type ImplementationImport @additionalLabels(labels: ["published"]){
+  interfaceGroupPath: NodePath!
+  alias: String
+  appVersion: VersionRange
+
+  methods: [ImplementationImportMethod!]!
+    @relation(name: "HAS", direction: "OUT")
+}
+
+type ImplementationImportMethod @additionalLabels(labels: ["published"]){
+  name: NodeName!
+
+  """
+  If not provided, latest revision for a given Interface is used
+  """
+  revision: Version
+}
+
+type ImplementationAction @additionalLabels(labels: ["published"]){
+  """
+  The Interface or Implementation of a runner, which handles the execution, for example, cap.interface.runner.helm3.run
+  """
+  runnerInterface: String!
+  args: Any
+    @cypher(
+      statement: """
+      MATCH (this) RETURN apoc.convert.fromJsonMap(this.args) as args
+      """
+    )
+}
+
+type Attribute @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix! @index
+
+  latestRevision: AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published) RETURN r ORDER BY r.revision DESC LIMIT 2"
+    )
+  revision(revision: Version!): AttributeRevision
+    @cypher(
+      statement: "MATCH (this)-[:CONTAINS]->(r:AttributeRevision:published {revision: $revision}) RETURN r"
+    )
+  revisions: [AttributeRevision!]! @relation(name: "CONTAINS", direction: "OUT")
+}
+
+type AttributeRevision @additionalLabels(labels: ["published"]){
+  revision: Version! @index
+
+  spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
+  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
+  metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
+}
+
+# It is defined to make sure that all metadata types have the same base fields.
+# Unfortunately all Types that implement an Interface have to repeat the same fields,
+# however it's the only way to do so.
+interface MetadataBaseFields {
+  name: NodeName
+  prefix: NodePrefix
+  path: NodePath
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+}
+
+type GenericMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix @index
+
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+}
+
+type ImplementationMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix @index
+
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  license: License! @relation(name: "LICENSED_WITH", direction: "OUT")
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
+}
+
+type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["published"]){
+  path: NodePath! @index
+  name: NodeName! @index
+  prefix: NodePrefix @index
+  displayName: String
+  description: String!
+  maintainers: [Maintainer!]! @relation(name: "MAINTAINED_BY", direction: "OUT")
+  documentationURL: String
+  supportURL: String
+  iconURL: String
+  attributes: [AttributeRevision!]!
+    @relation(name: "CHARACTERIZED_BY", direction: "OUT")
+}
+
+type License @additionalLabels(labels: ["published"]){
+  name: String! @index
+}
+
+type Signature @additionalLabels(labels: ["published"]){
+  hub: String!
+}
+
+type Maintainer @additionalLabels(labels: ["published"]){
+  name: String @index
+  email: String! @index
+  url: String
+}
+
+type AttributeSpec @additionalLabels(labels: ["published"]){
+  additionalRefs: [NodePath!]!
+}
+
+type Query @additionalLabels(labels: ["published"]){
+  repoMetadata: RepoMetadata
+
+  interfaceGroups(filter: InterfaceGroupFilter = {}): [InterfaceGroup!]!
+    @cypher(
+      statement: """
+      MATCH (this:InterfaceGroup:published)
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      """
+    )
+  interfaceGroup(path: NodePath!): InterfaceGroup
+
+  interfaces(filter: InterfaceFilter = {}): [Interface!]!
+    @cypher(
+      statement: """
+      MATCH (this:Interface:published)
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      """
+    )
+  interface(path: NodePath!): Interface
+
+  types(filter: TypeFilter = {}): [Type!]!
+    @cypher(
+      statement: """
+      MATCH (this:Type:published)
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      """
+    )
+  type(path: NodePath!): Type
+
+  implementations(filter: ImplementationFilter = {}): [Implementation!]!
+    @cypher(
+      statement: """
+      MATCH (this:Implementation:published)
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      """
+    )
+
+  implementation(path: NodePath!): Implementation
+
+  attributes(filter: AttributeFilter = {}): [Attribute!]!
+    @cypher(
+      statement: """
+      MATCH (this:Attribute:published)
+      WHERE $filter = {} OR this.path =~ $filter.pathPattern RETURN this
+      """
+    )
+  attribute(path: NodePath!): Attribute
+}
+
+# TODO: Prepare directive for user authorization in https://cshark.atlassian.net/browse/SV-65

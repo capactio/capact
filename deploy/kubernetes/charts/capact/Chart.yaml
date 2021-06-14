@@ -21,9 +21,9 @@ dependencies:
 - name: gateway
   version: "0.0.1"
   repository: "file://charts/gateway"
-- name: och-local
+- name: hub-local
   version: "0.0.1"
-  repository: "file://charts/och-local"
-- name: och-public
+  repository: "file://charts/hub-local"
+- name: hub-public
   version: "0.0.1"
-  repository: "file://charts/och-public"
+  repository: "file://charts/hub-public"

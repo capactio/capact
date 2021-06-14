@@ -11,11 +11,11 @@ entries:
     - name: gateway
       repository: file://charts/gateway
       version: 0.0.1
-    - name: och-local
-      repository: file://charts/och-local
+    - name: hub-local
+      repository: file://charts/hub-local
       version: 0.0.1
-    - name: och-public
-      repository: file://charts/och-public
+    - name: hub-public
+      repository: file://charts/hub-public
       version: 0.0.1
     description: It is the earlier based on `version` but older based on `created`.
     digest: 8594fed8256701af61ca88589ab9067fe8863d4f60bc3bf0f942e5fbdde89f2f
@@ -34,11 +34,11 @@ entries:
     - name: gateway
       repository: file://charts/gateway
       version: 0.0.1
-    - name: och-local
-      repository: file://charts/och-local
+    - name: hub-local
+      repository: file://charts/hub-local
       version: 0.0.1
-    - name: och-public
-      repository: file://charts/och-public
+    - name: hub-public
+      repository: file://charts/hub-public
       version: 0.0.1
     description: It is the older based on `version` but earlier based on `created`.
     digest: 95b244f04d4d64abaea0da8f5d3386c86b3d9a4a7d2948946ccdc2fe191cd3de

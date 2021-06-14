@@ -1,0 +1,181 @@
+---
+metadata:
+  attributes: []
+  displayName: Install App2
+  description: Action which installs App2 via Helm chart
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+  prefix: cap.implementation.app-stack.app2
+  name: install
+revision: 0.1.0
+signature:
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+spec:
+  additionalInput:
+    typeInstances:
+      - name: postgresql
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs:
+          - GET
+  additionalOutput:
+    typeInstances:
+      - name: app2-helm-release
+        typeRef:
+          path: cap.type.helm.chart.release
+          revision: 0.1.0
+      - name: postgresql
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs:
+          - GET
+  outputTypeInstanceRelations:
+    - typeInstanceName: app2-config
+      uses: [app2-helm-release, postgresql]
+  appVersion: 8.x.x
+  implements:
+    - path: cap.interface.app-stack.app2.install
+      revision: 0.1.0
+  imports:
+    - alias: helm
+      appVersion: 3.x.x
+      interfaceGroupPath: cap.interface.runner.helm
+      methods:
+        - name: install
+          revision: 0.1.0
+    - alias: argo
+      appVersion:
+      interfaceGroupPath: cap.interface.runner.argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - alias: jinja2
+      appVersion:
+      interfaceGroupPath: cap.interface.templating.jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - alias: postgresql
+      appVersion:
+      interfaceGroupPath: cap.interface.database.postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+
+  requires:
+    - allOf: []
+      anyOf: []
+      oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: main
+        templates:
+          - name: main
+            # Capact Engine will inject the 'input-parameters' artifacts into the workflow entrypoint.
+            # It contains the Interface parameters, in our case it is `app2.install-input`.
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+                  optional: true
+            outputs:
+              artifacts:
+                - name: app2-config
+                  from: "{{steps.helm-install.outputs.artifacts.additional}}"
+            steps:
+              # If the postgresql TypeInstance was not provided, then create it
+              # using the imported 'postgresql.install' Interface.
+              - - name: install-db
+                  capact-action: postgresql.install
+                  capact-outputTypeInstances:
+                    - name: postgresql
+                      from: postgresql
+                  capact-when: postgresql == nil
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                              password: okon
+                            defaultDBName: postgres
+
+              - - name: create-db
+                  capact-action: postgresql.create-db
+                  capact-outputTypeInstances:
+                    - name: database # Defining the output TypeInstance 'database'
+                      from: database
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+                      - name: database-input
+                        raw:
+                          data: |
+                            name: app2db
+                            owner: superuser
+
+              # Here we prepare the input for the Helm runner. In the next two steps,
+              # we use Jinja2 to render the input and fill the required parameters.
+              # In the future there might be better way to do this.
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "app2-server"
+                              repo: "https://helm.mox.sh"
+                            output:{% raw %}
+                              goTemplate:
+                                version: "{{ .Values.image.tag }}"
+                                host: '{{ template "app2-server.fullname" . }}'{% endraw %}
+                            values:
+                              postgresql:
+                                enabled: false
+                              databaseConnection:
+                                host: "{{ host }}"
+                                user: "{{ superuser.username }}"
+                                password: "{{ superuser.password }}"
+                                database: "{{ defaultDBName }}"
+                              ingress:
+                                enabled: true
+                                hosts:
+                                - host: app2.capact.local
+                                  paths: ['/']
+                      - name: input-parameters
+                        from: "{{steps.install-db.outputs.artifacts.postgresql}}"
+
+              # Execute the Helm runner, with the input parameters created in the previous step.
+              # This will create the Helm chart and deploy our App2 instance
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: app2-config # Defining the output TypeInstance 'app2-config'
+                      from: additional
+                    - name: app2-helm-release # Defining the output TypeInstance 'app2-helm-release'
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"

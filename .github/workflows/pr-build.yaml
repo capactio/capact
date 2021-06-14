@@ -12,8 +12,7 @@ on:
       - "**.sh"
       - "Makefile"
       - "deploy/**"
-      - "och-js/**"
-      - "och-content/**"
+      - "hub-js/**"
       - "Dockerfile"
       - "!**.md"
     branches:
@@ -204,7 +203,7 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
-          OCH_MANIFESTS_SOURCE_REPO_REF: "${{ github.head_ref }}"
+          HUB_MANIFESTS_SOURCE_REPO_REF: "15d21ce87e3616c7b1d47bdeadb18dec3cb749cd"
         run: |
           make test-integration
       - name: Upload artifacts

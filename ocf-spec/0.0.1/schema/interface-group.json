@@ -25,10 +25,10 @@
       "type": "object",
       "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
       "required": [
-        "och"
+        "hub"
       ],
       "properties": {
-        "och": {
+        "hub": {
           "description": "The signature signed with the HUB key.",
           "type": "string"
         }

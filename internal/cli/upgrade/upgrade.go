@@ -17,7 +17,7 @@ import (
 	"capact.io/capact/internal/ptr"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/httputil"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 
 	"github.com/avast/retry-go"
 	"github.com/mitchellh/mapstructure"
@@ -235,7 +235,7 @@ func (u *Upgrade) resolveInputParameters(opts *Options) error {
 
 	if opts.Parameters.IncreaseResourceLimits {
 		opts.Parameters.Override.CapactValues.Gateway.Resources = increasedGatewayResources()
-		opts.Parameters.Override.CapactValues.OCHPublic.Resources = increasedOCHPublicResources()
+		opts.Parameters.Override.CapactValues.HubPublic.Resources = increasedHubPublicResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = increasedNeo4jResources()
 	}
 

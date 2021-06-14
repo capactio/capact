@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"capact.io/capact/internal/ptr"
-	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
-	ochclient "capact.io/capact/pkg/och/client"
+	ochlocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
+	ochclient "capact.io/capact/pkg/hub/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"

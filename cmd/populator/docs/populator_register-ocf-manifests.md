@@ -12,9 +12,7 @@ Populates the OCF manifests into Neo4j database. It reads manifest from remote o
 > **CAUTION:**  In order to run DB populator manually, make sure the populator inside development cluster is disabled.
 > To disable it, run `ENABLE_POPULATOR=false make dev-cluster-update`
 
-It requires one argument, which is a path to directory with `och-content` directory. Internally it uses
-[go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations
-and in different formats.
+It requires one argument, which is a path to directory with Hub manifests. Internally it uses [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations and in different formats.
 
 To build the binary run:
 
@@ -66,6 +64,6 @@ You can set the following environment variables to configure the Hub database po
 | APP_NEO4J_PASSWORD                   | yes      |                          | Neo4h admin password                                                                                                                                  |
 | APP_JSON_PUBLISH_ADDR                | yes      |                          | Address on which populator will serve JSON files                                                                                                      |
 | APP_JSON_PUBLISH_PORT                | no       | `8080`                   | Port number on which populator will be listening                                                                                                      |
-| APP_MANIFESTS_PATH                   | no       | `och-content`            | Path to a directory in a repository where manifests are stored                                                                                        |
+| APP_MANIFESTS_PATH                   | no       | `hub-content`            | Path to a directory in a repository where manifests are stored                                                                                        |
 | APP_UPDATE_ON_GIT_COMMIT        | no       | `false`                  | Flag to make populator populate data only when there are new changes in a repository                                                                  |
 | APP_LOGGER_DEV_MODE                  | no       | `false`                  | Enable development mode logging                                                                                                                       |

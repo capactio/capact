@@ -20,4 +20,4 @@
     - **`default`** *(string)*: The default OCF version that is supported by the OCH. It should be the stored version.
     - **`supported`** *(array)*: The supported OCF version that OCH is able to serve. In general, the OCH takes the stored version and converts it to the supported one.
       - **Items** *(string)*
-  - **`ochVersion`** *(string)*: Defines the OCH version in SemVer2 format.
+  - **`hubVersion`** *(string)*: Defines the OCH version in SemVer2 format.

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	graphqllocal "capact.io/capact/pkg/och/api/graphql/local"
-	"capact.io/capact/pkg/och/client/local"
+	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/hub/client/local"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
@@ -76,7 +76,7 @@ func (u *Upload) Do(ctx context.Context) error {
 		return errors.Wrap(err, "while rendering CreateTypeInstancesInput")
 	}
 
-	u.log.Info("Uploading TypeInstances to OCH...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
+	u.log.Info("Uploading TypeInstances to Hub...", zap.Int("TypeInstance count", len(payload.TypeInstances)))
 
 	uploadOutput, err := u.uploadTypeInstances(ctx, payload)
 	if err != nil {

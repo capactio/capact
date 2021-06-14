@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
-	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
@@ -19,22 +19,22 @@ const (
 	runnerContext = "runner-context"
 )
 
-type PolicyEnforcedOCHClient interface {
-	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef ochpublicapi.InterfaceReference) ([]ochpublicapi.ImplementationRevision, policy.Rule, error)
-	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev ochpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
+type PolicyEnforcedHubClient interface {
+	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
+	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
 	SetPolicy(policy policy.Policy)
-	FindInterfaceRevision(ctx context.Context, ref ochpublicapi.InterfaceReference) (*ochpublicapi.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref hubpublicapi.InterfaceReference) (*hubpublicapi.InterfaceRevision, error)
 }
 
 type Renderer struct {
 	maxDepth      int
 	renderTimeout time.Duration
 
-	policyEnforcedCli   PolicyEnforcedOCHClient
+	policyEnforcedCli   PolicyEnforcedHubClient
 	typeInstanceHandler *TypeInstanceHandler
 }
 
-func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
+func NewRenderer(cfg renderer.Config, policyEnforcedCli PolicyEnforcedHubClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
 	r := &Renderer{
 		typeInstanceHandler: typeInstanceHandler,
 		policyEnforcedCli:   policyEnforcedCli,
@@ -57,7 +57,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	defer cancel()
 
 	// 1. Find the root manifests
-	interfaceRef := interfaceRefToOCH(input.InterfaceRef)
+	interfaceRef := interfaceRefToHub(input.InterfaceRef)
 
 	// 1.1 Get Interface
 	iface, err := r.policyEnforcedCli.FindInterfaceRevision(ctx, interfaceRef)

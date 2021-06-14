@@ -7,9 +7,9 @@ import (
 
 	"capact.io/capact/internal/cli/credstore"
 	"capact.io/capact/pkg/httputil"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
-	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
-	"capact.io/capact/pkg/och/client"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client"
 )
 
 type Hub interface {
