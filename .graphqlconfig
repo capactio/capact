@@ -5,12 +5,12 @@
         "./pkg/engine/api/graphql/**"
       ]
     },
-    "localOCH": {
+    "localHub": {
       "includes": [
         "./hub-js/graphql/local/**"
       ]
     },
-    "publicOCH": {
+    "publicHub": {
       "includes": [
         "./hub-js/graphql/public/**"
       ]

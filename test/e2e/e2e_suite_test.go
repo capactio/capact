@@ -10,8 +10,8 @@ import (
 
 	engineclient "capact.io/capact/pkg/engine/client"
 	"capact.io/capact/pkg/httputil"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/iosafety"
-	ochclient "capact.io/capact/pkg/hub/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -77,7 +77,7 @@ func waitTillServiceEndpointsAreReady() {
 }
 
 func waitTillDataIsPopulated() {
-	cli := getOCHGraphQLClient()
+	cli := getHubGraphQLClient()
 
 	Eventually(func() (int, error) {
 		ifaces, err := cli.ListInterfacesMetadata(context.Background())
@@ -85,13 +85,13 @@ func waitTillDataIsPopulated() {
 	}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNumerically(">", 1))
 }
 
-func getOCHGraphQLClient() *ochclient.Client {
+func getHubGraphQLClient() *hubclient.Client {
 	httpClient := httputil.NewClient(
 		30*time.Second,
 		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
-	return ochclient.New(cfg.Gateway.Endpoint, httpClient)
+	return hubclient.New(cfg.Gateway.Endpoint, httpClient)
 }
 
 func getEngineGraphQLClient() *engineclient.Client {

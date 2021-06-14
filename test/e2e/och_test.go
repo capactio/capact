@@ -16,18 +16,18 @@ import (
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
-	ochclient "capact.io/capact/pkg/hub/client"
+	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/hub/client/public"
 )
 
 var _ = Describe("GraphQL API", func() {
 	ctx := context.Background()
 
-	Context("Public OCH", func() {
-		var cli *ochclient.Client
+	Context("Public Hub", func() {
+		var cli *hubclient.Client
 
 		BeforeEach(func() {
-			cli = getOCHGraphQLClient()
+			cli = getHubGraphQLClient()
 		})
 
 		Describe("should return ImplementationRevision", func() {
@@ -172,9 +172,9 @@ var _ = Describe("GraphQL API", func() {
 		})
 	})
 
-	Context("Local OCH", func() {
+	Context("Local Hub", func() {
 		It("should create, find and delete TypeInstance", func() {
-			cli := getOCHGraphQLClient()
+			cli := getHubGraphQLClient()
 
 			// create TypeInstance
 			createdTypeInstance, err := cli.CreateTypeInstance(ctx, &gqllocalapi.CreateTypeInstanceInput{
@@ -239,7 +239,7 @@ var _ = Describe("GraphQL API", func() {
 		})
 
 		It("creates multiple TypeInstances with uses relations", func() {
-			cli := getOCHGraphQLClient()
+			cli := getHubGraphQLClient()
 
 			createdTypeInstanceIDs, err := cli.CreateTypeInstances(ctx, createTypeInstancesInput())
 
@@ -270,7 +270,7 @@ var _ = Describe("GraphQL API", func() {
 				fooOwnerID = "namespace/Foo"
 				barOwnerID = "namespace/Bar"
 			)
-			localCli := getOCHGraphQLClient()
+			localCli := getHubGraphQLClient()
 
 			var createdTIIDs []string
 
@@ -394,7 +394,7 @@ var _ = Describe("GraphQL API", func() {
 				fooOwnerID = "namespace/Foo"
 				barOwnerID = "namespace/Bar"
 			)
-			localCli := getOCHGraphQLClient()
+			localCli := getHubGraphQLClient()
 
 			var createdTIIDs []string
 
@@ -569,7 +569,7 @@ func typeInstance(ver string) *gqllocalapi.CreateTypeInstanceInput {
 	}
 }
 
-func assertTypeInstance(ctx context.Context, cli *ochclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
+func assertTypeInstance(ctx context.Context, cli *hubclient.Client, ID string, expected *gqllocalapi.TypeInstance) {
 	actual, err := cli.FindTypeInstance(ctx, ID)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(actual).NotTo(BeNil())
@@ -596,7 +596,7 @@ func findCreatedTypeInstanceID(alias string, instances []gqllocalapi.CreateTypeI
 	return nil
 }
 
-func deleteTypeInstance(ctx context.Context, cli *ochclient.Client, ID string) {
+func deleteTypeInstance(ctx context.Context, cli *hubclient.Client, ID string) {
 	err := cli.DeleteTypeInstance(ctx, ID)
 	Expect(err).ToNot(HaveOccurred())
 }
