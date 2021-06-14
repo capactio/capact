@@ -265,8 +265,11 @@ def cli(opts, args, config):
             else:
                 raise InvalidDataFormat(ext)
 
-        with open(path) as fp:
-            data = fp.read()
+        try:
+            with open(path) as fp:
+                data = fp.read()
+        except FileNotFoundError:
+            data = None
 
         if data:
             try:

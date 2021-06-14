@@ -212,7 +212,7 @@ type ImplementationSignature struct {
 // A container for the Implementation specification definition.
 type ImplementationSpec struct {
 	Action                      Action                                `json:"action"`                     // Definition of an action that should be executed.
-	AdditionalInput             *AdditionalInput                      `json:"additionalInput,omitempty"`  // Specifies additional input for a given Implementation.
+	AdditionalInput             *AdditionalInput                      `json:"additionalInput,omitempty"`  // Specifies additional input for the Implementation.
 	AdditionalOutput            *AdditionalOutput                     `json:"additionalOutput,omitempty"` // Specifies additional output for a given Implementation.
 	AppVersion                  string                                `json:"appVersion"`                 // The supported application versions in SemVer2 format. Currently not used for filtering of; Implementations.
 	Implements                  []Implement                           `json:"implements"`                 // Defines what kind of Interfaces this Implementation fulfills.
@@ -227,8 +227,9 @@ type Action struct {
 	RunnerInterface string                 `json:"runnerInterface"`// The Interface of a Runner, which handles the execution, for example,; cap.interface.runner.helm3.run
 }
 
-// Specifies additional input for a given Implementation.
+// Specifies additional input for the Implementation.
 type AdditionalInput struct {
+	Parameters    map[string]interface{}       `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
 	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
 }
 
