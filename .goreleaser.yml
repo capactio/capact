@@ -9,7 +9,6 @@
 before:
   hooks:
     - go mod tidy
-    - make generate
 
 builds:
   # Capact CLI
