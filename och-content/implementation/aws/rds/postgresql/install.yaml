@@ -4,8 +4,8 @@ kind: Implementation
 metadata:
   prefix: cap.implementation.aws.rds.postgresql
   name: install
-  displayName: Provision AWS RDS for PostgreSQL database using Terraform
-  description: Action which provisions AWS RDS for PostgreSQL database using Terraform
+  displayName: Install AWS RDS for PostgreSQL database using Terraform
+  description: Action which install AWS RDS for PostgreSQL database using Terraform
   documentationURL: https://aws.amazon.com/rds/postgresql/
   supportURL: https://aws.amazon.com/rds/postgresql/
   license:

@@ -33,7 +33,7 @@ spec:
         verbs: [ "get", "update" ]
     parameters:
       typeRef:
-        path: cap.type.wordpress.install-input
+        path: cap.type.wordpress.helm.install-input
         revision: 0.1.0
 
   additionalOutput:
