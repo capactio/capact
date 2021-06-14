@@ -4,8 +4,8 @@ kind: Vendor
 metadata:
   prefix: cap.vendor
   name: capact
-  description: Capact OCH
-  displayName: Capact OCH
+  description: Capact Hub
+  displayName: Capact Hub
   documentationURL: https://capact.io/docs
   supportURL: https://capact.io
   iconURL: https://capact.io/favicon.ico
@@ -15,7 +15,7 @@ metadata:
       url: https://capact.io
 spec:
   federation:
-    uri: https://och.capact.io
+    uri: https://hub.capact.io
 
 signature:
-  och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

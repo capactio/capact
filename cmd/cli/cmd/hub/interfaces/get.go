@@ -11,7 +11,7 @@ import (
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 	cliprinter "capact.io/capact/internal/cli/printer"
-	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
 	"github.com/spf13/cobra"
 )

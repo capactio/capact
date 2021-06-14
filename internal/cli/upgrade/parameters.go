@@ -20,7 +20,7 @@ type (
 	CapactValues struct {
 		Engine    Engine    `json:"engine,omitempty"`
 		Gateway   Gateway   `json:"gateway,omitempty"`
-		OCHPublic OCHPublic `json:"och-public,omitempty"`
+		HubPublic HubPublic `json:"hub-public,omitempty"`
 		Global    struct {
 			ContainerRegistry struct {
 				Tag  string `json:"overrideTag,omitempty"`
@@ -39,7 +39,7 @@ type (
 	Gateway struct {
 		Resources Resources `json:"resources,omitempty"`
 	}
-	OCHPublic struct {
+	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
 	}
 	Engine struct {
@@ -62,7 +62,7 @@ func increasedGatewayResources() Resources {
 	}
 }
 
-func increasedOCHPublicResources() Resources {
+func increasedHubPublicResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "400m",

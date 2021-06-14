@@ -8,15 +8,15 @@ import (
 )
 
 func NewCmd() *cobra.Command {
-	och := &cobra.Command{
+	hub := &cobra.Command{
 		Use:   "hub",
 		Short: "This command consists of multiple subcommands to interact with Hub server.",
 	}
 
-	och.AddCommand(
+	hub.AddCommand(
 		interfaces.NewInterfaces(),
 		implementations.NewImplementations(),
 	)
 
-	return och
+	return hub
 }

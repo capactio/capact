@@ -37,7 +37,7 @@ done
 
 
 # Other Docker Images
-image="och-js"
+image="hub-js"
 docker scan "${DOCKER_REPOSITORY}/${image}" --file="${REPO_ROOT_DIR}/${image}/Dockerfile" || returnCode=1
 
 if [ ${returnCode} -eq 0 ]; then

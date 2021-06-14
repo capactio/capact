@@ -4,11 +4,11 @@ The [schema](./schema) directory contains a representation of the OCF entities i
 
 ### RepoMetadata
 
-RepoMetadata stores read-only information about the [Open Capability Hub](https://capact.io/docs/architecture/e2e-architecture#och) (OCH), such as OCH version, supported OCF specification version, etc. This entity should be placed in the `core` directory in your OCH content. In the future, it will be embedded into the OCH server.
+RepoMetadata stores read-only information about the [Hub](https://capact.io/docs/architecture/e2e-architecture#hub), such as Hub version, supported OCF specification version, etc. This entity should be placed in the `core` directory in your Hub content. In the future, it will be embedded into the Hub server.
 
 The RepoMetadata format is defined in [repo-metadata.json](./schema/repo-metadata.json).
 
-> **NOTE:** Currently, the **spec.implementation** and **spec.ocfVersion.supported** properties are not supported by the OCH server.
+> **NOTE:** Currently, the **spec.implementation** and **spec.ocfVersion.supported** properties are not supported by the Hub server.
 
 ### Attribute
 
@@ -22,7 +22,7 @@ Type represents an object, such as database, application, but also a simple prim
 
 Type is used in [Interface](#interface) and [Implementation](#implementation) as a description and validation of possible input and output parameters. The object, which stores JSON value matching JSON schema from Type, is called TypeInstance.
 
-The core Types are placed in the `core` directory. In the future, core Types will be embedded into the OCH server.
+The core Types are placed in the `core` directory. In the future, core Types will be embedded into the Hub server.
 
 The [type-features.md](https://capact.io/docs/feature/type-features) describes all Type entity features.
 
@@ -50,8 +50,8 @@ The Implementation specification is defined in [implementation.json](./schema/im
 
 ### Vendor
 
-Vendor defines details of an external OCH server. This will be part of the OCH federation feature.
+Vendor defines details of an external Hub server. This will be part of the Hub federation feature.
 
 The Vendor specification is defined in [vendor.json](./schema/vendor.json).
 
-> **NOTE:** Currently, it is not supported by the OCH server.
+> **NOTE:** Currently, it is not supported by the Hub server.

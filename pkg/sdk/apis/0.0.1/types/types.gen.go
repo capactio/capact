@@ -104,7 +104,7 @@ type InterfaceMetadata struct {
 	IconURL          *string      `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
 	Maintainers      []Maintainer `json:"maintainers"`               // The list of maintainers with contact information.
 	Name             string       `json:"name"`                      // The name of OCF manifest. Together with the manifest revision property must uniquely; identify this object within the entity sub-tree. Must be a non-empty string. We recommend; using a CLI-friendly name.
-	Prefix           *string      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	Prefix           *string      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in Hub.
 	SupportURL       *string      `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
 }
 
@@ -117,7 +117,7 @@ type Maintainer struct {
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type InterfaceSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Interface specification definition.
@@ -184,7 +184,7 @@ type ImplementationMetadata struct {
 	IconURL          *string                      `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
 	Maintainers      []Maintainer                 `json:"maintainers"`               // The list of maintainers with contact information.
 	Name             string                       `json:"name"`                      // The name of OCF manifest. Together with the manifest revision property must uniquely; identify this object within the entity sub-tree. Must be a non-empty string. We recommend; using a CLI-friendly name.
-	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in Hub.
 	SupportURL       *string                      `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
 	Attributes       map[string]MetadataAttribute `json:"attributes,omitempty"`      
 	License          License                      `json:"license"`                   // This entry allows you to specify a license, so people know how they are permitted to use; it, and what kind of restrictions you are placing on it.
@@ -206,7 +206,7 @@ type License struct {
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type ImplementationSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Implementation specification definition.
@@ -217,7 +217,7 @@ type ImplementationSpec struct {
 	AppVersion                  string                                `json:"appVersion"`                 // The supported application versions in SemVer2 format. Currently not used for filtering of; Implementations.
 	Implements                  []Implement                           `json:"implements"`                 // Defines what kind of Interfaces this Implementation fulfills.
 	Imports                     []Import                              `json:"imports,omitempty"`          // List of external Interfaces that this Implementation requires to be able to execute the; action.
-	OutputTypeInstanceRelations map[string]OutputTypeInstanceRelation `json:"outputTypeInstanceRelations"`// Defines all output TypeInstances to upload with relations between them. It relates to; both optional and required TypeInstances. No TypeInstance name specified here means it; won't be uploaded to OCH after workflow run.
+	OutputTypeInstanceRelations map[string]OutputTypeInstanceRelation `json:"outputTypeInstanceRelations"`// Defines all output TypeInstances to upload with relations between them. It relates to; both optional and required TypeInstances. No TypeInstance name specified here means it; won't be uploaded to Hub after workflow run.
 	Requires                    map[string]Require                    `json:"requires,omitempty"`         // List of the system prerequisites that need to be present on the cluster.
 }
 
@@ -275,7 +275,7 @@ type RequireEntity struct {
 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema. CURRENTLY NOT IMPLEMENTED.
 }
 
-// RepoMetadata stores metadata about the Open Capability Hub.
+// RepoMetadata stores metadata about the Capact Hub.
 type RepoMetadata struct {
 	Kind       RepoMetadataKind       `json:"kind"`               
 	Metadata   InterfaceMetadata      `json:"metadata"`           
@@ -287,14 +287,14 @@ type RepoMetadata struct {
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type RepoMetadataSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the RepoMetadata definition.
 type RepoMetadataSpec struct {
+	HubVersion     string               `json:"hubVersion"`              // Defines the Hub version in SemVer2 format.
 	Implementation *ImplementationClass `json:"implementation,omitempty"`// Holds configuration for the OCF Implementation entities. CURRENTLY NOT IMPLEMENTED.
-	OcfVersion     OcfVersion           `json:"ocfVersion"`              // Holds information about supported OCF versions in OCH server.
-	OchVersion     string               `json:"ochVersion"`              // Defines the OCH version in SemVer2 format.
+	OcfVersion     OcfVersion           `json:"ocfVersion"`              // Holds information about supported OCF versions in Hub server.
 }
 
 // Holds configuration for the OCF Implementation entities. CURRENTLY NOT IMPLEMENTED.
@@ -309,19 +309,19 @@ type AppVersion struct {
 
 // Defines the tagging strategy.
 type SemVerTaggingStrategy struct {
-	Latest Latest `json:"latest"`// Defines the strategy for which version the tag Latest should be applied. You configure; this while running OCH.
+	Latest Latest `json:"latest"`// Defines the strategy for which version the tag Latest should be applied. You configure; this while running Hub.
 }
 
 // Defines the strategy for which version the tag Latest should be applied. You configure
-// this while running OCH.
+// this while running Hub.
 type Latest struct {
 	PointsTo *PointsTo `json:"pointsTo,omitempty"`// An explanation about the purpose of this instance.
 }
 
-// Holds information about supported OCF versions in OCH server.
+// Holds information about supported OCF versions in Hub server.
 type OcfVersion struct {
-	Default   string   `json:"default"`  // The default OCF version that is supported by the OCH. It should be the stored version.
-	Supported []string `json:"supported"`// The supported OCF version that OCH is able to serve. In general, the OCH takes the stored; version and converts it to the supported one. CURRENTLY NOT IMPLEMENTED.
+	Default   string   `json:"default"`  // The default OCF version that is supported by the Hub. It should be the stored version.
+	Supported []string `json:"supported"`// The supported OCF version that Hub is able to serve. In general, the Hub takes the stored; version and converts it to the supported one. CURRENTLY NOT IMPLEMENTED.
 }
 
 // Attribute is used to categorize Implementations, Types and TypeInstances. For example,
@@ -338,7 +338,7 @@ type Attribute struct {
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type AttributeSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Attribute specification definition.
@@ -366,14 +366,14 @@ type TypeMetadata struct {
 	IconURL          *string                      `json:"iconURL,omitempty"`         // The URL to an icon or a data URL containing an icon.
 	Maintainers      []Maintainer                 `json:"maintainers"`               // The list of maintainers with contact information.
 	Name             string                       `json:"name"`                      // The name of OCF manifest. Together with the manifest revision property must uniquely; identify this object within the entity sub-tree. Must be a non-empty string. We recommend; using a CLI-friendly name.
-	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in OCH.
+	Prefix           *string                      `json:"prefix,omitempty"`          // The prefix value is automatically computed and set when storing manifest in Hub.
 	SupportURL       *string                      `json:"supportURL,omitempty"`      // Link to support page for the OCF manifest.
 	Attributes       map[string]MetadataAttribute `json:"attributes,omitempty"`      
 }
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type TypeSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Type specification definition.
@@ -382,7 +382,7 @@ type TypeSpec struct {
 	JSONSchema     JSONSchema `json:"jsonSchema"`              
 }
 
-// Vendor manifests are currently not used. They will be part of the OCH federation feature.
+// Vendor manifests are currently not used. They will be part of the Hub federation feature.
 type Vendor struct {
 	Kind       VendorKind        `json:"kind"`               
 	Metadata   InterfaceMetadata `json:"metadata"`           
@@ -394,7 +394,7 @@ type Vendor struct {
 
 // Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
 type VendorSignature struct {
-	Och string `json:"och"`// The signature signed with the HUB key.
+	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Vendor specification definition.
@@ -404,7 +404,7 @@ type VendorSpec struct {
 
 // Holds configuration for vendor federation.
 type Federation struct {
-	URI string `json:"uri"`// The URI of the external OCH.
+	URI string `json:"uri"`// The URI of the external Hub.
 }
 
 type InterfaceKind string

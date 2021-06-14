@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"capact.io/capact/pkg/och/client/local"
+	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/runner"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"

@@ -68,7 +68,7 @@ spec:
               value: "https://capactio-stable-charts.storage.googleapis.com"
             - name: CAPACT_RELEASE_NAME
               value: "capact"
-            - name: LOCAL_OCH_ENDPOINT
-              value: "http://capact-och-local.{{ .Release.Namespace }}/graphql"
+            - name: LOCAL_HUB_ENDPOINT
+              value: "http://capact-hub-local.{{ .Release.Namespace }}/graphql"
           command: ["/bin/sh", "-c"]
           args: {{ .Values.postInstallTypeInstanceJob.args }}

@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ServeJson serves OCH Manifests
+// ServeJson serves Hub Manifests
 // manifests are converted from YAML to JSON when requested
 func MustServeJSON(ctx context.Context, listenPort int, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))

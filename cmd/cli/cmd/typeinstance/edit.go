@@ -8,7 +8,7 @@ import (
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"

@@ -9,8 +9,8 @@ import (
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/client"
 	"capact.io/capact/pkg/httputil"
-	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
-	"capact.io/capact/pkg/och/client/local"
+	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/hub/client/local"
 
 	"github.com/machinebox/graphql"
 )
@@ -31,7 +31,7 @@ type EngineClient interface {
 }
 
 type TypeInstanceClient interface {
-	FindTypeInstance(ctx context.Context, id string) (*ochlocalgraphql.TypeInstance, error)
+	FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error)
 }
 
 type clusterClient struct {

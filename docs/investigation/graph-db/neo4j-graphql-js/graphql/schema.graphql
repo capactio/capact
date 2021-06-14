@@ -120,7 +120,7 @@ type RepoMetadataRevision {
 }
 
 type RepoMetadataSpec {
-    ochVersion: Version!
+    hubVersion: Version!
     ocfVersion: RepoOCFVersion!
     implementation: RepoImplementationConfig!
 }

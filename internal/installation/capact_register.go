@@ -6,8 +6,8 @@ import (
 
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/internal/ptr"
-	gqllocalapi "capact.io/capact/pkg/och/api/graphql/local"
-	"capact.io/capact/pkg/och/client/local"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/runner/helm"
 
 	"github.com/MakeNowJust/heredoc"
@@ -40,7 +40,7 @@ var capactAdditionalOutput = heredoc.Doc(`
 type CapactRegister struct {
 	k8sCfg        *rest.Config
 	logger        *zap.Logger
-	localOCHCli   *local.Client
+	localHubCli   *local.Client
 	cfg           TypeInstancesConfig
 	helmOutputter *helm.Outputter
 }
@@ -62,12 +62,12 @@ func NewCapactRegister() (*CapactRegister, error) {
 		return nil, errors.Wrap(err, "while creating k8s config")
 	}
 
-	client := local.NewDefaultClient(cfg.LocalOCHEndpoint)
+	client := local.NewDefaultClient(cfg.LocalHubEndpoint)
 
 	return &CapactRegister{
 		k8sCfg:        k8sCfg,
 		logger:        logger,
-		localOCHCli:   client,
+		localHubCli:   client,
 		cfg:           cfg,
 		helmOutputter: helm.NewOutputter(logger, helm.NewRenderer()),
 	}, nil
@@ -111,9 +111,9 @@ func (i *CapactRegister) RegisterTypeInstances(ctx context.Context) error {
 	}
 
 	tiToCreate := i.createTypeInstancesInput(ownerName, ti)
-	uploadOutput, err := i.localOCHCli.CreateTypeInstances(ctx, tiToCreate)
+	uploadOutput, err := i.localHubCli.CreateTypeInstances(ctx, tiToCreate)
 	if err != nil {
-		return errors.Wrap(err, "while uploading TypeInstances to OCH")
+		return errors.Wrap(err, "while uploading TypeInstances to Hub")
 	}
 
 	for _, ti := range uploadOutput {

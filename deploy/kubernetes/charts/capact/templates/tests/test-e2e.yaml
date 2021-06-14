@@ -13,7 +13,7 @@ spec:
       image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.integrationTest.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
       env:
         - name: STATUS_ENDPOINTS
-          value: "http://capact-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-och-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-och-public.{{.Release.Namespace}}.svc.cluster.local/healthz"
+          value: "http://capact-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-hub-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-hub-public.{{.Release.Namespace}}.svc.cluster.local/healthz"
         - name: IGNORED_PODS_NAMES
           value: "{{ .Release.Namespace}}/{{ include "capact.fullname" . }}-test-e2e"
         - name: GATEWAY_ENDPOINT

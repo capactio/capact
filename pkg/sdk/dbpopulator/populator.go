@@ -12,7 +12,7 @@ import (
 )
 
 var attributeQuery = `
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 
 MERGE (attribute:Attribute:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
@@ -44,7 +44,7 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
 var typeQuery = `
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 MERGE (type:Type:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
@@ -90,7 +90,7 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
 var interfaceGroupQuery = `
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 CREATE (metadata:GenericMetadata:unpublished {
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
@@ -144,7 +144,7 @@ CREATE (spec:InterfaceSpec:unpublished {abstract: value.spec.abstract})
 CREATE (spec)-[:HAS_INPUT]->(input)
 CREATE (spec)-[:OUTPUTS]->(output)
 
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 
 CREATE (metadata:GenericMetadata:unpublished {
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
@@ -220,7 +220,7 @@ CREATE (implementationRevision:ImplementationRevision:unpublished {revision: val
 
 CREATE (implementation)-[:CONTAINS]->(implementationRevision)
 
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 CREATE (implementationRevision)-[:SIGNED_WITH]->(signature)
 
 MERGE (license: License:unpublished{name: value.metadata.license.name})
@@ -395,10 +395,10 @@ CREATE (metadata:GenericMetadata:unpublished {
   iconURL: value.metadata.supportURL})
 CREATE (repoRevision)-[:DESCRIBED_BY]->(metadata)
 
-MERGE (signature:Signature:unpublished{och: value.signature.och})
+MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 CREATE (repoRevision)-[:SIGNED_WITH]->(signature)
 
-CREATE (spec:RepoMetadataSpec:unpublished{ochVersion: value.spec.ochVersion})
+CREATE (spec:RepoMetadataSpec:unpublished{hubVersion: value.spec.hubVersion})
 CREATE (repoRevision)-[:SPECIFIED_BY]->(spec)
 
 CREATE (ocfVersion:RepoOCFVersion:unpublished {

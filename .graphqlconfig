@@ -5,22 +5,22 @@
         "./pkg/engine/api/graphql/**"
       ]
     },
-    "localOCH": {
+    "localHub": {
       "includes": [
-        "./och-js/graphql/local/**"
+        "./hub-js/graphql/local/**"
       ]
     },
-    "publicOCH": {
+    "publicHub": {
       "includes": [
-        "./och-js/graphql/public/**"
+        "./hub-js/graphql/public/**"
       ]
     },
-    "och-neo4j-gogm-poc": {
+    "hub-neo4j-gogm-poc": {
       "includes": [
         "./docs/investigation/graph-db/neo4j-gogm/graphql/**"
       ]
     },
-    "och-neo4j-graphql-js-poc": {
+    "hub-neo4j-graphql-js-poc": {
       "includes": [
         "./docs/investigation/graph-db/neo4j-graphql-js/graphql/**"
       ]

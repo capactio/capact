@@ -9,7 +9,7 @@ import (
 	"capact.io/capact/internal/cli/action"
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
-	gqlpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"

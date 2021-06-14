@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"capact.io/capact/internal/ptr"
-	ochlocalgraphql "capact.io/capact/pkg/och/api/graphql/local"
-	ochclient "capact.io/capact/pkg/och/client"
+	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
+	hubclient "capact.io/capact/pkg/hub/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -36,7 +36,7 @@ func getActionName() string {
 
 var _ = Describe("Action", func() {
 	var engineClient *engine.Client
-	var ochClient *ochclient.Client
+	var hubClient *hubclient.Client
 	var actionName string
 
 	failingActionName := fmt.Sprintf("e2e-failing-test-%d", GinkgoParallelNode())
@@ -44,7 +44,7 @@ var _ = Describe("Action", func() {
 
 	BeforeEach(func() {
 		engineClient = getEngineGraphQLClient()
-		ochClient = getOCHGraphQLClient()
+		hubClient = getHubGraphQLClient()
 		actionName = getActionName()
 	})
 
@@ -63,12 +63,12 @@ var _ = Describe("Action", func() {
 
 			// TypeInstance which will be downloaded
 			download := getTypeInstanceInputForDownload(testValue)
-			downloadTI, downloadTICleanup := createTypeInstance(ctx, ochClient, download)
+			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
 			// TypeInstance which will be downloaded and updated
 			update := getTypeInstanceInputForUpdate()
-			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
 			typeInstances := []*enginegraphql.InputTypeInstanceData{
@@ -88,7 +88,7 @@ var _ = Describe("Action", func() {
 
 			By("2. Check TypeInstances")
 			By("2.1. Check uploaded TypeInstances")
-			assertUploadedTypeInstance(ctx, ochClient, testValue)
+			assertUploadedTypeInstance(ctx, hubClient, testValue)
 
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElement(
 				&enginegraphql.OutputTypeInstanceDetails{
@@ -101,11 +101,11 @@ var _ = Describe("Action", func() {
 			), HaveLen(2)))
 
 			By("2.1. Check updated TypeInstances")
-			updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+			updateTI, err := hubClient.FindTypeInstance(ctx, updateTI.ID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(updateTI).ToNot(BeNil())
 
-			_, err = getTypeInstanceWithValue([]ochlocalgraphql.TypeInstance{*updateTI}, testValue)
+			_, err = getTypeInstanceWithValue([]hublocalgraphql.TypeInstance{*updateTI}, testValue)
 			Expect(err).ToNot(HaveOccurred())
 
 			By("2. Deleting Action...")
@@ -117,7 +117,7 @@ var _ = Describe("Action", func() {
 
 			// 3.1. Create TypeInstance which is required for second Implementation to be picked
 			typeInstanceValue := getTypeInstanceInputForPolicy()
-			typeInstance, tiCleanupFn := createTypeInstance(ctx, ochClient, typeInstanceValue)
+			typeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
 			defer tiCleanupFn()
 
 			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
@@ -132,7 +132,7 @@ var _ = Describe("Action", func() {
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
 			By("5. Check Uploaded TypeInstances")
-			assertUploadedTypeInstance(ctx, ochClient, testValue)
+			assertUploadedTypeInstance(ctx, hubClient, testValue)
 
 			By("6. Check output TypeInstances in Action status")
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, HaveLen(1))
@@ -170,7 +170,7 @@ var _ = Describe("Action", func() {
 			By("Prepare TypeInstance to update")
 
 			update := getTypeInstanceInputForUpdate()
-			updateTI, updateTICleanup := createTypeInstance(ctx, ochClient, update)
+			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
 
 			typeInstances := []*enginegraphql.InputTypeInstanceData{
@@ -198,7 +198,7 @@ var _ = Describe("Action", func() {
 
 			By("Verify the TypeInstance is locked")
 			Eventually(func() error {
-				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				updateTI, err := hubClient.FindTypeInstance(ctx, updateTI.ID)
 				if err != nil {
 					return err
 				}
@@ -215,7 +215,7 @@ var _ = Describe("Action", func() {
 
 			By("Verify the TypeInstance is unlock after the action passes")
 			Eventually(func() error {
-				updateTI, err := ochClient.FindTypeInstance(ctx, updateTI.ID)
+				updateTI, err := hubClient.FindTypeInstance(ctx, updateTI.ID)
 				if err != nil {
 					return err
 				}
@@ -247,13 +247,13 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 	}
 }
 
-func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
-	return &ochlocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+func getTypeInstanceInputForPolicy() *hublocalgraphql.CreateTypeInstanceInput {
+	return &hublocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.single-key",
 			Revision: "0.1.0",
 		},
-		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute",
 				Revision: "0.1.0",
@@ -265,14 +265,14 @@ func getTypeInstanceInputForPolicy() *ochlocalgraphql.CreateTypeInstanceInput {
 	}
 }
 
-func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTypeInstanceInput {
-	return &ochlocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+func getTypeInstanceInputForDownload(testValue string) *hublocalgraphql.CreateTypeInstanceInput {
+	return &hublocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.download",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": testValue},
-		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
@@ -281,14 +281,14 @@ func getTypeInstanceInputForDownload(testValue string) *ochlocalgraphql.CreateTy
 	}
 }
 
-func getTypeInstanceInputForUpdate() *ochlocalgraphql.CreateTypeInstanceInput {
-	return &ochlocalgraphql.CreateTypeInstanceInput{
-		TypeRef: &ochlocalgraphql.TypeInstanceTypeReferenceInput{
+func getTypeInstanceInputForUpdate() *hublocalgraphql.CreateTypeInstanceInput {
+	return &hublocalgraphql.CreateTypeInstanceInput{
+		TypeRef: &hublocalgraphql.TypeInstanceTypeReferenceInput{
 			Path:     "cap.type.capactio.capact.validation.update",
 			Revision: "0.1.0",
 		},
 		Value: map[string]interface{}{"key": "random text to update"},
-		Attributes: []*ochlocalgraphql.AttributeReferenceInput{
+		Attributes: []*hublocalgraphql.AttributeReferenceInput{
 			{
 				Path:     "cap.attribute.capactio.capact.attribute1",
 				Revision: "0.1.0",
@@ -343,15 +343,15 @@ func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client,
 	).Should(BeElementOf(statuses))
 }
 
-func createTypeInstance(ctx context.Context, ochClient *ochclient.Client, in *ochlocalgraphql.CreateTypeInstanceInput) (*ochlocalgraphql.TypeInstance, func()) {
-	createdTypeInstance, err := ochClient.CreateTypeInstance(ctx, in)
+func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, func()) {
+	createdTypeInstance, err := hubClient.CreateTypeInstance(ctx, in)
 	Expect(err).ToNot(HaveOccurred())
 
 	Expect(createdTypeInstance).NotTo(BeNil())
 	typeInstanceID := createdTypeInstance.ID
 
 	cleanupFn := func() {
-		err := ochClient.DeleteTypeInstance(ctx, typeInstanceID)
+		err := hubClient.DeleteTypeInstance(ctx, typeInstanceID)
 		if err != nil {
 			log(errors.Wrapf(err, "while deleting TypeInstance with ID %s", typeInstanceID).Error())
 		}
@@ -374,9 +374,9 @@ func updateGlobalPolicyConfigMap(stringToFind, stringToReplace string) func() {
 	return cleanupFn
 }
 
-func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client, testValue string) {
-	uploaded, err := ochClient.ListTypeInstances(ctx, &ochlocalgraphql.TypeInstanceFilter{
-		TypeRef: &ochlocalgraphql.TypeRefFilterInput{
+func assertUploadedTypeInstance(ctx context.Context, hubClient *hubclient.Client, testValue string) {
+	uploaded, err := hubClient.ListTypeInstances(ctx, &hublocalgraphql.TypeInstanceFilter{
+		TypeRef: &hublocalgraphql.TypeRefFilterInput{
 			Path:     "cap.type.capactio.capact.validation.upload",
 			Revision: ptr.String("0.1.0"),
 		},
@@ -387,7 +387,7 @@ func assertUploadedTypeInstance(ctx context.Context, ochClient *ochclient.Client
 	ti, err := getTypeInstanceWithValue(uploaded, testValue)
 	Expect(err).ToNot(HaveOccurred())
 
-	err = ochClient.DeleteTypeInstance(ctx, ti.ID)
+	err = hubClient.DeleteTypeInstance(ctx, ti.ID)
 	Expect(err).ToNot(HaveOccurred())
 }
 
@@ -438,7 +438,7 @@ func replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace string) error 
 	return nil
 }
 
-func getTypeInstanceWithValue(typeInstances []ochlocalgraphql.TypeInstance, testValue string) (*ochlocalgraphql.TypeInstance, error) {
+func getTypeInstanceWithValue(typeInstances []hublocalgraphql.TypeInstance, testValue string) (*hublocalgraphql.TypeInstance, error) {
 	for _, ti := range typeInstances {
 		values, ok := ti.LatestResourceVersion.Spec.Value.(map[string]interface{})
 		if !ok {

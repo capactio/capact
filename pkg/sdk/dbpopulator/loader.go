@@ -58,9 +58,9 @@ func Group(paths []string) (map[string][]string, error) {
 	return manifests, nil
 }
 
-func List(ochPath string) ([]string, error) {
+func List(hubPath string) ([]string, error) {
 	files := []string{}
-	err := filepath.Walk(ochPath, func(currentPath string, info os.FileInfo, err error) error {
+	err := filepath.Walk(hubPath, func(currentPath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}

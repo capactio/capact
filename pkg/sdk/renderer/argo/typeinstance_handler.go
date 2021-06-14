@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	graphqllocal "capact.io/capact/pkg/och/api/graphql/local"
+	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
@@ -17,13 +17,13 @@ import (
 // TypeInstanceHandler provides functionality to handle TypeInstance operations such as
 // injecting download step and upload step.
 type TypeInstanceHandler struct {
-	ochActionsImage string
+	hubActionsImage string
 	genUUID         func() string
 }
 
-func NewTypeInstanceHandler(ochActionsImage string) *TypeInstanceHandler {
+func NewTypeInstanceHandler(hubActionsImage string) *TypeInstanceHandler {
 	return &TypeInstanceHandler{
-		ochActionsImage: ochActionsImage,
+		hubActionsImage: hubActionsImage,
 		genUUID: func() string {
 			return uuid.New().String()
 		},
@@ -57,7 +57,7 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 	template := &wfv1.Template{
 		Name: fmt.Sprintf("inject-input-type-instances-%s", r.genUUID()),
 		Container: &apiv1.Container{
-			Image: r.ochActionsImage,
+			Image: r.hubActionsImage,
 			Env: []apiv1.EnvVar{
 				{
 					Name:  "APP_ACTION",
@@ -169,7 +169,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	template := &wfv1.Template{
 		Name: "upload-output-type-instances",
 		Container: &apiv1.Container{
-			Image:           r.ochActionsImage,
+			Image:           r.hubActionsImage,
 			ImagePullPolicy: apiv1.PullIfNotPresent,
 			Env: []apiv1.EnvVar{
 				{
@@ -259,7 +259,7 @@ func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow,
 	template := &wfv1.Template{
 		Name: "upload-update-type-instances",
 		Container: &apiv1.Container{
-			Image:           r.ochActionsImage,
+			Image:           r.hubActionsImage,
 			ImagePullPolicy: apiv1.PullIfNotPresent,
 			Env: []apiv1.EnvVar{
 				{

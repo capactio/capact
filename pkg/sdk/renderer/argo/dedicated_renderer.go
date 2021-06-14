@@ -8,7 +8,7 @@ import (
 
 	"capact.io/capact/internal/ptr"
 
-	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"github.com/Knetic/govaluate"
@@ -22,7 +22,7 @@ import (
 type dedicatedRenderer struct {
 	// required vars
 	maxDepth            int
-	policyEnforcedCli   PolicyEnforcedOCHClient
+	policyEnforcedCli   PolicyEnforcedHubClient
 	typeInstanceHandler *TypeInstanceHandler
 
 	// set with options
@@ -47,7 +47,7 @@ type InputArtifact struct {
 	typeInstanceReference *string
 }
 
-func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedOCHClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
+func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedHubClient, typeInstanceHandler *TypeInstanceHandler, opts ...RendererOption) *dedicatedRenderer {
 	r := &dedicatedRenderer{
 		maxDepth:            maxDepth,
 		policyEnforcedCli:   policyEnforcedCli,
@@ -151,7 +151,7 @@ func (r *dedicatedRenderer) GetRootTemplates() []*Template {
 // TODO Refactor it. It's too long
 // 1. Split it to smaller functions and leave only high level steps here
 // 2. Do not use global state, calling it multiple times seems not to work
-func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*ochpublicapi.ImplementationImport,
+func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*hubpublicapi.ImplementationImport,
 	typeInstances []types.InputTypeInstanceRef, prefix string) (map[string]*string, error) {
 	r.currentIteration++
 
@@ -339,7 +339,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 }
 
 // TODO: take into account the runner revision. Respect that also in k8s engine when scheduling runner job
-func (r *dedicatedRenderer) ResolveRunnerInterface(impl ochpublicapi.ImplementationRevision) (string, error) {
+func (r *dedicatedRenderer) ResolveRunnerInterface(impl hubpublicapi.ImplementationRevision) (string, error) {
 	imports, rInterface := impl.Spec.Imports, impl.Spec.Action.RunnerInterface
 	fullRef, err := r.resolveActionPathFromImports(imports, rInterface)
 	if err != nil {
@@ -349,7 +349,7 @@ func (r *dedicatedRenderer) ResolveRunnerInterface(impl ochpublicapi.Implementat
 	return fullRef.Path, nil
 }
 
-func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, implementation *ochpublicapi.ImplementationRevision) (*Workflow, map[string]string, error) {
+func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, implementation *hubpublicapi.ImplementationRevision) (*Workflow, map[string]string, error) {
 	workflow, err := r.createWorkflow(implementation)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "while unmarshaling Argo Workflow from OCF Implementation")
@@ -551,9 +551,9 @@ func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflo
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, typeInstances)
 }
 
-func (r *dedicatedRenderer) PickImplementationRevision(in []ochpublicapi.ImplementationRevision) (ochpublicapi.ImplementationRevision, error) {
+func (r *dedicatedRenderer) PickImplementationRevision(in []hubpublicapi.ImplementationRevision) (hubpublicapi.ImplementationRevision, error) {
 	if len(in) == 0 {
-		return ochpublicapi.ImplementationRevision{}, errors.New("No Implementations found with current policy for given Interface")
+		return hubpublicapi.ImplementationRevision{}, errors.New("No Implementations found with current policy for given Interface")
 	}
 
 	// business decision - pick first Implementation
@@ -562,14 +562,14 @@ func (r *dedicatedRenderer) PickImplementationRevision(in []ochpublicapi.Impleme
 
 // Internal helpers
 
-func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.ImplementationImport, actionRef string) (*ochpublicapi.InterfaceReference, error) {
+func (*dedicatedRenderer) resolveActionPathFromImports(imports []*hubpublicapi.ImplementationImport, actionRef string) (*hubpublicapi.InterfaceReference, error) {
 	action := strings.SplitN(actionRef, ".", 2)
 	if len(action) != 2 {
 		return nil, NewActionReferencePatternError(actionRef)
 	}
 
 	alias, name := action[0], action[1]
-	selectFirstMatchedImport := func() *ochpublicapi.InterfaceReference {
+	selectFirstMatchedImport := func() *hubpublicapi.InterfaceReference {
 		for _, i := range imports {
 			if i.Alias == nil || *i.Alias != alias {
 				continue
@@ -578,7 +578,7 @@ func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.I
 				if name != method.Name {
 					continue
 				}
-				return &ochpublicapi.InterfaceReference{
+				return &hubpublicapi.InterfaceReference{
 					Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
 					Revision: stringOrEmpty(method.Revision),
 				}
@@ -595,7 +595,7 @@ func (*dedicatedRenderer) resolveActionPathFromImports(imports []*ochpublicapi.I
 	return ref, nil
 }
 
-func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string, iface *ochpublicapi.InterfaceRevision, stepOutputTypeInstances map[string]*string) {
+func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string, iface *hubpublicapi.InterfaceRevision, stepOutputTypeInstances map[string]*string) {
 	step.typeInstanceOutputs = make(map[string]*string)
 
 	if iface == nil || iface.Spec.Output == nil || iface.Spec.Output.TypeInstances == nil {
@@ -623,7 +623,7 @@ outer:
 	}
 }
 
-func (*dedicatedRenderer) createWorkflow(implementation *ochpublicapi.ImplementationRevision) (*Workflow, error) {
+func (*dedicatedRenderer) createWorkflow(implementation *hubpublicapi.ImplementationRevision) (*Workflow, error) {
 	var renderedWorkflow = struct {
 		Spec Workflow `json:"workflow"`
 	}{}
@@ -878,7 +878,7 @@ func (r *dedicatedRenderer) registerTemplateInputArguments(step *WorkflowStep, a
 	r.tplInputArguments[step.Template] = inputArtifacts
 }
 
-func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, prefix string, iface *ochpublicapi.InterfaceRevision, impl *ochpublicapi.ImplementationRevision, inputArtifacts []InputArtifact) error {
+func (r *dedicatedRenderer) addOutputTypeInstancesToGraph(step *WorkflowStep, prefix string, iface *hubpublicapi.InterfaceRevision, impl *hubpublicapi.ImplementationRevision, inputArtifacts []InputArtifact) error {
 	artifactNamesMap := map[string]*string{}
 	for _, artifact := range inputArtifacts {
 		artifactNamesMap[artifact.artifact.Name] = artifact.typeInstanceReference

@@ -1,0 +1,151 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.app-stack.stack
+  name: install-parallel
+  displayName: Example how to install App stack with shared database in parallel.
+  description: Action which installs App stack via Helm charts
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  appVersion: "1.x.x"
+
+  implements:
+    - path: cap.interface.app-stack.stack.install
+      revision: 0.1.0
+
+  requires:
+    - oneOf:
+        - typeRef:
+            path: cap.core.type.platform.kubernetes
+            revision: 0.1.0
+          valueConstraints:
+      prefix: cap.core.type.platform
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.app-stack.app1
+      alias: app1
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.app-stack.app2
+      alias: app2
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: stack-install
+        templates:
+          - name: stack-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+            steps:
+              - - name: install-shared-db
+                  capact-action: postgresql.install
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        raw:
+                          data: |
+                            superuser:
+                              username: superuser
+                              password: okon
+                            defaultDBName: postgres
+
+              - - name: app1-install
+                  template: app1-install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+
+                - name: app2-install
+                  template: app2-install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{steps.install-shared-db.outputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+
+          - name: app1-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+            steps:
+              - - name: extract-app1-host
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            host: {{ app1Host }}
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+              - - name: app1-install
+                  capact-action: app1.install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{inputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{steps.extract-app1-host.outputs.artifacts.render}}"
+
+          - name: app2-install
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: postgresql
+            steps:
+              - - name: extract-app2-host
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        raw:
+                          data: |
+                            host: {{ app2Host }}
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+              - - name: app2-install
+                  capact-action: app2.install
+                  arguments:
+                    artifacts:
+                      - name: postgresql
+                        from: "{{inputs.artifacts.postgresql}}"
+                      - name: input-parameters
+                        from: "{{steps.extract-app2-host.outputs.artifacts.render}}"
+signature:
+  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

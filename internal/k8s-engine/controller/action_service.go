@@ -17,8 +17,8 @@ import (
 	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
-	ochlocalapi "capact.io/capact/pkg/och/api/graphql/local"
-	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	hublocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
@@ -45,8 +45,8 @@ const (
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
 )
 
-type OCHImplementationGetter interface {
-	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*ochpublicapi.ImplementationRevision, error)
+type HubImplementationGetter interface {
+	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*hubpublicapi.ImplementationRevision, error)
 }
 
 type ArgoRenderer interface {
@@ -62,12 +62,12 @@ type PolicyService interface {
 }
 
 type TypeInstanceLocker interface {
-	LockTypeInstances(ctx context.Context, in *ochlocalapi.LockTypeInstancesInput) error
-	UnlockTypeInstances(ctx context.Context, in *ochlocalapi.UnlockTypeInstancesInput) error
+	LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
+	UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
 }
 
 type TypeInstanceGetter interface {
-	ListTypeInstances(ctx context.Context, filter *ochlocalapi.TypeInstanceFilter) ([]ochlocalapi.TypeInstance, error)
+	ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
 }
 
 // ActionService provides business functionality for reconciling Action CR.
@@ -266,7 +266,7 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 
 	ownerID := ownerIDKey(action)
 
-	return a.typeInstanceLocker.LockTypeInstances(ctx, &ochlocalapi.LockTypeInstancesInput{
+	return a.typeInstanceLocker.LockTypeInstances(ctx, &hublocalapi.LockTypeInstancesInput{
 		OwnerID: ownerID,
 		Ids:     action.Status.Rendering.TypeInstancesToLock,
 	})
@@ -279,7 +279,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 
 	ownerID := ownerIDKey(action)
 
-	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &ochlocalapi.UnlockTypeInstancesInput{
+	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &hublocalapi.UnlockTypeInstancesInput{
 		OwnerID: ownerID,
 		Ids:     action.Status.Rendering.TypeInstancesToLock,
 	})
@@ -481,7 +481,7 @@ func jobFinishStatus(j *batchv1.Job) (batchv1.JobConditionType, bool) {
 func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *v1alpha1.Action) ([]v1alpha1.OutputTypeInstanceDetails, error) {
 	ownerID := ownerIDKey(action)
 
-	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &ochlocalapi.TypeInstanceFilter{
+	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &hublocalapi.TypeInstanceFilter{
 		CreatedBy: &ownerID,
 	})
 	if err != nil {

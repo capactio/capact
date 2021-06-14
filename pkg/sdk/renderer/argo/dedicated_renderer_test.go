@@ -3,7 +3,7 @@ package argo
 import (
 	"testing"
 
-	ochpublicapi "capact.io/capact/pkg/och/api/graphql/public"
+	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"gotest.tools/assert"
 )
 
@@ -17,26 +17,26 @@ func TestResolveActionFromImports(t *testing.T) {
 		name       string
 		shouldFail bool
 
-		imports   []*ochpublicapi.ImplementationImport
+		imports   []*hubpublicapi.ImplementationImport
 		actionRef string
 
-		reference ochpublicapi.InterfaceReference
+		reference hubpublicapi.InterfaceReference
 	}{
 		{
 			name:       "missing imports",
 			shouldFail: true,
-			imports:    []*ochpublicapi.ImplementationImport{},
+			imports:    []*hubpublicapi.ImplementationImport{},
 			actionRef:  "helm.install",
-			reference:  ochpublicapi.InterfaceReference{},
+			reference:  hubpublicapi.InterfaceReference{},
 		},
 		{
 			name: "correct revision",
-			imports: []*ochpublicapi.ImplementationImport{
+			imports: []*hubpublicapi.ImplementationImport{
 				{
 					InterfaceGroupPath: "cap.interface.runner.helm",
 					Alias:              &name,
 					AppVersion:         &appVersion,
-					Methods: []*ochpublicapi.ImplementationImportMethod{
+					Methods: []*hubpublicapi.ImplementationImportMethod{
 						{
 							Name:     "install",
 							Revision: &revision1,
@@ -45,7 +45,7 @@ func TestResolveActionFromImports(t *testing.T) {
 				},
 			},
 			actionRef: "helm.install",
-			reference: ochpublicapi.InterfaceReference{
+			reference: hubpublicapi.InterfaceReference{
 				Path:     "cap.interface.runner.helm.install",
 				Revision: revision1,
 			},

@@ -23,7 +23,7 @@ import (
 
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"capact.io/capact/pkg/engine/k8s/policy"
-	graphql "capact.io/capact/pkg/och/api/graphql/local"
+	graphql "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 )
