@@ -99,6 +99,12 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 						}
 						verbs
 					}
+					parameters {
+						typeRef {
+							path
+							revision
+						}
+					}
 				}
 				additionalOutput {
 					typeInstances {

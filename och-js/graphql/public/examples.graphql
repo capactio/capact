@@ -431,6 +431,12 @@ fragment ImplementationRevision on ImplementationRevision {
                 }
                 verbs
             }
+            parameters {
+                typeRef {
+                    path
+                    revision
+                }
+            }
         }
         additionalOutput {
             typeInstances {

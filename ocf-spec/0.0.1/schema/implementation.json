@@ -144,12 +144,18 @@
           "additionalProperties": false
         },
         "additionalInput": {
-          "$id": "#/properties/spec/properties/additionalInput",
+          "$id": "/properties/spec/properties/additionalInput",
           "type": "object",
-          "description": "Specifies additional input for a given Implementation.",
+          "description": "Specifies additional input for the Implementation.",
           "properties": {
             "typeInstances": {
               "$ref": "https://capact.io/schemas/common/input-type-instances.json"
+            },
+            "parameters": {
+              "$id": "/properties/spec/properties/additionalInput/properties/parameters",
+              "type": "object",
+              "description": "Specifies additional input parameters for the Implementation",
+              "additionalProperties": true
             }
           },
           "additionalProperties": false

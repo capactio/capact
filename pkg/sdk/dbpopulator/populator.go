@@ -296,7 +296,7 @@ CALL {
  RETURN count([]) as _tmp3
 }
 
-WITH *, value.spec.additionalInput.typeInstances as typeInstances
+WITH *, value.spec.additionalInput.typeInstances as typeInstances, value.spec.additionalInput.parameters as parameters
 CREATE (implementationAdditionalInput:ImplementationAdditionalInput:unpublished)
 CREATE (spec)-[:USES]->(implementationAdditionalInput)
 WITH *
@@ -312,6 +312,17 @@ CALL {
     revision: typeInstances[name].typeRef.revision})
   CREATE (inputTypeInstance)-[:OF_TYPE]->(typeReference)
   RETURN count([]) as _tmp4
+}
+CALL {
+ WITH parameters, implementationAdditionalInput
+ UNWIND parameters as _
+ CREATE (additionalParameter: ImplementationAdditionalInputParameters:unpublished)
+ CREATE (implementationAdditionalInput)-[:CONTAINS]->(additionalParameter)
+ MERGE (typeReference: TypeReference:unpublished{
+   path: parameters.typeRef.path,
+   revision: parameters.typeRef.revision})
+ CREATE (additionalParameter)-[:OF_TYPE]->(typeReference)
+ RETURN count([]) as _tmpAdditionalParameters
 }
 
 WITH *, value.spec.additionalOutput.typeInstances as typeInstances

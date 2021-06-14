@@ -77,7 +77,12 @@ type ImplementationAction struct {
 }
 
 type ImplementationAdditionalInput struct {
-	TypeInstances []*InputTypeInstance `json:"typeInstances"`
+	TypeInstances []*InputTypeInstance                     `json:"typeInstances"`
+	Parameters    *ImplementationAdditionalInputParameters `json:"parameters"`
+}
+
+type ImplementationAdditionalInputParameters struct {
+	TypeRef *TypeReference `json:"typeRef"`
 }
 
 type ImplementationAdditionalOutput struct {
