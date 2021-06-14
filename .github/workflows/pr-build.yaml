@@ -203,7 +203,7 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
-          HUB_MANIFESTS_SOURCE_REPO_REF: "replace-och-with-hub"
+          HUB_MANIFESTS_SOURCE_REPO_REF: "main"
         run: |
           make test-integration
       - name: Upload artifacts
