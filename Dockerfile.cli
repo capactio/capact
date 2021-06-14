@@ -1,0 +1,9 @@
+FROM golang:1.16.3-alpine as builder
+
+FROM scratch
+ENTRYPOINT ["/capact"]
+
+# Copy common CA certificates from Builder image (installed by default with ca-certificates package)
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+
+COPY ./capact-linux-amd64 /capact

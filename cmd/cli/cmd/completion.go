@@ -23,7 +23,7 @@ func NewCompletion() *cobra.Command {
 			
 			### bash
 			  Run this command:
-			  	echo "source <(argo completion bash)" >> ~/.bashrc
+			  	echo "source <(<cli> completion bash)" >> ~/.bashrc
 			
 			### zsh
 			  Generate a _<cli> completion script and put it somewhere in your $fpath:
