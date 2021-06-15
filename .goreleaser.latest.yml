@@ -20,7 +20,7 @@ builds:
     hooks:
       # Install upx first, https://github.com/upx/upx/releases
       post: upx -1 "{{ .Path }}"
-    # GoRelaser creates binaries inside `bin/${BuildID}_${BuildTarget}`, which is an unique directory per build target in the matrix.
+    # GoReleaser creates binaries inside `bin/${BuildID}_${BuildTarget}`, which is an unique directory per build target in the matrix.
     # Currently, we use the `gsutil -m rsync ./bin/ gs://capactio-binaries/latest/` command, which is easier when binaries are not nested in nested directories.
     no_unique_dist_dir: true
 

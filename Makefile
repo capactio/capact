@@ -21,7 +21,8 @@ APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populat
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
-build-all-tools: build-tool-cli build-tool-populator ## Builds the standalone binaries for all tools
+build-all-tools: ## Builds the standalone binaries for all tools
+	goreleaser build --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-cli-tools
 
 build-tool-cli: ## Builds the standalone binaries for the capact CLI
@@ -29,7 +30,7 @@ build-tool-cli: ## Builds the standalone binaries for the capact CLI
 .PHONY: build-tool-cli
 
 build-tool-populator: ## Builds the standalone binaries for the Hub Populator
-	goreleaser build --id capact --rm-dist --skip-post-hooks --snapshot --single-target
+	goreleaser build --id populator --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-tool-populator
 
 # All images

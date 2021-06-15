@@ -184,7 +184,7 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
-        # Needs to wait for next release, as we use new `no_unique_dist_dir` feature.
+        # We use a new `no_unique_dist_dir` feature, which is not yet released
         run: go install github.com/goreleaser/goreleaser@b53dbb89d02aa3673782f3d063d7d5039446baac
       - run: make build-tool-${{ matrix.tool }}
 

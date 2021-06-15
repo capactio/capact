@@ -172,7 +172,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Set up GoReleaser
-        # Needs to wait for next release, as we use new `no_unique_dist_dir` feature.
+        # We use a new `no_unique_dist_dir` feature, which is not yet released.
         run: go install github.com/goreleaser/goreleaser@b53dbb89d02aa3673782f3d063d7d5039446baac
       - name: Set up GCS
         uses: google-github-actions/setup-gcloud@master
