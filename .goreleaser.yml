@@ -49,6 +49,7 @@ dockers:
       - "ghcr.io/capactio/tools/capact-cli:stable"
       - "ghcr.io/capactio/tools/capact-cli:{{ .Tag }}"
       - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}"
 
 checksum:
   name_template: 'checksums.txt'

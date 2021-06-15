@@ -15,6 +15,7 @@ on:
       - "hub-js/**"
       - "Dockerfile"
       - "!**.md"
+      - ".goreleaser.latest.yml"
     branches:
       - "main"
 
