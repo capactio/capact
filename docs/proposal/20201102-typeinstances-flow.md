@@ -27,10 +27,10 @@ This document describes the approach for handling the TypeInstances (artifacts) 
     + [Suggested solution](#suggested-solution-3)
   * [Populate an Action with the input TypeInstances](#populate-an-action-with-the-input-typeinstances)
     + [Suggested solution](#suggested-solution-4)
-  * [Upload Action artifacts to Local OCH](#upload-action-artifacts-to-local-och)
+  * [Upload Action artifacts to Local Hub](#upload-action-artifacts-to-local-hub)
     + [Suggested solution](#suggested-solution-5)
     + [Alternatives](#alternatives-3)
-  * [Delete the TypeInstance from Local OCH by Action](#delete-the-typeinstance-from-local-och-by-action)
+  * [Delete the TypeInstance from Local Hub by Action](#delete-the-typeinstance-from-local-hub-by-action)
     + [Suggested solution](#suggested-solution-6)
 - [Consequences](#consequences)
 
@@ -40,7 +40,7 @@ This document describes the approach for handling the TypeInstances (artifacts) 
 
 The Capact project enables users to easily define Actions that depend on generic capabilities instead of hard dependencies. By doing so, we can build multi-cloud, portable solutions.
 
-All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local OCH.
+All Actions should work on defined Types. A given Action can consume or/and produce artifact(s). For that purpose, we introduced the TypeInstance entity which is stored in Local Hub.
 
 Currently, we are struggling with defining the flow for passing, creating, and deleting TypeInstances. As a result, we cannot estimate the work for artifacts implementation.
 
@@ -50,14 +50,14 @@ Currently, we are struggling with defining the flow for passing, creating, and d
 -	[Define how to handle optional input TypeInstances. For example, pass an already existing database.](#handle-optional-input-typeinstances)
 -	[Define how to identify Action behavior so we know if it creates/deletes/upserts/updates/gets/lists TypeInstances.](#identify-action-behavior-createdeleteupsertupdategetlist)
 -	[Define how to populate Action with input TypeInstances.](#populate-an-action-with-the-input-typeinstances)
--	[Define how to upload the generated artifacts from Action workflow to Local OCH.](#upload-action-artifacts-to-local-och)
--	[Define how Action can delete the TypeInstance from Local OCH.](#delete-the-typeinstance-from-local-och-by-action)
+-	[Define how to upload the generated artifacts from Action workflow to Local Hub.](#upload-action-artifacts-to-local-hub)
+-	[Define how Action can delete the TypeInstance from Local Hub.](#delete-the-typeinstance-from-local-hub-by-action)
 -	[Define how to specify additional output TypeInstances and relations between them.](#additional-output-typeinstances-and-relations-between-them)
 
 ###  Non-goal
 
 -	Provide a working POC. Currently, we are in the early stage, and providing POC is too complex as we do not have implemented the base logic.  
--	Define how to store the TypeInstance in Local OCH with the preservation of Type composition.
+-	Define how to store the TypeInstance in Local Hub with the preservation of Type composition.
 -	Define the final syntax for Action Workflow. This will be done in a separate task by taking into account the Argo Workflow syntax.  
 
 ##  Proposal
@@ -67,7 +67,7 @@ Currently, we are struggling with defining the flow for passing, creating, and d
 | Term             | Definition                                                                                                                        |
 |------------------|-----------------------------------------------------------------------------------------------------------------------------------|
 | Artifacts        | Input/Output object returned by steps in a given workflow.                                                                        |
-| TypeInstance     | An instance of a given Type that is stored in the Local OCH. Artifacts uploaded from workflow to Local OCH becomes TypeInstances. |
+| TypeInstance     | An instance of a given Type that is stored in the Local Hub. Artifacts uploaded from workflow to Local Hub becomes TypeInstances. |
 | Action developer | Person who defines the `action` property in Implementation manifest.                                                              |
 
 ### General notes
@@ -248,13 +248,13 @@ spec:
   templates:
     - name: gcp-create-service-account
       container:
-        image: gcr.io/google-och/actions/gcp-create-service-account:0.0.1
+        image: gcr.io/google-hub/actions/gcp-create-service-account:0.0.1
       outputs:
         artifacts:
         - name: gcp-sa
     - name: create-cloud-sql
       container:
-        image: gcr.io/google-och/actions/create-cloud-sql:0.0.1
+        image: gcr.io/google-hub/actions/create-cloud-sql:0.0.1
       arguments:
         artifacts:
         - name: mysql-config
@@ -262,7 +262,7 @@ spec:
       outputs:
         artifacts:
         - name: mysql-config
-          # Global as this is mentioned as optional input, so it can be also populated from Local OCH by initial step
+          # Global as this is mentioned as optional input, so it can be also populated from Local Hub by initial step
           globalName: mysql-config
     - name: mysql-create-db
       container:
@@ -363,8 +363,8 @@ Use the information from the `input`/`output` property defined in Interface. For
 | Verbs    | Description                                                                               |
 |----------|-------------------------------------------------------------------------------------------|
 | `get`    | Specify that the input is a single TypeInstance that is in read-only mode.                |
-| `list`   | Specify that the input is a list of all TypeInstances from Local OCH in read-only mode.   |
-| `create` | This is automatically set for output TypeInstances. Core Action stores them in Local OCH. |
+| `list`   | Specify that the input is a list of all TypeInstances from Local Hub in read-only mode.   |
+| `create` | This is automatically set for output TypeInstances. Core Action stores them in Local Hub. |
 | `update` | Specify that the input TypeInstance is modified in Action.                                |
 | `delete` | Specify that the input TypeInstance is deleted by Action.                                 |
 
@@ -504,7 +504,7 @@ If we know the relations between the TypeInstance e.g. that Jira instance uses a
 
 ####  Suggested solution
 
-Specify the relations between the TypeInstances in the Implementation. As described in [upload artifacts](#upload-action-artifacts-to-local-och) section, in the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. The Interface can define multiple TypeInstances in the output section. To simplify the solution for Beta and GA, the TypeInstance relations are defined on Implementation as we don't need to take care of proper merging those relations defined on Interface and Implementation.
+Specify the relations between the TypeInstances in the Implementation. As described in [upload artifacts](#upload-action-artifacts-to-local-hub) section, in the Implementation, the Action developer knows all details about all output artifacts and how they are related to each other. The Interface can define multiple TypeInstances in the output section. To simplify the solution for Beta and GA, the TypeInstance relations are defined on Implementation as we don't need to take care of proper merging those relations defined on Interface and Implementation.
 
 The `outputTypeInstanceRelations` property is required, and it contains two pieces of information:
   - TypeInstances to upload
@@ -518,7 +518,7 @@ The property contains both required and optional TypeInstances. By doing so, in 
 kind: Implementation
 # ...
 spec:
-  # when saving artifact in Local OCH we can create a proper edges.
+  # when saving artifact in Local Hub we can create a proper edges.
   additionalOutput:
     typeInstances: # list all optional artifacts with type references
       mysql_config:
@@ -554,7 +554,7 @@ Actors
 
 ####  Suggested solution
 
-If Action requires input TypeInstance, the Capact Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local OCH and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
+If Action requires input TypeInstance, the Capact Engine adds an initial download step to the Workflow. This step runs the core Action which connects to Local Hub and downloads TypeInstances and exposes them as a [global Argo artifacts](https://github.com/argoproj/argo/blob/6016ebdd94115ae3fb13cadbecd27cf2bc390657/examples/global-outputs.yaml#L33-L36), so they can be accessed by other steps via `{{inputs.artifacts.<name>}}`.
 
 The global Argo artifacts seem to be the only possible solution as the steps output artifacts are scoped to a given template. This assumption is based on [argo-workflows investigation](../investigation/argo-workflows/README.md) document.
 
@@ -624,7 +624,7 @@ spec:
 
 </details>
 
-###  Upload Action artifacts to Local OCH
+###  Upload Action artifacts to Local Hub
 
 Actors
 
@@ -667,7 +667,7 @@ kind: Implementation
 # ...
 spec:
   # Workflow developer needs to specify relations between additional output.
-  # We use that to create a proper edges when saving artifact in Local OCH.
+  # We use that to create a proper edges when saving artifact in Local Hub.
   additionalOutput:
     typeInstances: # list all optional artifacts with type references
       mysql_config:
@@ -765,7 +765,7 @@ This solution was rejected as we found out that we can do it also automatically.
 
 </details>
 
-###  Delete the TypeInstance from Local OCH by Action
+###  Delete the TypeInstance from Local Hub by Action
 
 Actors
 
@@ -818,7 +818,7 @@ metadata:
 spec:
   entrypoint: work
   templates:
-    # Download artifacts from Local OCH
+    # Download artifacts from Local Hub
     - name: downloads-instances
       container:
         image: ghcr.io/capactio/type-instance-fetcher:0.0.1
@@ -835,7 +835,7 @@ spec:
         artifacts:
         - name: mysql-config
           from: "{{workflow.outputs.artifacts.mysql-config}}"
-    # Deletes artifacts from Local OCH 
+    # Deletes artifacts from Local Hub 
     - name: delete-instances
       container:
         image: ghcr.io/capactio/type-instance-deleter:0.0.1
@@ -854,4 +854,4 @@ Once approved, these are the consequences:
 -	Remove JSON output from Interface.
 -	Rename the `input.jsonSchema` on Interface to `input.parameters.jsonSchema`.
 -	Update the [OCF JSONSchemas](../../ocf-spec/0.0.1/schema) with accepted new syntax.
--	Update the GraphQL queries for Engine and OCH.
+-	Update the GraphQL queries for Engine and Hub.

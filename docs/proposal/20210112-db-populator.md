@@ -1,4 +1,4 @@
-# Strategy to populate OCF manifest to OCH
+# Strategy to populate OCF manifest to Hub
 
 Created on 2021-01-12 by Łukasz Oleś (@lukaszo)
 
@@ -63,7 +63,7 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
          name: Capact Dev Team
          url: https://capact.io
    signature:
-     och: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
+     hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
    ```
 
    JSON format:
@@ -90,7 +90,7 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
        "iconURL": "https://capact.io/favicon.ico"
      },
      "signature": {
-       "och": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
+       "hub": "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
      },
    }
    ```
@@ -98,14 +98,14 @@ OCF manifests are stored in YAML format defined in OCF spec. We need a fast way 
 2. Serve JSON from populator.
 3. Use APOC function and CYPHER to load data.
    ```
-   call apoc.load.json("http://populator.svc.och.cluster.local:8000/interfaceGroups.json") yield value
+   call apoc.load.json("http://populator.svc.hub.cluster.local:8000/interfaceGroups.json") yield value
    merge (g:GroupInterface)
    with value, g
    unwind value.metadata as m
    merge (gim:GroupInterfaceMetadata {name: m.name, prefix: m.prefix, path: m.path})
    with value, g, gim
    unwind value.signature as sig
-   merge (s:Signature{och: sig.och})
+   merge (s:Signature{hub: sig.hub})
    merge (g)-[:DESCRIBED_BY]->(gim)
    merge (g)-[:SIGNED_WITH]->(s);
    ```
@@ -176,14 +176,14 @@ id, name, path, prefix
 
 *Signatures.csv*
 ```csv
-id, och
+id, hub
 12,eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 ```
   
 *Cypher*
 ```
 LOAD CSV WITH HEADERS FROM 'file:///signatures.csv' AS row
-MERGE (s:Signature {id: row.id, och: row.och})
+MERGE (s:Signature {id: row.id, hub: row.hub})
 RETURN count(s);
  
 LOAD CSV WITH HEADERS FROM 'file:///GroupMetadata.csv' AS row
@@ -210,7 +210,7 @@ Cons
 #### Cypher - CREATE/MERGE
 Create everything converting manifests to CYPHER queries
     ```
-    CREATE p = (GroupInterfaceMetadata {name: "jira", path: "cap.interface.productivity.jira", prefix: "cap.interface.productivity.jira"})-[:DESCRIBED_BY]->(:GroupInterface)<-[:SIGNED_WITH]-(:Signature {och: "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"}) Return p
+    CREATE p = (GroupInterfaceMetadata {name: "jira", path: "cap.interface.productivity.jira", prefix: "cap.interface.productivity.jira"})-[:DESCRIBED_BY]->(:GroupInterface)<-[:SIGNED_WITH]-(:Signature {hub: "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"}) Return p
     ```
 
 ##### Summary
@@ -233,7 +233,7 @@ Pros
 
 Cons
   - Slower than JSON/CSV approach.
-  - Requires restricting public OCH mutations.
+  - Requires restricting public Hub mutations.
 
 # Consequences
 None

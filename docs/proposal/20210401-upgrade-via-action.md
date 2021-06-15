@@ -196,7 +196,7 @@ This section describes final agreements for the upgrade [Action](../terminology.
 
     In the near future, we will implement a generic solution. For more info, check **Interface supports generic input parameters** from the [Access installation resources](#access-installation-resources-1) section.
 
-1. The long-running cluster is configured with only [test content](../../test/och-content), as we do not have federation support yet. As a result, we will not have access to the upgrade Action manifests. To fix that problem, we decided to merge `test/och-content` into `och-content`. Each manifest will be defined under the `validation` node. Additionally, we will give an option for others to have out-of-the-box manifests, which they can use for their own validation process.
+1. The long-running cluster is configured with only [test content](../../test/hub-content), as we do not have federation support yet. As a result, we will not have access to the upgrade Action manifests. To fix that problem, we decided to merge `test/hub-content` into `hub-content`. Each manifest will be defined under the `validation` node. Additionally, we will give an option for others to have out-of-the-box manifests, which they can use for their own validation process.
 
 1. Add logic to block [e2e tests](../../test) until Capact upgrade is finished.
 
