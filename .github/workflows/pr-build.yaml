@@ -178,6 +178,14 @@ jobs:
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
+      # Go is available by default but the expected version may differ, better to "hardcode" version
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Set up GoReleaser
+        # We use a new `no_unique_dist_dir` feature, which is not yet released
+        run: go install github.com/goreleaser/goreleaser@b53dbb89d02aa3673782f3d063d7d5039446baac
       - run: make build-tool-${{ matrix.tool }}
 
   integration-tests:

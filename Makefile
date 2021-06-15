@@ -21,19 +21,16 @@ APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populat
 TESTS = e2e
 INFRA = json-go-gen graphql-schema-linter jinja2
 
-build-all-tools-prod: export UPX_ON=true ## Builds the standalone UPX-compressed binaries for all tools
-build-all-tools-prod: build-tool-cli build-tool-populator
-.PHONY: build-cli-tools-prod
-
-build-all-tools: build-tool-cli build-tool-populator ## Builds the standalone binaries for all tools
+build-all-tools: ## Builds the standalone binaries for all tools
+	goreleaser build --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-cli-tools
 
 build-tool-cli: ## Builds the standalone binaries for the capact CLI
-	./hack/build-tool-cli.sh
+	goreleaser build --id capact --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-tool-cli
 
 build-tool-populator: ## Builds the standalone binaries for the Hub Populator
-	./hack/build-tool-populator.sh
+	goreleaser build --id populator --rm-dist --skip-post-hooks --snapshot --single-target
 .PHONY: build-tool-populator
 
 # All images
@@ -198,6 +195,23 @@ fix-lint-issues: ## Automatically fix lint issues
 release-charts: ## Release Capact Helm Charts
 	./hack/release-charts.sh
 .PHONY: release-charts
+
+release-binaries: ## Release stable Capact binaries, such as CLI, populator etc.
+	goreleaser release --rm-dist
+
+release-latest-binaries: ## Release latest Capact binaries
+	goreleaser release --snapshot --rm-dist --config .goreleaser.latest.yml
+	# Needs to be published manually, as gorelaser doesn't support latest tag
+	# https://goreleaser.com/limitations/semver/
+	#
+	# Update binaries
+	gsutil -m rsync ./bin/ gs://capactio-binaries/latest/
+	# By default Google sets `cache-control: public, max-age=3600`.
+	# We need to change to ensure the file is not cached by http clients, so latest version is always downloaded
+	# source: https://cloud.google.com/storage/docs/caching#performance_considerations
+	gsutil setmeta -h "Cache-Control: no-cache, no-store" gs://capactio-binaries/latest/*
+	# Update Docker images
+	docker push ghcr.io/capactio/tools/capact-cli:latest
 
 #############
 # Other     #

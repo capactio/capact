@@ -1,0 +1,62 @@
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  # Capact CLI
+  - id: capact
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+    main: ./cmd/cli
+    binary: 'capact-{{ .Os }}-{{ .Arch }}'
+    ldflags:
+      - -s -w -X  capact.io/capact/cmd/cli/cmd.Version={{.Version}} -X  capact.io/capact/cmd/cli/cmd.Revision={{.ShortCommit}} -X capact.io/capact/cmd/cli/cmd.BuildDate={{.Date}} -X capact.io/capact/cmd/cli/cmd.Branch={{.Branch}}
+    hooks:
+      # Install upx first, https://github.com/upx/upx/releases
+      post: upx -1 "{{ .Path }}"
+    # GoReleaser creates binaries inside `bin/${BuildID}_${BuildTarget}`, which is an unique directory per build target in the matrix.
+    # Currently, we use the `gsutil -m rsync ./bin/ gs://capactio-binaries/latest/` command, which is easier when binaries are not nested in nested directories.
+    no_unique_dist_dir: true
+
+archives:
+  - format: binary
+    name_template: '{{ .Binary }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
+
+dockers:
+  - dockerfile: Dockerfile.cli
+    ids:
+      - capact
+    image_templates:
+      - "ghcr.io/capactio/tools/capact-cli:latest"
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+dist: bin
+
+blobs:
+  -
+    provider: gs
+    bucket: capactio-binaries
+    folder: '{{ .Tag }}'
+
+release:
+  # You can disable this pipe in order to not upload any artifacts.
+  # Defaults to false.
+  disable: true

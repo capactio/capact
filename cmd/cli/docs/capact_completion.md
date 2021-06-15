@@ -16,7 +16,7 @@ shell before testing whether completions are working.
 
 ### bash
   Run this command:
-  	echo "source <(argo completion bash)" >> ~/.bashrc
+  	echo "source <(capact completion bash)" >> ~/.bashrc
 
 ### zsh
   Generate a _capact completion script and put it somewhere in your $fpath:

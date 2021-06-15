@@ -62,7 +62,6 @@ func NewRoot() *cobra.Command {
 			},
 			"\n",
 		),
-		Version:      cli.Version,
 		SilenceUsage: true,
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cmd.Help(); err != nil {
