@@ -1,0 +1,24 @@
+# TODO: Remove this Service after 0.4.0 release.
+#
+# NOTE: We changed the internal DNS from `capact-och-local.capact-system` to `capact-hub-local.capact-system`.
+# But the Action is rendered before upgrade and Engine sets up the TypeInstance upload step with old URL.
+# As a result, Action fails as the updated TypeInstances cannot be uploaded to Local Hub, error:
+# `Post "http://capact-och-local.capact-system/graphql": dial tcp: lookup capact-och-local.capact-system on 10.4.0.10:53: no such host`
+# To avoid such situation we leave the old Service but now it points to the new Local Hub deployment.
+#
+apiVersion: v1
+kind: Service
+metadata:
+  # old Service name
+  name: capact-och-local
+  labels:
+    deprecated: "true"
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "hub.selectorLabels" . | nindent 4 }}
