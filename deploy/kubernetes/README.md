@@ -69,7 +69,9 @@ To install Capact, run the following steps:
 
 1. Install Capact Helm chart:
     
-    ```bash
+    > **NOTE:** Helm release notes contains the Gateway password in base64 format. Add the `--set notes.printInsecure="false"` flag to print only helper commands which allows you to get the authorization information manually.
+    
+   ```bash
     helm install capact ./charts/capact -n capact-system
     ```
 

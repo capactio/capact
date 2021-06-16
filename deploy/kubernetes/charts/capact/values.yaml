@@ -26,3 +26,6 @@ postInstallTypeInstanceJob:
     name: populator
     pullPolicy: IfNotPresent
   args: ["/app register capact-installation"]
+
+notes:
+  printInsecure: true
