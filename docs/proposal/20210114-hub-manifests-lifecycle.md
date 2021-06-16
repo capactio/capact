@@ -34,7 +34,7 @@ any downtime.
 
 ## Goal
 
-Prepare zero-downtime Hub content update strategy.
+Prepare zero-downtime Hub manifests update strategy.
 
 ## Assumptions
 
@@ -84,7 +84,7 @@ type Query {
 
 #### Algorithm
 
-The following section describes the DB Populator algorithm for populating the Hub content.
+The following section describes the DB Populator algorithm for populating the Hub manifests.
 
 1. Populate initial content into database
     - Generate random Node IDs
@@ -121,7 +121,7 @@ The following section describes the DB Populator algorithm for populating the Hu
 
     - Use `commit` from `ContentMetadata:published` node to check the diff between new commit and commit from which the
       content has been populated.
-    - If there is any change in `hub-content` directory, continue.
+    - If there is any change in `hub-manifests` directory, continue.
 
 1. Populate full new content into database.
 
@@ -194,7 +194,7 @@ type Query {
 
 #### Algorithm
 
-The following section describes the DB Populator algorithm for populating the Hub content.
+The following section describes the DB Populator algorithm for populating the Hub manifests.
 
 1. Populate initial content into database
     - Generate random Node IDs
@@ -221,7 +221,7 @@ The following section describes the DB Populator algorithm for populating the Hu
 1. Every some period of time, check if OCF manifest changed in Git repository.
     - Use `commit` from Pointer to check the diff between new commit and commit from which the content has been
       populated.
-    - If there is any change in `hub-content` directory, continue.
+    - If there is any change in `hub-manifests` directory, continue.
 
 1. Populate full new content into database.
 
@@ -298,4 +298,4 @@ Because of serious limitation of this solution, it is not suggested.
   The ID field for every node in graph will change periodically. However, the field should be well documented, and then
   API consumers will know that they shouldn’t depend on it.
 
-- Implement Hub content update algorithm according to the document.
+- Implement Hub manifests update algorithm according to the document.
