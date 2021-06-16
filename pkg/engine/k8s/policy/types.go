@@ -2,6 +2,7 @@ package policy
 
 import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
@@ -60,6 +61,18 @@ type TypeInstanceToInject struct {
 
 	// TypeRef refers to a given Type.
 	TypeRef types.ManifestRef `json:"typeRef"`
+}
+
+func (r RulesForInterface) Copy() RulesForInterface {
+	newRules := RulesForInterface{}
+	_ = copier.CopyWithOption(&newRules, r, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	return newRules
+}
+
+func (r Rule) Copy() Rule {
+	newRules := Rule{}
+	_ = copier.CopyWithOption(&newRules, r, copier.Option{IgnoreEmpty: true, DeepCopy: true})
+	return newRules
 }
 
 func (p Policy) ToYAMLString() (string, error) {

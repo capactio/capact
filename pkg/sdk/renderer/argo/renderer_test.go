@@ -247,6 +247,13 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			},
 			policy: fixGlobalPolicyForFallback(),
 		},
+		{
+			name: "Workflow policy injects additional input",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.app-stack.app1.install",
+			},
+			policy: fixAWSGlobalPolicy(),
+		},
 	}
 	for testIdx, test := range tests {
 		tc := testIdx

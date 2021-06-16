@@ -234,7 +234,6 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 				// 3. Import and resolve Implementation for `capact-action`
 				if step.CapactAction != nil {
-					// TODO If capact-policy exists, add policy to the stack, compute/merge current policy
 					// 3.1 Expand `capact-action` alias based on imports section
 					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.CapactAction)
 					if err != nil {
@@ -247,6 +246,12 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, err
 					}
 
+					if step.CapactPolicy != nil {
+						err := r.policyEnforcedCli.PushWorkflowStepPolicy(*step.CapactPolicy)
+						if err != nil {
+							return nil, errors.Wrap(err, "while adding WorkflowPolicy")
+						}
+					}
 					// 3.3 Get all ImplementationRevisions for a given `capact-action`
 					implementations, rule, err := r.policyEnforcedCli.ListImplementationRevisionForInterface(ctx, *actionRef)
 					if err != nil {
@@ -308,7 +313,9 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, err
 					}
 
-					//TODO remove policy from the stack(if provided)
+					if step.CapactPolicy != nil {
+						r.policyEnforcedCli.PopWorkflowStepPolicy()
+					}
 
 					// 3.11 Register output TypeInstances from this action step
 					r.registerStepOutputTypeInstances(step, workflowPrefix, iface, actionOutputTypeInstances)

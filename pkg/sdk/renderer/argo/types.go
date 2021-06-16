@@ -4,6 +4,7 @@ package argo
 import (
 	"regexp"
 
+	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
 )
@@ -24,6 +25,7 @@ type WorkflowStep struct {
 	*wfv1.WorkflowStep
 	CapactWhen                *string                  `json:"capact-when,omitempty"`
 	CapactAction              *string                  `json:"capact-action,omitempty"`
+	CapactPolicy              *policy.WorkflowPolicy   `json:"capact-policy,omitempty"`
 	CapactTypeInstanceOutputs []TypeInstanceDefinition `json:"capact-outputTypeInstances,omitempty"`
 	CapactTypeInstanceUpdates []TypeInstanceDefinition `json:"capact-updateTypeInstances,omitempty"`
 

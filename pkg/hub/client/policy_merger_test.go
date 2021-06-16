@@ -346,3 +346,47 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		})
 	}
 }
+
+func TestNestedWorkflowPolicy(t *testing.T) {
+	w1 := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1})
+	w2 := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 2, "b": 3})
+
+	expected1, _ := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1}).ToPolicy()
+	expected2, _ := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1, "b": 3}).ToPolicy()
+
+	cli := client.NewPolicyEnforcedClient(nil)
+
+	err := cli.PushWorkflowStepPolicy(w1)
+	assert.NoError(t, err)
+	assert.Equal(t, expected1, cli.Policy())
+
+	err = cli.PushWorkflowStepPolicy(w2)
+	assert.NoError(t, err)
+	assert.Equal(t, expected2, cli.Policy())
+
+	cli.PopWorkflowStepPolicy()
+	assert.Equal(t, expected1, cli.Policy())
+}
+
+func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.WorkflowPolicy {
+	implementation := "cap.implementation.bitnami.postgresql.install"
+	return policy.WorkflowPolicy{
+		Rules: policy.WorkflowRulesList{
+			policy.WorkflowRulesForInterface{
+				Interface: types.ManifestRef{
+					Path: "cap.interface.database.postgresql.install",
+				},
+				OneOf: []policy.WorkflowRule{
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{
+							Path: &implementation,
+						},
+						Inject: &policy.WorkflowInjectData{
+							AdditionalInput: input,
+						},
+					},
+				},
+			},
+		},
+	}
+}

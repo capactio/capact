@@ -80,6 +80,10 @@ spec:
     runnerInterface: argo.run
   additionalInput:
     typeInstances: []
+    parameters:
+      typeRef:
+        path: cap.type.aws.rds.postgresql.install-input
+        revision: 0.1.0
   additionalOutput:
     typeInstances: []
   appVersion: 10, 11, 12

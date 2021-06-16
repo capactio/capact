@@ -87,6 +87,17 @@ spec:
               - - capact-action: postgresql.install
                   name: install-db
                   capact-when: postgresql == nil
+                  capact-policy:
+                    rules:
+                      - interface:
+                          path: cap.interface.database.postgresql.install
+                        oneOf:
+                          - implementationConstraints:
+                              path: "cap.implementation.aws.rds.postgresql.install"
+                            inject:
+                              additionalInput:
+                                additional-parameters:
+                                  region: eu-west-2
                   capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql

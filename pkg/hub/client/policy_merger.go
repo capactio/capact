@@ -1,22 +1,27 @@
 package client
 
-import "capact.io/capact/pkg/engine/k8s/policy"
+import (
+	"reflect"
+
+	"capact.io/capact/pkg/engine/k8s/policy"
+	"github.com/jinzhu/copier"
+)
 
 func (e *PolicyEnforcedClient) mergePolicies() {
-	newPolicy := policy.Policy{}
+	currentPolicy := policy.Policy{}
 
 	for _, p := range e.policyOrder {
 		if p == policy.Global {
-			newPolicy = applyPolicy(newPolicy, e.globalPolicy)
+			currentPolicy = applyPolicy(currentPolicy, e.globalPolicy)
 		} else if p == policy.Action {
-			newPolicy = applyPolicy(newPolicy, e.actionPolicy)
+			currentPolicy = applyPolicy(currentPolicy, e.actionPolicy)
 		} else if p == policy.Workflow {
 			for _, wp := range e.workflowStepPolicy {
-				newPolicy = applyPolicy(newPolicy, wp)
+				currentPolicy = applyPolicy(currentPolicy, wp)
 			}
 		}
 	}
-	e.mergedPolicy = newPolicy
+	e.mergedPolicy = currentPolicy
 }
 
 // from new policy we are checking if there are the same rules. If yes we fill missing data,
@@ -26,14 +31,14 @@ func applyPolicy(currentPolicy, newPolicy policy.Policy) policy.Policy {
 	for _, newRuleForInterface := range newPolicy.Rules {
 		policyRuleIndex := getIndexOfPolicyRule(currentPolicy, newRuleForInterface)
 		if policyRuleIndex == -1 {
-			currentPolicy.Rules = append(currentPolicy.Rules, newRuleForInterface)
+			currentPolicy.Rules = append(currentPolicy.Rules, newRuleForInterface.Copy())
 			continue
 		}
 		ruleForInterface := currentPolicy.Rules[policyRuleIndex]
 		for _, newRule := range newRuleForInterface.OneOf {
 			ruleIndex := getIndexOfOneOfRule(ruleForInterface.OneOf, newRule)
 			if ruleIndex == -1 {
-				currentPolicy.Rules[policyRuleIndex].OneOf = append(currentPolicy.Rules[policyRuleIndex].OneOf, newRule)
+				currentPolicy.Rules[policyRuleIndex].OneOf = append(currentPolicy.Rules[policyRuleIndex].OneOf, newRule.Copy())
 				continue
 			}
 			if newRule.Inject == nil {
@@ -75,19 +80,20 @@ func isForSameInterface(p1, p2 policy.RulesForInterface) bool {
 	if p1.Interface.Path != p2.Interface.Path {
 		return false
 	}
+	if p1.Interface.Revision != nil && p2.Interface.Revision != nil {
+		return *p1.Interface.Revision == *p2.Interface.Revision
+	}
 	return p1.Interface.Revision == p2.Interface.Revision
 }
 
 func isSameOneOf(a, b policy.Rule) bool {
-	return a.ImplementationConstraints.Path == b.ImplementationConstraints.Path
-	//TODO match rules with different constraints
+	return reflect.DeepEqual(a.ImplementationConstraints, b.ImplementationConstraints)
 }
 
 func mergeMaps(current, overwrite map[string]interface{}) map[string]interface{} {
 	out := make(map[string]interface{}, len(current))
-	for k, v := range current {
-		out[k] = v
-	}
+	_ = copier.Copy(&out, current)
+
 	for k, v := range overwrite {
 		if v, ok := v.(map[string]interface{}); ok {
 			if bv, ok := out[k]; ok {
