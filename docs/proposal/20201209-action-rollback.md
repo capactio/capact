@@ -18,7 +18,7 @@ Created on 2020-12-09 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec/))
     + [Renaming `resourceVersion` to `revision`](#renaming-resourceversion-to-revision)
     + [New `spec.rollbackActionRef` property](#new-specrollbackactionref-property)
     + [New `spec.standalone` property](#new-specstandalone-property)
-  * [Changes in Local OCH API](#changes-in-local-och-api)
+  * [Changes in Local Hub API](#changes-in-local-hub-api)
   * [Changes in Implementation manifest](#changes-in-implementation-manifest)
     + [New `spec.rollback` property](#new-specrollback-property)
     + [Summary](#summary)
@@ -118,7 +118,7 @@ The rollback action is always triggered by User. User triggers it in the followi
 #### Low-level scenario
 
 1. User navigates to the TypeInstance tree view.
-1. UI calls Local OCH to get all TypeInstances.
+1. UI calls Local Hub to get all TypeInstances.
 1. UI renders TypeInstances.
 1. User selects a given TypeInstance.
 
@@ -222,7 +222,7 @@ Specifies, whether a given TypeInstance was created with a separate Action.
   the "delete" rollback strategy, another condition is if they are not used by any other TypeInstances (in other words -
   they don't have any ancestor).
 
-### Changes in Local OCH API
+### Changes in Local Hub API
 
 User cannot delete TypeInstance via `deleteTypeInstance` mutation. TypeInstance deletion must be performed with Rollback
 creation using Engine API.
@@ -516,7 +516,7 @@ Rollback Controller watches for Rollback Custom Resources and reacts on theirs c
 
 Based on the Rollback CR, render rollback workflow:
 
-1. Using Local OCH GraphQL API, get details of a given input TypeInstance, along with all ancestors and descendants.
+1. Using Local Hub GraphQL API, get details of a given input TypeInstance, along with all ancestors and descendants.
 1. If a given input TypeInstance has property `standalone: false`, return error and exit.
 
    > **NOTE:** It could be implemented by Admission Webhook.
@@ -777,7 +777,7 @@ This section covers a few different example scenarios to present how the rollbac
 
     - Runs rollback workflow for `cap.implementation.atlassian.jira.upgrade` Implementation using its `spec.rollback`
       workflow.
-    - Restores previous revision of TypeInstances using Local OCH GraphQL API
+    - Restores previous revision of TypeInstances using Local Hub GraphQL API
 1. User runs workflow.
 1. The previous TypeInstance revision is restored.
 
@@ -1124,19 +1124,19 @@ Because of the first summary point, this solution cannot be accepted.
 
 ## Consequences
 
-- Introduce new properties in OCF schema and OCH GraphQL API:
+- Introduce new properties in OCF schema and Hub GraphQL API:
     - new Implementation `rollback` property,
     - new TypeInstance properties: `standalone` and `rollbackActionRef`,
 - Move the `Implementation.spec.additionalOutput.typeInstanceRelations` field
   to `Implementation.spec.outputTypeInstanceRelations`.
-- Expose TypeInstance relations in Local OCH GraphQL API:
+- Expose TypeInstance relations in Local Hub GraphQL API:
     - Add `uses` (or `descendants`) field,
     - Add `usedBy` (or `ancestors`) field.
-- Block User access for `deleteTypeInstance` mutation in Local OCH GraphQL API
+- Block User access for `deleteTypeInstance` mutation in Local Hub GraphQL API
 - Create [Rollback-related queries, mutations and types](#new-graphql-api-operations-for-rollback) for Engine GraphQL
   API
 - Create Rollback Custom Resource Definition
 - Implement rollback handling logic in Engine
 - Change `resourceVersion` to `revision` for TypeInstance
     - Update OCF schema
-    - Update Local OCH GraphQL API
+    - Update Local Hub GraphQL API

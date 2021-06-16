@@ -1,11 +1,11 @@
-# OCH Content Lifecycle
+# Hub Manifests Lifecycle
 
 Created on 2021-01-14 by Paweł Kosiec ([@pkosiec](https://github.com/pkosiec)).
 
 ## Overview
 
 This document describes way, how to achieve zero-downtime content synchronization between Git repository, where the OCF
-manifests are stored, and the OCH graph database.
+manifests are stored, and the Hub graph database.
 
 <!-- toc -->
 
@@ -26,15 +26,15 @@ manifests are stored, and the OCH graph database.
 
 ## Motivation
 
-The OCH component stores OCF manifests in graph database. To populate the database, we introduced DB Populator, which
-fetches OCF manifests from a given Git repository, and populates the OCH database.
+The Hub component stores OCF manifests in graph database. To populate the database, we introduced DB Populator, which
+fetches OCF manifests from a given Git repository, and populates the Hub database.
 
-As the content on Git repository changes over time, we need a way to update the content in a way, that OCH doesn't have
+As the content on Git repository changes over time, we need a way to update the content in a way, that Hub doesn't have
 any downtime.
 
 ## Goal
 
-Prepare zero-downtime OCH content update strategy.
+Prepare zero-downtime Hub manifests update strategy.
 
 ## Assumptions
 
@@ -84,7 +84,7 @@ type Query {
 
 #### Algorithm
 
-The following section describes the DB Populator algorithm for populating the OCH content.
+The following section describes the DB Populator algorithm for populating the Hub manifests.
 
 1. Populate initial content into database
     - Generate random Node IDs
@@ -121,7 +121,7 @@ The following section describes the DB Populator algorithm for populating the OC
 
     - Use `commit` from `ContentMetadata:published` node to check the diff between new commit and commit from which the
       content has been populated.
-    - If there is any change in `och-content` directory, continue.
+    - If there is any change in `hub-manifests` directory, continue.
 
 1. Populate full new content into database.
 
@@ -172,7 +172,7 @@ The following section describes the DB Populator algorithm for populating the OC
 - It could be not the most performant solution, as we need to update all nodes in one transaction (add and delete
   labels). However, this operation is very fast (<100ms), especially when comparing to recursive graph query (~30s).
 - All `neo4j-graphql-js` features are still supported after these adjustments.
-- This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
+- This solution is also applicable for synchronizing content of Hub once we implement federation support. The only change is that we will replace Hub vendor subgraph, instead of whole Hub graph.  
 - In the future, we may expose `ContentMetadata` node details as a part of `repoMetadata` GraphQL query.
 
 ### Alternative: Entrypoint node
@@ -194,7 +194,7 @@ type Query {
 
 #### Algorithm
 
-The following section describes the DB Populator algorithm for populating the OCH content.
+The following section describes the DB Populator algorithm for populating the Hub manifests.
 
 1. Populate initial content into database
     - Generate random Node IDs
@@ -221,7 +221,7 @@ The following section describes the DB Populator algorithm for populating the OC
 1. Every some period of time, check if OCF manifest changed in Git repository.
     - Use `commit` from Pointer to check the diff between new commit and commit from which the content has been
       populated.
-    - If there is any change in `och-content` directory, continue.
+    - If there is any change in `hub-manifests` directory, continue.
 
 1. Populate full new content into database.
 
@@ -269,7 +269,7 @@ The following section describes the DB Populator algorithm for populating the OC
 - Limitation: Losing ability to use [built-in filtering capabilities](https://grandstack.io/docs/graphql-filtering) for
   generated queries.
 - Most performant solution: publishing content is a matter of unlabeling one node and labeling another.
-- This solution is also applicable for synchronizing content of OCH once we implement federation support. The only change is that we will replace OCH vendor subgraph, instead of whole OCH graph.  
+- This solution is also applicable for synchronizing content of Hub once we implement federation support. The only change is that we will replace Hub vendor subgraph, instead of whole Hub graph.  
 - In the future, we may expose `Pointer` node details as a part of `repoMetadata` GraphQL query.
 
 Because of serious limitation of this solution, it is not suggested.
@@ -284,11 +284,11 @@ Because of serious limitation of this solution, it is not suggested.
 
   Two running Neo4j at the same time would consume too much resources. Also, the solution would depend on Kubernetes, which would be an issue at some point, when we will go platform-agnostic.
 
-- Creating new database, populating it and then switching connection for OCH.
+- Creating new database, populating it and then switching connection for Hub.
 
   While using multiple databases is
   a [recommended solution for Neo4j 4.x multi-tenancy implementation]([https://neo4j.com/developer/multi-tenancy-worked-example](https://neo4j.com/developer/multi-tenancy-worked-example/)
-  , it is only supported in Enterprise version. Also, we would need to update OCH component configuration to point to
+  , it is only supported in Enterprise version. Also, we would need to update Hub component configuration to point to
   different database in runtime, which doesn't seem as efficient solution.
 
 # Consequences
@@ -298,4 +298,4 @@ Because of serious limitation of this solution, it is not suggested.
   The ID field for every node in graph will change periodically. However, the field should be well documented, and then
   API consumers will know that they shouldn’t depend on it.
 
-- Implement OCH content update algorithm according to the document.
+- Implement Hub manifests update algorithm according to the document.

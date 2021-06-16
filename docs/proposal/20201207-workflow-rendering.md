@@ -26,7 +26,7 @@ This document shows how we can render the workflow in Capact Engine.
 
 Capact must, bases on the available OCF Manifests, be able to render a complete workflow, which can be executed by [runners](https://capact.io/docs/architecture/runner). For now, we do not have a proposal, for how the rendering will be done and what kind of syntax will be used to describe the workflow.
 
-Besides providing a syntax to define a workflow, in many cases, Content Creators would like to call other Interfaces, which are already available in OCH. For example - they are creating a workflow to provision WordPress and they need a PostgreSQL database. They have already an Interface `postgresql.install` available in OCH and they would like to use it in their Action.
+Besides providing a syntax to define a workflow, in many cases, Content Creators would like to call other Interfaces, which are already available in Hub. For example - they are creating a workflow to provision WordPress, and they need a PostgreSQL database. They have already an Interface `postgresql.install` available in Hub, and they would like to use it in their Action.
 Capact must have an option, to allow Content Creators to reference another Interface in their workflow. This way, Content Creators can prepare Actions, which use the already existing platform capabilities.
 
 Content Creator should be able to:
@@ -242,11 +242,11 @@ spec:
 
 ### How to define, which workflow artifacts are TypeInstances
 
-We need a way for the Content Creator to say, that an artifact created in the Argo workflow is a TypeInstance and is supposed to be uploaded to OCH. The workflow could use some intermediate artifacts just for handling the data flow between workflow steps. Currently, there is no way to identify the TypeInstance artifacts in the workflow.
+We need a way for the Content Creator to say, that an artifact created in the Argo workflow is a TypeInstance and is supposed to be uploaded to Hub. The workflow could use some intermediate artifacts just for handling the data flow between workflow steps. Currently, there is no way to identify the TypeInstance artifacts in the workflow.
 
 We could enforce the Content Creator to ensure, that the TypeInstance artifact names must match with the names defined in the `.spec.outputTypeInstanceRelations`, but this would mean writing additional boilerplate steps for the Content Creator. To avoid it, we propose to define a directive `capact-outputTypeInstances`.
 
-The `capact-outputTypeInstances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood, it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to OCH. This also allows us to track the TypeInstances produced in a workflow.
+The `capact-outputTypeInstances` should be defined on workflow steps, which produce TypeInstance artifacts. Under the hood, it will create an additional workflow step, which creates a global artifact, so it can be fetched and uploaded to Hub. This also allows us to track the TypeInstances produced in a workflow.
 
 The `capact-outputTypeInstances` is a list of mappings between the output TypeInstance and Argo global artifacts:
 ```yaml
