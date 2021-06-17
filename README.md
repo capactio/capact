@@ -2,6 +2,8 @@
 
 **Capact** (pronounced: "cape-act", /ˈkeɪp.ækt/) is a simple way to manage applications and infrastructure.
 
+colour
+
 ## Documentation
 
 The Capact documentation can be found on the [capact.io/docs](https://capact.io/docs) website.
