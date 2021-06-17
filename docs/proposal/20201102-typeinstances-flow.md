@@ -2,15 +2,6 @@
 
 Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszostok/))
 
- Triggger typo chesk.
- She were bla bla. Trigger language check.
- She were bla bla. Trigger language check.
- 
- 
- colour
- colour
- 
- 
 ##  Overview
 
 This document describes the approach for handling the TypeInstances (artifacts) between different Capact components.
