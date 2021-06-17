@@ -73,9 +73,8 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 	}
 
 	helmRelease, err := upgradeCli.Run(helmChartRel.Name, chartData, values)
-
 	if err != nil {
-		return Output{}, Status{}, errors.Wrap(err, "while installing Helm chart")
+		return Output{}, Status{}, errors.Wrap(err, "while upgrading Helm chart")
 	}
 
 	if helmRelease == nil {
