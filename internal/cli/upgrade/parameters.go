@@ -18,6 +18,9 @@ type (
 		} `json:"neo4j,omitempty"`
 	}
 	CapactValues struct {
+		Notes struct {
+			PrintInsecure bool `json:"printInsecure"`
+		} `json:"notes"`
 		Engine    Engine    `json:"engine,omitempty"`
 		Gateway   Gateway   `json:"gateway,omitempty"`
 		HubPublic HubPublic `json:"hub-public,omitempty"`

@@ -35,6 +35,7 @@ capact upgrade --version 0.1.0
       --max-queue-time duration             Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
       --override-capact-image-repo string   Allows you to override Docker image repository for Capact components. By default, Docker image repository from Helm chart is used.
       --override-capact-image-tag string    Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.
+      --print-insecure-helm-release-notes   Prints the base64-encoded Gateway password directly in Helm release notes.
       --timeout duration                    Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
       --version string                      Capact version. (default "@latest")
   -w, --wait                                Waits for the upgrade process until it finish or the defined "--timeout" occurs. (default true)

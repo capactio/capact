@@ -208,7 +208,7 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 		return nil, errors.Wrap(err, "while listing existing upgrade actions")
 	}
 
-	runningActions := []*gqlengine.Action{}
+	var runningActions []*gqlengine.Action
 	for i := range actions {
 		action := actions[i]
 		if action.Status.Phase != gqlengine.ActionStatusPhaseRunning {
