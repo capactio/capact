@@ -23,7 +23,7 @@ main() {
     export CLUSTER_TYPE="GKE"
     export DOCKER_TAG=${OVERRIDE_DOCKER_TAG:-${DOCKER_TAG}}
     export DOCKER_REPOSITORY=${OVERRIDE_DOCKER_REPOSITORY:-${DOCKER_REPOSITORY}}
-    export PRINT_INSECURE_NOTES=false
+    export PRINT_INSECURE_NOTES="false"
     capact::install_upgrade::charts
 }
 

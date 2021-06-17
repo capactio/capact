@@ -13,8 +13,8 @@ Use the following header configuration in the Gateway GraphQL Playground:
 {{ else }}
 To obtain the Gateway authorization information, run:
 
-    export GATEWAY_USER=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.username | base64decode }})`}}'
-    export GATEWAY_PASS=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.password | base64decode }})`}}'
+    export GATEWAY_USER=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.username | base64decode }}`}}')
+    export GATEWAY_PASS=$(kubectl -n {{ .Release.Namespace }} get secret capact-gateway -ogo-template='{{`{{.data.password | base64decode }}`}}')
     export BASIC_AUTH_HEADER=$(echo "$GATEWAY_USER:$GATEWAY_PASS" | base64)
 
 Use the following header configuration in the Gateway GraphQL Playground:

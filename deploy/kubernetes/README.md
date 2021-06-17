@@ -69,9 +69,9 @@ To install Capact, run the following steps:
 
 1. Install Capact Helm chart:
     
-    > **NOTE:** Helm release notes contains the Gateway password in base64 format. Add the `--set notes.printInsecure="false"` flag to print only helper commands which allows you to get the authorization information manually.
-    
-   ```bash
+    > **NOTE:** After the Helm chart installation, the Helm release notes are outputted only with the helper commands, which allows you to get the authorization information manually. Add the `--set notes.printInsecure="true"` flag to print the base64-encoded Gateway password directly.
+
+    ```bash
     helm install capact ./charts/capact -n capact-system
     ```
 
@@ -81,30 +81,17 @@ To install Capact, run the following steps:
 
 To upgrade Capact installation, do the following steps:
 
-1. Build CLI:
-
-   ```bash
-   # {OS} - possible values: linux, darwin, windows
-   CLI_OS={OS} make build-tool-cli
-   ```
-
-2. Log into the cluster:
-
-   ```bash
-   # {OS} - same as in the first step
-   ./bin/capact-{OS}-amd64 login {CLUSTER_GATEWAY_URL} -u {GATEWAY_USERNAME} -p {GATEWAY_PASSWORD}
-   ```
+1. [Setup Capact CLI](https://capact.io/docs/cli/getting-started#first-use)
    
-3. Trigger cluster upgrade:
+2. Trigger cluster upgrade:
 
    ```bash
-   # {OS} - same as in the first step
    # Upgrade Capact components to the newest available version
-   ./bin/capact-{OS}-amd64 upgrade
+   capact upgrade
    ```
    
-   >**NOTE:** To check possible configuration options, run: `./bin/capact-{OS}-amd64 upgrade --help`
-                 
+   >**NOTE:** To check possible configuration options, run: `capact upgrade --help`
+
 ## Uninstall
 
 To uninstall Capact, follow the steps:

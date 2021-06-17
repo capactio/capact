@@ -252,7 +252,7 @@ capact::install_upgrade::charts() {
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${CAPACT_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${CAPACT_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${CAPACT_INCREASE_RESOURCE_LIMITS}}
-    export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"true"}
+    export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"false"}
     # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
     if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
       shout "Using higher resource requests and limits from ${CLUSTER_CONFIG_DIR}"

@@ -28,4 +28,4 @@ postInstallTypeInstanceJob:
   args: ["/app register capact-installation"]
 
 notes:
-  printInsecure: true
+  printInsecure: false

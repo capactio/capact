@@ -34,6 +34,7 @@ main() {
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
     export CLUSTER_TYPE="KIND"
+    export PRINT_INSECURE_NOTES="true"
     capact::update::images_on_kind
     capact::install_upgrade::charts
 
