@@ -84,6 +84,7 @@ main() {
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
     export CLUSTER_TYPE="KIND"
     export USE_TEST_SETUP="true"
+    export PRINT_INSECURE_NOTES="false"
     capact::install_upgrade::charts
 
     capact::test::execute
