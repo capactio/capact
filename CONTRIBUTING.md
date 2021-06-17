@@ -2,6 +2,9 @@
 
 To contribute to this project, follow the common contribution rules in the [`CONTRIBUTING.md`](https://github.com/capactio/.github/blob/main/CONTRIBUTING.md) document on the `.github` repository.
 
+Triggger typo chesk.
+She were bla bla. Trigger language check.
+
 ## Additional contribution rules
 
 While creating pull requests to this repository, make sure your changes adhere to our [development guidelines](https://capact.io/docs/development/development-guidelines).
