@@ -4,8 +4,10 @@ Created on 2020-11-02 by Mateusz Szostok ([@mszostok](https://github.com/mszosto
 
  Triggger typo chesk.
  She were bla bla. Trigger language check.
+ She were bla bla. Trigger language check.
  
  
+ colour
  colour
  
  

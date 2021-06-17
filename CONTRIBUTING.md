@@ -4,8 +4,10 @@ To contribute to this project, follow the common contribution rules in the [`CON
 
  Triggger typo chesk.
  She were bla bla. Trigger language check.
+ She were bla bla. Trigger language check.
  
  
+ colour
  colour
  
 ## Additional contribution rules
