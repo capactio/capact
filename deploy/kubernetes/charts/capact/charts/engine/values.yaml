@@ -57,6 +57,8 @@ tolerations: []
 
 affinity: {}
 
+# order from highest priority to the lowest
+policyOrder: "ACTION,GLOBAL,WORKFLOW"
 globalPolicyRules:
 # Insert Interface paths with Implementations. For example:
 #

@@ -83,7 +83,7 @@ var _ = BeforeSuite(func(done Done) {
 	err = (&ActionReconciler{
 		log: ctrl.Log.WithName("controllers").WithName("Action"),
 		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(),
-			&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, &typeInstanceLockerFake{},
+			&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, policy.MergeOrder{policy.Action, policy.Global}, &typeInstanceLockerFake{},
 			&typeInstanceGetterFake{}, cfg),
 	}).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())

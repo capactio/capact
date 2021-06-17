@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"capact.io/capact/internal/ptr"
+	"sigs.k8s.io/yaml"
 
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -68,7 +69,7 @@ func newDedicatedRenderer(maxDepth int, policyEnforcedCli PolicyEnforcedHubClien
 	return r
 }
 
-func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Workflow {
+func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Workflow, *WorkflowStep) {
 	r.entrypointStep = &WorkflowStep{
 		WorkflowStep: &wfv1.WorkflowStep{
 			Name:     "start-entrypoint",
@@ -91,7 +92,7 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) *Work
 	workflow.Entrypoint = r.rootTemplate.Name
 	workflow.Templates = append(workflow.Templates, r.rootTemplate)
 
-	return workflow
+	return workflow, r.entrypointStep
 }
 
 func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
@@ -210,7 +211,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, err
 					}
 
-					// 2.3 Replace step and emit input TypeInstance as step output
+					// 2. Replace step and emit input TypeInstance as step output
 					if satisfiedArg != "" {
 						emitStep, wfTpl := r.emitWorkflowInputTypeInstanceAsStepOutput(tpl.Name, step, satisfiedArg)
 						step = emitStep
@@ -233,6 +234,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 				// 3. Import and resolve Implementation for `capact-action`
 				if step.CapactAction != nil {
+					// TODO If capact-policy exists, add policy to the stack, compute/merge current policy
 					// 3.1 Expand `capact-action` alias based on imports section
 					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.CapactAction)
 					if err != nil {
@@ -269,11 +271,18 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, errors.Wrap(err, "while creating workflow for action step")
 					}
 
-					// 3.7 List TypeInstances to inject based on policy and inject them if provided
+					// 3.7. List data based on policy and inject them if provided
+					// 3.7.1 TypeInstances
 					typeInstances := r.policyEnforcedCli.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 					err = r.InjectDownloadStepForTypeInstancesIfProvided(importedWorkflow, typeInstances)
 					if err != nil {
 						return nil, errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
+					}
+					// 3.7.2 Additional Input
+					additionalInput := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
+					err = r.InjectAdditionalInput(step, additionalInput)
+					if err != nil {
+						return nil, errors.Wrap(err, "while injecting additional input")
 					}
 
 					for k, v := range newArtifactMappings {
@@ -298,6 +307,8 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					if err != nil {
 						return nil, err
 					}
+
+					//TODO remove policy from the stack(if provided)
 
 					// 3.11 Register output TypeInstances from this action step
 					r.registerStepOutputTypeInstances(step, workflowPrefix, iface, actionOutputTypeInstances)
@@ -549,6 +560,24 @@ func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflo
 		return nil
 	}
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, typeInstances)
+}
+
+func (r *dedicatedRenderer) InjectAdditionalInput(step *WorkflowStep, additionalInput map[string]interface{}) error {
+	if len(additionalInput) == 0 {
+		return nil
+	}
+
+	data, err := yaml.Marshal(additionalInput["additional-parameters"])
+	if err != nil {
+		return errors.Wrap(err, "while marshaling additional input to YAML")
+	}
+
+	step.Arguments.Artifacts = append(step.Arguments.Artifacts, wfv1.Artifact{
+		Name: additionalInputName,
+		ArtifactLocation: wfv1.ArtifactLocation{
+			Raw: &wfv1.RawArtifact{Data: string(data)},
+		}})
+	return nil
 }
 
 func (r *dedicatedRenderer) PickImplementationRevision(in []hubpublicapi.ImplementationRevision) (hubpublicapi.ImplementationRevision, error) {

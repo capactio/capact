@@ -23,13 +23,18 @@ type HubClient interface {
 }
 
 type PolicyEnforcedClient struct {
-	hubCli HubClient
-	policy policy.Policy
-	mu     sync.RWMutex
+	hubCli             HubClient
+	globalPolicy       policy.Policy
+	actionPolicy       policy.Policy
+	mergedPolicy       policy.Policy
+	policyOrder        policy.MergeOrder
+	workflowStepPolicy []policy.Policy
+	mu                 sync.RWMutex
 }
 
 func NewPolicyEnforcedClient(hubCli HubClient) *PolicyEnforcedClient {
-	return &PolicyEnforcedClient{hubCli: hubCli}
+	defaultOrder := policy.MergeOrder{policy.Action, policy.Global}
+	return &PolicyEnforcedClient{hubCli: hubCli, policyOrder: defaultOrder}
 }
 
 func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicgraphql.InterfaceReference) ([]hubpublicgraphql.ImplementationRevision, policy.Rule, error) {
@@ -85,14 +90,60 @@ func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule
 	return typeInstancesToInject
 }
 
+// check if rules has AdditionalInput to inject and if implementation expects AdditionalInput
+func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) map[string]interface{} {
+	if policyRule.Inject == nil ||
+		len(policyRule.Inject.AdditionalInput) == 0 ||
+		implRev.Spec == nil ||
+		implRev.Spec.AdditionalInput == nil ||
+		implRev.Spec.AdditionalInput.Parameters == nil {
+		return nil
+	}
+	// TODO validate
+	return policyRule.Inject.AdditionalInput
+}
+
 func (e *PolicyEnforcedClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error) {
 	return e.hubCli.FindInterfaceRevision(ctx, ref)
 }
 
-// SetPolicy sets policy to use. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetPolicy(policy policy.Policy) {
+func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 	e.mu.Lock()
-	e.policy = policy
+	e.policyOrder = order
+	e.mergePolicies()
+	e.mu.Unlock()
+}
+
+// SetGlobalPolicy sets global policy to use. This setter is thread safe.
+func (e *PolicyEnforcedClient) SetGlobalPolicy(policy policy.Policy) {
+	e.mu.Lock()
+	e.globalPolicy = policy
+	e.mergePolicies()
+	e.mu.Unlock()
+}
+
+// SetActionPolicy sets policy to use during actiom workflow rendering. This setter is thread safe.
+func (e *PolicyEnforcedClient) SetActionPolicy(policy policy.Policy) {
+	e.mu.Lock()
+	e.actionPolicy = policy
+	e.mergePolicies()
+	e.mu.Unlock()
+}
+
+// SetWorkflowStepPolicy sets policy to use during rendering a step. This setter is thread safe.
+func (e *PolicyEnforcedClient) SetWorkflowStepPolicy(policy policy.Policy) {
+	e.mu.Lock()
+	e.workflowStepPolicy = append(e.workflowStepPolicy, policy)
+	e.mergePolicies()
+	e.mu.Unlock()
+}
+
+// SetWorkflowStepPolicy sets policy to use during rendering a step. This setter is thread safe.
+func (e *PolicyEnforcedClient) UnsetWorkflowStepPolicy() {
+	e.mu.Lock()
+	if len(e.workflowStepPolicy) > 0 {
+		e.workflowStepPolicy = e.workflowStepPolicy[:len(e.workflowStepPolicy)-1]
+	}
 	e.mu.Unlock()
 }
 
@@ -100,7 +151,7 @@ func (e *PolicyEnforcedClient) SetPolicy(policy policy.Policy) {
 func (e *PolicyEnforcedClient) Policy() policy.Policy {
 	e.mu.Lock()
 	defer e.mu.Unlock()
-	return e.policy
+	return e.mergedPolicy
 }
 
 func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraphql.InterfaceReference) policy.RulesForInterface {
