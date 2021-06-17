@@ -23,13 +23,13 @@ type HubClient interface {
 }
 
 type PolicyEnforcedClient struct {
-	hubCli             HubClient
-	globalPolicy       policy.Policy
-	actionPolicy       policy.Policy
-	mergedPolicy       policy.Policy
-	policyOrder        policy.MergeOrder
-	workflowStepPolicy []policy.Policy
-	mu                 sync.RWMutex
+	hubCli               HubClient
+	globalPolicy         policy.Policy
+	actionPolicy         policy.Policy
+	mergedPolicy         policy.Policy
+	policyOrder          policy.MergeOrder
+	workflowStepPolicies []policy.Policy
+	mu                   sync.RWMutex
 }
 
 func NewPolicyEnforcedClient(hubCli HubClient) *PolicyEnforcedClient {
@@ -137,7 +137,7 @@ func (e *PolicyEnforcedClient) PushWorkflowStepPolicy(workflowPolicy policy.Work
 	if err != nil {
 		return errors.Wrap(err, "while getting Policy from WorkflowPolicy")
 	}
-	e.workflowStepPolicy = append(e.workflowStepPolicy, p)
+	e.workflowStepPolicies = append(e.workflowStepPolicies, p)
 	e.mergePolicies()
 	e.mu.Unlock()
 	return nil
@@ -146,8 +146,8 @@ func (e *PolicyEnforcedClient) PushWorkflowStepPolicy(workflowPolicy policy.Work
 // PopWorkflowStepPolicy removes latest added workflow policy. This setter is thread safe.
 func (e *PolicyEnforcedClient) PopWorkflowStepPolicy() {
 	e.mu.Lock()
-	if len(e.workflowStepPolicy) > 0 {
-		e.workflowStepPolicy = e.workflowStepPolicy[:len(e.workflowStepPolicy)-1]
+	if len(e.workflowStepPolicies) > 0 {
+		e.workflowStepPolicies = e.workflowStepPolicies[:len(e.workflowStepPolicies)-1]
 	}
 	e.mergePolicies()
 	e.mu.Unlock()

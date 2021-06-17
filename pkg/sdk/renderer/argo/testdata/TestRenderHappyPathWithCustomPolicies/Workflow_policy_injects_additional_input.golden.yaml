@@ -25,18 +25,10 @@ args:
                     username: app1
                     password: okon
                   defaultDBName: app1
-          capact-policy:
-            apiVersion: ""
-            rules:
-            - interface:
-                path: cap.interface.database.postgresql.install
-              oneOf:
-              - implementationConstraints:
-                  path: cap.implementation.aws.rds.postgresql.install
-                inject:
-                  additionalInput:
-                    additional-parameters:
-                      region: eu-west-2
+            - name: additional-parameters
+              raw:
+                data: |
+                  region: eu-west-2
           name: install-db
           template: app1-install-install-db-postgres-install
       - - arguments:

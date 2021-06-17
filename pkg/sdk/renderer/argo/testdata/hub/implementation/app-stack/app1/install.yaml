@@ -91,9 +91,14 @@ spec:
                     rules:
                       - interface:
                           path: cap.interface.database.postgresql.install
+                          revision: 0.1.0
                         oneOf:
                           - implementationConstraints:
-                              path: "cap.implementation.aws.rds.postgresql.install"
+                              attributes:
+                              - path: cap.attribute.cloud.provider.aws
+                              requires:
+                              - path: cap.type.aws.auth.credentials
+                                revision: 0.1.0
                             inject:
                               additionalInput:
                                 additional-parameters:

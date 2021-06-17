@@ -316,6 +316,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					if step.CapactPolicy != nil {
 						r.policyEnforcedCli.PopWorkflowStepPolicy()
 					}
+					step.CapactPolicy = nil
 
 					// 3.11 Register output TypeInstances from this action step
 					r.registerStepOutputTypeInstances(step, workflowPrefix, iface, actionOutputTypeInstances)

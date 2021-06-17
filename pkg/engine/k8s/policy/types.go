@@ -12,13 +12,13 @@ const (
 	AnyInterfacePath  string = "cap.*"
 )
 
-type OrderItem string
-type MergeOrder []OrderItem
+type PolicyType string
+type MergeOrder []PolicyType
 
 const (
-	Global   OrderItem = "GLOBAL"
-	Action   OrderItem = "ACTION"
-	Workflow OrderItem = "WORKFLOW"
+	Global   PolicyType = "GLOBAL"
+	Action   PolicyType = "ACTION"
+	Workflow PolicyType = "WORKFLOW"
 )
 
 type Policy struct {
@@ -63,13 +63,13 @@ type TypeInstanceToInject struct {
 	TypeRef types.ManifestRef `json:"typeRef"`
 }
 
-func (r RulesForInterface) Copy() RulesForInterface {
+func (r RulesForInterface) DeepCopy() RulesForInterface {
 	newRules := RulesForInterface{}
 	_ = copier.CopyWithOption(&newRules, r, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	return newRules
 }
 
-func (r Rule) Copy() Rule {
+func (r Rule) DeepCopy() Rule {
 	newRules := Rule{}
 	_ = copier.CopyWithOption(&newRules, r, copier.Option{IgnoreEmpty: true, DeepCopy: true})
 	return newRules

@@ -16,7 +16,7 @@ func (e *PolicyEnforcedClient) mergePolicies() {
 		} else if p == policy.Action {
 			currentPolicy = applyPolicy(currentPolicy, e.actionPolicy)
 		} else if p == policy.Workflow {
-			for _, wp := range e.workflowStepPolicy {
+			for _, wp := range e.workflowStepPolicies {
 				currentPolicy = applyPolicy(currentPolicy, wp)
 			}
 		}
@@ -31,20 +31,26 @@ func applyPolicy(currentPolicy, newPolicy policy.Policy) policy.Policy {
 	for _, newRuleForInterface := range newPolicy.Rules {
 		policyRuleIndex := getIndexOfPolicyRule(currentPolicy, newRuleForInterface)
 		if policyRuleIndex == -1 {
-			currentPolicy.Rules = append(currentPolicy.Rules, newRuleForInterface.Copy())
+			currentPolicy.Rules = append(currentPolicy.Rules, newRuleForInterface.DeepCopy())
 			continue
 		}
 		ruleForInterface := currentPolicy.Rules[policyRuleIndex]
 		for _, newRule := range newRuleForInterface.OneOf {
 			ruleIndex := getIndexOfOneOfRule(ruleForInterface.OneOf, newRule)
 			if ruleIndex == -1 {
-				currentPolicy.Rules[policyRuleIndex].OneOf = append(currentPolicy.Rules[policyRuleIndex].OneOf, newRule.Copy())
+				currentPolicy.Rules[policyRuleIndex].OneOf = append(currentPolicy.Rules[policyRuleIndex].OneOf, newRule.DeepCopy())
 				continue
 			}
 			if newRule.Inject == nil {
 				break
 			}
 			rule := ruleForInterface.OneOf[ruleIndex]
+			if rule.Inject == nil {
+				rule.Inject = &policy.InjectData{}
+			}
+			if ruleForInterface.OneOf[ruleIndex].Inject == nil {
+				ruleForInterface.OneOf[ruleIndex].Inject = &policy.InjectData{}
+			}
 			// merge Additional Input
 			if newRule.Inject.AdditionalInput != nil {
 				ruleForInterface.OneOf[ruleIndex].Inject.AdditionalInput = mergeMaps(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
