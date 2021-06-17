@@ -4,7 +4,7 @@ Created on 2020-12-22 by Damian Czaja ([@trojan295](https://github.com/trojan295
 
 ## Overview
 
-This document shows how we can render the workflow in Capact Engine. Triggger typo chesk.
+This document shows how we can render the workflow in Capact Engine.
 
 <!-- toc -->
 
