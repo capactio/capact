@@ -23,6 +23,8 @@ jobs:
   recreate-cluster:
     name: Recreate cluster
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
       - name: Clone Repository (Latest)

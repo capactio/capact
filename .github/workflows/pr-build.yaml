@@ -24,6 +24,10 @@ jobs:
     name: Cancel previous workflows
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    # https://github.com/styfle/cancel-workflow-action#advanced-token-permissions
+    permissions:
+      actions: write
+
     steps:
       - name: Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.9.0
@@ -34,6 +38,8 @@ jobs:
     name: Lint and test code
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -58,6 +64,9 @@ jobs:
     name: Check documentation
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@v2
@@ -67,7 +76,6 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
           level: info
-          patterns: "**.md"
           custom_api_endpoint: ''
           ### Flags for LanguageTool ###
           # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
@@ -94,6 +102,8 @@ jobs:
       matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
       matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
       matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
@@ -116,6 +126,9 @@ jobs:
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
@@ -135,6 +148,9 @@ jobs:
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
@@ -154,6 +170,9 @@ jobs:
     needs: prepare-matrix
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout code
@@ -173,6 +192,9 @@ jobs:
     name: Build ${{ matrix.TOOL }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -194,6 +216,9 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     needs: [ entry-tests, build-app, build-tests ]
+    permissions:
+      contents: read
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
