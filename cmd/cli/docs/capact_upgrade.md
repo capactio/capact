@@ -38,7 +38,7 @@ capact upgrade --version 0.1.0
       --print-insecure-helm-release-notes   Prints the base64-encoded Gateway password directly in Helm release notes.
       --timeout duration                    Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
       --version string                      Capact version. (default "@latest")
-  -w, --wait                                Waits for the upgrade process until it finish or the defined "--timeout" occurs. (default true)
+  -w, --wait                                Waits for the upgrade process until it's finished or the defined "--timeout" has occurred. (default true)
 ```
 
 ### Options inherited from parent commands

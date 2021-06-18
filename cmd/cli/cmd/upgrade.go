@@ -45,7 +45,7 @@ func NewUpgrade() *cobra.Command {
 	flags.BoolVar(&opts.Parameters.Override.CapactValues.Notes.PrintInsecure, "print-insecure-helm-release-notes", false, "Prints the base64-encoded Gateway password directly in Helm release notes.")
 	flags.StringVar(&opts.ActionNamePrefix, "action-name-prefix", "capact-upgrade-", "Specifies Capact upgrade Action name prefix.")
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
-	flags.BoolVarP(&opts.Wait, "wait", "w", true, `Waits for the upgrade process until it finish or the defined "--timeout" occurs.`)
+	flags.BoolVarP(&opts.Wait, "wait", "w", true, `Waits for the upgrade process until it's finished or the defined "--timeout" has occurred.`)
 	flags.DurationVar(&opts.MaxQueueTime, "max-queue-time", 10*time.Minute, `Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 
 	return cmd
