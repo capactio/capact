@@ -29,7 +29,7 @@ capact action delete --name-regex='upgrade-*' --namespace=foo
   -n, --namespace string    Kubernetes namespace where the Action was created (default "default")
       --phase string        Deletes Actions only in the given phase. Supported only when the --name-regex flag is used. Allowed values: INITIAL, BEING_RENDERED, ADVANCED_MODE_RENDERING_ITERATION, READY_TO_RUN, RUNNING, BEING_CANCELED, CANCELED, SUCCEEDED, FAILED
       --timeout duration    Maximum time during which the deletion process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
-  -w, --wait                Waits for the deletion process until it finish or the defined "--timeout" occurs. (default true)
+  -w, --wait                Waits for the deletion process until it's finished or the defined "--timeout" has occurred. (default true)
 ```
 
 ### Options inherited from parent commands

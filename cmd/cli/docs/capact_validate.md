@@ -23,7 +23,7 @@ capact validate pkg/cli/test_manifests/*.yaml
 capact validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
 
 # Validate all Hub manifests
-capact validate ./hub-manifests/**/*.yaml
+capact validate ./manifests/**/*.yaml
 ```
 
 ### Options
