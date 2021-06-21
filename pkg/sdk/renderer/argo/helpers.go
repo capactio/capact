@@ -13,15 +13,8 @@ import (
 func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReference {
 	return hubpublicgraphql.InterfaceReference{
 		Path:     in.Path,
-		Revision: stringOrEmpty(in.Revision),
+		Revision: hubpublicgraphql.StringOrEmpty(in.Revision),
 	}
-}
-
-func stringOrEmpty(in *string) string {
-	if in != nil {
-		return *in
-	}
-	return ""
 }
 
 func shouldExit(ctx context.Context) bool {

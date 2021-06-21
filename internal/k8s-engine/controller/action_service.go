@@ -375,7 +375,7 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
 }
 
-func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.Policy, []byte, error) {
+func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.ActionPolicy, []byte, error) {
 	if action.Spec.Input == nil || action.Spec.Input.ActionPolicy == nil {
 		return nil, nil, nil
 	}
@@ -388,7 +388,7 @@ func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha
 
 	policyData := secret.Data[graphqldomain.ActionPolicySecretDataKey]
 
-	policy := &policy.Policy{}
+	policy := &policy.ActionPolicy{}
 	if err := json.Unmarshal(policyData, policy); err != nil {
 		return nil, nil, errors.Wrap(err, "while unmarshaling Policy data")
 	}

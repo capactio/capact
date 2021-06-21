@@ -11,6 +11,7 @@ type ImplementationRef ManifestRef
 type AttributeRef ManifestRef
 
 // ManifestRef holds the full path and the revision to a given manifest.
+// +kubebuilder:object:generate=true
 type ManifestRef struct {
 	Path     string  `json:"path"`               // Path of a given manifest
 	Revision *string `json:"revision,omitempty"` // Version of the manifest content in the SemVer format.

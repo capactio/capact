@@ -43,9 +43,4 @@ linters:
     - bodyclose
     - gocyclo
 
-linters-settings:
-  gocyclo:
-    # the maximal code complexity to report
-    min-complexity: 35
-
   fast: false

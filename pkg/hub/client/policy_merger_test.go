@@ -18,7 +18,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 	tests := []struct {
 		name     string
 		global   policy.Policy
-		action   policy.Policy
+		action   policy.ActionPolicy
 		expected policy.Policy
 		order    policy.MergeOrder
 	}{
@@ -55,7 +55,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 					},
 				},
 			},
-			action: policy.Policy{},
+			action: policy.ActionPolicy{},
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
@@ -91,7 +91,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		},
 		{
 			name: "only action policy",
-			action: policy.Policy{
+			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
 						Interface: types.ManifestRef{
@@ -158,7 +158,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		},
 		{
 			name: "action first then global for the same interface",
-			action: policy.Policy{
+			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
 						Interface: types.ManifestRef{
@@ -269,7 +269,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		},
 		{
 			name: "action first then global for different interfaces - only rules",
-			action: policy.Policy{
+			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
 						Interface: types.ManifestRef{
@@ -331,6 +331,90 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			},
 			order: policy.MergeOrder{policy.Action, policy.Global},
 		},
+		{
+			name: "merge type instances and additional input",
+			action: policy.ActionPolicy{
+				Rules: policy.RulesList{
+					policy.RulesForInterface{
+						Interface: types.ManifestRef{
+							Path: interfacePath,
+						},
+						OneOf: []policy.Rule{
+							{
+								ImplementationConstraints: policy.ImplementationConstraints{
+									Path: &implementationPath,
+								},
+								Inject: &policy.InjectData{
+									AdditionalInput: map[string]interface{}{
+										"additional-input": map[string]interface{}{
+											"a": 1,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			global: policy.Policy{
+				Rules: policy.RulesList{
+					policy.RulesForInterface{
+						Interface: types.ManifestRef{
+							Path: interfacePath,
+						},
+						OneOf: []policy.Rule{
+							{
+								ImplementationConstraints: policy.ImplementationConstraints{
+									Path: &implementationPath,
+								},
+								Inject: &policy.InjectData{
+									TypeInstances: []policy.TypeInstanceToInject{
+										{
+											ID: "123-321-123",
+											TypeRef: types.ManifestRef{
+												Path: "cap.type.x",
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			expected: policy.Policy{
+				Rules: policy.RulesList{
+					policy.RulesForInterface{
+						Interface: types.ManifestRef{
+							Path: interfacePath,
+						},
+						OneOf: []policy.Rule{
+							{
+								ImplementationConstraints: policy.ImplementationConstraints{
+									Path: &implementationPath,
+								},
+								Inject: &policy.InjectData{
+									TypeInstances: []policy.TypeInstanceToInject{
+										{
+											ID: "123-321-123",
+											TypeRef: types.ManifestRef{
+												Path: "cap.type.x",
+											},
+										},
+									},
+									AdditionalInput: map[string]interface{}{
+										"additional-input": map[string]interface{}{
+											"a": 1,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			order: policy.MergeOrder{policy.Action, policy.Global},
+		},
 	}
 	for _, test := range tests {
 		tt := test
@@ -351,12 +435,15 @@ func TestNestedWorkflowPolicy(t *testing.T) {
 	w1 := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1})
 	w2 := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 2, "b": 3})
 
-	expected1, _ := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1}).ToPolicy()
-	expected2, _ := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1, "b": 3}).ToPolicy()
+	expected1, err := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1}).ToPolicy()
+	assert.NoError(t, err)
+
+	expected2, err := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1, "b": 3}).ToPolicy()
+	assert.NoError(t, err)
 
 	cli := client.NewPolicyEnforcedClient(nil)
 
-	err := cli.PushWorkflowStepPolicy(w1)
+	err = cli.PushWorkflowStepPolicy(w1)
 	assert.NoError(t, err)
 	assert.Equal(t, expected1, cli.Policy())
 
@@ -373,8 +460,10 @@ func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.Work
 	return policy.WorkflowPolicy{
 		Rules: policy.WorkflowRulesList{
 			policy.WorkflowRulesForInterface{
-				Interface: types.ManifestRef{
-					Path: "cap.interface.database.postgresql.install",
+				Interface: policy.InterfaceRef{
+					ManifestRef: &types.ManifestRef{
+						Path: "cap.interface.database.postgresql.install",
+					},
 				},
 				OneOf: []policy.WorkflowRule{
 					{

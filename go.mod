@@ -27,7 +27,6 @@ require (
 	github.com/hashicorp/terraform v0.14.8
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/iancoleman/strcase v0.1.2
-	github.com/jinzhu/copier v0.3.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.12

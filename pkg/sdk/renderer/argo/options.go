@@ -25,7 +25,7 @@ func WithGlobalPolicy(policy policy.Policy) RendererOption {
 	}
 }
 
-func WithActionPolicy(policy policy.Policy) RendererOption {
+func WithActionPolicy(policy policy.ActionPolicy) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.policyEnforcedCli.SetActionPolicy(policy)
 	}

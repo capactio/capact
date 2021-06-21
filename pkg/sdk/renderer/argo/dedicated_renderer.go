@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"capact.io/capact/internal/ptr"
 	"sigs.k8s.io/yaml"
@@ -152,6 +151,7 @@ func (r *dedicatedRenderer) GetRootTemplates() []*Template {
 // TODO Refactor it. It's too long
 // 1. Split it to smaller functions and leave only high level steps here
 // 2. Do not use global state, calling it multiple times seems not to work
+//nolint:gocyclo // This legacy function is complex but the team too busy to simplify it
 func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *Workflow, importsCollection []*hubpublicapi.ImplementationImport,
 	typeInstances []types.InputTypeInstanceRef, prefix string) (map[string]*string, error) {
 	r.currentIteration++
@@ -235,7 +235,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 				// 3. Import and resolve Implementation for `capact-action`
 				if step.CapactAction != nil {
 					// 3.1 Expand `capact-action` alias based on imports section
-					actionRef, err := r.resolveActionPathFromImports(importsCollection, *step.CapactAction)
+					actionRef, err := hubpublicapi.ResolveActionPathFromImports(importsCollection, *step.CapactAction)
 					if err != nil {
 						return nil, err
 					}
@@ -247,7 +247,11 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 					}
 
 					if step.CapactPolicy != nil {
-						err := r.policyEnforcedCli.PushWorkflowStepPolicy(*step.CapactPolicy)
+						err = step.CapactPolicy.ResolveImports(importsCollection)
+						if err != nil {
+							return nil, errors.Wrap(err, "while resolving import in WorkflowPolicy")
+						}
+						err = r.policyEnforcedCli.PushWorkflowStepPolicy(*step.CapactPolicy)
 						if err != nil {
 							return nil, errors.Wrap(err, "while adding WorkflowPolicy")
 						}
@@ -360,7 +364,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 // TODO: take into account the runner revision. Respect that also in k8s engine when scheduling runner job
 func (r *dedicatedRenderer) ResolveRunnerInterface(impl hubpublicapi.ImplementationRevision) (string, error) {
 	imports, rInterface := impl.Spec.Imports, impl.Spec.Action.RunnerInterface
-	fullRef, err := r.resolveActionPathFromImports(imports, rInterface)
+	fullRef, err := hubpublicapi.ResolveActionPathFromImports(imports, rInterface)
 	if err != nil {
 		return "", err
 	}
@@ -598,39 +602,6 @@ func (r *dedicatedRenderer) PickImplementationRevision(in []hubpublicapi.Impleme
 }
 
 // Internal helpers
-
-func (*dedicatedRenderer) resolveActionPathFromImports(imports []*hubpublicapi.ImplementationImport, actionRef string) (*hubpublicapi.InterfaceReference, error) {
-	action := strings.SplitN(actionRef, ".", 2)
-	if len(action) != 2 {
-		return nil, NewActionReferencePatternError(actionRef)
-	}
-
-	alias, name := action[0], action[1]
-	selectFirstMatchedImport := func() *hubpublicapi.InterfaceReference {
-		for _, i := range imports {
-			if i.Alias == nil || *i.Alias != alias {
-				continue
-			}
-			for _, method := range i.Methods {
-				if name != method.Name {
-					continue
-				}
-				return &hubpublicapi.InterfaceReference{
-					Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
-					Revision: stringOrEmpty(method.Revision),
-				}
-			}
-		}
-		return nil
-	}
-
-	ref := selectFirstMatchedImport()
-	if ref == nil {
-		return nil, NewActionImportsError(actionRef)
-	}
-
-	return ref, nil
-}
 
 func (r *dedicatedRenderer) registerStepOutputTypeInstances(step *WorkflowStep, prefix string, iface *hubpublicapi.InterfaceRevision, stepOutputTypeInstances map[string]*string) {
 	step.typeInstanceOutputs = make(map[string]*string)

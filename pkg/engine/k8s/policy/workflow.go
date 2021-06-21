@@ -1,9 +1,14 @@
 package policy
 
 import (
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"encoding/json"
+
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
+
+	"capact.io/capact/internal/ptr"
+	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
 type WorkflowPolicy struct {
@@ -13,9 +18,14 @@ type WorkflowPolicy struct {
 
 type WorkflowRulesList []WorkflowRulesForInterface
 
+type InterfaceRef struct {
+	ManifestRef *types.ManifestRef
+	Alias       *string
+}
+
 type WorkflowRulesForInterface struct {
 	// Interface refers to a given Interface manifest.
-	Interface types.ManifestRef `json:"interface"`
+	Interface InterfaceRef `json:"interface"`
 
 	OneOf []WorkflowRule `json:"oneOf"`
 }
@@ -27,6 +37,20 @@ type WorkflowRule struct {
 
 type WorkflowInjectData struct {
 	AdditionalInput map[string]interface{} `json:"additionalInput,omitempty"`
+}
+
+func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationImport) error {
+	for i, r := range p.Rules {
+		if r.Interface.Alias != nil && *r.Interface.Alias != "" {
+			actionRef, err := hubpublicapi.ResolveActionPathFromImports(imports, *r.Interface.Alias)
+			if err != nil {
+				return errors.Wrap(err, "while resolving Action path")
+			}
+			p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
+			p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
+		}
+	}
+	return nil
 }
 
 func (p WorkflowPolicy) ToYAMLBytes() ([]byte, error) {
@@ -56,4 +80,22 @@ func (p WorkflowPolicy) ToPolicy() (Policy, error) {
 		return Policy{}, errors.Wrap(err, "while converting to Policy when unmarshaling")
 	}
 	return newPolicy, nil
+}
+
+func (i *InterfaceRef) UnmarshalJSON(b []byte) error {
+	i.ManifestRef = &types.ManifestRef{}
+	err := json.Unmarshal(b, i.ManifestRef)
+	if err == nil {
+		return nil
+	}
+
+	i.Alias = ptr.String("")
+	if err := json.Unmarshal(b, i.Alias); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *InterfaceRef) MarshalJSON() ([]byte, error) {
+	return json.Marshal(i.ManifestRef)
 }

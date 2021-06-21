@@ -101,6 +101,20 @@ spec:
               # using the imported 'postgresql.install' Interface.
               - - name: install-db
                   capact-action: postgresql.install
+                  capact-policy:
+                    rules:
+                      - interface: postgresql.install
+                        oneOf:
+                          - implementationConstraints:
+                              attributes:
+                              - path: cap.attribute.cloud.provider.aws
+                              requires:
+                              - path: cap.type.aws.auth.credentials
+                                revision: 0.1.0
+                            inject:
+                              additionalInput:
+                                additional-parameters:
+                                  region: eu-west-2
                   capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql

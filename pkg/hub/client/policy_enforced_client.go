@@ -115,17 +115,17 @@ func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 }
 
 // SetGlobalPolicy sets global policy to use. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetGlobalPolicy(policy policy.Policy) {
+func (e *PolicyEnforcedClient) SetGlobalPolicy(p policy.Policy) {
 	e.mu.Lock()
-	e.globalPolicy = policy
+	e.globalPolicy = p
 	e.mergePolicies()
 	e.mu.Unlock()
 }
 
 // SetActionPolicy sets policy to use during actiom workflow rendering. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetActionPolicy(policy policy.Policy) {
+func (e *PolicyEnforcedClient) SetActionPolicy(p policy.ActionPolicy) {
 	e.mu.Lock()
-	e.actionPolicy = policy
+	e.actionPolicy = policy.Policy(p)
 	e.mergePolicies()
 	e.mu.Unlock()
 }

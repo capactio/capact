@@ -711,8 +711,6 @@ github.com/jcmturner/gofork v1.0.0 h1:J7uCkflzTEhUZ64xqKnkDxq3kzc96ajM1Gli5ktUem
 github.com/jcmturner/gofork v1.0.0/go.mod h1:MK8+TM0La+2rjBD4jE12Kj1pCCxK7d2LK/UM3ncEo0o=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jhump/protoreflect v1.6.0/go.mod h1:eaTn3RZAmMBcV0fifFvlm6VHNz3wSkYyXYWUh7ymB74=
-github.com/jinzhu/copier v0.3.2 h1:QdBOCbaouLDYaIPFfi1bKv5F5tPpeTwXe4sD0jqtz5w=
-github.com/jinzhu/copier v0.3.2/go.mod h1:24xnZezI2Yqac9J61UC6/dG/k76ttpq0DdJI3QmUvro=
 github.com/jinzhu/gorm v0.0.0-20170222002820-5409931a1bb8 h1:CZkYfurY6KGhVtlalI4QwQ6T0Cu6iuY3e0x5RLu96WE=
 github.com/jinzhu/gorm v0.0.0-20170222002820-5409931a1bb8/go.mod h1:Vla75njaFJ8clLU1W44h34PjIkijhjHIYnZxMqCdxqo=
 github.com/jinzhu/inflection v0.0.0-20170102125226-1c35d901db3d h1:jRQLvyVGL+iVtDElaEIDdKwpPqUIZJfzkNLV34htpEc=
