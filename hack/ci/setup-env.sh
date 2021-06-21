@@ -64,6 +64,5 @@ function gitChanges() {
 cat <<EOT >>"$GITHUB_ENV"
 APPS=name=matrix::{"include":[{"APP":"gateway"},{"APP":"k8s-engine"},{"APP":"hub-js"},{"APP":"argo-runner"},{"APP":"helm-runner"},{"APP":"populator"},{"APP":"terraform-runner"},{"APP":"argo-actions"}]}
 TESTS=name=matrix::{"include":[{"TEST":"e2e"}]}
-TOOLS=name=matrix::{"include":[{"TOOL":"cli"}]}
 $(returnInfraMatrixIfNeeded)
 EOT
