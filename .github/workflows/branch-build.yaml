@@ -158,6 +158,7 @@ jobs:
   release-cli:
     name: Release the latest Capact CLIs
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
       packages: write
@@ -202,7 +203,7 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: [ entry-tests, build-app, build-infra, build-tests ]
+    needs: [ entry-tests, build-app, build-tests ]
     permissions:
       contents: read
 
