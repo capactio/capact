@@ -185,11 +185,8 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-infra-image-${{ matrix.INFRA }}
 
-  build-tools:
-    strategy:
-      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-tool)}}
-    needs: prepare-matrix
-    name: Build ${{ matrix.TOOL }}
+  build-cli:
+    name: Build Capact CLI
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     permissions:
@@ -209,7 +206,7 @@ jobs:
       - name: Set up GoReleaser
         # We use a new `no_unique_dist_dir` feature, which is not yet released
         run: go install github.com/goreleaser/goreleaser@b53dbb89d02aa3673782f3d063d7d5039446baac
-      - run: make build-tool-${{ matrix.tool }}
+      - run: make build-tool-cli
 
   integration-tests:
     name: Integration tests
