@@ -5,8 +5,9 @@ package graphql
 
 import (
 	"context"
-	go_cypherdsl "github.com/mindstand/go-cypherdsl"
 	"log"
+
+	go_cypherdsl "github.com/mindstand/go-cypherdsl"
 )
 
 func (r *queryResolver) InterfaceGroups(ctx context.Context, filter *InterfaceGroupFilter) ([]*InterfaceGroup, error) {
@@ -19,7 +20,6 @@ func (r *queryResolver) InterfaceGroups(ctx context.Context, filter *InterfaceGr
 	}
 	return items, nil
 }
-
 
 //
 // Not used resolvers - uncomment in `config.yaml` custom resolvers to play around
@@ -36,8 +36,7 @@ func (r *interfaceResolver) Revision(ctx context.Context, obj *Interface, revisi
 	}).And(&go_cypherdsl.ConditionConfig{}) // TODO: How to build the condition?
 
 	var items []*InterfaceRevision
-	err := r.sess.LoadAllDepthFilter(&items, 20, condition, map[string]interface{}{
-	})
+	err := r.sess.LoadAllDepthFilter(&items, 20, condition, map[string]interface{}{})
 	if err != nil {
 		log.Println(err)
 		return nil, err

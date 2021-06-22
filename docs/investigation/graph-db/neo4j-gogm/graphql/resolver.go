@@ -6,7 +6,7 @@ import "github.com/mindstand/gogm"
 //
 // It serves as dependency injection for your app, add any dependencies you require here.
 
-type Resolver struct{
+type Resolver struct {
 	sess *gogm.Session
 }
 

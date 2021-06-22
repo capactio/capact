@@ -48,7 +48,7 @@ func toQuery(fields []string) string {
 			query += ", has name $ifaceName"
 		}
 
-		// this would go to a new funciton which would get implementation query
+		// this would go to a new function which would get implementation query
 		if _, ok := mapped["interfaces.revisions.implementations"]; ok {
 			query += ";$impl isa implementation"
 			relations += ";$impl-iface (defines: $iface, implements: $impl) isa implementator"

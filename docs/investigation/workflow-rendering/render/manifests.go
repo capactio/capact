@@ -7,9 +7,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/pkg/errors"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 

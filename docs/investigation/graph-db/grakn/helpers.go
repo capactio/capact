@@ -4,9 +4,9 @@ import (
 	"context"
 	"time"
 
+	grakn "capact.io/capact/poc/graph-db/grakn/go-grakn/gograkn/session"
 	"github.com/99designs/gqlgen/graphql"
 	grpc "google.golang.org/grpc"
-	grakn "capact.io/capact/poc/graph-db/grakn/go-grakn/gograkn/session"
 )
 
 func GetPreloads(ctx context.Context) []string {

@@ -47,7 +47,7 @@ type ImplementationRevision struct {
 
 type ImplementationSpec struct {
 	Implements []InterfaceReference `mapstructure:"ImplementationSpec.implements"`
-	Requires [] TypeReference `mapstructure:"ImplementationSpec.requires"`
+	Requires   []TypeReference      `mapstructure:"ImplementationSpec.requires"`
 }
 
 type TypeReference struct {
@@ -64,7 +64,7 @@ type InterfaceReference struct {
 type DecodeInterfaceQuery struct {
 	Path      string
 	Revisions []struct {
-		Uid       string
+		Uid string
 		Rev string
 	}
 }

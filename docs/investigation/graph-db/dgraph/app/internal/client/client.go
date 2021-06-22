@@ -23,4 +23,3 @@ func New() (*dgo.Dgraph, error) {
 		api.NewDgraphClient(d),
 	), nil
 }
-
