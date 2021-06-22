@@ -18,7 +18,7 @@
     "express": "^4.17.0",
     "graphql": "^14.7.0",
     "neo4j-driver": "^4.2.3",
-    "neo4j-graphql-js": "~2.17.1",
+    "neo4j-graphql-js": "~2.19.4",
     "winston": "^3.3.3",
     "ws": ">=7.4.6"
   },
