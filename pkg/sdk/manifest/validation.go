@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"path/filepath"
 	"sort"
 
 	"github.com/iancoleman/strcase"
@@ -13,14 +14,19 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Validator is a interface, which the ValidateFile method.
+// ValidateFile validates the Manifest in filepath and return a ValidationResult.
+// If other, not Manifest related errors occur, it will return an error.
 type Validator interface {
 	ValidateFile(filepath string) (ValidationResult, error)
 }
 
+// ValidationResult hold the result of the Manifest validation.
 type ValidationResult struct {
 	Errors []error
 }
 
+// Valid returns true, if the Manifest contains no errors.
 func (r *ValidationResult) Valid() bool {
 	return len(r.Errors) == 0
 }
@@ -31,6 +37,7 @@ func newValidationResult(errors ...error) ValidationResult {
 	}
 }
 
+// FilesystemManifestValidator validates Manifests using a OCF specification, which is read from a filesystem.
 type FilesystemManifestValidator struct {
 	schemaRootPath string
 	cachedSchemas  map[ocfVersion]*loadedOCFSchema
@@ -46,6 +53,7 @@ type loadedOCFSchema struct {
 	kind   map[kind]*gojsonschema.Schema
 }
 
+// NewFilesystemValidator returns a new FilesystemManifestValidator.
 func NewFilesystemValidator(fs http.FileSystem, schemaRootPath string) Validator {
 	return &FilesystemManifestValidator{
 		schemaRootPath: schemaRootPath,
@@ -54,8 +62,9 @@ func NewFilesystemValidator(fs http.FileSystem, schemaRootPath string) Validator
 	}
 }
 
-func (v *FilesystemManifestValidator) ValidateFile(filepath string) (ValidationResult, error) {
-	data, err := ioutil.ReadFile(filepath)
+// ValidateFile validates a Manifest.
+func (v *FilesystemManifestValidator) ValidateFile(path string) (ValidationResult, error) {
+	data, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return newValidationResult(), err
 	}

@@ -300,7 +300,8 @@ func (e *PolicyEnforcedClient) listCurrentTypeInstanceValues(ctx context.Context
 func (e *PolicyEnforcedClient) typeInstancesToTypeInstanceValues(in []hublocalgraphql.TypeInstanceTypeReference) []*hubpublicgraphql.TypeInstanceValue {
 	var out []*hubpublicgraphql.TypeInstanceValue
 
-	for _, typeRef := range in {
+	for i := range in {
+		typeRef := in[i]
 		out = append(out, &hubpublicgraphql.TypeInstanceValue{
 			TypeRef: &hubpublicgraphql.TypeReferenceWithOptionalRevision{
 				Path:     typeRef.Path,

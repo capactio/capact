@@ -1,4 +1,4 @@
-// Holds manually added types
+// Package types holds manually added types
 package types
 
 // InterfaceRef holds the full path and revision to the Interface

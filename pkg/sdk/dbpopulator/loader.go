@@ -33,6 +33,7 @@ func getManifestMetadata(yamlBytes []byte) (manifestMetadata, error) {
 	return mm, err
 }
 
+// Group return a map of the provided Manifests Paths, grouped by the Manifest Kind.
 func Group(paths []string) (map[string][]string, error) {
 	manifests := map[string][]string{}
 	for _, kind := range ordered {
@@ -40,7 +41,7 @@ func Group(paths []string) (map[string][]string, error) {
 	}
 	for _, path := range paths {
 		// may just read first 3 lines if there are performance issues
-		content, err := ioutil.ReadFile(path)
+		content, err := ioutil.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return manifests, errors.Wrapf(err, "while reading file from path %s", path)
 		}
@@ -58,6 +59,7 @@ func Group(paths []string) (map[string][]string, error) {
 	return manifests, nil
 }
 
+// List returns all YAML files in the provided hubPath by using filepath.Walk.
 func List(hubPath string) ([]string, error) {
 	files := []string{}
 	err := filepath.Walk(hubPath, func(currentPath string, info os.FileInfo, err error) error {
