@@ -13,7 +13,7 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
-    "@godaddy/terminus": "^4.7.2",
+    "@godaddy/terminus": "^4.8.0",
     "apollo-server-express": "^2.22.2",
     "express": "^4.17.0",
     "graphql": "^14.7.0",
