@@ -4,6 +4,13 @@ func String(in string) *string {
 	return &in
 }
 
+func StringPtrToString(in *string) string {
+	if in != nil {
+		return *in
+	}
+	return ""
+}
+
 func Bool(in bool) *bool {
 	return &in
 }

@@ -11,19 +11,21 @@ const (
 	AnyInterfacePath  string = "cap.*"
 )
 
-type OrderItem string
-type MergeOrder []OrderItem
+type Type string
+type MergeOrder []Type
 
 const (
-	Global   OrderItem = "GLOBAL"
-	Action   OrderItem = "ACTION"
-	Workflow OrderItem = "WORKFLOW"
+	Global   Type = "GLOBAL"
+	Action   Type = "ACTION"
+	Workflow Type = "WORKFLOW"
 )
 
 type Policy struct {
 	APIVersion string    `json:"apiVersion"`
 	Rules      RulesList `json:"rules"`
 }
+
+type ActionPolicy Policy
 
 type RulesList []RulesForInterface
 
@@ -70,4 +72,48 @@ func (p Policy) ToYAMLString() (string, error) {
 	}
 
 	return string(bytes), nil
+}
+
+// controller-gen doesn't support interface{} so writing it manually
+func (in *InjectData) DeepCopy() *InjectData {
+	if in == nil {
+		return nil
+	}
+	out := new(InjectData)
+	in.DeepCopyInto(out)
+	return out
+}
+
+// controller-gen doesn't support interface{} so writing it manually
+func (in *InjectData) DeepCopyInto(out *InjectData) {
+	*out = *in
+	if in.TypeInstances != nil {
+		in, out := &in.TypeInstances, &out.TypeInstances
+		*out = make([]TypeInstanceToInject, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
+	if in.AdditionalInput != nil {
+		out.AdditionalInput = MergeMaps(out.AdditionalInput, in.AdditionalInput)
+	}
+}
+
+func MergeMaps(current, overwrite map[string]interface{}) map[string]interface{} {
+	out := make(map[string]interface{}, len(current))
+	for k, v := range current {
+		out[k] = v
+	}
+	for k, v := range overwrite {
+		if v, ok := v.(map[string]interface{}); ok {
+			if bv, ok := out[k]; ok {
+				if bv, ok := bv.(map[string]interface{}); ok {
+					out[k] = MergeMaps(bv, v)
+					continue
+				}
+			}
+		}
+		out[k] = v
+	}
+	return out
 }

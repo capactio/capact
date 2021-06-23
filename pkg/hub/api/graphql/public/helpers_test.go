@@ -1,14 +1,12 @@
-package argo
+package graphql
 
 import (
 	"testing"
 
-	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"gotest.tools/assert"
 )
 
 func TestResolveActionFromImports(t *testing.T) {
-	d := dedicatedRenderer{}
 	name := "helm"
 	appVersion := "3.x.x"
 	revision1 := "0.1.0"
@@ -17,26 +15,26 @@ func TestResolveActionFromImports(t *testing.T) {
 		name       string
 		shouldFail bool
 
-		imports   []*hubpublicapi.ImplementationImport
+		imports   []*ImplementationImport
 		actionRef string
 
-		reference hubpublicapi.InterfaceReference
+		reference InterfaceReference
 	}{
 		{
 			name:       "missing imports",
 			shouldFail: true,
-			imports:    []*hubpublicapi.ImplementationImport{},
+			imports:    []*ImplementationImport{},
 			actionRef:  "helm.install",
-			reference:  hubpublicapi.InterfaceReference{},
+			reference:  InterfaceReference{},
 		},
 		{
 			name: "correct revision",
-			imports: []*hubpublicapi.ImplementationImport{
+			imports: []*ImplementationImport{
 				{
 					InterfaceGroupPath: "cap.interface.runner.helm",
 					Alias:              &name,
 					AppVersion:         &appVersion,
-					Methods: []*hubpublicapi.ImplementationImportMethod{
+					Methods: []*ImplementationImportMethod{
 						{
 							Name:     "install",
 							Revision: &revision1,
@@ -45,7 +43,7 @@ func TestResolveActionFromImports(t *testing.T) {
 				},
 			},
 			actionRef: "helm.install",
-			reference: hubpublicapi.InterfaceReference{
+			reference: InterfaceReference{
 				Path:     "cap.interface.runner.helm.install",
 				Revision: revision1,
 			},
@@ -55,7 +53,7 @@ func TestResolveActionFromImports(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			reference, err := d.resolveActionPathFromImports(test.imports, test.actionRef)
+			reference, err := ResolveActionPathFromImports(test.imports, test.actionRef)
 			if test.shouldFail {
 				if err == nil {
 					t.Fatal("test should fail, but did not")

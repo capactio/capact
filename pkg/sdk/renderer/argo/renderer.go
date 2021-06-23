@@ -26,8 +26,9 @@ type PolicyEnforcedHubClient interface {
 	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
 	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) map[string]interface{}
 	SetGlobalPolicy(policy policy.Policy)
-	SetActionPolicy(policy policy.Policy)
-	SetWorkflowStepPolicy(policy policy.Policy)
+	SetActionPolicy(policy policy.ActionPolicy)
+	PushWorkflowStepPolicy(policy policy.WorkflowPolicy) error
+	PopWorkflowStepPolicy()
 	SetPolicyOrder(policy.MergeOrder)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicapi.InterfaceReference) (*hubpublicapi.InterfaceRevision, error)
 }

@@ -68,5 +68,5 @@ populator:
     repository: git@github.com:capactio/hub-manifests.git
     # sshKey is a base64 encoded private key used by populator to download manifests. It has read only access
     sshKey: LS0tLS1CRUdJTiBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0KYjNCbGJuTnphQzFyWlhrdGRqRUFBQUFBQkc1dmJtVUFBQUFFYm05dVpRQUFBQUFBQUFBQkFBQUFNd0FBQUF0emMyZ3RaVwpReU5UVXhPUUFBQUNEUXhvRUVSTUx0K2E2Ym9yUXdhTTJuak4vL2hqMDZSQTMyRDBuVmlNSnEzd0FBQUpnd2ZrS1hNSDVDCmx3QUFBQXR6YzJndFpXUXlOVFV4T1FBQUFDRFF4b0VFUk1MdCthNmJvclF3YU0ybmpOLy9oajA2UkEzMkQwblZpTUpxM3cKQUFBRUIybEFhUDVzNG9qRWw0UzlTSU5xbTk0YU1OaXdZWWhpdTJtaHpqS3hUVmE5REdnUVJFd3UzNXJwdWl0REJvemFlTQozLytHUFRwRURmWVBTZFdJd21yZkFBQUFFblJsWVcwdFpHVjJRR05oY0dGamRDNXBid0VDQXc9PQotLS0tLUVORCBPUEVOU1NIIFBSSVZBVEUgS0VZLS0tLS0K
-    branch: CP-432-modify-och-content
+    branch: main
   args: ["while true; do /app register ocf-manifests $MANIFESTS_PATH; sleep 600;done"]

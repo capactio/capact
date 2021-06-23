@@ -1,0 +1,996 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: capact-root
+    templates:
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+        - name: postgresql
+          optional: true
+      metadata: {}
+      name: app1-install
+      outputs:
+        artifacts:
+        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+          name: app1-config
+      steps:
+      - - arguments:
+            artifacts:
+            - name: input-parameters
+              raw:
+                data: |
+                  superuser:
+                    username: app1
+                    password: okon
+                  defaultDBName: app1
+            - name: additional-parameters
+              raw:
+                data: |
+                  region: eu-west-2
+          name: install-db
+          template: app1-install-install-db-rds-provision
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - name: database-input
+              raw:
+                data: |
+                  name: app1db
+                  owner: superuser
+          name: create-db
+          template: app1-install-create-db-main
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  generateName: true
+                  chart:
+                    name: "app1-software"
+                    repo: "https://helm.mox.sh"
+                  output:{% raw %}
+                    goTemplate:
+                      version: "{{ .Values.image.tag }}"
+                      host: '{{ template "app1-software.fullname" . }}'{% endraw %}
+                  values:
+                    postgresql:
+                      enabled: false
+                    databaseConnection:
+                      host: "{{ host }}"
+                      user: "{{ superuser.username }}"
+                      password: "{{ superuser.password }}"
+                      database: "{{ defaultDBName }}"
+                    ingress:
+                      enabled: true
+                      hosts:
+                      - host: app1-cloud.capact.local
+                        paths: ['/']
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: create-helm-args
+          template: app1-install-create-helm-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: helm-install
+          template: app1-install-helm-install-helm
+      - - arguments:
+            artifacts:
+            - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-database
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
+              name: app1-config
+          name: output-app1-config
+          template: output-app1-config
+      - - arguments:
+            artifacts:
+            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
+              name: app1-helm-release
+          name: output-app1-helm-release
+          template: output-app1-helm-release
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+        - name: additional-parameters
+          optional: true
+      metadata: {}
+      name: app1-install-install-db-rds-provision
+      outputs:
+        artifacts:
+        - from: '{{steps.render-postgresql.outputs.artifacts.render}}'
+          name: postgresql
+        - from: '{{steps.render-rds.outputs.artifacts.render}}'
+          name: rds-instance
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  superuser:
+                    username: "<@ input.superuser.username | default('postgres') @>"
+                    password: "<@ input.superuser.password | default(random_word(length=16)) @>"
+            - name: configuration
+              raw:
+                data: |
+                  prefix: input
+          name: fill-default-input
+          template: app1-install-install-db-rds-provision-fill-default-input-template
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.additional-parameters}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: additionalinput
+            - name: template
+              raw:
+                data: |
+                  variables: |+
+                    user_name = "<@ input.superuser.username @>"
+                    user_password = "<@ input.superuser.password @>"
+
+                    region = "<@ additionalinput.region | default('eu-west-1') @>"
+                    ingress_rule_cidr_blocks = "<@ additionalinput.ingress_rule_cidr_blocks | default('0.0.0.0/0') @>"
+                    tier = "<@ additionalinput.tier | default('db.t3.micro') @>"
+                    publicly_accessible = <@ additionalinput.publicly_accessible | default(true) | tojson @>
+                    engine_version = "<@ additionalinput.engine_version | default('11.10') @>"
+                    major_engine_version = "<@ additionalinput.major_engine_version | default('11') @>"
+                    performance_insights_enabled = <@ additionalinput.performance_insights_enabled | default(true) | tojson @>
+
+                    <% if additionalinput.engine -%>
+                    engine = "<@ additionalinput.engine @>"
+                    <%- endif %>
+
+                    <% if additionalinput.res_name -%>
+                    res_name = "<@ additionalinput.res_name @>"
+                    <%- endif %>
+
+                    <% if additionalinput.allocated_storage -%>
+                    allocated_storage = <@ additionalinput.allocated_storage @>
+                    <%- endif %>
+
+                    <% if additionalinput.max_allocated_storage -%>
+                    max_allocated_storage = <@ additionalinput.max_allocated_storage @>
+                    <%- endif %>
+
+                    <% if additionalinput.storage_encrypted -%>
+                    storage_encrypted = <@ additionalinput.storage_encrypted | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.multi_az -%>
+                    multi_az = <@ additionalinput.multi_az | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.deletion_protection -%>
+                    deletion_protection = <@ additionalinput.deletion_protection | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.backup_retention_period -%>
+                    backup_retention_period = <@ additionalinput.backup_retention_period @>
+                    <%- endif %>
+
+                    <% if additionalinput.performance_insights_retention_period -%>
+                    performance_insights_retention_period = <@ additionalinput.performance_insights_retention_period @>
+                    <%- endif %>
+
+                    <% if additionalinput.monitoring_interval -%>
+                    monitoring_interval = <@ additionalinput.monitoring_interval @>
+                    <%- endif %>
+
+                    <% if additionalinput.skip_final_snapshot -%>
+                    skip_final_snapshot = <@ additionalinput.skip_final_snapshot | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.maintenance_window -%>
+                    maintenance_window = "<@ additionalinput.maintenance_window @>"
+                    <%- endif %>
+
+                    <% if additionalinput.backup_window -%>
+                    backup_window = "<@ additionalinput.backup_window @>"
+                    <%- endif %>
+
+                  command: "apply"
+                  module:
+                    name: "rds"
+                    source: "https://storage.googleapis.com/capactio-terraform-modules/terraform.aws.rds.postgresql.provision/0.1.0/module.tgz"
+                  env:
+                  - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
+                  - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
+                  output:
+                    goTemplate:
+                      host: "{{ .instance_ip_addr }}"
+                      port: "{{ .port }}"
+                      defaultDBName: "{{ .defaultDBName }}"
+                      superuser:
+                        username: "{{ .username }}"
+                        password: "{{ .password }}"
+                      identifier: "{{ .identifier }}"
+                      availability_zone: "{{ .availability_zone }}"
+                      class: "{{ .class }}"
+          name: create-module-args
+          template: app1-install-install-db-rds-provision-create-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-module-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{steps.fill-default-input.outputs.artifacts.render}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: input
+          name: fill-input-in-module-args
+          template: app1-install-install-db-rds-provision-fill-input-in-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-input-in-module-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{workflow.outputs.artifacts.aws-credentials}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: aws
+          name: fill-aws-params-in-module-args
+          template: app1-install-install-db-rds-provision-fill-aws-params-in-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: terraform-apply
+          template: app1-install-install-db-rds-provision-terraform-apply-terraform
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: ""
+            - name: template
+              raw:
+                data: |
+                  host: "<@ host @>"
+                  port: <@ port @>
+                  defaultDBName: "<@ defaultDBName @>"
+                  superuser:
+                    username: "<@ superuser.username @>"
+                    password: "<@ superuser.password @>"
+          name: render-postgresql
+          template: app1-install-install-db-rds-provision-render-postgresql-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: ""
+            - name: template
+              raw:
+                data: |
+                  identifier: "<@ identifier @>"
+                  availability_zone: "<@ availability_zone @>"
+                  class: "<@ class @>"
+          name: render-rds
+          template: app1-install-install-db-rds-provision-render-rds-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.terraform-release}}'
+              name: terraform-release
+          name: output-terraform-release
+          template: output-app1-install-install-db-terraform-release
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-postgresql.outputs.artifacts.render}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-app1-install-install-db-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-rds.outputs.artifacts.render}}'
+              name: rds-instance
+          name: output-rds-instance
+          template: output-app1-install-install-db-rds-instance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-fill-default-input-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-create-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-fill-input-in-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-fill-aws-params-in-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.terraform-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_OUTPUT_TFSTATE_FILE_PATH
+          value: '{{outputs.artifacts.tfstate.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: ghcr.io/capactio/terraform-runner:PR-252
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /terraform-args
+        - name: runner-context
+          path: /runner-context
+        - name: additional
+          optional: true
+          path: /additional
+      metadata: {}
+      name: app1-install-install-db-rds-provision-terraform-apply-terraform
+      outputs:
+        artifacts:
+        - globalName: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+          name: terraform-release
+          path: /terraform-release.yaml
+        - globalName: app1-install-install-db-rds-provision-terraform-apply-additional
+          name: additional
+          path: /terraform.yaml
+        - globalName: app1-install-install-db-rds-provision-terraform-apply-tfstate
+          name: tfstate
+          path: /terraform.tfstate
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-render-postgresql-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-install-db-rds-provision-render-rds-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: terraform-release
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-install-install-db-terraform-release
+      outputs:
+        artifacts:
+        - globalName: app1-install-install-db-terraform-release
+          name: terraform-release
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-install-install-db-postgresql
+      outputs:
+        artifacts:
+        - globalName: app1-install-install-db-postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: rds-instance
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-install-install-db-rds-instance
+      outputs:
+        artifacts:
+        - globalName: app1-install-install-db-rds-instance
+          name: rds-instance
+          path: /typeinstance
+    - arguments: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+        - name: database-input
+      metadata: {}
+      name: app1-install-create-db-main
+      outputs:
+        artifacts:
+        - from: '{{steps.create-db.outputs.artifacts.database}}'
+          name: database
+      steps:
+      - - arguments:
+            artifacts:
+            - name: template
+              raw:
+                data: |
+                  export PGPASSWORD=<@ superuser.password @>
+                  PSQL_CMD="psql -h <@host@> -U <@superuser.username@> <@defaultDBName@> -c"
+                  ${PSQL_CMD} "CREATE DATABASE <@name@>"
+                  ${PSQL_CMD} "GRANT ALL PRIVILEGES ON DATABASE <@name@> TO <@owner@>"
+
+                  cat <<EOF > /database.yml
+                  name: <@name@>
+                  owner: <@owner@>
+                  tablespace: ""
+                  EOF
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: input-parameters
+          name: render-create-db-script
+          template: app1-install-create-db-main-render-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-create-db-script.outputs.artifacts.render}}'
+              name: template
+            - from: '{{inputs.artifacts.database-input}}'
+              name: input-parameters
+          name: fill-params-in-create-db-script
+          template: app1-install-create-db-main-fill-params-in-create-db-script-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-params-in-create-db-script.outputs.artifacts.render}}'
+              name: script
+          name: create-db
+          template: app1-install-create-db-create-psql-db
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-db.outputs.artifacts.database}}'
+              name: database
+          name: output-database
+          template: output-app1-install-create-db-database
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-create-db-main-render-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-create-db-main-fill-params-in-create-db-script-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1 && chmod +x /script.sh && /script.sh
+        command:
+        - bash
+        - -c
+        image: postgres:11
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: script
+          path: /script.sh
+      metadata: {}
+      name: app1-install-create-db-create-psql-db
+      outputs:
+        artifacts:
+        - name: database
+          path: /database.yml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-install-create-db-database
+      outputs:
+        artifacts:
+        - globalName: app1-install-create-db-database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: app1-install-create-helm-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - arguments: {}
+      container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        - name: RUNNER_COMMAND
+          value: install
+        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.helm-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        image: ghcr.io/capactio/pr/helm-runner:PR-252
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /runner-args
+        - name: runner-context
+          path: /runner-context
+      metadata: {}
+      name: app1-install-helm-install-helm
+      outputs:
+        artifacts:
+        - globalName: app1-install-helm-install-helm-release
+          name: helm-release
+          path: /helm-release.yaml
+        - globalName: app1-install-helm-install-additional
+          name: additional
+          path: /additional.yaml
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: database
+          path: /typeinstance
+      metadata: {}
+      name: output-database
+      outputs:
+        artifacts:
+        - globalName: database
+          name: database
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: app1-config
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-config
+      outputs:
+        artifacts:
+        - globalName: app1-config
+          name: app1-config
+          path: /typeinstance
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: app1-helm-release
+          path: /typeinstance
+      metadata: {}
+      name: output-app1-helm-release
+      outputs:
+        artifacts:
+        - globalName: app1-helm-release
+          name: app1-helm-release
+          path: /typeinstance
+    - arguments: {}
+      inputs: {}
+      metadata: {}
+      name: capact-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: start-entrypoint
+          template: app1-install
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.app1-config}}'
+              name: app1-config
+            - from: '{{workflow.outputs.artifacts.app1-install-install-db-postgresql}}'
+              name: app1-install-install-db-postgresql
+            - from: '{{workflow.outputs.artifacts.app1-install-install-db-rds-instance}}'
+              name: app1-install-install-db-rds-instance
+            - from: '{{workflow.outputs.artifacts.app1-install-install-db-rds-provision-terraform-apply-terraform-release}}'
+              name: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+            - from: '{{workflow.outputs.artifacts.app1-install-install-db-rds-provision-terraform-apply-tfstate}}'
+              name: app1-install-install-db-rds-provision-terraform-apply-tfstate
+            - from: '{{workflow.outputs.artifacts.app1-install-create-db-database}}'
+              name: app1-install-create-db-database
+            - from: '{{workflow.outputs.artifacts.app1-install-helm-install-helm-release}}'
+              name: app1-install-helm-install-helm-release
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: app1-config
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.productivity.app1.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-install-db-postgresql
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-install-db-rds-instance
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.aws.rds.instance
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.terraform.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-install-db-rds-provision-terraform-apply-tfstate
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.core.type.generic.value
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-create-db-database
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.database
+                      revision: 0.1.0
+                    value: null
+                  - alias: app1-install-helm-install-helm-release
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.helm.chart.release
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: app1-config
+                    to: app1-install-helm-install-helm-release
+                  - from: app1-config
+                    to: app1-install-install-db-postgresql
+                  - from: app1-install-install-db-postgresql
+                    to: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+                  - from: app1-install-install-db-postgresql
+                    to: app1-install-install-db-rds-instance
+                  - from: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+                    to: app1-install-install-db-rds-provision-terraform-apply-tfstate
+                  - from: app1-install-create-db-database
+                    to: app1-install-install-db-postgresql
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
+    - arguments: {}
+      container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+    - arguments: {}
+      container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: app1-config
+          path: /upload/typeInstances/app1-config
+        - name: app1-install-install-db-postgresql
+          path: /upload/typeInstances/app1-install-install-db-postgresql
+        - name: app1-install-install-db-rds-instance
+          path: /upload/typeInstances/app1-install-install-db-rds-instance
+        - name: app1-install-install-db-rds-provision-terraform-apply-terraform-release
+          path: /upload/typeInstances/app1-install-install-db-rds-provision-terraform-apply-terraform-release
+        - name: app1-install-install-db-rds-provision-terraform-apply-tfstate
+          path: /upload/typeInstances/app1-install-install-db-rds-provision-terraform-apply-tfstate
+        - name: app1-install-create-db-database
+          path: /upload/typeInstances/app1-install-create-db-database
+        - name: app1-install-helm-install-helm-release
+          path: /upload/typeInstances/app1-install-helm-install-helm-release
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
+runnerInterface: cap.interface.runner.argo.run

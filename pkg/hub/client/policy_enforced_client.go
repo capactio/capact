@@ -23,17 +23,17 @@ type HubClient interface {
 }
 
 type PolicyEnforcedClient struct {
-	hubCli             HubClient
-	globalPolicy       policy.Policy
-	actionPolicy       policy.Policy
-	mergedPolicy       policy.Policy
-	policyOrder        policy.MergeOrder
-	workflowStepPolicy []policy.Policy
-	mu                 sync.RWMutex
+	hubCli               HubClient
+	globalPolicy         policy.Policy
+	actionPolicy         policy.Policy
+	mergedPolicy         policy.Policy
+	policyOrder          policy.MergeOrder
+	workflowStepPolicies []policy.Policy
+	mu                   sync.RWMutex
 }
 
 func NewPolicyEnforcedClient(hubCli HubClient) *PolicyEnforcedClient {
-	defaultOrder := policy.MergeOrder{policy.Action, policy.Global}
+	defaultOrder := policy.MergeOrder{policy.Action, policy.Global, policy.Workflow}
 	return &PolicyEnforcedClient{hubCli: hubCli, policyOrder: defaultOrder}
 }
 
@@ -115,35 +115,41 @@ func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 }
 
 // SetGlobalPolicy sets global policy to use. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetGlobalPolicy(policy policy.Policy) {
+func (e *PolicyEnforcedClient) SetGlobalPolicy(p policy.Policy) {
 	e.mu.Lock()
-	e.globalPolicy = policy
+	e.globalPolicy = p
 	e.mergePolicies()
 	e.mu.Unlock()
 }
 
 // SetActionPolicy sets policy to use during actiom workflow rendering. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetActionPolicy(policy policy.Policy) {
+func (e *PolicyEnforcedClient) SetActionPolicy(p policy.ActionPolicy) {
 	e.mu.Lock()
-	e.actionPolicy = policy
+	e.actionPolicy = policy.Policy(p)
 	e.mergePolicies()
 	e.mu.Unlock()
 }
 
-// SetWorkflowStepPolicy sets policy to use during rendering a step. This setter is thread safe.
-func (e *PolicyEnforcedClient) SetWorkflowStepPolicy(policy policy.Policy) {
+// PushWorkflowStepPolicy adds a workflow policy to use during rendering a step. This setter is thread safe.
+func (e *PolicyEnforcedClient) PushWorkflowStepPolicy(workflowPolicy policy.WorkflowPolicy) error {
 	e.mu.Lock()
-	e.workflowStepPolicy = append(e.workflowStepPolicy, policy)
-	e.mergePolicies()
-	e.mu.Unlock()
-}
-
-// SetWorkflowStepPolicy sets policy to use during rendering a step. This setter is thread safe.
-func (e *PolicyEnforcedClient) UnsetWorkflowStepPolicy() {
-	e.mu.Lock()
-	if len(e.workflowStepPolicy) > 0 {
-		e.workflowStepPolicy = e.workflowStepPolicy[:len(e.workflowStepPolicy)-1]
+	p, err := workflowPolicy.ToPolicy()
+	if err != nil {
+		return errors.Wrap(err, "while getting Policy from WorkflowPolicy")
 	}
+	e.workflowStepPolicies = append(e.workflowStepPolicies, p)
+	e.mergePolicies()
+	e.mu.Unlock()
+	return nil
+}
+
+// PopWorkflowStepPolicy removes latest added workflow policy. This setter is thread safe.
+func (e *PolicyEnforcedClient) PopWorkflowStepPolicy() {
+	e.mu.Lock()
+	if len(e.workflowStepPolicies) > 0 {
+		e.workflowStepPolicies = e.workflowStepPolicies[:len(e.workflowStepPolicies)-1]
+	}
+	e.mergePolicies()
 	e.mu.Unlock()
 }
 
