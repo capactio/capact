@@ -3,8 +3,6 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![GitHub Actions main branch CI](https://github.com/capactio/capact/actions/workflows/branch-build.yaml/badge.svg?branch=main)](https://github.com/capactio/capact/actions/workflows/branch-build.yaml?query=branch%3Amain)
 [![Go Report Card](https://goreportcard.com/badge/github.com/capactio/capact)](https://goreportcard.com/report/github.com/capactio/capact)
-[![Maintainability](https://api.codeclimate.com/v1/badges/a71ad7d5bb4b00ca8e0e/maintainability)](https://codeclimate.com/github/capactio/capact/maintainability)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4988/badge)](https://bestpractices.coreinfrastructure.org/projects/4988)
 
 **Capact** (pronounced: "cape-act", /ˈkeɪp.ækt/) is a simple way to manage applications and infrastructure.
 
