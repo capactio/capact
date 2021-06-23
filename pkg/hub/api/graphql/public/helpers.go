@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	"github.com/pkg/errors"
 )
 
@@ -13,13 +14,6 @@ func NewActionImportsError(actionRef string) error {
 
 func NewActionReferencePatternError(actionRef string) error {
 	return errors.Errorf("Action reference %q doesn't follow pattern <import_alias>.<method_name>", actionRef)
-}
-
-func StringOrEmpty(in *string) string {
-	if in != nil {
-		return *in
-	}
-	return ""
 }
 
 func ResolveActionPathFromImports(imports []*ImplementationImport, actionRef string) (*InterfaceReference, error) {
@@ -40,7 +34,7 @@ func ResolveActionPathFromImports(imports []*ImplementationImport, actionRef str
 				}
 				return &InterfaceReference{
 					Path:     fmt.Sprintf("%s.%s", i.InterfaceGroupPath, name),
-					Revision: StringOrEmpty(method.Revision),
+					Revision: ptr.StringPtrToString(method.Revision),
 				}
 			}
 		}

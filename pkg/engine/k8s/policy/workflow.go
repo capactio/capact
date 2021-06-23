@@ -18,14 +18,14 @@ type WorkflowPolicy struct {
 
 type WorkflowRulesList []WorkflowRulesForInterface
 
-type InterfaceRef struct {
+type WorkflowInterfaceRef struct {
 	ManifestRef *types.ManifestRef
 	Alias       *string
 }
 
 type WorkflowRulesForInterface struct {
 	// Interface refers to a given Interface manifest.
-	Interface InterfaceRef `json:"interface"`
+	Interface WorkflowInterfaceRef `json:"interface"`
 
 	OneOf []WorkflowRule `json:"oneOf"`
 }
@@ -83,7 +83,7 @@ func (p WorkflowPolicy) ToPolicy() (Policy, error) {
 	return newPolicy, nil
 }
 
-func (i *InterfaceRef) UnmarshalJSON(b []byte) error {
+func (i *WorkflowInterfaceRef) UnmarshalJSON(b []byte) error {
 	i.ManifestRef = &types.ManifestRef{}
 	err := json.Unmarshal(b, i.ManifestRef)
 	if err == nil {
@@ -97,6 +97,6 @@ func (i *InterfaceRef) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-func (i *InterfaceRef) MarshalJSON() ([]byte, error) {
+func (i *WorkflowInterfaceRef) MarshalJSON() ([]byte, error) {
 	return json.Marshal(i.ManifestRef)
 }

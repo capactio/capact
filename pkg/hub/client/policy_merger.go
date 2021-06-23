@@ -77,7 +77,7 @@ func getIndexOfPolicyRule(p *policy.Policy, rule policy.RulesForInterface) int {
 
 func getIndexOfOneOfRule(rules []policy.Rule, rule policy.Rule) int {
 	for i, r := range rules {
-		if isSameOneOf(r, rule) {
+		if areImplementationConstraintsEqual(r, rule) {
 			return i
 		}
 	}
@@ -100,7 +100,7 @@ func isForSameInterface(p1, p2 policy.RulesForInterface) bool {
 	return revision1 == revision2
 }
 
-func isSameOneOf(a, b policy.Rule) bool {
+func areImplementationConstraintsEqual(a, b policy.Rule) bool {
 	return reflect.DeepEqual(a.ImplementationConstraints, b.ImplementationConstraints)
 }
 
