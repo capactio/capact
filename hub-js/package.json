@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "description": "Component, which stores the OCF manifests and exposes API to access, and manage them",
   "main": "dist/index.js",
+  "types": "./index.d.ts",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -13,14 +14,15 @@
     "dev": "npm run build && npm run start"
   },
   "dependencies": {
-    "@godaddy/terminus": "^4.7.2",
-    "apollo-server-express": "^2.22.2",
+    "@godaddy/terminus": "^4.8.0",
+    "apollo-server-express": "^2.25.0",
     "express": "^4.17.0",
-    "graphql": "^14.7.0",
-    "neo4j-driver": "^4.2.3",
-    "neo4j-graphql-js": "~2.17.1",
+    "graphql": "^15.4.0",
+    "neo4j-driver": "^4.3.0",
+    "neo4j-graphql-js": "~2.19.4",
     "winston": "^3.3.3",
-    "ws": ">=7.4.6"
+    "ws": ">=7.4.6",
+    "graphql-tools": "^7.0.2"
   },
   "devDependencies": {
     "@types/express": "^4.17.0",
