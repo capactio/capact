@@ -41,14 +41,15 @@ type WorkflowInjectData struct {
 
 func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationImport) error {
 	for i, r := range p.Rules {
-		if r.Interface.Alias != nil && *r.Interface.Alias != "" {
-			actionRef, err := hubpublicapi.ResolveActionPathFromImports(imports, *r.Interface.Alias)
-			if err != nil {
-				return errors.Wrap(err, "while resolving Action path")
-			}
-			p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
-			p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
+		if r.Interface.Alias == nil || *r.Interface.Alias == "" {
+			continue
 		}
+		actionRef, err := hubpublicapi.ResolveActionPathFromImports(imports, *r.Interface.Alias)
+		if err != nil {
+			return errors.Wrap(err, "while resolving Action path")
+		}
+		p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
+		p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
 	}
 	return nil
 }
