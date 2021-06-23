@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"capact.io/capact/internal/ptr"
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
@@ -13,7 +14,7 @@ import (
 func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReference {
 	return hubpublicgraphql.InterfaceReference{
 		Path:     in.Path,
-		Revision: hubpublicgraphql.StringOrEmpty(in.Revision),
+		Revision: ptr.StringPtrToString(in.Revision),
 	}
 }
 
