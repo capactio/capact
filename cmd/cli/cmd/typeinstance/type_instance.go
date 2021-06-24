@@ -9,6 +9,7 @@ const (
 	decodeBufferSize = 4096
 )
 
+// NewCmd returns a cobra.Command for the "typeinstance" subcommand.
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "typeinstance",

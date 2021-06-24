@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewGet returns a cobra.Command for the "config get" command.
 func NewGet() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get-contexts",

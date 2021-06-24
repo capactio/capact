@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewDelete returns a cobra.Command for the "typeinstance delete" command.
 func NewDelete() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "delete TYPE_INSTANCE_ID...",

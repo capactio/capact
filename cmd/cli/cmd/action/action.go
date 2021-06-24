@@ -26,6 +26,7 @@ var argoHiddenFlags = []string{
 	"node-field-selector",
 }
 
+// NewCmd returns a new cobra.Command for the "action" subcommand.
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "action",

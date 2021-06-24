@@ -15,6 +15,7 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
+// HubClient interface agreggates methods for interacting with the Local and Public Hub.
 type HubClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
@@ -22,6 +23,8 @@ type HubClient interface {
 	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error)
 }
 
+// PolicyEnforcedClient is a client, which can interact with the Local and Public Hub.
+// It can be configured with policies to filter the Implementations returned by the Hub.
 type PolicyEnforcedClient struct {
 	hubCli               HubClient
 	globalPolicy         policy.Policy
@@ -32,11 +35,14 @@ type PolicyEnforcedClient struct {
 	mu                   sync.RWMutex
 }
 
+// NewPolicyEnforcedClient returns a new NewPolicyEnforcedClient.
 func NewPolicyEnforcedClient(hubCli HubClient) *PolicyEnforcedClient {
 	defaultOrder := policy.MergeOrder{policy.Action, policy.Global, policy.Workflow}
 	return &PolicyEnforcedClient{hubCli: hubCli, policyOrder: defaultOrder}
 }
 
+// ListImplementationRevisionForInterface returns ImplementationRevisions
+// for the given Interface and the current policy configuration.
 func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicgraphql.InterfaceReference) ([]hubpublicgraphql.ImplementationRevision, policy.Rule, error) {
 	if interfaceRef.Revision == "" {
 		interfaceRevision, err := e.hubCli.GetInterfaceLatestRevisionString(ctx, interfaceRef)
@@ -66,6 +72,8 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 	return implementations, rule, nil
 }
 
+// ListTypeInstancesToInjectBasedOnPolicy returns the input TypeInstance references,
+// which have to be injected into the Action, based on the current policies.
 func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) []types.InputTypeInstanceRef {
 	if policyRule.Inject == nil || len(policyRule.Inject.TypeInstances) == 0 {
 		return nil

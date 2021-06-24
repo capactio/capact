@@ -20,6 +20,7 @@ type Client struct {
 	client *graphql.Client
 }
 
+// NewClient creates a public client with a given GraphQL custom client instance.
 func NewClient(cli *graphql.Client) *Client {
 	return &Client{client: cli}
 }
@@ -47,6 +48,8 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 	return resp.Interfaces, nil
 }
 
+// FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
+// It will return nil, if the InterfaceRevision is not found.
 func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
 	query, params := c.interfaceQueryForRef(ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query($interfacePath: NodePath!, %s) {
@@ -74,6 +77,8 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
+// ListInterfacesWithLatestRevision returns the latest revision of the Interfaces,
+// which match the provided filter.
 func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query ListInterface($interfaceFilter: InterfaceFilter!)  {
 		  interfaces(filter: $interfaceFilter) {
@@ -97,6 +102,8 @@ func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gq
 	return resp.Interfaces, nil
 }
 
+// GetInterfaceLatestRevisionString returns the latest revision of the available Interfaces.
+// Semantic versioning is used to determine the latest revision.
 func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpublicapi.InterfaceReference) (string, error) {
 	req := graphql.NewRequest(`query ($interfacePath: NodePath!) {
 		interface(path: $interfacePath) {
@@ -129,6 +136,8 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 	return resp.Interface.LatestRevision.Revision, nil
 }
 
+// ListImplementationRevisions returns ImplementationRevisions,
+// which match the given filter.
 func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpublicapi.ImplementationRevisionFilter) ([]*gqlpublicapi.ImplementationRevision, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query {
 		implementations {
@@ -157,6 +166,7 @@ func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpub
 	return revs, nil
 }
 
+// ListImplementationRevisionsForInterface returns ImplementationRevisions for the given Interface.
 func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
 	getOpts := &ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)
@@ -195,8 +205,12 @@ func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, re
 
 var key = regexp.MustCompile(`\$(\w+):`)
 
+// Args is used to store arguments to GraphQL queries.
 type Args map[string]interface{}
 
+// Query returns the definition for the arguments
+// stored in this Args, which has to be put in the
+// GraphQL query.
 func (a Args) Query() string {
 	var out []string
 	for k := range a {
@@ -205,6 +219,8 @@ func (a Args) Query() string {
 	return strings.Join(out, ",")
 }
 
+// PopulateVars fills the variables stores in this Args
+// in the provided *graphql.Request.
 func (a Args) PopulateVars(req *graphql.Request) {
 	for k, v := range a {
 		name := key.FindStringSubmatch(k)

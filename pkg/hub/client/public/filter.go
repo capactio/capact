@@ -7,6 +7,9 @@ import (
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 )
 
+// FilterImplementationRevisions filters the provided ImplementationRevisions using the given filter options.
+// It is used to perform client-side filtering during rendering to find an ImplementationRevision,
+// which matches the given constraints.
 func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsOptions) []gqlpublicapi.ImplementationRevision {
 	if opts == nil {
 		return revs

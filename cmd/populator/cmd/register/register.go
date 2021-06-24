@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRegister returns a cobra.Command subcommand for registering Capact resources.
 func NewRegister(cliName string) *cobra.Command {
 	hub := &cobra.Command{
 		Use:   "register",

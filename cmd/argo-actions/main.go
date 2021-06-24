@@ -14,6 +14,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// Config for the argo-actions command.
 type Config struct {
 	Action           string
 	DownloadConfig   []argoactions.DownloadConfig `envconfig:"optional"`

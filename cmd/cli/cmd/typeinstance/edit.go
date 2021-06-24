@@ -21,6 +21,7 @@ type editOptions struct {
 	EditTypeInstanceID string
 }
 
+// NewEdit returns a cobra.Command for the "typeinstance edit" command.
 func NewEdit() *cobra.Command {
 	var opts editOptions
 

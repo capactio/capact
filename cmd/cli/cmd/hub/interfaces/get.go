@@ -24,6 +24,7 @@ var (
 	allPathPrefix = "cap.interface.*"
 )
 
+// NewGet returns a cobra.Command for the "interfaces get" command.
 func NewGet() *cobra.Command {
 	var opts getOptions
 

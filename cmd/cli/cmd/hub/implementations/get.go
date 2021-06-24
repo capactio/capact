@@ -21,6 +21,7 @@ type getOptions struct {
 	implementationPaths []string
 }
 
+// NewGet return a cobra.Command for the "implementations get" command.
 func NewGet() *cobra.Command {
 	var opts getOptions
 

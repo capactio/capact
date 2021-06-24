@@ -11,19 +11,24 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// DownloadAction const for the download TypeInstance action.
 const DownloadAction = "DownloadAction"
 
+// DownloadConfig stores the configuration parameters for the download TypeInstance action.
 type DownloadConfig struct {
 	ID   string
 	Path string
 }
 
+// Download implements the Action interface.
+// It is used to download a single TypeInstance from the Local Hub.
 type Download struct {
 	log    *zap.Logger
 	cfg    []DownloadConfig
 	client *local.Client
 }
 
+// NewDownloadAction returns a pointer to the Download struct, which is implementing the Action interface.
 func NewDownloadAction(log *zap.Logger, client *local.Client, cfg []DownloadConfig) Action {
 	return &Download{
 		log:    log,
@@ -32,6 +37,7 @@ func NewDownloadAction(log *zap.Logger, client *local.Client, cfg []DownloadConf
 	}
 }
 
+// Do downloads a TypeInstance from the Local Hub.
 func (d *Download) Do(ctx context.Context) error {
 	for _, config := range d.cfg {
 		d.log.Info("Downloading TypeInstance", zap.String("ID", config.ID), zap.String("Path", config.Path))

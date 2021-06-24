@@ -22,6 +22,7 @@ var (
 	configPath string
 )
 
+// NewRoot returns a root cobra.Command for the whole Capact CLI.
 func NewRoot() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   cli.Name,

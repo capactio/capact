@@ -38,8 +38,8 @@ var (
 )
 
 const (
-	GraphQLServerName = "engine-graphql"
-	PolicyServiceName = "policy-svc"
+	graphQLServerName = "engine-graphql"
+	policyServiceName = "policy-svc"
 )
 
 // Config holds application related configuration
@@ -112,7 +112,7 @@ func main() {
 	exitOnError(err, "while creating Argo client")
 	actionValidator := validate.NewActionValidator(wfCli)
 
-	policySvcLogger := logger.Named(PolicyServiceName)
+	policySvcLogger := logger.Named(policyServiceName)
 	policyService := policy.NewService(policySvcLogger, mgr.GetClient(), cfg.Policy)
 
 	actionSvc := controller.NewActionService(
@@ -141,12 +141,12 @@ func main() {
 	k8sCli, err := client.New(k8sCfg, client.Options{Scheme: scheme})
 	exitOnError(err, "while creating K8s client")
 
-	gqlLogger := logger.Named(GraphQLServerName)
+	gqlLogger := logger.Named(graphQLServerName)
 
 	execSchema := graphql.NewExecutableSchema(graphql.Config{
 		Resolvers: domaingraphql.NewRootResolver(gqlLogger, k8sCli, policyService),
 	})
-	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, GraphQLServerName)
+	gqlSrv := gqlServer(gqlLogger, execSchema, cfg.GraphQLAddr, graphQLServerName)
 
 	err = mgr.Add(gqlSrv)
 	exitOnError(err, "while adding GraphQL server")

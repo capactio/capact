@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Validator is a interface, which the ValidateFile method.
+// Validator is a interface, with the ValidateFile method.
 // ValidateFile validates the Manifest in filepath and return a ValidationResult.
 // If other, not Manifest related errors occur, it will return an error.
 type Validator interface {

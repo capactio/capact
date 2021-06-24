@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewApply returns a cobra.Command for the "policy apply" command.
 func NewApply() *cobra.Command {
 	var opts policy.ApplyOptions
 

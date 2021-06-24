@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"path"
+	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/hub/client/local"
@@ -12,19 +13,24 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// UpdateAction const for the update TypeInstancess action.
 const UpdateAction = "UpdateAction"
 
+// UpdateConfig stores the configuration parameters for update TypeInstances action.
 type UpdateConfig struct {
 	PayloadFilepath  string
 	TypeInstancesDir string
 }
 
+// Update implements the Action interface.
+// It is used to update existing TypeInstances in the Local Hub.
 type Update struct {
 	log    *zap.Logger
 	client *local.Client
 	cfg    UpdateConfig
 }
 
+// NewUpdateAction returns a pointer to the Download struct, which is implementing the Action interface.
 func NewUpdateAction(log *zap.Logger, client *local.Client, cfg UpdateConfig) Action {
 	return &Update{
 		log:    log,
@@ -33,6 +39,7 @@ func NewUpdateAction(log *zap.Logger, client *local.Client, cfg UpdateConfig) Ac
 	}
 }
 
+// Do updates existing TypeInstances in the Local Hub.
 func (u *Update) Do(ctx context.Context) error {
 	payloadBytes, err := ioutil.ReadFile(u.cfg.PayloadFilepath)
 	if err != nil {
@@ -59,7 +66,7 @@ func (u *Update) Do(ctx context.Context) error {
 	for _, f := range files {
 		path := path.Join(u.cfg.TypeInstancesDir, f.Name())
 
-		typeInstanceValueBytes, err := ioutil.ReadFile(path)
+		typeInstanceValueBytes, err := ioutil.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return errors.Wrapf(err, "while reading TypeInstance value file %s", path)
 		}

@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewImplementations return a cobra.Command for the "implementations" subcommand.
 func NewImplementations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "implementations",

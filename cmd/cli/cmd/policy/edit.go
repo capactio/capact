@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewEdit returns a cobra.Command for the "policy edit" command.
 func NewEdit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit",

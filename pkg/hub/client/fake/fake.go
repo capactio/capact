@@ -21,6 +21,7 @@ import (
 
 const manifestsExtension = ".yaml"
 
+// FileSystemClient is a client, which reads Hub Manifests from a file system.
 type FileSystemClient struct {
 	loadTypeInstances bool
 	TypeInstances     map[string]hublocalgraphql.TypeInstance
@@ -28,6 +29,11 @@ type FileSystemClient struct {
 	Interfaces        []hubpublicgraphql.InterfaceRevision
 }
 
+// NewFromLocal returns a new FileSystemClient.
+// The Manifest files are loaded in this function and served from memory
+// so changes done to the files after the FileSystemClient is created
+// will not be reflected.
+// The function will return an error, if loading of the manifests failed.
 func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient, error) {
 	cli := &FileSystemClient{
 		loadTypeInstances: loadTypeInstances,
@@ -43,6 +49,7 @@ func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient
 	return cli, nil
 }
 
+// ListImplementationRevisionsForInterface returns ImplementationRevisions for the given Interface.
 func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error) {
 	getOpts := &public.ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)
@@ -68,6 +75,7 @@ func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.C
 	return public.SortImplementationRevisions(result, getOpts), nil
 }
 
+// ListTypeInstancesTypeRef returns the TypeReferences of the present TypeInstances.
 func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error) {
 	var typeInstanceTypeRefs []hublocalgraphql.TypeInstanceTypeReference
 	for _, ti := range s.TypeInstances {
@@ -81,6 +89,8 @@ func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]hubl
 	return typeInstanceTypeRefs, nil
 }
 
+// GetInterfaceLatestRevisionString returns the latest revision of the available Interfaces.
+// Semantic versioning is used to determine the latest revision.
 func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error) {
 	var versions semver.Collection
 	for _, impl := range s.Implementations {
@@ -104,6 +114,8 @@ func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context,
 	return latestVersion.String(), nil
 }
 
+// FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
+// It will return nil, if the InterfaceRevision is not found.
 func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error) {
 	for i := range s.Interfaces {
 		iface := s.Interfaces[i]
@@ -123,6 +135,8 @@ func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpub
 	return nil, nil
 }
 
+// FindTypeInstance returns the TypeInstance with the given ID.
+// It will return nil, if the TypeInstances is not found.
 func (s *FileSystemClient) FindTypeInstance(_ context.Context, id string) (*hublocalgraphql.TypeInstance, error) {
 	ti, found := s.TypeInstances[id]
 	if !found {
@@ -156,8 +170,8 @@ func (s *FileSystemClient) loadManifests(dir string) error {
 	return nil
 }
 
-func (s *FileSystemClient) loadManifest(filepath string) error {
-	data, err := ioutil.ReadFile(filepath)
+func (s *FileSystemClient) loadManifest(path string) error {
+	data, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return errors.Wrap(err, "while reading file")
 	}
@@ -167,7 +181,7 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		return errors.Wrap(err, "while converting YAML to JSON")
 	}
 
-	if strings.Contains(filepath, "implementation") {
+	if strings.Contains(path, "implementation") {
 		impl := hubpublicgraphql.ImplementationRevision{}
 		if err := json.Unmarshal(jsonData, &impl); err != nil {
 			return err
@@ -175,7 +189,7 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		s.Implementations = append(s.Implementations, impl)
 	}
 
-	if strings.Contains(filepath, "interface") {
+	if strings.Contains(path, "interface") {
 		iface := hubpublicgraphql.InterfaceRevision{}
 		if err := json.Unmarshal(jsonData, &iface); err != nil {
 			return err
@@ -183,7 +197,7 @@ func (s *FileSystemClient) loadManifest(filepath string) error {
 		s.Interfaces = append(s.Interfaces, iface)
 	}
 
-	if s.loadTypeInstances && strings.Contains(filepath, "typeinstance") {
+	if s.loadTypeInstances && strings.Contains(path, "typeinstance") {
 		ti := hublocalgraphql.TypeInstance{}
 		if err := json.Unmarshal(jsonData, &ti); err != nil {
 			return err

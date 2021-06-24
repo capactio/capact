@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewWatch returns a cobra.Command for the "action watch" command.
 func NewWatch() *cobra.Command {
 	cmd := commands.NewWatchCommand()
 	cmd.Use = "watch ACTION"

@@ -9,6 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCreate returns a new cobra.Command for the "action create" command.
 func NewCreate() *cobra.Command {
 	var opts action.CreateOptions
 
