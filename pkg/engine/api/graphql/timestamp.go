@@ -30,7 +30,7 @@ func (t *Timestamp) UnmarshalGQL(v interface{}) error {
 	return nil
 }
 
-// MarshalGQL writes the RFC3339 formated Timestamp to the provided writer.
+// MarshalGQL writes the RFC3339 formatted Timestamp to the provided writer.
 func (t Timestamp) MarshalGQL(w io.Writer) {
 	_, err := w.Write([]byte(strconv.Quote(t.Format(time.RFC3339))))
 	if err != nil {

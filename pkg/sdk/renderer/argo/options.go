@@ -45,7 +45,7 @@ func WithPolicyOrder(order policy.MergeOrder) RendererOption {
 }
 
 // WithOwnerID returns a RendererOption, which sets OwnerID for the workflow.
-// The OwnerID is used to lock the TypeInstances
+// The OwnerID is used to lock the TypeInstances.
 func WithOwnerID(ownerID string) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.ownerID = &ownerID

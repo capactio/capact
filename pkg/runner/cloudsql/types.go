@@ -31,7 +31,7 @@ const (
 )
 
 var (
-	// ErrInstanceCreateTimeout indicates the operation timed.
+	// ErrInstanceCreateTimeout indicates the operation timed out.
 	ErrInstanceCreateTimeout = errors.New("timed out waiting for DB instance to be ready")
 	// ErrUnknownCommand indicates an unknown operation command.
 	ErrUnknownCommand = errors.New("unknown command")

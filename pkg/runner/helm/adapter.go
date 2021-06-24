@@ -44,7 +44,7 @@ func (r *runnerAdapter) WaitForCompletion(_ context.Context, _ runner.WaitForCom
 	return r.out, nil
 }
 
-// Name returns the name of the Helm runner
+// Name returns the name of the Helm runner.
 func (r *runnerAdapter) Name() string {
 	return r.underlying.Name()
 }

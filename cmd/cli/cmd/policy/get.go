@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewGet return a cobra.Command for getting the Capact Global policy on a Capact environment
+// NewGet return a cobra.Command for getting the Capact Global policy on a Capact environment.
 func NewGet() *cobra.Command {
 	resourcePrinter := printer.NewForResource(os.Stdout, printer.WithJSON(), printer.WithYAML(), printer.WithDefaultOutputFormat(printer.YAMLFormat))
 

@@ -41,7 +41,7 @@ type KubernetesPlatformConfig struct {
 // `json: cannot unmarshal string into Go struct field of type time.Duration`
 type Duration time.Duration
 
-// Duration returns the time.Duration representation
+// Duration returns the time.Duration representation.
 func (d Duration) Duration() time.Duration {
 	return time.Duration(d)
 }

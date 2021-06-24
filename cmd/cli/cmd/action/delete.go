@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewDelete returns a new cobra.Command for the deleting an action.
+// NewDelete returns a new cobra.Command for deleting an Action.
 func NewDelete() *cobra.Command {
 	var opts action.DeleteOptions
 

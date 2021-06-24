@@ -30,7 +30,7 @@ type Update struct {
 	cfg    UpdateConfig
 }
 
-// NewUpdateAction returns a pointer to the Download struct, which is implementing the Action interface.
+// NewUpdateAction returns a new Action instance for updating TypeInstances.
 func NewUpdateAction(log *zap.Logger, client *local.Client, cfg UpdateConfig) Action {
 	return &Update{
 		log:    log,

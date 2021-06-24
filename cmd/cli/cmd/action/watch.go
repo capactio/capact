@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewWatch returns a cobra.Command for the watching runnning actions.
+// NewWatch returns a cobra.Command for watching of runnning Actions.
 // It uses the command from "argo watch".
 func NewWatch() *cobra.Command {
 	cmd := commands.NewWatchCommand()

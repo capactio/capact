@@ -6,11 +6,11 @@ import "encoding/json"
 type CommandType string
 
 const (
-	// ApplyCommand is an operation to perform terraform apply
+	// ApplyCommand is an operation to perform terraform apply.
 	ApplyCommand = "apply"
-	// DestroyCommand is an operation to perform terraform destroy
+	// DestroyCommand is an operation to perform terraform destroy.
 	DestroyCommand = "destroy"
-	// PlanCommand is an operation to perform terraform plan
+	// PlanCommand is an operation to perform terraform plan.
 	PlanCommand = "plan"
 )
 
@@ -57,7 +57,7 @@ type Release struct {
 	Source string `json:"source"`
 }
 
-// StateTypeInstance stores the details about the Terraform state TypeInstance
+// StateTypeInstance stores the details about the Terraform state TypeInstance.
 type StateTypeInstance struct {
 	State     []byte `json:"state"`
 	Variables []byte `json:"variables"`

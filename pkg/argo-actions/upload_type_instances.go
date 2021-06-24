@@ -30,7 +30,7 @@ type Upload struct {
 	cfg    UploadConfig
 }
 
-// NewUploadAction returns a pointer to the Upload struct, which is implementing the Action interface.
+// NewUploadAction returns Action instance to upload TypeInstances to Local Hub.
 func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
 	return &Upload{
 		log:    log,

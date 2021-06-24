@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	// CurrentAPIVersion holds the current Policy API version
+	// CurrentAPIVersion holds the current Policy API version.
 	CurrentAPIVersion = "0.2.0"
 	// AnyInterfacePath holds a value, which represents any Interface path.
 	AnyInterfacePath string = "cap.*"

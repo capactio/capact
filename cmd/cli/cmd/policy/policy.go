@@ -2,7 +2,7 @@ package policy
 
 import "github.com/spf13/cobra"
 
-// NewCmd returns a cobra.Command for the "policy" subcommand.
+// NewCmd returns a cobra.Command for policy related operations.
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "policy",

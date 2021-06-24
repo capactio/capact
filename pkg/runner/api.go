@@ -7,7 +7,7 @@ import (
 )
 
 type (
-	// StartInput defines the input arguments to start a runner
+	// StartInput defines the input arguments to start a runner.
 	StartInput struct {
 		// RunnerCtx contains Runner data provided by Engine.
 		RunnerCtx Context

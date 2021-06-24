@@ -11,7 +11,7 @@ type ListImplementationRevisionsOptions struct {
 	sortByPathAscAndRevisionDesc bool
 }
 
-// Apply is used to configure the ListImplementationRevisionsOptions
+// Apply is used to configure the ListImplementationRevisionsOptions.
 func (o *ListImplementationRevisionsOptions) Apply(opts ...GetImplementationOption) {
 	for _, opt := range opts {
 		opt(o)

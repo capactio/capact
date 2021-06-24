@@ -1,6 +1,6 @@
 package argo
 
-// We had to copy the Argo Workflow Go struct as we need to extend the WorkflowStep syntax with our own keywords
+// We had to copy the Argo Workflow Go struct as we need to extend the WorkflowStep syntax with our own keywords.
 
 import (
 	"regexp"
@@ -16,13 +16,13 @@ type Workflow struct {
 	Templates []*Template `json:"templates"`
 }
 
-// Template is a reusable and composable unit of execution in a workflow
+// Template is a reusable and composable unit of execution in a workflow.
 type Template struct {
 	*wfv1.Template
 	Steps []ParallelSteps `json:"steps,omitempty"`
 }
 
-// ParallelSteps define a series of sequential/parallel workflow steps
+// ParallelSteps define a series of sequential/parallel workflow steps.
 type ParallelSteps []*WorkflowStep
 
 // WorkflowStep is a reference to a template to execute in a series of step.
@@ -54,7 +54,7 @@ type RunnerContextSecretRef struct {
 }
 
 // UserInputSecretRef hold a reference to the runner context
-// in a Kubernetes Secret resource
+// in a Kubernetes Secret resource.
 type UserInputSecretRef struct {
 	Name string
 	Key  string
