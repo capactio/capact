@@ -16,7 +16,7 @@ type setContextOptions struct {
 	serverAddress string
 }
 
-// NewSet returns a cobra.Command for the "config set" command.
+// NewSet returns a cobra.Command for setting an active CLI context.
 func NewSet() *cobra.Command {
 	var opts setContextOptions
 

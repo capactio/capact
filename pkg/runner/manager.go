@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
+	"path/filepath"
 
 	"capact.io/capact/internal/logger"
 
@@ -104,7 +105,7 @@ func (r *Manager) readRunnerInput() (InputData, error) {
 }
 
 func (r *Manager) unmarshalFromFile(path string, out interface{}) error {
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return errors.Wrapf(err, "while reading file from path %q", path)
 	}

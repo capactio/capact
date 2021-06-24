@@ -25,12 +25,14 @@ type terraformRunner struct {
 	terraform *terraform
 }
 
+// NewTerraformRunner returns a new Terraform runner instance.
 func NewTerraformRunner(cfg Config) runner.Runner {
 	return &terraformRunner{
 		cfg: cfg,
 	}
 }
 
+// Start starts the Terraform runner operation.
 func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	var args Arguments
 	err := yaml.Unmarshal(in.Args, &args)
@@ -67,6 +69,7 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 	}, nil
 }
 
+// WaitForCompletion waits for the runner operation to complete.
 func (r *terraformRunner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	if r.terraform == nil {
 		return &runner.WaitForCompletionOutput{}, errors.New("terraform not started yet")
@@ -119,10 +122,12 @@ func (r *terraformRunner) WaitForCompletion(ctx context.Context, in runner.WaitF
 	return &runner.WaitForCompletionOutput{Succeeded: true, Message: "Terraform finished"}, nil
 }
 
+// Name returns the runner name.
 func (r *terraformRunner) Name() string {
 	return "terraform"
 }
 
+// InjectLogger sets the logger on the runner.
 func (r *terraformRunner) InjectLogger(logger *zap.Logger) {
 	r.log = logger
 }
@@ -134,7 +139,10 @@ func (r *terraformRunner) setEnvVars(env []string) error {
 			return fmt.Errorf("Invalid env variable %s", e)
 		}
 		k, v := s[0], s[1]
-		os.Setenv(k, v)
+
+		if err := os.Setenv(k, v); err != nil {
+			return errors.Wrapf(err, "while setting env %s", k)
+		}
 	}
 	return nil
 }

@@ -21,6 +21,8 @@ const (
 	runnerContext       = "runner-context"
 )
 
+// PolicyEnforcedHubClient is a interfaces used to interact with the Capact Hubs
+// and enforce the policies.
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
 	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
@@ -33,6 +35,7 @@ type PolicyEnforcedHubClient interface {
 	FindInterfaceRevision(ctx context.Context, ref hubpublicapi.InterfaceReference) (*hubpublicapi.InterfaceRevision, error)
 }
 
+// Renderer is used to render the Capact Action workflows.
 type Renderer struct {
 	maxDepth      int
 	renderTimeout time.Duration
@@ -41,6 +44,7 @@ type Renderer struct {
 	hubClient           hubclient.HubClient
 }
 
+// NewRenderer returns a new Renderer instance.
 func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
 	r := &Renderer{
 		typeInstanceHandler: typeInstanceHandler,
@@ -52,6 +56,7 @@ func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanc
 	return r
 }
 
+// Render performs the rendering of an Action workflow.
 func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutput, error) {
 	if input == nil {
 		input = &RenderInput{}

@@ -18,6 +18,7 @@ type Client struct {
 	Public
 }
 
+// Local interface aggregates methods to interact with Capact Local Hub.
 type Local interface {
 	CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, error)
 	CreateTypeInstances(ctx context.Context, in *hublocalgraphql.CreateTypeInstancesInput) ([]hublocalgraphql.CreateTypeInstanceOutput, error)
@@ -30,6 +31,7 @@ type Local interface {
 	UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput) ([]hublocalgraphql.TypeInstance, error)
 }
 
+// Public interface aggregates methods to interact with Capact Public Hub.
 type Public interface {
 	ListInterfacesMetadata(ctx context.Context) ([]hubpublicgraphql.Interface, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
@@ -39,6 +41,7 @@ type Public interface {
 	ListImplementationRevisions(ctx context.Context, filter *hubpublicgraphql.ImplementationRevisionFilter) ([]*hubpublicgraphql.ImplementationRevision, error)
 }
 
+// New returns a new Client to interact with the Capact Local and Public Hub.
 func New(endpoint string, httpClient *http.Client) *Client {
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)

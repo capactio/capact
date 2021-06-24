@@ -29,7 +29,7 @@ type GetOptions struct {
 // which is not supported.
 var ErrTableFormatWithExportFlag = fmt.Errorf("cannot use --export with table output")
 
-// NewGet returns a cobra.Command for the "typeinstance get" command.
+// NewGet returns a cobra.Command for getting TypeInstances on a Local Hub.
 func NewGet() *cobra.Command {
 	var opts GetOptions
 	out := os.Stdout

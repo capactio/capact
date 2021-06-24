@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewInterfaces returns a cobra.Command for the "interfaces" command.
+// NewInterfaces returns a cobra.Command for Hub Interfaces related operations.
 func NewInterfaces() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interfaces",

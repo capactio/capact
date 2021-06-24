@@ -24,11 +24,12 @@ const (
 	runnerName          = "argo-runner"
 )
 
-// Provides info to easily identify started Argo Workflow.
 type (
+	// Status provides info to easily identify started Argo Workflow.
 	Status struct {
 		ArgoWorkflowRef WorkflowRef `json:"argoWorkflowRef"`
 	}
+	// WorkflowRef represents a Argo Workflow CR.
 	WorkflowRef struct {
 		Name      string `json:"name"`
 		Namespace string `json:"namespace"`

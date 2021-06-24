@@ -2,6 +2,7 @@ package helm
 
 import (
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -18,7 +19,7 @@ func readValueOverrides(inlineValues map[string]interface{}, valuesFilePath stri
 		return nil, errors.New("providing values both inline and from file is currently unsupported")
 	}
 
-	bytes, err := ioutil.ReadFile(valuesFilePath)
+	bytes, err := ioutil.ReadFile(filepath.Clean(valuesFilePath))
 	if err != nil {
 		return nil, errors.Wrapf(err, "while reading values from file %q", valuesFilePath)
 	}

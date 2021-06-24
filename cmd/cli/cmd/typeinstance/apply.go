@@ -24,7 +24,7 @@ type applyOptions struct {
 	TypeInstancesFiles []string
 }
 
-// NewApply returns a cobra.Command for the "typeinstance apply" command.
+// NewApply returns a cobra.Command for applying a TypeInstance on a Local Hub.
 func NewApply() *cobra.Command {
 	var opts applyOptions
 

@@ -24,7 +24,7 @@ type createOptions struct {
 	TypeInstancesFiles []string
 }
 
-// NewCreate returns a cobra.Command for the "typeinstance create" command.
+// NewCreate returns a cobra.Command for create a TypeInstance on a Local Hub
 func NewCreate() *cobra.Command {
 	var opts createOptions
 

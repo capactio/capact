@@ -98,6 +98,8 @@ func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule
 	return typeInstancesToInject
 }
 
+// ListAdditionalInputToInjectBasedOnPolicy returns additional input parameters,
+// which have to be injected into the Action, based on the current policies
 // check if rules has AdditionalInput to inject and if implementation expects AdditionalInput
 func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) map[string]interface{} {
 	if policyRule.Inject == nil ||
@@ -111,10 +113,13 @@ func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRu
 	return policyRule.Inject.AdditionalInput
 }
 
+// FindInterfaceRevision finds InterfaceRevision for the provided reference.
+// It will return nil, if no revision was found.
 func (e *PolicyEnforcedClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error) {
 	return e.hubCli.FindInterfaceRevision(ctx, ref)
 }
 
+// SetPolicyOrder sets the policy merging order for the client. This setter is thread safe.
 func (e *PolicyEnforcedClient) SetPolicyOrder(order policy.MergeOrder) {
 	e.mu.Lock()
 	e.policyOrder = order

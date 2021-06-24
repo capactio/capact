@@ -16,6 +16,7 @@ type Config struct {
 	Logger      logger.Config
 }
 
+// InputData holds the input data for the runners.
 type InputData struct {
 	Context Context         `json:"context"`
 	Args    json.RawMessage `json:"args"`
@@ -40,10 +41,12 @@ type KubernetesPlatformConfig struct {
 // `json: cannot unmarshal string into Go struct field of type time.Duration`
 type Duration time.Duration
 
+// Duration returns the time.Duration representation
 func (d Duration) Duration() time.Duration {
 	return time.Duration(d)
 }
 
+// UnmarshalJSON loads the JSON representation of Duration in the byte slice b.
 func (d *Duration) UnmarshalJSON(b []byte) error {
 	var value string
 	if err := json.Unmarshal(b, &value); err != nil {
@@ -57,6 +60,7 @@ func (d *Duration) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+// MarshalJSON returns the JSON representation of the Duration.
 func (d Duration) MarshalJSON() ([]byte, error) {
 	return json.Marshal(time.Duration(d).String())
 }

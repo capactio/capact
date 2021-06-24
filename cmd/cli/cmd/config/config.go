@@ -4,7 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCmd returns a cobra.Command for the "config" subcommand.
+// NewCmd returns a cobra.Command for CLI configuration related operations.
 // TODO: Add support for target configuration (instead of relying on current default context in kubectl)
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{

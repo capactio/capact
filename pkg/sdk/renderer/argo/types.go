@@ -1,5 +1,6 @@
-// We had to copy the Argo Workflow Go struct as we need to extend the WorkflowStep syntax with our own keywords
 package argo
+
+// We had to copy the Argo Workflow Go struct as we need to extend the WorkflowStep syntax with our own keywords
 
 import (
 	"regexp"
@@ -9,18 +10,23 @@ import (
 	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
 )
 
+// Workflow is the specification of a Workflow.
 type Workflow struct {
 	*wfv1.WorkflowSpec
 	Templates []*Template `json:"templates"`
 }
 
+// Template is a reusable and composable unit of execution in a workflow
 type Template struct {
 	*wfv1.Template
 	Steps []ParallelSteps `json:"steps,omitempty"`
 }
 
+// ParallelSteps define a series of sequential/parallel workflow steps
 type ParallelSteps []*WorkflowStep
 
+// WorkflowStep is a reference to a template to execute in a series of step.
+// It extends the Argo WorkflowStep and adds Capact specific properties.
 type WorkflowStep struct {
 	*wfv1.WorkflowStep
 	CapactWhen                *string                  `json:"capact-when,omitempty"`
@@ -33,27 +39,35 @@ type WorkflowStep struct {
 	typeInstanceOutputs map[string]*string
 }
 
+// TypeInstanceDefinition represents a TypeInstance,
+// which is created in a step.
 type TypeInstanceDefinition struct {
 	Name string `json:"name"`
 	From string `json:"from"`
 }
 
+// RunnerContextSecretRef hold a reference to the runner context
+// in a Kubernetes Secret resource.
 type RunnerContextSecretRef struct {
 	Name string
 	Key  string
 }
 
+// UserInputSecretRef hold a reference to the runner context
+// in a Kubernetes Secret resource
 type UserInputSecretRef struct {
 	Name string
 	Key  string
 }
 
+// RenderInput holds the input parameters to the Render method.
 type RenderInput struct {
 	RunnerContextSecretRef RunnerContextSecretRef
 	InterfaceRef           types.InterfaceRef
 	Options                []RendererOption
 }
 
+// RenderOutput holds the output of the Render method.
 type RenderOutput struct {
 	Action              *types.Action
 	TypeInstancesToLock []string

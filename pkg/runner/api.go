@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-// API types used to ensure extendable function input/output.
 type (
+	// StartInput defines the input arguments to start a runner
 	StartInput struct {
 		// RunnerCtx contains Runner data provided by Engine.
 		RunnerCtx Context
@@ -15,16 +15,19 @@ type (
 		Args json.RawMessage
 	}
 
+	// StartOutput defines the output from a starting an operation.
 	StartOutput struct {
 		// Status holds generic status object that is later marshalled to JSON format.
 		Status interface{}
 	}
 
+	// WaitForCompletionInput defines the input for the wait step of the runner.
 	WaitForCompletionInput struct {
 		// RunnerCtx contains Runner data provided by Engine.
 		RunnerCtx Context
 	}
 
+	// WaitForCompletionOutput defines the output from the wait step of the runner.
 	WaitForCompletionOutput struct {
 		// Succeeded indicates if runner finished successfully or not.
 		Succeeded bool

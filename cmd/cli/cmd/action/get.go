@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewGet returns a cobra.Command for the "action get" command.
+// NewGet returns a cobra.Command for getting actions.
 func NewGet() *cobra.Command {
 	var opts action.GetOptions
 

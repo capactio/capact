@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewGet returns a cobra.Command for the "config get" command.
+// NewGet returns a cobra.Command for getting the available Capact contexts.
 func NewGet() *cobra.Command {
 	return &cobra.Command{
 		Use:   "get-contexts",
