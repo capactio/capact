@@ -7,18 +7,22 @@ Populates the OCF manifests into Neo4j database. It reads manifest from remote o
 - [Go](https://golang.org)
 - Running Kubernetes cluster with Capact installed
 
+## Build
+
+To build the binary install required [Prerequisites](https://capact.io/docs/development/development-guide/#prerequisites) and run:
+
+```shell
+make build-tool-populator
+```
+
+It will create in a `bin` directory binary for your platform. For Linux systems it will be `bin/populator-linux-amd64`.
+
 ## Usage
 
 > **CAUTION:**  In order to run DB populator manually, make sure the populator inside development cluster is disabled.
 > To disable it, run `ENABLE_POPULATOR=false make dev-cluster-update`
 
 It requires one argument, which is a path to directory with Hub manifests. Internally it uses [go-getter](https://github.com/hashicorp/go-getter) so it can download manifests from different locations and in different formats.
-
-To build the binary run:
-
-```shell
-go build -ldflags "-s -w" -o populator ./cmd/populator/main.go
-```
 
 To be able to use it locally when Capact is running in a Kubernetes cluster, two ports need to
 be forwarded:
@@ -28,13 +32,10 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
 kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 ```
 
-
-It will create a `populator` binary in a local dir.
-
-To run it and use local manifests from Capact repo:
+To run it and use manifests for example from [hub-manifests](https://github.com/capactio/hub-manifests) repo:
 
 ```shell
-./populator register ocf-manifests .
+./bin/populator-linux-amd64 register ocf-manifests <path to the main directory of the repo>
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.
