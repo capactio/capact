@@ -15,7 +15,7 @@ To build the binary install required [Prerequisites](https://capact.io/docs/deve
 make build-tool-populator
 ```
 
-It will create in a `bin` directory binary for your platform. For Linux systems it will be `bin/populator-linux-amd64`.
+It creates a binary for your platform in the `bin` directory. For example, for Linux systems, it is `bin/populator-linux-amd64`.
 
 ## Usage
 
