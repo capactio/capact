@@ -32,7 +32,7 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7687:7687
 kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 ```
 
-To run it and use manifests for example from [hub-manifests](https://github.com/capactio/hub-manifests) repo:
+To run it and use manifests, for example from the [`hub-manifests`](https://github.com/capactio/hub-manifests) repo, run:
 
 ```shell
 ./bin/populator-linux-amd64 register ocf-manifests <path to the main directory of the repo>
