@@ -35,7 +35,7 @@ kubectl -n capact-system port-forward svc/neo4j-neo4j 7474:7474
 To run it and use manifests, for example from the [`hub-manifests`](https://github.com/capactio/hub-manifests) repo, run:
 
 ```shell
-./bin/populator-linux-amd64 register ocf-manifests <path to the main directory of the repo>
+./bin/populator-linux-amd64 register ocf-manifests {PATH_TO_THE_MAIN_DIRECTORY_OF_THE_REPO}
 ```
 
 To use manifests from private git repo, private key, encoded in base64 format, is needed.
