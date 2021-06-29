@@ -26,7 +26,7 @@ func NewClient(cli *graphql.Client) *Client {
 
 // ListInterfacesMetadata returns only name, prefix and path. Rest fields have zero value.
 func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Interface, error) {
-	req := graphql.NewRequest(`query {
+	req := graphql.NewRequest(`query ListInterfacesMetadata {
 		interfaces {
 			name
 			prefix
@@ -49,7 +49,7 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 
 func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
 	query, params := c.interfaceQueryForRef(ref)
-	req := graphql.NewRequest(fmt.Sprintf(`query($interfacePath: NodePath!, %s) {
+	req := graphql.NewRequest(fmt.Sprintf(`query FindInterfaceRevision($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s
 		  }
@@ -75,7 +75,7 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 }
 
 func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
-	req := graphql.NewRequest(fmt.Sprintf(`query ListInterface($interfaceFilter: InterfaceFilter!)  {
+	req := graphql.NewRequest(fmt.Sprintf(`query ListInterfacesWithLatestRevision($interfaceFilter: InterfaceFilter!)  {
 		  interfaces(filter: $interfaceFilter) {
 			%s
 		  }
@@ -98,7 +98,7 @@ func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gq
 }
 
 func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpublicapi.InterfaceReference) (string, error) {
-	req := graphql.NewRequest(`query ($interfacePath: NodePath!) {
+	req := graphql.NewRequest(`query GetInterfaceLatestRevisionString($interfacePath: NodePath!) {
 		interface(path: $interfacePath) {
 			latestRevision {
 				revision
@@ -130,7 +130,7 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 }
 
 func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpublicapi.ImplementationRevisionFilter) ([]*gqlpublicapi.ImplementationRevision, error) {
-	req := graphql.NewRequest(fmt.Sprintf(`query {
+	req := graphql.NewRequest(fmt.Sprintf(`query ListImplementationRevisions{
 		implementations {
 			%s
 		}		
@@ -162,7 +162,7 @@ func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, re
 	getOpts.Apply(opts...)
 
 	query, params := c.interfaceQueryForRef(ref)
-	req := graphql.NewRequest(fmt.Sprintf(`query($interfacePath: NodePath!, %s) {
+	req := graphql.NewRequest(fmt.Sprintf(`query ListImplementationRevisionsForInterface($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s
 		  }
