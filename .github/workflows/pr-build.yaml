@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -70,6 +72,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Run LanguageTool
         uses: reviewdog/action-languagetool@v1
         with:
@@ -108,6 +112,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: setup env
         run: . ./hack/ci/setup-env.sh
       - id: set-matrix-app
@@ -133,6 +139,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -155,6 +163,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -177,6 +187,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -195,6 +207,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
@@ -219,6 +233,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
         run: |
           . ./hack/ci/setup-env.sh
