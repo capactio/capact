@@ -40,7 +40,7 @@ func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 }
 
 func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, error) {
-	query := fmt.Sprintf(`mutation($in: CreateTypeInstanceInput!) {
+	query := fmt.Sprintf(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
 		createTypeInstance(
 			in: $in
 		) {
@@ -65,7 +65,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.Cre
 }
 
 func (c *Client) CreateTypeInstances(ctx context.Context, in *hublocalgraphql.CreateTypeInstancesInput) ([]hublocalgraphql.CreateTypeInstanceOutput, error) {
-	query := `mutation($in: CreateTypeInstancesInput!) {
+	query := `mutation CreateTypeInstances($in: CreateTypeInstancesInput!) {
 		createTypeInstances(
 			in: $in
 		) {
@@ -91,7 +91,7 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *hublocalgraphql.Cr
 }
 
 func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput) ([]hublocalgraphql.TypeInstance, error) {
-	query := fmt.Sprintf(`mutation($in: [UpdateTypeInstancesInput]!) {
+	query := fmt.Sprintf(`mutation UpdateTypeInstances($in: [UpdateTypeInstancesInput]!) {
 		updateTypeInstances(
 			in: $in
 		) {
@@ -116,7 +116,7 @@ func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.U
 }
 
 func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error) {
-	query := fmt.Sprintf(`query($id: ID!) {
+	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
 		typeInstance(id: $id) {
 			%s	
 		}
@@ -139,7 +139,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgrap
 }
 
 func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter) ([]hublocalgraphql.TypeInstance, error) {
-	query := fmt.Sprintf(`query($filter: TypeInstanceFilter) {
+	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {
 		typeInstances(filter: $filter) {
 			%s	
 		}
@@ -162,7 +162,7 @@ func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.
 }
 
 func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error) {
-	query := `query {
+	query := `query ListTypeInstancesTypeRef {
 	  typeInstances {
 		  typeRef {
 			path
@@ -196,7 +196,7 @@ func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphq
 }
 
 func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
-	req := graphql.NewRequest(`mutation ($id: ID!) {
+	req := graphql.NewRequest(`mutation DeleteTypeInstance($id: ID!) {
 	  deleteTypeInstance(
 	    id: $id
 	  )
@@ -215,7 +215,7 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 }
 
 func (c *Client) LockTypeInstances(ctx context.Context, in *hublocalgraphql.LockTypeInstancesInput) error {
-	query := `mutation($in: LockTypeInstancesInput!) {
+	query := `mutation LockTypeInstances($in: LockTypeInstancesInput!) {
 		lockTypeInstances(in: $in)
 	}`
 
@@ -233,7 +233,7 @@ func (c *Client) LockTypeInstances(ctx context.Context, in *hublocalgraphql.Lock
 }
 
 func (c *Client) UnlockTypeInstances(ctx context.Context, in *hublocalgraphql.UnlockTypeInstancesInput) error {
-	query := `mutation($in: UnlockTypeInstancesInput!) {
+	query := `mutation UnlockTypeInstances($in: UnlockTypeInstancesInput!) {
 		unlockTypeInstances(in: $in)
 	}`
 
