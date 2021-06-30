@@ -47,6 +47,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       - name: Setup Go
@@ -142,6 +144,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       - run: make build-app-image-${{ matrix.APP }}
@@ -166,6 +170,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       - run: make build-test-image-${{ matrix.TEST }}
@@ -190,6 +196,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       - run: make build-infra-image-${{ matrix.INFRA }}
@@ -210,6 +218,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       # Go is available by default but the expected version may differ, better to "hardcode" version
@@ -236,6 +246,8 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
       - name: Setup Go
