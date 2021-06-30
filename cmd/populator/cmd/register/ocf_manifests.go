@@ -24,7 +24,7 @@ import (
 	"go.uber.org/zap"
 )
 
-// NewOCFManifests returns a cobra.Command for populating Manifests into a Neo4j database.
+// NewOCFManifests returns a cobra.Command for populating manifests into a Neo4j database.
 // TODO: support configuration both via flags and environment variables
 func NewOCFManifests(cliName string) *cobra.Command {
 	return &cobra.Command{

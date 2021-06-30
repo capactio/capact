@@ -15,18 +15,18 @@ import (
 )
 
 // Validator is a interface, with the ValidateFile method.
-// ValidateFile validates the Manifest in filepath and return a ValidationResult.
-// If other, not Manifest related errors occur, it will return an error.
+// ValidateFile validates the manifest in filepath and return a ValidationResult.
+// If other, not manifest related errors occur, it will return an error.
 type Validator interface {
 	ValidateFile(filepath string) (ValidationResult, error)
 }
 
-// ValidationResult hold the result of the Manifest validation.
+// ValidationResult hold the result of the manifest validation.
 type ValidationResult struct {
 	Errors []error
 }
 
-// Valid returns true, if the Manifest contains no errors.
+// Valid returns true, if the manifest contains no errors.
 func (r *ValidationResult) Valid() bool {
 	return len(r.Errors) == 0
 }
@@ -37,7 +37,7 @@ func newValidationResult(errors ...error) ValidationResult {
 	}
 }
 
-// FilesystemManifestValidator validates Manifests using a OCF specification, which is read from a filesystem.
+// FilesystemManifestValidator validates manifests using a OCF specification, which is read from a filesystem.
 type FilesystemManifestValidator struct {
 	schemaRootPath string
 	cachedSchemas  map[ocfVersion]*loadedOCFSchema
@@ -62,7 +62,7 @@ func NewFilesystemValidator(fs http.FileSystem, schemaRootPath string) Validator
 	}
 }
 
-// ValidateFile validates a Manifest.
+// ValidateFile validates a manifest.
 func (v *FilesystemManifestValidator) ValidateFile(path string) (ValidationResult, error) {
 	data, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {

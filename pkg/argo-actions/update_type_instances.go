@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// UpdateAction const for the update TypeInstancess action.
+// UpdateAction represents the update TypeInstancess action.
 const UpdateAction = "UpdateAction"
 
 // UpdateConfig stores the configuration parameters for update TypeInstances action.
@@ -30,7 +30,7 @@ type Update struct {
 	cfg    UpdateConfig
 }
 
-// NewUpdateAction returns a new Action instance for updating TypeInstances.
+// NewUpdateAction returns a new Update instance.
 func NewUpdateAction(log *zap.Logger, client *local.Client, cfg UpdateConfig) Action {
 	return &Update{
 		log:    log,

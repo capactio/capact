@@ -19,7 +19,7 @@ type PolicyRuleImplementationConstraints struct {
 	Path *string `json:"path,omitempty"`
 }
 
-// ManifestReferenceWithOptionalRevision is used to represent a Manifest Reference with an optional revision property.
+// ManifestReferenceWithOptionalRevision is used to represent a manifest reference with an optional revision property.
 type ManifestReferenceWithOptionalRevision struct {
 	Path     string  `json:"path"`
 	Revision *string `json:"revision,omitempty"`

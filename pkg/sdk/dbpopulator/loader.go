@@ -33,7 +33,7 @@ func getManifestMetadata(yamlBytes []byte) (manifestMetadata, error) {
 	return mm, err
 }
 
-// Group return a map of the provided Manifests Paths, grouped by the Manifest Kind.
+// Group returns a map of the provided Manifests Paths, grouped by the manifest kind.
 func Group(paths []string) (map[string][]string, error) {
 	manifests := map[string][]string{}
 	for _, kind := range ordered {

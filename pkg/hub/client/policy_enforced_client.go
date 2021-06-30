@@ -100,7 +100,7 @@ func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule
 
 // ListAdditionalInputToInjectBasedOnPolicy returns additional input parameters,
 // which have to be injected into the Action, based on the current policies.
-// check if rules has AdditionalInput to inject and if implementation expects AdditionalInput
+// TODO: check if rules has AdditionalInput to inject and if implementation expects AdditionalInput
 func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) map[string]interface{} {
 	if policyRule.Inject == nil ||
 		len(policyRule.Inject.AdditionalInput) == 0 ||

@@ -18,7 +18,7 @@ func (o *ListImplementationRevisionsOptions) Apply(opts ...GetImplementationOpti
 	}
 }
 
-// GetImplementationOption is some configuration that modifies options for a list request.
+// GetImplementationOption provides an option to configure the get request for Implementations.
 type GetImplementationOption func(*ListImplementationRevisionsOptions)
 
 // WithFilter returns an options, which adds a filter for ImplementationRevisions.

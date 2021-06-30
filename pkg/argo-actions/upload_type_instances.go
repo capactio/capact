@@ -13,7 +13,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// UploadAction const for the upload TypeInstances action.
+// UploadAction represents the upload TypeInstances action.
 const UploadAction = "UploadAction"
 
 // UploadConfig stores the configuration parameters for the upload TypeInstances action.
@@ -30,7 +30,7 @@ type Upload struct {
 	cfg    UploadConfig
 }
 
-// NewUploadAction returns Action instance to upload TypeInstances to Local Hub.
+// NewUploadAction returns a new Upload instance.
 func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
 	return &Upload{
 		log:    log,

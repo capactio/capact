@@ -21,7 +21,7 @@ import (
 
 const manifestsExtension = ".yaml"
 
-// FileSystemClient is a client, which reads Hub Manifests from a file system.
+// FileSystemClient is a client, which reads Hub manifests from a file system.
 type FileSystemClient struct {
 	loadTypeInstances bool
 	TypeInstances     map[string]hublocalgraphql.TypeInstance
