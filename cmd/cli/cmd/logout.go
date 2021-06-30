@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewLogout returns a cobra.Command for logout from a Hub.
 func NewLogout() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "logout [SERVER]",

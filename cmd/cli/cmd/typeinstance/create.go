@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -23,6 +24,7 @@ type createOptions struct {
 	TypeInstancesFiles []string
 }
 
+// NewCreate returns a cobra.Command for creating a TypeInstance on a Local Hub.
 func NewCreate() *cobra.Command {
 	var opts createOptions
 
@@ -112,7 +114,7 @@ func createTI(ctx context.Context, opts createOptions, resourcePrinter *printer.
 }
 
 func loadCreateTypeInstanceFromFile(path string) (*gqllocalapi.CreateTypeInstancesInput, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot open file with TypeInstance input")
 	}

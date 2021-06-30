@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCmd returns a cobra.Command for interacting with the Hub.
 func NewCmd() *cobra.Command {
 	hub := &cobra.Command{
 		Use:   "hub",

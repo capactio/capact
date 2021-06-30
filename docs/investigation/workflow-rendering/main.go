@@ -3,13 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/ghodss/yaml"
-	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"log"
+
 	"capact.io/capact/docs/investigation/workflow-rendering/render"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"github.com/ghodss/yaml"
+	"github.com/mitchellh/mapstructure"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
 type renderInput struct {

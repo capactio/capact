@@ -42,6 +42,8 @@ type dedicatedRenderer struct {
 	registeredOutputTypeInstanceNames []*string
 }
 
+// InputArtifact is an Argo artifact with a reference to a Capact TypeInstance.
+// It is used to track the TypeInstance, which is handled in the workflow.
 type InputArtifact struct {
 	artifact              wfv1.Artifact
 	typeInstanceReference *string

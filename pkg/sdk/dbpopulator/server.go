@@ -11,8 +11,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// ServeJson serves Hub Manifests
-// manifests are converted from YAML to JSON when requested
+// MustServeJSON serves Hub Manifests. Manifests are converted from YAML to JSON when requested
+// It will run os.Exit(1), if an error occurs.
 func MustServeJSON(ctx context.Context, listenPort int, validPaths []string) {
 	http.HandleFunc("/", jsonHandler(validPaths))
 	srv := http.Server{Addr: fmt.Sprintf("0.0.0.0:%d", listenPort)}

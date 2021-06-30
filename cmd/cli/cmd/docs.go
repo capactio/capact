@@ -19,6 +19,7 @@ title: %s
 `
 )
 
+// NewDocs returns a cobra.Command for generating Capact CLI documentation.
 func NewDocs() *cobra.Command {
 	return &cobra.Command{
 		Use:    "gen-usage-docs",

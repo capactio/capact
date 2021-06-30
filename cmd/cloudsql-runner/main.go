@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
 )
 
+// Config holds the input parameters for the CloudSQL runner binary.
 type Config struct {
 	GCP    cloudsql.GCPConfig
 	Output cloudsql.OutputConfig

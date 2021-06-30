@@ -13,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewValidate returns a cobra.Command for validating Hub Manifests.
 func NewValidate() *cobra.Command {
 	schemaProvider := schema.Provider{}
 

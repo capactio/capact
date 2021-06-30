@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/hub/client/local"
@@ -12,19 +13,24 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// UploadAction represents the upload TypeInstances action.
 const UploadAction = "UploadAction"
 
+// UploadConfig stores the configuration parameters for the upload TypeInstances action.
 type UploadConfig struct {
 	PayloadFilepath  string
 	TypeInstancesDir string
 }
 
+// Upload implements the Action interface.
+// It is used to upload TypeInstances to the Local Hub.
 type Upload struct {
 	log    *zap.Logger
 	client *local.Client
 	cfg    UploadConfig
 }
 
+// NewUploadAction returns a new Upload instance.
 func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Action {
 	return &Upload{
 		log:    log,
@@ -33,6 +39,7 @@ func NewUploadAction(log *zap.Logger, client *local.Client, cfg UploadConfig) Ac
 	}
 }
 
+// Do uploads TypeInstances to the Local Hub.
 func (u *Upload) Do(ctx context.Context) error {
 	payloadBytes, err := ioutil.ReadFile(u.cfg.PayloadFilepath)
 	if err != nil {
@@ -59,7 +66,7 @@ func (u *Upload) Do(ctx context.Context) error {
 	for _, f := range files {
 		path := fmt.Sprintf("%s/%s", u.cfg.TypeInstancesDir, f.Name())
 
-		typeInstanceValueBytes, err := ioutil.ReadFile(path)
+		typeInstanceValueBytes, err := ioutil.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return errors.Wrapf(err, "while reading TypeInstance value file %s", path)
 		}

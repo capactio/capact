@@ -6,6 +6,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 )
 
+// LoadVariablesFromFiles loads and merges multiple files with Terraform variables.
+// Variables from subsequent files are overriding the variables in files before.
 func LoadVariablesFromFiles(paths ...string) (map[string]cty.Value, error) {
 	p := configs.NewParser(nil)
 
@@ -25,6 +27,7 @@ func LoadVariablesFromFiles(paths ...string) (map[string]cty.Value, error) {
 	return values, nil
 }
 
+// MarshalVariables outputs the provided variables as a bytestream in HCL format.
 func MarshalVariables(variables map[string]cty.Value) []byte {
 	f := hclwrite.NewEmptyFile()
 	rootBody := f.Body()

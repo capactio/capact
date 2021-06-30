@@ -6,10 +6,10 @@ import (
 	"capact.io/capact/cmd/populator/cmd"
 )
 
-const CLIName = "populator"
+const cliName = "populator"
 
 func main() {
-	if err := cmd.NewRoot(CLIName).Execute(); err != nil {
+	if err := cmd.NewRoot(cliName).Execute(); err != nil {
 		os.Exit(1)
 	}
 }

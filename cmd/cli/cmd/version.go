@@ -33,6 +33,7 @@ var (
 `
 )
 
+// NewVersion returns a cobra.Command for showing Capact CLI binary information.
 func NewVersion() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",

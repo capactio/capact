@@ -10,6 +10,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewCompletion returns a cobra.Command for shell autocompletion generation.
+// Supported shells: bash, zsh, fish, powershell
 func NewCompletion() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "completion [bash|zsh|fish|powershell]",

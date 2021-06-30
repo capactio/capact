@@ -26,8 +26,7 @@ type loginOptions struct {
 	password      string
 }
 
-// TODO: Validate the Gateway Hub URL
-
+// NewLogin returns a cobra.Command for logging into a Hub.
 func NewLogin() *cobra.Command {
 	var opts loginOptions
 

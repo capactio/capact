@@ -1,4 +1,4 @@
-name: Default branch build
+name: Main branch
 
 on:
   push:

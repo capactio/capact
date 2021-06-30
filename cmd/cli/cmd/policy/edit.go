@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewEdit returns a cobra.Command for interactive editing
+// of Capact Global policy on a Capact environment.
 func NewEdit() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "edit",

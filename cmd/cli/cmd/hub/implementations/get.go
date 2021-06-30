@@ -21,6 +21,7 @@ type getOptions struct {
 	implementationPaths []string
 }
 
+// NewGet returns a cobra.Command for getting Implementations from a Public Hub.
 func NewGet() *cobra.Command {
 	var opts getOptions
 

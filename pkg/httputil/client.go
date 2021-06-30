@@ -23,12 +23,14 @@ func NewClient(timeout time.Duration, opts ...ClientOption) *http.Client {
 // modify the behaviour of the Client.
 type ClientOption func(*http.Client)
 
+// WithBasicAuth returns a ClientOption to add basic access authentication credentials.
 func WithBasicAuth(user, pass string) ClientOption {
 	return func(client *http.Client) {
 		client.Transport.(*configurableTransport).SetBasicAuth(user, pass)
 	}
 }
 
+// WithTLSInsecureSkipVerify returns a ClientOption to skip TLS verification for the HTTP server.
 func WithTLSInsecureSkipVerify(skip bool) func(client *http.Client) {
 	return func(client *http.Client) {
 		client.Transport.(*configurableTransport).SetTLSInsecureSkipVerify(skip)

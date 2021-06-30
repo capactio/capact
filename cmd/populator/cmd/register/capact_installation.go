@@ -8,6 +8,7 @@ import (
 	"capact.io/capact/internal/installation"
 )
 
+// NewCapactInstallation returns a cobra.Command for populating Capact installation TypeInstances
 // TODO: support configuration both via flags and environment variables
 func NewCapactInstallation(cliName string) *cobra.Command {
 	return &cobra.Command{

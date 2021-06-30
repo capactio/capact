@@ -39,6 +39,7 @@ func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 	return NewClient(client)
 }
 
+// CreateTypeInstance creates a new TypeInstances in the local Hub.
 func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
 		createTypeInstance(
@@ -64,6 +65,7 @@ func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.Cre
 	return resp.TypeInstance, nil
 }
 
+// CreateTypeInstances creates new TypeInstances and allows to define "uses" relationships between them.
 func (c *Client) CreateTypeInstances(ctx context.Context, in *hublocalgraphql.CreateTypeInstancesInput) ([]hublocalgraphql.CreateTypeInstanceOutput, error) {
 	query := `mutation CreateTypeInstances($in: CreateTypeInstancesInput!) {
 		createTypeInstances(
@@ -90,6 +92,7 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *hublocalgraphql.Cr
 	return resp.CreatedTypeInstances, nil
 }
 
+// UpdateTypeInstances updates multiple TypeInstances in the local Hub.
 func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput) ([]hublocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`mutation UpdateTypeInstances($in: [UpdateTypeInstancesInput]!) {
 		updateTypeInstances(
@@ -115,6 +118,7 @@ func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.U
 	return resp.TypeInstances, nil
 }
 
+// FindTypeInstance finds a TypeInstance with the given ID. If no TypeInstance is found, it returns nil.
 func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
 		typeInstance(id: $id) {
@@ -138,6 +142,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgrap
 	return resp.TypeInstance, nil
 }
 
+// ListTypeInstances lists the TypeInstances in the local Hub. You can pass a filter limit the list of returned TypeInstances.
 func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter) ([]hublocalgraphql.TypeInstance, error) {
 	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {
 		typeInstances(filter: $filter) {
@@ -161,6 +166,8 @@ func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.
 	return resp.TypeInstances, nil
 }
 
+// ListTypeInstancesTypeRef lists TypeInstances with only the TypeReference fields filled. It can be used to determine,
+// if a TypeInstance of a given TypeReference exists in the local Hub.
 func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error) {
 	query := `query ListTypeInstancesTypeRef {
 	  typeInstances {
@@ -195,6 +202,7 @@ func (c *Client) ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphq
 	return typeRefs, nil
 }
 
+// DeleteTypeInstance deletes a TypeInstances from the local Hub.
 func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 	req := graphql.NewRequest(`mutation DeleteTypeInstance($id: ID!) {
 	  deleteTypeInstance(
@@ -214,6 +222,7 @@ func (c *Client) DeleteTypeInstance(ctx context.Context, id string) error {
 	return nil
 }
 
+// LockTypeInstances locks the given TypeInstances. It will return an error, if the TypeInstance is already locked by an another owner.
 func (c *Client) LockTypeInstances(ctx context.Context, in *hublocalgraphql.LockTypeInstancesInput) error {
 	query := `mutation LockTypeInstances($in: LockTypeInstancesInput!) {
 		lockTypeInstances(in: $in)
@@ -232,6 +241,7 @@ func (c *Client) LockTypeInstances(ctx context.Context, in *hublocalgraphql.Lock
 	return nil
 }
 
+// UnlockTypeInstances unlocks the given TypeInstances. It will return an error, if the TypeInstances are locked by a different owner.
 func (c *Client) UnlockTypeInstances(ctx context.Context, in *hublocalgraphql.UnlockTypeInstancesInput) error {
 	query := `mutation UnlockTypeInstances($in: UnlockTypeInstancesInput!) {
 		unlockTypeInstances(in: $in)

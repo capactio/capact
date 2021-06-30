@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// GCPConfig hold information about the GCP SA configuration and credentials.
 type GCPConfig struct {
 	ServiceAccount struct {
 		Filepath   string            `envconfig:"default=/etc/gcp/sa.json"`
@@ -21,7 +22,9 @@ type GCPConfig struct {
 type CredentialsFormat string
 
 const (
+	// JSON indicates GCP credentials in JSON format.
 	JSON CredentialsFormat = "JSON"
+	// YAML indicates GCP credentials in YAML format.
 	YAML CredentialsFormat = "YAML"
 )
 
@@ -49,6 +52,7 @@ var scopes = []string{
 	"https://www.googleapis.com/auth/sqlservice.admin",
 }
 
+// LoadGCPCredentials loads the google.Credentials from a GCPConfig.
 func LoadGCPCredentials(cfg GCPConfig) (*google.Credentials, error) {
 	rawInput, err := ioutil.ReadFile(cfg.ServiceAccount.Filepath)
 	if err != nil {

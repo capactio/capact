@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -23,6 +24,7 @@ type applyOptions struct {
 	TypeInstancesFiles []string
 }
 
+// NewApply returns a cobra.Command for applying a TypeInstance on a Local Hub.
 func NewApply() *cobra.Command {
 	var opts applyOptions
 
@@ -95,7 +97,7 @@ func typeInstancesFromFile(typeInstancesFiles []string) ([]gqllocalapi.UpdateTyp
 }
 
 func loadUpdateTypeInstanceFromFile(path string) ([]gqllocalapi.UpdateTypeInstancesInput, error) {
-	f, err := os.Open(path)
+	f, err := os.Open(filepath.Clean(path))
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot open file with TypeInstance input")
 	}

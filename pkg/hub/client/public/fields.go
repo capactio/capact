@@ -2,6 +2,7 @@ package public
 
 import "fmt"
 
+// GenericMetadataFields for querying the GenericMetadata fields.
 var GenericMetadataFields = `
 			prefix
 			path
@@ -18,6 +19,7 @@ var GenericMetadataFields = `
 			iconURL
 			`
 
+// AttributeFields for quering the Attributes fields and GenericMetadata.
 var AttributeFields = fmt.Sprintf(`
 			metadata {
 				%s
@@ -31,6 +33,7 @@ var AttributeFields = fmt.Sprintf(`
 			}
 			`, GenericMetadataFields)
 
+// ImplementationFields for quering the Implementation fields with all revisions.
 var ImplementationFields = fmt.Sprintf(`
 			path
 			name
@@ -40,6 +43,7 @@ var ImplementationFields = fmt.Sprintf(`
 			}
 `, ImplementationRevisionFields)
 
+// ImplementationRevisionFields for quering ImplementationRevision fields.
 var ImplementationRevisionFields = fmt.Sprintf(`
 			metadata {
 					%s
@@ -129,6 +133,7 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 			}
 			`, GenericMetadataFields, AttributeFields)
 
+// InterfaceRevisionFields for quering InterfaceRevision fields with GenericMetadata and all revisions.
 var InterfaceRevisionFields = fmt.Sprintf(`
       revision
       metadata {
@@ -164,6 +169,7 @@ var InterfaceRevisionFields = fmt.Sprintf(`
 			}
 `, GenericMetadataFields, ImplementationRevisionFields)
 
+// InterfacesFields for quering Interface with the latest revision only.
 var InterfacesFields = fmt.Sprintf(`
 		path
 		name

@@ -19,11 +19,8 @@ import (
 )
 
 const (
-	ApplyCommand   = "apply"
-	DestroyCommand = "destroy"
-	PlanCommand    = "plan"
-	variablesFile  = "terraform.tfvars"
-	stateFile      = "terraform.tfstate"
+	variablesFile = "terraform.tfvars"
+	stateFile     = "terraform.tfstate"
 )
 
 type terraform struct {
@@ -42,6 +39,7 @@ func newTerraform(log *zap.Logger, workdir string, args Arguments) *terraform {
 	}
 }
 
+// Start starts the Terraform operation.
 func (t *terraform) Start(dryRun bool) error {
 	t._waitCh = make(chan error)
 
@@ -76,6 +74,7 @@ func (t *terraform) Start(dryRun bool) error {
 	return nil
 }
 
+// Wait blocks until the Terraform operation is not finished.
 func (t *terraform) Wait(ctx context.Context) error {
 	select {
 	case <-ctx.Done():

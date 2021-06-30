@@ -19,13 +19,17 @@ import (
 
 const yamlFileSeparator = "---"
 
+// GetOptions is used to store the configuration flags for the Get command.
 type GetOptions struct {
 	RequestedTypeInstancesIDs []string
 	ExportToUpdateFormat      bool
 }
 
+// ErrTableFormatWithExportFlag is used to inform that --export flag was used with table output,
+// which is not supported.
 var ErrTableFormatWithExportFlag = fmt.Errorf("cannot use --export with table output")
 
+// NewGet returns a cobra.Command for getting TypeInstances on a Local Hub.
 func NewGet() *cobra.Command {
 	var opts GetOptions
 	out := os.Stdout

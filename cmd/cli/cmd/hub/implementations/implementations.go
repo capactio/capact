@@ -4,6 +4,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewImplementations returns a cobra.Command for Hub Implementation related operations.
 func NewImplementations() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "implementations",

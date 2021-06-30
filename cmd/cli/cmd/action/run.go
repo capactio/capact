@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRun returns a new cobra.Command for running rendered Actions.
 func NewRun() *cobra.Command {
 	var opts action.RunOptions
 

@@ -12,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewUpgrade returns a cobra.Command for upgrading a Capact environment.
 func NewUpgrade() *cobra.Command {
 	var opts upgrade.Options
 

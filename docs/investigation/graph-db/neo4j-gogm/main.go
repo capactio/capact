@@ -1,12 +1,13 @@
 package main
 
 import (
+	"log"
+	"net/http"
+
+	"capact.io/capact/poc/graph-db/neo4j-gogm/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/mindstand/gogm"
-	"log"
-	"net/http"
-	"capact.io/capact/poc/graph-db/neo4j-gogm/graphql"
 )
 
 func main() {
@@ -67,39 +68,39 @@ func mustLoadModels(sess *gogm.Session) {
 
 	interfaceGroups := []*graphql.InterfaceGroup{
 		{
-			Metadata:   &graphql.GenericMetadata{
-				Name:              "foo",
-				Prefix:            "prefix",
-				Path:              "path",
-				DisplayName:       "Foo",
-				Description:       "Foo",
-				Maintainers:       []*graphql.Maintainer{
+			Metadata: &graphql.GenericMetadata{
+				Name:        "foo",
+				Prefix:      "prefix",
+				Path:        "path",
+				DisplayName: "Foo",
+				Description: "Foo",
+				Maintainers: []*graphql.Maintainer{
 					{
-						Name:            "Maitainer 1",
-						Email:           "foo@bar.com",
+						Name:  "Maitainer 1",
+						Email: "foo@bar.com",
 					},
 				},
 			},
-			Signature:  &graphql.Signature{
-				Och:            "och1",
+			Signature: &graphql.Signature{
+				Och: "och1",
 			},
 			Interfaces: []*graphql.Interface{
 				{
-					Name:           "interface 1",
-					Prefix:         "prefix int",
-					Path:           "int path",
-					Revisions:      []*graphql.InterfaceRevision{
+					Name:   "interface 1",
+					Prefix: "prefix int",
+					Path:   "int path",
+					Revisions: []*graphql.InterfaceRevision{
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "Revision 1",
 							},
-							Revision:  "0.0.1",
+							Revision: "0.0.1",
 						},
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "Revision 2",
 							},
-							Revision:  "0.0.2",
+							Revision: "0.0.2",
 						},
 					},
 				},
@@ -107,69 +108,68 @@ func mustLoadModels(sess *gogm.Session) {
 		},
 
 		{
-			Metadata:   &graphql.GenericMetadata{
-				Name:              "bar",
-				Prefix:            "prefix",
-				Path:              "path",
-				DisplayName:       "Bar",
-				Description:       "Bar",
-				Maintainers:       []*graphql.Maintainer{
+			Metadata: &graphql.GenericMetadata{
+				Name:        "bar",
+				Prefix:      "prefix",
+				Path:        "path",
+				DisplayName: "Bar",
+				Description: "Bar",
+				Maintainers: []*graphql.Maintainer{
 					{
-						Name:            "Maitainer 1",
-						Email:           "foo@bar.com",
+						Name:  "Maitainer 1",
+						Email: "foo@bar.com",
 					},
 					{
-						Name:            "Maitainer 1",
-						Email:           "bar@bar.com",
+						Name:  "Maitainer 1",
+						Email: "bar@bar.com",
 					},
 				},
 			},
-			Signature:  &graphql.Signature{
-				Och:            "och2",
+			Signature: &graphql.Signature{
+				Och: "och2",
 			},
 			Interfaces: []*graphql.Interface{
 				{
-					Name:           "bar interface 1",
-					Prefix:         "prefix int",
-					Path:           "int path",
-					Revisions:      []*graphql.InterfaceRevision{
+					Name:   "bar interface 1",
+					Prefix: "prefix int",
+					Path:   "int path",
+					Revisions: []*graphql.InterfaceRevision{
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "bar 1 Revision 1",
 							},
-							Revision:  "0.0.1",
+							Revision: "0.0.1",
 						},
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "bar 1 Revision 2",
 							},
-							Revision:  "0.0.2",
+							Revision: "0.0.2",
 						},
 					},
 				},
 				{
-					Name:           "bar interface 2",
-					Prefix:         "prefix int",
-					Path:           "int path",
-					Revisions:      []*graphql.InterfaceRevision{
+					Name:   "bar interface 2",
+					Prefix: "prefix int",
+					Path:   "int path",
+					Revisions: []*graphql.InterfaceRevision{
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "bar 2 Revision 1",
 							},
-							Revision:  "0.0.1",
+							Revision: "0.0.1",
 						},
 						{
-							Metadata:  &graphql.GenericMetadata{
+							Metadata: &graphql.GenericMetadata{
 								Name: "bar 2 Revision 2",
 							},
-							Revision:  "0.0.2",
+							Revision: "0.0.2",
 						},
 					},
 				},
 			},
 		},
 	}
-
 
 	for _, iG := range interfaceGroups {
 		err := sess.SaveDepth(iG, 10)

@@ -21,6 +21,7 @@ type TypeInstanceHandler struct {
 	genUUID         func() string
 }
 
+// NewTypeInstanceHandler returns a new TypeInstanceHandler instance.
 func NewTypeInstanceHandler(hubActionsImage string) *TypeInstanceHandler {
 	return &TypeInstanceHandler{
 		hubActionsImage: hubActionsImage,
@@ -30,6 +31,8 @@ func NewTypeInstanceHandler(hubActionsImage string) *TypeInstanceHandler {
 	}
 }
 
+// AddInputTypeInstances adds steps to the workflow to download
+// the input TypeInstances.
 func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, instances []types.InputTypeInstanceRef) error {
 	if len(instances) == 0 {
 		return nil
@@ -90,28 +93,38 @@ func (r *TypeInstanceHandler) AddInputTypeInstances(rootWorkflow *Workflow, inst
 	return nil
 }
 
+// OutputTypeInstanceRelation holds a relationship between the output TypeInstances.
 type OutputTypeInstanceRelation struct {
 	From *string
 	To   *string
 }
 
+// OutputTypeInstance holds details about a output TypeInstance,
+// which will be created in the workflow.
 type OutputTypeInstance struct {
 	ArtifactName *string
 	TypeInstance types.OutputTypeInstance
 }
 
+// OutputTypeInstances holds information about the output TypeInstances
+// created in the workflow and the relationships between them.
 type OutputTypeInstances struct {
 	typeInstances []OutputTypeInstance
 	relations     []OutputTypeInstanceRelation
 }
 
+// UpdateTypeInstance holds details about a TypeInstance,
+// which will be updated in the workflow.
 type UpdateTypeInstance struct {
 	ArtifactName string
 	ID           string
 }
 
+// UpdateTypeInstances holds the TypeInstances,
+// which will be updates in the workflow.
 type UpdateTypeInstances []UpdateTypeInstance
 
+// AddUploadTypeInstancesStep adds workflow steps to upload TypeInstances to the Capact Local Hub.
 func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow, output *OutputTypeInstances, ownerID string) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}
@@ -213,6 +226,7 @@ func (r *TypeInstanceHandler) AddUploadTypeInstancesStep(rootWorkflow *Workflow,
 	return nil
 }
 
+// AddUpdateTypeInstancesStep adds a workflow step to update TypeInstances in the Capact Local Hub.
 func (r *TypeInstanceHandler) AddUpdateTypeInstancesStep(rootWorkflow *Workflow, typeInstances UpdateTypeInstances, ownerID string) error {
 	artifacts := wfv1.Artifacts{}
 	arguments := wfv1.Artifacts{}

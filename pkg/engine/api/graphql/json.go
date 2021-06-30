@@ -10,8 +10,10 @@ import (
 	"log"
 )
 
+// JSON represents a GraphQL scalar, which holds a JSON string.
 type JSON string
 
+// UnmarshalGQL unmarshals the GraphQL input to JSON.
 func (j *JSON) UnmarshalGQL(v interface{}) error {
 	val, err := graphqlutil.ScalarToString(v)
 	if err != nil {
@@ -27,6 +29,7 @@ func (j *JSON) UnmarshalGQL(v interface{}) error {
 	return nil
 }
 
+// MarshalGQL writes the JSON to the provided writer.
 func (j JSON) MarshalGQL(w io.Writer) {
 	_, err := io.WriteString(w, strconv.Quote(string(j)))
 	if err != nil {

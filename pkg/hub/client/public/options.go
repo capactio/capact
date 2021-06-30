@@ -2,6 +2,7 @@ package public
 
 import gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
+// ListImplementationRevisionsOptions stores Implementation Revision filtering parameters.
 type ListImplementationRevisionsOptions struct {
 	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
 	implPathPattern              *string
@@ -10,15 +11,17 @@ type ListImplementationRevisionsOptions struct {
 	sortByPathAscAndRevisionDesc bool
 }
 
+// Apply is used to configure the ListImplementationRevisionsOptions.
 func (o *ListImplementationRevisionsOptions) Apply(opts ...GetImplementationOption) {
 	for _, opt := range opts {
 		opt(o)
 	}
 }
 
-// ListOption is some configuration that modifies options for a list request.
+// GetImplementationOption provides an option to configure the get request for Implementations.
 type GetImplementationOption func(*ListImplementationRevisionsOptions)
 
+// WithFilter returns an options, which adds a filter for ImplementationRevisions.
 func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
 	return func(opt *ListImplementationRevisionsOptions) {
 		// 1. Process attributes
@@ -63,6 +66,10 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementat
 	}
 }
 
+// WithSortingByPathAscAndRevisionDesc returns an options, which ensures
+// that the returned ImplementationRevision slice will be sorted
+// in ascending order by the Implementation path
+// and descending by the Implementation revision.
 func WithSortingByPathAscAndRevisionDesc() GetImplementationOption {
 	return func(options *ListImplementationRevisionsOptions) {
 		options.sortByPathAscAndRevisionDesc = true

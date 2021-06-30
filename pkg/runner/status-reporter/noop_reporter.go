@@ -18,6 +18,7 @@ func NewNoop() *NoopReporter {
 	return &NoopReporter{}
 }
 
+// Report does nothing and returns always nil.
 func (n NoopReporter) Report(ctx context.Context, runnerCtx runner.Context, status interface{}) error {
 	return nil
 }

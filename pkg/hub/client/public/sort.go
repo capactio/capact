@@ -7,6 +7,9 @@ import (
 	"github.com/Masterminds/semver/v3"
 )
 
+// SortImplementationRevisions will sort the ImplementationRevisions,
+// if the sortByPathAscAndRevisionDesc property is true in the opts.
+// In other case it will return the original revs.
 func SortImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsOptions) []gqlpublicapi.ImplementationRevision {
 	if opts == nil {
 		return revs

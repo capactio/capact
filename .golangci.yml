@@ -31,12 +31,12 @@ linters:
     - typecheck
     - unused
     - varcheck
-    - golint
+    - revive
     - gofmt
     - misspell
     - gochecknoinits
     - unparam
-    - scopelint
+    - exportloopref
     - gosec
     - goimports
     - whitespace

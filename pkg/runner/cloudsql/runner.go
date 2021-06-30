@@ -16,6 +16,7 @@ type runnerAction interface {
 	WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error)
 }
 
+// Runner provides functionality to run and wait for GCP CloudSQL operations.
 type Runner struct {
 	logger          *zap.Logger
 	sqladminService *sqladmin.Service
@@ -24,6 +25,7 @@ type Runner struct {
 	outputCfg       OutputConfig
 }
 
+// NewRunner returns new instance of CloudSQL runner.
 func NewRunner(cfg OutputConfig, sqladminService *sqladmin.Service, gcpProjectName string) *Runner {
 	return &Runner{
 		outputCfg:       cfg,
@@ -33,14 +35,18 @@ func NewRunner(cfg OutputConfig, sqladminService *sqladmin.Service, gcpProjectNa
 	}
 }
 
+// InjectLogger sets the logger on the runner.
 func (r *Runner) InjectLogger(logger *zap.Logger) {
 	r.logger = logger
 }
 
+// Name returns the name of the runner.
 func (r *Runner) Name() string {
 	return "cloudsql"
 }
 
+// Start starts a CloudSQL operation.
+// It will not wait for the operation to finish.
 func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.StartOutput, error) {
 	args := &Args{}
 
@@ -64,6 +70,7 @@ func (r *Runner) Start(ctx context.Context, in runner.StartInput) (*runner.Start
 	return r.action.Start(ctx, &in)
 }
 
+// WaitForCompletion waits for the started operation to finish.
 func (r *Runner) WaitForCompletion(ctx context.Context, in runner.WaitForCompletionInput) (*runner.WaitForCompletionOutput, error) {
 	return r.action.WaitForCompletion(ctx, in)
 }

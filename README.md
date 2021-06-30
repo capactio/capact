@@ -1,5 +1,9 @@
 # Capact
 
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![GitHub Actions main branch CI](https://github.com/capactio/capact/actions/workflows/branch-build.yaml/badge.svg?branch=main)](https://github.com/capactio/capact/actions/workflows/branch-build.yaml?query=branch%3Amain)
+[![Go Report Card](https://goreportcard.com/badge/github.com/capactio/capact)](https://goreportcard.com/report/github.com/capactio/capact)
+
 **Capact** (pronounced: "cape-act", /ˈkeɪp.ækt/) is a simple way to manage applications and infrastructure.
 
 > **⚠️ WARNING**: Capact versions prior to 0.4.0 are considered experimental. Capact 0.4.0, the very first public Capact release, is coming very soon, along with the **capact.io** website going live. Until this moment, the links may not work properly. Stay tuned for the announcement!

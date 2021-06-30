@@ -20,6 +20,7 @@ type browseOptions struct {
 	pathPattern string
 }
 
+// NewBrowse returns a cobra.Command for browsing available Interfaces in a Public Hub.
 func NewBrowse() *cobra.Command {
 	var opts browseOptions
 

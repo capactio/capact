@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -104,7 +105,7 @@ func (i *upgrader) Do(_ context.Context, in Input) (Output, Status, error) {
 
 func (i *upgrader) loadHelmReleaseData(path string) (ChartRelease, error) {
 	i.log.Debug("Reading Helm Release data from file", zap.String("path", path))
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return ChartRelease{}, errors.Wrapf(err, "while reading values from file %q", path)
 	}

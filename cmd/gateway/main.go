@@ -39,6 +39,7 @@ type Config struct {
 	Auth BasicAuth
 }
 
+// BasicAuth holds the credentials for HTTP basic access authentication.
 type BasicAuth struct {
 	Username string `envconfig:"default=graphql"`
 	Password string

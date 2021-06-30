@@ -11,8 +11,10 @@ import (
 
 const supportedAPIVersionConstraintString = "^0.2"
 
+// SupportedAPIVersionMap stores the supported API versions of the policy.
 type SupportedAPIVersionMap map[string]struct{}
 
+// ToStringSlice returns a string slice of the supported API versions.
 func (m SupportedAPIVersionMap) ToStringSlice() []string {
 	var strSlice []string
 	for key := range m {
@@ -23,6 +25,8 @@ func (m SupportedAPIVersionMap) ToStringSlice() []string {
 	return strSlice
 }
 
+// FromYAMLString reads the Policy from the input string.
+// It will return an error, if the Policy APIVersion is not supported.
 func FromYAMLString(in string) (Policy, error) {
 	bytes := []byte(in)
 	err := Validate(bytes)
@@ -38,6 +42,7 @@ func FromYAMLString(in string) (Policy, error) {
 	return policy, nil
 }
 
+// Validate checks, if the apiVersion in the provided Policy is supported.
 func Validate(in []byte) error {
 	var unmarshalled struct {
 		APIVersion semver.Version `json:"apiVersion"`

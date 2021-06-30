@@ -12,18 +12,23 @@ import (
 
 const additionalOutputTemplateName = "additionalOutputTemplate"
 
+// RenderEngine has a Render method.
+// The Render method is used to perform rendering of Chart values.
 type RenderEngine interface {
 	Render(*chart.Chart, chartutil.Values) (map[string]string, error)
 }
 
+// Renderer is used to perform rendering of Chart values. It uses the Golang templating engine.
 type Renderer struct {
 	renderEngine RenderEngine
 }
 
+// NewRenderer returns a new Renderer instance.
 func NewRenderer() *Renderer {
 	return &Renderer{renderEngine: &engine.Engine{}}
 }
 
+// Do renders the additional output data using the deployed Chart release.
 func (r *Renderer) Do(chartData *chart.Chart, release *release.Release, additionalOutputTemplate []byte) ([]byte, error) {
 	chartData.Templates = append(chartData.Templates, &chart.File{
 		Name: additionalOutputTemplateName,

@@ -81,6 +81,7 @@ type argoArtifactRef struct {
 	name string
 }
 
+// ArgoArtifactNoStep indicates that the Argo artifact was not produced in a workflow step.
 const ArgoArtifactNoStep = ""
 
 func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {

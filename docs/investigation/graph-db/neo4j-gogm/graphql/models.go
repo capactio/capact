@@ -2,9 +2,10 @@ package graphql
 
 import (
 	"fmt"
-	"github.com/mindstand/gogm"
 	"io"
 	"strconv"
+
+	"github.com/mindstand/gogm"
 )
 
 // inputs
@@ -66,18 +67,18 @@ type TypeInstance interface {
 type GenericMetadata struct {
 	gogm.BaseNode `json:"-"`
 
-	InterfaceGroup *InterfaceGroup `json:"-" gogm:"direction=incoming;relationship=describedWith"`
+	InterfaceGroup    *InterfaceGroup    `json:"-" gogm:"direction=incoming;relationship=describedWith"`
 	InterfaceRevision *InterfaceRevision `json:"-" gogm:"direction=incoming;relationship=describedWith"`
 
 	Name             string        `json:"name" gogm:"name=name"`
-	Prefix           string       `json:"prefix" gogm:"name=prefix"`
-	Path             string       `json:"path" gogm:"name=path"`
-	DisplayName      string       `json:"displayName" gogm:"name=displayName"`
+	Prefix           string        `json:"prefix" gogm:"name=prefix"`
+	Path             string        `json:"path" gogm:"name=path"`
+	DisplayName      string        `json:"displayName" gogm:"name=displayName"`
 	Description      string        `json:"description" gogm:"name=description"`
 	Maintainers      []*Maintainer `json:"maintainers" gogm:"direction=outgoing;relationship=maintainedBy"`
-	DocumentationURL string       `json:"documentationURL" gogm:"name=documentationURL"`
-	SupportURL       string       `json:"supportURL" gogm:"name=supportURL"`
-	IconURL          string       `json:"iconURL" gogm:"name=iconURL"`
+	DocumentationURL string        `json:"documentationURL" gogm:"name=documentationURL"`
+	SupportURL       string        `json:"supportURL" gogm:"name=supportURL"`
+	IconURL          string        `json:"iconURL" gogm:"name=iconURL"`
 }
 
 func (GenericMetadata) IsMetadataBaseFields() {}
@@ -214,7 +215,7 @@ type Interface struct {
 	Path   string `json:"path" gogm:"name=path"`
 	//LatestRevision *InterfaceRevision   `json:"latestRevision" gogm:"direction=outgoing;relationship=latest_revision"`
 	//Revision       *InterfaceRevision   `json:"revision" gogm:"direction=outgoing;relationship=revision"`
-	Revisions      []*InterfaceRevision `json:"revisions" gogm:"direction=outgoing;relationship=revision"`
+	Revisions []*InterfaceRevision `json:"revisions" gogm:"direction=outgoing;relationship=revision"`
 }
 
 type InterfaceGroup struct {
@@ -248,7 +249,7 @@ type InterfaceReference struct {
 type InterfaceRevision struct {
 	gogm.BaseNode `json:"-"`
 
-	Interface      *Interface `json:"-" gogm:"direction=incoming;relationship=revision"`
+	Interface *Interface `json:"-" gogm:"direction=incoming;relationship=revision"`
 
 	Metadata *GenericMetadata `json:"metadata" gogm:"direction=outgoing;relationship=describedWith"`
 	Revision string           `json:"revision" gogm:"name=revision"`
@@ -271,7 +272,7 @@ type Maintainer struct {
 	GenericMetadata *GenericMetadata `json:"-" gogm:"direction=incoming;relationship=maintainedBy"`
 
 	Name  string `json:"name" gogm:"name=name"`
-	Email string  `json:"email" gogm:"name=email"`
+	Email string `json:"email" gogm:"name=email"`
 	URL   string `json:"url" gogm:"name=url"`
 }
 

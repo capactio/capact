@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRoot returns a root cobra.Command for the db populator.
 func NewRoot(cliName string) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:          cliName,
