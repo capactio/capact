@@ -35,7 +35,7 @@ func NewValidate() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			validator := manifest.NewFilesystemValidator(schemaProvider.FileSystem())
 
-			fmt.Fprintf(os.Stdout, "Validating files...")
+			fmt.Println("Validating files...")
 
 			shouldFail := false
 
