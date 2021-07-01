@@ -387,6 +387,13 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(MatchRegexp(heredoc.Docf(`while executing mutation to lock TypeInstances: All attempts fail:
 						#1: graphql: failed to lock TypeInstances: 1 error occurred: TypeInstances with IDs %s are locked by different owner`, allPermutations(createdTIIDs))))
+
+			then("should unlock id1,id2,id3")
+			err = localCli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
+				Ids:     createdTIIDs,
+				OwnerID: fooOwnerID,
+			})
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("should test update TypeInstances based on all edge cases", func() {
@@ -537,6 +544,13 @@ var _ = Describe("GraphQL API", func() {
 			Expect(err).To(HaveOccurred())
 			Expect(err.Error()).To(Equal(heredoc.Doc(`while executing mutation to update TypeInstances: All attempts fail:
         			#1: graphql: failed to update TypeInstances: TypeInstances with IDs "id3" were not found`)))
+
+			then("should unlock id1,id2,id3")
+			err = localCli.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
+				Ids:     createdTIIDs,
+				OwnerID: fooOwnerID,
+			})
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })
