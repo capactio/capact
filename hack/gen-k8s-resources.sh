@@ -27,26 +27,26 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.' e
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.' exit 1; }
 
 cleanup() {
-    rm -rf "${TMP_DIR}"
+  rm -rf "${TMP_DIR}"
 }
 
 trap cleanup EXIT
 
 host::install::controller-gen() {
-    shout "Install the controller-gen ${STABLE_CONTROLLER_GEN_VERSION} locally to a tempdir..."
-    mkdir -p "${TMP_DIR}/bin"
+  shout "Install the controller-gen ${STABLE_CONTROLLER_GEN_VERSION} locally to a tempdir..."
+  mkdir -p "${TMP_DIR}/bin"
 
-    export PATH="${TMP_DIR}/bin:${PATH}"
-    export GOBIN="${TMP_DIR}/bin"
+  export PATH="${TMP_DIR}/bin:${PATH}"
+  export GOBIN="${TMP_DIR}/bin"
 
-    pushd "$TMP_DIR" >/dev/null
+  pushd "$TMP_DIR" >/dev/null
 
-    go mod init tmp
-    go get sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN_VERSION
+  go mod init tmp
+  go get sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN_VERSION
 
-    popd >/dev/null
+  popd >/dev/null
 
-    echo -e "${GREEN}√ install controller-gen${NC}"
+  echo -e "${GREEN}√ install controller-gen${NC}"
 }
 
 main() {
@@ -61,7 +61,7 @@ main() {
   CRDS_OUTPUT="${K8S_DEPLOY_DIR}/crds"
   RBAC_OUTPUT="${UMBRELLA_CHART}/charts/engine/templates"
 
-  controller-gen object crd:trivialVersions=true rbac:roleName=k8s-engine-role \
+  controller-gen object:headerFile="${CURRENT_DIR}/boilerplate.txt" crd:trivialVersions=true rbac:roleName=k8s-engine-role \
     paths="$REPO_ROOT_DIR/..." \
     output:crd:artifacts:config="$CRDS_OUTPUT" \
     output:rbac:artifacts:config="$RBAC_OUTPUT"
