@@ -14,12 +14,14 @@ import (
 
 const policyConfigMapKey = "cluster-policy.yaml"
 
+// Service provides functionality to manage Capact Policy configuration.
 type Service struct {
 	log          *zap.Logger
 	k8sCli       client.Client
 	policyObjKey client.ObjectKey
 }
 
+// NewService returns a new Service instance.
 func NewService(log *zap.Logger, actionCli client.Client, cfg Config) *Service {
 	return &Service{
 		log:    log.With(zap.String("module", "policyService")),
@@ -31,6 +33,7 @@ func NewService(log *zap.Logger, actionCli client.Client, cfg Config) *Service {
 	}
 }
 
+// Get returns current Capact Policy configuration.
 func (s *Service) Get(ctx context.Context) (policy.Policy, error) {
 	cfgMap, err := s.getConfigMap(ctx)
 	if err != nil {
@@ -50,6 +53,7 @@ func (s *Service) Get(ctx context.Context) (policy.Policy, error) {
 	return p, nil
 }
 
+// Update updates current Capact Policy configuration with a given input.
 func (s *Service) Update(ctx context.Context, in policy.Policy) (policy.Policy, error) {
 	cfgMap, err := s.getConfigMap(ctx)
 	if err != nil {

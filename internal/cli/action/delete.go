@@ -50,11 +50,11 @@ var (
 	// ErrMissingActionToDeleteOpt defines error indicating that at least Action name or Action regex name needs to be provided.
 	ErrMissingActionToDeleteOpt = errors.New("exact name, or regex option need to be specified")
 	// ErrMutuallyExclusiveOpts defines error indicating that Action name and Action regex name cannot be provided at the same time.
-	ErrMutuallyExclusiveOpts    = errors.New("exact name cannot be provided when regex option is specified")
+	ErrMutuallyExclusiveOpts = errors.New("exact name cannot be provided when regex option is specified")
 	// ErrNoActionToDelete defines error indicating there are no Action to be deleted.
-	ErrNoActionToDelete         = errors.New("no Action to delete")
+	ErrNoActionToDelete = errors.New("no Action to delete")
 	// ErrNotSupportedPhaseOpt defines error indicating that you can filter Actions by the `phase` field only when Action regex name is used.
-	ErrNotSupportedPhaseOpt     = errors.New("phase filter is supported only when regex option is used")
+	ErrNotSupportedPhaseOpt = errors.New("phase filter is supported only when regex option is used")
 )
 
 // Delete schedules Action deletion. If requested, wait for deletion process to complete.

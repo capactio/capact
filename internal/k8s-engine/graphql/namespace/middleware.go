@@ -6,7 +6,7 @@ const (
 	// NamespaceHeaderName defines HTTP header name where Kubernetes Namespace is stored.
 	NamespaceHeaderName = "NAMESPACE"
 	// DefaultNamespace defines default Kubernetes Namespace name.
-	DefaultNamespace    = "default"
+	DefaultNamespace = "default"
 )
 
 // Middleware provides functionality to handle Namespace property in HTTP requests.
