@@ -14,16 +14,20 @@ import (
 	"k8s.io/apimachinery/pkg/util/duration"
 )
 
+// GetOptions holds configuration for fetching Actions.
 type GetOptions struct {
 	ActionNames []string
 	Namespace   string
 	Output      string
 }
+
+// GetOutput defines output for Get function.
 type GetOutput struct {
 	Actions   []*gqlengine.Action
 	Namespace string
 }
 
+// Get fetches given Actions and use printer to display them in requested format.
 func Get(ctx context.Context, opts GetOptions, printer *cliprinter.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 
@@ -73,6 +77,7 @@ func errNotFound(name string) error {
 	return fmt.Errorf(`NotFound: Action "%s" not found`, name)
 }
 
+// TableDataOnGet returns table data with Action specific properties.
 func TableDataOnGet(in interface{}) (cliprinter.TableData, error) {
 	out := cliprinter.TableData{}
 

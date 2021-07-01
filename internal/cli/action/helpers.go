@@ -48,7 +48,7 @@ func namespaceQuestion() *survey.Question {
 		Name: "namespace",
 		Prompt: &survey.Input{
 			Message: "Please type Action namespace: ",
-			Default: DefaultNamespace,
+			Default: defaultNamespace,
 		},
 		Validate: survey.ComposeValidators(survey.Required),
 	}

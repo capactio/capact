@@ -3,14 +3,18 @@ package namespace
 import "net/http"
 
 const (
+	// NamespaceHeaderName defines HTTP header name where Kubernetes Namespace is stored.
 	NamespaceHeaderName = "NAMESPACE"
+	// DefaultNamespace defines default Kubernetes Namespace name.
 	DefaultNamespace    = "default"
 )
 
+// Middleware provides functionality to handle Namespace property in HTTP requests.
 type Middleware struct {
 	headerName string
 }
 
+// NewMiddleware returns a new Middleware instance.
 func NewMiddleware() *Middleware {
 	return &Middleware{headerName: NamespaceHeaderName}
 }
