@@ -20,6 +20,6 @@ This command consists of multiple subcommands to create a Capact environment
 
 ### SEE ALSO
 
-* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Kubernetes cluster
+* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Capact environments
 * [capact environment create kind](capact_environment_create_kind.md)	 - Provision local kind cluster
 

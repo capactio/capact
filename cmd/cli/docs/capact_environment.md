@@ -4,7 +4,7 @@ title: capact environment
 
 ## capact environment
 
-This command consists of multiple subcommands to interact with a Kubernetes cluster
+This command consists of multiple subcommands to interact with a Capact environments
 
 ### Options
 

@@ -45,7 +45,11 @@ check_for_unknown_issues() {
 
 gen_go_api_from_ocf_specs() {
   shout "Generating Go types from OCF JSON Schemas..."
-  OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.gen.go"
+
+  # Unfortunately, generated comment by quicktype is not taken into account by Go Report Card,
+  # so we use the `generated.go` suffix to exclude this file from report.
+  # source: https://github.com/gojp/goreportcard/blob/90f40babc458157667588faa664896dc544beccd/check/utils.go#L15-L19
+  OUTPUT="pkg/sdk/apis/${OCF_VERSION}/types/types.generated.go"
   mkdir -p "${REPORT_FILE_DIR}"
 
   pushd "${REPO_ROOT_DIR}"

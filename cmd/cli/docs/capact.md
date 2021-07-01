@@ -60,7 +60,7 @@ capact [flags]
 * [capact action](capact_action.md)	 - This command consists of multiple subcommands to interact with target Actions
 * [capact completion](capact_completion.md)	 - Generate shell completion scripts
 * [capact config](capact_config.md)	 - Manage configuration
-* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Kubernetes cluster
+* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Capact environments
 * [capact hub](capact_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
 * [capact install](capact_install.md)	 - install Capact into a given environment
 * [capact login](capact_login.md)	 - Login to a Hub (Gateway) server
