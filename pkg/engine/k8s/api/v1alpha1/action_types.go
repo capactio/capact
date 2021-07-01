@@ -1,4 +1,5 @@
 // +kubebuilder:validation:Required
+
 package v1alpha1
 
 import (
@@ -85,31 +86,38 @@ func isBoolSet(in *bool) bool {
 	return in != nil && *in
 }
 
+// IsDryRun returns true if dry-run is enabled.
 func (in *ActionSpec) IsDryRun() bool {
 	return isBoolSet(in.DryRun)
 }
 
+// IsRun returns true if Action is approved to be executed.
 func (in *ActionSpec) IsRun() bool {
 	return isBoolSet(in.Run)
 }
 
+// IsCanceled returns true if Action should be canceled.
 func (in *ActionSpec) IsCanceled() bool {
 	return isBoolSet(in.Cancel)
 }
 
+// IsAdvancedRenderingEnabled returns true if advanced rendering was requested.
 func (in *ActionSpec) IsAdvancedRenderingEnabled() bool {
 	return in.AdvancedRendering != nil && in.AdvancedRendering.Enabled
 }
 
+// IsExecuted returns true if Action is executed.
 func (in *Action) IsExecuted() bool {
 	return in.Status.Phase == RunningActionPhase || in.Status.Phase == BeingCanceledActionPhase
 }
 
+// IsUninitialized returns true if action in uninitialized.
 // TODO bug, that newly created Action CR has empty phase and not the default, so we need to handle it here
 func (in *Action) IsUninitialized() bool {
 	return in.Status.Phase == "" || in.Status.Phase == InitialActionPhase
 }
 
+// IsBeingRendered returns true if Action is being rendered.
 func (in *Action) IsBeingRendered() bool {
 	return in.Status.Phase == BeingRenderedActionPhase
 }
@@ -129,6 +137,7 @@ func (in *Action) IsBeingDeleted() bool {
 	return !in.ObjectMeta.DeletionTimestamp.IsZero()
 }
 
+// IsCompleted returns true if Action is in in the complete state.
 func (in *Action) IsCompleted() bool {
 	return in.Status.Phase == FailedActionPhase || in.Status.Phase == SucceededActionPhase || in.Status.Phase == CanceledActionPhase
 }
@@ -149,6 +158,7 @@ type ActionInput struct {
 	ActionPolicy *ActionPolicy `json:"policy,omitempty"`
 }
 
+// ActionPolicy describes Action Policy reference.
 type ActionPolicy struct {
 
 	// SecretRef stores reference to Secret in the same namespace the Action CR is created.
@@ -292,10 +302,13 @@ type RenderingStatus struct {
 	AdvancedRendering *AdvancedRenderingStatus `json:"advancedRendering,omitempty"`
 }
 
+// SetAction sets the Action property to a given input.
 func (r *RenderingStatus) SetAction(action []byte) {
 	r.Action = &runtime.RawExtension{Raw: action}
 }
 
+// SetInputParameters sets the Action input parameters to a given input.
+// It handles nil slices properly.
 func (r *RenderingStatus) SetInputParameters(params []byte) {
 	if params == nil {
 		return
@@ -307,6 +320,8 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
+// SetInputParameters sets the Action Policy to a given input.
+// It handles nil slices properly.
 func (r *RenderingStatus) SetActionPolicy(policy []byte) {
 	if policy == nil {
 		return
@@ -318,6 +333,7 @@ func (r *RenderingStatus) SetActionPolicy(policy []byte) {
 	r.Input.SetActionPolicy(policy)
 }
 
+// SetTypeInstancesToLock sets the Action locked TypeInstances to a given input.
 func (r *RenderingStatus) SetTypeInstancesToLock(typeInstances []string) {
 	r.TypeInstancesToLock = typeInstances
 }
