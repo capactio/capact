@@ -31,35 +31,21 @@ readonly charts=(
 # shellcheck source=./hack/lib/utilities.sh
 source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; exit 1; }
 
-setChartVersionToCommitSHA() {
+setChartVersionAndImageTagToCommitSHA() {
   readonly version="${GITHUB_SHA:0:7}"
 
   for chart in "${charts[@]}"; do
     sed -i.bak "/^version: / s/$/-${version}/" "${DEPLOY_CHARTS_DIR}/${chart}/Chart.yaml"
   done
-}
 
-function wereChartsModifed() {
-  DIFF=$(git diff HEAD^ HEAD -- "${DEPLOY_CHARTS_DIR}")
-  readonly DIFF
-  if [ "${DIFF:-}" = "" ]; then
-    return 1
-  fi
-  return 0
+  sed -i.bak "s/overrideTag: \"latest\"/overrideTag: \"${version}\"/g" "${DEPLOY_CHARTS_DIR}/capact/values.yaml"
 }
 
 main() {
-  if wereChartsModifed; then
-    shout "Changes detected in ${DEPLOY_CHARTS_DIR}. Starting Helm chart releasing..."
-  else
-    shout "No changes detected in ${DEPLOY_CHARTS_DIR}. Skipping Helm chart releasing."
-    exit 0
-  fi
-
   local CAPACTIO_BUCKET="${CAPACTIO_OFFICIAL_BUCKET}"
   if [ "${MAIN_BUILD:-}" = "true" ]; then
     CAPACTIO_BUCKET="${CAPACTIO_LATEST_BUCKET}"
-    setChartVersionToCommitSHA
+    setChartVersionAndImageTagToCommitSHA
   fi
 
   readonly CAPACTIO_REPO_URL=https://storage.googleapis.com/${CAPACTIO_BUCKET}
