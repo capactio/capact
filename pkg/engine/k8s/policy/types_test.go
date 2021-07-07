@@ -3,6 +3,8 @@ package policy
 import (
 	"testing"
 
+	tools "capact.io/capact/internal"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -65,7 +67,7 @@ func TestMergeMaps(t *testing.T) {
 	for _, test := range tests {
 		test := test
 		t.Run(test.name, func(t *testing.T) {
-			result := MergeMaps(test.current, test.overwrites)
+			result := tools.MergeMaps(test.current, test.overwrites)
 			assert.Equalf(t, test.expected, result, "Merged map is different from expected")
 		})
 	}

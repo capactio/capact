@@ -5,40 +5,40 @@ import (
 	"os"
 	"time"
 
+	"capact.io/capact/internal/cli/environment/create"
+
 	"capact.io/capact/internal/cli/capact"
 
-	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/heredoc"
-	"capact.io/capact/internal/cli/upgrade"
-
+	"capact.io/capact/internal/cli/install"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 )
 
-// NewUpgrade returns a cobra.Command for upgrading a Capact environment.
-func NewUpgrade() *cobra.Command {
-	var opts upgrade.Options
+// NewInstall returns a cobra.Command for installing Capact in the created env
+func NewInstall() *cobra.Command {
+	opts := capact.Options{}
 
-	cmd := &cobra.Command{
-		Use:   "upgrade",
-		Short: "Upgrades Capact",
-		Long:  "Use this command to upgrade the Capact version on a cluster.",
-		Example: heredoc.WithCLIName(`
-			# Upgrade Capact components to the newest available version
-			<cli> upgrade
-
-			# Upgrade Capact components to 0.1.0 version
-			<cli> upgrade --version 0.1.0`, cli.Name),
+	installCmd := &cobra.Command{
+		Use:   "install [OPTIONS] [SERVER]",
+		Short: "install Capact into a given environment",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			upgradeProcess, err := upgrade.New(os.Stdout)
+			k8sCfg, err := config.GetConfig()
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while creating k8s config")
 			}
-
-			return upgradeProcess.Run(cmd.Context(), opts)
+			return install.Install(cmd.Context(), os.Stdout, k8sCfg, opts)
 		},
 	}
 
-	flags := cmd.Flags()
+	flags := installCmd.Flags()
+
+	flags.StringVar(&opts.Name, "name", create.KindDefaultClusterName, "Cluster name, overrides config.")
+	flags.StringVar(&opts.Namespace, "namespace", capact.Namespace, "Capact namespace.")
+	flags.StringVar(&opts.Environment, "environment", capact.KindEnv, "Capact environment.")
+	flags.StringSliceVar(&opts.SkipComponents, "skip-component", []string{}, "Components names that should not be installed.")
+	flags.StringSliceVar(&opts.SkipImages, "skip-image", []string{}, "Local images names that should not be build when using local build.")
+	flags.StringSliceVar(&opts.FocusImages, "focus-image", []string{}, "Local images to build, all if not specified.")
 	flags.StringVar(&opts.Parameters.Version, "version", capact.LatestVersionTag, "Capact version.")
 	flags.StringVar(&opts.Parameters.Override.HelmRepoURL, "helm-repo-url", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
 	flags.StringVar(&opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag, "override-capact-image-tag", "", "Allows you to override Docker image tag for Capact components. By default, Docker image tag from Helm chart is used.")
@@ -46,10 +46,8 @@ func NewUpgrade() *cobra.Command {
 	flags.BoolVar(&opts.Parameters.IncreaseResourceLimits, "increase-resource-limits", true, "Enables higher resource requests and limits for components.")
 	flags.BoolVar(&opts.Parameters.Override.CapactValues.Engine.TestSetup.Enabled, "enable-test-setup", false, "Enables test setup for the Capact E2E validation scenarios.")
 	flags.BoolVar(&opts.Parameters.Override.CapactValues.Notes.PrintInsecure, "print-insecure-helm-release-notes", false, "Prints the base64-encoded Gateway password directly in Helm release notes.")
-	flags.StringVar(&opts.ActionNamePrefix, "action-name-prefix", "capact-upgrade-", "Specifies Capact upgrade Action name prefix.")
+	flags.BoolVar(&opts.Parameters.Override.CapactValues.HubPublic.Populator.Enabled, "enable-populator", true, "Enables Public Hub data populator")
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
-	flags.BoolVarP(&opts.Wait, "wait", "w", true, `Waits for the upgrade process until it's finished or the defined "--timeout" has occurred.`)
-	flags.DurationVar(&opts.MaxQueueTime, "max-queue-time", 10*time.Minute, `Maximum waiting time for the completion of other, currently running upgrade tasks. Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 
-	return cmd
+	return installCmd
 }

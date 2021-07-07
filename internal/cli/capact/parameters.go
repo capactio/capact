@@ -1,13 +1,13 @@
-package upgrade
+package capact
 
 type (
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"-"`
 		Override               struct {
-			HelmRepoURL  string       `json:"helmRepoURL"`
-			CapactValues CapactValues `json:"capactValues,omitempty"`
-			Neo4jValues  Neo4jValues  `json:"neo4jValues,omitempty"`
+			HelmRepoURL  string      `json:"helmRepoURL"`
+			CapactValues Values      `json:"capactValues,omitempty"`
+			Neo4jValues  Neo4jValues `json:"neo4jValues,omitempty"`
 		} `json:"override"`
 	}
 	Neo4jValues struct {
@@ -17,7 +17,7 @@ type (
 			} `json:"core,omitempty"`
 		} `json:"neo4j,omitempty"`
 	}
-	CapactValues struct {
+	Values struct {
 		Notes struct {
 			PrintInsecure bool `json:"printInsecure"`
 		} `json:"notes"`
@@ -44,15 +44,20 @@ type (
 	}
 	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
+		Populator Populator `json:"populator,omitempty"`
 	}
 	Engine struct {
 		TestSetup struct {
 			Enabled bool `json:"enabled,omitempty"`
 		} `json:"testSetup,omitempty"`
 	}
+	Populator struct {
+		Enabled bool `json:"enabled,omitempty"`
+	}
 )
 
-func increasedGatewayResources() Resources {
+// IncreasedGatewayResources returns increased Gateway resources
+func IncreasedGatewayResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "300m",
@@ -65,7 +70,8 @@ func increasedGatewayResources() Resources {
 	}
 }
 
-func increasedHubPublicResources() Resources {
+// IncreasedHubPublicResources returns increased Public Hub resources
+func IncreasedHubPublicResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "400m",
@@ -78,7 +84,8 @@ func increasedHubPublicResources() Resources {
 	}
 }
 
-func increasedNeo4jResources() Resources {
+// IncreasedNeo4jResources returns increased Neo4j resources
+func IncreasedNeo4jResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "1",

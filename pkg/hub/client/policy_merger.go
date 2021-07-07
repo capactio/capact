@@ -3,6 +3,8 @@ package client
 import (
 	"reflect"
 
+	tools "capact.io/capact/internal"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 )
 
@@ -57,7 +59,7 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 	}
 	// merge Additional Input
 	if newRule.Inject.AdditionalInput != nil {
-		newMap := policy.MergeMaps(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
+		newMap := tools.MergeMaps(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
 		rule.Inject.AdditionalInput = newMap
 	}
 	// merge TypeInstances
