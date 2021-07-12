@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// SecretStatusEntryKey defines key name under which Action status is saved.
 const SecretStatusEntryKey = "status"
 
 var _ runner.StatusReporter = &K8sSecretReporter{}
