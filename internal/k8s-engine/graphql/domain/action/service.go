@@ -24,6 +24,7 @@ type Service struct {
 	k8sCli client.Client
 }
 
+// NewService returns a new Service instance.
 func NewService(log *zap.Logger, actionCli client.Client) *Service {
 	return &Service{
 		log:    log.With(zap.String("module", "actionService")),

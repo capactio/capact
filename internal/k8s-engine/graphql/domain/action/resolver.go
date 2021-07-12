@@ -60,7 +60,7 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 	return &gqlItem, nil
 }
 
-// Action returns all Actions which meet a given filter criteria.
+// Actions returns all Actions which meet a given filter criteria.
 func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
 	svcFilter, err := r.conv.FilterFromGraphQL(filter)
 	if err != nil {

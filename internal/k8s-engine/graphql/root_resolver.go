@@ -15,6 +15,7 @@ type RootResolver struct {
 	combinedResolver combinedResolver
 }
 
+// NewRootResolver returns a new RootResolver instance.
 func NewRootResolver(log *zap.Logger, k8sCli client.Client, policyService policy.Service) *RootResolver {
 	actionConverter := action.NewConverter()
 	actionService := action.NewService(log, k8sCli)
