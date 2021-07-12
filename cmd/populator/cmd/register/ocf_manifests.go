@@ -18,6 +18,7 @@ import (
 
 	"github.com/avast/retry-go"
 	"github.com/docker/cli/cli"
+	"github.com/hashicorp/go-multierror"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -41,15 +42,15 @@ func NewOCFManifests(cliName string) *cobra.Command {
 	}
 }
 
-func runDBPopulate(ctx context.Context, src string) error {
+func runDBPopulate(ctx context.Context, src string) (err error) {
 	var cfg dbpopulator.Config
-	err := envconfig.InitWithPrefix(&cfg, "APP")
+	err = envconfig.InitWithPrefix(&cfg, "APP")
 	if err != nil {
 		return errors.Wrap(err, "while loading configuration")
 	}
 
 	// setup logger
-	logger, err := logger.New(cfg.Logger)
+	log, err := logger.New(cfg.Logger)
 	if err != nil {
 		return errors.Wrap(err, "while creating zap logger")
 	}
@@ -59,14 +60,18 @@ func runDBPopulate(ctx context.Context, src string) error {
 		return errors.Wrap(err, "while creating temporary directory")
 	}
 	dstDir := path.Join(parent, "hub")
-	defer os.RemoveAll(parent)
+	defer func() {
+		if rErr := os.RemoveAll(parent); rErr != nil {
+			err = multierror.Append(err, rErr)
+		}
+	}()
 
 	err = getter.Download(ctx, src, dstDir)
 	if err != nil {
 		return errors.Wrap(err, "while downloading Hub manifests")
 	}
 
-	logger.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
+	log.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
 	rootDir := path.Join(dstDir, cfg.ManifestsPath)
 	files, err := io.ListYamls(rootDir)
 	if err != nil {
@@ -79,34 +84,42 @@ func runDBPopulate(ctx context.Context, src string) error {
 	if err != nil {
 		return errors.Wrap(err, "while connecting to Neo4j db")
 	}
-	defer driver.Close()
+	defer func() {
+		if cErr := driver.Close(); cErr != nil {
+			err = multierror.Append(err, cErr)
+		}
+	}()
 
 	session := driver.NewSession(neo4j.SessionConfig{})
-	defer session.Close()
+	defer func() {
+		if sErr := session.Close(); sErr != nil {
+			err = multierror.Append(err, sErr)
+		}
+	}()
 
-	gitHash := []byte{}
+	var gitHash []byte
 	if cfg.UpdateOnGitCommit {
-		logger.Info("APP_UPDATE_ON_GIT_COMMIT set. Updating manifests only if git commit changed.")
+		log.Info("APP_UPDATE_ON_GIT_COMMIT set. Updating manifests only if git commit changed.")
 		gitHash, err = getGitHash(rootDir)
 		if err != nil {
 			return errors.Wrap(err, "while getting `git rev-parse HEAD`")
 		}
 	} else {
-		logger.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
+		log.Info("APP_UPDATE_ON_GIT_COMMIT not set. Ignoring git commit, always updating manifests.")
 	}
 
 	start := time.Now()
 	err = retry.Do(func() error {
 		hash := strings.TrimSpace(string(gitHash))
 		populated, err := dbpopulator.Populate(
-			ctx, logger, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), hash)
+			ctx, log, session, files, rootDir, fmt.Sprintf("%s:%d", cfg.JSONPublishAddr, cfg.JSONPublishPort), hash)
 		if err != nil {
-			logger.Error("Cannot populate a new data", zap.String("error", err.Error()))
+			log.Error("Cannot populate a new data", zap.String("error", err.Error()))
 			return err
 		}
 		if populated {
 			end := time.Now()
-			logger.Info("Populated new data", zap.Duration("duration (seconds)", end.Sub(start)))
+			log.Info("Populated new data", zap.Duration("duration (seconds)", end.Sub(start)))
 		}
 		return nil
 	}, retry.Attempts(3), retry.Delay(1*time.Minute))

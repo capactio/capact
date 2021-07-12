@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -58,7 +59,7 @@ func Apply(ctx context.Context, opts ApplyOptions, w io.Writer) error {
 }
 
 func loadPolicyInputFromFile(path string) (*graphql.PolicyInput, error) {
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}

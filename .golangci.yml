@@ -1,7 +1,5 @@
 issues:
-  exclude:
-    # Check this issue for more info: https://github.com/kyoh86/scopelint/issues/4
-    - Using the variable on range scope `tc` in function literal
+  exclude-use-default: false
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # This is a special case. We want to have a different name for each Resolver
@@ -13,11 +11,28 @@ issues:
       text: "consider calling this Resolver"
       linters:
         - golint
+  exclude:
+    # Check this issue for more info: https://github.com/kyoh86/scopelint/issues/4
+    - Using the variable on range scope `tc` in function literal
+    - EXC0001
+    - EXC0003
+    - EXC0004
+    - EXC0005
+    - EXC0006
+    - EXC0007
+    - EXC0008
+    - EXC0009
+    - EXC0010
+    - EXC0011
+    - EXC0012
+    - EXC0013
+    - EXC0014
+    - EXC0015
 
 run:
   tests: true
   skip-files:
-    - ".*\\.gen\\.go$"
+    - ".*\\.generated\\.go$"
 linters:
   disable-all: true
   enable:

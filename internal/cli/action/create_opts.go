@@ -31,7 +31,7 @@ type CreateOptions struct {
 	policy        *gqlengine.PolicyInput
 }
 
-// SetDefaults sets default values to not provided options.
+// SetDefaults defaults not provided options.
 func (c *CreateOptions) SetDefaults() {
 	if c.ActionName == "" {
 		c.ActionName = generateDNSName()

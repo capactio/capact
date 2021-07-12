@@ -3,6 +3,7 @@ package policy_test
 import (
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"testing"
 
 	"capact.io/capact/internal/ptr"
@@ -41,7 +42,7 @@ func TestFromYAMLBytes_Invalid(t *testing.T) {
 }
 
 func loadInput(t *testing.T, path string) string {
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	require.NoError(t, err)
 	return string(bytes)
 }

@@ -102,6 +102,7 @@ func (t *terraform) _execute(command string, arg ...string) ([]byte, error) {
 	allArgs := []string{command, "-no-color"}
 	allArgs = append(allArgs, arg...)
 
+	// #nosec
 	cmd := exec.Command("terraform", allArgs...)
 	cmd.Dir = t.workdir
 	cmd.Env = append(os.Environ(), "TF_IN_AUTOMATION=true")
