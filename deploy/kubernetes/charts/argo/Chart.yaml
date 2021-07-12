@@ -8,6 +8,6 @@ version: 0.3.0
 
 dependencies:
   - name: argo
-    version: "0.16.7"
+    version: "1.0.0"
     repository: https://argoproj.github.io/argo-helm
     condition: argo.enabled
