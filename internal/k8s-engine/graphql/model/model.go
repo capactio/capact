@@ -67,7 +67,7 @@ func (f *ActionFilter) Match(item v1alpha1.Action) bool {
 	return true
 }
 
-// Input used for continuing Action rendering in advanced mode
+// AdvancedModeContinueRenderingInput used for continuing Action rendering in advanced mode
 type AdvancedModeContinueRenderingInput struct {
 	// TypeInstances that are optional for a given rendering iteration
 	TypeInstances *[]v1alpha1.InputTypeInstance

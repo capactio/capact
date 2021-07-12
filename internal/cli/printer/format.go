@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-// Format is a type for capturing supported output formats.
+// PrintFormat is a type for capturing supported output formats.
 // Implements pflag.Value interface.
 type PrintFormat string
 

@@ -5,7 +5,7 @@ func String(in string) *string {
 	return &in
 }
 
-// String returns string value for a given pointer string.
+// StringPtrToString returns string value for a given pointer string.
 // Support nil values.
 func StringPtrToString(in *string) string {
 	if in != nil {

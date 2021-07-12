@@ -320,7 +320,7 @@ func (r *RenderingStatus) SetInputParameters(params []byte) {
 	r.Input.SetParameters(params)
 }
 
-// SetInputParameters sets the Action Policy to a given input.
+// SetActionPolicy sets the Action Policy to a given input.
 // It handles nil slices properly.
 func (r *RenderingStatus) SetActionPolicy(policy []byte) {
 	if policy == nil {
@@ -356,10 +356,12 @@ type ResolvedActionInput struct {
 	ActionPolicy *runtime.RawExtension `json:"actionPolicy,omitempty"`
 }
 
+// SetParameters sets resolved Action parameters to a given input.
 func (r *ResolvedActionInput) SetParameters(params []byte) {
 	r.Parameters = &runtime.RawExtension{Raw: params}
 }
 
+// SetActionPolicy sets resolved Action Policy to a given input.
 func (r *ResolvedActionInput) SetActionPolicy(params []byte) {
 	r.ActionPolicy = &runtime.RawExtension{Raw: params}
 }
@@ -457,6 +459,7 @@ type NodePath string
 // +kubebuilder:validation:Enum=Initial;BeingRendered;AdvancedModeRenderingIteration;ReadyToRun;Running;BeingCanceled;Canceled;Succeeded;Failed
 type ActionPhase string
 
+// List of possible Action phases.
 const (
 	InitialActionPhase                        ActionPhase = "Initial"
 	BeingRenderedActionPhase                  ActionPhase = "BeingRendered"

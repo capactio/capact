@@ -95,6 +95,7 @@ func (p Policy) ToYAMLString() (string, error) {
 	return string(bytes), nil
 }
 
+// DeepCopy returns a new deep copy of InjectData.
 // controller-gen doesn't support interface{} so writing it manually
 func (in *InjectData) DeepCopy() *InjectData {
 	if in == nil {
@@ -105,6 +106,7 @@ func (in *InjectData) DeepCopy() *InjectData {
 	return out
 }
 
+// DeepCopyInto writes a deep copy of InjectedData into out.
 // controller-gen doesn't support interface{} so writing it manually
 func (in *InjectData) DeepCopyInto(out *InjectData) {
 	*out = *in
