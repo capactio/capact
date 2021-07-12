@@ -135,6 +135,7 @@ func (c *CreateOptions) resolveFromFiles() error {
 	return nil
 }
 
+// ActionInput returns GraphQL Action input based on the given options.
 func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,

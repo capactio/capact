@@ -50,7 +50,7 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 	return &resp.Action, nil
 }
 
-// Get action returns Action with a given name from Namespace extracted from a given ctx.
+// GetAction returns Action with a given name from Namespace extracted from a given ctx.
 func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Action, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query($name: String!) {
 		action(name: $name) {

@@ -6,8 +6,10 @@ import (
 	"github.com/nautilus/graphql"
 )
 
+// Middleware provides functionality to store and restore headers between requests.
 type Middleware struct{}
 
+// StoreInCtx stores headers in context.
 func (Middleware) StoreInCtx(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
@@ -17,6 +19,8 @@ func (Middleware) StoreInCtx(next http.Handler) http.Handler {
 	)
 }
 
+// RestoreFromCtx restores HTTP headers based on those saved in ctx.
+// Do not override any existing headers.
 func (Middleware) RestoreFromCtx() graphql.NetworkMiddleware {
 	return func(request *http.Request) error {
 		headers, ok := FromContext(request.Context())

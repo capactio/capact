@@ -14,6 +14,7 @@ type ActionToCreateOrUpdate struct {
 	InputParamsSecret *v1.Secret
 }
 
+// SetNamespace set a given namespace to all required poperties.
 func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
 	m.Action.Namespace = namespace
 
@@ -30,10 +31,12 @@ type ActionFilter struct {
 	InterfaceRef *v1alpha1.ManifestReference
 }
 
+// AllAllowed returns true if all Actions are allowed.
 func (f *ActionFilter) AllAllowed() bool {
 	return f == nil || (f.Phase == nil && f.NameRegex == nil && f.InterfaceRef == nil)
 }
 
+// ZapFields returns zap logger filed used for debug purposes.
 func (f *ActionFilter) ZapFields() []zap.Field {
 	var out []zap.Field
 	if f.Phase != nil {
@@ -45,6 +48,7 @@ func (f *ActionFilter) ZapFields() []zap.Field {
 	return out
 }
 
+// Match returns true if a given Action match filter criteria.
 func (f *ActionFilter) Match(item v1alpha1.Action) bool {
 	if f.Phase != nil && *f.Phase != item.Status.Phase {
 		return false

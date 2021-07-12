@@ -18,6 +18,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
+// Service provides functionality to manage Capact Actions.
 type Service struct {
 	log    *zap.Logger
 	k8sCli client.Client
@@ -34,6 +35,7 @@ func NewService(log *zap.Logger, actionCli client.Client) *Service {
 // Validate the list of input TypeInstances with validation webhook,
 // to make sure there are no TypeInstances with duplicated names and different IDs
 
+// Create Action on cluster side in the Namespace extracted from a given ctx.
 func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
@@ -60,6 +62,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 	return item.Action, nil
 }
 
+// Update Action on cluster side in the Namespace extracted from a given ctx.
 func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
@@ -100,6 +103,7 @@ func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate)
 	return item.Action, nil
 }
 
+// GetByName returns Action with a given name from the Namespace extracted from a given ctx.
 func (s *Service) GetByName(ctx context.Context, name string) (v1alpha1.Action, error) {
 	objKey, err := s.objectKey(ctx, name)
 	if err != nil {
@@ -126,6 +130,7 @@ func (s *Service) GetByName(ctx context.Context, name string) (v1alpha1.Action, 
 	return item, nil
 }
 
+// List returns all Actions witch match a given filter criteria in the Namespace extracted from a given ctx.
 func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
@@ -164,6 +169,7 @@ func (s *Service) List(ctx context.Context, filter model.ActionFilter) ([]v1alph
 	return filteredItems, nil
 }
 
+// DeleteByName deletes Action with a given name from the Namespace extracted from a given ctx.
 func (s *Service) DeleteByName(ctx context.Context, name string) error {
 	item, err := s.GetByName(ctx, name)
 	if err != nil {
@@ -183,6 +189,7 @@ func (s *Service) DeleteByName(ctx context.Context, name string) error {
 	return nil
 }
 
+// RunByName executes Action with a given name from the Namespace extracted from a given ctx.
 func (s *Service) RunByName(ctx context.Context, name string) error {
 	item, err := s.GetByName(ctx, name)
 	if err != nil {
@@ -212,6 +219,7 @@ func (s *Service) RunByName(ctx context.Context, name string) error {
 	return err
 }
 
+// CancelByName cancels Action with a given name from the Namespace extracted from a given ctx.
 func (s *Service) CancelByName(ctx context.Context, name string) error {
 	item, err := s.GetByName(ctx, name)
 	if err != nil {
@@ -238,6 +246,7 @@ func (s *Service) CancelByName(ctx context.Context, name string) error {
 	return err
 }
 
+// ContinueAdvancedRendering continues advanced rendering for Action with a given name from the Namespace extracted from a given ctx.
 func (s *Service) ContinueAdvancedRendering(ctx context.Context, actionName string, in model.AdvancedModeContinueRenderingInput) error {
 	item, err := s.GetByName(ctx, actionName)
 	if err != nil {
@@ -310,7 +319,7 @@ func (s *Service) validateInputTypeInstancesForRenderingIteration(optionalTypeIn
 	}
 
 	if len(invalidTypeInstanceNames) > 0 {
-		return NewErrInvalidSetOfTypeInstancesForRenderingIteration(invalidTypeInstanceNames)
+		return NewInvalidSetOfTypeInstancesForRenderingIterationError(invalidTypeInstanceNames)
 	}
 
 	return nil

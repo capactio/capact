@@ -45,30 +45,32 @@ const (
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
 )
 
-type HubImplementationGetter interface {
-	GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*hubpublicapi.ImplementationRevision, error)
-}
+// Defines dependencies for Action service operation.
+type (
+	HubImplementationGetter interface {
+		GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*hubpublicapi.ImplementationRevision, error)
+	}
+	ArgoRenderer interface {
+		Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)
+	}
 
-type ArgoRenderer interface {
-	Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)
-}
+	ActionValidator interface {
+		Validate(action *types.Action, namespace string) error
+	}
 
-type ActionValidator interface {
-	Validate(action *types.Action, namespace string) error
-}
+	PolicyService interface {
+		Get(ctx context.Context) (policy.Policy, error)
+	}
 
-type PolicyService interface {
-	Get(ctx context.Context) (policy.Policy, error)
-}
+	TypeInstanceLocker interface {
+		LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
+		UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
+	}
 
-type TypeInstanceLocker interface {
-	LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
-	UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
-}
-
-type TypeInstanceGetter interface {
-	ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
-}
+	TypeInstanceGetter interface {
+		ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
+	}
+)
 
 // ActionService provides business functionality for reconciling Action CR.
 type ActionService struct {
@@ -257,6 +259,7 @@ func (a *ActionService) EnsureRunnerExecuted(ctx context.Context, saName string,
 	return nil
 }
 
+// LockTypeInstances locks TypeInstance used by a given Action.
 func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
 	if action == nil || action.Status.Rendering == nil {
 		return errors.New("Action or Action rendering status is nil")
@@ -274,6 +277,7 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 	})
 }
 
+// UnlockTypeInstances unlocks TypeInstances used by a given Action.
 func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error {
 	if action == nil || action.Status.Rendering == nil || action.Status.Rendering.TypeInstancesToLock == nil {
 		return nil
@@ -423,6 +427,7 @@ func (a *ActionService) getPolicyWithFallbackToEmpty(ctx context.Context) (polic
 	return p, nil
 }
 
+// GetReportedRunnerStatusOutput defines output for GetReportedRunnerStatus method.
 type GetReportedRunnerStatusOutput struct {
 	Changed bool
 	Status  []byte
@@ -457,6 +462,7 @@ func (a *ActionService) GetReportedRunnerStatus(ctx context.Context, action *v1a
 	}, nil
 }
 
+// GetRunnerJobStatusOutput defines output for GetRunnerJobStatus method.
 type GetRunnerJobStatusOutput struct {
 	Finished  bool
 	JobStatus batchv1.JobConditionType
@@ -486,6 +492,7 @@ func jobFinishStatus(j *batchv1.Job) (batchv1.JobConditionType, bool) {
 	return "", false
 }
 
+// GetTypeInstancesFromAction returns TypeInstances created by a given Action.
 func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *v1alpha1.Action) ([]v1alpha1.OutputTypeInstanceDetails, error) {
 	ownerID := ownerIDKey(action)
 
@@ -496,8 +503,7 @@ func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *
 		return nil, errors.Wrap(err, "while listing TypeInstances")
 	}
 
-	res := []v1alpha1.OutputTypeInstanceDetails{}
-
+	var res []v1alpha1.OutputTypeInstanceDetails
 	for _, ti := range typeInstances {
 		res = append(res, v1alpha1.OutputTypeInstanceDetails{
 			CommonTypeInstanceDetails: v1alpha1.CommonTypeInstanceDetails{

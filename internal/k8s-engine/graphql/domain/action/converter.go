@@ -15,10 +15,14 @@ import (
 )
 
 const (
-	ParametersSecretDataKey   = "parameters.json"
+	// ParametersSecretDataKey defines key name for Action runner parameters.
+	ParametersSecretDataKey = "parameters.json"
+	// ActionPolicySecretDataKey defines key name for Action Policy.
 	ActionPolicySecretDataKey = "action-policy.json"
-	LatestRevision            = "latest"
-	secretKind                = "Secret"
+	// LatestRevision defines keyword to indicate latest revision.
+	LatestRevision = "latest"
+
+	secretKind = "Secret"
 )
 
 // Converter provides functionality to convert GraphQL DTO to models.

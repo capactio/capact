@@ -28,11 +28,13 @@ type actionService interface {
 	ContinueAdvancedRendering(ctx context.Context, actionName string, in model.AdvancedModeContinueRenderingInput) error
 }
 
+// Resolver provides functionality to handle Action GraphQL operation such as queries and mutations.
 type Resolver struct {
 	svc  actionService
 	conv actionConverter
 }
 
+// NewResolver returns a new Resolver instance.
 func NewResolver(svc actionService, conv actionConverter) *Resolver {
 	return &Resolver{
 		svc:  svc,
@@ -40,6 +42,7 @@ func NewResolver(svc actionService, conv actionConverter) *Resolver {
 	}
 }
 
+// Action returns Action with a given name.
 func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, error) {
 	item, err := r.svc.GetByName(ctx, name)
 	if err != nil {
@@ -57,6 +60,7 @@ func (r *Resolver) Action(ctx context.Context, name string) (*graphql.Action, er
 	return &gqlItem, nil
 }
 
+// Action returns all Actions which meet a given filter criteria.
 func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([]*graphql.Action, error) {
 	svcFilter, err := r.conv.FilterFromGraphQL(filter)
 	if err != nil {
@@ -85,6 +89,7 @@ func (r *Resolver) Actions(ctx context.Context, filter *graphql.ActionFilter) ([
 	return gqlItems, actErrors
 }
 
+// CreateAction creates Action on cluster side.
 func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsInput) (*graphql.Action, error) {
 	if in == nil {
 		return nil, errors.New("input cannot be empty")
@@ -108,6 +113,7 @@ func (r *Resolver) CreateAction(ctx context.Context, in *graphql.ActionDetailsIn
 	return &gqlItem, nil
 }
 
+// RunAction executes a given Action.
 func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action, error) {
 	err := r.svc.RunByName(ctx, name)
 	if err != nil {
@@ -117,6 +123,7 @@ func (r *Resolver) RunAction(ctx context.Context, name string) (*graphql.Action,
 	return r.findAndConvertToGQL(ctx, name)
 }
 
+// CancelAction cancels a given action.
 func (r *Resolver) CancelAction(ctx context.Context, name string) (*graphql.Action, error) {
 	err := r.svc.CancelByName(ctx, name)
 	if err != nil {
@@ -126,6 +133,7 @@ func (r *Resolver) CancelAction(ctx context.Context, name string) (*graphql.Acti
 	return r.findAndConvertToGQL(ctx, name)
 }
 
+// DeleteAction deletes a given Action.
 func (r *Resolver) DeleteAction(ctx context.Context, name string) (*graphql.Action, error) {
 	gqlItem, err := r.findAndConvertToGQL(ctx, name)
 	if err != nil {
@@ -154,6 +162,7 @@ func (r *Resolver) findAndConvertToGQL(ctx context.Context, name string) (*graph
 	return &gqlItem, nil
 }
 
+// UpdateAction updates a given Action.
 func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInput) (*graphql.Action, error) {
 	actionToUpdate, err := r.conv.FromGraphQLInput(in)
 	if err != nil {
@@ -173,6 +182,7 @@ func (r *Resolver) UpdateAction(ctx context.Context, in graphql.ActionDetailsInp
 	return &gqlItem, nil
 }
 
+// ContinueAdvancedRendering continues advanced rendering for a given Action. Input parameters are validate before continuation.
 func (r *Resolver) ContinueAdvancedRendering(ctx context.Context, actionName string, in graphql.AdvancedModeContinueRenderingInput) (*graphql.Action, error) {
 	continueRenderingInput := r.conv.AdvancedModeContinueRenderingInputFromGraphQL(in)
 

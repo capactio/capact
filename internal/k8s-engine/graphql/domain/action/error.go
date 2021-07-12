@@ -7,26 +7,33 @@ import (
 	"github.com/pkg/errors"
 )
 
-var ErrActionNotFound = errors.New("action not found")
+// Defines GraphQL Action related errors.
+var (
+	ErrActionNotFound = errors.New("action not found")
 
-var ErrActionNotReadyToRun = errors.New("action is not runnable")
+	ErrActionNotReadyToRun = errors.New("action is not runnable")
 
-var ErrActionCanceledNotRunnable = errors.New("action is not runnable, as it has been already canceled")
+	ErrActionCanceledNotRunnable = errors.New("action is not runnable, as it has been already canceled")
 
-var ErrActionNotCancelable = errors.New("action cannot be canceled, as it is not run")
+	ErrActionNotCancelable = errors.New("action cannot be canceled, as it is not run")
 
-var ErrActionAdvancedRenderingDisabled = errors.New("action advanced rendering mode is disabled")
+	ErrActionAdvancedRenderingDisabled = errors.New("action advanced rendering mode is disabled")
 
-var ErrActionAdvancedRenderingIterationNotContinuable = errors.New("action advanced rendering iteration is not ready to be continued")
+	ErrActionAdvancedRenderingIterationNotContinuable = errors.New("action advanced rendering iteration is not ready to be continued")
+)
 
-type ErrInvalidSetOfTypeInstancesForRenderingIteration struct {
+// InvalidSetOfTypeInstancesForRenderingIterationError defines an error indicating that some TypeInstances are
+// not in the set of optional TypeInstances to provide.
+type InvalidSetOfTypeInstancesForRenderingIterationError struct {
 	Names []string
 }
 
-func NewErrInvalidSetOfTypeInstancesForRenderingIteration(names []string) *ErrInvalidSetOfTypeInstancesForRenderingIteration {
-	return &ErrInvalidSetOfTypeInstancesForRenderingIteration{Names: names}
+// NewInvalidSetOfTypeInstancesForRenderingIterationError returns a new InvalidSetOfTypeInstancesForRenderingIterationError instance.
+func NewInvalidSetOfTypeInstancesForRenderingIterationError(names []string) *InvalidSetOfTypeInstancesForRenderingIterationError {
+	return &InvalidSetOfTypeInstancesForRenderingIterationError{Names: names}
 }
 
-func (e ErrInvalidSetOfTypeInstancesForRenderingIteration) Error() string {
+// Error returns error message.
+func (e InvalidSetOfTypeInstancesForRenderingIterationError) Error() string {
 	return fmt.Sprintf("invalid set of TypeInstances provided for a given rendering iteration: [ %s ]", strings.Join(e.Names, ", "))
 }
