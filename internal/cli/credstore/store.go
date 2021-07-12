@@ -7,13 +7,15 @@ import (
 	"github.com/99designs/keyring"
 )
 
+// Credentials holds credentials details.
 type Credentials struct {
 	Username string
 	Secret   string
 }
 
+// GetHub returns Public Hub credentials associated with a given URL.
 func GetHub(serverURL string) (*Credentials, error) {
-	ks, err := keyring.Open(Config(CredStoreName))
+	ks, err := openStore()
 	if err != nil {
 		return nil, err
 	}
@@ -31,8 +33,9 @@ func GetHub(serverURL string) (*Credentials, error) {
 	return &creds, nil
 }
 
+// AddHub saves and associates Public Hub credentials with a given URL.
 func AddHub(serverURL string, creds Credentials) error {
-	ks, err := keyring.Open(Config(CredStoreName))
+	ks, err := openStore()
 	if err != nil {
 		return err
 	}
@@ -48,8 +51,9 @@ func AddHub(serverURL string, creds Credentials) error {
 	})
 }
 
+// DeleteHub removes credentials associates with a given Public Hub URL.
 func DeleteHub(serverURL string) error {
-	ks, err := keyring.Open(Config(CredStoreName))
+	ks, err := openStore()
 	if err != nil {
 		return err
 	}
@@ -57,8 +61,9 @@ func DeleteHub(serverURL string) error {
 	return ks.Remove(b64.StdEncoding.EncodeToString([]byte(serverURL)))
 }
 
+// ListHubServer returns a list of saved Public Hub servers.
 func ListHubServer() ([]string, error) {
-	ks, err := keyring.Open(Config(CredStoreName))
+	ks, err := openStore()
 	if err != nil {
 		return nil, err
 	}
