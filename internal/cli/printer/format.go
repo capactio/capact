@@ -15,12 +15,12 @@ const (
 	// TableFormat represents table data format.
 	TableFormat PrintFormat = "table"
 	// JSONFormat represents JSON data format.
-	JSONFormat  PrintFormat = "json"
+	JSONFormat PrintFormat = "json"
 	// YAMLFormat represents YAML data format.
-	YAMLFormat  PrintFormat = "yaml"
+	YAMLFormat PrintFormat = "yaml"
 )
 
-// String returns the string representation of the Format.
+// IsValid returns true if PrintFormat is valid.
 func (o PrintFormat) IsValid() bool {
 	switch o {
 	case TableFormat, JSONFormat, YAMLFormat:

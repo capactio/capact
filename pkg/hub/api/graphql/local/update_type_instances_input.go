@@ -3,6 +3,8 @@ package graphql
 import "encoding/json"
 
 // The types had to be moved out from generated models to add `omitempty` tags.
+
+// UpdateTypeInstancesInput defines input for update TypeInstances mutation.
 type UpdateTypeInstancesInput struct {
 	// Allows you to update TypeInstances which are locked by a given ownerID. If not provided,
 	// you can update only those TypeInstances which are not locked.
@@ -12,6 +14,7 @@ type UpdateTypeInstancesInput struct {
 	TypeInstance *UpdateTypeInstanceInput `json:"typeInstance"`
 }
 
+// UpdateTypeInstanceInput defines input for update TypeInstance mutation.
 // At least one property needs to be specified.
 type UpdateTypeInstanceInput struct {
 	// The attributes property is optional. If not provided, previous value is used.
@@ -20,8 +23,11 @@ type UpdateTypeInstanceInput struct {
 	Value interface{} `json:"value,omitempty"`
 }
 
+// NativeUpdateTypeInstanceInput declared to shadow custom MarshalJSON declared on UpdateTypeInstanceInput.
 type NativeUpdateTypeInstanceInput UpdateTypeInstanceInput
 
+// MarshalJSON provides custom marshaling to support case when Attributes are not specified.
+// TODO: it is a temporary solution and should be fixed directly in Hub server.
 func (u *UpdateTypeInstanceInput) MarshalJSON() ([]byte, error) {
 	if u.Attributes != nil {
 		return json.Marshal(NativeUpdateTypeInstanceInput(*u))
