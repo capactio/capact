@@ -45,6 +45,7 @@ type CapactRegister struct {
 	helmOutputter *helm.Outputter
 }
 
+// NewCapactRegister returns a new CapactRegister instance.
 func NewCapactRegister() (*CapactRegister, error) {
 	var cfg TypeInstancesConfig
 	err := envconfig.Init(&cfg)

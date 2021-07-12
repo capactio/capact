@@ -15,11 +15,13 @@ import (
 	"github.com/machinebox/graphql"
 )
 
+// ClusterClient groups GraphQL operation that can be executed against Capact cluster.
 type ClusterClient interface {
 	TypeInstanceClient
 	EngineClient
 }
 
+// EngineClient aggregates operations that are executed against Capact Engine by Capact CLI.
 type EngineClient interface {
 	CreateAction(ctx context.Context, in *enginegraphql.ActionDetailsInput) (*enginegraphql.Action, error)
 	GetAction(ctx context.Context, name string) (*enginegraphql.Action, error)
@@ -30,6 +32,7 @@ type EngineClient interface {
 	GetPolicy(ctx context.Context) (*enginegraphql.Policy, error)
 }
 
+// TypeInstanceClient aggregates operations that are executed against Local Hub by Capact CLI.
 type TypeInstanceClient interface {
 	FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error)
 }
@@ -39,15 +42,17 @@ type clusterClient struct {
 	EngineClient
 }
 
-func NewCluster(server string) (ClusterClient, error) {
-	creds, err := credstore.GetHub(server)
+// NewCluster returns client for Capact cluster configured with saved credentials for a given server URL.
+func NewCluster(serverURL string) (ClusterClient, error) {
+	creds, err := credstore.GetHub(serverURL)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewClusterWithCreds(server, creds)
+	return NewClusterWithCreds(serverURL, creds)
 }
 
+// NewClusterWithCreds returns client for Capact cluster with custom credentials.
 func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterClient, error) {
 	endpoint := fmt.Sprintf("%s/graphql", server)
 

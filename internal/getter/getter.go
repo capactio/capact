@@ -8,10 +8,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Download data from a given source to local file system under a given destination path.
 func Download(ctx context.Context, src string, dst string) error {
 	pwd, err := os.Getwd()
 	if err != nil {
-		return errors.Wrap(err, "Error getting pwd")
+		return errors.Wrap(err, "while getting pwd")
 	}
 
 	// Build the client
