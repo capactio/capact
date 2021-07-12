@@ -53,20 +53,16 @@ type (
 	ArgoRenderer interface {
 		Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)
 	}
-
 	ActionValidator interface {
 		Validate(action *types.Action, namespace string) error
 	}
-
 	PolicyService interface {
 		Get(ctx context.Context) (policy.Policy, error)
 	}
-
 	TypeInstanceLocker interface {
 		LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
 		UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
 	}
-
 	TypeInstanceGetter interface {
 		ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
 	}
