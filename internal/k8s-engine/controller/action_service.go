@@ -45,24 +45,29 @@ const (
 	k8sJobActiveDeadlinePadding    = 10 * time.Second
 )
 
-// Defines dependencies for Action service operation.
 type (
+	// HubImplementationGetter allows to fetch a specific Implementation from Hub.
 	HubImplementationGetter interface {
 		GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*hubpublicapi.ImplementationRevision, error)
 	}
+	// ArgoRenderer allows to render Capact Action defines in Argo format.
 	ArgoRenderer interface {
 		Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)
 	}
+	// ActionValidator allows to validate Action definition.
 	ActionValidator interface {
 		Validate(action *types.Action, namespace string) error
 	}
+	// PolicyService allows to manage Capact Policy.
 	PolicyService interface {
 		Get(ctx context.Context) (policy.Policy, error)
 	}
+	// TypeInstanceLocker allows to lock and unlock given TypeInstances.
 	TypeInstanceLocker interface {
 		LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
 		UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
 	}
+	// TypeInstanceGetter allow to fetch given TypeInstances from Hub.
 	TypeInstanceGetter interface {
 		ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
 	}
