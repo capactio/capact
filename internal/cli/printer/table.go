@@ -6,6 +6,7 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// TableData holds data specific values that should be printed in table format.
 type TableData struct {
 	Headers      []string
 	MultipleRows [][]string
@@ -14,12 +15,15 @@ type TableData struct {
 
 var _ Printer = &Table{}
 
+// TableDataProvider provides data specific values.
 type TableDataProvider func(in interface{}) (TableData, error)
 
+// Table prints data in table format.
 type Table struct {
 	dataProvider TableDataProvider
 }
 
+// Print creates table with provided data and writes it to a given writer.
 func (p *Table) Print(in interface{}, w io.Writer) error {
 	data, err := p.dataProvider(in)
 	if err != nil {

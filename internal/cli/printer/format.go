@@ -12,17 +12,15 @@ type PrintFormat string
 var ErrInvalidFormatType = fmt.Errorf("invalid output format type")
 
 const (
+	// TableFormat represents table data format.
 	TableFormat PrintFormat = "table"
+	// JSONFormat represents JSON data format.
 	JSONFormat  PrintFormat = "json"
+	// YAMLFormat represents YAML data format.
 	YAMLFormat  PrintFormat = "yaml"
 )
 
-// String returns the string representation of the Format
-func (o PrintFormat) String() string {
-	return string(o)
-}
-
-// String returns the string representation of the Format
+// String returns the string representation of the Format.
 func (o PrintFormat) IsValid() bool {
 	switch o {
 	case TableFormat, JSONFormat, YAMLFormat:
@@ -31,6 +29,12 @@ func (o PrintFormat) IsValid() bool {
 	return false
 }
 
+// String returns the string representation of the Format. Required by pflag.Value interface.
+func (o PrintFormat) String() string {
+	return string(o)
+}
+
+// Set format type to a given input. Required by pflag.Value interface.
 func (o *PrintFormat) Set(in string) error {
 	*o = PrintFormat(in)
 	if !o.IsValid() {
@@ -39,6 +43,7 @@ func (o *PrintFormat) Set(in string) error {
 	return nil
 }
 
+// Type returns data type. Required by pflag.Value interface.
 func (o *PrintFormat) Type() string {
 	return "string"
 }
