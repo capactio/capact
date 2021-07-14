@@ -20,7 +20,7 @@ func NewDynamicSpinner(w io.Writer) *DynamicSpinner {
 	}
 }
 
-// Start the spinner with a given name.
+// Start activates the spinner with a given name.
 func (d *DynamicSpinner) Start(stage string) {
 	d.underlying.Prefix = " "
 	d.underlying.Suffix = fmt.Sprintf(" %s", stage)
@@ -32,7 +32,7 @@ func (d *DynamicSpinner) Active() bool {
 	return d.underlying.Active()
 }
 
-// Stop the spinner with a given message.
+// Stop deactivates the spinner with a given message.
 func (d *DynamicSpinner) Stop(msg string) {
 	d.underlying.FinalMSG = msg
 	d.underlying.Stop()

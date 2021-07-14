@@ -16,7 +16,7 @@ func NewStaticSpinner(w io.Writer) *StaticSpinner {
 	return &StaticSpinner{w: w}
 }
 
-// Start the spinner with a given name.
+// Start activates the spinner with a given name.
 func (s *StaticSpinner) Start(stage string) {
 	s.active = true
 	fmt.Fprintf(s.w, " • %s\n", stage)
@@ -27,7 +27,7 @@ func (s *StaticSpinner) Active() bool {
 	return s.active
 }
 
-// Stop the spinner with a given message.
+// Stop deactivates the spinner with a given message.
 func (s *StaticSpinner) Stop(msg string) {
 	s.active = false
 	fmt.Fprintln(s.w, msg)

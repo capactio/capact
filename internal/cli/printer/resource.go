@@ -80,7 +80,7 @@ func (r *ResourcePrinter) PrintFormat() PrintFormat {
 	return r.output
 }
 
-// Print received object in requested format.
+// Print prints received object in requested format.
 func (r *ResourcePrinter) Print(in interface{}) error {
 	printer, found := r.printers[r.output]
 	if !found {

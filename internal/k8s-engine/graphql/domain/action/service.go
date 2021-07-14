@@ -36,7 +36,7 @@ func NewService(log *zap.Logger, actionCli client.Client) *Service {
 // Validate the list of input TypeInstances with validation webhook,
 // to make sure there are no TypeInstances with duplicated names and different IDs
 
-// Create Action on cluster side in the Namespace extracted from a given ctx.
+// Create creates Action on cluster side in the Namespace extracted from a given ctx.
 func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
@@ -63,7 +63,7 @@ func (s *Service) Create(ctx context.Context, item model.ActionToCreateOrUpdate)
 	return item.Action, nil
 }
 
-// Update Action on cluster side in the Namespace extracted from a given ctx.
+// Update updates Action on cluster side in the Namespace extracted from a given ctx.
 func (s *Service) Update(ctx context.Context, item model.ActionToCreateOrUpdate) (v1alpha1.Action, error) {
 	ns, err := namespace.FromContext(ctx)
 	if err != nil {
