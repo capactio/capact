@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"capact.io/capact/internal/cli/capact"
-
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/printer"
@@ -33,31 +32,24 @@ const (
 	pollInterval       = time.Second
 )
 
-var ErrActionNotFinished = errors.New("Action still not finished")
-var ErrActionWithoutStatus = errors.New("Action doesn't have status")
-var ErrActionDeleted = errors.New("Action has been deleted, final state is unknown")
+// Options holds configuration for Capact upgrade operation.
+type Options struct {
+	Timeout          time.Duration
+	Wait             bool
+	Parameters       capact.InputParameters
+	ActionNamePrefix string
 
-func NewErrAnotherUpgradeIsRunning(actionName string) error {
-	return errors.Errorf("Another upgrade action %s is currently running", actionName)
+	MaxQueueTime time.Duration
 }
 
-type (
-	Options struct {
-		Timeout          time.Duration
-		Wait             bool
-		Parameters       capact.InputParameters
-		ActionNamePrefix string
-
-		MaxQueueTime time.Duration
-	}
-)
-
+// Upgrade provides functionality to upgrade Capact cluster to a given version.
 type Upgrade struct {
 	hubCli client.Hub
 	actCli client.ClusterClient
 	writer io.Writer
 }
 
+// New returns a new Upgrade instance.
 func New(w io.Writer) (*Upgrade, error) {
 	server := config.GetDefaultContext()
 
@@ -78,6 +70,7 @@ func New(w io.Writer) (*Upgrade, error) {
 	}, nil
 }
 
+// Run executes Capact cluster upgrade action with a input configuration.
 func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 	status := printer.NewStatus(u.writer, "Upgrading Capact on cluster...")
 	defer func() {
