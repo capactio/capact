@@ -21,7 +21,7 @@ capact install [OPTIONS] [flags]
 capact install
 
 # Install Capact 0.1.0 version
-capact upgrade --version 0.1.0
+capact install --version 0.1.0
 
 # Install Capact from local git repository. Needs to be run from the main directory
 capact install --version @local
