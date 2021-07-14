@@ -14,20 +14,6 @@ issues:
   exclude:
     # Check this issue for more info: https://github.com/kyoh86/scopelint/issues/4
     - Using the variable on range scope `tc` in function literal
-    - EXC0001
-    - EXC0003
-    - EXC0004
-    - EXC0005
-    - EXC0006
-    - EXC0007
-    - EXC0008
-    - EXC0009
-    - EXC0010
-    - EXC0011
-    - EXC0012
-    - EXC0013
-    - EXC0014
-    - EXC0015
 
 run:
   tests: true
