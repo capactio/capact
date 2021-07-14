@@ -204,14 +204,9 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 }
 
 func (u *Upgrade) resolveInputParameters(opts *Options) error {
-	if opts.Parameters.Version == capact.LatestVersionTag {
-		opts.Parameters.Override.HelmRepoURL = capact.HelmRepoLatest
-
-		ver, err := capact.NewHelmHelper().GetLatestVersion(opts.Parameters.Override.HelmRepoURL, capact.Name)
-		if err != nil {
-			return err
-		}
-		opts.Parameters.Version = ver
+	err := opts.Parameters.ResolveVersion()
+	if err != nil {
+		return err
 	}
 
 	if opts.Parameters.IncreaseResourceLimits {

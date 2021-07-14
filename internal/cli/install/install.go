@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/printer"
@@ -60,11 +59,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		return err
 	}
 
-	err = hideLog()
-	if err != nil {
-		return err
-	}
-
+	log.SetOutput(io.Discard)
 	err = helm.InstallComponents(w, status)
 	if err != nil {
 		return err
@@ -98,9 +93,4 @@ To begin working with Capact, use 'capact login' command.
 To read more how to use CLI, check out the documentation on https://capact.io/docs/cli/getting-started#first-use.
 `
 	fmt.Fprintln(w, msg)
-}
-
-func hideLog() error {
-	log.SetOutput(io.Discard)	
-	return nil
 }

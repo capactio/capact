@@ -187,6 +187,11 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 	fmt.Fprintf(out, "\tDESCRIPTION: %s\n", r.Info.Description)
 }
 
+func (h Helm) writeHelmDetails(out io.Writer) {
+	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
+	fmt.Fprintf(out, "\tHelm repository: %s\n", h.opts.Parameters.Override.HelmRepoURL)
+}
+
 var components = []Component{
 	&Neo4j{
 		ComponentData{
@@ -435,17 +440,20 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 		opts.Parameters.Override.CapactValues.HubPublic.Resources = IncreasedHubPublicResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = IncreasedNeo4jResources()
 	}
-	if opts.Parameters.Version == LatestVersionTag {
-		opts.Parameters.Override.HelmRepoURL = HelmRepoLatest
-	}
-
 	return &Helm{configuration: configuration, opts: opts}
 }
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 	var err error
-	helper := NewHelmHelper()
+	err = h.opts.Parameters.ResolveVersion()
+	if err != nil {
+		return errors.Wrap(err, "while resolving version")
+	}
+	if h.opts.Verbose {
+		status.End(true)
+		h.writeHelmDetails(w)
+	}
 
 	for _, component := range components {
 		if shouldSkipTheComponent(component.Name(), h.opts.SkipComponents) {
@@ -456,16 +464,8 @@ func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 		component.withConfiguration(h.configuration)
 		component.withWriter(w)
 
-		version := h.opts.Parameters.Version
-		if version == LatestVersionTag {
-			version, err = helper.GetLatestVersion(h.opts.Parameters.Override.HelmRepoURL, component.Name())
-			if err != nil {
-				return errors.Wrapf(err, "while getting latest version for %s", component.Name())
-			}
-		}
-
 		status.Step("Installing %s Helm chart", component.Name())
-		newRelease, err := component.InstallUpgrade(version)
+		newRelease, err := component.InstallUpgrade(h.opts.Parameters.Version)
 		status.End(err == nil)
 		if err != nil {
 			return err
