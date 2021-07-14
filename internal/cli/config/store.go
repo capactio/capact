@@ -14,7 +14,7 @@ const (
 	credentialsStoreFilePassphrase = "credentialsStore.filePassphrase"
 )
 
-// Init config store for Capact CLI.
+// Init initializes config store for Capact CLI.
 func Init(configPath string) error {
 	err := viper.BindEnv(credentialsStoreBackendKey, "CAPACT_CREDENTIALS_STORE_BACKEND")
 	if err != nil {

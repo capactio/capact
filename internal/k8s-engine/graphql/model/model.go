@@ -14,7 +14,7 @@ type ActionToCreateOrUpdate struct {
 	InputParamsSecret *v1.Secret
 }
 
-// SetNamespace set a given namespace to all required poperties.
+// SetNamespace sets a given namespace to all required poperties.
 func (m *ActionToCreateOrUpdate) SetNamespace(namespace string) {
 	m.Action.Namespace = namespace
 
@@ -71,7 +71,7 @@ func (f *ActionFilter) Match(item v1alpha1.Action) bool {
 	return true
 }
 
-// AdvancedModeContinueRenderingInput used for continuing Action rendering in advanced mode
+// AdvancedModeContinueRenderingInput is used for continuing Action rendering in advanced mode.
 type AdvancedModeContinueRenderingInput struct {
 	// TypeInstances that are optional for a given rendering iteration
 	TypeInstances *[]v1alpha1.InputTypeInstance

@@ -18,7 +18,7 @@ func NewActionReferencePatternError(actionRef string) error {
 	return errors.Errorf("Action reference %q doesn't follow pattern <import_alias>.<method_name>", actionRef)
 }
 
-// ResolveActionPathFromImports resolve import alias and return full InterfaceReference used in Action.
+// ResolveActionPathFromImports resolves import alias and returns full InterfaceReference used in Action.
 // If aliases are duplicated, first matched import is returned.
 func ResolveActionPathFromImports(imports []*ImplementationImport, actionRef string) (*InterfaceReference, error) {
 	action := strings.SplitN(actionRef, ".", 2)

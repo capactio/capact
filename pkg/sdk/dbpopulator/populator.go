@@ -447,7 +447,7 @@ call apoc.periodic.iterate("MATCH (n:to_remove) return n", "DETACH DELETE n", {b
 yield batches, total return batches, total
 `
 
-// Populate neo4j database with Public Hub manifests.
+// Populate imports Public Hub manifests into a Neo4j database.
 func Populate(ctx context.Context, log *zap.Logger, session neo4j.Session, paths []string, rootDir string, publishPath string, commit string) (bool, error) {
 	currentCommit, err := currentCommit(session)
 	if err != nil {

@@ -9,13 +9,13 @@ import (
 	"sigs.k8s.io/kind/pkg/cmd"
 )
 
-// KindOptions holds configuration for delete KIND cluster operation.
+// KindOptions holds configuration for delete kind cluster operation.
 type KindOptions struct {
 	Name       string
 	Kubeconfig string
 }
 
-// Kind delete a given KIND cluster.
+// Kind deletes a given kind cluster.
 func Kind(ctx context.Context, opts KindOptions) error {
 	logger := cmd.NewLogger()
 	provider := cluster.NewProvider(
