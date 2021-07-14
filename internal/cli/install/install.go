@@ -13,6 +13,7 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// Install installs Capact
 func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.Options) (err error) {
 	status := printer.NewStatus(w, "Installing Capact on cluster...")
 	defer func() {
