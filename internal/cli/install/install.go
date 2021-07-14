@@ -101,11 +101,6 @@ To read more how to use CLI, check out the documentation on https://capact.io/do
 }
 
 func hideLog() error {
-	null := "/dev/null"
-	f, err := os.Open(null)
-	if err != nil {
-		return err
-	}
-	log.SetOutput(f)
+	log.SetOutput(io.Discard)	
 	return nil
 }
