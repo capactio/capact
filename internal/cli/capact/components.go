@@ -445,8 +445,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
-	var err error
-	err = h.opts.Parameters.ResolveVersion()
+	err := h.opts.Parameters.ResolveVersion()
 	if err != nil {
 		return errors.Wrap(err, "while resolving version")
 	}

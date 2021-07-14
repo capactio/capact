@@ -106,3 +106,18 @@ func IncreasedNeo4jResources() Resources {
 		},
 	}
 }
+
+//ResolveVersion resolves @latest tag
+func (i *InputParameters) ResolveVersion() error {
+	if i.Override.HelmRepoURL == LatestVersionTag {
+		i.Override.HelmRepoURL = HelmRepoLatest
+	}
+	if i.Version == LatestVersionTag {
+		ver, err := NewHelmHelper().GetLatestVersion(i.Override.HelmRepoURL, Name)
+		if err != nil {
+			return err
+		}
+		i.Version = ver
+	}
+	return nil
+}
