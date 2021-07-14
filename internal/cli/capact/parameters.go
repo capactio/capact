@@ -1,15 +1,17 @@
-package upgrade
+package capact
 
 type (
+	// InputParameters for Capact Helm charts
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"-"`
 		Override               struct {
-			HelmRepoURL  string       `json:"helmRepoURL"`
-			CapactValues CapactValues `json:"capactValues,omitempty"`
-			Neo4jValues  Neo4jValues  `json:"neo4jValues,omitempty"`
+			HelmRepoURL  string      `json:"helmRepoURL"`
+			CapactValues Values      `json:"capactValues,omitempty"`
+			Neo4jValues  Neo4jValues `json:"neo4jValues,omitempty"`
 		} `json:"override"`
 	}
+	// Neo4jValues for Neo4j Helm chart
 	Neo4jValues struct {
 		Neo4j struct {
 			Core struct {
@@ -17,7 +19,8 @@ type (
 			} `json:"core,omitempty"`
 		} `json:"neo4j,omitempty"`
 	}
-	CapactValues struct {
+	// Values for Capact Helm charts
+	Values struct {
 		Notes struct {
 			PrintInsecure bool `json:"printInsecure"`
 		} `json:"notes"`
@@ -31,28 +34,39 @@ type (
 			} `json:"containerRegistry,omitempty"`
 		} `json:"global,omitempty"`
 	}
+	// ResourcesQuantity resource quantity values
 	ResourcesQuantity struct {
 		CPU    string `json:"cpu,omitempty"`
 		Memory string `json:"memory,omitempty"`
 	}
+	// Resources values
 	Resources struct {
 		Limits   ResourcesQuantity `json:"limits,omitempty"`
 		Requests ResourcesQuantity `json:"requests,omitempty"`
 	}
+	// Gateway values
 	Gateway struct {
 		Resources Resources `json:"resources,omitempty"`
 	}
+	// HubPublic values
 	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
+		Populator Populator `json:"populator,omitempty"`
 	}
+	// Engine values
 	Engine struct {
 		TestSetup struct {
 			Enabled bool `json:"enabled,omitempty"`
 		} `json:"testSetup,omitempty"`
 	}
+	//Populator values
+	Populator struct {
+		Enabled bool `json:"enabled,omitempty"`
+	}
 )
 
-func increasedGatewayResources() Resources {
+// IncreasedGatewayResources returns increased Gateway resources
+func IncreasedGatewayResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "300m",
@@ -65,7 +79,8 @@ func increasedGatewayResources() Resources {
 	}
 }
 
-func increasedHubPublicResources() Resources {
+// IncreasedHubPublicResources returns increased Public Hub resources
+func IncreasedHubPublicResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "400m",
@@ -78,7 +93,8 @@ func increasedHubPublicResources() Resources {
 	}
 }
 
-func increasedNeo4jResources() Resources {
+// IncreasedNeo4jResources returns increased Neo4j resources
+func IncreasedNeo4jResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "1",
@@ -89,4 +105,19 @@ func increasedNeo4jResources() Resources {
 			Memory: "1768Mi",
 		},
 	}
+}
+
+//ResolveVersion resolves @latest tag
+func (i *InputParameters) ResolveVersion() error {
+	if i.Override.HelmRepoURL == LatestVersionTag {
+		i.Override.HelmRepoURL = HelmRepoLatest
+	}
+	if i.Version == LatestVersionTag {
+		ver, err := NewHelmHelper().GetLatestVersion(i.Override.HelmRepoURL, Name)
+		if err != nil {
+			return err
+		}
+		i.Version = ver
+	}
+	return nil
 }

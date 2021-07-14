@@ -5,10 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"net/http"
-	"sort"
 	"time"
+
+	"capact.io/capact/internal/cli/capact"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
@@ -16,28 +15,16 @@ import (
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	"capact.io/capact/internal/ptr"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
-	"capact.io/capact/pkg/httputil"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 
 	"github.com/avast/retry-go"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
-	"helm.sh/helm/v3/pkg/repo"
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"sigs.k8s.io/yaml"
 )
 
 const (
-	LatestVersionTag = "@latest"
-
-	capactSystemNS = "capact-system"
-	capactName     = "capact"
-
-	capactioHelmRepoLatest    = "https://storage.googleapis.com/capactio-latest-charts"
-	CapactioHelmRepoOfficial  = "https://storage.googleapis.com/capactio-stable-charts"
-	CapactioHelmRepoLatestTag = "@latest"
-
 	capactUpgradeInterfacePath = "cap.interface.capactio.capact.upgrade"
 	capactTypeRefPath          = "cap.type.capactio.capact.config"
 	helmReleaseTypeRefPath     = "cap.type.helm.chart.release"
@@ -58,7 +45,7 @@ type (
 	Options struct {
 		Timeout          time.Duration
 		Wait             bool
-		Parameters       InputParameters
+		Parameters       capact.InputParameters
 		ActionNamePrefix string
 
 		MaxQueueTime time.Duration
@@ -66,10 +53,9 @@ type (
 )
 
 type Upgrade struct {
-	hubCli     client.Hub
-	actCli     client.ClusterClient
-	writer     io.Writer
-	httpClient *http.Client
+	hubCli client.Hub
+	actCli client.ClusterClient
+	writer io.Writer
 }
 
 func New(w io.Writer) (*Upgrade, error) {
@@ -85,13 +71,10 @@ func New(w io.Writer) (*Upgrade, error) {
 		return nil, errors.Wrap(err, "while creating cluster client")
 	}
 
-	httpClient := httputil.NewClient(30 * time.Second)
-
 	return &Upgrade{
-		hubCli:     hubCli,
-		actCli:     actionCli,
-		httpClient: httpClient,
-		writer:     w,
+		hubCli: hubCli,
+		actCli: actionCli,
+		writer: w,
 	}, nil
 }
 
@@ -101,7 +84,7 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 		status.End(err == nil)
 	}()
 
-	ctxWithNs := namespace.NewContext(ctx, capactSystemNS)
+	ctxWithNs := namespace.NewContext(ctx, capact.Namespace)
 
 	status.Step("Waiting for other upgrade actions to complete...")
 	if err := u.waitForOtherUpgradesToComplete(ctxWithNs, opts); err != nil {
@@ -147,11 +130,11 @@ func (u *Upgrade) Run(ctx context.Context, opts Options) (err error) {
 	}
 
 	if !opts.Wait {
-		status.Step("Action '%s/%s' successfully scheduled.", capactSystemNS, act.Name)
+		status.Step("Action '%s/%s' successfully scheduled.", capact.Namespace, act.Name)
 		return nil
 	}
 
-	status.Step("Waiting ≤ %s for the '%s/%s' Action to finish 🏁", opts.Timeout, capactSystemNS, act.Name)
+	status.Step("Waiting ≤ %s for the '%s/%s' Action to finish 🏁", opts.Timeout, capact.Namespace, act.Name)
 	err = u.waitUntilFinished(ctxWithNs, act.Name, opts.Timeout)
 	if err != nil {
 		return err
@@ -221,22 +204,15 @@ func (u *Upgrade) getRunningUpgradeActions(nsCtx context.Context) ([]*gqlengine.
 }
 
 func (u *Upgrade) resolveInputParameters(opts *Options) error {
-	if opts.Parameters.Override.HelmRepoURL == CapactioHelmRepoLatestTag {
-		opts.Parameters.Override.HelmRepoURL = capactioHelmRepoLatest
-	}
-
-	if opts.Parameters.Version == LatestVersionTag {
-		ver, err := u.getLatestVersion(opts.Parameters.Override.HelmRepoURL)
-		if err != nil {
-			return err
-		}
-		opts.Parameters.Version = ver
+	err := opts.Parameters.ResolveVersion()
+	if err != nil {
+		return err
 	}
 
 	if opts.Parameters.IncreaseResourceLimits {
-		opts.Parameters.Override.CapactValues.Gateway.Resources = increasedGatewayResources()
-		opts.Parameters.Override.CapactValues.HubPublic.Resources = increasedHubPublicResources()
-		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = increasedNeo4jResources()
+		opts.Parameters.Override.CapactValues.Gateway.Resources = capact.IncreasedGatewayResources()
+		opts.Parameters.Override.CapactValues.HubPublic.Resources = capact.IncreasedHubPublicResources()
+		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = capact.IncreasedNeo4jResources()
 	}
 
 	return nil
@@ -376,7 +352,7 @@ func (u *Upgrade) waitUntilFinished(ctx context.Context, name string, timeout ti
 func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.InputTypeInstanceData, error) {
 	inputTI := []*gqlengine.InputTypeInstanceData{
 		{
-			Name: fmt.Sprintf("%s-config", capactName),
+			Name: fmt.Sprintf("%s-config", capact.Name),
 			ID:   capactCfg.ID,
 		},
 	}
@@ -403,7 +379,7 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 	return inputTI, nil
 }
 
-func mapToInputParameters(params InputParameters) (gqlengine.JSON, error) {
+func mapToInputParameters(params capact.InputParameters) (gqlengine.JSON, error) {
 	marshalled, err := json.Marshal(params)
 	if err != nil {
 		return "", err
@@ -426,60 +402,3 @@ func validateTypeInstance(ti *gqllocalapi.TypeInstance) error {
 	}
 	return nil
 }
-
-// getLatestVersion loads an index file and returns version of the latest chart:
-//	- for the @latest Helm charts sort by Created field
-//  - for all others repos sort by SemVer
-//
-// Assumption that all charts are versioned in the same way.
-func (u *Upgrade) getLatestVersion(repoURL string) (string, error) {
-	// by default sort by SemVer, so even if someone pushed bugfix of older
-	// release we will not take it.
-	sortFn := func(in *repo.IndexFile) {
-		in.SortEntries()
-	}
-
-	// `main` (@latest) charts are versioned via SHA commit, so we need to sort
-	// them via Created time.
-	if repoURL == capactioHelmRepoLatest {
-		sortFn = func(in *repo.IndexFile) {
-			sort.Sort(ByCreatedTime(in.Entries[capactName]))
-		}
-	}
-
-	url := fmt.Sprintf("%s/index.yaml", repoURL)
-	resp, err := u.httpClient.Get(url)
-	if err != nil {
-		return "", errors.Wrap(err, "while getting capactio Helm Chart repository index.yaml")
-	}
-	defer resp.Body.Close()
-
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	i := &repo.IndexFile{}
-	if err := yaml.UnmarshalStrict(data, i); err != nil {
-		return "", errors.Wrapf(err, "Index fetch from %q is malformed", url)
-	}
-
-	sortFn(i)
-
-	capactEntry, ok := i.Entries[capactName]
-	if !ok {
-		return "", fmt.Errorf("no entry %q in Helm Chart repository index.yaml", capactName)
-	}
-
-	if len(capactEntry) == 0 {
-		return "", fmt.Errorf("no Chart versions for entry %q in Helm Chart repository index.yaml", capactName)
-	}
-
-	return capactEntry[0].Version, nil
-}
-
-type ByCreatedTime repo.ChartVersions
-
-func (b ByCreatedTime) Len() int           { return len(b) }
-func (b ByCreatedTime) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b ByCreatedTime) Less(i, j int) bool { return b[i].Created.After(b[j].Created) }

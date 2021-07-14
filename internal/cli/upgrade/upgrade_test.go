@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/pkg/httputil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -25,12 +26,12 @@ func TestGetLatestVersion(t *testing.T) {
 	}{
 		{
 			name:            "Latest URL should sort by Created timestamp",
-			url:             capactioHelmRepoLatest,
+			url:             capact.HelmRepoLatest,
 			expectedVersion: "0.2.0-7a347a9",
 		},
 		{
 			name:            "Official URL should sort by version",
-			url:             CapactioHelmRepoOfficial,
+			url:             capact.HelmRepoStable,
 			expectedVersion: "0.2.1",
 		},
 	}
@@ -52,12 +53,12 @@ func TestGetLatestVersion(t *testing.T) {
 					Body:       file,
 				}, nil
 			})
-			upgrade := Upgrade{
-				httpClient: fakeCli,
+			helper := capact.HelmHelper{
+				HTTPClient: fakeCli,
 			}
 
 			// when
-			ver, err := upgrade.getLatestVersion(tc.url)
+			ver, err := helper.GetLatestVersion(tc.url, "capact")
 
 			// then
 			require.NoError(t, err)

@@ -62,6 +62,7 @@ capact [flags]
 * [capact config](capact_config.md)	 - Manage configuration
 * [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Kubernetes cluster
 * [capact hub](capact_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
+* [capact install](capact_install.md)	 - install Capact into a given environment
 * [capact login](capact_login.md)	 - Login to a Hub (Gateway) server
 * [capact logout](capact_logout.md)	 - Logout from the Hub (Gateway) server
 * [capact policy](capact_policy.md)	 - This command consists of multiple subcommands to interact with Policy

@@ -12,6 +12,7 @@ import (
 
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/getter"
+	"capact.io/capact/internal/io"
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/sdk/dbpopulator"
 
@@ -67,7 +68,7 @@ func runDBPopulate(ctx context.Context, src string) error {
 
 	logger.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
 	rootDir := path.Join(dstDir, cfg.ManifestsPath)
-	files, err := dbpopulator.List(rootDir)
+	files, err := io.ListYamls(rootDir)
 	if err != nil {
 		return errors.Wrap(err, "while loading manifests")
 	}

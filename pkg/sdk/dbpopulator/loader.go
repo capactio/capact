@@ -3,9 +3,7 @@ package dbpopulator
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -57,23 +55,4 @@ func Group(paths []string) (map[string][]string, error) {
 		manifests[metadata.Kind] = append(list, path)
 	}
 	return manifests, nil
-}
-
-// List returns all YAML files in the provided hubPath by using filepath.Walk.
-func List(hubPath string) ([]string, error) {
-	files := []string{}
-	err := filepath.Walk(hubPath, func(currentPath string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() && isYaml(info.Name()) {
-			files = append(files, currentPath)
-		}
-		return nil
-	})
-	return files, err
-}
-
-func isYaml(path string) bool {
-	return strings.HasSuffix(path, ".yaml") || strings.HasSuffix(path, ".yml")
 }
