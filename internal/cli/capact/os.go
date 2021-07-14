@@ -35,7 +35,7 @@ func AddGatewayToHostsFile(status *printer.Status) error {
 	return cmd.Run()
 }
 
-//TrustSelfSigned adds Capact generatd certificate to the trusted certificates
+// TrustSelfSigned adds Capact generatd certificate to the trusted certificates
 func TrustSelfSigned(status *printer.Status) error {
 	status.Step("Trusting self-signed CA certificate if not already trusted")
 
