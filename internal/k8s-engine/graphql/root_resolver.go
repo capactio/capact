@@ -10,10 +10,12 @@ import (
 
 var _ graphql.ResolverRoot = &RootResolver{}
 
+// RootResolver aggregates all query and mutation resolver for Capact Engine domain.
 type RootResolver struct {
 	combinedResolver combinedResolver
 }
 
+// NewRootResolver returns a new RootResolver instance.
 func NewRootResolver(log *zap.Logger, k8sCli client.Client, policyService policy.Service) *RootResolver {
 	actionConverter := action.NewConverter()
 	actionService := action.NewService(log, k8sCli)
@@ -30,10 +32,12 @@ func NewRootResolver(log *zap.Logger, k8sCli client.Client, policyService policy
 	}
 }
 
+// Mutation returns Capact Engine mutation resolvers.
 func (r RootResolver) Mutation() graphql.MutationResolver {
 	return r.combinedResolver
 }
 
+// Query returns Capact Engine query resolvers.
 func (r RootResolver) Query() graphql.QueryResolver {
 	return r.combinedResolver
 }

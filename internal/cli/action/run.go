@@ -12,11 +12,13 @@ import (
 	"github.com/fatih/color"
 )
 
+// RunOptions holds configuration for running Action.
 type RunOptions struct {
 	ActionName string `survey:"name"`
 	Namespace  string `survey:"namespace"`
 }
 
+// Run executes a given Action. Possible only if Action is in the `READY_TO_RUN` phase.
 func Run(ctx context.Context, opts RunOptions, w io.Writer) error {
 	var qs []*survey.Question
 	if opts.Namespace == "" {

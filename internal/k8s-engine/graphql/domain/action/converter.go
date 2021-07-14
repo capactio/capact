@@ -15,18 +15,25 @@ import (
 )
 
 const (
-	ParametersSecretDataKey   = "parameters.json"
+	// ParametersSecretDataKey defines key name for Action runner parameters.
+	ParametersSecretDataKey = "parameters.json"
+	// ActionPolicySecretDataKey defines key name for Action Policy.
 	ActionPolicySecretDataKey = "action-policy.json"
-	LatestRevision            = "latest"
-	secretKind                = "Secret"
+	// LatestRevision defines keyword to indicate latest revision.
+	LatestRevision = "latest"
+
+	secretKind = "Secret"
 )
 
+// Converter provides functionality to convert GraphQL DTO to models.
 type Converter struct{}
 
+// NewConverter returns a new Converter instance.
 func NewConverter() *Converter {
 	return &Converter{}
 }
 
+// FromGraphQLInput coverts create/update Action input to model.
 func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (model.ActionToCreateOrUpdate, error) {
 	var advancedRendering *v1alpha1.AdvancedRendering
 	if in.AdvancedRendering != nil {
@@ -81,6 +88,7 @@ func (c *Converter) FromGraphQLInput(in graphql.ActionDetailsInput) (model.Actio
 	}, nil
 }
 
+// ToGraphQL converts Kubernetes Action representation to GraphQL DTO.
 func (c *Converter) ToGraphQL(in v1alpha1.Action) (graphql.Action, error) {
 	var run bool
 	if in.Spec.Run != nil {
@@ -131,6 +139,7 @@ func (c *Converter) ToGraphQL(in v1alpha1.Action) (graphql.Action, error) {
 	}, nil
 }
 
+// FilterFromGraphQL converts GraphQL Action filters to model.
 func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFilter, error) {
 	if in == nil {
 		return model.ActionFilter{}, nil
@@ -169,6 +178,7 @@ func (c *Converter) FilterFromGraphQL(in *graphql.ActionFilter) (model.ActionFil
 	}, nil
 }
 
+// AdvancedModeContinueRenderingInputFromGraphQL converts GraphQL advance mode input to model.
 func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.AdvancedModeContinueRenderingInput) model.AdvancedModeContinueRenderingInput {
 	return model.AdvancedModeContinueRenderingInput{
 		TypeInstances: c.inputTypeInstanceDataFromGraphQL(in.TypeInstances),

@@ -14,6 +14,7 @@ const (
 	credentialsStoreFilePassphrase = "credentialsStore.filePassphrase"
 )
 
+// Init initializes config store for Capact CLI.
 func Init(configPath string) error {
 	err := viper.BindEnv(credentialsStoreBackendKey, "CAPACT_CREDENTIALS_STORE_BACKEND")
 	if err != nil {
@@ -64,6 +65,7 @@ func getDefaultConfigPath() (string, error) {
 	return path.Join(homeDir, ".config", "capact", "config.yaml"), nil
 }
 
+// SetAsDefaultContext sets default Hub server which is used for all executed operations.
 func SetAsDefaultContext(server string, override bool) error {
 	currentDefaultContext := GetDefaultContext()
 
@@ -78,14 +80,17 @@ func SetAsDefaultContext(server string, override bool) error {
 	return nil
 }
 
+// GetDefaultContext returns default Hub server URL.
 func GetDefaultContext() string {
 	return viper.GetString(defaultContextKey)
 }
 
+// GetCredentialsStoreBackend returns keyring backend type.
 func GetCredentialsStoreBackend() string {
 	return viper.GetString(credentialsStoreBackendKey)
 }
 
+// GetCredentialsStoreFilePassphrase returns passphrase for file keyring backend type.
 func GetCredentialsStoreFilePassphrase() string {
 	return viper.GetString(credentialsStoreFilePassphrase)
 }

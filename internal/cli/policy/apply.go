@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"io/ioutil"
+	"path/filepath"
 
 	"github.com/pkg/errors"
 
@@ -13,10 +14,12 @@ import (
 	"github.com/fatih/color"
 )
 
+// ApplyOptions holds configuration for updating Capact Policy.
 type ApplyOptions struct {
 	PolicyFilePath string
 }
 
+// Validate validates if provided options are valid.
 func (opts *ApplyOptions) Validate() error {
 	if opts.PolicyFilePath == "" {
 		return errors.New("Policy YAML file path cannot be empty")
@@ -25,6 +28,7 @@ func (opts *ApplyOptions) Validate() error {
 	return nil
 }
 
+// Apply updates Capact policy with a given input.
 func Apply(ctx context.Context, opts ApplyOptions, w io.Writer) error {
 	err := opts.Validate()
 	if err != nil {
@@ -55,7 +59,7 @@ func Apply(ctx context.Context, opts ApplyOptions, w io.Writer) error {
 }
 
 func loadPolicyInputFromFile(path string) (*graphql.PolicyInput, error) {
-	bytes, err := ioutil.ReadFile(path)
+	bytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
 		return nil, err
 	}

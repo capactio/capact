@@ -7,12 +7,15 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Converter provides functionality to convert GraphQL DTO to models.
 type Converter struct{}
 
+// NewConverter returns an new Converter instance.
 func NewConverter() *Converter {
 	return &Converter{}
 }
 
+// FromGraphQLInput coverts Graphql Policy data to model.
 func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, error) {
 	var rules policy.RulesList
 
@@ -34,6 +37,7 @@ func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, err
 	}, nil
 }
 
+// ToGraphQL converts Policy model representation to GraphQL DTO.
 func (c *Converter) ToGraphQL(in policy.Policy) graphql.Policy {
 	var gqlRules []*graphql.RulesForInterface
 

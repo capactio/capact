@@ -1,7 +1,5 @@
 issues:
-  exclude:
-    # Check this issue for more info: https://github.com/kyoh86/scopelint/issues/4
-    - Using the variable on range scope `tc` in function literal
+  exclude-use-default: false
   # Excluding configuration per-path, per-linter, per-text and per-source
   exclude-rules:
     # This is a special case. We want to have a different name for each Resolver
@@ -13,11 +11,17 @@ issues:
       text: "consider calling this Resolver"
       linters:
         - golint
-
+  exclude:
+    # Check this issue for more info: https://github.com/kyoh86/scopelint/issues/4
+    - Using the variable on range scope `tc` in function literal
+    # EXC0001 errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*print(f|ln)?|os\.(Un)?Setenv). is not checked
+    # EXC0008 gosec: Duplicated errcheck checks
+    - (G104|G307)
 run:
   tests: true
   skip-files:
-    - ".*\\.gen\\.go$"
+    - ".*\\.generated\\.go$"
 linters:
   disable-all: true
   enable:

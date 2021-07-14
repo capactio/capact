@@ -8,7 +8,7 @@ import (
 
 const cliTag = "<cli>"
 
-// Docf returns unindented and formatted string as here-document.
+// WithCLIName returns unindented and formatted string as here-document.
 // Replace all <cli> with a given name.
 func WithCLIName(raw string, cliName string) string {
 	return strings.ReplaceAll(heredoc.Doc(raw), cliTag, cliName)

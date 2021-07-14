@@ -1,4 +1,4 @@
-// Copied and adjusted code from: https://github.com/kubernetes-sigs/kind/blob/b6bc112522651d98c81823df56b7afa511459a3b/pkg/internal/env/term.go#L51
+// Package cli is copied and adjusted code from: https://github.com/kubernetes-sigs/kind/blob/b6bc112522651d98c81823df56b7afa511459a3b/pkg/internal/env/term.go#L51
 package cli
 
 import (

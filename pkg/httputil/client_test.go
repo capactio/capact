@@ -50,7 +50,9 @@ func TestNewClient(t *testing.T) {
 
 			// then
 			require.NoError(t, err)
-			defer resp.Body.Close()
+			defer func() {
+				require.NoError(t, resp.Body.Close())
+			}()
 
 			// BasicAuth is configured
 			require.Equal(t, tc.username, receivedUser)

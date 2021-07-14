@@ -13,13 +13,15 @@ import (
 	"github.com/fatih/color"
 )
 
+// CreateOutput defines output for Create function.
 type CreateOutput struct {
 	Action    *gqlengine.Action
 	Namespace string
 }
 
+// Create creates a given Action.
 func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput, error) {
-	if err := opts.Resolve(); err != nil {
+	if err := opts.resolve(); err != nil {
 		return nil, err
 	}
 

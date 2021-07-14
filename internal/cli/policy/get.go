@@ -9,6 +9,7 @@ import (
 	"capact.io/capact/internal/cli/printer"
 )
 
+// Get current Capact Policy.
 func Get(ctx context.Context, printer *printer.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 

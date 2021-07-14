@@ -15,8 +15,10 @@ func TestLookupNS_Unmarshal_Success_Set(t *testing.T) {
 		HelmReleasesNSLookup LookupNS
 	}
 
-	os.Setenv("HELM_RELEASES_NS_LOOKUP", "ns1,ns2")
-	defer os.Unsetenv("HELM_RELEASES_NS_LOOKUP")
+	require.NoError(t, os.Setenv("HELM_RELEASES_NS_LOOKUP", "ns1,ns2"))
+	defer func() {
+		require.NoError(t, os.Unsetenv("HELM_RELEASES_NS_LOOKUP"))
+	}()
 
 	// when
 	err := envconfig.Init(&conf)

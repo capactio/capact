@@ -11,16 +11,19 @@ import (
 	"github.com/pkg/errors"
 )
 
+// ActionValidator provides functionality to statically validate Action definition.
 type ActionValidator struct {
 	wfCli *wfclientset.Clientset
 }
 
+// NewActionValidator returns a new ActionValidator instance.
 func NewActionValidator(wfCli *wfclientset.Clientset) *ActionValidator {
 	return &ActionValidator{
 		wfCli: wfCli,
 	}
 }
 
+// Validate validates a given Action definition.
 func (v *ActionValidator) Validate(action *types.Action, namespace string) error {
 	if action == nil {
 		return nil

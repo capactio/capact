@@ -12,8 +12,9 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-const DefaultNamespace = "default"
+const defaultNamespace = "default"
 
+// CreateOptions holds configuration for creating a given Action.
 type CreateOptions struct {
 	InterfacePath string
 	ActionName    string `survey:"name"`
@@ -30,17 +31,20 @@ type CreateOptions struct {
 	policy        *gqlengine.PolicyInput
 }
 
+// SetDefaults defaults not provided options.
 func (c *CreateOptions) SetDefaults() {
 	if c.ActionName == "" {
 		c.ActionName = generateDNSName()
 	}
 
 	if c.Namespace == "" {
-		c.Namespace = DefaultNamespace
+		c.Namespace = defaultNamespace
 	}
 }
 
-func (c *CreateOptions) Resolve() error {
+// resolve resolves the CreateOptions properties with data from different sources.
+// If possible starts interactive mode.
+func (c *CreateOptions) resolve() error {
 	if err := c.resolveFromFiles(); err != nil {
 		return err
 	}
@@ -131,6 +135,7 @@ func (c *CreateOptions) resolveFromFiles() error {
 	return nil
 }
 
+// ActionInput returns GraphQL Action input based on the given options.
 func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,

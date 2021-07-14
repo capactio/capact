@@ -17,6 +17,7 @@ type Client struct {
 	client *graphql.Client
 }
 
+// New returns a new Client instance.
 func New(endpoint string, httpClient *http.Client) *Client {
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)
@@ -26,6 +27,7 @@ func New(endpoint string, httpClient *http.Client) *Client {
 	}
 }
 
+// CreateAction creates Action in the Namespace extracted from a given ctx.
 func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetailsInput) (*enginegraphql.Action, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`mutation($in: ActionDetailsInput) {
 		createAction(
@@ -48,6 +50,7 @@ func (c *Client) CreateAction(ctx context.Context, in *enginegraphql.ActionDetai
 	return &resp.Action, nil
 }
 
+// GetAction returns Action with a given name from Namespace extracted from a given ctx.
 func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Action, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query($name: String!) {
 		action(name: $name) {
@@ -68,6 +71,8 @@ func (c *Client) GetAction(ctx context.Context, name string) (*enginegraphql.Act
 	return resp.Action, nil
 }
 
+// ListActions returns all Actions which meet filter criteria.
+// Namespace extracted from a given ctx.
 func (c *Client) ListActions(ctx context.Context, filter *enginegraphql.ActionFilter) ([]*enginegraphql.Action, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query($filter: ActionFilter) {
 		actions(filter: $filter) {
@@ -88,6 +93,7 @@ func (c *Client) ListActions(ctx context.Context, filter *enginegraphql.ActionFi
 	return resp.Actions, nil
 }
 
+// RunAction executes a given Action.
 func (c *Client) RunAction(ctx context.Context, name string) error {
 	req := graphql.NewRequest(fmt.Sprintf(`mutation($name: String!) {
 		runAction(
@@ -110,6 +116,7 @@ func (c *Client) RunAction(ctx context.Context, name string) error {
 	return nil
 }
 
+// DeleteAction deletes a given Action.
 func (c *Client) DeleteAction(ctx context.Context, name string) error {
 	req := graphql.NewRequest(fmt.Sprintf(`mutation($name: String!) {
 		deleteAction(
@@ -132,6 +139,7 @@ func (c *Client) DeleteAction(ctx context.Context, name string) error {
 	return nil
 }
 
+// UpdatePolicy updates Capact Policy on cluster side.
 func (c *Client) UpdatePolicy(ctx context.Context, policy *enginegraphql.PolicyInput) (*enginegraphql.Policy, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`mutation($in: PolicyInput!) {
 		updatePolicy(
@@ -152,6 +160,7 @@ func (c *Client) UpdatePolicy(ctx context.Context, policy *enginegraphql.PolicyI
 	return resp.Policy, nil
 }
 
+// GetPolicy returns current Capact Policy.
 func (c *Client) GetPolicy(ctx context.Context) (*enginegraphql.Policy, error) {
 	req := graphql.NewRequest(fmt.Sprintf(`query {
 		policy{

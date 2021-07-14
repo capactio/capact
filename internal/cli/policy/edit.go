@@ -14,6 +14,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// Edit Capact Policy in interactive mode.
 func Edit(ctx context.Context, w io.Writer) error {
 	server := config.GetDefaultContext()
 

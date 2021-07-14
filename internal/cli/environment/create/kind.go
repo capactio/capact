@@ -10,6 +10,7 @@ import (
 	"sigs.k8s.io/kind/pkg/cmd"
 )
 
+// KindOptions holds configuration for creating kind cluster.
 type KindOptions struct {
 	Name       string
 	Config     string
@@ -19,6 +20,7 @@ type KindOptions struct {
 	Kubeconfig string
 }
 
+// Kind creates a new kind cluster.
 func Kind(ctx context.Context, opts KindOptions) error {
 	provider := cluster.NewProvider(
 		cluster.ProviderWithLogger(cmd.NewLogger()),

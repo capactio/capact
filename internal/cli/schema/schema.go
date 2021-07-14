@@ -3,6 +3,7 @@ package schema
 import (
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/pflag"
 )
@@ -33,5 +34,5 @@ type LocalFileSystem struct{}
 
 // Open opens the named file for reading.
 func (*LocalFileSystem) Open(name string) (http.File, error) {
-	return os.Open(name)
+	return os.Open(filepath.Clean(name))
 }

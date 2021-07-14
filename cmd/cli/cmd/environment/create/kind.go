@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewKind returns a cobra.Command for creating kind environment.
 func NewKind() *cobra.Command {
 	var opts create.KindOptions
 

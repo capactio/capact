@@ -10,6 +10,7 @@ import (
 	"capact.io/capact/pkg/httputil"
 )
 
+// NewHTTPServer returns new HTTP server with preconfigured `/healthz` endpoint.
 func NewHTTPServer(log *zap.Logger, healthzAddr, appName string) httputil.StartableServer {
 	router := mux.NewRouter()
 	router.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {

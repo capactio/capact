@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// New returns a new zap logger based on a given configuration.
 func New(cfg Config) (*zap.Logger, error) {
 	var logCfg zap.Config
 	if cfg.DevMode {

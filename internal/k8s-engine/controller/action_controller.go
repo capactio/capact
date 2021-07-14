@@ -460,6 +460,7 @@ func (r *ActionReconciler) ignoreNotActionableTypeInstanceErrors(err error) erro
 	return err
 }
 
+// SetupWithManager sets up Action reconciler with a given controller manager.
 func (r *ActionReconciler) SetupWithManager(mgr ctrl.Manager, maxConcurrentReconciles int) error {
 	r.k8sCli = mgr.GetClient()
 	r.recorder = mgr.GetEventRecorderFor("action-controller")

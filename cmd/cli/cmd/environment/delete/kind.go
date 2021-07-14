@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewKind returns a cobra.Command for deleting kind environment.
 func NewKind() *cobra.Command {
 	var opts delete.KindOptions
 

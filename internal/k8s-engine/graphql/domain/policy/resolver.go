@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// Service allows to get and update Capact Policy.
 type Service interface {
 	Update(ctx context.Context, in policy.Policy) (policy.Policy, error)
 	Get(ctx context.Context) (policy.Policy, error)
@@ -18,11 +19,13 @@ type policyConverter interface {
 	ToGraphQL(in policy.Policy) graphql.Policy
 }
 
+// Resolver provides functionality to manage Capact Policy via GraphQL.
 type Resolver struct {
 	svc  Service
 	conv policyConverter
 }
 
+// NewResolver returns a new Resolver instance.
 func NewResolver(svc Service, conv policyConverter) *Resolver {
 	return &Resolver{
 		svc:  svc,
@@ -30,6 +33,7 @@ func NewResolver(svc Service, conv policyConverter) *Resolver {
 	}
 }
 
+// UpdatePolicy updates Capact Policy on cluster side.
 func (r *Resolver) UpdatePolicy(ctx context.Context, in graphql.PolicyInput) (*graphql.Policy, error) {
 	p, err := r.conv.FromGraphQLInput(in)
 	if err != nil {
@@ -45,12 +49,13 @@ func (r *Resolver) UpdatePolicy(ctx context.Context, in graphql.PolicyInput) (*g
 	return &gqlPolicy, nil
 }
 
+// Policy returns Capact Policy.
 func (r *Resolver) Policy(ctx context.Context) (*graphql.Policy, error) {
-	policy, err := r.svc.Get(ctx)
+	currentPolicy, err := r.svc.Get(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting Policy")
 	}
 
-	gqlPolicy := r.conv.ToGraphQL(policy)
+	gqlPolicy := r.conv.ToGraphQL(currentPolicy)
 	return &gqlPolicy, nil
 }

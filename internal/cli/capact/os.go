@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -93,7 +94,7 @@ func trustSelfSignedLinux(tmpCertPath string) error {
 	certPath := path.Join(LinuxCertsPath, CertFile)
 	certData := ""
 
-	data, err := ioutil.ReadFile(certPath)
+	data, err := ioutil.ReadFile(filepath.Clean(certPath))
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}

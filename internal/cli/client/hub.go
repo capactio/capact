@@ -12,6 +12,7 @@ import (
 	"capact.io/capact/pkg/hub/client"
 )
 
+// Hub aggregates operation executed by Capact CLI against Capact Hub server.
 type Hub interface {
 	ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error)
 	ListTypeInstances(ctx context.Context, filter *gqllocalapi.TypeInstanceFilter) ([]gqllocalapi.TypeInstance, error)
@@ -22,6 +23,7 @@ type Hub interface {
 	DeleteTypeInstance(ctx context.Context, id string) error
 }
 
+// NewHub returns client for Capact Hub configured with saved credentials for a given server URL.
 func NewHub(server string) (Hub, error) {
 	creds, err := credstore.GetHub(server)
 	if err != nil {

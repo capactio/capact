@@ -20,6 +20,6 @@ This command consists of multiple subcommands to delete created Capact environme
 
 ### SEE ALSO
 
-* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Kubernetes cluster
+* [capact environment](capact_environment.md)	 - This command consists of multiple subcommands to interact with a Capact environments
 * [capact environment delete kind](capact_environment_delete_kind.md)	 - Delete local kind cluster
 

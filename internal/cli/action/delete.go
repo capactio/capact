@@ -19,6 +19,7 @@ import (
 
 const deletionCheckPollInterval = time.Second
 
+// DeleteOptions holds configuration for Action deletion.
 type DeleteOptions struct {
 	ActionNames []string
 	Namespace   string
@@ -28,6 +29,7 @@ type DeleteOptions struct {
 	Wait        bool
 }
 
+// Validate validates if provided delete options are valid.
 func (d *DeleteOptions) Validate() error {
 	if len(d.ActionNames) == 0 && d.NameRegex == "" {
 		return ErrMissingActionToDeleteOpt
@@ -45,12 +47,17 @@ func (d *DeleteOptions) Validate() error {
 }
 
 var (
+	// ErrMissingActionToDeleteOpt defines error indicating that at least Action name or Action regex name needs to be provided.
 	ErrMissingActionToDeleteOpt = errors.New("exact name, or regex option need to be specified")
-	ErrMutuallyExclusiveOpts    = errors.New("exact name cannot be provided when regex option is specified")
-	ErrNoActionToDelete         = errors.New("no Action to delete")
-	ErrNotSupportedPhaseOpt     = errors.New("phase filter is supported only when regex option is used")
+	// ErrMutuallyExclusiveOpts defines error indicating that Action name and Action regex name cannot be provided at the same time.
+	ErrMutuallyExclusiveOpts = errors.New("exact name cannot be provided when regex option is specified")
+	// ErrNoActionToDelete defines error indicating there are no Action to be deleted.
+	ErrNoActionToDelete = errors.New("no Action to delete")
+	// ErrNotSupportedPhaseOpt defines error indicating that you can filter Actions by the `phase` field only when Action regex name is used.
+	ErrNotSupportedPhaseOpt = errors.New("phase filter is supported only when regex option is used")
 )
 
+// Delete schedules Action deletion. If requested, wait for deletion process to complete.
 func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) (err error) {
 	status := printer.NewStatus(w, "")
 	defer func() {
@@ -97,6 +104,15 @@ func Delete(ctx context.Context, opts DeleteOptions, w io.Writer) (err error) {
 	return waitUntilDeleted(ctxWithNs, actionCli, actionsToDelete, opts.Timeout)
 }
 
+// AllowedPhases returns string with all possible Action phases separated by comma.
+func AllowedPhases() string {
+	var out []string
+	for _, p := range gqlengine.AllActionStatusPhase {
+		out = append(out, string(p))
+	}
+	return strings.Join(out, ", ")
+}
+
 func waitUntilDeleted(ctxWithNs context.Context, actCli client.ClusterClient, names []string, timeout time.Duration) error {
 	toBeDeletedNameRegex := mapToStrictOrRegex(names)
 
@@ -137,14 +153,6 @@ func toNamesList(in []*gqlengine.Action) []string {
 func mapToStrictOrRegex(in []string) string {
 	out := strings.Join(in, "$|^")
 	return fmt.Sprintf("(^%s$)", out)
-}
-
-func AllowedPhases() string {
-	var out []string
-	for _, p := range gqlengine.AllActionStatusPhase {
-		out = append(out, string(p))
-	}
-	return strings.Join(out, ", ")
 }
 
 func listActionsForDeletion(ctxWithNs context.Context, actionCli client.ClusterClient, opts DeleteOptions) ([]string, error) {

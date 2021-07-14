@@ -8,14 +8,18 @@ import (
 	"github.com/pkg/errors"
 )
 
+// NewActionImportsError returns an error indicating missing referenced import in Implementation manifests.
 func NewActionImportsError(actionRef string) error {
 	return errors.Errorf("Full path not found in Implementation imports for action %q", actionRef)
 }
 
+// NewActionReferencePatternError returns an error indicating malformed Action import pattern path.
 func NewActionReferencePatternError(actionRef string) error {
 	return errors.Errorf("Action reference %q doesn't follow pattern <import_alias>.<method_name>", actionRef)
 }
 
+// ResolveActionPathFromImports resolves import alias and returns full InterfaceReference used in Action.
+// If aliases are duplicated, first matched import is returned.
 func ResolveActionPathFromImports(imports []*ImplementationImport, actionRef string) (*InterfaceReference, error) {
 	action := strings.SplitN(actionRef, ".", 2)
 	if len(action) != 2 {
