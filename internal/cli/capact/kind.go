@@ -77,7 +77,7 @@ func LoadImage(envName string, image string) error {
 
 // loads an image tarball onto a node
 func loadImage(imageTarName string, node nodes.Node) error {
-	f, err := os.Open(imageTarName)
+	f, err := os.Open(filepath.Clean(imageTarName))
 	if err != nil {
 		return errors.Wrap(err, "failed to open image")
 	}

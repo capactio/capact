@@ -73,7 +73,7 @@ func runDBPopulate(ctx context.Context, src string) (err error) {
 
 	log.Info("Populating downloaded manifests...", zap.String("path", cfg.ManifestsPath))
 	rootDir := path.Join(dstDir, cfg.ManifestsPath)
-	files, err := io.ListYamls(rootDir)
+	files, err := io.ListYAMLs(rootDir)
 	if err != nil {
 		return errors.Wrap(err, "while loading manifests")
 	}

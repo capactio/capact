@@ -6,9 +6,9 @@ import (
 	"strings"
 )
 
-// List returns all YAML files in the provided path by using filepath.Walk.
-func ListYamls(path string) ([]string, error) {
-	files := []string{}
+// ListYAMLs returns all YAML files in the provided path by using filepath.Walk.
+func ListYAMLs(path string) ([]string, error) {
+	var files []string
 	err := filepath.Walk(path, func(currentPath string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
