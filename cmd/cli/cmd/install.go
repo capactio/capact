@@ -30,7 +30,7 @@ func NewInstall() *cobra.Command {
 			<cli> install
 
 			# Install Capact 0.1.0 version
-			<cli> upgrade --version 0.1.0
+			<cli> install --version 0.1.0
 
 			# Install Capact from local git repository. Needs to be run from the main directory
 			<cli> install --version @local`, cli.Name),

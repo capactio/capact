@@ -71,20 +71,19 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 	}
 
 	if opts.UpdateHostsFile {
-		status.End(true)
-		err = capact.AddGatewayToHostsFile(w)
+		err = capact.AddGatewayToHostsFile(status)
 		if err != nil {
 			return err
 		}
 	}
 
 	if opts.UpdateTrustedCerts {
-		status.End(true)
-		err = capact.TrustSelfSigned(w)
+		err = capact.TrustSelfSigned(status)
 		if err != nil {
 			return err
 		}
 	}
+	status.End(true)
 
 	welcomeMessage(w)
 
@@ -95,12 +94,8 @@ func welcomeMessage(w io.Writer) {
 	msg := `
 Capact installed successfully!
 
-You can now use it with:
-
- capact login https://gateway.capact.local -u graphql -p t0p_s3cr3t
- capact typeinstance get
-
-Check out https://capact.io/docs/introduction to see what to do next.
+To begin working with Capact, use 'capact login' command.
+To read more how to use CLI, check out the documentation on https://capact.io/docs/cli/getting-started#first-use.
 `
 	fmt.Fprintln(w, msg)
 }

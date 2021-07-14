@@ -2,17 +2,18 @@ package capact
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path"
 	"runtime"
 	"strings"
+
+	"capact.io/capact/internal/cli/printer"
 )
 
 //AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway
-func AddGatewayToHostsFile(w io.Writer) error {
+func AddGatewayToHostsFile(status *printer.Status) error {
 	hosts := "/etc/hosts"
 	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
 
@@ -24,7 +25,7 @@ func AddGatewayToHostsFile(w io.Writer) error {
 		return nil
 	}
 
-	fmt.Fprintf(w, "\nUpdating /etc/hosts file\n")
+	status.Step("Updating /etc/hosts file")
 	// #nosec G204
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a /etc/hosts", entry))
 	cmd.Stdout = os.Stdout
@@ -35,8 +36,8 @@ func AddGatewayToHostsFile(w io.Writer) error {
 }
 
 //TrustSelfSigned adds Capact generatd certificate to the trusted certificates
-func TrustSelfSigned(writer io.Writer) error {
-	fmt.Fprintf(writer, "\nTrusting self-signed CA certificate if not already trusted...\n")
+func TrustSelfSigned(status *printer.Status) error {
+	status.Step("Trusting self-signed CA certificate if not already trusted")
 
 	f, err := ioutil.TempFile("/tmp", "capact-cert")
 	if err != nil {
