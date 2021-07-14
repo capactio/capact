@@ -23,7 +23,7 @@ func NewActionValidator(wfCli *wfclientset.Clientset) *ActionValidator {
 	}
 }
 
-// Validate a given Action definition.
+// Validate validates a given Action definition.
 func (v *ActionValidator) Validate(action *types.Action, namespace string) error {
 	if action == nil {
 		return nil
