@@ -61,7 +61,7 @@ type Options struct {
 // Validate validates provided options
 func (o Options) Validate() error {
 	if len(o.SkipImages) != 0 && len(o.FocusImages) != 0 {
-		return errors.New("can not skip and focus images at the same time")
+		return errors.New("cannot skip and focus images at the same time")
 	}
 
 	return nil
