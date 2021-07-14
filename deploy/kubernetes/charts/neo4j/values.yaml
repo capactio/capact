@@ -8,5 +8,5 @@ neo4j:
       limits:
         cpu: 400m
         memory: 2048Mi
-  imageTag: 4.2.3
+  imageTag: 4.2.8
   neo4jPassword: okon

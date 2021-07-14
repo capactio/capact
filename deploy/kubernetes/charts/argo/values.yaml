@@ -3,7 +3,7 @@ argo:
     # Overrides .images.namespace if defined.
     # NOTE: argocli and argoexec was mirrored to our repository
     namespace: "ghcr.io/capactio/argoproj"
-    tag: v2.12.10
+    tag: v2.12.11
     pullPolicy: IfNotPresent
 
   controller:
@@ -11,7 +11,7 @@ argo:
     image:
       # We need to override it until this bug will be fixed: https://github.com/argoproj/argo/issues/4772
       # Overrides .images.tag if defined.
-      tag: "v2.12.10-disable-global-artifacts-validation"
+      tag: "v2.12.11-disable-global-artifacts-validation"
 
   artifactRepository:
     s3:

@@ -9,7 +9,7 @@ locals {
   route53_zone_id = module.zones.this_route53_zone_zone_id[var.domain_name]
 
   tags = {
-    Application = "Capact"
+    Application   = "Capact"
     "Domain-Name" = var.domain_name
   }
 }

@@ -44,7 +44,7 @@ module "ec2_bastion" {
   ssh_user = local.bastion_ssh_user
   user_data_base64 = base64encode(templatefile("templates/bastion_userdata.sh.tpl", {
     capact_cli_version = var.capact_cli_version
-    capact_user = local.bastion_ssh_user
+    capact_user        = local.bastion_ssh_user
   }))
 
   ami_filter = {
