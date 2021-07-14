@@ -35,17 +35,9 @@ var images = map[string]image{
 		Dir:    ".",
 		Target: "generic",
 	},
-	"helm-runner": {
+	"argo-actions": {
 		Dir:    ".",
 		Target: "generic",
-	},
-	"cloudsql-runner": {
-		Dir:    ".",
-		Target: "generic",
-	},
-	"terraform-runner": {
-		Dir:    ".",
-		Target: "terraform-runner",
 	},
 	"populator": {
 		Dir:    ".",
