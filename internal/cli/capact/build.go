@@ -10,7 +10,6 @@ import (
 )
 
 type image struct {
-	Name   string
 	Dir    string
 	Target string
 
@@ -18,50 +17,41 @@ type image struct {
 	DisableBuildKit bool
 }
 
-var images = []image{
-	{
-		Name:   "gateway",
+var images = map[string]image{
+	"gateway": {
 		Dir:    ".",
 		Target: "generic",
 	},
-	{
-		Name:   "k8s-engine",
+	"k8s-engine": {
 		Dir:    ".",
 		Target: "generic",
 	},
-	{
-		Name: "hub-js",
-		Dir:  "hub-js",
+	"hub-js": {
+		Dir: "hub-js",
 
 		DisableBuildKit: true,
 	},
-	{
-		Name:   "argo-runner",
+	"argo-runner": {
 		Dir:    ".",
 		Target: "generic",
 	},
-	{
-		Name:   "helm-runner",
+	"helm-runner": {
 		Dir:    ".",
 		Target: "generic",
 	},
-	{
-		Name:   "cloudsql-runner",
+	"cloudsql-runner": {
 		Dir:    ".",
 		Target: "generic",
 	},
-	{
-		Name:   "terraform-runner",
+	"terraform-runner": {
 		Dir:    ".",
 		Target: "terraform-runner",
 	},
-	{
-		Name:   "populator",
+	"populator": {
 		Dir:    ".",
 		Target: "generic-alpine",
 	},
-	{
-		Name:   "e2e",
+	"e2e": {
 		Dir:    ".",
 		Target: "e2e",
 		ExtraBuildArgs: []string{
@@ -71,14 +61,14 @@ var images = []image{
 	},
 }
 
-func buildImage(w io.Writer, img image, repository, version string) (string, error) {
+func buildImage(w io.Writer, imgName string, img image, repository, version string) (string, error) {
 	// docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
-	imageTag := fmt.Sprintf("%s/%s:%s", repository, img.Name, version)
+	imageTag := fmt.Sprintf("%s/%s:%s", repository, imgName, version)
 
 	// #nosec G204
 	cmd := exec.Command("docker",
 		"build",
-		"--build-arg", fmt.Sprintf("COMPONENT=%s", img.Name),
+		"--build-arg", fmt.Sprintf("COMPONENT=%s", imgName),
 		"-t", imageTag, ".")
 
 	if img.Target != "" {
@@ -86,12 +76,6 @@ func buildImage(w io.Writer, img image, repository, version string) (string, err
 	}
 
 	cmd.Env = os.Environ()
-	cmd.Env = append(cmd.Env, []string{
-		// enable module support across all go commands.
-		"GO111MODULE=on",
-		// enable consistent Go 1.12/1.13 GOPROXY behavior.
-		"GOPROXY=https://proxy.golang.org",
-	}...)
 
 	if !img.DisableBuildKit {
 		cmd.Env = append(cmd.Env,
@@ -114,32 +98,31 @@ func buildImage(w io.Writer, img image, repository, version string) (string, err
 	return imageTag, nil
 }
 
-// DeleteImage deletes passed image
-func DeleteImage(images []string) error {
-	// #nosec G204
-	cmd := exec.Command("docker",
-		"rmi", images[0]) //TODO
-	stdoutStderr, err := cmd.CombinedOutput()
-	fmt.Printf("%s\n", stdoutStderr)
-	if err != nil {
-		return err
+// DeleteImages deletes passed image
+func DeleteImages(images []string) error {
+	for _, image := range images {
+		// #nosec G204
+		cmd := exec.Command("docker", "rmi", image)
+		err := cmd.Run()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 // BuildImages builds passed images setting passed repository and version
 func BuildImages(w io.Writer, repository, version string, names []string) ([]string, error) {
-	imagesMap := mappedImages()
 	var created []string
 
 	for _, name := range names {
-		image, ok := imagesMap[name]
+		image, ok := images[name]
 		if !ok {
-			return nil, fmt.Errorf("can not find image %s", name)
+			return nil, fmt.Errorf("cannot find image %s", name)
 		}
-		imageTag, err := buildImage(w, image, repository, version)
+		imageTag, err := buildImage(w, name, image, repository, version)
 		if err != nil {
-			return nil, errors.Wrapf(err, "while building image %s", image.Name)
+			return nil, errors.Wrapf(err, "while building image %s", name)
 		}
 		created = append(created, imageTag)
 	}
@@ -148,16 +131,10 @@ func BuildImages(w io.Writer, repository, version string, names []string) ([]str
 
 // SelectImages returns a list of images calculated from focus and skip lists
 func SelectImages(focus, skip []string) ([]string, error) {
-	if len(focus) > 0 && len(skip) > 0 {
-		return nil, errors.New("can not skip and focus images at the same time")
-	}
-
-	imagesMap := mappedImages()
-
 	var selected []string
 	if len(focus) > 0 {
 		for _, name := range focus {
-			_, ok := imagesMap[name]
+			_, ok := images[name]
 			if !ok {
 				return nil, fmt.Errorf("focused image does not exist: %s", name)
 			}
@@ -166,11 +143,11 @@ func SelectImages(focus, skip []string) ([]string, error) {
 		return selected, nil
 	}
 
-	for _, image := range images {
-		if shouldSkipImage(image.Name, skip) {
+	for image := range images {
+		if shouldSkipImage(image, skip) {
 			continue
 		}
-		selected = append(selected, image.Name)
+		selected = append(selected, image)
 	}
 	return selected, nil
 }
@@ -182,12 +159,4 @@ func shouldSkipImage(name string, skipList []string) bool {
 		}
 	}
 	return false
-}
-
-func mappedImages() map[string]image {
-	imagesMap := map[string]image{}
-	for _, image := range images {
-		imagesMap[image.Name] = image
-	}
-	return imagesMap
 }

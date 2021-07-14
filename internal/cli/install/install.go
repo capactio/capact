@@ -3,6 +3,8 @@ package install
 import (
 	"context"
 	"io"
+	"log"
+	"os"
 
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/printer"
@@ -18,11 +20,6 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 	version := opts.Parameters.Version
 	if version == "@local" {
-		//status.Step("Building local images")
-		if len(opts.SkipImages) != 0 && len(opts.FocusImages) != 0 {
-			return errors.New("can not skip and focus images at the same time")
-		}
-
 		images, err := capact.SelectImages(opts.FocusImages, opts.SkipImages)
 		if err != nil {
 			return errors.Wrap(err, "while selecting images")
@@ -61,10 +58,41 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		return err
 	}
 
-	err = helm.InstallComponnents(w, status)
+	err = hideLog()
 	if err != nil {
 		return err
 	}
 
+	err = helm.InstallComponents(w, status)
+	if err != nil {
+		return err
+	}
+
+	if opts.UpdateHostsFile {
+		status.End(true)
+		err = capact.AddGatewayToHostsFile(w)
+		if err != nil {
+			return err
+		}
+	}
+
+	if opts.UpdateTrustedCerts {
+		status.End(true)
+		err = capact.TrustSelfSigned(w)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func hideLog() error {
+	null := "/dev/null"
+	f, err := os.Open(null)
+	if err != nil {
+		return err
+	}
+	log.SetOutput(f)
 	return nil
 }

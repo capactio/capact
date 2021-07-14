@@ -13,10 +13,12 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+// HelmHelper provides some helper functions
 type HelmHelper struct {
 	HTTPClient *http.Client
 }
 
+// NewHelmHelper creates a new HelmHelper
 func NewHelmHelper() *HelmHelper {
 	httpClient := httputil.NewClient(30 * time.Second)
 	return &HelmHelper{
@@ -40,7 +42,7 @@ func (h *HelmHelper) GetLatestVersion(repoURL string, chart string) (string, err
 	// them via Created time.
 	if repoURL == HelmRepoLatest {
 		sortFn = func(in *repo.IndexFile) {
-			sort.Sort(ByCreatedTime(in.Entries[chart]))
+			sort.Sort(byCreatedTime(in.Entries[chart]))
 		}
 	}
 
@@ -75,12 +77,13 @@ func (h *HelmHelper) GetLatestVersion(repoURL string, chart string) (string, err
 	return capactEntry[0].Version, nil
 }
 
-type ByCreatedTime repo.ChartVersions
+type byCreatedTime repo.ChartVersions
 
-func (b ByCreatedTime) Len() int           { return len(b) }
-func (b ByCreatedTime) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
-func (b ByCreatedTime) Less(i, j int) bool { return b[i].Created.After(b[j].Created) }
+func (b byCreatedTime) Len() int           { return len(b) }
+func (b byCreatedTime) Swap(i, j int)      { b[i], b[j] = b[j], b[i] }
+func (b byCreatedTime) Less(i, j int) bool { return b[i].Created.After(b[j].Created) }
 
+//ValuesFromString converts yaml string into map[string]interface{}
 func ValuesFromString(values string) (map[string]interface{}, error) {
 	v := map[string]interface{}{}
 	err := yaml.Unmarshal([]byte(values), &v)

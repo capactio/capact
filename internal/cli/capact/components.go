@@ -30,14 +30,16 @@ import (
 	"capact.io/capact/internal/ptr"
 )
 
+// Component is a Capact component which can be installed in the environement
 type Component interface {
-	InstallUpgrade(version string) error
+	InstallUpgrade(version string) (*release.Release, error)
 	Name() string
 	withOptions(*Options)
 	withConfiguration(*action.Configuration)
 	withWriter(io.Writer)
 }
 
+// ComponentData information about component
 type ComponentData struct {
 	ReleaseName string
 	LocalPath   string
@@ -52,6 +54,7 @@ type ComponentData struct {
 	writer io.Writer
 }
 
+// Name of the component
 func (c *ComponentData) Name() string {
 	return c.ReleaseName
 }
@@ -102,7 +105,7 @@ func (c *ComponentData) withWriter(w io.Writer) {
 	c.writer = w
 }
 
-func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string]interface{}) error {
+func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string]interface{}) (*release.Release, error) {
 	histClient := action.NewHistory(c.configuration)
 	histClient.Max = 1
 	if _, err := histClient.Run(c.Name()); err == driver.ErrReleaseNotFound {
@@ -123,23 +126,22 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
-		return errors.Wrap(err, "while locating Helm chart")
+		return nil, errors.Wrap(err, "while locating Helm chart")
 	}
 
 	chartData, err := loader.Load(chartPath)
 	if err != nil {
-		return errors.Wrap(err, "while loading Helm chart")
+		return nil, errors.Wrap(err, "while loading Helm chart")
 	}
 
 	r, err := upgradeCli.Run(c.Name(), chartData, values)
 	if err != nil {
-		return errors.Wrapf(err, "while upgrading Helm chart [%s]", c.Name())
+		return nil, errors.Wrapf(err, "while upgrading Helm chart [%s]", c.Name())
 	}
-	c.WriteStatus(c.writer, r)
-	return nil
+	return r, nil
 }
 
-func (c *ComponentData) runInstall(installCli *action.Install, values map[string]interface{}) error {
+func (c *ComponentData) runInstall(installCli *action.Install, values map[string]interface{}) (*release.Release, error) {
 	var chartPath string
 	var err error
 	var location string
@@ -154,38 +156,35 @@ func (c *ComponentData) runInstall(installCli *action.Install, values map[string
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
-		return errors.Wrap(err, "while locating Helm chart")
+		return nil, errors.Wrap(err, "while locating Helm chart")
 	}
 
 	chartData, err := loader.Load(chartPath)
 	if err != nil {
-		return errors.Wrap(err, "while loading Helm chart")
+		return nil, errors.Wrap(err, "while loading Helm chart")
 	}
 
 	r, err := installCli.Run(chartData, values)
 	if err != nil {
-		return errors.Wrapf(err, "while installing Helm chart [%s]", installCli.ReleaseName)
+		return nil, errors.Wrapf(err, "while installing Helm chart [%s]", installCli.ReleaseName)
 	}
-	c.WriteStatus(c.writer, r)
 
-	return nil
+	return r, nil
 }
 
-// based on https://github.com/helm/helm/blob/main/cmd/helm/status.go#L112
-func (c ComponentData) WriteStatus(out io.Writer, r *release.Release) {
+// based on https://github.com/helm/helm/blob/433b90c4b6010415524bfd98b77efca0e6ec7205/cmd/helm/status.go#L112
+func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 	if r == nil {
 		return
 	}
-	fmt.Fprint(out, "\n\n")
-	fmt.Fprintf(out, "NAME: %s\n", r.Name)
+	fmt.Fprintf(out, "\tNAME: %s\n", r.Name)
 	if !r.Info.LastDeployed.IsZero() {
-		fmt.Fprintf(out, "LAST DEPLOYED: %s\n", r.Info.LastDeployed.Format(time.ANSIC))
+		fmt.Fprintf(out, "\tLAST DEPLOYED: %s\n", r.Info.LastDeployed.Format(time.ANSIC))
 	}
-	fmt.Fprintf(out, "NAMESPACE: %s\n", r.Namespace)
-	fmt.Fprintf(out, "STATUS: %s\n", r.Info.Status.String())
-	fmt.Fprintf(out, "REVISION: %d\n", r.Version)
-	fmt.Fprintf(out, "DESCRIPTION: %s\n", r.Info.Description)
-	fmt.Fprint(out, "\n")
+	fmt.Fprintf(out, "\tNAMESPACE: %s\n", r.Namespace)
+	fmt.Fprintf(out, "\tSTATUS: %s\n", r.Info.Status.String())
+	fmt.Fprintf(out, "\tREVISION: %d\n", r.Version)
+	fmt.Fprintf(out, "\tDESCRIPTION: %s\n", r.Info.Description)
 }
 
 var components = []Component{
@@ -237,35 +236,43 @@ var components = []Component{
 	},
 }
 
+// Neo4j component
 type Neo4j struct {
 	ComponentData
 }
 
+// IngressController component
 type IngressController struct {
 	ComponentData
 }
 
+// Argo component
 type Argo struct {
 	ComponentData
 }
 
+// CertManager component
 type CertManager struct {
 	ComponentData
 }
 
+// Kubed component
 type Kubed struct {
 	ComponentData
 }
 
+// Monitoring component
 type Monitoring struct {
 	ComponentData
 }
 
+// Capact component
 type Capact struct {
 	ComponentData
 }
 
-func (n *Neo4j) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (n *Neo4j) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := n.upgradeAction(version)
 
 	values := tools.MergeMaps(map[string]interface{}{}, n.Overrides)
@@ -273,7 +280,8 @@ func (n *Neo4j) InstallUpgrade(version string) error {
 	return n.runUpgrade(upgradeCli, values)
 }
 
-func (a *Argo) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (a *Argo) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := a.upgradeAction(version)
 
 	values := tools.MergeMaps(map[string]interface{}{}, a.Overrides)
@@ -281,7 +289,8 @@ func (a *Argo) InstallUpgrade(version string) error {
 	return a.runUpgrade(upgradeCli, values)
 }
 
-func (i *IngressController) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (i *IngressController) InstallUpgrade(version string) (*release.Release, error) {
 	var err error
 	upgradeCli := i.upgradeAction(version)
 
@@ -289,31 +298,32 @@ func (i *IngressController) InstallUpgrade(version string) error {
 	if i.opts.Environment == KindEnv {
 		values, err = ValuesFromString(ingressKindOverridesYaml)
 		if err != nil {
-			return errors.Wrap(err, "while converting override values")
+			return nil, errors.Wrap(err, "while converting override values")
 		}
 	} //TODO eks
 	return i.runUpgrade(upgradeCli, values)
 }
 
-func (c *CertManager) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := c.upgradeAction(version)
 
 	values := map[string]interface{}{}
 
-	err := c.runUpgrade(upgradeCli, values)
+	r, err := c.runUpgrade(upgradeCli, values)
 	if err != nil {
-		return errors.Wrap(err, "while installing cert-manager")
+		return nil, errors.Wrap(err, "while installing cert-manager")
 	}
 
 	if c.opts.Environment != KindEnv {
-		return nil
+		return nil, nil
 	}
 
 	// TODO if h.opts.Environment == "eks" {}
 
 	restConfig, err := c.configuration.RESTClientGetter.ToRESTConfig()
 	if err != nil {
-		return errors.Wrap(err, "while getting k8s REST config")
+		return nil, errors.Wrap(err, "while getting k8s REST config")
 	}
 
 	secret := &corev1.Secret{
@@ -327,36 +337,38 @@ func (c *CertManager) InstallUpgrade(version string) error {
 	}
 	err = CreateUpdateSecret(restConfig, secret, c.opts.Namespace)
 	if err != nil {
-		return errors.Wrapf(err, "while creating %s Secret", certManagerSecretName)
+		return nil, errors.Wrapf(err, "while creating %s Secret", certManagerSecretName)
 	}
 
 	// Not using cert-manager types as it's conflicting with argo deps
 	issuer := fmt.Sprintf(issuerTemplate, clusterIssuerName, certManagerSecretName)
 	err = createObject(c.configuration, []byte(issuer))
 	if err != nil {
-		return errors.Wrapf(err, "while creating %s ClusterIssuer", clusterIssuerName)
+		return nil, errors.Wrapf(err, "while creating %s ClusterIssuer", clusterIssuerName)
 	}
-	return nil
+	return r, nil
 }
 
-func (k *Kubed) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (k *Kubed) InstallUpgrade(version string) (*release.Release, error) {
 	restConfig, err := k.configuration.RESTClientGetter.ToRESTConfig()
 	if err != nil {
-		return errors.Wrap(err, "while getting k8s REST config")
+		return nil, errors.Wrap(err, "while getting k8s REST config")
 	}
 
 	upgradeCli := k.upgradeAction(version)
 	values := map[string]interface{}{}
-	err = k.runUpgrade(upgradeCli, values)
+	r, err := k.runUpgrade(upgradeCli, values)
 	if err != nil {
-		return errors.Wrap(err, "while running action")
+		return nil, errors.Wrap(err, "while running action")
 	}
 
 	err = AnnotateSecret(restConfig, "argo-minio", k.opts.Namespace, "kubed.appscode.com/sync", "")
-	return errors.Wrap(err, "while annotating secret")
+	return r, errors.Wrap(err, "while annotating secret")
 }
 
-func (c *Capact) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := c.upgradeAction(version)
 
 	capactValues := c.opts.Parameters.Override.CapactValues
@@ -371,20 +383,22 @@ func (c *Capact) InstallUpgrade(version string) error {
 	if c.opts.Environment == KindEnv {
 		values, err := ValuesFromString(capactKindOverridesYaml)
 		if err != nil {
-			return errors.Wrap(err, "while converting override values")
+			return nil, errors.Wrap(err, "while converting override values")
 		}
 		mappedValues = tools.MergeMaps(values, mappedValues)
 	}
 	return c.runUpgrade(upgradeCli, mappedValues)
 }
 
-func (m *Monitoring) InstallUpgrade(version string) error {
+// InstallUpgrade upgrades or if not available, installs the component
+func (m *Monitoring) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeAction := m.upgradeAction(version)
 
 	values := map[string]interface{}{}
 	return m.runUpgrade(upgradeAction, values)
 }
 
+// GetActionConfiguration gets Helm action.Configuration
 func GetActionConfiguration(k8sCfg *rest.Config, forNamespace string) (*action.Configuration, error) {
 	actionConfig := new(action.Configuration)
 	helmCfg := &genericclioptions.ConfigFlags{
@@ -408,25 +422,28 @@ func GetActionConfiguration(k8sCfg *rest.Config, forNamespace string) (*action.C
 	return actionConfig, nil
 }
 
+// Helm installs Helm components
 type Helm struct {
 	configuration *action.Configuration
 	opts          Options
 }
 
+// NewHelm creates a Helm struct
 func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 	if opts.Parameters.IncreaseResourceLimits {
 		opts.Parameters.Override.CapactValues.Gateway.Resources = IncreasedGatewayResources()
 		opts.Parameters.Override.CapactValues.HubPublic.Resources = IncreasedHubPublicResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = IncreasedNeo4jResources()
 	}
-	if opts.Parameters.Override.HelmRepoURL == LatestVersionTag {
+	if opts.Parameters.Version == LatestVersionTag {
 		opts.Parameters.Override.HelmRepoURL = HelmRepoLatest
 	}
 
 	return &Helm{configuration: configuration, opts: opts}
 }
 
-func (h *Helm) InstallComponnents(w io.Writer, status *printer.Status) error {
+// InstallComponents installs Helm components
+func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 	var err error
 	helper := NewHelmHelper()
 
@@ -447,10 +464,14 @@ func (h *Helm) InstallComponnents(w io.Writer, status *printer.Status) error {
 			}
 		}
 
-		status.Step("Installing %s Helm Chart", component.Name())
-		err := component.InstallUpgrade(version)
+		status.Step("Installing %s Helm chart", component.Name())
+		newRelease, err := component.InstallUpgrade(version)
+		status.End(err == nil)
 		if err != nil {
 			return err
+		}
+		if h.opts.Verbose {
+			h.writeStatus(w, newRelease)
 		}
 	}
 	return nil
@@ -465,6 +486,7 @@ func shouldSkipTheComponent(name string, skipList []string) bool {
 	return false
 }
 
+// InstallCRD installs Capact CRD
 func (h *Helm) InstallCRD() error {
 	resp, err := http.Get(CRDUrl)
 	if err != nil {

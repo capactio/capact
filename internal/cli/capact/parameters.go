@@ -1,6 +1,7 @@
 package capact
 
 type (
+	// InputParameters for Capact Helm charts
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"-"`
@@ -10,6 +11,7 @@ type (
 			Neo4jValues  Neo4jValues `json:"neo4jValues,omitempty"`
 		} `json:"override"`
 	}
+	// Neo4jValues for Neo4j Helm chart
 	Neo4jValues struct {
 		Neo4j struct {
 			Core struct {
@@ -17,6 +19,7 @@ type (
 			} `json:"core,omitempty"`
 		} `json:"neo4j,omitempty"`
 	}
+	// Values for Capact Helm charts
 	Values struct {
 		Notes struct {
 			PrintInsecure bool `json:"printInsecure"`
@@ -31,26 +34,32 @@ type (
 			} `json:"containerRegistry,omitempty"`
 		} `json:"global,omitempty"`
 	}
+	// ResourcesQuantity resource quantity values
 	ResourcesQuantity struct {
 		CPU    string `json:"cpu,omitempty"`
 		Memory string `json:"memory,omitempty"`
 	}
+	// Resources values
 	Resources struct {
 		Limits   ResourcesQuantity `json:"limits,omitempty"`
 		Requests ResourcesQuantity `json:"requests,omitempty"`
 	}
+	// Gateway values
 	Gateway struct {
 		Resources Resources `json:"resources,omitempty"`
 	}
+	// HubPublic values
 	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
 		Populator Populator `json:"populator,omitempty"`
 	}
+	// Engine values
 	Engine struct {
 		TestSetup struct {
 			Enabled bool `json:"enabled,omitempty"`
 		} `json:"testSetup,omitempty"`
 	}
+	//Populator values
 	Populator struct {
 		Enabled bool `json:"enabled,omitempty"`
 	}

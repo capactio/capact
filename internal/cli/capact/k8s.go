@@ -10,10 +10,11 @@ import (
 	"k8s.io/client-go/util/retry"
 )
 
+// CreateNamespace creates a k8s namespaces. If it already exists it does nothing
 func CreateNamespace(config *rest.Config, namespace string) error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	nsName := &corev1.Namespace{
@@ -28,10 +29,11 @@ func CreateNamespace(config *rest.Config, namespace string) error {
 	return err
 }
 
+// AnnotateSecret adds an annotation to the Secret
 func AnnotateSecret(config *rest.Config, secretName, namespace, key, val string) error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	secretsClient := clientset.CoreV1().Secrets(namespace)
@@ -58,10 +60,11 @@ func AnnotateSecret(config *rest.Config, secretName, namespace, key, val string)
 	return nil
 }
 
+// CreateUpdateSecret creates or, if it already exists, updates a secret
 func CreateUpdateSecret(config *rest.Config, newSecret *corev1.Secret, namespace string) error {
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	secretsClient := clientset.CoreV1().Secrets(namespace)
