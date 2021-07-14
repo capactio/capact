@@ -12,7 +12,7 @@ import (
 	"capact.io/capact/internal/cli/printer"
 )
 
-//AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway
+// AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway
 func AddGatewayToHostsFile(status *printer.Status) error {
 	hosts := "/etc/hosts"
 	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
