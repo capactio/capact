@@ -54,6 +54,7 @@ function setupHttpServer(
   healthCheck: HealthCheck
 ): http.Server {
   const app = express();
+  app.use(express.json({ limit: config.express.bodySizeLimit }));
 
   const apolloServer = new ApolloServer({ schema, context: { driver } });
   apolloServer.applyMiddleware({ app });
