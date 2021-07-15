@@ -42,7 +42,7 @@ host::install::controller-gen() {
     pushd "$TMP_DIR" >/dev/null
 
     go mod init tmp
-    go get sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN_VERSION
+    go install sigs.k8s.io/controller-tools/cmd/controller-gen@$STABLE_CONTROLLER_GEN_VERSION
 
     popd >/dev/null
 
