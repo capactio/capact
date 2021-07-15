@@ -1,7 +1,7 @@
 name: PR build
 
 on:
-  pull_request:
+  pull_request_target:
     types: [ opened, synchronize, reopened ]
     paths:
       - "**.go"
@@ -33,177 +33,177 @@ jobs:
         uses: styfle/cancel-workflow-action@0.9.0
         with:
           access_token: ${{ github.token }}
-#
-#  entry-tests:
-#    name: Lint and test code
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    permissions:
-#      contents: read
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: Setup environment
-#        env:
-#          PR_NUMBER: ${{ github.event.pull_request.number }}
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - name: Setup Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{env.GO_VERSION}}
-#      - name: Run linting
-#        run: |
-#          make test-lint
-#      - name: Run unit tests
-#        run: make test-unit
-#      - name: Check generated files
-#        run: |
-#          make test-generated
-#
-#  documentation-sanity:
-#    name: Check documentation
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    permissions:
-#      contents: read
-#      pull-requests: write
-#
-#    steps:
-#      - uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: Run LanguageTool
-#        uses: reviewdog/action-languagetool@v1
-#        with:
-#          github_token: ${{ secrets.github_token }}
-#          reporter: github-pr-review
-#          level: info
-#          custom_api_endpoint: ''
-#          ### Flags for LanguageTool ###
-#          # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
-#          language: 'en-US'
-#          enabled_rules: ''
-#          disabled_rules: 'WHITESPACE_RULE,EN_QUOTES,DASH_RULE,WORD_CONTAINS_UNDERSCORE,UPPERCASE_SENTENCE_START,ARROWS,COMMA_PARENTHESIS_WHITESPACE,UNLIKELY_OPENING_PUNCTUATION,SENTENCE_WHITESPACE,CURRENCY,EN_UNPAIRED_BRACKETS,PHRASE_REPETITION,PUNCTUATION_PARAGRAPH_END,METRIC_UNITS_EN_US,ENGLISH_WORD_REPEAT_BEGINNING_RULE,DOUBLE_PUNCTUATION'
-#          enabled_categories: ''
-#          disabled_categories: 'TYPOS,TYPOGRAPHY,CASING'
-#          enabled_only: 'false'
-#      - name: Run misspell check
-#        uses: reviewdog/action-misspell@v1
-#        with:
-#          github_token: ${{ secrets.github_token }}
-#          reporter: github-pr-review
-#          level: info
-#          locale: "US"
-#
-#  prepare-matrix:
-#    name: Prepare components build matrix
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    outputs:
-#      matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
-#      matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
-#      matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
-#      matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
-#    permissions:
-#      contents: read
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: setup env
-#        run: . ./hack/ci/setup-env.sh
-#      - id: set-matrix-app
-#        run: echo "::set-output ${APPS}"
-#      - id: set-matrix-test
-#        run: echo "::set-output ${TESTS}"
-#      - id: set-matrix-infra
-#        run: echo "::set-output ${INFRAS}"
-#      - id: set-matrix-tool
-#        run: echo "::set-output ${TOOLS}"
-#
-#  build-app:
-#    name: Build ${{ matrix.APP }}
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    needs: prepare-matrix
-#    strategy:
-#      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
-#    permissions:
-#      contents: read
-#      packages: write
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: Setup environment
-#        env:
-#          PR_NUMBER: ${{ github.event.pull_request.number }}
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - run: make build-app-image-${{ matrix.APP }}
-#      - name: Log into registry
-#        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#      - run: make push-app-image-${{ matrix.APP }}
-#
-#  build-tests:
-#    name: Build ${{ matrix.TEST }}
-#    runs-on: ubuntu-latest
-#    if: github.event.pull_request.draft == false
-#    needs: prepare-matrix
-#    strategy:
-#      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
-#    permissions:
-#      contents: read
-#      packages: write
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: Setup environment
-#        env:
-#          PR_NUMBER: ${{ github.event.pull_request.number }}
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - run: make build-test-image-${{ matrix.TEST }}
-#      - name: Log into registry
-#        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#      - run: make push-test-image-${{ matrix.TEST }}
-#
-#  build-infra:
-#    name: Build ${{ matrix.INFRA }}
-#    runs-on: ubuntu-latest
-#    if: ${{ needs.prepare-matrix.outputs.matrix-infra != '' && github.event.pull_request.draft == false }}
-#    needs: prepare-matrix
-#    strategy:
-#      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
-#    permissions:
-#      contents: read
-#      packages: write
-#
-#    steps:
-#      - name: Checkout code
-#        uses: actions/checkout@v2
-#        with:
-#          ref: ${{ github.event.pull_request.head.sha }}
-#      - name: Setup environment
-#        env:
-#          PR_NUMBER: ${{ github.event.pull_request.number }}
-#        run: |
-#          . ./hack/ci/setup-env.sh
-#      - run: make build-infra-image-${{ matrix.INFRA }}
-#      - name: Log into registry
-#        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-#      - run: make push-infra-image-${{ matrix.INFRA }}
+
+  entry-tests:
+    name: Lint and test code
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run linting
+        run: |
+          make test-lint
+      - name: Run unit tests
+        run: make test-unit
+      - name: Check generated files
+        run: |
+          make test-generated
+
+  documentation-sanity:
+    name: Check documentation
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Run LanguageTool
+        uses: reviewdog/action-languagetool@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          custom_api_endpoint: ''
+          ### Flags for LanguageTool ###
+          # Ref: https://languagetool.org/http-api/swagger-ui/#!/default/post_check
+          language: 'en-US'
+          enabled_rules: ''
+          disabled_rules: 'WHITESPACE_RULE,EN_QUOTES,DASH_RULE,WORD_CONTAINS_UNDERSCORE,UPPERCASE_SENTENCE_START,ARROWS,COMMA_PARENTHESIS_WHITESPACE,UNLIKELY_OPENING_PUNCTUATION,SENTENCE_WHITESPACE,CURRENCY,EN_UNPAIRED_BRACKETS,PHRASE_REPETITION,PUNCTUATION_PARAGRAPH_END,METRIC_UNITS_EN_US,ENGLISH_WORD_REPEAT_BEGINNING_RULE,DOUBLE_PUNCTUATION'
+          enabled_categories: ''
+          disabled_categories: 'TYPOS,TYPOGRAPHY,CASING'
+          enabled_only: 'false'
+      - name: Run misspell check
+        uses: reviewdog/action-misspell@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          level: info
+          locale: "US"
+
+  prepare-matrix:
+    name: Prepare components build matrix
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
+      matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
+      matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
+      matrix-tool: ${{ steps.set-matrix-tool.outputs.matrix }}
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: setup env
+        run: . ./hack/ci/setup-env.sh
+      - id: set-matrix-app
+        run: echo "::set-output ${APPS}"
+      - id: set-matrix-test
+        run: echo "::set-output ${TESTS}"
+      - id: set-matrix-infra
+        run: echo "::set-output ${INFRAS}"
+      - id: set-matrix-tool
+        run: echo "::set-output ${TOOLS}"
+
+  build-app:
+    name: Build ${{ matrix.APP }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-app-image-${{ matrix.APP }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-app-image-${{ matrix.APP }}
+
+  build-tests:
+    name: Build ${{ matrix.TEST }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-test-image-${{ matrix.TEST }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-test-image-${{ matrix.TEST }}
+
+  build-infra:
+    name: Build ${{ matrix.INFRA }}
+    runs-on: ubuntu-latest
+    if: ${{ needs.prepare-matrix.outputs.matrix-infra != '' && github.event.pull_request.draft == false }}
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-infra-image-${{ matrix.INFRA }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-infra-image-${{ matrix.INFRA }}
 
   build-cli:
     name: Build Capact CLI
@@ -241,8 +241,7 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-#    needs: [ entry-tests, build-app, build-tests, build-cli ]
-    needs: [ build-cli ]
+    needs: [ entry-tests, build-app, build-tests, build-cli ]
     permissions:
       contents: read
 
@@ -268,29 +267,30 @@ jobs:
         run: |
           chmod +x $CAPACT_BINARY
           $CAPACT_BINARY version
-#      - name: Setup Go
-#        uses: actions/setup-go@v2
-#        with:
-#          go-version: ${{env.GO_VERSION}}
-#      - name: Run K8s Controller integration tests
-#        run: |
-#          make test-k8s-controller
-#      - name: Run cross-functional integration tests
-#        env:
-#          BUILD_IMAGES: "false"
-#          ARTIFACTS: "output/"
-#          DISABLE_MONITORING_INSTALLATION: "true"
-#          HUB_MANIFESTS_SOURCE_REPO_REF: "3be817d39c69aefec4b8860c69ba2f37afba7cc8"
-#        run: |
-#          make test-integration
-#      - name: Upload artifacts
-#        uses: actions/upload-artifact@v2
-#        if: ${{ always() }}
-#        with:
-#          name: cluster_dump_${{github.sha}}
-#          path: "output"
-#          retention-days: 5 # Default 90 days
-      # delete-artifact
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+      - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
+          ARTIFACTS: "output/"
+          DISABLE_MONITORING_INSTALLATION: "true"
+          HUB_MANIFESTS_SOURCE_REPO_REF: "3be817d39c69aefec4b8860c69ba2f37afba7cc8"
+        run: |
+          make test-integration
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: cluster_dump_${{github.sha}}
+          path: "output"
+          retention-days: 5 # Default 90 days
+
+      # Delete Capact CLI
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: cli_${{github.sha}}
