@@ -263,9 +263,11 @@ jobs:
       - name: Display structure
         run: ls -R
       - name: Display downloaded file
+        env:
+            CAPACT_BINARY: "${{ github.workspace}}/capact-linux-amd64"
         run: |
-          chmod +x ./capact
-          ./capact version
+          chmod +x $CAPACT_BINARY
+          $CAPACT_BINARY version
 #      - name: Setup Go
 #        uses: actions/setup-go@v2
 #        with:
@@ -288,3 +290,7 @@ jobs:
 #          name: cluster_dump_${{github.sha}}
 #          path: "output"
 #          retention-days: 5 # Default 90 days
+      # delete-artifact
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: cli_${{github.sha}}
