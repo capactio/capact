@@ -17,7 +17,18 @@ type image struct {
 	DisableBuildKit bool
 }
 
-var images = map[string]image{
+type images map[string]image
+
+func (i images) All() []string {
+	var all []string
+	for img := range i {
+		all = append(all, img)
+	}
+	return all
+}
+
+// Images is a list of all Capact Docker images available to build
+var Images = images{
 	"gateway": {
 		Dir:    ".",
 		Target: "generic",
@@ -108,7 +119,7 @@ func BuildImages(w io.Writer, repository, version string, names []string) ([]str
 	var created []string
 
 	for _, name := range names {
-		image, ok := images[name]
+		image, ok := Images[name]
 		if !ok {
 			return nil, fmt.Errorf("cannot find image %s", name)
 		}
@@ -119,36 +130,4 @@ func BuildImages(w io.Writer, repository, version string, names []string) ([]str
 		created = append(created, imageTag)
 	}
 	return created, nil
-}
-
-// SelectImages returns a list of images calculated from focus and skip lists
-func SelectImages(focus, skip []string) ([]string, error) {
-	var selected []string
-	if len(focus) > 0 {
-		for _, name := range focus {
-			_, ok := images[name]
-			if !ok {
-				return nil, fmt.Errorf("focused image does not exist: %s", name)
-			}
-			selected = append(selected, name)
-		}
-		return selected, nil
-	}
-
-	for image := range images {
-		if shouldSkipImage(image, skip) {
-			continue
-		}
-		selected = append(selected, image)
-	}
-	return selected, nil
-}
-
-func shouldSkipImage(name string, skipList []string) bool {
-	for _, image := range skipList {
-		if image == name {
-			return true
-		}
-	}
-	return false
 }

@@ -18,7 +18,7 @@ source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; e
 
 main() {
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
-    kind::delete_cluster
+    capact::delete_cluster
 
     shout "Development local cluster deleted successfully."
 }

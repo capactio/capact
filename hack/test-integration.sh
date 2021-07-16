@@ -39,7 +39,7 @@ cleanup() {
     shout "Nodes description"
     kubectl describe nodes
 
-    kind::delete_cluster || true
+    capact::delete_cluster || true
 
     rm -rf "${TMP_DIR}"
 }
@@ -53,39 +53,29 @@ capact::test::execute() {
 
 main() {
     shout "Starting integration test..."
-
-    if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
-        export INSTALL_DIR=${TMP_DIR}
-        export KIND_VERSION=${STABLE_KIND_VERSION}
-        export HELM_VERSION=${STABLE_HELM_VERSION}
-        host::install::kind
-        host::install::helm
-    else
-        echo "Skipping kind and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
-    fi
-
     export REPO_DIR=$REPO_ROOT_DIR
 
-    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KUBECONFIG="${TMP_DIR}/kubeconfig"
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
-    kind::create_cluster
+    capact::create_cluster
 
-    # Cluster is already created, and all below operation are performed against that cluster,
+    # Cluster is already created, and all below operations are performed against that cluster,
     # so we should dump cluster info for debugging purpose in case of any error
     DUMP_CLUSTER_INFO=true
+
 
     if [[ "${BUILD_IMAGES:-"true"}" == "true" ]]; then
       export DOCKER_TAG=$RANDOM
       export DOCKER_REPOSITORY="local"
-      capact::update::images_on_kind
+    else
+      export BUILD_IMAGES=""
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
-    export CLUSTER_TYPE="KIND"
+    export CLUSTER_TYPE="kind"
     export USE_TEST_SETUP="true"
     export PRINT_INSECURE_NOTES="false"
-    capact::install_upgrade::charts
+    capact::install
 
     capact::test::execute
     # Test completed successfully. We do not have to dump cluster info

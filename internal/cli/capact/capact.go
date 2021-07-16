@@ -2,8 +2,6 @@ package capact
 
 import (
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 const (
@@ -47,22 +45,12 @@ type Options struct {
 	Name               string
 	Namespace          string
 	Environment        string
-	SkipComponents     []string
-	SkipImages         []string
-	FocusImages        []string
+	InstallComponents  []string
+	BuildImages        []string
 	DryRun             bool
 	Timeout            time.Duration
 	Parameters         InputParameters
 	UpdateHostsFile    bool
 	UpdateTrustedCerts bool
 	Verbose            bool
-}
-
-// Validate validates provided options
-func (o Options) Validate() error {
-	if len(o.SkipImages) != 0 && len(o.FocusImages) != 0 {
-		return errors.New("cannot skip and focus images at the same time")
-	}
-
-	return nil
 }

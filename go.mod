@@ -45,7 +45,7 @@ require (
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.7.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/vektah/gqlparser/v2 v2.1.0
 	github.com/vrischmann/envconfig v1.3.0
@@ -63,6 +63,7 @@ require (
 	k8s.io/apimachinery v0.20.2
 	k8s.io/cli-runtime v0.17.9
 	k8s.io/client-go v10.0.0+incompatible
+	k8s.io/helm v2.17.0+incompatible
 	k8s.io/kubectl v0.17.2
 	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
 	rsc.io/letsencrypt v0.0.3 // indirect
