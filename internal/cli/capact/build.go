@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sort"
 
 	"github.com/pkg/errors"
 )
@@ -24,6 +25,9 @@ func (i images) All() []string {
 	for img := range i {
 		all = append(all, img)
 	}
+
+	// We generate doc automatically, so it needs to be deterministic
+	sort.Strings(all)
 	return all
 }
 

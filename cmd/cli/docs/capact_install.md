@@ -30,7 +30,7 @@ capact install --version @local
 ### Options
 
 ```
-      --build-image strings                    Local images names that should not be build when using @local version. Takes comma-separated list. (default [argo-runner,argo-actions,populator,e2e-test,gateway,k8s-engine,hub-js])
+      --build-image strings                    Local images names that should not be build when using @local version. Takes comma-separated list. (default [argo-actions,argo-runner,e2e-test,gateway,hub-js,k8s-engine,populator])
       --capact-overrides strings               Overrides for Capact component.
       --cert-manager-overrides strings         Overrides for Cert Manager component.
       --environment string                     Capact environment. (default "kind")
