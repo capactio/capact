@@ -228,15 +228,20 @@ jobs:
         with:
           go-version: ${{env.GO_VERSION}}
       - name: Set up GoReleaser
-        # We use a new `no_unique_dist_dir` feature, which is not yet released
-        run: go install github.com/goreleaser/goreleaser@b53dbb89d02aa3673782f3d063d7d5039446baac
+        run: go install github.com/goreleaser/goreleaser@v0.173.2
       - run: make build-tool-cli
+      - name: Share Capact CLI for integration tests bootstrapping
+        uses: actions/upload-artifact@v2
+        with:
+          name: cli_${{github.sha}}
+          path: ${{ github.workspace }}/bin/capact-linux-amd64
+          retention-days: 1 # Default 90 days
 
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [ entry-tests, build-app, build-tests ]
+    needs: [ entry-tests, build-app, build-tests, build-cli ]
     permissions:
       contents: read
 
@@ -250,6 +255,17 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
+      - name: Download Capact CLI
+        uses: actions/download-artifact@v2
+        with:
+          name: cli_${{github.sha}}
+          path: ${{ github.workspace }}
+      - name: Setup Capact CLI
+        env:
+            CAPACT_BINARY: "${{ github.workspace}}/capact-linux-amd64"
+        run: |
+          chmod +x $CAPACT_BINARY
+          $CAPACT_BINARY version
       - name: Setup Go
         uses: actions/setup-go@v2
         with:
@@ -272,3 +288,7 @@ jobs:
           name: cluster_dump_${{github.sha}}
           path: "output"
           retention-days: 5 # Default 90 days
+      - name: Delete Capact CLI artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: cli_${{github.sha}}
