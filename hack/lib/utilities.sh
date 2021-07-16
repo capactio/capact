@@ -160,6 +160,7 @@ capact::create_cluster() {
       --name="${KIND_CLUSTER_NAME}" \
       --cluster-config="${config}" \
       --wait=5m
+   # TODO   --image="kindest/node:${KUBERNETES_VERSION}" \
 }
 
 #  - KIND_CLUSTER_NAME
