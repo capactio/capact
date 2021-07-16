@@ -149,7 +149,6 @@ helm::version(){
 #  - REPO_DIR
 #  - MULTINODE_CLUSTER
 capact::create_cluster() {
-set -x
     shout "- Creating K8s cluster..."
     local config
     if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
@@ -238,9 +237,20 @@ capact::install() {
 # Required envs:
 #  - REPO_DIR
 capact::cli()  {
+  local os
+  local arch
+  local default_path
+  local cli
+
   os=$(host::os)
   arch=$(host::arch)
-  cli="${REPO_DIR}/bin/capact-${os}-${arch}"
+  default_path="${REPO_DIR}/bin/capact-${os}-${arch}"
+  cli=${CAPACT_BINARY:-${default_path}}
+  if [ ! -f "${cli}" ]; then
+    echo "capact cli not found, trying to build one..."
+    make build-tool-cli
+    cli=${default_path}
+  fi
 
   ${cli} "$@"
 }

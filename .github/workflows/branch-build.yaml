@@ -220,11 +220,16 @@ jobs:
       - name: Run K8s Controller integration tests
         run: |
           make test-k8s-controller
+      - name: Get Capact CLI for linux
+        run: |
+          curl -Lo .${{ github.workspace }}/capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
+          chmod +x ./capact
       - name: Run cross-functional integration tests
         env:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
+          CAPACT_BINARY: "./capact"
         run: |
           make test-integration
       - name: Upload artifacts
