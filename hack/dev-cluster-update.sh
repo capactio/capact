@@ -28,8 +28,7 @@ main() {
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
     export CLUSTER_TYPE="KIND"
     export PRINT_INSECURE_NOTES="true"
-    capact::update::images_on_kind
-    capact::install_upgrade::charts
+    capact::install
 
     shout "Development local cluster updated successfully."
 }

@@ -178,12 +178,13 @@ capact::delete_cluster() {
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
-#  - CLUSTER_TYPE
 #  - KIND_CLUSTER_NAME
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
+#  - ENABLE_HOSTS_UPDATE - if set to true, /etc/hosts is updated
+#  - ENABLE_ADDING_TRUSTED_CERT - if set to true, add Capact self-signed TLS certificate as trusted
 capact::install() {
     pushd "${REPO_DIR}" || return
 
@@ -191,7 +192,8 @@ capact::install() {
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${CAPACT_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${CAPACT_INCREASE_RESOURCE_LIMITS}}
     export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"false"}
-
+    export ENABLE_HOSTS_UPDATE=${ENABLE_HOSTS_UPDATE:-"true"}
+    export ENABLE_ADDING_TRUSTED_CERT=${ENABLE_ADDING_TRUSTED_CERT:-"true"}
     export COMPONENTS="neo4j,ingress-controller,argo,cert-manager,capact"
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
 
@@ -223,8 +225,10 @@ capact::install() {
         --namespace="${CAPACT_NAMESPACE}" \
         --capact-overrides="${CAPACT_OVERRIDES}" \
         --increase-resource-limits="${INCREASE_RESOURCE_LIMITS}" \
-	--helm-repo-url="${REPO_DIR}/deploy/kubernetes/charts/" \
-	--version=@local
+        --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
+        --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
+        --helm-repo-url="${REPO_DIR}/deploy/kubernetes/charts/" \
+        --version=@local
 }
 
 # Required envs:
@@ -233,57 +237,8 @@ capact::cli()  {
   os=$(host::os)
   arch=$(host::arch)
   cli="${REPO_DIR}/bin/capact-${os}-${arch}"
-  
+
   ${cli} "$@"
-}
-
-# Updates /etc/hosts with all Capact subdomains.
-host::update::capact_hosts() {
-  shout "- Updating /etc/hosts..."
-  readonly DOMAIN="capact.local"
-  readonly CAPACT_HOSTS=("gateway")
-
-  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${CAPACT_HOSTS[@]}")"
-  HOSTS_FILE="/etc/hosts"
-
-  grep -qxF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
-}
-
-# Sets self-signed wildcard TLS certificate as trusted
-#
-# Required envs:
-#  - REPO_DIR
-host::install:trust_self_signed_cert() {
-  shout "- Trusting self-signed CA certificate if not already trusted..."
-  CERT_FILE="capact-local-ca.crt"
-  CERT_PATH="${REPO_DIR}/hack/cluster-config/kind/${CERT_FILE}"
-  OS="$(host::os)"
-
-  echo "Certificate path: ${CERT_PATH}"
-  echo "Detected OS: ${OS}"
-
-  case $OS in
-    'linux')
-      if diff "${CERT_PATH}" "/usr/local/share/ca-certificates/${CERT_FILE}"; then
-        echo "Certificate is already trusted."
-        return
-      fi
-
-      sudo cp "${CERT_PATH}" "/usr/local/share/ca-certificates"
-      sudo update-ca-certificates
-      ;;
-    'darwin')
-      if security verify-cert -c "${CERT_PATH}"; then
-        echo "Certificate is already trusted."
-        return
-      fi
-
-      sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
-      ;;
-    *)
-      echo "Please manually set the certificate ${CERT_PATH} as trusted for your OS."
-      ;;
-  esac
 }
 
 # Installs kind and helm dependencies locally.
