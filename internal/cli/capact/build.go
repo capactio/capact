@@ -54,7 +54,7 @@ var Images = images{
 		Dir:    ".",
 		Target: "generic-alpine",
 	},
-	"e2e": {
+	"e2e-test": {
 		Dir:    ".",
 		Target: "e2e",
 		ExtraBuildArgs: []string{
