@@ -112,12 +112,12 @@ host::arch() {
 }
 
 
-# Installs kind and helm dependencies locally.
+# Installs helm dependencies locally.
 # Required envs:
 #  - HELM_VERSION
 #  - INSTALL_DIR
 #
-# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 host::install::kind
+# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 host::install::helm
 host::install::helm() {
     mkdir -p "${INSTALL_DIR}/bin"
     export PATH="${INSTALL_DIR}/bin:${PATH}"
@@ -219,6 +219,10 @@ capact::install() {
       CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
+    if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
+      BUILD_IMAGES_FLAG=--build-image=""
+    fi
+
     # shellcheck disable=SC2086
     capact::cli install --verbose \
         --name="${KIND_CLUSTER_NAME}" \
@@ -227,7 +231,7 @@ capact::install() {
         --increase-resource-limits="${INCREASE_RESOURCE_LIMITS}" \
         --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
         --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
-        --helm-repo-url="${REPO_DIR}/deploy/kubernetes/charts/" \
+        ${BUILD_IMAGES_FLAG:-} \
         --version=@local
 }
 
@@ -253,21 +257,14 @@ capact::version_supported(){
 
 capact::validate::tools() {
   shout "- Validating tools versions..."
-  local current_kind_version
   local current_helm_version
   local wrong_versions
 
-  current_kind_version=$(kind::version)
   current_helm_version=$(helm::version)
   wrong_versions=false
 
-  echo "Current kind version: $current_kind_version, recommended kind version: $STABLE_KIND_VERSION"
   echo "Current helm version: $current_helm_version, recommended helm version: $STABLE_HELM_VERSION"
 
-  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" capact::version_supported; then
-    wrong_versions=true
-    echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
-  fi
   if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" capact::version_supported; then
       wrong_versions=true
       echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"

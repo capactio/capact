@@ -67,8 +67,6 @@ main() {
     if [[ "${BUILD_IMAGES:-"true"}" == "true" ]]; then
       export DOCKER_TAG=$RANDOM
       export DOCKER_REPOSITORY="local"
-    else
-      export BUILD_IMAGES=""
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
