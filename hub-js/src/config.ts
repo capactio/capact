@@ -16,4 +16,7 @@ export const config = {
     bindPort: Number(graphQLPort),
   },
   hubMode: process.env.APP_HUB_MODE || "public",
+  express: {
+    bodySizeLimit: process.env.APP_EXPRESS_BODY_SIZE_LIMIT || "32mb",
+  },
 };
