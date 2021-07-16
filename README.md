@@ -6,8 +6,6 @@
 
 **Capact** (pronounced: "cape-act", /ˈkeɪp.ækt/) is a simple way to manage applications and infrastructure.
 
-> **⚠️ WARNING**: Capact versions prior to 0.4.0 are considered experimental. Capact 0.4.0, the very first public Capact release, is coming very soon, along with the **capact.io** website going live. Until this moment, the links may not work properly. Stay tuned for the announcement!
-
 ## Documentation
 
 The Capact documentation can be found on the [capact.io](https://capact.io) website.
