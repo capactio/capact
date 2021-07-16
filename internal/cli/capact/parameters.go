@@ -140,6 +140,7 @@ func (i *InputParameters) ResolveVersion() error {
 	return nil
 }
 
+// SetCapactValuesFromOverrides fills CapactValues struct with values passed in Override.CapactStringOverrides
 func (i *InputParameters) SetCapactValuesFromOverrides() error {
 	mapValues := i.Override.CapactValues.AsMap()
 
@@ -171,5 +172,8 @@ func ValuesFromMap(values map[string]interface{}) (Values, error) {
 		return v, errors.Wrap(err, "failed to marshal input values")
 	}
 	err = yaml.Unmarshal(marshaled, &v)
+	if err != nil {
+		return v, errors.Wrap(err, "failed to unmarshal input values")
+	}
 	return v, nil
 }
