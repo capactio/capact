@@ -134,7 +134,7 @@ func (i *InputParameters) ResolveVersion() error {
 			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerPath
 		}
 		if i.Override.CapactValues.Global.ContainerRegistry.Tag == "" {
-			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerTag
+			i.Override.CapactValues.Global.ContainerRegistry.Tag = LocalDockerTag
 		}
 	}
 	return nil
