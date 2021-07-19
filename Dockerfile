@@ -60,7 +60,7 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /bin/$COMPONENT /app.test
 
 RUN apk add --no-cache 'git=>2.30' && \
-    go get github.com/onsi/ginkgo/ginkgo
+    go install github.com/onsi/ginkgo/ginkgo@latest
 
 LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
