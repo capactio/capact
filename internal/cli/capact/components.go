@@ -409,6 +409,12 @@ func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
 		capactValues = tools.MergeMaps(values, capactValues)
 	}
 
+	for _, value := range c.opts.Parameters.Override.CapactStringOverrides {
+		if err := strvals.ParseInto(value, capactValues); err != nil {
+			return nil, errors.Wrap(err, "failed parsing passed overrides")
+		}
+	}
+
 	return c.runUpgrade(upgradeCli, capactValues)
 }
 
