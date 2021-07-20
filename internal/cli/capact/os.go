@@ -28,7 +28,7 @@ func AddGatewayToHostsFile(status *printer.Status) error {
 
 	status.Step("Updating /etc/hosts file")
 	// #nosec G204
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a /etc/hosts >/dev/null", entry))
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a /etc/hosts", entry))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -69,7 +69,7 @@ func trustSelfSignedDarwin(tmpCertPath string) error {
 		return nil
 	}
 
-	addCertCmd := "sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s >/dev/null"
+	addCertCmd := "sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s"
 	// #nosec G204
 	cmd = exec.Command("/bin/sh", "-c", fmt.Sprintf(addCertCmd, tmpCertPath))
 	cmd.Stdout = os.Stdout
@@ -102,7 +102,7 @@ func trustSelfSignedLinux(tmpCertPath string) error {
 		}
 
 		// #nosec G204
-		cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates >/dev/null")
+		cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin
