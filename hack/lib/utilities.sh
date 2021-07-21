@@ -231,6 +231,7 @@ capact::install() {
         --increase-resource-limits="${INCREASE_RESOURCE_LIMITS}" \
         --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
         --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
+        --install-component="${COMPONENTS}" \
         ${BUILD_IMAGES_FLAG:-} \
         --version=@local
 }
