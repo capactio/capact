@@ -367,9 +367,6 @@ fragment InterfaceRevision on InterfaceRevision {
             }
         }
     }
-    signature {
-        hub
-    }
 }
 
 fragment ImplementationRevision on ImplementationRevision {
@@ -456,9 +453,6 @@ fragment ImplementationRevision on ImplementationRevision {
             args
         }
     }
-    signature {
-        hub
-    }
 }
 
 fragment AttributeRevision on AttributeRevision {
@@ -468,9 +462,6 @@ fragment AttributeRevision on AttributeRevision {
     revision
     spec {
         additionalRefs
-    }
-    signature {
-        hub
     }
 }
 
@@ -485,9 +476,6 @@ fragment TypeRevision on TypeRevision {
     spec {
         additionalRefs
         jsonSchema
-    }
-    signature {
-        hub
     }
 }
 
@@ -511,9 +499,6 @@ fragment RepoMetadataRevision on RepoMetadataRevision {
                 }
             }
         }
-    }
-    signature {
-        hub
     }
 }
 

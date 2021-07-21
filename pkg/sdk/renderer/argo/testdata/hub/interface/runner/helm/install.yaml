@@ -46,6 +46,3 @@ spec:
         typeRef:
           path: cap.core.type.generic.value
           revision: 0.1.0
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

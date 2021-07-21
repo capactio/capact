@@ -22,6 +22,3 @@ spec:
   # Additional refs gives you an option to extend other parent node.
   additionalRefs:
     - cap.core.attribute.workload
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

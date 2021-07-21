@@ -8,8 +8,6 @@ metadata:
   path: cap.implementation.infinite.render.loop
   prefix: cap.implementation.infinite.render
 revision: 0.1.0
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
   appVersion: 3.x.x
   implements:

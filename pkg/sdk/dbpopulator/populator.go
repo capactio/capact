@@ -12,8 +12,6 @@ import (
 )
 
 var attributeQuery = `
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
-
 MERGE (attribute:Attribute:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
@@ -32,7 +30,6 @@ CREATE (attributeRevision: AttributeRevision:unpublished {revision: value.revisi
 
 CREATE (attributeRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (attribute)-[:CONTAINS]->(attributeRevision)
-CREATE (attributeRevision)-[:SIGNED_WITH]->(signature)
 
 WITH value, metadata 
 UNWIND value.metadata.maintainers as m
@@ -44,7 +41,6 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
 var typeQuery = `
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 MERGE (type:Type:unpublished{
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
@@ -69,7 +65,6 @@ CREATE (vType)-[:CONTAINS]->(type)
 CREATE (typeRevision)-[:SPECIFIED_BY]->(typeSpec)
 CREATE (typeRevision)-[:DESCRIBED_BY]->(metadata)
 CREATE (type)-[:CONTAINS]->(typeRevision)
-CREATE (typeRevision)-[:SIGNED_WITH]->(signature)
 
 WITH *, value.spec.additionalRefs as refs
 CALL {
@@ -90,7 +85,6 @@ CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
 `
 
 var interfaceGroupQuery = `
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 CREATE (metadata:GenericMetadata:unpublished {
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
   prefix: "<PREFIX>",
@@ -106,7 +100,6 @@ CREATE (interfaceGroup:InterfaceGroup:unpublished{
   name: value.metadata.name})
 
 CREATE (interfaceGroup)-[:DESCRIBED_BY]->(metadata)
-CREATE (interfaceGroup)-[:SIGNED_WITH]->(signature)
 
 WITH value, metadata 
 UNWIND value.metadata.maintainers as m
@@ -144,7 +137,6 @@ CREATE (spec:InterfaceSpec:unpublished {abstract: value.spec.abstract})
 CREATE (spec)-[:HAS_INPUT]->(input)
 CREATE (spec)-[:OUTPUTS]->(output)
 
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
 
 CREATE (metadata:GenericMetadata:unpublished {
   path: apoc.text.join(["<PREFIX>", value.metadata.name], "."),
@@ -157,7 +149,6 @@ CREATE (metadata:GenericMetadata:unpublished {
   iconURL: value.metadata.iconURL})
 CREATE (interfaceRevision:InterfaceRevision:unpublished {revision: value.revision})
 CREATE (interfaceRevision)-[:DESCRIBED_BY]->(metadata)
-CREATE (interfaceRevision)-[:SIGNED_WITH]->(signature)
 CREATE (interfaceRevision)-[:SPECIFIED_BY]->(spec)
 CREATE (interface)-[:CONTAINS]->(interfaceRevision)
 
@@ -219,9 +210,6 @@ MERGE (implementation:Implementation:unpublished{
 CREATE (implementationRevision:ImplementationRevision:unpublished {revision: value.revision})
 
 CREATE (implementation)-[:CONTAINS]->(implementationRevision)
-
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
-CREATE (implementationRevision)-[:SIGNED_WITH]->(signature)
 
 MERGE (license: License:unpublished{name: value.metadata.license.name})
 
@@ -394,9 +382,6 @@ CREATE (metadata:GenericMetadata:unpublished {
   supportURL: value.metadata.supportURL,
   iconURL: value.metadata.supportURL})
 CREATE (repoRevision)-[:DESCRIBED_BY]->(metadata)
-
-MERGE (signature:Signature:unpublished{hub: value.signature.hub})
-CREATE (repoRevision)-[:SIGNED_WITH]->(signature)
 
 CREATE (spec:RepoMetadataSpec:unpublished{hubVersion: value.spec.hubVersion})
 CREATE (repoRevision)-[:SPECIFIED_BY]->(spec)

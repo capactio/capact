@@ -30,6 +30,3 @@ spec:
           - name: mysql-install
           - name: mysql-create-db
           - name: wp-install
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

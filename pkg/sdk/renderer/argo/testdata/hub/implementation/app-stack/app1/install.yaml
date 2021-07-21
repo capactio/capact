@@ -12,8 +12,6 @@ metadata:
   path: cap.implementation.app-stack.app1.install
   prefix: cap.implementation.app-stack.app1
 revision: 0.1.0
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
   additionalInput:
     typeInstances:

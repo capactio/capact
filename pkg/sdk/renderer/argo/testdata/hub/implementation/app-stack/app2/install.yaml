@@ -11,8 +11,6 @@ metadata:
   prefix: cap.implementation.app-stack.app2
   name: install
 revision: 0.1.0
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
   additionalInput:
     typeInstances:

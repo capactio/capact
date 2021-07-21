@@ -13,8 +13,6 @@ metadata:
   prefix: cap.implementation.bitnami.postgresql
   supportURL: https://bitnami.com
 revision: 0.1.0
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
   additionalInput:
     typeInstances: []

@@ -37,10 +37,9 @@ type AttributeFilterInput struct {
 }
 
 type AttributeRevision struct {
-	Revision  string           `json:"revision"`
-	Spec      *AttributeSpec   `json:"spec"`
-	Signature *Signature       `json:"signature"`
-	Metadata  *GenericMetadata `json:"metadata"`
+	Revision string           `json:"revision"`
+	Spec     *AttributeSpec   `json:"spec"`
+	Metadata *GenericMetadata `json:"metadata"`
 }
 
 type AttributeSpec struct {
@@ -140,7 +139,6 @@ type ImplementationRequirementItem struct {
 
 type ImplementationRevision struct {
 	Revision   string                  `json:"revision"`
-	Signature  *Signature              `json:"signature"`
 	Metadata   *ImplementationMetadata `json:"metadata"`
 	Spec       *ImplementationSpec     `json:"spec"`
 	Interfaces []*InterfaceRevision    `json:"interfaces"`
@@ -204,7 +202,6 @@ type InterfaceFilter struct {
 type InterfaceGroup struct {
 	Path       string           `json:"path"`
 	Metadata   *GenericMetadata `json:"metadata"`
-	Signature  *Signature       `json:"signature"`
 	Interfaces []*Interface     `json:"interfaces"`
 }
 
@@ -230,7 +227,6 @@ type InterfaceRevision struct {
 	Revision                string                    `json:"revision"`
 	Metadata                *GenericMetadata          `json:"metadata"`
 	Spec                    *InterfaceSpec            `json:"spec"`
-	Signature               *Signature                `json:"signature"`
 	ImplementationRevisions []*ImplementationRevision `json:"implementationRevisions"`
 }
 
@@ -278,10 +274,9 @@ type RepoMetadata struct {
 }
 
 type RepoMetadataRevision struct {
-	Revision  string            `json:"revision"`
-	Metadata  *GenericMetadata  `json:"metadata"`
-	Spec      *RepoMetadataSpec `json:"spec"`
-	Signature *Signature        `json:"signature"`
+	Revision string            `json:"revision"`
+	Metadata *GenericMetadata  `json:"metadata"`
+	Spec     *RepoMetadataSpec `json:"spec"`
 }
 
 type RepoMetadataSpec struct {
@@ -297,10 +292,6 @@ type RepoOCFVersion struct {
 
 type SemVerTaggingStrategy struct {
 	Latest *LatestSemVerTaggingStrategy `json:"latest"`
-}
-
-type Signature struct {
-	Hub string `json:"hub"`
 }
 
 type Type struct {
@@ -355,10 +346,9 @@ type TypeReferenceWithOptionalRevision struct {
 }
 
 type TypeRevision struct {
-	Revision  string        `json:"revision"`
-	Metadata  *TypeMetadata `json:"metadata"`
-	Spec      *TypeSpec     `json:"spec"`
-	Signature *Signature    `json:"signature"`
+	Revision string        `json:"revision"`
+	Metadata *TypeMetadata `json:"metadata"`
+	Spec     *TypeSpec     `json:"spec"`
 }
 
 type TypeSpec struct {

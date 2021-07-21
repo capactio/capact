@@ -12,8 +12,6 @@ metadata:
   prefix: cap.implementation.runner.helm
   supportURL:
 revision: 0.1.0
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9
 spec:
   additionalInput:
     typeInstances: []
