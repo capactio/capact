@@ -28,9 +28,6 @@ var AttributeFields = fmt.Sprintf(`
 			spec {
 				additionalRefs
 			}
-			signature {
-				hub
-			}
 			`, GenericMetadataFields)
 
 // ImplementationFields for quering the Implementation fields with all revisions.
@@ -127,9 +124,6 @@ var ImplementationRevisionFields = fmt.Sprintf(`
 					runnerInterface
 					args
 				}
-			}
-			signature {
-				hub
 			}
 			`, GenericMetadataFields, AttributeFields)
 
