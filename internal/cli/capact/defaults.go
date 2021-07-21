@@ -51,7 +51,13 @@ spec:
 	// #nosec G101
 	certManagerSecretName = "ca-key-pair"
 	clusterIssuerName     = "letsencrypt"
-	tlsCrt                = `-----BEGIN CERTIFICATE-----
+	/*
+	   To generate new certificate run:
+
+	   openssl genrsa -out capact-local-ca.key 2048
+	   openssl req -x509 -sha256 -new -nodes -key capact-local-ca.key -days 3650 -out capact-local-ca.crt
+	*/
+	tlsCrt = `-----BEGIN CERTIFICATE-----
 MIIDfTCCAmWgAwIBAgIUfsqOeL7scRH53okBkJPfUZuajc8wDQYJKoZIhvcNAQEL
 BQAwTjELMAkGA1UEBhMCUEwxEzARBgNVBAgMClNvbWUtU3RhdGUxEjAQBgNVBAoM
 CUNhcGFjdC5pbzEWMBQGA1UEAwwNQ2FwYWN0Q0EgUm9vdDAeFw0yMTA1MTEwOTIw
