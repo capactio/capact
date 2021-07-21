@@ -10,6 +10,7 @@
 readonly STABLE_CONTROLLER_GEN_VERSION=v0.5.0
 readonly STABLE_KUBEBUILDER_VERSION=2.3.2
 readonly STABLE_GQLGEN_VERSION=v0.13.0
+readonly STABLE_HELM_VERSION=v3.5.4
 
 #
 # Kubernetes installation

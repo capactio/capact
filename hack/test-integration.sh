@@ -53,10 +53,20 @@ capact::test::execute() {
 
 main() {
     shout "Starting integration test..."
+    if [[ "${SKIP_DEPS_INSTALLATION}" == "false" ]]; then
+        export INSTALL_DIR=${TMP_DIR}
+        export HELM_VERSION=${STABLE_HELM_VERSION}
+        host::install::helm
+    else
+        echo "Skipping kind and helm installation cause SKIP_DEPS_INSTALLATION is set to true."
+    fi
+
+
     export REPO_DIR=$REPO_ROOT_DIR
 
     export KUBECONFIG="${TMP_DIR}/kubeconfig"
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
+    export HELM_VERSION=${STABLE_HELM_VERSION}
     capact::create_cluster
 
     # Cluster is already created, and all below operations are performed against that cluster,

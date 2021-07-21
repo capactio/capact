@@ -291,7 +291,7 @@ type Capact struct {
 func (n *Neo4j) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := n.upgradeAction(version)
 
-	values := tools.MergeMaps(map[string]interface{}{}, n.Overrides)
+	values := tools.MergeMaps(n.opts.Parameters.Override.Neo4jValues.AsMap(), n.Overrides)
 
 	return n.runUpgrade(upgradeCli, values)
 }
@@ -461,6 +461,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 	if opts.Parameters.IncreaseResourceLimits {
 		opts.Parameters.Override.CapactValues.Gateway.Resources = IncreasedGatewayResources()
 		opts.Parameters.Override.CapactValues.HubPublic.Resources = IncreasedHubPublicResources()
+		opts.Parameters.Override.CapactValues.HubLocal.Resources = IncreasedHubLocalResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = IncreasedNeo4jResources()
 	}
 	return &Helm{configuration: configuration, opts: opts}

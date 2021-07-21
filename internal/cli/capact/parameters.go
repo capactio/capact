@@ -38,6 +38,7 @@ type (
 		Engine    Engine    `json:"engine,omitempty"`
 		Gateway   Gateway   `json:"gateway,omitempty"`
 		HubPublic HubPublic `json:"hub-public,omitempty"`
+		HubLocal  HubLocal  `json:"hub-local,omitempty"`
 		Global    struct {
 			ContainerRegistry struct {
 				Tag  string `json:"overrideTag,omitempty"`
@@ -63,6 +64,10 @@ type (
 	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
 		Populator Populator `json:"populator,omitempty"`
+	}
+	// HubLocal values
+	HubLocal struct {
+		Resources Resources `json:"resources,omitempty"`
 	}
 	// Engine values
 	Engine struct {
@@ -92,6 +97,20 @@ func IncreasedGatewayResources() Resources {
 
 // IncreasedHubPublicResources returns increased Public Hub resources
 func IncreasedHubPublicResources() Resources {
+	return Resources{
+		Limits: ResourcesQuantity{
+			CPU:    "400m",
+			Memory: "512Mi",
+		},
+		Requests: ResourcesQuantity{
+			CPU:    "200m",
+			Memory: "128Mi",
+		},
+	}
+}
+
+// IncreasedHubLocalResources returns increased Local Hub resources
+func IncreasedHubLocalResources() Resources {
 	return Resources{
 		Limits: ResourcesQuantity{
 			CPU:    "400m",
@@ -160,6 +179,13 @@ func (i *InputParameters) SetCapactValuesFromOverrides() error {
 // AsMap converts Values struct into map[string]interface{}
 func (i *Values) AsMap() map[string]interface{} {
 	s := structs.New(i)
+	s.TagName = "json"
+	return s.Map()
+}
+
+// AsMap converts Values struct into map[string]interface{}
+func (n *Neo4jValues) AsMap() map[string]interface{} {
+	s := structs.New(n)
 	s.TagName = "json"
 	return s.Map()
 }
