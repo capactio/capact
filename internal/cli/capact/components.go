@@ -67,11 +67,12 @@ type ComponentData struct {
 	writer io.Writer
 }
 
+// Name of the Release
 func (c *ComponentData) Name() string {
 	return c.ReleaseName
 }
 
-// ChartName of the component
+// Chart name of the component
 func (c *ComponentData) Chart() string {
 	if c.ChartName != "" {
 		return c.ChartName

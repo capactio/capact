@@ -38,7 +38,7 @@ capact install --version @local
   -h, --help                                   help for install
       --increase-resource-limits               Enables higher resource requests and limits for components. (default true)
       --ingress-controller-overrides strings   Overrides for Ingress controller component.
-      --install-component strings              Components names that should be installed. Takes comma-separated list. (default [neo4j,ingress-controller,argo,cert-manager,kubed,monitoring,capact])
+      --install-component strings              Components names that should be installed. Takes comma-separated list. (default [neo4j,ingress-nginx,argo,cert-manager,kubed,monitoring,capact])
       --name string                            Cluster name, overrides config. (default "kind-dev-capact")
       --namespace string                       Capact namespace. (default "capact-system")
       --timeout duration                       Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
