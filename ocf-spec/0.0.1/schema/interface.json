@@ -54,10 +54,25 @@
                 "type": "object",
                 "description": "The input parameters for a given Action.",
                 "properties": {
+                  "typeRef": {
+                    "$ref": "https://capact.io/schemas/common/type-ref.json"
+                  },
                   "jsonSchema": {
                     "$ref": "https://capact.io/schemas/common/json-schema-type.json"
                   }
                 },
+                "oneOf": [
+                  {
+                    "required": [
+                      "typeRef"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "jsonSchema"
+                    ]
+                  }
+                ],
                 "additionalProperties": false
               }
             },

@@ -6,8 +6,7 @@
   "properties": {
     "value": {
       "type": "string",
-      "title": "Inline JSON Schema definition for the parameters. It may contain external references to JSON schemas in Types.",
-      "description": "Inline JSON Schema definition for the parameters."
+      "description": "Inline JSON Schema definition for the parameters. It may contain external references to JSON schemas in Types."
     }
   },
   "additionalProperties": false,
