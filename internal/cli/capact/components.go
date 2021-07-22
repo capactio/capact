@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path"
 	"time"
 
@@ -34,6 +35,7 @@ import (
 type Component interface {
 	InstallUpgrade(version string) (*release.Release, error)
 	Name() string
+	Chart() string
 	withOptions(*Options)
 	withConfiguration(*action.Configuration)
 	withWriter(io.Writer)
@@ -53,6 +55,7 @@ func (i components) All() []string {
 type ComponentData struct {
 	ReleaseName string
 	LocalPath   string
+	ChartName   string
 	Wait        bool
 
 	Resources *Resources
@@ -64,8 +67,15 @@ type ComponentData struct {
 	writer io.Writer
 }
 
-// Name of the component
 func (c *ComponentData) Name() string {
+	return c.ReleaseName
+}
+
+// ChartName of the component
+func (c *ComponentData) Chart() string {
+	if c.ChartName != "" {
+		return c.ChartName
+	}
 	return c.ReleaseName
 }
 
@@ -79,8 +89,8 @@ func (c *ComponentData) installAction(version string) *action.Install {
 	installCli.ChartPathOptions.Version = version
 	installCli.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepoURL
 
-	installCli.NameTemplate = c.ReleaseName
-	installCli.ReleaseName = c.ReleaseName
+	installCli.NameTemplate = c.Name()
+	installCli.ReleaseName = c.Name()
 
 	installCli.Wait = c.Wait
 	installCli.Replace = true
@@ -129,7 +139,7 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 	if upgradeCli.Version == LocalVersionTag {
 		location = c.LocalPath
 	} else {
-		location = c.ReleaseName
+		location = c.Chart()
 	}
 
 	chartPath, err = upgradeCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
@@ -159,7 +169,7 @@ func (c *ComponentData) runInstall(installCli *action.Install, values map[string
 	if installCli.Version == LocalVersionTag {
 		location = c.LocalPath
 	} else {
-		location = c.ReleaseName
+		location = c.Chart()
 	}
 
 	chartPath, err = installCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
@@ -198,8 +208,14 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 }
 
 func (h Helm) writeHelmDetails(out io.Writer) {
+	fmt.Fprintf(out, "\n  Installation details:\n")
 	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
-	fmt.Fprintf(out, "\tHelm repository: %s\n", h.opts.Parameters.Override.HelmRepoURL)
+
+	helmRepo := h.opts.Parameters.Override.HelmRepoURL
+	if h.opts.Parameters.Version == LocalVersionTag {
+		helmRepo = LocalChartsPath
+	}
+	fmt.Fprintf(out, "\tHelm repository: %s\n\n", helmRepo)
 }
 
 // Components is a list of all Capact components available to install
@@ -213,7 +229,8 @@ var Components = components{
 	},
 	&IngressController{
 		ComponentData{
-			ReleaseName: "ingress-controller",
+			ReleaseName: "ingress-nginx",
+			ChartName:   "ingress-controller",
 			LocalPath:   path.Join(LocalChartsPath, "ingress-nginx"),
 			Wait:        true,
 		},
@@ -470,6 +487,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 	if h.opts.Verbose {
+		status.Step("Resolving installation config")
 		status.End(true)
 		h.writeHelmDetails(w)
 	}
@@ -498,13 +516,23 @@ func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 
 // InstallCRD installs Capact CRD
 func (h *Helm) InstallCRD() error {
-	resp, err := http.Get(CRDUrl)
-	if err != nil {
-		return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+	var reader io.Reader
+	if h.opts.Parameters.Version == LocalVersionTag {
+		f, err := os.Open(CRDLocalPath)
+		if err != nil {
+			return errors.Wrapf(err, "while opening local CRD file%s", CRDLocalPath)
+		}
+		reader = f
+	} else {
+		resp, err := http.Get(CRDUrl)
+		if err != nil {
+			return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+		}
+		defer resp.Body.Close()
+		reader = resp.Body
 	}
-	defer resp.Body.Close()
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return errors.Wrapf(err, "while downloading CRD %s", CRDUrl)
 	}

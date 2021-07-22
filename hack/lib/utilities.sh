@@ -193,7 +193,7 @@ capact::install() {
     export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"false"}
     export ENABLE_HOSTS_UPDATE=${ENABLE_HOSTS_UPDATE:-"true"}
     export ENABLE_ADDING_TRUSTED_CERT=${ENABLE_ADDING_TRUSTED_CERT:-"true"}
-    export COMPONENTS="neo4j,ingress-controller,argo,cert-manager,capact"
+    export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
 
     CAPACT_OVERRIDES+="global.containerRegistry.path=${DOCKER_REPOSITORY}"
