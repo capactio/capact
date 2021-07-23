@@ -130,6 +130,7 @@ type Input struct {
 // The input parameters for a given Action.
 type Parameter struct {
 	JSONSchema *JSONSchema `json:"jsonSchema,omitempty"`
+	TypeRef    *TypeRef    `json:"typeRef,omitempty"`   
 }
 
 // The JSONSchema definition.
@@ -137,16 +138,16 @@ type JSONSchema struct {
 	Value string `json:"value"`// Inline JSON Schema definition for the parameters.
 }
 
-// Object key is an alias of the TypeInstance, used in the Implementation.
-type InputTypeInstance struct {
-	TypeRef TypeRef `json:"typeRef"`
-	Verbs   []Verb  `json:"verbs"`  // The full list of access rights for a given TypeInstance.
-}
-
 // The full path to a given Type.
 type TypeRef struct {
 	Path     string `json:"path"`    // Path of a given Type.
 	Revision string `json:"revision"`// Version of the manifest content in the SemVer format.
+}
+
+// Object key is an alias of the TypeInstance, used in the Implementation.
+type InputTypeInstance struct {
+	TypeRef TypeRef `json:"typeRef"`
+	Verbs   []Verb  `json:"verbs"`  // The full list of access rights for a given TypeInstance.
 }
 
 // The output schema for Interface action.
