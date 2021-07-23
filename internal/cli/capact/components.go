@@ -523,6 +523,7 @@ func (h *Helm) InstallCRD() error {
 		if err != nil {
 			return errors.Wrapf(err, "while opening local CRD file%s", CRDLocalPath)
 		}
+		defer f.Close()
 		reader = f
 	} else {
 		resp, err := http.Get(CRDUrl)
