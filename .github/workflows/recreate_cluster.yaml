@@ -47,6 +47,8 @@ jobs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get update && sudo apt-get install terraform
+      - name: Set up GoReleaser
+        run: go install github.com/goreleaser/goreleaser@v0.173.2
       - name: Delete old cluster
         env:
           OLD_CLUSTER_NAME: ${{ github.event.inputs.oldClusterToDelete }}
