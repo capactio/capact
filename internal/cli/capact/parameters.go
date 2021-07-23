@@ -1,11 +1,22 @@
 package capact
 
+import (
+	"github.com/fatih/structs"
+	"github.com/pkg/errors"
+	"k8s.io/helm/pkg/strvals"
+	"sigs.k8s.io/yaml"
+)
+
 type (
 	// InputParameters for Capact Helm charts
 	InputParameters struct {
 		Version                string `json:"version"`
 		IncreaseResourceLimits bool   `json:"-"`
 		Override               struct {
+			CapactStringOverrides      []string
+			IngressStringOverrides     []string
+			CertManagerStringOverrides []string
+
 			HelmRepoURL  string      `json:"helmRepoURL"`
 			CapactValues Values      `json:"capactValues,omitempty"`
 			Neo4jValues  Neo4jValues `json:"neo4jValues,omitempty"`
@@ -27,6 +38,7 @@ type (
 		Engine    Engine    `json:"engine,omitempty"`
 		Gateway   Gateway   `json:"gateway,omitempty"`
 		HubPublic HubPublic `json:"hub-public,omitempty"`
+		HubLocal  HubLocal  `json:"hub-local,omitempty"`
 		Global    struct {
 			ContainerRegistry struct {
 				Tag  string `json:"overrideTag,omitempty"`
@@ -52,6 +64,10 @@ type (
 	HubPublic struct {
 		Resources Resources `json:"resources,omitempty"`
 		Populator Populator `json:"populator,omitempty"`
+	}
+	// HubLocal values
+	HubLocal struct {
+		Resources Resources `json:"resources,omitempty"`
 	}
 	// Engine values
 	Engine struct {
@@ -93,6 +109,20 @@ func IncreasedHubPublicResources() Resources {
 	}
 }
 
+// IncreasedHubLocalResources returns increased Local Hub resources
+func IncreasedHubLocalResources() Resources {
+	return Resources{
+		Limits: ResourcesQuantity{
+			CPU:    "400m",
+			Memory: "512Mi",
+		},
+		Requests: ResourcesQuantity{
+			CPU:    "200m",
+			Memory: "128Mi",
+		},
+	}
+}
+
 // IncreasedNeo4jResources returns increased Neo4j resources
 func IncreasedNeo4jResources() Resources {
 	return Resources{
@@ -118,6 +148,58 @@ func (i *InputParameters) ResolveVersion() error {
 			return err
 		}
 		i.Version = ver
+	} else if i.Version == LocalVersionTag {
+		if i.Override.CapactValues.Global.ContainerRegistry.Path == "" {
+			i.Override.CapactValues.Global.ContainerRegistry.Path = LocalDockerPath
+		}
+		if i.Override.CapactValues.Global.ContainerRegistry.Tag == "" {
+			i.Override.CapactValues.Global.ContainerRegistry.Tag = LocalDockerTag
+		}
 	}
 	return nil
+}
+
+// SetCapactValuesFromOverrides fills CapactValues struct with values passed in Override.CapactStringOverrides
+func (i *InputParameters) SetCapactValuesFromOverrides() error {
+	mapValues := i.Override.CapactValues.AsMap()
+
+	for _, value := range i.Override.CapactStringOverrides {
+		if err := strvals.ParseInto(value, mapValues); err != nil {
+			return errors.Wrap(err, "failed parsing passed overrides")
+		}
+	}
+	values, err := ValuesFromMap(mapValues)
+	if err != nil {
+		return errors.Wrap(err, "while converting map to values")
+	}
+	i.Override.CapactValues = values
+	return nil
+}
+
+// AsMap converts Values struct into map[string]interface{}
+func (i *Values) AsMap() map[string]interface{} {
+	s := structs.New(i)
+	s.TagName = "json"
+	return s.Map()
+}
+
+// AsMap converts Values struct into map[string]interface{}
+func (n *Neo4jValues) AsMap() map[string]interface{} {
+	s := structs.New(n)
+	s.TagName = "json"
+	return s.Map()
+}
+
+// ValuesFromMap returns Values struct converted from map[string]interface{}
+func ValuesFromMap(values map[string]interface{}) (Values, error) {
+	v := Values{}
+	marshaled, err := yaml.Marshal(values)
+	if err != nil {
+		return v, errors.Wrap(err, "failed to marshal input values")
+	}
+	err = yaml.Unmarshal(marshaled, &v)
+	if err != nil {
+		return v, errors.Wrap(err, "failed to unmarshal input values")
+	}
+	return v, nil
 }

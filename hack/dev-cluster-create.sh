@@ -27,28 +27,17 @@ main() {
 
     capact::validate::tools
 
-    export KUBERNETES_VERSION=${KUBERNETES_VERSION:-${STABLE_KUBERNETES_VERSION}}
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
-    kind::create_cluster
+    capact::create_cluster
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
-    export CLUSTER_TYPE="KIND"
+    export CLUSTER_TYPE="kind"
     export PRINT_INSECURE_NOTES="true"
-    capact::update::images_on_kind
-    capact::install_upgrade::charts
+    shout "Installing Capact on development local cluster..."
+    capact::install
 
-    if [[ "${DISABLE_HOSTS_UPDATE:-"false"}" == "true" ]]; then
-      shout "Skipping updating /etc/hosts cause DISABLE_HOSTS_UPDATE is set to true."
-    else
-      host::update::capact_hosts
-    fi
-
-    if [[ "${DISABLE_ADDING_TRUSTED_CERT:-"false"}" == "true" ]]; then
-      shout "Skipping setting self-signed TLS certificate as trusted cause DISABLE_ADDING_TRUSTED_CERT is set to true."
-    else
-      host::install:trust_self_signed_cert
-    fi
+    helm -n capact-system get notes capact
 
     shout "Development local cluster created successfully."
 }

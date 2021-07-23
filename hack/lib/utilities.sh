@@ -62,30 +62,6 @@ host::install::kubebuilder() {
   echo -e "${GREEN}√ install kubebuilder${NC}"
 }
 
-# Installs kind dependency locally.
-# Required envs:
-#  - KIND_VERSION
-#  - INSTALL_DIR
-#
-# usage: env INSTALL_DIR=/tmp KIND_VERSION=v0.4.0 host::install::kind
-host::install::kind() {
-    mkdir -p "${INSTALL_DIR}/bin"
-    export PATH="${INSTALL_DIR}/bin:${PATH}"
-
-    pushd "${INSTALL_DIR}" || return
-
-    os=$(host::os)
-    arch=$(host::arch)
-
-    shout "- Install kind ${KIND_VERSION} locally to a tempdir..."
-
-    curl -sSLo kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-${os}-${arch}"
-    chmod +x kind
-    mv kind "${INSTALL_DIR}/bin"
-
-    popd || return
-}
-
 host::os() {
   local host_os
   case "$(uname -s)" in
@@ -136,12 +112,12 @@ host::arch() {
 }
 
 
-# Installs kind and helm dependencies locally.
+# Installs helm dependencies locally.
 # Required envs:
 #  - HELM_VERSION
 #  - INSTALL_DIR
 #
-# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 host::install::kind
+# usage: env INSTALL_DIR=/tmp HELM_VERSION=v2.14.3 host::install::helm
 host::install::helm() {
     mkdir -p "${INSTALL_DIR}/bin"
     export PATH="${INSTALL_DIR}/bin:${PATH}"
@@ -159,13 +135,20 @@ host::install::helm() {
 }
 
 #
-# 'kind'(kubernetes-in-docker) functions
+# 'helm' functions
 #
-# Required environments variables for all 'kind' commands:
+helm::version(){
+  helm version --short -c | tr -d  'Client: '
+}
+
+#
+# Capact functions
+#
+
 #  - KIND_CLUSTER_NAME
 #  - REPO_DIR
 #  - MULTINODE_CLUSTER
-kind::create_cluster() {
+capact::create_cluster() {
     shout "- Creating K8s cluster..."
     local config
     if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
@@ -173,62 +156,18 @@ kind::create_cluster() {
     else
       config="${REPO_DIR}/hack/cluster-config/kind/config.yaml"
     fi
-    kind create cluster \
+    capact::cli env create kind \
       --name="${KIND_CLUSTER_NAME}" \
-      --image="kindest/node:${KUBERNETES_VERSION}" \
-      --config="${config}" \
+      --cluster-config="${config}" \
       --wait=5m
 }
 
-kind::delete_cluster() {
+#  - KIND_CLUSTER_NAME
+capact::delete_cluster() {
     shout "- Deleting K8s cluster..."
-    kind delete cluster --name="${KIND_CLUSTER_NAME}"
+    capact::cli env delete kind --name="${KIND_CLUSTER_NAME}"
 }
 
-# Arguments:
-#   $1 - list of docker images in format "name:tag [name:tag...]"
-kind::load_images() {
-  for id in $1; do
-    kind load docker-image "$id" --name="${KIND_CLUSTER_NAME}"
-  done
-}
-
-kind::version() {
-  echo "v$(kind version -q)"
-}
-
-#
-# 'helm' functions
-#
-helm::version(){
-  helm version --short -c | tr -d  'Client: '
-}
-
-
-#
-# Docker functions
-#
-
-# Arguments:
-#   $1 - reference filter
-docker::list_images() {
-  names=$(docker image ls --filter=reference="$1" --format="{{.Repository}}:{{.Tag}}")
-
-  echo "$names"
-}
-
-# Arguments:
-#   $1 - image list
-docker::delete_images() {
-  # images have to be passed as multiple arguments
-  # shellcheck disable=SC2206
-  images=($1)
-  docker rmi "${images[@]}"
-}
-
-#
-# Capact functions
-#
 
 # Installs Capact charts. If they are already installed, it upgrades them.
 #
@@ -237,271 +176,85 @@ docker::delete_images() {
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
-#  - CAPACT_RELEASE_NAME
 #  - CLUSTER_TYPE
+#  - KIND_CLUSTER_NAME
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
-capact::install_upgrade::charts() {
-    readonly K8S_DEPLOY_DIR="${REPO_DIR}/deploy/kubernetes"
-    readonly CLUSTER_CONFIG_DIR="${REPO_DIR}/hack/cluster-config"
-    readonly KIND_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/kind"
-    readonly EKS_CONFIG_DIR="${CLUSTER_CONFIG_DIR}/eks"
+#  - ENABLE_HOSTS_UPDATE - if set to true, /etc/hosts is updated
+#  - ENABLE_ADDING_TRUSTED_CERT - if set to true, add Capact self-signed TLS certificate as trusted
+capact::install() {
+    pushd "${REPO_DIR}" || return
 
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${CAPACT_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${CAPACT_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${CAPACT_INCREASE_RESOURCE_LIMITS}}
     export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"false"}
-    # TODO: Prepare overrides for Github Actions CI and use the "higher resource requests and limits" overrides by default in charts
-    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
-      shout "Using higher resource requests and limits from ${CLUSTER_CONFIG_DIR}"
-    fi
+    export ENABLE_HOSTS_UPDATE=${ENABLE_HOSTS_UPDATE:-"true"}
+    export ENABLE_ADDING_TRUSTED_CERT=${ENABLE_ADDING_TRUSTED_CERT:-"true"}
+    export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
+    export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
 
-    shout "- Applying Capact CRDs..."
-    kubectl apply -f "${K8S_DEPLOY_DIR}"/crds
-
-    shout "- Creating Capact Namespace..."
-    kubectl create namespace "${CAPACT_NAMESPACE}" --dry-run=client -oyaml | kubectl apply -f -
-
-    capact::install_upgrade::neo4j
-
-    capact::install_upgrade::ingress_controller
-
-    capact::install_upgrade::argo
-
-    capact::install_upgrade::cert_manager
-
-    if [ "${CLUSTER_TYPE}" == "KIND" ]; then
-      kubectl -n "${CAPACT_NAMESPACE}" apply -f "${KIND_CONFIG_DIR}/ca-config.yaml"
-    fi
+    CAPACT_OVERRIDES+="global.containerRegistry.path=${DOCKER_REPOSITORY}"
+    CAPACT_OVERRIDES+=",global.containerRegistry.overrideTag=${DOCKER_TAG}"
+    CAPACT_OVERRIDES+=",hub-public.populator.enabled=${ENABLE_POPULATOR}"
+    CAPACT_OVERRIDES+=",engine.testSetup.enabled=${USE_TEST_SETUP}"
+    CAPACT_OVERRIDES+=",notes.printInsecure=${PRINT_INSECURE_NOTES}"
 
     if [[ "${DISABLE_KUBED_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping kubed installation cause DISABLE_KUBED_INSTALLATION is set to true."
     else
-      capact::install_upgrade::kubed
-      capact::synchronize::minio_secret
+      COMPONENTS+=",kubed"
     fi
 
     if [[ "${DISABLE_MONITORING_INSTALLATION:-"false"}" == "true" ]]; then
       shout "Skipping monitoring installation cause DISABLE_MONITORING_INSTALLATION is set to true."
     else
-      capact::install_upgrade::monitoring
-    fi
-
-    shout "- Installing Capact Helm chart from sources [wait: true]..."
-    echo -e "- Using DOCKER_REPOSITORY=$DOCKER_REPOSITORY and DOCKER_TAG=$DOCKER_TAG\n"
-
-    if [[ "${CLUSTER_TYPE}" == "KIND" ]]; then
-      readonly CAPACT_OVERRIDES="${KIND_CONFIG_DIR}/overrides.capact.yaml"
-      echo -e "- Applying overrides from ${CAPACT_OVERRIDES}\n"
-    else
-      readonly CAPACT_OVERRIDES=""
-    fi
-
-    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
-      readonly CAPACT_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.capact.higher-res-limits.yaml"
-      echo -e "- Applying overrides from ${CAPACT_RESOURCE_OVERRIDES}\n"
-    else
-      readonly CAPACT_RESOURCE_OVERRIDES=""
+      COMPONENTS+=",monitoring"
     fi
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_REF:-}" ]; then
-      CUSTOM_CAPACT_SET_FLAGS="${CUSTOM_CAPACT_SET_FLAGS:-} \
-        --set hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
-    # CUSTOM_CAPACT_SET_FLAGS cannot be quoted
-    # shellcheck disable=SC2086
-    helm upgrade "${CAPACT_RELEASE_NAME}" "${K8S_DEPLOY_DIR}/charts/capact" \
-        --install \
-        --namespace="${CAPACT_NAMESPACE}" \
-        --set global.containerRegistry.path="${DOCKER_REPOSITORY}" \
-        --set global.containerRegistry.overrideTag="${DOCKER_TAG}" \
-        --set hub-public.populator.enabled="${ENABLE_POPULATOR}" \
-        --set engine.testSetup.enabled="${USE_TEST_SETUP}" \
-        --set notes.printInsecure="${PRINT_INSECURE_NOTES}" \
-        ${CUSTOM_CAPACT_SET_FLAGS:-}  \
-        -f "${CAPACT_OVERRIDES}" \
-        -f "${CAPACT_RESOURCE_OVERRIDES}" \
-        --wait
-}
-
-capact::install_upgrade::monitoring() {
-    # not waiting as Helm Charts installation takes additional ~3 minutes. To proceed further we need only monitoring CRDs.
-    shout "- Installing monitoring Helm chart [wait: false]..."
-    helm upgrade monitoring "${K8S_DEPLOY_DIR}/charts/monitoring" \
-        --install \
-        --namespace="${CAPACT_NAMESPACE}"
-}
-
-capact::install_upgrade::kubed() {
-    # not waiting as it is not needed.
-    shout "- Installing kubed Helm chart [wait: false]..."
-    helm upgrade kubed "${K8S_DEPLOY_DIR}/charts/kubed" \
-        --install \
-        --namespace="${CAPACT_NAMESPACE}"
-}
-
-capact::install_upgrade::neo4j() {
-    shout "- Installing Neo4j Helm chart..."
-
-    if [[ "${INCREASE_RESOURCE_LIMITS}" == "true" ]]; then
-      readonly NEO4J_RESOURCE_OVERRIDES="${CLUSTER_CONFIG_DIR}/overrides.neo4j.higher-res-limits.yaml"
-      echo -e "- Applying overrides from ${NEO4J_RESOURCE_OVERRIDES}\n"
-    else
-      readonly NEO4J_RESOURCE_OVERRIDES=""
+    if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
+      BUILD_IMAGES_FLAG=--build-image=""
     fi
 
-    helm upgrade neo4j "${K8S_DEPLOY_DIR}/charts/neo4j" \
-        --install \
-        --namespace="${CAPACT_NAMESPACE}" \
-        -f "${NEO4J_RESOURCE_OVERRIDES}" \
-        --wait
-
-    echo -e "\n- Waiting for Neo4j database to be ready...\n"
-    kubectl wait --namespace "${CAPACT_NAMESPACE}" \
-      --for=condition=ready pod \
-      --selector=app.kubernetes.io/component=core \
-      --timeout=300s
-}
-
-capact::install_upgrade::ingress_controller() {
-    # waiting as admission webhooks server is required to be available during further installation steps
-    shout "- Installing Ingress NGINX Controller Helm chart [wait: true]..."
-
-    case "${CLUSTER_TYPE}" in
-      KIND)
-        readonly INGRESS_CTRL_OVERRIDES="${KIND_CONFIG_DIR}/overrides.ingress-nginx.yaml"
-        echo -e "- Applying overrides from ${INGRESS_CTRL_OVERRIDES}\n"
-        ;;
-
-      EKS)
-        readonly INGRESS_CTRL_OVERRIDES="${EKS_CONFIG_DIR}/overrides.ingress-nginx.yaml"
-        ;;
-
-      *)
-        readonly INGRESS_CTRL_OVERRIDES=""
-        ;;
-    esac
-
-    # CUSTOM_NGINX_SET_FLAGS cannot be quoted
     # shellcheck disable=SC2086
-    helm upgrade ingress-nginx "${K8S_DEPLOY_DIR}/charts/ingress-nginx" \
-        --install \
+    capact::cli install --verbose \
+        --environment="${CLUSTER_TYPE}" \
+        --name="${KIND_CLUSTER_NAME}" \
         --namespace="${CAPACT_NAMESPACE}" \
-        -f "${INGRESS_CTRL_OVERRIDES}" \
-        ${CUSTOM_NGINX_SET_FLAGS:-} \
-        --wait
-
-    echo -e "\n- Waiting for Ingress Controller to be ready...\n"
-    kubectl wait --namespace "${CAPACT_NAMESPACE}" \
-      --for=condition=ready pod \
-      --selector=app.kubernetes.io/component=controller \
-      --timeout=90s
-}
-
-capact::install_upgrade::argo() {
-    # not waiting as other components do not need it during installation
-    shout "- Installing Argo Helm chart [wait: false]..."
-
-    helm upgrade argo "${K8S_DEPLOY_DIR}/charts/argo" \
-        --install \
-        --namespace="${CAPACT_NAMESPACE}"
-}
-
-capact::install_upgrade::cert_manager() {
-    shout "- Installing Cert Manager Helm chart..."
-
-    if [ "${CLUSTER_TYPE}" == "EKS" ]; then
-      local -r values_overrides="${EKS_CONFIG_DIR}/overrides.cert-manager.yaml"
-    else
-      local -r values_overrides=""
-    fi
-
-    # CUSTOM_CERT_MANAGER_SET_FLAGS cannot be quoted
-    # shellcheck disable=SC2086
-    helm upgrade cert-manager "${K8S_DEPLOY_DIR}/charts/cert-manager" \
-        --install \
-        --wait \
-        --namespace="${CAPACT_NAMESPACE}" \
-        -f "${values_overrides}" \
-        ${CUSTOM_CERT_MANAGER_SET_FLAGS:-}
-}
-
-capact::synchronize::minio_secret() {
-  echo "Annotating Minio secret to be synchronized across all namespaces..."
-  kubectl annotate secret -n "${CAPACT_NAMESPACE}" argo-minio kubed.appscode.com/sync="" --overwrite
-}
-
-# Updates /etc/hosts with all Capact subdomains.
-host::update::capact_hosts() {
-  shout "- Updating /etc/hosts..."
-  readonly DOMAIN="capact.local"
-  readonly CAPACT_HOSTS=("gateway")
-
-  LINE_TO_APPEND="127.0.0.1 $(printf "%s.${DOMAIN} " "${CAPACT_HOSTS[@]}")"
-  HOSTS_FILE="/etc/hosts"
-
-  grep -qxF -- "$LINE_TO_APPEND" "${HOSTS_FILE}" || (echo "$LINE_TO_APPEND" | sudo tee -a "${HOSTS_FILE}" > /dev/null)
-}
-
-# Sets self-signed wildcard TLS certificate as trusted
-#
-# Required envs:
-#  - REPO_DIR
-host::install:trust_self_signed_cert() {
-  shout "- Trusting self-signed CA certificate if not already trusted..."
-  CERT_FILE="capact-local-ca.crt"
-  CERT_PATH="${REPO_DIR}/hack/cluster-config/kind/${CERT_FILE}"
-  OS="$(host::os)"
-
-  echo "Certificate path: ${CERT_PATH}"
-  echo "Detected OS: ${OS}"
-
-  case $OS in
-    'linux')
-      if diff "${CERT_PATH}" "/usr/local/share/ca-certificates/${CERT_FILE}"; then
-        echo "Certificate is already trusted."
-        return
-      fi
-
-      sudo cp "${CERT_PATH}" "/usr/local/share/ca-certificates"
-      sudo update-ca-certificates
-      ;;
-    'darwin')
-      if security verify-cert -c "${CERT_PATH}"; then
-        echo "Certificate is already trusted."
-        return
-      fi
-
-      sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "${CERT_PATH}"
-      ;;
-    *)
-      echo "Please manually set the certificate ${CERT_PATH} as trusted for your OS."
-      ;;
-  esac
+        --capact-overrides="${CAPACT_OVERRIDES}" \
+        --increase-resource-limits="${INCREASE_RESOURCE_LIMITS}" \
+        --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
+        --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
+        --install-component="${COMPONENTS}" \
+        ${BUILD_IMAGES_FLAG:-} \
+        --version=@local
 }
 
 # Required envs:
-#  - DOCKER_REPOSITORY
-#  - DOCKER_TAG
 #  - REPO_DIR
-capact::update::images_on_kind() {
-    pushd "${REPO_DIR}" || return
+capact::cli()  {
+  local os
+  local arch
+  local default_path
+  local cli
 
-    shout "- Building Capact apps and tests images from sources..."
-    make build-all-apps-images build-all-tests-images
+  os=$(host::os)
+  arch=$(host::arch)
+  default_path="${REPO_DIR}/bin/capact-${os}-${arch}"
+  cli=${CAPACT_BINARY:-${default_path}}
+  if [ ! -f "${cli}" ]; then
+    shout "capact cli not found, trying to build one..."
+    make build-tool-cli
+    cli=${default_path}
+  fi
 
-    REFERENCE_FILTER="$DOCKER_REPOSITORY/*:$DOCKER_TAG"
-    shout "- Loading Capact image into kind cluster... [reference filter: $REFERENCE_FILTER]"
-    names=$(docker::list_images "$REFERENCE_FILTER")
-    kind::load_images "$names"
-
-    shout "- Deleting local Docker Capact images..."
-    docker::delete_images "$names"
-
-    popd || return
+  ${cli} "$@"
 }
 
 # Installs kind and helm dependencies locally.
@@ -516,21 +269,14 @@ capact::version_supported(){
 
 capact::validate::tools() {
   shout "- Validating tools versions..."
-  local current_kind_version
   local current_helm_version
   local wrong_versions
 
-  current_kind_version=$(kind::version)
   current_helm_version=$(helm::version)
   wrong_versions=false
 
-  echo "Current kind version: $current_kind_version, recommended kind version: $STABLE_KIND_VERSION"
   echo "Current helm version: $current_helm_version, recommended helm version: $STABLE_HELM_VERSION"
 
-  if ! MINIMAL_VERSION="${STABLE_KIND_VERSION}" CURRENT_VERSION="${current_kind_version}" capact::version_supported; then
-    wrong_versions=true
-    echo "Unsupported kind version $current_kind_version. Must be at least $STABLE_KIND_VERSION"
-  fi
   if ! MINIMAL_VERSION="${STABLE_HELM_VERSION}" CURRENT_VERSION="${current_helm_version}" capact::version_supported; then
       wrong_versions=true
       echo "Unsupported helm version $current_helm_version. Must be at least $STABLE_HELM_VERSION"

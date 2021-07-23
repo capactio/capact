@@ -19,14 +19,22 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		status.End(err == nil)
 	}()
 
+	err = opts.Parameters.SetCapactValuesFromOverrides()
+	if err != nil {
+		return errors.Wrap(err, "while parsing capact overrides")
+	}
+
+	err = opts.Parameters.ResolveVersion()
+	if err != nil {
+		return errors.Wrap(err, "while resolving version")
+	}
+
 	version := opts.Parameters.Version
 	if version == "@local" {
-		images, err := capact.SelectImages(opts.FocusImages, opts.SkipImages)
-		if err != nil {
-			return errors.Wrap(err, "while selecting images")
-		}
-
-		created, err := capact.BuildImages(w, capact.LocalDockerPath, capact.LocalDockerTag, images)
+		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
+		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
+		// TODO can we parallelize it?
+		created, err := capact.BuildImages(w, registryPath, registryTag, opts.BuildImages)
 		if err != nil {
 			return errors.Wrap(err, "while building images")
 		}

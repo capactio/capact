@@ -6,6 +6,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"path"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 
 	"capact.io/capact/internal/cli/printer"
 
-	"github.com/fatih/structs"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
@@ -22,6 +22,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
+	"k8s.io/helm/pkg/strvals"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,15 +35,27 @@ import (
 type Component interface {
 	InstallUpgrade(version string) (*release.Release, error)
 	Name() string
+	Chart() string
 	withOptions(*Options)
 	withConfiguration(*action.Configuration)
 	withWriter(io.Writer)
+}
+
+type components []Component
+
+func (i components) All() []string {
+	var all []string
+	for _, c := range i {
+		all = append(all, c.Name())
+	}
+	return all
 }
 
 // ComponentData information about component
 type ComponentData struct {
 	ReleaseName string
 	LocalPath   string
+	ChartName   string
 	Wait        bool
 
 	Resources *Resources
@@ -54,8 +67,16 @@ type ComponentData struct {
 	writer io.Writer
 }
 
-// Name of the component
+// Name of the Release
 func (c *ComponentData) Name() string {
+	return c.ReleaseName
+}
+
+// Chart name of the component
+func (c *ComponentData) Chart() string {
+	if c.ChartName != "" {
+		return c.ChartName
+	}
 	return c.ReleaseName
 }
 
@@ -69,8 +90,8 @@ func (c *ComponentData) installAction(version string) *action.Install {
 	installCli.ChartPathOptions.Version = version
 	installCli.ChartPathOptions.RepoURL = c.opts.Parameters.Override.HelmRepoURL
 
-	installCli.NameTemplate = c.ReleaseName
-	installCli.ReleaseName = c.ReleaseName
+	installCli.NameTemplate = c.Name()
+	installCli.ReleaseName = c.Name()
 
 	installCli.Wait = c.Wait
 	installCli.Replace = true
@@ -119,7 +140,7 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 	if upgradeCli.Version == LocalVersionTag {
 		location = c.LocalPath
 	} else {
-		location = c.ReleaseName
+		location = c.Chart()
 	}
 
 	chartPath, err = upgradeCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
@@ -149,7 +170,7 @@ func (c *ComponentData) runInstall(installCli *action.Install, values map[string
 	if installCli.Version == LocalVersionTag {
 		location = c.LocalPath
 	} else {
-		location = c.ReleaseName
+		location = c.Chart()
 	}
 
 	chartPath, err = installCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
@@ -188,11 +209,18 @@ func (h Helm) writeStatus(out io.Writer, r *release.Release) {
 }
 
 func (h Helm) writeHelmDetails(out io.Writer) {
+	fmt.Fprintf(out, "\n  Installation details:\n")
 	fmt.Fprintf(out, "\tVersion: %s\n", h.opts.Parameters.Version)
-	fmt.Fprintf(out, "\tHelm repository: %s\n", h.opts.Parameters.Override.HelmRepoURL)
+
+	helmRepo := h.opts.Parameters.Override.HelmRepoURL
+	if h.opts.Parameters.Version == LocalVersionTag {
+		helmRepo = LocalChartsPath
+	}
+	fmt.Fprintf(out, "\tHelm repository: %s\n\n", helmRepo)
 }
 
-var components = []Component{
+// Components is a list of all Capact components available to install
+var Components = components{
 	&Neo4j{
 		ComponentData{
 			ReleaseName: "neo4j",
@@ -202,7 +230,8 @@ var components = []Component{
 	},
 	&IngressController{
 		ComponentData{
-			ReleaseName: "ingress-controller",
+			ReleaseName: "ingress-nginx",
+			ChartName:   "ingress-controller",
 			LocalPath:   path.Join(LocalChartsPath, "ingress-nginx"),
 			Wait:        true,
 		},
@@ -280,7 +309,7 @@ type Capact struct {
 func (n *Neo4j) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := n.upgradeAction(version)
 
-	values := tools.MergeMaps(map[string]interface{}{}, n.Overrides)
+	values := tools.MergeMaps(n.opts.Parameters.Override.Neo4jValues.AsMap(), n.Overrides)
 
 	return n.runUpgrade(upgradeCli, values)
 }
@@ -306,6 +335,12 @@ func (i *IngressController) InstallUpgrade(version string) (*release.Release, er
 			return nil, errors.Wrap(err, "while converting override values")
 		}
 	} //TODO eks
+
+	for _, value := range i.opts.Parameters.Override.IngressStringOverrides {
+		if err := strvals.ParseInto(value, values); err != nil {
+			return nil, errors.Wrap(err, "failed parsing passed overrides")
+		}
+	}
 	return i.runUpgrade(upgradeCli, values)
 }
 
@@ -314,6 +349,12 @@ func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := c.upgradeAction(version)
 
 	values := map[string]interface{}{}
+
+	for _, value := range c.opts.Parameters.Override.CertManagerStringOverrides {
+		if err := strvals.ParseInto(value, values); err != nil {
+			return nil, errors.Wrap(err, "failed parsing passed overrides")
+		}
+	}
 
 	r, err := c.runUpgrade(upgradeCli, values)
 	if err != nil {
@@ -376,23 +417,23 @@ func (k *Kubed) InstallUpgrade(version string) (*release.Release, error) {
 func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
 	upgradeCli := c.upgradeAction(version)
 
-	capactValues := c.opts.Parameters.Override.CapactValues
-	if version == LocalVersionTag {
-		capactValues.Global.ContainerRegistry.Path = LocalDockerPath
-		capactValues.Global.ContainerRegistry.Tag = LocalDockerTag
-	}
-	s := structs.New(capactValues)
-	s.TagName = "json"
-	mappedValues := s.Map()
+	capactValues := c.opts.Parameters.Override.CapactValues.AsMap()
 
 	if c.opts.Environment == KindEnv {
 		values, err := ValuesFromString(capactKindOverridesYaml)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
-		mappedValues = tools.MergeMaps(values, mappedValues)
+		capactValues = tools.MergeMaps(values, capactValues)
 	}
-	return c.runUpgrade(upgradeCli, mappedValues)
+
+	for _, value := range c.opts.Parameters.Override.CapactStringOverrides {
+		if err := strvals.ParseInto(value, capactValues); err != nil {
+			return nil, errors.Wrap(err, "failed parsing passed overrides")
+		}
+	}
+
+	return c.runUpgrade(upgradeCli, capactValues)
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
@@ -438,6 +479,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 	if opts.Parameters.IncreaseResourceLimits {
 		opts.Parameters.Override.CapactValues.Gateway.Resources = IncreasedGatewayResources()
 		opts.Parameters.Override.CapactValues.HubPublic.Resources = IncreasedHubPublicResources()
+		opts.Parameters.Override.CapactValues.HubLocal.Resources = IncreasedHubLocalResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = IncreasedNeo4jResources()
 	}
 	return &Helm{configuration: configuration, opts: opts}
@@ -445,17 +487,14 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
-	err := h.opts.Parameters.ResolveVersion()
-	if err != nil {
-		return errors.Wrap(err, "while resolving version")
-	}
 	if h.opts.Verbose {
+		status.Step("Resolving installation config")
 		status.End(true)
 		h.writeHelmDetails(w)
 	}
 
-	for _, component := range components {
-		if shouldSkipTheComponent(component.Name(), h.opts.SkipComponents) {
+	for _, component := range Components {
+		if !contains(component.Name(), h.opts.InstallComponents) {
 			continue
 		}
 
@@ -476,24 +515,26 @@ func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 	return nil
 }
 
-func shouldSkipTheComponent(name string, skipList []string) bool {
-	for _, skip := range skipList {
-		if skip == name {
-			return true
-		}
-	}
-	return false
-}
-
 // InstallCRD installs Capact CRD
 func (h *Helm) InstallCRD() error {
-	resp, err := http.Get(CRDUrl)
-	if err != nil {
-		return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+	var reader io.Reader
+	if h.opts.Parameters.Version == LocalVersionTag {
+		f, err := os.Open(CRDLocalPath)
+		if err != nil {
+			return errors.Wrapf(err, "while opening local CRD file%s", CRDLocalPath)
+		}
+		defer f.Close()
+		reader = f
+	} else {
+		resp, err := http.Get(CRDUrl)
+		if err != nil {
+			return errors.Wrapf(err, "while getting CRD %s", CRDUrl)
+		}
+		defer resp.Body.Close()
+		reader = resp.Body
 	}
-	defer resp.Body.Close()
 
-	content, err := ioutil.ReadAll(resp.Body)
+	content, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return errors.Wrapf(err, "while downloading CRD %s", CRDUrl)
 	}
@@ -514,4 +555,13 @@ func createObject(configuration *action.Configuration, content []byte) error {
 		return errors.Wrapf(err, "while creating the object")
 	}
 	return nil
+}
+
+func contains(s string, list []string) bool {
+	for _, v := range list {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }

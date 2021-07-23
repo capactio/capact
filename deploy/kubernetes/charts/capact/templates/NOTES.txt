@@ -23,3 +23,5 @@ Use the following header configuration in the Gateway GraphQL Playground:
     "Authorization": "Basic $BASIC_AUTH_HEADER"
   }
 {{ end }}
+
+To read more about Capact check out the documentation on https://capact.io/docs

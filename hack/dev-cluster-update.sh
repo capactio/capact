@@ -22,14 +22,13 @@ source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; e
 main() {
     shout "Updating development local cluster..."
 
-    export DOCKER_TAG="dev-$RANDOM"
-    export DOCKER_REPOSITORY="local"
+    export DOCKER_TAG=${DOCKER_TAG:-"dev-$RANDOM"}
+    export DOCKER_REPOSITORY=${DOCKER_REPOSITORY:-"local"}
     export REPO_DIR=$REPO_ROOT_DIR
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
-    export CLUSTER_TYPE="KIND"
+    export CLUSTER_TYPE="kind"
     export PRINT_INSECURE_NOTES="true"
-    capact::update::images_on_kind
-    capact::install_upgrade::charts
+    capact::install
 
     shout "Development local cluster updated successfully."
 }
