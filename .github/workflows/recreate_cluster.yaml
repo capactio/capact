@@ -84,8 +84,8 @@ jobs:
           USE_TEST_SETUP: "true"
           GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
         run: |
-          export CUSTOM_NGINX_SET_FLAGS="--set ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
-          export CUSTOM_CAPACT_SET_FLAGS="--set global.gateway.auth.password=$GATEWAY_PASSWORD"
+          export INGRESS_CONTROLLER_OVERRIDES="ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
+          export CAPACT_OVERRIDES="global.gateway.auth.password=$GATEWAY_PASSWORD"
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Configure Cert Manager in cluster
         run: |

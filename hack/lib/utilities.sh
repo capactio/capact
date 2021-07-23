@@ -197,9 +197,10 @@ capact::install() {
     export HUB_MANIFESTS_SOURCE_REPO_REF=${HUB_MANIFESTS_SOURCE_REPO_REF:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF}}
     export HUB_MANIFESTS_SOURCE_REPO_URL=${HUB_MANIFESTS_SOURCE_REPO_URL:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL}}
     export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
+    export INGRESS_CONTROLLER_OVERRIDES=${INGRESS_CONTROLLER_OVERRIDES:=""}
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
 
-    CAPACT_OVERRIDES+="global.containerRegistry.path=${DOCKER_REPOSITORY}"
+    CAPACT_OVERRIDES+=",global.containerRegistry.path=${DOCKER_REPOSITORY}"
     CAPACT_OVERRIDES+=",global.containerRegistry.overrideTag=${DOCKER_TAG}"
     CAPACT_OVERRIDES+=",hub-public.populator.enabled=${ENABLE_POPULATOR}"
     CAPACT_OVERRIDES+=",engine.testSetup.enabled=${USE_TEST_SETUP}"
@@ -235,6 +236,7 @@ capact::install() {
         --name="${KIND_CLUSTER_NAME}" \
         --namespace="${CAPACT_NAMESPACE}" \
         --capact-overrides="${CAPACT_OVERRIDES}" \
+        --ingress-controller-overrides="${INGRESS_CONTROLLER_OVERRIDES}" \
         --increase-resource-limits="${INCREASE_RESOURCE_LIMITS}" \
         --update-hosts-file="${ENABLE_HOSTS_UPDATE}" \
         --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
