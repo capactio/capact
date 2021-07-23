@@ -135,7 +135,7 @@ type Parameter struct {
 
 // The JSONSchema definition.
 type JSONSchema struct {
-	Value string `json:"value"`// Inline JSON Schema definition for the parameters. It may contain external references to; JSON schemas in Types.
+	Value string `json:"value"`// Inline JSON Schema definition for the parameters.
 }
 
 // The full path to a given Type.
