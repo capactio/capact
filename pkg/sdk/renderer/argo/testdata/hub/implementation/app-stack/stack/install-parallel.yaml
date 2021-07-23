@@ -147,5 +147,3 @@ spec:
                         from: "{{inputs.artifacts.postgresql}}"
                       - name: input-parameters
                         from: "{{steps.extract-app2-host.outputs.artifacts.render}}"
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

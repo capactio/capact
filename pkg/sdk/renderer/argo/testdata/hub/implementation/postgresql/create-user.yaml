@@ -126,6 +126,3 @@ spec:
               artifacts:
                 - name: user
                   path: /user.yaml
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

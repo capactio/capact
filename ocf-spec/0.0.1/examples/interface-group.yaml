@@ -15,6 +15,3 @@ metadata:
     - email: foo@example.com
       name: Foo Bar
       url: https://examples.com/foo/bar
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

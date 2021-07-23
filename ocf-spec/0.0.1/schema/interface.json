@@ -29,20 +29,6 @@
       "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)$",
       "description": "Version of the manifest content in the SemVer format."
     },
-    "signature": {
-      "$id": "#/properties/signature",
-      "type": "object",
-      "description": "Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.",
-      "required": [
-        "hub"
-      ],
-      "properties": {
-        "hub": {
-          "description": "The signature signed with the HUB key.",
-          "type": "string"
-        }
-      }
-    },
     "metadata": {
       "$ref": "https://capact.io/schemas/common/metadata.json"
     },

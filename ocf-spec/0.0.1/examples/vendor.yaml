@@ -16,6 +16,3 @@ metadata:
 spec:
   federation:
     uri: https://hub.capact.io
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

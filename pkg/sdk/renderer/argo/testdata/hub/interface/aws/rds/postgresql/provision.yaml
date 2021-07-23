@@ -40,6 +40,3 @@ spec:
         typeRef:
           path: cap.type.aws.rds.instance
           revision: 0.1.0
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

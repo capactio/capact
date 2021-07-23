@@ -63,10 +63,9 @@ type ComplexityRoot struct {
 	}
 
 	AttributeRevision struct {
-		Metadata  func(childComplexity int) int
-		Revision  func(childComplexity int) int
-		Signature func(childComplexity int) int
-		Spec      func(childComplexity int) int
+		Metadata func(childComplexity int) int
+		Revision func(childComplexity int) int
+		Spec     func(childComplexity int) int
 	}
 
 	AttributeSpec struct {
@@ -155,7 +154,6 @@ type ComplexityRoot struct {
 		Interfaces func(childComplexity int) int
 		Metadata   func(childComplexity int) int
 		Revision   func(childComplexity int) int
-		Signature  func(childComplexity int) int
 		Spec       func(childComplexity int) int
 	}
 
@@ -194,7 +192,6 @@ type ComplexityRoot struct {
 		Interfaces func(childComplexity int, filter *InterfaceFilter) int
 		Metadata   func(childComplexity int) int
 		Path       func(childComplexity int) int
-		Signature  func(childComplexity int) int
 	}
 
 	InterfaceInput struct {
@@ -215,7 +212,6 @@ type ComplexityRoot struct {
 		ImplementationRevisions func(childComplexity int) int
 		Metadata                func(childComplexity int) int
 		Revision                func(childComplexity int) int
-		Signature               func(childComplexity int) int
 		Spec                    func(childComplexity int) int
 	}
 
@@ -275,10 +271,9 @@ type ComplexityRoot struct {
 	}
 
 	RepoMetadataRevision struct {
-		Metadata  func(childComplexity int) int
-		Revision  func(childComplexity int) int
-		Signature func(childComplexity int) int
-		Spec      func(childComplexity int) int
+		Metadata func(childComplexity int) int
+		Revision func(childComplexity int) int
+		Spec     func(childComplexity int) int
 	}
 
 	RepoMetadataSpec struct {
@@ -294,10 +289,6 @@ type ComplexityRoot struct {
 
 	SemVerTaggingStrategy struct {
 		Latest func(childComplexity int) int
-	}
-
-	Signature struct {
-		Hub func(childComplexity int) int
 	}
 
 	Type struct {
@@ -333,10 +324,9 @@ type ComplexityRoot struct {
 	}
 
 	TypeRevision struct {
-		Metadata  func(childComplexity int) int
-		Revision  func(childComplexity int) int
-		Signature func(childComplexity int) int
-		Spec      func(childComplexity int) int
+		Metadata func(childComplexity int) int
+		Revision func(childComplexity int) int
+		Spec     func(childComplexity int) int
 	}
 
 	TypeSpec struct {
@@ -455,13 +445,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.AttributeRevision.Revision(childComplexity), true
-
-	case "AttributeRevision.signature":
-		if e.complexity.AttributeRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.AttributeRevision.Signature(childComplexity), true
 
 	case "AttributeRevision.spec":
 		if e.complexity.AttributeRevision.Spec == nil {
@@ -818,13 +801,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationRevision.Revision(childComplexity), true
 
-	case "ImplementationRevision.signature":
-		if e.complexity.ImplementationRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.ImplementationRevision.Signature(childComplexity), true
-
 	case "ImplementationRevision.spec":
 		if e.complexity.ImplementationRevision.Spec == nil {
 			break
@@ -996,13 +972,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.InterfaceGroup.Path(childComplexity), true
 
-	case "InterfaceGroup.signature":
-		if e.complexity.InterfaceGroup.Signature == nil {
-			break
-		}
-
-		return e.complexity.InterfaceGroup.Signature(childComplexity), true
-
 	case "InterfaceInput.parameters":
 		if e.complexity.InterfaceInput.Parameters == nil {
 			break
@@ -1058,13 +1027,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InterfaceRevision.Revision(childComplexity), true
-
-	case "InterfaceRevision.signature":
-		if e.complexity.InterfaceRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.InterfaceRevision.Signature(childComplexity), true
 
 	case "InterfaceRevision.spec":
 		if e.complexity.InterfaceRevision.Spec == nil {
@@ -1338,13 +1300,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.RepoMetadataRevision.Revision(childComplexity), true
 
-	case "RepoMetadataRevision.signature":
-		if e.complexity.RepoMetadataRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.RepoMetadataRevision.Signature(childComplexity), true
-
 	case "RepoMetadataRevision.spec":
 		if e.complexity.RepoMetadataRevision.Spec == nil {
 			break
@@ -1393,13 +1348,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.SemVerTaggingStrategy.Latest(childComplexity), true
-
-	case "Signature.hub":
-		if e.complexity.Signature.Hub == nil {
-			break
-		}
-
-		return e.complexity.Signature.Hub(childComplexity), true
 
 	case "Type.latestRevision":
 		if e.complexity.Type.LatestRevision == nil {
@@ -1559,13 +1507,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.TypeRevision.Revision(childComplexity), true
-
-	case "TypeRevision.signature":
-		if e.complexity.TypeRevision.Signature == nil {
-			break
-		}
-
-		return e.complexity.TypeRevision.Signature(childComplexity), true
 
 	case "TypeRevision.spec":
 		if e.complexity.TypeRevision.Spec == nil {
@@ -1788,7 +1729,6 @@ type RepoMetadataRevision @additionalLabels(labels: ["published"]){
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type RepoMetadataSpec @additionalLabels(labels: ["published"]){
@@ -1830,7 +1770,6 @@ type RepoOCFVersion @additionalLabels(labels: ["published"]){
 type InterfaceGroup @additionalLabels(labels: ["published"]){
   path: NodePath! @index
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   interfaces(filter: InterfaceFilter): [Interface!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
@@ -1856,7 +1795,6 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   implementationRevisions: [ImplementationRevision!]!
     @relation(name: "IMPLEMENTS", direction: "IN")
@@ -1937,7 +1875,6 @@ type TypeRevision @additionalLabels(labels: ["published"]){
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type TypeSpec @additionalLabels(labels: ["published"]){
@@ -1964,7 +1901,6 @@ type Implementation @additionalLabels(labels: ["published"]){
 
 type ImplementationRevision @additionalLabels(labels: ["published"]){
   revision: Version! @index
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   metadata: ImplementationMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -2102,7 +2038,6 @@ type AttributeRevision @additionalLabels(labels: ["published"]){
   revision: Version! @index
 
   spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
@@ -2166,10 +2101,6 @@ type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["publ
 
 type License @additionalLabels(labels: ["published"]){
   name: String! @index
-}
-
-type Signature @additionalLabels(labels: ["published"]){
-  hub: String!
 }
 
 type Maintainer @additionalLabels(labels: ["published"]){
@@ -3106,79 +3037,6 @@ func (ec *executionContext) _AttributeRevision_spec(ctx context.Context, field g
 	res := resTmp.(*AttributeSpec)
 	fc.Result = res
 	return ec.marshalOAttributeSpec2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐAttributeSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _AttributeRevision_signature(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "AttributeRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _AttributeRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *AttributeRevision) (ret graphql.Marshaler) {
@@ -5670,79 +5528,6 @@ func (ec *executionContext) _ImplementationRevision_revision(ctx context.Context
 	return ec.marshalNVersion2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImplementationRevision_signature(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "ImplementationRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _ImplementationRevision_metadata(ctx context.Context, field graphql.CollectedField, obj *ImplementationRevision) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7258,79 +7043,6 @@ func (ec *executionContext) _InterfaceGroup_metadata(ctx context.Context, field 
 	return ec.marshalNGenericMetadata2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐGenericMetadata(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InterfaceGroup_signature(ctx context.Context, field graphql.CollectedField, obj *InterfaceGroup) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InterfaceGroup",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _InterfaceGroup_interfaces(ctx context.Context, field graphql.CollectedField, obj *InterfaceGroup) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -7939,79 +7651,6 @@ func (ec *executionContext) _InterfaceRevision_spec(ctx context.Context, field g
 	res := resTmp.(*InterfaceSpec)
 	fc.Result = res
 	return ec.marshalNInterfaceSpec2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐInterfaceSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _InterfaceRevision_signature(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "InterfaceRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InterfaceRevision_implementationRevisions(ctx context.Context, field graphql.CollectedField, obj *InterfaceRevision) (ret graphql.Marshaler) {
@@ -10116,79 +9755,6 @@ func (ec *executionContext) _RepoMetadataRevision_spec(ctx context.Context, fiel
 	return ec.marshalNRepoMetadataSpec2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐRepoMetadataSpec(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _RepoMetadataRevision_signature(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "RepoMetadataRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
-}
-
 func (ec *executionContext) _RepoMetadataSpec_hubVersion(ctx context.Context, field graphql.CollectedField, obj *RepoMetadataSpec) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -10511,41 +10077,6 @@ func (ec *executionContext) _SemVerTaggingStrategy_latest(ctx context.Context, f
 	res := resTmp.(*LatestSemVerTaggingStrategy)
 	fc.Result = res
 	return ec.marshalNLatestSemVerTaggingStrategy2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐLatestSemVerTaggingStrategy(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Signature_hub(ctx context.Context, field graphql.CollectedField, obj *Signature) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "Signature",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Hub, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Type_path(ctx context.Context, field graphql.CollectedField, obj *Type) (ret graphql.Marshaler) {
@@ -11772,79 +11303,6 @@ func (ec *executionContext) _TypeRevision_spec(ctx context.Context, field graphq
 	res := resTmp.(*TypeSpec)
 	fc.Result = res
 	return ec.marshalNTypeSpec2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeSpec(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _TypeRevision_signature(ctx context.Context, field graphql.CollectedField, obj *TypeRevision) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:     "TypeRevision",
-		Field:      field,
-		Args:       nil,
-		IsMethod:   false,
-		IsResolver: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return obj.Signature, nil
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.AdditionalLabels == nil {
-				return nil, errors.New("directive additionalLabels is not implemented")
-			}
-			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			name, err := ec.unmarshalOString2ᚖstring(ctx, "SIGNED_WITH")
-			if err != nil {
-				return nil, err
-			}
-			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.Relation == nil {
-				return nil, errors.New("directive relation is not implemented")
-			}
-			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*Signature); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.Signature`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*Signature)
-	fc.Result = res
-	return ec.marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TypeSpec_additionalRefs(ctx context.Context, field graphql.CollectedField, obj *TypeSpec) (ret graphql.Marshaler) {
@@ -13372,11 +12830,6 @@ func (ec *executionContext) _AttributeRevision(ctx context.Context, sel ast.Sele
 			}
 		case "spec":
 			out.Values[i] = ec._AttributeRevision_spec(ctx, field, obj)
-		case "signature":
-			out.Values[i] = ec._AttributeRevision_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		case "metadata":
 			out.Values[i] = ec._AttributeRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -13852,11 +13305,6 @@ func (ec *executionContext) _ImplementationRevision(ctx context.Context, sel ast
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "signature":
-			out.Values[i] = ec._ImplementationRevision_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "metadata":
 			out.Values[i] = ec._ImplementationRevision_metadata(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -14087,11 +13535,6 @@ func (ec *executionContext) _InterfaceGroup(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&invalids, 1)
 			}
-		case "signature":
-			out.Values[i] = ec._InterfaceGroup_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&invalids, 1)
-			}
 		case "interfaces":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
@@ -14231,11 +13674,6 @@ func (ec *executionContext) _InterfaceRevision(ctx context.Context, sel ast.Sele
 			}
 		case "spec":
 			out.Values[i] = ec._InterfaceRevision_spec(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "signature":
-			out.Values[i] = ec._InterfaceRevision_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -14705,11 +14143,6 @@ func (ec *executionContext) _RepoMetadataRevision(ctx context.Context, sel ast.S
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "signature":
-			out.Values[i] = ec._RepoMetadataRevision_signature(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -14803,33 +14236,6 @@ func (ec *executionContext) _SemVerTaggingStrategy(ctx context.Context, sel ast.
 			out.Values[i] = graphql.MarshalString("SemVerTaggingStrategy")
 		case "latest":
 			out.Values[i] = ec._SemVerTaggingStrategy_latest(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch()
-	if invalids > 0 {
-		return graphql.Null
-	}
-	return out
-}
-
-var signatureImplementors = []string{"Signature"}
-
-func (ec *executionContext) _Signature(ctx context.Context, sel ast.SelectionSet, obj *Signature) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, signatureImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	var invalids uint32
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("Signature")
-		case "hub":
-			out.Values[i] = ec._Signature_hub(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -15040,11 +14446,6 @@ func (ec *executionContext) _TypeRevision(ctx context.Context, sel ast.Selection
 			}
 		case "spec":
 			out.Values[i] = ec._TypeRevision_spec(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "signature":
-			out.Values[i] = ec._TypeRevision_signature(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -16372,16 +15773,6 @@ func (ec *executionContext) unmarshalNSemVerTaggingStrategyTags2capactᚗioᚋca
 
 func (ec *executionContext) marshalNSemVerTaggingStrategyTags2capactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSemVerTaggingStrategyTags(ctx context.Context, sel ast.SelectionSet, v SemVerTaggingStrategyTags) graphql.Marshaler {
 	return v
-}
-
-func (ec *executionContext) marshalNSignature2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐSignature(ctx context.Context, sel ast.SelectionSet, v *Signature) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._Signature(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

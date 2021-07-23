@@ -53,6 +53,3 @@ spec:
               image: docker/whalesay:latest
               command: ["sh", "-c"]
               args: ["cowsay hello && sleep 2"]
-
-signature:
-  hub: eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9

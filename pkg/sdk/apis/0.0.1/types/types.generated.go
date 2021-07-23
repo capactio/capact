@@ -88,12 +88,11 @@ func (r *Vendor) Marshal() ([]byte, error) {
 // Interface defines an action signature. It describes the action name, input, and output
 // parameters.
 type Interface struct {
-	Kind       InterfaceKind       `json:"kind"`               
-	Metadata   InterfaceMetadata   `json:"metadata"`           
-	OcfVersion string              `json:"ocfVersion"`         
-	Revision   string              `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *InterfaceSignature `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       InterfaceSpec       `json:"spec"`               // A container for the Interface specification definition.
+	Kind       InterfaceKind     `json:"kind"`      
+	Metadata   InterfaceMetadata `json:"metadata"`  
+	OcfVersion string            `json:"ocfVersion"`
+	Revision   string            `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Spec       InterfaceSpec     `json:"spec"`      // A container for the Interface specification definition.
 }
 
 // A container for the OCF metadata definitions.
@@ -113,11 +112,6 @@ type Maintainer struct {
 	Email string  `json:"email"`         // Email address of the person.
 	Name  *string `json:"name,omitempty"`// Name of the person.
 	URL   *string `json:"url,omitempty"` // URL of the person’s site.
-}
-
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type InterfaceSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Interface specification definition.
@@ -168,12 +162,11 @@ type OutputTypeInstance struct {
 // The description of an action and its prerequisites (dependencies). An implementation
 // implements at least one interface.
 type Implementation struct {
-	Kind       ImplementationKind       `json:"kind"`               
-	Metadata   ImplementationMetadata   `json:"metadata"`           
-	OcfVersion string                   `json:"ocfVersion"`         
-	Revision   string                   `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *ImplementationSignature `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       ImplementationSpec       `json:"spec"`               // A container for the Implementation specification definition.
+	Kind       ImplementationKind     `json:"kind"`      
+	Metadata   ImplementationMetadata `json:"metadata"`  
+	OcfVersion string                 `json:"ocfVersion"`
+	Revision   string                 `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Spec       ImplementationSpec     `json:"spec"`      // A container for the Implementation specification definition.
 }
 
 // A container for the OCF metadata definitions.
@@ -202,11 +195,6 @@ type MetadataAttribute struct {
 type License struct {
 	Name *string `json:"name,omitempty"`// If you are using a common license such as BSD-2-Clause or MIT, add a current SPDX license; identifier for the license you’re using e.g. BSD-3-Clause. If your package is licensed; under multiple common licenses, use an SPDX license expression syntax version 2.0 string,; e.g. (ISC OR GPL-3.0)
 	Ref  *string `json:"ref,omitempty"` // If you are using a license that hasn’t been assigned an SPDX identifier, or if you are; using a custom license, use the direct link to the license file e.g.; https://raw.githubusercontent.com/project/v1/license.md. The resource under given link; MUST be immutable and publicly accessible.
-}
-
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type ImplementationSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
 }
 
 // A container for the Implementation specification definition.
@@ -277,17 +265,11 @@ type RequireEntity struct {
 
 // RepoMetadata stores metadata about the Capact Hub.
 type RepoMetadata struct {
-	Kind       RepoMetadataKind       `json:"kind"`               
-	Metadata   InterfaceMetadata      `json:"metadata"`           
-	OcfVersion string                 `json:"ocfVersion"`         
-	Revision   string                 `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *RepoMetadataSignature `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       RepoMetadataSpec       `json:"spec"`               // A container for the RepoMetadata definition.
-}
-
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type RepoMetadataSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
+	Kind       RepoMetadataKind  `json:"kind"`      
+	Metadata   InterfaceMetadata `json:"metadata"`  
+	OcfVersion string            `json:"ocfVersion"`
+	Revision   string            `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Spec       RepoMetadataSpec  `json:"spec"`      // A container for the RepoMetadata definition.
 }
 
 // A container for the RepoMetadata definition.
@@ -328,17 +310,11 @@ type OcfVersion struct {
 // you can use `cap.core.attribute.workload.stateful` Attribute to find and filter Stateful
 // Implementations.
 type Attribute struct {
-	Kind       AttributeKind       `json:"kind"`               
-	Metadata   InterfaceMetadata   `json:"metadata"`           
-	OcfVersion string              `json:"ocfVersion"`         
-	Revision   string              `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *AttributeSignature `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       *AttributeSpec      `json:"spec,omitempty"`     // A container for the Attribute specification definition.
-}
-
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type AttributeSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
+	Kind       AttributeKind     `json:"kind"`          
+	Metadata   InterfaceMetadata `json:"metadata"`      
+	OcfVersion string            `json:"ocfVersion"`    
+	Revision   string            `json:"revision"`      // Version of the manifest content in the SemVer format.
+	Spec       *AttributeSpec    `json:"spec,omitempty"`// A container for the Attribute specification definition.
 }
 
 // A container for the Attribute specification definition.
@@ -350,12 +326,11 @@ type AttributeSpec struct {
 // validation. There are core and custom Types. Type can be also a composition of other
 // Types.
 type Type struct {
-	Kind       TypeKind       `json:"kind"`               
-	Metadata   TypeMetadata   `json:"metadata"`           
-	OcfVersion string         `json:"ocfVersion"`         
-	Revision   string         `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *TypeSignature `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       TypeSpec       `json:"spec"`               // A container for the Type specification definition.
+	Kind       TypeKind     `json:"kind"`      
+	Metadata   TypeMetadata `json:"metadata"`  
+	OcfVersion string       `json:"ocfVersion"`
+	Revision   string       `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Spec       TypeSpec     `json:"spec"`      // A container for the Type specification definition.
 }
 
 // A container for the OCF metadata definitions.
@@ -371,11 +346,6 @@ type TypeMetadata struct {
 	Attributes       map[string]MetadataAttribute `json:"attributes,omitempty"`      
 }
 
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type TypeSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
-}
-
 // A container for the Type specification definition.
 type TypeSpec struct {
 	AdditionalRefs []string   `json:"additionalRefs,omitempty"`// List of the full path of additional parent nodes the Type is attached to. The parent; nodes MUST reside under “cap.core.type” or “cap.type” subtree. The connection means that; the Type becomes a child of the referenced parent nodes. In a result, the Type has; multiple parents.
@@ -384,17 +354,11 @@ type TypeSpec struct {
 
 // Vendor manifests are currently not used. They will be part of the Hub federation feature.
 type Vendor struct {
-	Kind       VendorKind        `json:"kind"`               
-	Metadata   InterfaceMetadata `json:"metadata"`           
-	OcfVersion string            `json:"ocfVersion"`         
-	Revision   string            `json:"revision"`           // Version of the manifest content in the SemVer format.
-	Signature  *VendorSignature  `json:"signature,omitempty"`// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-	Spec       VendorSpec        `json:"spec"`               // A container for the Vendor specification definition.
-}
-
-// Ensures the authenticity and integrity of a given manifest. CURRENTLY NOT IMPLEMENTED.
-type VendorSignature struct {
-	Hub string `json:"hub"`// The signature signed with the HUB key.
+	Kind       VendorKind        `json:"kind"`      
+	Metadata   InterfaceMetadata `json:"metadata"`  
+	OcfVersion string            `json:"ocfVersion"`
+	Revision   string            `json:"revision"`  // Version of the manifest content in the SemVer format.
+	Spec       VendorSpec        `json:"spec"`      // A container for the Vendor specification definition.
 }
 
 // A container for the Vendor specification definition.

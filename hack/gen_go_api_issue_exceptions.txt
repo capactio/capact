@@ -1,12 +1,12 @@
 
-Issue in line 226: quicktype cannot infer this type because there is no data about it in the input.
-226: 	Args            map[string]interface{} `json:"args"`           // Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
+Issue in line 214: quicktype cannot infer this type because there is no data about it in the input.
+214: 	Args            map[string]interface{} `json:"args"`           // Holds all parameters that should be passed to the selected runner, for example repoUrl,; or chartName for the Helm3 runner.
 
-Issue in line 232: quicktype cannot infer this type because there is no data about it in the input.
-232: 	Parameters    map[string]interface{}       `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
+Issue in line 220: quicktype cannot infer this type because there is no data about it in the input.
+220: 	Parameters    map[string]interface{}       `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
 
-Issue in line 275: quicktype cannot infer this type because there is no data about it in the input.
-275: 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema. CURRENTLY NOT IMPLEMENTED.
+Issue in line 263: quicktype cannot infer this type because there is no data about it in the input.
+263: 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema. CURRENTLY NOT IMPLEMENTED.
 
-Issue in line 457: quicktype cannot infer this type because there is no data about it in the input.
-457: 	AnythingArray []interface{}
+Issue in line 421: quicktype cannot infer this type because there is no data about it in the input.
+421: 	AnythingArray []interface{}

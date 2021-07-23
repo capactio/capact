@@ -148,7 +148,6 @@ type RepoMetadataRevision @additionalLabels(labels: ["published"]){
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: RepoMetadataSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type RepoMetadataSpec @additionalLabels(labels: ["published"]){
@@ -190,7 +189,6 @@ type RepoOCFVersion @additionalLabels(labels: ["published"]){
 type InterfaceGroup @additionalLabels(labels: ["published"]){
   path: NodePath! @index
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   interfaces(filter: InterfaceFilter): [Interface!]!
     @relation(name: "CONTAINS", direction: "OUT")
 }
@@ -216,7 +214,6 @@ type InterfaceRevision @additionalLabels(labels: ["published"]){
 
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: InterfaceSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   implementationRevisions: [ImplementationRevision!]!
     @relation(name: "IMPLEMENTS", direction: "IN")
@@ -297,7 +294,6 @@ type TypeRevision @additionalLabels(labels: ["published"]){
 
   metadata: TypeMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
   spec: TypeSpec! @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 }
 
 type TypeSpec @additionalLabels(labels: ["published"]){
@@ -324,7 +320,6 @@ type Implementation @additionalLabels(labels: ["published"]){
 
 type ImplementationRevision @additionalLabels(labels: ["published"]){
   revision: Version! @index
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
 
   metadata: ImplementationMetadata!
     @relation(name: "DESCRIBED_BY", direction: "OUT")
@@ -462,7 +457,6 @@ type AttributeRevision @additionalLabels(labels: ["published"]){
   revision: Version! @index
 
   spec: AttributeSpec @relation(name: "SPECIFIED_BY", direction: "OUT")
-  signature: Signature! @relation(name: "SIGNED_WITH", direction: "OUT")
   metadata: GenericMetadata! @relation(name: "DESCRIBED_BY", direction: "OUT")
 }
 
@@ -526,10 +520,6 @@ type TypeMetadata implements MetadataBaseFields @additionalLabels(labels: ["publ
 
 type License @additionalLabels(labels: ["published"]){
   name: String! @index
-}
-
-type Signature @additionalLabels(labels: ["published"]){
-  hub: String!
 }
 
 type Maintainer @additionalLabels(labels: ["published"]){
