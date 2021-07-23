@@ -14,8 +14,6 @@ import (
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"sigs.k8s.io/yaml"
-
-	"capact.io/capact/internal/getter"
 )
 
 const (
@@ -44,14 +42,7 @@ func (t *terraform) Start(dryRun bool) error {
 	t._waitCh = make(chan error)
 
 	go func() {
-		// TODO move Download to a better place
-		err := getter.Download(context.Background(), t.args.Module.Source, t.workdir)
-		if err != nil {
-			t._waitCh <- errors.Wrap(err, "while downloading module")
-			return
-		}
-
-		err = t.init()
+		err := t.init()
 		if err != nil {
 			t._waitCh <- errors.Wrap(err, "while initializing terraform")
 			return
