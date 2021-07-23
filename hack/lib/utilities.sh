@@ -160,7 +160,6 @@ capact::create_cluster() {
       --name="${KIND_CLUSTER_NAME}" \
       --cluster-config="${config}" \
       --wait=5m
-   # TODO   --image="kindest/node:${KUBERNETES_VERSION}" \
 }
 
 #  - KIND_CLUSTER_NAME
@@ -177,6 +176,7 @@ capact::delete_cluster() {
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
+#  - CLUSTER_TYPE
 #  - KIND_CLUSTER_NAME
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
