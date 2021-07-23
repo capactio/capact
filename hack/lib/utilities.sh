@@ -177,7 +177,7 @@ capact::delete_cluster() {
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
 #  - CLUSTER_TYPE
-#  - KIND_CLUSTER_NAME
+#  - CLUSTER_NAME
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
@@ -233,7 +233,7 @@ capact::install() {
     # shellcheck disable=SC2086
     capact::cli install --verbose \
         --environment="${CLUSTER_TYPE}" \
-        --name="${KIND_CLUSTER_NAME}" \
+        --name="${CLUSTER_NAME}" \
         --namespace="${CAPACT_NAMESPACE}" \
         --capact-overrides="${CAPACT_OVERRIDES}" \
         --ingress-controller-overrides="${INGRESS_CONTROLLER_OVERRIDES}" \

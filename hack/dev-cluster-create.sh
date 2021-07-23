@@ -32,6 +32,7 @@ main() {
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
+    export CLUSTER_NAME="${KIND_CLUSTER_NAME}"
     export CLUSTER_TYPE="kind"
     export PRINT_INSECURE_NOTES="true"
     shout "Installing Capact on development local cluster..."

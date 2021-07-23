@@ -86,6 +86,7 @@ jobs:
         run: |
           export INGRESS_CONTROLLER_OVERRIDES="ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
           export CAPACT_OVERRIDES="global.gateway.auth.password=$GATEWAY_PASSWORD"
+          export CLUSTER_NAME="dev-cluster"
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Configure Cert Manager in cluster
         run: |
