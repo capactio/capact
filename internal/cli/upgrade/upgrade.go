@@ -205,6 +205,7 @@ func (u *Upgrade) resolveInputParameters(opts *Options) error {
 	if opts.Parameters.IncreaseResourceLimits {
 		opts.Parameters.Override.CapactValues.Gateway.Resources = capact.IncreasedGatewayResources()
 		opts.Parameters.Override.CapactValues.HubPublic.Resources = capact.IncreasedHubPublicResources()
+		opts.Parameters.Override.CapactValues.HubLocal.Resources = capact.IncreasedHubLocalResources()
 		opts.Parameters.Override.Neo4jValues.Neo4j.Core.Resources = capact.IncreasedNeo4jResources()
 	}
 
