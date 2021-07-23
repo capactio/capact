@@ -67,5 +67,7 @@ Create the manifest source path
 {{- define "populator.manifestPath" -}}
 {{- .Values.populator.manifestsLocation.repository -}}
 ?ref={{ .Values.populator.manifestsLocation.branch -}}
+{{- if .Values.populator.manifestsLocation.sshKey -}}
 &sshkey={{ .Values.populator.manifestsLocation.sshKey -}}
+{{- end }}
 {{- end }}

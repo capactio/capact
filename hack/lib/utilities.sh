@@ -218,6 +218,10 @@ capact::install() {
       CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.branch=${HUB_MANIFESTS_SOURCE_REPO_REF}"
     fi
 
+    if [ -n "${HUB_MANIFESTS_SOURCE_REPO_URL:-}" ]; then
+      CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
+    fi
+
     if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
       BUILD_IMAGES_FLAG=--build-image=""
     fi

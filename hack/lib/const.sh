@@ -46,3 +46,5 @@ readonly CAPACT_USE_TEST_SETUP="false"
 #
 
 readonly CAPACT_INCREASE_RESOURCE_LIMITS="true"
+readonly HUB_MANIFESTS_SOURCE_REPO_URL="git@github.com:capactio/hub-manifests.git"
+readonly HUB_MANIFESTS_SOURCE_REPO_REF="5464edbf0b3f5ef2d1a02c6266dfc50fb5ac0a4a"
