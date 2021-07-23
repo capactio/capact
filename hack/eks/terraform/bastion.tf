@@ -35,7 +35,7 @@ resource "aws_security_group" "bastion" {
 
 module "ec2_bastion" {
   source  = "cloudposse/ec2-bastion-server/aws"
-  version = "0.25.0"
+  version = "0.28.3"
 
   name          = "${var.namespace}-bastion"
   key_name      = module.bastion_key_pair.key_name

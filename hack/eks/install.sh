@@ -75,7 +75,12 @@ capact::aws::install::efs_csi_driver() {
 
 capact::aws::install::capact() {
   shout "Deploying Capact..."
-  "${CURRENT_DIR}"/cluster-components-install-upgrade.sh
+  capact install --environment eks \
+    --version "${CAPACT_VERSION}" \
+    --capact-overrides "global.domainName=${CAPACT_DOMAIN_NAME}" \
+    --cert-manager-overrides "${CUSTOM_CERT_MANAGER_OVERRIDES},cert-manager.securityContext.enabled=true,cert-manager.securityContext.fsGroup=1001" \
+    --ingress-controller-overrides "ingress-nginx.controller.ingressClass=capact,ingress-nginx.controller.service.annotations.service\.beta\.kubernetes\.io/aws-load-balancer-internal=true"
+
   shout "Capact deployed successfully!"
 }
 
@@ -99,7 +104,7 @@ capact::aws::register_dnses() {
 
   local internal_lb_fqdn
   for _ in $(seq 6); do
-    internal_lb_fqdn="$(kubectl -n capact-system get svc ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
+    internal_lb_fqdn="$(kubectl -n capact-system get svc ingress-controller-ingress-nginx-controller '-ojsonpath={.status.loadBalancer.ingress[].hostname}')"
     if [ -n "${internal_lb_fqdn}" ]; then
       break
     fi
@@ -186,8 +191,7 @@ main() {
   export CAPACT_NAME="${CAPACT_NAME}"
   export CAPACT_REGION="${CAPACT_REGION}"
   export CAPACT_DOMAIN_NAME="${CAPACT_DOMAIN_NAME}"
-  export DOCKER_TAG="${CAPACT_DOCKER_TAG}"
-  export DOCKER_REPOSITORY="${CAPACT_DOCKER_REPOSITORY:-ghcr.io/capactio}"
+  export CAPACT_VERSION="${CAPACT_VERSION:-@latest}"
   export EKS_EFS_ENABLED="${EKS_EFS_ENABLED:-false}"
   export EKS_AZ_COUNT="${EKS_AZ_COUNT:-1}"
 
@@ -200,11 +204,11 @@ main() {
    --set gateway.ingress.annotations.class=capact"
 
   local -r cert_manager_role_arn=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
-  CUSTOM_CERT_MANAGER_SET_FLAGS="--set cert-manager.serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${cert_manager_role_arn}"
+  CUSTOM_CERT_MANAGER_OVERRIDES="cert-manager.serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${cert_manager_role_arn}"
 
   export CAPACT_HOSTED_ZONE_ID
   export CUSTOM_CAPACT_SET_FLAGS
-  export CUSTOM_CERT_MANAGER_SET_FLAGS
+  export CUSTOM_CERT_MANAGER_OVERRIDES
 
   if [[ "${EKS_EFS_ENABLED}" == "true" ]]; then
       capact::aws::install::efs_csi_driver
