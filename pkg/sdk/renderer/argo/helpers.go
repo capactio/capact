@@ -89,9 +89,16 @@ func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 	ref = strings.TrimSuffix(ref, "}}")
 	parts := strings.Split(ref, ".")
 
+	invalidPathErrForRef := func(ref string) error {
+		return fmt.Errorf("invalid artifact path '%s'", ref)
+	}
+
 	prefix := parts[0]
 	switch prefix {
 	case "steps":
+		if len(parts) < 2 || len(parts) < 5 {
+			return nil, invalidPathErrForRef(ref)
+		}
 		stepName := parts[1]
 		artifactName := parts[4]
 		return &argoArtifactRef{
@@ -99,12 +106,18 @@ func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 			name: artifactName,
 		}, nil
 	case "inputs":
+		if len(parts) < 3 {
+			return nil, invalidPathErrForRef(ref)
+		}
 		artifactName := parts[2]
 		return &argoArtifactRef{
 			step: ArgoArtifactNoStep,
 			name: artifactName,
 		}, nil
 	case "workflow":
+		if len(parts) < 4 {
+			return nil, invalidPathErrForRef(ref)
+		}
 		artifactName := parts[3]
 		return &argoArtifactRef{
 			step: ArgoArtifactNoStep,
