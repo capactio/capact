@@ -87,38 +87,41 @@ const ArgoArtifactNoStep = ""
 func getArgoArtifactRef(ref string) (*argoArtifactRef, error) {
 	ref = strings.TrimPrefix(ref, "{{")
 	ref = strings.TrimSuffix(ref, "}}")
-	parts := strings.Split(ref, ".")
+	segments := strings.Split(ref, ".")
 
-	invalidPathErrForRef := func(ref string) error {
-		return fmt.Errorf("invalid artifact path '%s'", ref)
+	invalidPathErrForRef := func(ref string, expectedSegments, actualSegments int) error {
+		return fmt.Errorf("invalid artifact path '%s': expected %d path segments, instead got %d", ref, expectedSegments, actualSegments)
 	}
 
-	prefix := parts[0]
+	prefix := segments[0]
 	switch prefix {
 	case "steps":
-		if len(parts) < 2 || len(parts) < 5 {
-			return nil, invalidPathErrForRef(ref)
+		expectedSegments := 5
+		if len(segments) < expectedSegments {
+			return nil, invalidPathErrForRef(ref, expectedSegments, len(segments))
 		}
-		stepName := parts[1]
-		artifactName := parts[4]
+		stepName := segments[1]
+		artifactName := segments[4]
 		return &argoArtifactRef{
 			step: stepName,
 			name: artifactName,
 		}, nil
 	case "inputs":
-		if len(parts) < 3 {
-			return nil, invalidPathErrForRef(ref)
+		expectedSegments := 3
+		if len(segments) < expectedSegments {
+			return nil, invalidPathErrForRef(ref, expectedSegments, len(segments))
 		}
-		artifactName := parts[2]
+		artifactName := segments[2]
 		return &argoArtifactRef{
 			step: ArgoArtifactNoStep,
 			name: artifactName,
 		}, nil
 	case "workflow":
-		if len(parts) < 4 {
-			return nil, invalidPathErrForRef(ref)
+		expectedSegments := 4
+		if len(segments) < expectedSegments {
+			return nil, invalidPathErrForRef(ref, expectedSegments, len(segments))
 		}
-		artifactName := parts[3]
+		artifactName := segments[3]
 		return &argoArtifactRef{
 			step: ArgoArtifactNoStep,
 			name: artifactName,
