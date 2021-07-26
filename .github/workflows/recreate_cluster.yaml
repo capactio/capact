@@ -90,6 +90,8 @@ jobs:
           CLUSTER_NAME: "dev-cluster"
           CAPACT_VERSION: "@latest"
           CAPACT_HELM_REPO_URL: "@latest"
+          OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
+          OVERRIDE_DOCKER_REPOSITORY: ${{ github.event.inputs.overrideDockerRepository }}
         run: |
           export INGRESS_CONTROLLER_OVERRIDES="ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
           export CAPACT_OVERRIDES="global.gateway.auth.password=$GATEWAY_PASSWORD"
