@@ -9,12 +9,6 @@ on:
       gitCommitSHA:
         description: Git commit SHA. If not provided, use the latest commit from branch.
         required: false
-      overrideDockerTag:
-        description: Docker images tag. If not provided images generated from git commit SHA are used.
-        required: false
-      overrideDockerRepository:
-        description: Docker images repository.
-        required: false
       oldClusterToDelete:
         description: Name of the old cluster to delete. If not provided, the delete step will be skipped.
         required: false
@@ -85,8 +79,6 @@ jobs:
           echo "::set-output name=JOB_IP::$AUTHORIZED"
       - name: Install components
         env:
-          OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
-          OVERRIDE_DOCKER_REPOSITORY: ${{ github.event.inputs.overrideDockerRepository }}
           USE_TEST_SETUP: "true"
           GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
           CLUSTER_NAME: "dev-cluster"
