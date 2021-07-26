@@ -176,6 +176,7 @@ capact::delete_cluster() {
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
+#  - CAPACT_VERSION
 #  - CLUSTER_TYPE
 #  - CLUSTER_NAME
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
@@ -183,11 +184,13 @@ capact::delete_cluster() {
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
 #  - HUB_MANIFESTS_SOURCE_REPO_URL - set this to override the Git URL from which the source manifests are populated
+#  - CAPACT_HELM_REPO_URL - set this to override the Helm repo url used to install Capact.
 #  - ENABLE_HOSTS_UPDATE - if set to true, /etc/hosts is updated
 #  - ENABLE_ADDING_TRUSTED_CERT - if set to true, add Capact self-signed TLS certificate as trusted
 capact::install() {
     pushd "${REPO_DIR}" || return
 
+    export CAPACT_VERSION=${CAPACT_VERSION:-@local}
     export ENABLE_POPULATOR=${ENABLE_POPULATOR:-${CAPACT_ENABLE_POPULATOR}}
     export USE_TEST_SETUP=${USE_TEST_SETUP:-${CAPACT_USE_TEST_SETUP}}
     export INCREASE_RESOURCE_LIMITS=${INCREASE_RESOURCE_LIMITS:-${CAPACT_INCREASE_RESOURCE_LIMITS}}
@@ -199,6 +202,7 @@ capact::install() {
     export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
     export INGRESS_CONTROLLER_OVERRIDES=${INGRESS_CONTROLLER_OVERRIDES:=""}
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
+    export CAPACT_INSTALL_ADDITIONAL_OPTS=""
 
     CAPACT_OVERRIDES+=",global.containerRegistry.path=${DOCKER_REPOSITORY}"
     CAPACT_OVERRIDES+=",global.containerRegistry.overrideTag=${DOCKER_TAG}"
@@ -230,6 +234,10 @@ capact::install() {
       BUILD_IMAGES_FLAG=--build-image=""
     fi
 
+    if [ -n "${CAPACT_HELM_REPO_URL:-}" ]; then
+      CAPACT_INSTALL_ADDITIONAL_OPTS="${CAPACT_INSTALL_ADDITIONAL_OPTS} --helm-repo-url=${CAPACT_HELM_REPO_URL}"
+    fi
+
     # shellcheck disable=SC2086
     capact::cli install --verbose \
         --environment="${CLUSTER_TYPE}" \
@@ -242,7 +250,8 @@ capact::install() {
         --update-trusted-certs="${ENABLE_ADDING_TRUSTED_CERT}" \
         --install-component="${COMPONENTS}" \
         ${BUILD_IMAGES_FLAG:-} \
-        --version=@local
+        --version="${CAPACT_VERSION}" \
+        ${CAPACT_INSTALL_ADDITIONAL_OPTS}
 }
 
 # Required envs:
