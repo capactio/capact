@@ -35,6 +35,15 @@ class Undefined(Undefined):
         return Undefined(name=".".join([self._undefined_name, attr]))
 
 
+# Dict is a special type of dict which always returns an item before checing an attribute
+class Dict(dict):
+    def __getattribute__(self, name):
+        try:
+            return self[name]
+        except Exception as e:
+            return super().__getattribute__(self, name)
+
+
 def random_string(letters: str = "", length: int = 10) -> str:
     """
     random_string generates random string of the given length
@@ -51,8 +60,9 @@ def random_string(letters: str = "", length: int = 10) -> str:
     return "".join(random.choices(letters, k=length))
 
 
-def random_password(length: int = 10, numbers=True,
-                    lowercase=True, uppercase=True, special=True) -> str:
+def random_password(
+    length: int = 10, numbers=True, lowercase=True, uppercase=True, special=True
+) -> str:
     """
     random_password generates a random password with a given length
     and requirements.
@@ -79,7 +89,7 @@ def random_password(length: int = 10, numbers=True,
     pwlist += [random.choice(chars) for i in range(to_fill)]
 
     random.shuffle(pwlist)
-    return ''.join(pwlist)
+    return "".join(pwlist)
 
 
 def random_word(length: int = 10) -> str:
