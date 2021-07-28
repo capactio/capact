@@ -35,13 +35,32 @@ class Undefined(Undefined):
         return Undefined(name=".".join([self._undefined_name, attr]))
 
 
-# Dict is a special type of dict which always returns an item before checing an attribute
+# Dict is a special type of dict which always returns an item before checking an attribute
 class Dict(dict):
+    ## __init__ converts all nested dictionaries {} to the Dict
+    def __init__(self, *args, **kwargs):
+        if len(kwargs) > 0:
+            raise Exception("Dict does not support kwargs")
+
+        if len(args) == 0:
+            return super().__init__()
+
+        if len(args) > 1:
+            raise Exception("Dict does not support more than one arg")
+
+        kw = {}
+        for k, v in args[0].items():
+            if isinstance(v, dict):
+                kw[k] = Dict(v)
+            else:
+                kw[k] = v
+        super().__init__(kw)
+
     def __getattribute__(self, name):
         try:
-            return self[name]
+            return Dict(self[name])
         except Exception as e:
-            return super().__getattribute__(self, name)
+            return super().__getattribute__(name)
 
 
 def random_string(letters: str = "", length: int = 10) -> str:
