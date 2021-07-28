@@ -8,6 +8,8 @@ import (
 	"path"
 	"strings"
 
+	"capact.io/capact/internal/getter"
+
 	"go.uber.org/zap"
 
 	"capact.io/capact/pkg/runner"
@@ -45,6 +47,19 @@ func (r *terraformRunner) Start(ctx context.Context, in runner.StartInput) (*run
 	err = r.setEnvVars(args.Env)
 	if err != nil {
 		return nil, errors.Wrap(err, "while proceeding Environment variables")
+	}
+
+	// in case of git repository as a source, the module download needs to be done in empty directory
+	r.log.Debug("Downloading source into workdir", zap.String("workdir", r.cfg.WorkDir))
+
+	_, err = os.Stat(r.cfg.WorkDir)
+	if strings.HasPrefix(args.Module.Source, "git") && !os.IsNotExist(err) {
+		return nil, fmt.Errorf("the workdir directory %q must not exist when cloning git repository", r.cfg.WorkDir)
+	}
+
+	err = getter.Download(context.Background(), args.Module.Source, r.cfg.WorkDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "while downloading module")
 	}
 
 	err = r.injectStateTypeInstance()

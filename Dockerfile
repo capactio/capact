@@ -82,16 +82,12 @@ RUN apk add --no-cache 'git=>2.30' 'openssh=~8.4' && \
 
 WORKDIR /bin
 
-ENV TERRAFORM_VERSION 0.14.9
+ENV TERRAFORM_VERSION 1.0.3
 RUN wget -nv https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -O terraform.zip && \
     unzip terraform.zip && \
     rm terraform.zip
 
-COPY hack/runners/terraform /workspace
-
-WORKDIR /workspace
-RUN /bin/terraform init && \
-    rm /workspace/providers.tf
+WORKDIR /home
 
 LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
