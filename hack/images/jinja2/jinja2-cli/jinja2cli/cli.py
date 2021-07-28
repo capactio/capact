@@ -249,7 +249,7 @@ def render(template_path, data, extensions, filters=None, strict=False):
     for vf in capact.GLOBALS:
         env.globals[vf.__name__] = vf
 
-    return env.get_template(os.path.basename(template_path)).render(data)
+    return env.get_template(os.path.basename(template_path)).render(capact.Dict(data))
 
 
 def cli(opts, args, config):
