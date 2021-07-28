@@ -1,11 +1,5 @@
 # jinja Docker Image 
 
-- [Overview](#overview)
-- [Prerequisites](#prerequisites)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [Development](#development)
-
 ## Overview
 
 * support for passing multiple files with data,

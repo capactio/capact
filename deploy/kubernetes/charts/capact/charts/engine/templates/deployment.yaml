@@ -50,6 +50,8 @@ spec:
               value: "{{ .Values.global.gateway.auth.password }}"
             - name: APP_BUILTIN_RUNNER_IMAGE
               value: "{{ .Values.global.containerRegistry.path }}/{{ .Values.builtInRunner.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+            - name: APP_BUILTIN_RUNNER_TIMEOUT
+              value: "{{ .Values.builtInRunner.timeout }}"
             - name: APP_CLUSTER_POLICY_NAME
               value: {{ include "engine.fullname" . }}-cluster-policy
             - name: APP_CLUSTER_POLICY_NAMESPACE

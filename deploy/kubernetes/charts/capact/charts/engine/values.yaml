@@ -5,6 +5,7 @@ image:
   pullPolicy: IfNotPresent
 
 builtInRunner:
+  timeout: "2h"
   image:
     name: argo-runner
 
