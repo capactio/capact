@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "**.go"
+      - "**.py"
       - "go.mod"
       - "go.sum"
       - "**.graphql"

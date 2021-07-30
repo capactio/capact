@@ -9,6 +9,6 @@ type Config struct {
 
 // BuiltinRunnerConfig holds configuration for built-in Action runner.
 type BuiltinRunnerConfig struct {
-	Timeout time.Duration `envconfig:"default=30m"`
+	Timeout time.Duration `envconfig:"default=2h"`
 	Image   string
 }
