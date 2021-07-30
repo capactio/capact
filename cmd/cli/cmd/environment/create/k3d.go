@@ -8,28 +8,26 @@ import (
 
 // NewK3D returns a cobra.Command for creating k3d environment.
 func NewK3D() *cobra.Command {
-	var opts K3dOptions
+	var name string
+
 	k3d := cluster.NewCmdClusterCreate()
-	cmd := &cobra.Command{
-		Use:   "k3d",
-		Short: "Provision local k3d cluster",
-		Long:  k3d.Long,
-		Args:  cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			//
-			k3d.Run(cmd, []string{opts.Name})
-			return nil
-		},
+	k3d.Use = "k3d"
+	k3d.Args = cobra.NoArgs
+	k3d.Short = "Provision local k3d cluster"
+	k3d.PersistentPreRun = func(cmd *cobra.Command, args []string) {
+		create.K3dSetDefaultFlags(k3d.Flags())
 	}
-	*cmd.Flags() = *k3d.Flags()
+	k3d.RunE = func(cmd *cobra.Command, args []string) error {
+		k3d.Run(cmd, []string{name})
+		return nil
+	}
 
-	cmd.Flags().StringVar(&opts.Name, "name", create.K3dDefaultClusterName, "Cluster name")
-	cmd.Flag("image").Value.Set(create.K3dDefaultNodeImage)
+	k3d.Flags().Set("image", create.K3dDefaultNodeImage)
 
-	return cmd
-}
+	// add `name` flag to have the same UX as we have for `kind` in the minimal scenario:
+	//   $ capact env create kind --name capact-dev
+	//   $ capact env create kind --name capact-dev
+	k3d.Flags().StringVar(&name, "name", create.K3dDefaultClusterName, "Cluster name")
 
-// K3dOptions holds configuration for creating k3d cluster.
-type K3dOptions struct {
-	Name string
+	return k3d
 }

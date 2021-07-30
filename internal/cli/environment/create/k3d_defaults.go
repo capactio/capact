@@ -1,5 +1,6 @@
 package create
 
+import "github.com/spf13/pflag"
 
 const (
 	// K3dDefaultNodeImage defines default Kubernetes image for a new k3d cluster.
@@ -7,3 +8,45 @@ const (
 	// K3dDefaultClusterName defines default name for a new k3d cluster.
 	K3dDefaultClusterName = "k3d-dev-capact"
 )
+
+// Flags are used to set default values for k3d.
+type Flags struct {
+	Name   string
+	Values []string
+}
+
+// K3dDefaultConfig returns default set of values for k3d.
+var K3dDefaultConfig = []Flags{
+	{
+		Name:   "port",
+		Values: []string{"80:80@loadbalancer", "443:443@loadbalancer"},
+	},
+	{
+		Name:   "k3s-server-arg",
+		Values: []string{"--no-deploy=traefik", `--node-label="ingress-ready=true"`},
+	},
+	{
+		Name:   "kubeconfig-switch-context",
+		Values: []string{"true"},
+	},
+	{
+		Name:   "wait",
+		Values: []string{"true"},
+	},
+	{
+		Name:   "timeout",
+		Values: []string{"60"},
+	},
+}
+
+func K3dSetDefaultFlags(flags *pflag.FlagSet) {
+	for _, cfg := range K3dDefaultConfig {
+		flag := flags.Lookup(cfg.Name)
+		if flag.Changed { // do not change user settings
+			continue
+		}
+		for _, val := range cfg.Values {
+			flag.Value.Set(val)
+		}
+	}
+}
