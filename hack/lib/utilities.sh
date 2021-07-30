@@ -182,6 +182,7 @@ capact::delete_cluster() {
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
 #  - HUB_MANIFESTS_SOURCE_REPO_REF - set this to override the Git branch from which the source manifests are populated
+#  - HUB_MANIFESTS_SOURCE_REPO_URL - set this to override the Git URL from which the source manifests are populated
 #  - ENABLE_HOSTS_UPDATE - if set to true, /etc/hosts is updated
 #  - ENABLE_ADDING_TRUSTED_CERT - if set to true, add Capact self-signed TLS certificate as trusted
 capact::install() {
@@ -193,6 +194,8 @@ capact::install() {
     export PRINT_INSECURE_NOTES=${PRINT_INSECURE_NOTES:-"false"}
     export ENABLE_HOSTS_UPDATE=${ENABLE_HOSTS_UPDATE:-"true"}
     export ENABLE_ADDING_TRUSTED_CERT=${ENABLE_ADDING_TRUSTED_CERT:-"true"}
+    export HUB_MANIFESTS_SOURCE_REPO_REF=${HUB_MANIFESTS_SOURCE_REPO_REF:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF}}
+    export HUB_MANIFESTS_SOURCE_REPO_URL=${HUB_MANIFESTS_SOURCE_REPO_URL:-${CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL}}
     export COMPONENTS="neo4j,ingress-nginx,argo,cert-manager,capact"
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
 
