@@ -6,7 +6,7 @@ const (
 	// K3dDefaultNodeImage defines default Kubernetes image for a new k3d cluster.
 	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.19.7-k3s1"
 	// K3dDefaultClusterName defines default name for a new k3d cluster.
-	K3dDefaultClusterName = "k3d-dev-capact"
+	K3dDefaultClusterName = "dev-capact"
 )
 
 // Flags are used to set default values for k3d.
@@ -23,11 +23,7 @@ var K3dDefaultConfig = []Flags{
 	},
 	{
 		Name:   "k3s-server-arg",
-		Values: []string{"--no-deploy=traefik", `--node-label="ingress-ready=true"`},
-	},
-	{
-		Name:   "kubeconfig-switch-context",
-		Values: []string{"true"},
+		Values: []string{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
 	},
 	{
 		Name:   "wait",
