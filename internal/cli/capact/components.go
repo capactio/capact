@@ -29,6 +29,7 @@ import (
 
 	tools "capact.io/capact/internal"
 	"capact.io/capact/internal/ptr"
+	"k8s.io/utils/strings/slices"
 )
 
 // Component is a Capact component which can be installed in the environement
@@ -494,7 +495,7 @@ func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 	}
 
 	for _, component := range Components {
-		if !contains(component.Name(), h.opts.InstallComponents) {
+		if !slices.Contains(h.opts.InstallComponents, component.Name()) {
 			continue
 		}
 
@@ -555,13 +556,4 @@ func createObject(configuration *action.Configuration, content []byte) error {
 		return errors.Wrapf(err, "while creating the object")
 	}
 	return nil
-}
-
-func contains(s string, list []string) bool {
-	for _, v := range list {
-		if s == v {
-			return true
-		}
-	}
-	return false
 }

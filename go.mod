@@ -65,7 +65,7 @@ require (
 	k8s.io/client-go v10.0.0+incompatible
 	k8s.io/helm v2.17.0+incompatible
 	k8s.io/kubectl v0.17.2
-	k8s.io/utils v0.0.0-20200619165400-6e3d28b6ed19
+	k8s.io/utils v0.0.0-20210722164352-7f3ee0f31471
 	rsc.io/letsencrypt v0.0.3 // indirect
 	sigs.k8s.io/controller-runtime v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/kind v0.11.1

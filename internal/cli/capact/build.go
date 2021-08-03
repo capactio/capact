@@ -8,6 +8,8 @@ import (
 	"sort"
 
 	"github.com/pkg/errors"
+
+	"k8s.io/utils/strings/slices"
 )
 
 type image struct {
@@ -122,16 +124,14 @@ func DeleteImages(images []string) error {
 func BuildImages(w io.Writer, repository, version string, names []string) ([]string, error) {
 	var created []string
 
-	for _, name := range names {
-		image, ok := Images[name]
-		if !ok {
-			return nil, fmt.Errorf("cannot find image %s", name)
+	for _, image := range Images.All() {
+		if slices.Contains(names, image) {
+			imageTag, err := buildImage(w, image, Images[image], repository, version)
+			if err != nil {
+				return nil, errors.Wrapf(err, "while building image %s", image)
+			}
+			created = append(created, imageTag)
 		}
-		imageTag, err := buildImage(w, name, image, repository, version)
-		if err != nil {
-			return nil, errors.Wrapf(err, "while building image %s", name)
-		}
-		created = append(created, imageTag)
 	}
 	return created, nil
 }
