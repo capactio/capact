@@ -25,5 +25,5 @@ Use alpha features in the CLI
 ### SEE ALSO
 
 * [capact](capact.md)	 - Collective Capability Manager CLI
-* [capact alpha terraform](capact_alpha_terraform.md)	 - Bootstrap Terraform based manifests
+* [capact alpha content](capact_alpha_content.md)	 - Content generation
 

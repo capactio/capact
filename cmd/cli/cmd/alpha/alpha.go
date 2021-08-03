@@ -1,6 +1,9 @@
 package alpha
 
-import "github.com/spf13/cobra"
+import (
+	"capact.io/capact/cmd/cli/cmd/alpha/content"
+	"github.com/spf13/cobra"
+)
 
 // NewCmd returns a cobra.Command for operations, which are in alpha version.
 func NewCmd() *cobra.Command {
@@ -10,7 +13,7 @@ func NewCmd() *cobra.Command {
 		Long:  "Use alpha features in the CLI",
 	}
 
-	cmd.AddCommand(NewTerraform())
+	cmd.AddCommand(content.NewCmd())
 
 	return cmd
 }

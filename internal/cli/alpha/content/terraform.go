@@ -1,34 +1,57 @@
 package content
 
 import (
+	"fmt"
+
+	"capact.io/capact/pkg/sdk/manifest"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/pkg/errors"
 )
 
-// TerraformConfig stores the input parameters for Terraform based content generation
+// TerraformConfig stores input parameters for Terraform based content generation
 type TerraformConfig struct {
 	Config
-	ModulePath string
+	ModulePath    string
+	InterfacePath string
 }
 
-// GenerateTerraformManifests generates the manifest files for a Terraform module based Implementation
+// GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
 func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
 	input, err := getTerraformTemplatingInput(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting templating input")
 	}
 
-	manifests := map[string]string{
-		"generated/type.yaml":           additonalInputTypeTemplate,
-		"generated/implementation.yaml": terraformImplementationTemplate,
+	cfgs := []*templatingConfig{
+		{
+			Template: typeManifestTemplate,
+			Input:    *input,
+		},
+		{
+			Template: terraformImplementationManifestTemplate,
+			Input:    *input,
+		},
 	}
 
-	generated, err := generateManifests(input, manifests)
+	generated, err := generateManifests(cfgs)
 	if err != nil {
 		return nil, errors.Wrap(err, "while generating manifests")
 	}
 
-	return generated, nil
+	result := make(map[string]string, len(generated))
+
+	for _, m := range generated {
+		metadata, err := manifest.GetMetadata([]byte(m))
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting metadata for manifest")
+		}
+
+		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
+
+		result[manifestPath] = m
+	}
+
+	return result, nil
 }
 
 func getTerraformTemplatingInput(cfg *TerraformConfig) (*templatingInput, error) {
@@ -46,11 +69,11 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*templatingInput, error)
 	}
 
 	for _, tfVar := range module.Variables {
+		// Skip default for now, as there are problems, when it is multiline string or with doublequotes in it.
 		input.Variables = append(input.Variables, inputVariable{
 			Name:        tfVar.Name,
 			Type:        tfVar.Type,
 			Description: tfVar.Description,
-			Default:     tfVar.Default,
 		})
 	}
 
@@ -64,8 +87,7 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*templatingInput, error)
 }
 
 const (
-	terraformImplementationTemplate = `
-ocfVersion: 0.0.1
+	terraformImplementationManifestTemplate = `ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Implementation
 metadata:
@@ -77,20 +99,23 @@ metadata:
   supportURL: https://example.com
   maintainers:
     - email: dev@example.com
-      name: Example User
+      name: Example Dev
       url: https://example.com
   license:
     name: "Apache 2.0"
 
 spec:
-  appVersion: "..." #TODO
+  appVersion: "1.0.x" # Set the supported application version here
   additionalInput:
     parameters:
       typeRef:
         path: "cap.type.{{ .Prefix }}.{{ .Name }}-input"
         revision: 0.1.0
 
-  outputTypeInstanceRelations: {}
+  outputTypeInstanceRelations:
+    config:
+      uses:
+        - terraform-release      
 
   implements:
     - path: {{ .InterfacePath }}
@@ -138,8 +163,9 @@ spec:
                         from: "{{"{{"}}inputs.artifacts.input-parameters{{"}}"}}"
                       - name: template
                         raw:
+                          # Put the input parameters from the Interface here and set default values for it:
                           data: |
-                            #TODO values from Interface input
+                            my_property: <@ input.my_property | default("default_value") @>
                       - name: configuration
                         raw:
                           data: |
@@ -161,7 +187,7 @@ spec:
                             command: "apply"
                             module:
                               name: "{{ .Name }}"
-                              source: "#TODO"
+                              source: "https://example.com/terraform-module.tgz" # Put the URL for the tarball with the Terraform module source code
                             env: []
                             output:
                               goTemplate:
@@ -199,5 +225,23 @@ spec:
                         from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
                       - name: runner-context
                         from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
+
+              - - name: render-config
+                  capact-outputTypeInstances:
+                    - name: config
+                      from: render
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          # You have fill the properties of the output TypeInstance here:
+                          data: |
+                            property: value
 `
 )

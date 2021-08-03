@@ -73,7 +73,7 @@ func (v *FilesystemManifestValidator) ValidateFile(path string) (ValidationResul
 }
 
 func (v *FilesystemManifestValidator) validateYamlBytes(yamlBytes []byte) (ValidationResult, error) {
-	metadata, err := getManifestMetadata(yamlBytes)
+	metadata, err := GetMetadata(yamlBytes)
 	if err != nil {
 		return newValidationResult(errors.Wrap(err, "failed to read manifest metadata")), err
 	}
@@ -104,21 +104,7 @@ func (v *FilesystemManifestValidator) validateYamlBytes(yamlBytes []byte) (Valid
 	return result, err
 }
 
-type manifestMetadata struct {
-	OCFVersion ocfVersion `yaml:"ocfVersion"`
-	Kind       kind       `yaml:"kind"`
-}
-
-func getManifestMetadata(yamlBytes []byte) (manifestMetadata, error) {
-	mm := manifestMetadata{}
-	err := yaml.Unmarshal(yamlBytes, &mm)
-	if err != nil {
-		return mm, err
-	}
-	return mm, nil
-}
-
-func (v *FilesystemManifestValidator) getManifestSchema(metadata manifestMetadata) (*gojsonschema.Schema, error) {
+func (v *FilesystemManifestValidator) getManifestSchema(metadata Metadata) (*gojsonschema.Schema, error) {
 	var ok bool
 	var cachedSchema *loadedOCFSchema
 
@@ -154,7 +140,7 @@ func (v *FilesystemManifestValidator) getManifestSchema(metadata manifestMetadat
 	return schema, nil
 }
 
-func (v *FilesystemManifestValidator) getRootSchemaJSONLoader(metadata manifestMetadata) gojsonschema.JSONLoader {
+func (v *FilesystemManifestValidator) getRootSchemaJSONLoader(metadata Metadata) gojsonschema.JSONLoader {
 	filename := strcase.ToKebab(string(metadata.Kind))
 	path := fmt.Sprintf("file://%s/%s/schema/%s.json", v.schemaRootPath, metadata.OCFVersion, filename)
 	return gojsonschema.NewReferenceLoaderFileSystem(path, v.fs)

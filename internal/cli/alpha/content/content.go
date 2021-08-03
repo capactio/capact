@@ -9,10 +9,21 @@ import (
 
 // Config stores the generic input parameters for content generation
 type Config struct {
-	ModulePath      string
 	ManifestName    string
 	ManifestsPrefix string
-	InterfacePath   string
+}
+
+type templatingConfig struct {
+	Template string
+	Input    templatingInput
+}
+
+type templatingInput struct {
+	Name          string
+	Prefix        string
+	InterfacePath string
+	Variables     []inputVariable
+	Outputs       []outputVariable
 }
 
 type inputVariable struct {
@@ -26,66 +37,57 @@ type outputVariable struct {
 	Name string
 }
 
-type templatingInput struct {
-	Name          string
-	Prefix        string
-	InterfacePath string
-	Variables     []inputVariable
-	Outputs       []outputVariable
-}
-
 var tmplFuncs = template.FuncMap{
 	"add": func(a, b int) int {
 		return a + b
 	},
 }
 
-func generateManifests(input *templatingInput, manifestTemplates map[string]string) (map[string]string, error) {
-	manifests := make(map[string]string)
+func generateManifests(cfgs []*templatingConfig) ([]string, error) {
+	manifests := make([]string, 0, len(cfgs))
 
-	for manifestPath, tmpl := range manifestTemplates {
-		manifest, err := generateManifest(input, tmpl)
+	for _, cfg := range cfgs {
+		manifest, err := generateManifest(cfg)
 		if err != nil {
-			return nil, errors.Wrapf(err, "while generating manifest %s", manifestPath)
+			return nil, errors.Wrapf(err, "while generating manifest: %v", err)
 		}
 
-		manifests[manifestPath] = manifest
+		manifests = append(manifests, manifest)
 	}
 
 	return manifests, nil
 }
 
-func generateManifest(input *templatingInput, templateString string) (string, error) {
-	typeTemplate, err := template.New("manifest").
+func generateManifest(cfg *templatingConfig) (string, error) {
+	tmpl, err := template.New("manifest").
 		Funcs(tmplFuncs).
-		Parse(templateString)
+		Parse(cfg.Template)
 	if err != nil {
 		return "", errors.Wrap(err, "while creating new template")
 	}
 
-	var typeManifest bytes.Buffer
-	if err := typeTemplate.Execute(&typeManifest, input); err != nil {
+	var manifest bytes.Buffer
+	if err := tmpl.Execute(&manifest, cfg.Input); err != nil {
 		return "", errors.Wrap(err, "while executing Go template")
 	}
 
-	return typeManifest.String(), nil
+	return manifest.String(), nil
 }
 
 const (
-	additonalInputTypeTemplate = `
-ocfVersion: 0.0.1
+	typeManifestTemplate = `ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
   name: {{ .Name }}-input
   prefix: "cap.type.{{ .Prefix }}"
-  displayName: "Additional input for {{ .Prefix }}.{{ .Name }}"
-  description: Additional input for the "{{ .Prefix }}.{{ .Name }} Action"
+  displayName: "Input for {{ .Prefix }}.{{ .Name }}"
+  description: Input for the "{{ .Prefix }}.{{ .Name }} Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
     - email: dev@example.com
-      name: Example User
+      name: Example Dev
       url: https://example.com
 spec:
   jsonSchema:
@@ -100,9 +102,9 @@ spec:
           "{{ $variable.Name }}": {
             "$id": "#/properties/{{ $variable.Name }}",
             "type": "{{ $variable.Type }}",
-            "description": "{{ $variable.Description }}",
-            "default": "{{ $variable.Default }}"
-          }{{if ne $index (add $length -1) }},{{end}}
+            "description": "{{ $variable.Description }}"{{if $variable.Default }},
+            "default": "{{ $variable.Default }}"{{ end }}
+          }{{ if ne $index (add $length -1) }},{{ end }}
           {{ end }}
         }
       }
