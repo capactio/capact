@@ -18,7 +18,7 @@ capact alpha content terraform [PREFIX] [NAME] [TERRAFORM_MODULE_PATH] [flags]
 
 ```
 # Bootstrap manifests 
-	capact alpha content terraform aws.rds deploy ../hub-manifests/manifests/implementation/aws/rds/postgresql/provision-module
+	capact alpha content terraform aws.rds deploy ./terraform-modules/aws-rds
 ```
 
 ### Options

@@ -19,7 +19,7 @@ func NewTerraform() *cobra.Command {
 		Long:  "Bootstrap Terraform based manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Bootstrap manifests 
-			<cli> alpha content terraform aws.rds deploy ../hub-manifests/manifests/implementation/aws/rds/postgresql/provision-module`, cli.Name),
+			<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds`, cli.Name),
 		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			tfContentCfg.ManifestsPrefix = args[0]

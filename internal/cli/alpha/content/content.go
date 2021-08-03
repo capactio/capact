@@ -15,7 +15,7 @@ type Config struct {
 
 type templatingConfig struct {
 	Template string
-	Input    templatingInput
+	Input    *templatingInput
 }
 
 type templatingInput struct {

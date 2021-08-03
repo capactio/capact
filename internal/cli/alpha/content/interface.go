@@ -14,27 +14,23 @@ type InterfaceConfig struct {
 
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
+	input := &templatingInput{
+		Name:   cfg.ManifestName,
+		Prefix: cfg.ManifestsPrefix,
+	}
+
 	cfgs := []*templatingConfig{
 		{
 			Template: typeManifestTemplate,
-			Input: templatingInput{
-				Name:   cfg.ManifestName,
-				Prefix: cfg.ManifestsPrefix,
-			},
+			Input:    input,
 		},
 		{
 			Template: outputTypeManifestTemplate,
-			Input: templatingInput{
-				Name:   cfg.ManifestName,
-				Prefix: cfg.ManifestsPrefix,
-			},
+			Input:    input,
 		},
 		{
 			Template: interfaceManifestTemplate,
-			Input: templatingInput{
-				Name:   cfg.ManifestName,
-				Prefix: cfg.ManifestsPrefix,
-			},
+			Input:    input,
 		},
 	}
 

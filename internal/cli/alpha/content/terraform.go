@@ -25,11 +25,11 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 	cfgs := []*templatingConfig{
 		{
 			Template: typeManifestTemplate,
-			Input:    *input,
+			Input:    input,
 		},
 		{
 			Template: terraformImplementationManifestTemplate,
-			Input:    *input,
+			Input:    input,
 		},
 	}
 
@@ -118,10 +118,15 @@ spec:
         - terraform-release      
 
   implements:
-    - path: {{ if .InterfacePath }}{{ .InterfacePath }}{{else}}"" # Put here the path of the implemented Interface{{end}}
+    - path: {{ if .InterfacePath }}cap.interface.{{ .InterfacePath }}{{else}}"cap.interface..." # Put here the path of the implemented Interface{{end}}
       revision: 0.1.0
 
-  requires: {}
+  requires: {} # You might need to add here a TypeInstance to access an external API:
+    #cap.type.aws.auth:
+    #  allOf:
+    #    - name: credentials
+    #      alias: aws-credentials
+    #      revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
