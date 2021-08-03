@@ -1,10 +1,11 @@
 package controller
 
 import (
-	"capact.io/capact/internal/ptr"
-	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"context"
 	"fmt"
+
+	"capact.io/capact/internal/ptr"
+	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"

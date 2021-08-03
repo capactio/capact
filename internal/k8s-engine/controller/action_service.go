@@ -170,10 +170,11 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 	return sa, nil
 }
 
-func (a *ActionService) CleanupActionOwnedResources(ctx context.Context, action *v1alpha1.Action) (ignored bool, err error) {
-	ignored = true
+// CleanupActionOwnedResources removes the Action owned resources.
+func (a *ActionService) CleanupActionOwnedResources(ctx context.Context, action *v1alpha1.Action) (bool, error) {
+	isCleanupIgnored := true
 	if !controllerutil.ContainsFinalizer(action, v1alpha1.ActionFinalizer) {
-		return ignored, nil // our finalizer was already removed
+		return isCleanupIgnored, nil // our finalizer was already removed
 	}
 
 	if action.IsExecuted() {
@@ -184,16 +185,16 @@ func (a *ActionService) CleanupActionOwnedResources(ctx context.Context, action 
 		// creating resources on hyperscaler side, etc.
 		// In the future we can revisit this approach based on user feedback and e.g. cancel running actions, maybe even rollback
 		// already executed steps, etc.
-		return ignored, nil
+		return isCleanupIgnored, nil
 	}
 
 	// ===== Execute clean-up logic
-	ignored = false
+	isCleanupIgnored = false
 
 	// 1. Ensure that TypeInstances are unlocked.
-	err = a.UnlockTypeInstances(ctx, action)
+	err := a.UnlockTypeInstances(ctx, action)
 	if a.ignoreNotActionableTypeInstanceErrors(err) != nil {
-		return ignored, errors.Wrap(err, "while unlocking TypeInstances")
+		return isCleanupIgnored, errors.Wrap(err, "while unlocking TypeInstances")
 	}
 
 	// 2. Ensure ClusterRoleBinding deleted
@@ -203,16 +204,16 @@ func (a *ActionService) CleanupActionOwnedResources(ctx context.Context, action 
 		ObjectMeta: a.objectMetaFromAction(action),
 	}
 	if err := a.k8sCli.Delete(ctx, binding); client.IgnoreNotFound(err) != nil {
-		return ignored, errors.Wrapf(err, "while deleting ClusterRoleBinding owned by %s/%s Action", action.GetName(), action.GetNamespace())
+		return isCleanupIgnored, errors.Wrapf(err, "while deleting ClusterRoleBinding owned by %s/%s Action", action.GetName(), action.GetNamespace())
 	}
 
 	// 3. Remove finalizer
 	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
 	if err := a.k8sCli.Update(ctx, action); err != nil {
-		return ignored, errors.Wrap(err, "while removing Action finalizer")
+		return isCleanupIgnored, errors.Wrap(err, "while removing Action finalizer")
 	}
 
-	return ignored, nil
+	return isCleanupIgnored, nil
 }
 
 // ignoreNotActionableTypeInstanceErrors ignores GraphQL error which says that TI are locked by different owner or do not exist.
