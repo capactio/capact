@@ -1,12 +1,10 @@
 package controller
 
 import (
-	"context"
-	"fmt"
-	"strings"
-
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -42,6 +40,9 @@ type (
 		LockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
 		UnlockTypeInstances(ctx context.Context, action *v1alpha1.Action) error
 	}
+	actionCleanup interface {
+		CleanupActionOwnedResources(ctx context.Context, action *v1alpha1.Action) (ignored bool, err error)
+	}
 	actionRenderer interface {
 		RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error)
 	}
@@ -57,6 +58,7 @@ type (
 	actionService interface {
 		actionRenderer
 		actionStarter
+		actionCleanup
 		actionStatusGetter
 		actionTypeInstanceGetter
 	}
@@ -103,7 +105,7 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if action.IsBeingDeleted() {
 		log.Info("Deleting runner action")
-		ignored, err := r.handleFinalizer(ctx, action, log)
+		ignored, err := r.svc.CleanupActionOwnedResources(ctx, action)
 		if err != nil {
 			return reportOnError(err, "Delete runner action")
 		}
@@ -160,40 +162,6 @@ func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	return ctrl.Result{}, nil
-}
-
-func (r *ActionReconciler) handleFinalizer(ctx context.Context, action *v1alpha1.Action, log logr.Logger) (bool, error) {
-	if !controllerutil.ContainsFinalizer(action, v1alpha1.ActionFinalizer) {
-		return true, nil // our finalizer was already removed
-	}
-
-	switch {
-	case action.IsExecuted():
-
-		// Current decision:
-		log.Info("Ignoring delete request. Wait until Action execution will be finished.", "phase", string(action.Status.Phase))
-
-		// Deletion in this state is complicated as such Action can be in the middle of e.g. data migration, system shutdown,
-		// creating resources on hyperscaler side, etc.
-		// In the future we can revisit this approach based on user feedback and e.g. cancel running actions, maybe even rollback
-		// already executed steps, etc.
-		return true, nil
-
-	case action.IsCompleted():
-
-		// Ensure that TypeInstances are unlocked.
-		err := r.svc.UnlockTypeInstances(ctx, action)
-		if r.ignoreNotActionableTypeInstanceErrors(err) != nil {
-			return false, errors.Wrap(err, "while unlocking TypeInstances")
-		}
-
-	default:
-
-		// Currently, we do not need to clean up anything as we use ownerReference for other resources.
-	}
-
-	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
-	return false, r.k8sCli.Update(ctx, action)
 }
 
 // initAction can be extracted to mutation webhook.
@@ -437,27 +405,6 @@ func (r *ActionReconciler) newStatusForAction(action *v1alpha1.Action, eventType
 	}
 
 	return *statusCpy
-}
-
-// ignoreNotActionableTypeInstanceErrors ignores GraphQL error which says that TI are locked by different owner or do not exist.
-// In our case it means that TI were already unlocked by a given Action and someone else locked them or deleted.
-//
-// TODO: Get rid of ridiculous string assertion after adding proper error types to GraphQL responses.
-//       http://knowyourmeme.com/memes/this-is-fine
-func (r *ActionReconciler) ignoreNotActionableTypeInstanceErrors(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if strings.Contains(err.Error(), "locked by different owner") {
-		return nil
-	}
-
-	if strings.Contains(err.Error(), "not found") {
-		return nil
-	}
-
-	return err
 }
 
 // SetupWithManager sets up Action reconciler with a given controller manager.
