@@ -2,12 +2,12 @@ package capact
 
 import (
 	"fmt"
+	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
 	"sort"
 
-	"github.com/pkg/errors"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -124,15 +124,13 @@ func BuildImages(w io.Writer, repository, version string, names []string) ([]str
 	var created []string
 
 	for _, image := range Images.All() {
-		ok := slices.Contains(names, image)
-		if !ok {
-			return nil, fmt.Errorf("cannot find image %s", image)
+		if slices.Contains(names, image) {
+			imageTag, err := buildImage(w, image, Images[image], repository, version)
+			if err != nil {
+				return nil, errors.Wrapf(err, "while building image %s", image)
+			}
+			created = append(created, imageTag)
 		}
-		imageTag, err := buildImage(w, image, Images[image], repository, version)
-		if err != nil {
-			return nil, errors.Wrapf(err, "while building image %s", image)
-		}
-		created = append(created, imageTag)
 	}
 	return created, nil
 }
