@@ -13,7 +13,8 @@ Subcommand for various content generation operations
 ### Options
 
 ```
-  -h, --help   help for content
+  -h, --help            help for content
+  -o, --output string   Path to the output directory for the generated manifests (default "generated")
 ```
 
 ### Options inherited from parent commands

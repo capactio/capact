@@ -3,7 +3,9 @@ package content
 import (
 	"log"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/content"
+	"capact.io/capact/internal/cli/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -15,7 +17,10 @@ func NewTerraform() *cobra.Command {
 		Use:   "terraform [PREFIX] [NAME] [TERRAFORM_MODULE_PATH]",
 		Short: "Bootstrap Terraform based manifests",
 		Long:  "Bootstrap Terraform based manifests based on a Terraform module",
-		Args:  cobra.ExactArgs(3),
+		Example: heredoc.WithCLIName(`
+		# Bootstrap manifests 
+			<cli> alpha content terraform aws.rds deploy ../hub-manifests/manifests/implementation/aws/rds/postgresql/provision-module`, cli.Name),
+		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			tfContentCfg.ManifestsPrefix = args[0]
 			tfContentCfg.ManifestName = args[1]
@@ -32,7 +37,7 @@ func NewTerraform() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&tfContentCfg.InterfacePath, "interface", "i", "", "Interface path, which is implemented by this Implementation")
+	cmd.Flags().StringVarP(&tfContentCfg.InterfacePath, "interface", "i", "", "Path of the Interface, which is implemented by this Implementation")
 
 	return cmd
 }

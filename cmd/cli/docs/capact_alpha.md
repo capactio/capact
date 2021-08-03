@@ -8,7 +8,7 @@ Alpha features
 
 ### Synopsis
 
-Use alpha features in the CLI
+Subcommand for alpha features in the CLI
 
 ### Options
 

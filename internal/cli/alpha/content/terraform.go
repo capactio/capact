@@ -118,7 +118,7 @@ spec:
         - terraform-release      
 
   implements:
-    - path: {{ .InterfacePath }}
+    - path: {{ if .InterfacePath }}{{ .InterfacePath }}{{else}}"" # Put here the path of the implemented Interface{{end}}
       revision: 0.1.0
 
   requires: {}
@@ -234,7 +234,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                        from: "{{"{{"}}steps.terraform-apply.outputs.artifacts.additional{{"}}"}}"
                       - name: configuration
                         raw:
                           data: ""

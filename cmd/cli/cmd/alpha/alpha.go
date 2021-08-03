@@ -10,7 +10,7 @@ func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "alpha",
 		Short: "Alpha features",
-		Long:  "Use alpha features in the CLI",
+		Long:  "Subcommand for alpha features in the CLI",
 	}
 
 	cmd.AddCommand(content.NewCmd())

@@ -8,10 +8,17 @@ Bootstrap new Interface manifests
 
 ### Synopsis
 
-Bootstrap new Interface and associated Type manifest
+Bootstrap new Interface and associated Type manifests
 
 ```
 capact alpha content interface [PREFIX] [NAME] [flags]
+```
+
+### Examples
+
+```
+# Bootstrap manifests for the cap.interface.database.postgresql.install Interface
+capact alpha content interface database.postgresql install
 ```
 
 ### Options
@@ -24,6 +31,7 @@ capact alpha content interface [PREFIX] [NAME] [flags]
 
 ```
   -c, --config string   Path to the YAML config file
+  -o, --output string   Path to the output directory for the generated manifests (default "generated")
 ```
 
 ### SEE ALSO

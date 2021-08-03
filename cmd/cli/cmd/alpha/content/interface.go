@@ -3,7 +3,9 @@ package content
 import (
 	"log"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/content"
+	"capact.io/capact/internal/cli/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -14,8 +16,11 @@ func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interface [PREFIX] [NAME]",
 		Short: "Bootstrap new Interface manifests",
-		Long:  "Bootstrap new Interface and associated Type manifest",
-		Args:  cobra.ExactArgs(2),
+		Long:  "Bootstrap new Interface and associated Type manifests",
+		Example: heredoc.WithCLIName(`
+			# Bootstrap manifests for the cap.interface.database.postgresql.install Interface
+			<cli> alpha content interface database.postgresql install`, cli.Name),
+		Args: cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
 			interfaceCfg.ManifestsPrefix = args[0]
 			interfaceCfg.ManifestName = args[1]
