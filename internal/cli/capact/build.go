@@ -2,11 +2,12 @@ package capact
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
 	"io"
 	"os"
 	"os/exec"
 	"sort"
+
+	"github.com/pkg/errors"
 
 	"k8s.io/utils/strings/slices"
 )
