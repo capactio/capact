@@ -35,14 +35,18 @@ var K3dDefaultConfig = []Flags{
 	},
 }
 
-func K3dSetDefaultFlags(flags *pflag.FlagSet) {
+// K3dSetDefaultFlags sets default values for k3d flags
+func K3dSetDefaultFlags(flags *pflag.FlagSet) error {
 	for _, cfg := range K3dDefaultConfig {
 		flag := flags.Lookup(cfg.Name)
 		if flag.Changed { // do not change user settings
 			continue
 		}
 		for _, val := range cfg.Values {
-			flag.Value.Set(val)
+			if err := flag.Value.Set(val); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }

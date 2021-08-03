@@ -7,25 +7,25 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type SpinnerFormatter struct {
+// LogrusSpinnerFormatter implements a naive support for spinner for logrus logger.
+// If message starts with a gerund then it's spinner is active until next message is logged.
+type LogrusSpinnerFormatter struct {
 	failedPreviously bool
-	secondRun        bool
 	spinner          *Status
 }
 
-func NewLogrusSpinnerFormatter(header string) *SpinnerFormatter {
-	return &SpinnerFormatter{
+// NewLogrusSpinnerFormatter returns a new LogrusSpinnerFormatter instance.
+func NewLogrusSpinnerFormatter(header string) *LogrusSpinnerFormatter {
+	return &LogrusSpinnerFormatter{
 		spinner: NewStatus(os.Stdout, header),
 	}
 }
 
-func (f *SpinnerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
+// Format formats logrus entry
+func (f *LogrusSpinnerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	f.spinner.End(!f.failedPreviously)
 	f.spinner.Step(entry.Message)
 
-	if strings.EqualFold(entry.Message, "You can now use it like this:") {
-		f.spinner.End(true)
-	}
 	switch entry.Level {
 	case logrus.DebugLevel, logrus.InfoLevel, logrus.TraceLevel:
 		f.failedPreviously = false
@@ -35,5 +35,20 @@ func (f *SpinnerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		f.failedPreviously = true
 	}
 
+	// Here is a naive assumption that if the first message word is not a gerund,
+	// it's not a long-running task and can be already marked as done.
+	// In the worst case, we will mark a message indicating long-running task a little to fast.
+	words := strings.Fields(entry.Message)
+	if isEmpty(words) || isNotGerund(words[0]) {
+		f.spinner.End(!f.failedPreviously)
+	}
+
 	return []byte{}, nil
+}
+
+func isEmpty(in []string) bool {
+	return len(in) == 0
+}
+func isNotGerund(in string) bool {
+	return !strings.HasSuffix(in, "ing")
 }

@@ -11,6 +11,7 @@ func NewCmd() *cobra.Command {
 
 	root.AddCommand(
 		NewKind(),
+		NewK3D(),
 	)
 	return root
 }

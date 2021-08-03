@@ -1,6 +1,7 @@
 package delete
 
 import (
+	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/environment/delete"
 	"github.com/spf13/cobra"
 )
@@ -17,7 +18,7 @@ func NewKind() *cobra.Command {
 			return delete.Kind(cmd.Context(), opts)
 		},
 	}
-	cmd.Flags().StringVar(&opts.Name, "name", "kind-dev-capact", "cluster name, overrides config")
+	cmd.Flags().StringVar(&opts.Name, "name", create.KindDefaultClusterName, "cluster name, overrides config")
 
 	return cmd
 }
