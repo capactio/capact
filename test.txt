@@ -1,4 +1,0 @@
-Creating cluster dupa ...
- • Failed to create cluster 'dupa' because a cluster with that name already exists
- ✗ Failed to create cluster 'dupa' because a cluster with that name already exists
-
