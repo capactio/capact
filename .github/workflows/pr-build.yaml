@@ -279,7 +279,6 @@ jobs:
           BUILD_IMAGES: "false"
           ARTIFACTS: "output/"
           DISABLE_MONITORING_INSTALLATION: "true"
-          HUB_MANIFESTS_SOURCE_REPO_REF: "3be817d39c69aefec4b8860c69ba2f37afba7cc8"
         run: |
           make test-integration
       - name: Upload artifacts
