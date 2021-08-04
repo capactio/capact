@@ -78,8 +78,7 @@ capact::aws::install::capact() {
   capact install --environment eks \
     --version "${CAPACT_VERSION}" \
     --capact-overrides "global.domainName=${CAPACT_DOMAIN_NAME}" \
-    --cert-manager-overrides "${CUSTOM_CERT_MANAGER_OVERRIDES},cert-manager.securityContext.enabled=true,cert-manager.securityContext.fsGroup=1001" \
-    --ingress-controller-overrides "ingress-nginx.controller.ingressClass=capact,ingress-nginx.controller.service.annotations.service\.beta\.kubernetes\.io/aws-load-balancer-internal=true"
+    --cert-manager-overrides "${CUSTOM_CERT_MANAGER_OVERRIDES}"
 
   shout "Capact deployed successfully!"
 }
@@ -200,14 +199,11 @@ main() {
   export KUBECONFIG="${CONFIG_DIR}/eks_kubeconfig"
 
   CAPACT_HOSTED_ZONE_ID=$(cat "${CONFIG_DIR}/route53_zone_id")
-  CUSTOM_CAPACT_SET_FLAGS="--set global.domainName=${CAPACT_DOMAIN_NAME}
-   --set gateway.ingress.annotations.class=capact"
 
   local -r cert_manager_role_arn=$(cat "${CONFIG_DIR}/cert_manager_role_arn")
   CUSTOM_CERT_MANAGER_OVERRIDES="cert-manager.serviceAccount.annotations.eks\.amazonaws\.com/role-arn=${cert_manager_role_arn}"
 
   export CAPACT_HOSTED_ZONE_ID
-  export CUSTOM_CAPACT_SET_FLAGS
   export CUSTOM_CERT_MANAGER_OVERRIDES
 
   if [[ "${EKS_EFS_ENABLED}" == "true" ]]; then

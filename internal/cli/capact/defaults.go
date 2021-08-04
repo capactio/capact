@@ -31,6 +31,30 @@ ingress-nginx:
       force-ssl-redirect: "true" # To enable HTTPS redirect with default SSL certificate
 `
 
+	ingressEksOverridesYaml = `
+ingress-nginx:
+  controller:
+    ingressClass: capact
+    resources:
+      requests:
+        cpu: 50m
+        memory: 150Mi
+      limits:
+        cpu: 100m
+        memory: 300Mi
+
+    service:
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+`
+
+	certManagerEksOverridesYaml = `
+cert-manager:
+  securityContext:
+    enabled: true
+    fsGroup: 1001
+`
+
 	capactKindOverridesYaml = `
 global:
   domainName: "capact.local"
