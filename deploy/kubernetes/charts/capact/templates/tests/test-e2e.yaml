@@ -10,7 +10,9 @@ spec:
   serviceAccountName: "{{ include "capact.fullname" . }}-test-e2e"
   containers:
     - name: tests-runner
-      image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.integrationTest.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+      # image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.integrationTest.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
+      # Use PR image
+      image: "ghcr.io/capactio/pr/e2e-test:PR-424"
       env:
         - name: STATUS_ENDPOINTS
           value: "http://capact-engine-graphql.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-gateway.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-hub-local.{{.Release.Namespace}}.svc.cluster.local/healthz,http://capact-hub-public.{{.Release.Namespace}}.svc.cluster.local/healthz"

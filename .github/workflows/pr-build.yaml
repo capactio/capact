@@ -242,7 +242,7 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [ entry-tests, build-app, build-tests, build-cli ]
+    needs: [ build-app, build-tests, build-cli ]
     permissions:
       contents: read
     env:

@@ -5,30 +5,30 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
-	policypkg "capact.io/capact/internal/k8s-engine/policy"
-
-	"go.uber.org/zap"
-
-	"capact.io/capact/pkg/engine/k8s/policy"
-
 	graphqldomain "capact.io/capact/internal/k8s-engine/graphql/domain/action"
+	policypkg "capact.io/capact/internal/k8s-engine/policy"
 	statusreporter "capact.io/capact/internal/k8s-engine/status-reporter"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
+
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/yaml"
 )
 
@@ -150,7 +150,7 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 	case err == nil:
 	case apierrors.IsAlreadyExists(err):
 		old := &rbacv1.ClusterRoleBinding{}
-		key := client.ObjectKey{Name: binding.Name, Namespace: binding.Namespace}
+		key := client.ObjectKey{Name: binding.Name}
 		if err := a.k8sCli.Get(ctx, key, old); err != nil {
 			return nil, err
 		}
@@ -168,6 +168,73 @@ func (a *ActionService) EnsureWorkflowSAExists(ctx context.Context, action *v1al
 	}
 
 	return sa, nil
+}
+
+// CleanupActionOwnedResources removes the Action owned resources.
+func (a *ActionService) CleanupActionOwnedResources(ctx context.Context, action *v1alpha1.Action) (bool, error) {
+	isCleanupIgnored := true
+	if !controllerutil.ContainsFinalizer(action, v1alpha1.ActionFinalizer) {
+		return isCleanupIgnored, nil // our finalizer was already removed
+	}
+
+	if action.IsExecuted() {
+		// Current decision:
+		a.log.Info("Ignoring delete request. Wait until Action execution will be finished.", zap.String("phase", string(action.Status.Phase)))
+
+		// Deletion in this state is complicated as such Action can be in the middle of e.g. data migration, system shutdown,
+		// creating resources on hyperscaler side, etc.
+		// In the future we can revisit this approach based on user feedback and e.g. cancel running actions, maybe even rollback
+		// already executed steps, etc.
+		return isCleanupIgnored, nil
+	}
+
+	// ===== Execute clean-up logic
+	isCleanupIgnored = false
+
+	// 1. Ensure that TypeInstances are unlocked.
+	err := a.UnlockTypeInstances(ctx, action)
+	if a.ignoreNotActionableTypeInstanceErrors(err) != nil {
+		return isCleanupIgnored, errors.Wrap(err, "while unlocking TypeInstances")
+	}
+
+	// 2. Ensure ClusterRoleBinding deleted
+	// We use ownerReference for created resources. But the cluster-scoped resources cannot have namespace-scoped owners.
+	// As a result, we need to remove it manually.
+	binding := &rbacv1.ClusterRoleBinding{
+		ObjectMeta: a.objectMetaFromAction(action),
+	}
+	if err := a.k8sCli.Delete(ctx, binding); client.IgnoreNotFound(err) != nil {
+		return isCleanupIgnored, errors.Wrapf(err, "while deleting ClusterRoleBinding owned by %s/%s Action", action.GetName(), action.GetNamespace())
+	}
+
+	// 3. Remove finalizer
+	controllerutil.RemoveFinalizer(action, v1alpha1.ActionFinalizer)
+	if err := a.k8sCli.Update(ctx, action); err != nil {
+		return isCleanupIgnored, errors.Wrap(err, "while removing Action finalizer")
+	}
+
+	return isCleanupIgnored, nil
+}
+
+// ignoreNotActionableTypeInstanceErrors ignores GraphQL error which says that TI are locked by different owner or do not exist.
+// In our case it means that TI were already unlocked by a given Action and someone else locked them or deleted.
+//
+// TODO: Get rid of ridiculous string assertion after adding proper error types to GraphQL responses.
+//       http://knowyourmeme.com/memes/this-is-fine
+func (a *ActionService) ignoreNotActionableTypeInstanceErrors(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "locked by different owner") {
+		return nil
+	}
+
+	if strings.Contains(err.Error(), "not found") {
+		return nil
+	}
+
+	return err
 }
 
 // EnsureRunnerInputDataCreated ensures that Kubernetes Secret with input data for a runner is created and up to date.

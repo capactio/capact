@@ -27,7 +27,7 @@ var _ = Describe("Cluster check", func() {
 
 	Describe("Capact cluster health", func() {
 		Context("Pods in cluster", func() {
-			It("should be in running phase (ignored kube-system and default)", func() {
+			It("should be in running phase (ignored Namespace: [kube-system, default], ignored evicted Pods)", func() {
 				k8sCfg, err := config.GetConfig()
 				Expect(err).ToNot(HaveOccurred())
 
@@ -77,6 +77,11 @@ func podRunningAndReadyOrFinished(pod *v1.Pod) bool {
 		}
 		return ready
 	default:
+		// Ignore evicted pods which are in Failed state because of graceful node shutdown.
+		// see: https://kubernetes.io/docs/concepts/architecture/nodes/#graceful-node-shutdown
+		if strings.EqualFold(pod.Status.Reason, "Shutdown") {
+			return true
+		}
 		log("The status of Pod %s/%s is %s, waiting for it to be Running (with Ready = true)", pod.Namespace, pod.Name, pod.Status.Phase)
 		return false
 	}
