@@ -19,7 +19,13 @@ func NewTerraform() *cobra.Command {
 		Long:  "Bootstrap Terraform based manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Bootstrap manifests 
-			<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds`, cli.Name),
+		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds
+
+		# Bootstrap manifests for an AWS Terraform module
+		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds -p aws
+	
+		# Bootstrap manifests for an GCP Terraform module
+		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds -p gcp`, cli.Name),
 		Args: cobra.ExactArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
 			tfContentCfg.ManifestsPrefix = args[0]
@@ -40,6 +46,7 @@ func NewTerraform() *cobra.Command {
 	cmd.Flags().StringVarP(&tfContentCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
 	cmd.Flags().StringVarP(&tfContentCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "URL to the tarball with the Terraform module")
+	cmd.Flags().VarP(&tfContentCfg.Provider, "provider", "p", `Create a provider-specific workflow. Possible values: "aws", "gcp"`)
 
 	return cmd
 }

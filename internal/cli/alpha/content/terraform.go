@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"capact.io/capact/pkg/sdk/manifest"
@@ -16,6 +17,7 @@ type TerraformConfig struct {
 	ModulePath                string
 	ModuleSourceURL           string
 	InterfacePathWithRevision string
+	Provider                  Provider
 }
 
 type terraformTemplatingInput struct {
@@ -25,6 +27,7 @@ type terraformTemplatingInput struct {
 	InterfaceRevision string
 	ModuleSourceURL   string
 	Outputs           []outputVariable
+	Provider          Provider
 }
 
 // GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
@@ -94,6 +97,7 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInpu
 		InterfaceRevision: interfaceRevision,
 		ModuleSourceURL:   cfg.ModuleSourceURL,
 		Outputs:           make([]outputVariable, 0, len(module.Outputs)),
+		Provider:          cfg.Provider,
 	}
 
 	for _, tfVar := range module.Variables {
@@ -105,11 +109,19 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInpu
 		})
 	}
 
+	sort.Slice(input.Variables, func(i, j int) bool {
+		return input.Variables[i].Name < input.Variables[j].Name
+	})
+
 	for _, tfOut := range module.Outputs {
 		input.Outputs = append(input.Outputs, outputVariable{
 			Name: tfOut.Name,
 		})
 	}
+
+	sort.Slice(input.Outputs, func(i, j int) bool {
+		return input.Outputs[i].Name < input.Outputs[j].Name
+	})
 
 	return input, nil
 }
@@ -169,12 +181,17 @@ spec:
     - path: {{if .InterfacePath}}cap.interface.{{ .InterfacePath }}{{else}}"cap.interface..." # Put here the path of the implemented Interface{{end}}
       revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
 
-  requires: {} # You might need to add here a TypeInstance to access an external API:
-    #cap.type.aws.auth:
-    #  allOf:
-    #    - name: credentials
-    #      alias: aws-credentials
-    #      revision: 0.1.0
+  requires: {{if eq .Provider "aws"}}
+    cap.type.aws.auth:
+      allOf:
+        - name: credentials
+          alias: aws-credentials
+          revision: 0.1.0{{else if eq .Provider "gcp"}}
+    cap.type.gcp.auth:
+      allOf:
+        - name: service-account
+          alias: gcp-sa
+          revision: 0.1.0{{else}}{}{{end}}
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -241,7 +258,11 @@ spec:
                             module:
                               name: "{{ .Name }}"
                               source: "{{ .ModuleSourceURL }}"
-                            env: []
+                            env: {{if eq .Provider "aws"}}
+                              - AWS_ACCESS_KEY_ID=<@ creds.accessKeyID @>
+                              - AWS_SECRET_ACCESS_KEY=<@ creds.secretAccessKey @>{{else if eq .Provider "gcp"}}
+                              - GOOGLE_PROJECT=<@ creds.project_id @>
+                              - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
                             output:
                               goTemplate: |
                                 {{ range $index, $output := .Outputs -}}
@@ -266,7 +287,31 @@ spec:
                         raw:
                           data: |
                             prefix: input
-
+              {{ if eq .Provider "gcp" }}
+              - - name: convert-gcp-yaml-to-json
+                  template: convert-yaml-to-json
+                  arguments:
+                    artifacts:
+                      - name: in
+                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-sa{{"}}"}}"
+              {{ end }}{{ if .Provider }}
+              - - name: fill-creds
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
+                      - name: input-parameters
+                        {{if eq .Provider "aws" -}}
+                        from: "{{"{{"}}workflow.outputs.artifacts.aws-credentials{{"}}"}}"
+                        {{- else if eq .Provider "gcp" -}}
+                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-credentials{{"}}"}}"
+                        {{- end}}
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: creds
+              {{ end }}
               - - name: terraform-apply
                   capact-action: terraform.apply
                   capact-outputTypeInstances:
@@ -275,9 +320,17 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
+                        {{if .Provider -}}
+                        from: "{{"{{"}}steps.fill-creds.outputs.artifacts.render{{"}}"}}"
+                        {{- else -}}
                         from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
+                        {{- end}}
                       - name: runner-context
                         from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
+                        {{- if eq .Provider "gcp"}}
+                      - name: additional
+                        from: "{{"{{"}}steps.convert-gcp-yaml-to-json.outputs.artifacts.out{{"}}"}}"
+                        {{- end}}
 
               - - name: render-config
                   capact-outputTypeInstances:
@@ -296,5 +349,20 @@ spec:
                           # You have fill the properties of the output TypeInstance here:
                           data: |
                             property: value
+          {{ if eq .Provider "gcp" }}
+          - name: convert-yaml-to-json
+            inputs:
+              artifacts:
+                - name: in
+                  path: /file
+            container:
+              image: ghcr.io/capactio/yq:4 # Original image: mikefarah/yq:4
+              command: ["sh", "-c"]
+              args: ["sleep 1 && yq eval -j -i /file"]
+            outputs:
+              artifacts:
+                - name: out
+                  path: /file
+          {{ end -}}
 `
 )
