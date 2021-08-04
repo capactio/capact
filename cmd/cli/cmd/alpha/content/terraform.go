@@ -37,7 +37,9 @@ func NewTerraform() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&tfContentCfg.InterfacePath, "interface", "i", "", "Path of the Interface, which is implemented by this Implementation")
+	cmd.Flags().StringVarP(&tfContentCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
+	cmd.Flags().StringVarP(&tfContentCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "URL to the tarball with the Terraform module")
 
 	return cmd
 }

@@ -2,6 +2,7 @@ package content
 
 import (
 	"fmt"
+	"strings"
 
 	"capact.io/capact/pkg/sdk/manifest"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
@@ -11,8 +12,19 @@ import (
 // TerraformConfig stores input parameters for Terraform based content generation
 type TerraformConfig struct {
 	Config
-	ModulePath    string
-	InterfacePath string
+
+	ModulePath                string
+	ModuleSourceURL           string
+	InterfacePathWithRevision string
+}
+
+type terraformTemplatingInput struct {
+	templatingInput
+
+	InterfacePath     string
+	InterfaceRevision string
+	ModuleSourceURL   string
+	Outputs           []outputVariable
 }
 
 // GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
@@ -54,25 +66,41 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 	return result, nil
 }
 
-func getTerraformTemplatingInput(cfg *TerraformConfig) (*templatingInput, error) {
+func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInput, error) {
 	module, diags := tfconfig.LoadModule(cfg.ModulePath)
 	if diags.Err() != nil {
 		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
 	}
 
-	input := &templatingInput{
-		Name:          cfg.ManifestName,
-		Prefix:        cfg.ManifestsPrefix,
-		InterfacePath: cfg.InterfacePath,
-		Variables:     make([]inputVariable, 0, len(module.Variables)),
-		Outputs:       make([]outputVariable, 0, len(module.Outputs)),
+	var (
+		interfacePath     = cfg.InterfacePathWithRevision
+		interfaceRevision = "0.1.0"
+	)
+
+	pathSlice := strings.Split(cfg.InterfacePathWithRevision, ":")
+	if len(pathSlice) == 2 {
+		interfacePath = pathSlice[0]
+		interfaceRevision = pathSlice[1]
+	}
+
+	input := &terraformTemplatingInput{
+		templatingInput: templatingInput{
+			Name:      cfg.ManifestName,
+			Prefix:    cfg.ManifestsPrefix,
+			Revision:  cfg.ManifestRevision,
+			Variables: make([]inputVariable, 0, len(module.Variables)),
+		},
+		InterfacePath:     interfacePath,
+		InterfaceRevision: interfaceRevision,
+		ModuleSourceURL:   cfg.ModuleSourceURL,
+		Outputs:           make([]outputVariable, 0, len(module.Outputs)),
 	}
 
 	for _, tfVar := range module.Variables {
-		// Skip default for now, as there are problems, when it is multiline string or with doublequotes in it.
+		// Skip default for now, as there are problems, when it is a multiline string or with doublequotes in it.
 		input.Variables = append(input.Variables, inputVariable{
 			Name:        tfVar.Name,
-			Type:        tfVar.Type,
+			Type:        getTypeFromTerraformType(tfVar.Type),
 			Description: tfVar.Description,
 		})
 	}
@@ -86,9 +114,29 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*templatingInput, error)
 	return input, nil
 }
 
+// Terraform types: https://www.terraform.io/docs/language/expressions/types.html
+func getTypeFromTerraformType(t string) string {
+	if strings.HasPrefix(t, "list") || strings.HasPrefix(t, "tuple") {
+		return "array"
+	}
+
+	switch t {
+	case "string":
+		return "string"
+	case "number":
+		return "number"
+	case "bool":
+		return "boolean"
+	case "null":
+		return "null"
+	}
+
+	return "object"
+}
+
 const (
 	terraformImplementationManifestTemplate = `ocfVersion: 0.0.1
-revision: 0.1.0
+revision: {{ .Revision }}
 kind: Implementation
 metadata:
   prefix: "cap.implementation.{{ .Prefix }}"
@@ -115,11 +163,11 @@ spec:
   outputTypeInstanceRelations:
     config:
       uses:
-        - terraform-release      
+        - terraform-release
 
   implements:
-    - path: {{ if .InterfacePath }}cap.interface.{{ .InterfacePath }}{{else}}"cap.interface..." # Put here the path of the implemented Interface{{end}}
-      revision: 0.1.0
+    - path: {{if .InterfacePath}}cap.interface.{{ .InterfacePath }}{{else}}"cap.interface..." # Put here the path of the implemented Interface{{end}}
+      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
 
   requires: {} # You might need to add here a TypeInstance to access an external API:
     #cap.type.aws.auth:
@@ -192,10 +240,10 @@ spec:
                             command: "apply"
                             module:
                               name: "{{ .Name }}"
-                              source: "https://example.com/terraform-module.tgz" # Put the URL for the tarball with the Terraform module source code
+                              source: "{{ .ModuleSourceURL }}"
                             env: []
                             output:
-                              goTemplate:
+                              goTemplate: |
                                 {{ range $index, $output := .Outputs -}}
                                 {{ $output.Name }}: {{"{{"}} .{{ $output.Name }} {{"}}"}}
                                 {{ end }}

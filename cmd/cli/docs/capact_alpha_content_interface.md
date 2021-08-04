@@ -24,7 +24,8 @@ capact alpha content interface database.postgresql install
 ### Options
 
 ```
-  -h, --help   help for interface
+  -h, --help              help for interface
+  -r, --revision string   Revision of the Interface manifest (default "0.1.0")
 ```
 
 ### Options inherited from parent commands

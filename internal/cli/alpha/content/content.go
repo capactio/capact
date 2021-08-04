@@ -9,21 +9,21 @@ import (
 
 // Config stores the generic input parameters for content generation
 type Config struct {
-	ManifestName    string
-	ManifestsPrefix string
+	ManifestName     string
+	ManifestsPrefix  string
+	ManifestRevision string
 }
 
 type templatingConfig struct {
 	Template string
-	Input    *templatingInput
+	Input    interface{}
 }
 
 type templatingInput struct {
-	Name          string
-	Prefix        string
-	InterfacePath string
-	Variables     []inputVariable
-	Outputs       []outputVariable
+	Name      string
+	Prefix    string
+	Revision  string
+	Variables []inputVariable
 }
 
 type inputVariable struct {

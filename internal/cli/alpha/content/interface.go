@@ -15,8 +15,9 @@ type InterfaceConfig struct {
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
 	input := &templatingInput{
-		Name:   cfg.ManifestName,
-		Prefix: cfg.ManifestsPrefix,
+		Name:     cfg.ManifestName,
+		Prefix:   cfg.ManifestsPrefix,
+		Revision: cfg.ManifestRevision,
 	}
 
 	cfgs := []*templatingConfig{
@@ -57,7 +58,7 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 
 const (
 	interfaceManifestTemplate = `ocfVersion: 0.0.1
-revision: 0.1.0
+revision: {{ .Revision }}
 kind: Interface
 metadata:
   prefix: "cap.interface.{{ .Prefix }}"
@@ -116,7 +117,7 @@ spec:
         "properties": {
           "example": {
             "$id": "#/properties/example",
-            "type": "String",
+            "type": "string",
             "description": "Example field"
           }
         }

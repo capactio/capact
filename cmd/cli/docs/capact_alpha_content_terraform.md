@@ -25,7 +25,9 @@ capact alpha content terraform [PREFIX] [NAME] [TERRAFORM_MODULE_PATH] [flags]
 
 ```
   -h, --help               help for terraform
-  -i, --interface string   Path of the Interface, which is implemented by this Implementation
+  -i, --interface string   Path with revision of the Interface, which is implemented by this Implementation
+  -r, --revision string    Revision of the Implementation manifest (default "0.1.0")
+  -s, --source string      URL to the tarball with the Terraform module (default "https://example.com/terraform-module.tgz")
 ```
 
 ### Options inherited from parent commands

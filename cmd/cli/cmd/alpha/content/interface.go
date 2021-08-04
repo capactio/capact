@@ -36,5 +36,7 @@ func NewInterface() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringVarP(&interfaceCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Interface manifest")
+
 	return cmd
 }
