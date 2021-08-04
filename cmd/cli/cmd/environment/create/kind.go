@@ -19,7 +19,7 @@ func NewKind() *cobra.Command {
 			return create.Kind(cmd.Context(), opts)
 		},
 	}
-	cmd.Flags().StringVar(&opts.Name, "name", create.KindDefaultClusterName, "cluster name, overrides config")
+	cmd.Flags().StringVar(&opts.Name, "name", create.DefaultClusterName, "cluster name, overrides config")
 	cmd.Flags().StringVar(&opts.Config, "cluster-config", "", "path to a kind config file")
 	cmd.Flags().StringVar(&opts.ImageName, "image", create.KindDefaultNodeImage, "node docker image to use for booting the cluster")
 	cmd.Flags().BoolVar(&opts.Retain, "retain", false, "retain nodes for debugging when cluster creation fails")

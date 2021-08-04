@@ -11,8 +11,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewK3D returns a cobra.Command for creating k3d environment.
-func NewK3D() *cobra.Command {
+// NewK3d returns a cobra.Command for creating k3d environment.
+func NewK3d() *cobra.Command {
 	var name string
 	cmd := &cobra.Command{
 		Use:   "k3d",
@@ -30,7 +30,7 @@ func NewK3D() *cobra.Command {
 	// add `name` flag to have the same UX as we have for `kind` in the minimal scenario:
 	//   $ capact env delete kind --name capact-dev
 	//   $ capact env delete k3d  --name capact-dev
-	cmd.Flags().StringVar(&name, "name", create.K3dDefaultClusterName, "Cluster name")
+	cmd.Flags().StringVar(&name, "name", create.DefaultClusterName, "Cluster name")
 	_ = cmd.RegisterFlagCompletionFunc("name", util.ValidArgsAvailableClusters)
 
 	return cmd

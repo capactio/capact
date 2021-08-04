@@ -20,6 +20,8 @@ const (
 	GKEEnv = "gke"
 	// EKSEnv default name for EKS environment
 	EKSEnv = "eks"
+	// KindEnv default name for kind environment
+	K3dEnv = "k3d"
 
 	// LocalChartsPath path to Helm charts in Capact repo
 	LocalChartsPath = "deploy/kubernetes/charts"

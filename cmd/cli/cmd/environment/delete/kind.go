@@ -18,7 +18,7 @@ func NewKind() *cobra.Command {
 			return delete.Kind(cmd.Context(), opts)
 		},
 	}
-	cmd.Flags().StringVar(&opts.Name, "name", create.KindDefaultClusterName, "cluster name, overrides config")
+	cmd.Flags().StringVar(&opts.Name, "name", create.DefaultClusterName, "cluster name, overrides config")
 
 	return cmd
 }

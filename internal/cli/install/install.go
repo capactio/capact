@@ -31,20 +31,18 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 	version := opts.Parameters.Version
 	if version == "@local" {
-		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
-		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
+		//registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
+		//registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
 		// TODO can we parallelize it?
-		created, err := capact.BuildImages(ctx, w, registryPath, registryTag, opts.BuildImages)
-		if err != nil {
-			return errors.Wrap(err, "while building images")
-		}
+		//created, err := capact.BuildImages(ctx, w, registryPath, registryTag, opts.BuildImages)
+		//if err != nil {
+		//	return errors.Wrap(err, "while building images")
+		//}
 
-		status.Step("Loading Docker images")
-		for _, image := range created {
-			err = capact.LoadImage(opts.Name, image)
-			if err != nil {
-				return errors.Wrap(err, "while loading images into env")
-			}
+		created := []string{"local/argo-actions:dev", "local/argo-runner:dev", "local/e2e-test:dev", "local/gateway:dev", "local/hub-js:dev", "local/k8s-engine:dev", "local/populator:dev"}
+		//status.Step("Loading Docker images")
+		if err := capact.LoadImages(ctx, opts.Environment, opts.Name, created); err != nil {
+			return err
 		}
 	}
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"capact.io/capact/internal/cli/environment/create"
@@ -32,17 +31,19 @@ func NewK3D() *cobra.Command {
 		// Run k3d create cmd
 		k3d.Run(cmd, []string{name})
 
-		waitFlag := cmd.Flag("wait")
-		if strings.EqualFold(waitFlag.Value.String(), "false") {
-			return nil
-		}
-
-		rawTimeout := cmd.Flag("timeout").Value.String()
-		timeout, err := time.ParseDuration(rawTimeout)
+		wait, err := cmd.Flags().GetBool("wait")
 		if err != nil {
 			return err
 		}
-		ctx, cancel := context.WithTimeout(cmd.Context(), timeout)
+		if !wait {
+			return nil
+		}
+
+		timeout, err := cmd.Flags().GetDuration("timeout")
+		if err != nil {
+			return err
+		}
+		ctx, cancel := getTimeoutContext(cmd.Context(), timeout)
 		defer cancel()
 		return create.WaitForK3DReadyNodes(ctx, os.Stdout, name)
 	}
@@ -52,7 +53,14 @@ func NewK3D() *cobra.Command {
 	// add `name` flag to have the same UX as we have for `kind` in the minimal scenario:
 	//   $ capact env create kind --name capact-dev
 	//   $ capact env create k3d  --name capact-dev
-	k3d.Flags().StringVar(&name, "name", create.K3dDefaultClusterName, "Cluster name")
+	k3d.Flags().StringVar(&name, "name", create.DefaultClusterName, "Cluster name")
 
 	return k3d
+}
+
+func getTimeoutContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout.Seconds() == 0 {
+		return ctx, func() {}
+	}
+	return context.WithTimeout(ctx, timeout)
 }

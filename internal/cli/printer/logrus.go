@@ -1,6 +1,7 @@
 package printer
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -24,7 +25,7 @@ func NewLogrusSpinnerFormatter(header string) *LogrusSpinnerFormatter {
 // Format formats logrus entry
 func (f *LogrusSpinnerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 	f.spinner.End(!f.failedPreviously)
-	f.spinner.Step(entry.Message)
+	f.spinner.Step(fmt.Sprintf(entry.Message))
 
 	switch entry.Level {
 	case logrus.DebugLevel, logrus.InfoLevel, logrus.TraceLevel:
