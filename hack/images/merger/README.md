@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains Docker image with a helper for merging input parameters in manifests.
+This folder contains the Docker image which merges multiple input YAML files into a single one.
 
 The Docker image consists a helper script, `merger.sh`. The script is an entrypoint of the image, and it is used to prefix and merge all yaml files found in `$SRC` directory.
 Each file is prefixed with a file name without extension.
