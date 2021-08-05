@@ -21,5 +21,5 @@ You can configure the merger script passing the following environment variables:
 
 | Variable                  | Default      | Description                                      |
 | ------------------------- | ------------ | ------------------------------------------------ |
-| SRC                       | /yamls       | Path to the directory with yaml files.           |
-| OUT                       | /merged.yaml | Output file with prefixed and merged yaml files. |
+| SRC                       | /yamls       | Path to the directory with YAML files.           |
+| OUT                       | /merged.yaml | Output file with prefixed and merged YAML files. |
