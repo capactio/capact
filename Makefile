@@ -19,7 +19,7 @@ all: generate build-all-images test-unit test-lint ## Default: generate all, bui
 
 APPS = gateway k8s-engine hub-js argo-runner helm-runner cloudsql-runner populator terraform-runner argo-actions
 TESTS = e2e
-INFRA = json-go-gen graphql-schema-linter jinja2
+INFRA = json-go-gen graphql-schema-linter jinja2 merger
 
 build-all-tools: ## Builds the standalone binaries for all tools
 	goreleaser build --rm-dist --skip-post-hooks --snapshot --single-target

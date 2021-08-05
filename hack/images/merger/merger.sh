@@ -4,7 +4,7 @@ SRC=${SRC:-"/yamls"}
 OUT=${OUT:-"/merged.yaml"}
 
 # prefix each file with its filename
-for filename in "${SRC}"/*.yaml; do
+for filename in "${SRC}"/*; do
   filename=$(basename -- "$filename")
   prefix="${filename%.*}"
   yq e -i "{\"${prefix}\": . }" "${SRC}"/"${filename}"
