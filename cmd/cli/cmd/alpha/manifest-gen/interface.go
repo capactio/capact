@@ -1,36 +1,48 @@
-package content
+package manifestgen
 
 import (
+	"errors"
 	"log"
+	"strings"
 
 	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/alpha/content"
+	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"github.com/spf13/cobra"
 )
 
-var interfaceCfg content.InterfaceConfig
+var interfaceCfg manifestgen.InterfaceConfig
 
 // NewInterface returns a cobra.Command to bootstrap new Interface manifests.
 func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "interface [PREFIX] [NAME]",
+		Use:   "interface [PATH]",
 		Short: "Bootstrap new Interface manifests",
 		Long:  "Bootstrap new Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Bootstrap manifests for the cap.interface.database.postgresql.install Interface
 			<cli> alpha content interface database.postgresql install`, cli.Name),
-		Args: cobra.ExactArgs(2),
-		Run: func(cmd *cobra.Command, args []string) {
-			interfaceCfg.ManifestsPrefix = args[0]
-			interfaceCfg.ManifestName = args[1]
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				return errors.New("accepts only one argument")
+			}
 
-			files, err := content.GenerateInterfaceManifests(&interfaceCfg)
+			path := args[0]
+			if !strings.HasPrefix(path, "cap.interface.") || len(strings.Split(path, ".")) < 4 {
+				return errors.New(`manifest path must be in format "cap.interface.[PREFIX].[NAME]"`)
+			}
+
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			interfaceCfg.ManifestPath = args[0]
+
+			files, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
 			if err != nil {
 				log.Fatalf("while generating content files: %v", err)
 			}
 
-			if err := writeManifestFiles(files); err != nil {
+			if err := manifestgen.WriteManifestFiles(manifestOutputDirectory, files, overrideExistingManifest); err != nil {
 				log.Fatalf("while writing manifest files: %v", err)
 			}
 		},

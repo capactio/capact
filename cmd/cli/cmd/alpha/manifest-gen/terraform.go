@@ -1,15 +1,16 @@
-package content
+package manifestgen
 
 import (
+	"errors"
 	"log"
 
 	"capact.io/capact/internal/cli"
-	"capact.io/capact/internal/cli/alpha/content"
+	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
 	"github.com/spf13/cobra"
 )
 
-var tfContentCfg content.TerraformConfig
+var tfContentCfg manifestgen.TerraformConfig
 
 // NewTerraform returns a cobra.Command to bootstrap Terraform based manifests.
 func NewTerraform() *cobra.Command {
@@ -19,25 +20,31 @@ func NewTerraform() *cobra.Command {
 		Long:  "Bootstrap Terraform based manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Bootstrap manifests 
-		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds
+		<cli> alpha content implementation terraform aws.rds.deploy ./terraform-modules/aws-rds
 
 		# Bootstrap manifests for an AWS Terraform module
-		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds -p aws
+		<cli> alpha content implementation terraform aws.rds.deploy ./terraform-modules/aws-rds -p aws
 	
 		# Bootstrap manifests for an GCP Terraform module
-		<cli> alpha content terraform aws.rds deploy ./terraform-modules/aws-rds -p gcp`, cli.Name),
-		Args: cobra.ExactArgs(3),
-		Run: func(cmd *cobra.Command, args []string) {
-			tfContentCfg.ManifestsPrefix = args[0]
-			tfContentCfg.ManifestName = args[1]
-			tfContentCfg.ModulePath = args[2]
+		<cli> alpha content implementation terraform gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp`, cli.Name),
 
-			files, err := content.GenerateTerraformManifests(&tfContentCfg)
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 2 {
+				return errors.New("accepts two arguments: [MANIFEST_PATH] [MODULE_PATH]")
+			}
+
+			return nil
+		},
+		Run: func(cmd *cobra.Command, args []string) {
+			tfContentCfg.ManifestPath = args[0]
+			tfContentCfg.ModulePath = args[1]
+
+			files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
 				log.Fatalf("while generating content files: %v", err)
 			}
 
-			if err := writeManifestFiles(files); err != nil {
+			if err := manifestgen.WriteManifestFiles(manifestOutputDirectory, files, overrideExistingManifest); err != nil {
 				log.Fatalf("while writing manifest files: %v", err)
 			}
 		},

@@ -1,7 +1,7 @@
 package alpha
 
 import (
-	"capact.io/capact/cmd/cli/cmd/alpha/content"
+	manifestgen "capact.io/capact/cmd/cli/cmd/alpha/manifest-gen"
 	"github.com/spf13/cobra"
 )
 
@@ -13,7 +13,7 @@ func NewCmd() *cobra.Command {
 		Long:  "Subcommand for alpha features in the CLI",
 	}
 
-	cmd.AddCommand(content.NewCmd())
+	cmd.AddCommand(manifestgen.NewCmd())
 
 	return cmd
 }

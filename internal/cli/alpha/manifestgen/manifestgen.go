@@ -1,7 +1,8 @@
-package content
+package manifestgen
 
 import (
 	"bytes"
+	"strings"
 	"text/template"
 
 	"github.com/pkg/errors"
@@ -9,8 +10,7 @@ import (
 
 // Config stores the generic input parameters for content generation
 type Config struct {
-	ManifestName     string
-	ManifestsPrefix  string
+	ManifestPath     string
 	ManifestRevision string
 }
 
@@ -72,6 +72,14 @@ func generateManifest(cfg *templatingConfig) (string, error) {
 	}
 
 	return manifest.String(), nil
+}
+
+func splitPathToPrefixAndName(path string) (string, string) {
+	parts := strings.Split(path, ".")
+	prefix := strings.Join(parts[2:len(parts)-1], ".")
+	name := parts[len(parts)-1]
+
+	return prefix, name
 }
 
 const (

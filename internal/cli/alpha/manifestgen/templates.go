@@ -1,152 +1,89 @@
-package content
-
-import (
-	"fmt"
-	"sort"
-	"strings"
-
-	"capact.io/capact/pkg/sdk/manifest"
-	"github.com/hashicorp/terraform-config-inspect/tfconfig"
-	"github.com/pkg/errors"
-)
-
-// TerraformConfig stores input parameters for Terraform based content generation
-type TerraformConfig struct {
-	Config
-
-	ModulePath                string
-	ModuleSourceURL           string
-	InterfacePathWithRevision string
-	Provider                  Provider
-}
-
-type terraformTemplatingInput struct {
-	templatingInput
-
-	InterfacePath     string
-	InterfaceRevision string
-	ModuleSourceURL   string
-	Outputs           []outputVariable
-	Provider          Provider
-}
-
-// GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
-func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
-	input, err := getTerraformTemplatingInput(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting templating input")
-	}
-
-	cfgs := []*templatingConfig{
-		{
-			Template: typeManifestTemplate,
-			Input:    input,
-		},
-		{
-			Template: terraformImplementationManifestTemplate,
-			Input:    input,
-		},
-	}
-
-	generated, err := generateManifests(cfgs)
-	if err != nil {
-		return nil, errors.Wrap(err, "while generating manifests")
-	}
-
-	result := make(map[string]string, len(generated))
-
-	for _, m := range generated {
-		metadata, err := manifest.GetMetadata([]byte(m))
-		if err != nil {
-			return nil, errors.Wrap(err, "while getting metadata for manifest")
-		}
-
-		manifestPath := fmt.Sprintf("%s.%s", metadata.Metadata.Prefix, metadata.Metadata.Name)
-
-		result[manifestPath] = m
-	}
-
-	return result, nil
-}
-
-func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInput, error) {
-	module, diags := tfconfig.LoadModule(cfg.ModulePath)
-	if diags.Err() != nil {
-		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
-	}
-
-	var (
-		interfacePath     = cfg.InterfacePathWithRevision
-		interfaceRevision = "0.1.0"
-	)
-
-	pathSlice := strings.Split(cfg.InterfacePathWithRevision, ":")
-	if len(pathSlice) == 2 {
-		interfacePath = pathSlice[0]
-		interfaceRevision = pathSlice[1]
-	}
-
-	input := &terraformTemplatingInput{
-		templatingInput: templatingInput{
-			Name:      cfg.ManifestName,
-			Prefix:    cfg.ManifestsPrefix,
-			Revision:  cfg.ManifestRevision,
-			Variables: make([]inputVariable, 0, len(module.Variables)),
-		},
-		InterfacePath:     interfacePath,
-		InterfaceRevision: interfaceRevision,
-		ModuleSourceURL:   cfg.ModuleSourceURL,
-		Outputs:           make([]outputVariable, 0, len(module.Outputs)),
-		Provider:          cfg.Provider,
-	}
-
-	for _, tfVar := range module.Variables {
-		// Skip default for now, as there are problems, when it is a multiline string or with doublequotes in it.
-		input.Variables = append(input.Variables, inputVariable{
-			Name:        tfVar.Name,
-			Type:        getTypeFromTerraformType(tfVar.Type),
-			Description: tfVar.Description,
-		})
-	}
-
-	sort.Slice(input.Variables, func(i, j int) bool {
-		return input.Variables[i].Name < input.Variables[j].Name
-	})
-
-	for _, tfOut := range module.Outputs {
-		input.Outputs = append(input.Outputs, outputVariable{
-			Name: tfOut.Name,
-		})
-	}
-
-	sort.Slice(input.Outputs, func(i, j int) bool {
-		return input.Outputs[i].Name < input.Outputs[j].Name
-	})
-
-	return input, nil
-}
-
-// Terraform types: https://www.terraform.io/docs/language/expressions/types.html
-func getTypeFromTerraformType(t string) string {
-	if strings.HasPrefix(t, "list") || strings.HasPrefix(t, "tuple") {
-		return "array"
-	}
-
-	switch t {
-	case "string":
-		return "string"
-	case "number":
-		return "number"
-	case "bool":
-		return "boolean"
-	case "null":
-		return "null"
-	}
-
-	return "object"
-}
+package manifestgen
 
 const (
+	interfaceGroupManifestTemplate = `
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: InterfaceGroup
+metadata:
+  prefix: "cap.interface.{{ .Prefix }}"
+  name: "{{ .Name }}"
+  displayName: "{{ .Name }}"
+  description: "{{ .Name }} related Interfaces"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  iconURL: https://example.com/icon.png
+  maintainers:
+    - email: dev@example.cop
+      name: Example Dev
+      url: https://example.com
+`
+
+	interfaceManifestTemplate = `ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Interface
+metadata:
+  prefix: "cap.interface.{{ .Prefix }}"
+  name: "{{ .Name }}"
+  displayName: "{{ .Name }}"
+  description: "{{ .Name }} action for {{ .Prefix }}"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  iconURL: https://example.com/icon.png
+  maintainers:
+    - email: dev@example.cop
+      name: Example Dev
+      url: https://example.com
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.{{ .Name }}-input
+          revision: 0.1.0
+    typeInstances: {}
+
+  output:
+    typeInstances:
+      config:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.config
+          revision: 0.1.0
+`
+
+	outputTypeManifestTemplate = `ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: "cap.type.{{ .Prefix }}"
+  displayName: "{{.Prefix }} config"
+  description: "Type representing a {{ .Prefix }} config"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # Put the properties of your Interface output Type in form of a JSON Schema here:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "required": [],
+        "properties": {
+          "example": {
+            "$id": "#/properties/example",
+            "type": "string",
+            "description": "Example field"
+          }
+        }
+      }
+`
+
 	terraformImplementationManifestTemplate = `ocfVersion: 0.0.1
 revision: {{ .Revision }}
 kind: Implementation
