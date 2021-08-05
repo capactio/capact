@@ -17,7 +17,7 @@ docker build -t merger .
 
 ## Configuration
 
-You can configure the merger script passing the following environment variables:
+You can configure the merger script by passing the following environment variables:
 
 | Variable                  | Default      | Description                                      |
 | ------------------------- | ------------ | ------------------------------------------------ |
