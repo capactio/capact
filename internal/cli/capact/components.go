@@ -338,7 +338,7 @@ func (i *IngressController) InstallUpgrade(version string) (*release.Release, er
 			return nil, errors.Wrap(err, "while converting override values")
 		}
 
-	case EksEnv:
+	case EKSEnv:
 		values, err = ValuesFromString(ingressEksOverridesYaml)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
@@ -360,7 +360,7 @@ func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 
 	values := map[string]interface{}{}
 	switch c.opts.Environment {
-	case EksEnv:
+	case EKSEnv:
 		values, err = ValuesFromString(certManagerEksOverridesYaml)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
