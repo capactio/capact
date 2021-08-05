@@ -4,7 +4,7 @@
 
 This folder contains the Docker image which merges multiple input YAML files into a single one.
 
-The Docker image consists a helper script, `merger.sh`. The script is an entrypoint of the image, and it is used to prefix and merge all yaml files found in `$SRC` directory.
+The Docker image contains the `merger.sh` helper script. The script is an entrypoint of the image, and it is used to prefix and merge all YAML files found in `$SRC` directory.
 Each file is prefixed with a file name without extension.
 
 ## Installation
