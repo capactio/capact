@@ -49,4 +49,4 @@ readonly CAPACT_INCREASE_RESOURCE_LIMITS="true"
 readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL="github.com/capactio/hub-manifests"
 # The git ref to checkout. It can point to a commit SHA, a branch name, or a tag.
 # If you want to use your forked version, remember to update CAPACT_HUB_MANIFESTS_SOURCE_REPO_URL  respectively.
-readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="3aad3a310e3d22319bf423c0d6d59a0ce4cc2ee3"
+readonly CAPACT_HUB_MANIFESTS_SOURCE_REPO_REF="main"
