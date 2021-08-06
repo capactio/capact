@@ -15,7 +15,7 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
-// HubClient interface agreggates methods for interacting with the Local and Public Hub.
+// HubClient interface aggregates methods for interacting with the Local and Public Hub.
 type HubClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)

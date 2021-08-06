@@ -77,6 +77,39 @@ func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.Int
 	return resp.Interface.Revision, nil
 }
 
+// ListTypeRefRevisionsJSONSchemas returns the list of requested Types.
+// Only a few fields are populated. Check the query fields for more information.
+func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.Type, error) {
+	req := graphql.NewRequest(`query ListTypeRefsJSONSchemas($typeFilter: TypeFilter!)  {
+		  types(filter: $typeFilter) {
+			revisions {
+			  revision
+			  metadata {
+				path
+			  }
+			  spec {
+				jsonSchema
+			  }
+			}
+		  }
+		}`)
+
+	req.Var("typeFilter", filter)
+
+	var resp struct {
+		Types []*gqlpublicapi.Type `json:"interfaces"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to list Types")
+	}
+
+	return resp.Types, nil
+}
+
 // ListInterfacesWithLatestRevision returns the latest revision of the Interfaces,
 // which match the provided filter.
 func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {

@@ -1,6 +1,7 @@
 package local
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"time"
@@ -140,6 +141,50 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgrap
 	}
 
 	return resp.TypeInstance, nil
+}
+
+// FindTypeInstance finds a TypeInstance's TypeRef.
+// If no TypeInstances are found, it returns nil.
+func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error) {
+	if len(ids) == 0 {
+		return map[string]hublocalgraphql.TypeInstanceTypeReference{}, nil
+	}
+
+	body := bytes.Buffer{}
+	for idx, id := range ids {
+		body.WriteString(fmt.Sprintf(`		
+		id_%d:typeInstance(id: %q) {
+			id
+			typeRef {
+			  path
+			  revision
+			}	
+		}`, idx, id))
+	}
+
+	req := graphql.NewRequest(fmt.Sprintf(`query FindTypeInstancesTypeRef {
+		%s
+	}`, body.String()))
+
+	var resp struct {
+		TypeInstanceRefs map[string]*hublocalgraphql.TypeInstance `json:"typeInstance"`
+	}
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to get TypeInstances TypeRefs")
+	}
+
+	out := map[string]hublocalgraphql.TypeInstanceTypeReference{}
+	for _, ti := range resp.TypeInstanceRefs {
+		if ti == nil || ti.TypeRef == nil {
+			continue
+		}
+		out[ti.ID] = *ti.TypeRef
+	}
+
+	return out, nil
 }
 
 // ListTypeInstances lists the TypeInstances in the local Hub. You can pass a filter limit the list of returned TypeInstances.

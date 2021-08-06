@@ -3,6 +3,7 @@ package action
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"capact.io/capact/internal/cli/client"
@@ -92,7 +93,7 @@ func TableDataOnGet(in interface{}) (cliprinter.TableData, error) {
 			getOut.Namespace,
 			act.Name,
 			act.ActionRef.Path,
-			toString(act.Run),
+			strconv.FormatBool(act.Run),
 			string(act.Status.Phase),
 			duration.HumanDuration(time.Since(act.CreatedAt.Time)),
 		})

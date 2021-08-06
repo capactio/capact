@@ -26,6 +26,17 @@ func isDNSSubdomain(val interface{}) error {
 	return nil
 }
 
+func areParamsValid(validate func(inputParams string) error ) survey.Validator {
+	return func(val interface{}) error {
+		str, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("Cannot enforce input parameters JSONSchema validation on response of type %T", val)
+		}
+
+		return validate(str)
+	}
+}
+
 func isYAML(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
@@ -34,13 +45,6 @@ func isYAML(val interface{}) error {
 
 	out := map[string]interface{}{}
 	return yaml.Unmarshal([]byte(str), &out)
-}
-
-func toString(in bool) string {
-	if in {
-		return "true"
-	}
-	return "false"
 }
 
 func namespaceQuestion() *survey.Question {
