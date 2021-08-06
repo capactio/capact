@@ -88,7 +88,6 @@ build-test-image-%:
 		--build-arg BUILD_CMD="go test -v -c" \
 		--build-arg SOURCE_PATH="./test/$(APP)/*_test.go" \
 		-t $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) .
-.PHONY: build-test-image
 
 push-test-image-%:
 	$(eval APP := $*)

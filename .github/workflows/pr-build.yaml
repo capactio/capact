@@ -156,7 +156,7 @@ jobs:
         with:
           name: ${{ matrix.APP }}-${{github.sha}}
           path: /tmp/${{ matrix.APP }}.tar
-          retention-days: 5
+          retention-days: 1
 
   push-apps:
     name: Push ${{ matrix.APP }}
