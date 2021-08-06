@@ -47,6 +47,12 @@ jobs:
           curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
           sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
           sudo apt-get update && sudo apt-get install terraform
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Set up GoReleaser
+        run: go install github.com/goreleaser/goreleaser@v0.173.2
       - name: Delete old cluster
         env:
           OLD_CLUSTER_NAME: ${{ github.event.inputs.oldClusterToDelete }}
@@ -79,21 +85,20 @@ jobs:
           echo "::set-output name=JOB_IP::$AUTHORIZED"
       - name: Install components
         env:
-          OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
-          OVERRIDE_DOCKER_REPOSITORY: ${{ github.event.inputs.overrideDockerRepository }}
           USE_TEST_SETUP: "true"
           GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
+          CLUSTER_NAME: "dev-cluster"
+          CAPACT_VERSION: "@latest"
+          CAPACT_HELM_REPO_URL: "@latest"
+          OVERRIDE_DOCKER_TAG: ${{ github.event.inputs.overrideDockerTag }}
+          OVERRIDE_DOCKER_REPOSITORY: ${{ github.event.inputs.overrideDockerRepository }}
         run: |
-          export CUSTOM_NGINX_SET_FLAGS="--set ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
-          export CUSTOM_CAPACT_SET_FLAGS="--set global.gateway.auth.password=$GATEWAY_PASSWORD"
+          export INGRESS_CONTROLLER_OVERRIDES="ingress-nginx.controller.service.loadBalancerIP=${LOAD_BALANCER_EXTERNAL_IP}"
+          export CAPACT_OVERRIDES="global.gateway.auth.password=$GATEWAY_PASSWORD"
           ./hack/ci/cluster-components-install-upgrade.sh
       - name: Configure Cert Manager in cluster
         run: |
           ./hack/ci/install-cert-manager.sh
-          . ./hack/ci/compare-cert.sh
-      - name: Store secrets
-        run: |
-          ./hack/ci/backup-cert.sh
 
       - name: Network cleanup
         # The `always()` is needed as "If your if expression does not contain any of the status functions it will automatically result with success(). "

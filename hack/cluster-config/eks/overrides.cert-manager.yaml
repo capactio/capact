@@ -1,4 +1,0 @@
-cert-manager:
-  securityContext:
-    enabled: true
-    fsGroup: 1001

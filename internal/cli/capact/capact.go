@@ -13,8 +13,13 @@ const (
 	LocalDockerTag = "dev"
 	// LocalDockerPath path used when building local images
 	LocalDockerPath = "local"
+
 	// KindEnv default name for kind environment
 	KindEnv = "kind"
+	// GKEEnv default name for GKE environment
+	GKEEnv = "gke"
+	// EKSEnv default name for EKS environment
+	EKSEnv = "eks"
 
 	// LocalChartsPath path to Helm charts in Capact repo
 	LocalChartsPath = "deploy/kubernetes/charts"

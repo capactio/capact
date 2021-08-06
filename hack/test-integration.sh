@@ -80,6 +80,7 @@ main() {
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
+    export CLUSTER_NAME="${KIND_CLUSTER_NAME}"
     export CLUSTER_TYPE="kind"
     export USE_TEST_SETUP="true"
     export PRINT_INSECURE_NOTES="false"

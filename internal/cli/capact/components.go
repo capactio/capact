@@ -330,12 +330,20 @@ func (i *IngressController) InstallUpgrade(version string) (*release.Release, er
 	upgradeCli := i.upgradeAction(version)
 
 	values := map[string]interface{}{}
-	if i.opts.Environment == KindEnv {
+
+	switch i.opts.Environment {
+	case KindEnv:
 		values, err = ValuesFromString(ingressKindOverridesYaml)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
-	} //TODO eks
+
+	case EKSEnv:
+		values, err = ValuesFromString(ingressEksOverridesYaml)
+		if err != nil {
+			return nil, errors.Wrap(err, "while converting override values")
+		}
+	}
 
 	for _, value := range i.opts.Parameters.Override.IngressStringOverrides {
 		if err := strvals.ParseInto(value, values); err != nil {
@@ -347,9 +355,17 @@ func (i *IngressController) InstallUpgrade(version string) (*release.Release, er
 
 // InstallUpgrade upgrades or if not available, installs the component
 func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
+	var err error
 	upgradeCli := c.upgradeAction(version)
 
 	values := map[string]interface{}{}
+	switch c.opts.Environment {
+	case EKSEnv:
+		values, err = ValuesFromString(certManagerEksOverridesYaml)
+		if err != nil {
+			return nil, errors.Wrap(err, "while converting override values")
+		}
+	}
 
 	for _, value := range c.opts.Parameters.Override.CertManagerStringOverrides {
 		if err := strvals.ParseInto(value, values); err != nil {
@@ -365,8 +381,6 @@ func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 	if c.opts.Environment != KindEnv {
 		return nil, nil
 	}
-
-	// TODO if h.opts.Environment == "eks" {}
 
 	restConfig, err := c.configuration.RESTClientGetter.ToRESTConfig()
 	if err != nil {
@@ -420,7 +434,8 @@ func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
 
 	capactValues := c.opts.Parameters.Override.CapactValues.AsMap()
 
-	if c.opts.Environment == KindEnv {
+	switch c.opts.Environment {
+	case KindEnv:
 		values, err := ValuesFromString(capactKindOverridesYaml)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
