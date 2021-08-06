@@ -182,6 +182,11 @@ jobs:
         run: docker load --input /tmp/${{ matrix.APP }}.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-app-image-${{ matrix.APP }}
 
   build-tests:
@@ -238,6 +243,11 @@ jobs:
         run: docker load --input /tmp/${{ matrix.TEST }}-test.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-test-image-${{ matrix.TEST }}
 
   build-infra:
@@ -293,6 +303,11 @@ jobs:
         run: docker load --input /tmp/infra-${{ matrix.INFRA }}.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-infra-image-${{ matrix.INFRA }}
 
   build-cli:
