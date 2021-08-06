@@ -4,6 +4,10 @@ import { Driver, Transaction } from "neo4j-driver";
 
 const typeDefs = readFileSync("./graphql/local/schema.graphql", "utf-8");
 
+interface TypeInstanceNode {
+  properties: { id: string; lockedBy: string };
+}
+
 interface CreateTypeInstancesArgs {
   in: {
     typeInstances: Array<{ alias: string }>;
@@ -30,18 +34,14 @@ interface LockingResult {
   };
 }
 
-interface TypeInstanceNode {
-  properties: { id: string, lockedBy: string }
+enum UpdateTypeInstanceErrorCode {
+  Conflict = 409,
+  NotFound = 404,
 }
 
 interface UpdateTypeInstanceError {
-	code: UpdateTypeInstanceErrorCode;
-	ids: string[];
-}
-
-enum UpdateTypeInstanceErrorCode {
-	Conflict = 409,
-	NotFound = 404,
+  code: UpdateTypeInstanceErrorCode;
+  ids: string[];
 }
 
 // TODO: extract each mutation/query into dedicated file
@@ -165,21 +165,36 @@ export const schema = makeAugmentedSchema({
         try {
           return await neo4jgraphql(obj, args, context, resolveInfo);
         } catch (e) {
-          const customErr = tryToExtractCustomError(e)
+          let err = e;
+          const customErr = tryToExtractCustomError(err);
           if (customErr) {
             switch (customErr.code) {
               case UpdateTypeInstanceErrorCode.Conflict:
-                e = Error(`TypeInstances with IDs "${customErr.ids.join('", "')}" are locked by different owner`);
+                err = Error(
+                  `TypeInstances with IDs "${customErr.ids.join(
+                    '", "'
+                  )}" are locked by different owner`
+                );
                 break;
-              case UpdateTypeInstanceErrorCode.NotFound:
-                const ids = args.in.map(({id}) => id);
-                const notFoundIDs = ids.filter(x => !customErr.ids.includes(x));
-                e = Error(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
+              case UpdateTypeInstanceErrorCode.NotFound: {
+                const ids = args.in.map(({ id }) => id);
+                const notFoundIDs = ids.filter(
+                  (x) => !customErr.ids.includes(x)
+                );
+                err = Error(
+                  `TypeInstances with IDs "${notFoundIDs.join(
+                    '", "'
+                  )}" were not found`
+                );
+                break;
+              }
+              default:
+                err = Error(`Unexpected error code ${customErr.code}`);
                 break;
             }
           }
 
-          throw new Error(`failed to update TypeInstances: ${e.message}`);
+          throw new Error(`failed to update TypeInstances: ${err.message}`);
         }
       },
       deleteTypeInstance: async (_obj, args, context) => {
@@ -230,71 +245,85 @@ export const schema = makeAugmentedSchema({
                     }
               
                     RETURN $id`,
-                {id: args.id, ownerID: args.ownerID || null}
+                { id: args.id, ownerID: args.ownerID || null }
               );
               return args.id;
             }
           );
         } catch (e) {
-          const customErr = tryToExtractCustomError(e)
+          let err = e;
+          const customErr = tryToExtractCustomError(err);
           if (customErr) {
             switch (customErr.code) {
               case UpdateTypeInstanceErrorCode.Conflict:
-                e = Error(`TypeInstance is locked by different owner`);
+                err = Error(`TypeInstance is locked by different owner`);
                 break;
               case UpdateTypeInstanceErrorCode.NotFound:
-                e = Error(`TypeInstance was not found`);
+                err = Error(`TypeInstance was not found`);
+                break;
+              default:
+                err = Error(`Unexpected error code ${customErr.code}`);
                 break;
             }
           }
 
           throw new Error(
-            `failed to delete TypeInstance with ID "${args.id}": ${e.message}`
+            `failed to delete TypeInstance with ID "${args.id}": ${err.message}`
           );
         } finally {
           neo4jSession.close();
         }
       },
-      lockTypeInstances: async (_obj, args: LockingTypeInstanceInput, context) => {
+      lockTypeInstances: async (
+        _obj,
+        args: LockingTypeInstanceInput,
+        context
+      ) => {
         const neo4jSession = context.driver.session();
         try {
-
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              await switchLocking(tx, args, `
+              await switchLocking(
+                tx,
+                args,
+                `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = $in.ownerID
-                  RETURN true as executed`)
+                  RETURN true as executed`
+              );
               return args.in.ids;
             }
           );
         } catch (e) {
-          throw new Error(
-            `failed to lock TypeInstances: ${e.message}`
-          );
+          throw new Error(`failed to lock TypeInstances: ${e.message}`);
         } finally {
           neo4jSession.close();
         }
       },
-      unlockTypeInstances: async (_obj, args: LockingTypeInstanceInput, context) => {
+      unlockTypeInstances: async (
+        _obj,
+        args: LockingTypeInstanceInput,
+        context
+      ) => {
         const neo4jSession = context.driver.session();
         try {
-
           return await neo4jSession.writeTransaction(
             async (tx: Transaction) => {
-              await switchLocking(tx, args, `
+              await switchLocking(
+                tx,
+                args,
+                `
                   MATCH (ti:TypeInstance)
                   WHERE ti.id IN $in.ids
                   SET ti.lockedBy = null
-                  RETURN true as executed`)
+                  RETURN true as executed`
+              );
               return args.in.ids;
             }
           );
         } catch (e) {
-          throw new Error(
-            `failed to unlock TypeInstances: ${e.message}`
-          );
+          throw new Error(`failed to unlock TypeInstances: ${e.message}`);
         } finally {
           neo4jSession.close();
         }
@@ -307,7 +336,11 @@ export const schema = makeAugmentedSchema({
   },
 });
 
-async function switchLocking(tx: Transaction, args: LockingTypeInstanceInput, executeQuery: string) {
+async function switchLocking(
+  tx: Transaction,
+  args: LockingTypeInstanceInput,
+  executeQuery: string
+) {
   const instanceLockedByOthers = await tx.run(
     `MATCH (ti:TypeInstance)
           WHERE ti.id IN $in.ids 
@@ -343,48 +376,54 @@ async function switchLocking(tx: Transaction, args: LockingTypeInstanceInput, ex
           ) YIELD value as lockingProcess
           
           RETURN  allIDs, lockedIDs, lockingProcess`,
-    {in: args.in}
+    { in: args.in }
   );
 
   if (!instanceLockedByOthers.records.length) {
-    throw new Error(
-      `Internal Server Error, result row is undefined`
-    );
+    throw new Error(`Internal Server Error, result row is undefined`);
   }
 
-  const record = instanceLockedByOthers.records[0]
+  const record = instanceLockedByOthers.records[0];
 
-  const resultRow:LockingResult = {
+  const resultRow: LockingResult = {
     allIDs: record.get("allIDs"),
     lockedIDs: record.get("lockedIDs"),
     lockingProcess: record.get("lockingProcess"),
-  }
+  };
 
-  validateLockingProcess(resultRow, args.in.ids)
-
+  validateLockingProcess(resultRow, args.in.ids);
 }
 
 function validateLockingProcess(result: LockingResult, expIDs: [string]) {
   if (!result.lockingProcess.executed) {
-    const errMsg: string[] = []
+    const errMsg: string[] = [];
 
-    const foundIDs = result.allIDs.map(item =>item.properties.id);
-    const notFoundIDs = expIDs.filter(x => !foundIDs.includes(x));
+    const foundIDs = result.allIDs.map((item) => item.properties.id);
+    const notFoundIDs = expIDs.filter((x) => !foundIDs.includes(x));
     if (notFoundIDs.length !== 0) {
-      errMsg.push(`TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`);
+      errMsg.push(
+        `TypeInstances with IDs "${notFoundIDs.join('", "')}" were not found`
+      );
     }
 
-    const lockedIDs = result.lockedIDs.map(item =>item.properties.id);
+    const lockedIDs = result.lockedIDs.map((item) => item.properties.id);
     if (lockedIDs.length !== 0) {
-      errMsg.push(`TypeInstances with IDs "${lockedIDs.join('", "')}" are locked by different owner`);
+      errMsg.push(
+        `TypeInstances with IDs "${lockedIDs.join(
+          '", "'
+        )}" are locked by different owner`
+      );
     }
 
     switch (errMsg.length) {
-      case 0: break;
+      case 0:
+        break;
       case 1:
-        throw new Error(`1 error occurred: ${errMsg.join(", ")}`)
+        throw new Error(`1 error occurred: ${errMsg.join(", ")}`);
       default:
-        throw new Error(`${errMsg.length} errors occurred: [${errMsg.join(", ")}]`)
+        throw new Error(
+          `${errMsg.length} errors occurred: [${errMsg.join(", ")}]`
+        );
     }
   }
 }
@@ -396,15 +435,18 @@ function validateLockingProcess(result: LockingResult, expIDs: [string]) {
 //  Failed to invoke procedure `apoc.cypher.doIt`: Caused by: java.lang.RuntimeException: {"lockedIDs":["b0283e96-ce83-451c-9325-0d144b9cea6a"],"code":409}
 //
 // This function tries to extract this error, if not possible, returns `null`.
-function tryToExtractCustomError(gotErr: Error): UpdateTypeInstanceError | null  {
-	const firstOpen =  gotErr.message.indexOf('{');
-	const firstClose =  gotErr.message.lastIndexOf('}');
-	const candidate =  gotErr.message.substring(firstOpen, firstClose + 1);
+function tryToExtractCustomError(
+  gotErr: Error
+): UpdateTypeInstanceError | null {
+  const firstOpen = gotErr.message.indexOf("{");
+  const firstClose = gotErr.message.lastIndexOf("}");
+  const candidate = gotErr.message.substring(firstOpen, firstClose + 1);
 
-	try {
-		return JSON.parse(candidate)
-	}
-	catch(e) {/* cannot extract, return generic error */}
+  try {
+    return JSON.parse(candidate);
+  } catch (e) {
+    /* cannot extract, return generic error */
+  }
 
-	return null;
+  return null;
 }

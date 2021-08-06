@@ -20,7 +20,7 @@ The Hubs are accessed via a GraphQL API.
 
 ## Prerequisites
 
-- [Node v15](https://nodejs.org/)
+- [Node v16](https://nodejs.org/)
 - A running Neo4j database with APOC plugin
 
 For the Neo4j database, you can run it locally using Docker:
