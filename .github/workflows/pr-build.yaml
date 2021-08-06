@@ -128,7 +128,7 @@ jobs:
       - id: set-matrix-tool
         run: echo "::set-output ${TOOLS}"
 
-  build-app:
+  build-apps:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
@@ -158,11 +158,11 @@ jobs:
           path: /tmp/${{ matrix.APP }}.tar
           retention-days: 5
 
-  push-app:
+  push-apps:
     name: Push ${{ matrix.APP }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [prepare-matrix, build-app]
+    needs: [prepare-matrix, build-apps]
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
     permissions:
@@ -212,11 +212,11 @@ jobs:
           path: /tmp/${{ matrix.TEST }}-test.tar
           retention-days: 1
 
-  push-test:
+  push-tests:
     name: Push ${{ matrix.TEST }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [prepare-matrix, build-test]
+    needs: [prepare-matrix, build-tests]
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
     permissions:
@@ -325,7 +325,7 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [ push-app, push-tests, build-cli ]
+    needs: [ push-apps, push-tests, build-cli ]
     permissions:
       contents: read
     env:
