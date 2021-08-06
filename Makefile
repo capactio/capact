@@ -104,12 +104,10 @@ INFRA_IMAGES_DIR = ./hack/images
 build-infra-image-%:
 	$(eval APP := $*)
 	docker build -t $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) -f $(INFRA_IMAGES_DIR)/$(APP)/Dockerfile $(INFRA_IMAGES_DIR)/$(APP)
-.PHONY: build-infra-image
 
 push-infra-image-%:
 	$(eval APP := $*)
 	docker push $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
-.PHONY: push-infra-image
 
 save-infra-image-%:
 	$(eval APP := $*)

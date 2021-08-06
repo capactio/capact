@@ -154,7 +154,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.APP }}-${{ github.event.pull_request.number }}
+          name: ${{ matrix.APP }}-${{github.sha}}
           path: /tmp/${{ matrix.APP }}.tar
           retention-days: 5
 
@@ -171,10 +171,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.APP }}-${{ github.event.pull_request.number }}
+          name: ${{ matrix.APP }}-${{github.sha}}
           path: /tmp
       - name: Load image
         run: docker load --input /tmp/${{ matrix.APP }}.tar
@@ -208,7 +210,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: test-${{ matrix.TEST }}-${{ github.event.pull_request.number }}
+          name: test-${{ matrix.TEST }}-${{github.sha}}
           path: /tmp/${{ matrix.TEST }}-test.tar
           retention-days: 1
 
@@ -225,10 +227,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.TEST }}-${{ github.event.pull_request.number }}
+          name: test-${{ matrix.TEST }}-${{github.sha}}
           path: /tmp
       - name: Load image
         run: docker load --input /tmp/${{ matrix.TEST }}-test.tar
@@ -257,12 +261,12 @@ jobs:
           . ./hack/ci/setup-env.sh
       - run: |
           make build-infra-image-${{ matrix.INFRA }}
-          make save-test-image-${{ matrix.APP }}
+          make save-infra-image-${{ matrix.INFRA }}
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: infra-${{ matrix.APP }}-${{ github.event.pull_request.number }}
-          path: /tmp/infra-${{ matrix.APP }}.tar
+          name: infra-${{ matrix.INFRA }}-${{github.sha}}
+          path: /tmp/infra-${{ matrix.INFRA }}.tar
           retention-days: 1
 
   push-infra:
@@ -278,10 +282,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Download artifact
         uses: actions/download-artifact@v2
         with:
-          name: ${{ matrix.INFRA }}-${{ github.event.pull_request.number }}
+          name: infra-${{ matrix.INFRA }}-${{github.sha}}
           path: /tmp
       - name: Load image
         run: docker load --input /tmp/infra-${{ matrix.INFRA }}.tar
