@@ -159,10 +159,10 @@ jobs:
           retention-days: 5
 
   push-app:
-    name: Build ${{ matrix.APP }}
+    name: Push ${{ matrix.APP }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: prepare-matrix
+    needs: [prepare-matrix, build-app]
     strategy:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
     permissions:
