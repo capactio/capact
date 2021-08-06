@@ -99,10 +99,6 @@ jobs:
       - name: Configure Cert Manager in cluster
         run: |
           ./hack/ci/install-cert-manager.sh
-          . ./hack/ci/compare-cert.sh
-      - name: Store secrets
-        run: |
-          ./hack/ci/backup-cert.sh
 
       - name: Network cleanup
         # The `always()` is needed as "If your if expression does not contain any of the status functions it will automatically result with success(). "
