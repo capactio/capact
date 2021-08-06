@@ -65,12 +65,14 @@ build-app-image-terraform-runner: ## Build application image for terraform runne
 build-app-image-%:
 	$(eval APP := $*)
 	docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) .
-.PHONY: build-app-image-%
 
 push-app-image-%:
 	$(eval APP := $*)
 	docker push $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
-.PHONY: push-apps-images-%
+
+save-app-image-%:
+	$(eval APP := $*)
+	docker save $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG) > /tmp/$(APP).tar
 
 # Test images
 build-test-image-e2e:
@@ -91,7 +93,10 @@ build-test-image-%:
 push-test-image-%:
 	$(eval APP := $*)
 	docker push $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG)
-.PHONY: push-test-image
+
+save-test-image-%:
+	$(eval APP := $*)
+	docker save $(DOCKER_REPOSITORY)/$(APP)-test:$(DOCKER_TAG) > /tmp/$(APP)-test.tar
 
 # Infra images
 INFRA_IMAGES_DIR = ./hack/images
@@ -105,6 +110,10 @@ push-infra-image-%:
 	$(eval APP := $*)
 	docker push $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG)
 .PHONY: push-infra-image
+
+save-infra-image-%:
+	$(eval APP := $*)
+	docker save $(DOCKER_REPOSITORY)/infra/$(APP):$(DOCKER_TAG) > /tmp/infra-$(APP).tar
 
 ###########
 # Testing #
