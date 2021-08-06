@@ -6,14 +6,13 @@ import (
 	"path"
 	"strings"
 
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 )
 
 // WriteManifestFiles writes the manifests file in files parameters to the provided outputDir.
 // Depending on the override parameter is will either override existing manifest files or skip them.
 func WriteManifestFiles(outputDir string, files map[string]string, override bool) error {
-	fmt.Println(override)
-
 	for manifestPath, content := range files {
 		manifestFilepath := strings.ReplaceAll(manifestPath, ".", string(os.PathSeparator)) + ".yaml"
 		outputFilepath := path.Join(outputDir, manifestFilepath)
@@ -23,7 +22,7 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 		}
 
 		if _, err := os.Stat(outputFilepath); !override && !os.IsNotExist(err) {
-			fmt.Printf("Skipped %s as it already exists in %s\n", manifestPath, outputFilepath)
+			fmt.Printf("%s Skipped %s as it already exists in %s\n", color.YellowString("-"), manifestPath, outputFilepath)
 			continue
 		}
 
@@ -31,7 +30,7 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 			return errors.Wrapf(err, "while writing generated manifest %s", manifestPath)
 		}
 
-		fmt.Printf("Generated %s in %s\n", manifestPath, outputFilepath)
+		fmt.Printf("%s Generated %s in %s\n", color.GreenString("✓"), manifestPath, outputFilepath)
 	}
 
 	return nil

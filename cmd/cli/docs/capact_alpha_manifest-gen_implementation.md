@@ -4,11 +4,11 @@ title: capact alpha manifest-gen implementation
 
 ## capact alpha manifest-gen implementation
 
-Bootstrap new Implementation manifests
+Generate new Implementation manifests
 
 ### Synopsis
 
-Bootstrap new Implementation manifests for various tools.
+Generate new Implementation manifests for various tools.
 
 ### Options
 
@@ -27,5 +27,5 @@ Bootstrap new Implementation manifests for various tools.
 ### SEE ALSO
 
 * [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
-* [capact alpha manifest-gen implementation terraform](capact_alpha_manifest-gen_implementation_terraform.md)	 - Bootstrap Terraform based manifests
+* [capact alpha manifest-gen implementation terraform](capact_alpha_manifest-gen_implementation_terraform.md)	 - Generate Terraform based manifests
 

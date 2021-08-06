@@ -4,11 +4,11 @@ title: capact alpha manifest-gen interface
 
 ## capact alpha manifest-gen interface
 
-Bootstrap new Interface manifests
+Generate new Interface manifests
 
 ### Synopsis
 
-Bootstrap new Interface and associated Type manifests
+Generate new Interface and associated Type manifests
 
 ```
 capact alpha manifest-gen interface [PATH] [flags]
@@ -17,8 +17,8 @@ capact alpha manifest-gen interface [PATH] [flags]
 ### Examples
 
 ```
-# Bootstrap manifests for the cap.interface.database.postgresql.install Interface
-capact alpha content interface database.postgresql install
+# Generate manifests for the cap.interface.database.postgresql.install Interface
+capact alpha content interface cap.interface.database.postgresql install
 ```
 
 ### Options

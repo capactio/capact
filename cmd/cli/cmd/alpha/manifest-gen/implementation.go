@@ -6,8 +6,8 @@ import "github.com/spf13/cobra"
 func NewImplementation() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "implementation",
-		Short: "Bootstrap new Implementation manifests",
-		Long:  "Bootstrap new Implementation manifests for various tools.",
+		Short: "Generate new Implementation manifests",
+		Long:  "Generate new Implementation manifests for various tools.",
 	}
 
 	cmd.AddCommand(NewTerraform())

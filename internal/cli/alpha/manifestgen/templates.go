@@ -6,7 +6,7 @@ ocfVersion: 0.0.1
 revision: 0.1.0
 kind: InterfaceGroup
 metadata:
-  prefix: "cap.interface.{{ .Prefix }}"
+  prefix: "cap.interface{{ if .Prefix }}.{{ .Prefix }}{{ end }}"
   name: "{{ .Name }}"
   displayName: "{{ .Name }}"
   description: "{{ .Name }} related Interfaces"
@@ -52,12 +52,47 @@ spec:
           revision: 0.1.0
 `
 
+	typeManifestTemplate = `ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  prefix: "cap.type.{{ .Prefix }}"
+  name: {{ .Name }}-input
+  displayName: "Input for {{ .Prefix }}.{{ .Name }}"
+  description: Input for the "{{ .Prefix }}.{{ .Name }} Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "required": [],
+        "properties": {
+          {{ $length := len .Variables -}}
+          {{ range $index, $variable := .Variables -}}
+          "{{ $variable.Name }}": {
+            "$id": "#/properties/{{ $variable.Name }}",
+            "type": "{{ $variable.Type }}",
+            "description": "{{ $variable.Description }}"{{if $variable.Default }},
+            "default": "{{ $variable.Default }}"{{ end }}
+          }{{ if ne $index (add $length -1) }},{{ end }}
+          {{ end }}
+        }
+      }
+`
+
 	outputTypeManifestTemplate = `ocfVersion: 0.0.1
 revision: 0.1.0
 kind: Type
 metadata:
-  name: config
   prefix: "cap.type.{{ .Prefix }}"
+  name: config
   displayName: "{{.Prefix }} config"
   description: "Type representing a {{ .Prefix }} config"
   documentationURL: https://example.com

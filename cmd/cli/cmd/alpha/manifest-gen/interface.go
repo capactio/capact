@@ -17,11 +17,11 @@ var interfaceCfg manifestgen.InterfaceConfig
 func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interface [PATH]",
-		Short: "Bootstrap new Interface manifests",
-		Long:  "Bootstrap new Interface and associated Type manifests",
+		Short: "Generate new Interface manifests",
+		Long:  "Generate new Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
-			# Bootstrap manifests for the cap.interface.database.postgresql.install Interface
-			<cli> alpha content interface database.postgresql install`, cli.Name),
+			# Generate manifests for the cap.interface.database.postgresql.install Interface
+			<cli> alpha content interface cap.interface.database.postgresql install`, cli.Name),
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return errors.New("accepts only one argument")

@@ -27,6 +27,6 @@ Subcommand for various manifest generation operations
 ### SEE ALSO
 
 * [capact alpha](capact_alpha.md)	 - Alpha features
-* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Bootstrap new Implementation manifests
-* [capact alpha manifest-gen interface](capact_alpha_manifest-gen_interface.md)	 - Bootstrap new Interface manifests
+* [capact alpha manifest-gen implementation](capact_alpha_manifest-gen_implementation.md)	 - Generate new Implementation manifests
+* [capact alpha manifest-gen interface](capact_alpha_manifest-gen_interface.md)	 - Generate new Interface manifests
 

@@ -3,6 +3,7 @@ package manifestgen
 import (
 	"errors"
 	"log"
+	"strings"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
@@ -15,22 +16,27 @@ var tfContentCfg manifestgen.TerraformConfig
 // NewTerraform returns a cobra.Command to bootstrap Terraform based manifests.
 func NewTerraform() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "terraform [PREFIX] [NAME] [TERRAFORM_MODULE_PATH]",
-		Short: "Bootstrap Terraform based manifests",
-		Long:  "Bootstrap Terraform based manifests based on a Terraform module",
+		Use:   "terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH]",
+		Short: "Generate Terraform based manifests",
+		Long:  "Generate Terraform based manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
-		# Bootstrap manifests 
-		<cli> alpha content implementation terraform aws.rds.deploy ./terraform-modules/aws-rds
+		# Generate Implementation manifests 
+		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
 
-		# Bootstrap manifests for an AWS Terraform module
-		<cli> alpha content implementation terraform aws.rds.deploy ./terraform-modules/aws-rds -p aws
+		# Generate Implementation manifests for an AWS Terraform module
+		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds -p aws
 	
-		# Bootstrap manifests for an GCP Terraform module
-		<cli> alpha content implementation terraform gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp`, cli.Name),
+		# Generate Implementation manifests for an GCP Terraform module
+		<cli> alpha manifest-gen implementation terraform cap.implementation.gcp.cloudsql.deploy ./terraform-modules/cloud-sql -p gcp`, cli.Name),
 
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {
 				return errors.New("accepts two arguments: [MANIFEST_PATH] [MODULE_PATH]")
+			}
+
+			path := args[0]
+			if !strings.HasPrefix(path, "cap.implementation.") || len(strings.Split(path, ".")) < 4 {
+				return errors.New(`manifest path must be in format "cap.implementation.[PREFIX].[NAME]"`)
 			}
 
 			return nil
