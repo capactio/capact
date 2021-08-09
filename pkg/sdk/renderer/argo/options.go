@@ -16,9 +16,10 @@ func WithTypeInstances(typeInstances []types.InputTypeInstanceRef) RendererOptio
 }
 
 // WithSecretUserInput returns a RendererOption, which adds user input to the workflow.
-func WithSecretUserInput(ref *UserInputSecretRef) RendererOption {
+func WithSecretUserInput(ref *UserInputSecretRef, inputRaw []byte) RendererOption {
 	return func(r *dedicatedRenderer) {
-		r.userInputSecretRef = ref
+		r.inputParametersSecretRef = ref
+		r.inputParametersRaw = string(inputRaw)
 	}
 }
 

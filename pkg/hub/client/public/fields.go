@@ -127,8 +127,8 @@ var ImplementationRevisionFields = fmt.Sprintf(`
       }
       `, GenericMetadataFields, AttributeFields)
 
-// InterfaceRevisionFields for quering InterfaceRevision fields with GenericMetadata and all revisions.
-var InterfaceRevisionFields = fmt.Sprintf(`
+// InterfaceRevisionAllFields for quering InterfaceRevision fields with GenericMetadata and all revisions.
+var InterfaceRevisionAllFields = fmt.Sprintf(`
       revision
       metadata {
         %s
@@ -167,6 +167,26 @@ var InterfaceRevisionFields = fmt.Sprintf(`
       }
 `, GenericMetadataFields, ImplementationRevisionFields)
 
+// InterfaceRevisionInputDataFields for fetching InterfaceRevision input data fields only.
+var InterfaceRevisionInputDataFields = `
+      spec {
+        input {
+          parameters {
+            name
+            jsonSchema
+          }
+          typeInstances {
+            name
+            typeRef {
+              path
+              revision
+            }
+            verbs
+          }
+        }
+      }
+`
+
 // InterfacesFields for quering Interface with the latest revision only.
 var InterfacesFields = fmt.Sprintf(`
     path
@@ -175,4 +195,4 @@ var InterfacesFields = fmt.Sprintf(`
     latestRevision {
       %s
     }
-`, InterfaceRevisionFields)
+`, InterfaceRevisionAllFields)

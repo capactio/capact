@@ -3,24 +3,18 @@ package validate
 import (
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"sync"
 
 	"github.com/hashicorp/go-multierror"
 )
 
-type (
-	Issue struct {
-		Severity SeverityType // enum // default error
-		Message  string
-	}
-
-	IssueBuilder struct {
-		mux    sync.Mutex
-		issues ValidationResult
-		header string
-	}
-)
+type IssueBuilder struct {
+	mux    sync.Mutex
+	issues ValidationResult
+	header string
+}
 
 func NewResultBuilder(header string) *IssueBuilder {
 	return &IssueBuilder{
@@ -29,8 +23,6 @@ func NewResultBuilder(header string) *IssueBuilder {
 	}
 }
 
-type ValidationResult map[string]*multierror.Error
-
 func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{}) *IssueBuilder {
 	if bldr == nil { // TODO: error?
 		return nil
@@ -38,6 +30,7 @@ func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{})
 
 	bldr.mux.Lock()
 	defer bldr.mux.Unlock()
+
 	err := fmt.Errorf(format, args...)
 	bldr.issues[field] = multierror.Append(bldr.issues[field], err)
 
@@ -53,7 +46,7 @@ func (bldr *IssueBuilder) Result() ValidationResult {
 		if issues == nil {
 			continue
 		}
-		issues.ErrorFormat = ListFormatFunc(fmt.Sprintf("- %s %q", bldr.header, field))
+		issues.ErrorFormat = headeredErrListFormatFunc(fmt.Sprintf("- %s %q", bldr.header, field))
 	}
 
 	return bldr.issues
@@ -73,11 +66,11 @@ func (issues ValidationResult) Len() int {
 
 func (issues ValidationResult) ErrorOrNil() error {
 	var msgs []string
-	for _, issues := range issues {
-		if issues == nil {
+	for _, name := range issues.sortedKeys() {
+		if issues[name] == nil {
 			continue
 		}
-		msgs = append(msgs, issues.Error())
+		msgs = append(msgs, issues[name].Error())
 	}
 
 	if len(msgs) > 0 {
@@ -86,9 +79,18 @@ func (issues ValidationResult) ErrorOrNil() error {
 	return nil
 }
 
-// ListFormatFunc is a basic formatter that outputs the number of errors
-// that occurred along with a bullet point list of the errors.
-func ListFormatFunc(fieldName string) multierror.ErrorFormatFunc {
+func (issues ValidationResult) sortedKeys() []string {
+	keys := make([]string, 0, len(issues))
+	for k := range issues {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
+}
+
+// headeredErrListFormatFunc is a basic formatter that outputs the errors as
+// a bullet point list with a given header.
+func headeredErrListFormatFunc(fieldName string) multierror.ErrorFormatFunc {
 	return func(es []error) string {
 		points := make([]string, len(es))
 		for i, err := range es {
@@ -98,33 +100,5 @@ func ListFormatFunc(fieldName string) multierror.ErrorFormatFunc {
 		return fmt.Sprintf(
 			"%s:\n    %s",
 			fieldName, strings.Join(points, "\n    "))
-	}
-}
-
-// maybe later
-
-type ReportIssueOpt func(*Issue)
-
-func WithSeverity(s SeverityType) ReportIssueOpt {
-	return func(i *Issue) {
-		i.Severity = s
-	}
-}
-
-type SeverityType int
-
-const (
-	Error SeverityType = iota + 1
-	Warning
-)
-
-func (s SeverityType) String() string {
-	switch s {
-	case Error:
-		return "Error"
-	case Warning:
-		return "Warning"
-	default:
-		return ""
 	}
 }

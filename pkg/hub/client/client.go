@@ -37,7 +37,7 @@ type Public interface {
 	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter hubpublicgraphql.TypeFilter) ([]*hubpublicgraphql.Type, error)
 	ListInterfacesMetadata(ctx context.Context) ([]hubpublicgraphql.Interface, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
-	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListInterfacesWithLatestRevision(ctx context.Context, filter hubpublicgraphql.InterfaceFilter) ([]*hubpublicgraphql.Interface, error)
 	ListImplementationRevisions(ctx context.Context, filter *hubpublicgraphql.ImplementationRevisionFilter) ([]*hubpublicgraphql.ImplementationRevision, error)

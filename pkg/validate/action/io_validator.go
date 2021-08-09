@@ -1,18 +1,19 @@
 package action
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/validate"
-	"context"
-	"fmt"
 	"github.com/hashicorp/go-multierror"
 	"github.com/valyala/fastjson"
 	"github.com/xeipuuv/gojsonschema"
 	"sigs.k8s.io/yaml"
-	"strings"
 )
 
 type HubClient interface {
@@ -24,31 +25,16 @@ type HubClient interface {
 // for Interface and Implementation manifests.
 type InputOutputValidator struct {
 	hubCli            HubClient
-	ParametersSchemas SchemaCollection
+	ParametersSchemas validate.SchemaCollection
 }
 
 func NewValidator(hubCli HubClient) *InputOutputValidator {
 	return &InputOutputValidator{hubCli: hubCli}
 }
 
-type TypeRef struct {
-	gqlpublicapi.TypeReference
-	Required bool
-}
-
-type Schema struct {
-	Value    string
-	Required bool
-}
-
-type (
-	SchemaCollection  map[string]Schema
-	TypeRefCollection map[string]TypeRef
-)
-
 // HasRequiredProp returns true if at least one of schema
 // in collection has `required` property at the root level.
-func (c *InputOutputValidator) HasRequiredProp(schemas SchemaCollection) (bool, error) {
+func (c *InputOutputValidator) HasRequiredProp(schemas validate.SchemaCollection) (bool, error) {
 	// re-used for parsing multiple json strings.
 	// This improves parsing speed by reducing the number
 	// of memory allocations.
@@ -67,10 +53,10 @@ func (c *InputOutputValidator) HasRequiredProp(schemas SchemaCollection) (bool, 
 	return false, nil
 }
 
-func (c *InputOutputValidator) LoadIfaceInputParametersSchemas(ctx context.Context, iface *gqlpublicapi.InterfaceRevision) (SchemaCollection, error) {
+func (c *InputOutputValidator) LoadIfaceInputParametersSchemas(ctx context.Context, iface *gqlpublicapi.InterfaceRevision) (validate.SchemaCollection, error) {
 	var (
-		parametersSchemas = SchemaCollection{}
-		parametersTypeRef = TypeRefCollection{}
+		parametersSchemas = validate.SchemaCollection{}
+		parametersTypeRef = validate.TypeRefCollection{}
 	)
 
 	// 1. Process input parameters
@@ -80,41 +66,42 @@ func (c *InputOutputValidator) LoadIfaceInputParametersSchemas(ctx context.Conte
 			if !ok {
 				return nil, fmt.Errorf("got unexpected JSONSchema type, expected %T, got %T", "", param.JSONSchema)
 			}
-			parametersSchemas[param.Name] = Schema{
+			parametersSchemas[param.Name] = validate.Schema{
 				Value:    str,
 				Required: true,
 			}
 		}
 		if param.TypeRef != nil {
-			parametersTypeRef[param.Name] = TypeRef{
-				TypeReference: *param.TypeRef,
-				Required:      true,
+			parametersTypeRef[param.Name] = validate.TypeRef{
+				TypeRef:  types.TypeRef(*param.TypeRef),
+				Required: true,
 			}
 		}
 	}
 
 	// 2. Resolve input parameters TypeRefs JSONSchemas
-	schemas, err := c.resolveTypeRefsToJSONSchemas(ctx, parametersTypeRef)
+	resolvedSchemas, err := c.resolveTypeRefsToJSONSchemas(ctx, parametersTypeRef)
 	if err != nil {
 		return nil, err
 	}
 
 	// 3. Merge schemas
-	for key, val := range schemas {
-		parametersSchemas[key] = val
+	allSchemas, err := validate.MergeSchemaCollection(parametersSchemas, resolvedSchemas)
+	if err != nil {
+		return nil, err
 	}
 
-	return parametersSchemas, nil
+	return allSchemas, nil
 }
 
-func (c *InputOutputValidator) LoadIfaceInputTypeInstanceRefs(_ context.Context, iface *gqlpublicapi.InterfaceRevision) (TypeRefCollection, error) {
-	var typeInstancesTypeRefs = TypeRefCollection{}
+func (c *InputOutputValidator) LoadIfaceInputTypeInstanceRefs(_ context.Context, iface *gqlpublicapi.InterfaceRevision) (validate.TypeRefCollection, error) {
+	var typeInstancesTypeRefs = validate.TypeRefCollection{}
 
 	for _, param := range iface.Spec.Input.TypeInstances {
 		if param.TypeRef != nil {
-			typeInstancesTypeRefs[param.Name] = TypeRef{
-				TypeReference: *param.TypeRef,
-				Required:      true, // Currently, input TypeInstances are required on Interface and must be passed
+			typeInstancesTypeRefs[param.Name] = validate.TypeRef{
+				TypeRef:  types.TypeRef(*param.TypeRef),
+				Required: true, // Currently, input TypeInstances are required on Interface and must be passed
 			}
 		}
 	}
@@ -122,19 +109,21 @@ func (c *InputOutputValidator) LoadIfaceInputTypeInstanceRefs(_ context.Context,
 	return typeInstancesTypeRefs, nil
 }
 
-// ValidateParameters validate that a given input parameters are valid against JSONSchema defined in SchemaCollection.
-func (c *InputOutputValidator) ValidateParameters(paramsSchemas SchemaCollection, parameters map[string]string) (validate.ValidationResult, error) {
+// ValidateParameters validate that a given input parameters are valid against JSONSchema defined in validate.SchemaCollection.
+func (c *InputOutputValidator) ValidateParameters(paramsSchemas validate.SchemaCollection, parameters map[string]string) (validate.ValidationResult, error) {
 	resultBldr := validate.NewResultBuilder("Parameters")
 
 	// 2.2. Check that all required typeRef from collection are passed
-	for name := range paramsSchemas {
+	for name, schema := range paramsSchemas {
 		_, found := parameters[name]
-		if !found {
+		if schema.Required && !found {
 			resultBldr.ReportIssue(name, "not found but it's required")
 		}
 	}
 
 	for paramName, paramData := range parameters {
+		// Ensure that it's in JSON format.
+		// It's not a problem if it's already a JSON.
 		paramDataJSON, err := yaml.YAMLToJSON([]byte(paramData))
 		if err != nil {
 			return nil, err
@@ -142,7 +131,7 @@ func (c *InputOutputValidator) ValidateParameters(paramsSchemas SchemaCollection
 
 		schema, found := paramsSchemas[paramName]
 		if !found {
-			resultBldr.ReportIssue(paramName, fmt.Sprintf("JSONSchema was not found"))
+			resultBldr.ReportIssue(paramName, "JSONSchema was not found")
 			continue
 		}
 
@@ -164,7 +153,7 @@ func (c *InputOutputValidator) ValidateParameters(paramsSchemas SchemaCollection
 	return resultBldr.Result(), nil
 }
 
-func (c *InputOutputValidator) ValidateTypeInstances(allowedTypes TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error) {
+func (c *InputOutputValidator) ValidateTypeInstances(allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error) {
 	// 1. Resolve TypeRef for given Types
 	var ids []string
 	for _, input := range gotTypeInstances {
@@ -180,15 +169,15 @@ func (c *InputOutputValidator) ValidateTypeInstances(allowedTypes TypeRefCollect
 	resultBldr := validate.NewResultBuilder("TypeInstances")
 
 	// 2.1. Check if specified input TypeInstance were found in Hub
-	gotTypes := TypeRefCollection{}
+	gotTypes := validate.TypeRefCollection{}
 	for _, input := range gotTypeInstances {
 		ref, found := gotTypeInstancesTypeRefs[input.ID]
 		if !found {
 			resultBldr.ReportIssue(input.Name, "TypeInstance was not found in Hub")
 			continue
 		}
-		gotTypes[input.Name] = TypeRef{
-			TypeReference: gqlpublicapi.TypeReference(ref),
+		gotTypes[input.Name] = validate.TypeRef{
+			TypeRef: types.TypeRef(ref),
 		}
 	}
 
@@ -223,11 +212,11 @@ func (c *InputOutputValidator) ValidateTypeInstances(allowedTypes TypeRefCollect
 	return resultBldr.Result(), nil
 }
 
-func (*InputOutputValidator) typeRefToKey(ref TypeRef) string {
+func (*InputOutputValidator) typeRefToKey(ref validate.TypeRef) string {
 	return fmt.Sprintf("%s:%s", ref.Path, ref.Revision)
 }
 
-func (c *InputOutputValidator) LoadImplInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (SchemaCollection, error) {
+func (c *InputOutputValidator) LoadImplInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (validate.SchemaCollection, error) {
 	if impl.Spec == nil ||
 		impl.Spec.AdditionalInput == nil ||
 		impl.Spec.AdditionalInput.Parameters == nil ||
@@ -236,19 +225,19 @@ func (c *InputOutputValidator) LoadImplInputParametersSchemas(ctx context.Contex
 	}
 
 	// called `additional-parameters`
-	in := TypeRefCollection{
+	in := validate.TypeRefCollection{
 		"additional-parameters": { // TODO: const
-			TypeReference: *impl.Spec.AdditionalInput.Parameters.TypeRef,
-			Required:      false, // Parameters on Implementation are not required.
+			TypeRef:  types.TypeRef(*impl.Spec.AdditionalInput.Parameters.TypeRef),
+			Required: false, // Parameters on Implementation are not required.
 		},
 	}
 	return c.resolveTypeRefsToJSONSchemas(ctx, in)
 }
 
-func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context, inTypeRefs TypeRefCollection) (SchemaCollection, error) {
+func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context, inTypeRefs validate.TypeRefCollection) (validate.SchemaCollection, error) {
 	var (
 		typeRefsPath = []string{}
-		schemas      = SchemaCollection{}
+		schemas      = validate.SchemaCollection{}
 	)
 	for _, ref := range inTypeRefs {
 		typeRefsPath = append(typeRefsPath, ref.Path)
@@ -288,9 +277,8 @@ func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context,
 		if !ok {
 			merr = multierror.Append(merr, fmt.Errorf("unexpected JSONSchema type for %s, expected %T, got %T", refKey, "", schema))
 			continue
-
 		}
-		schemas[name] = Schema{
+		schemas[name] = validate.Schema{
 			Value:    str,
 			Required: ref.Required,
 		}
@@ -302,20 +290,20 @@ func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context,
 	return schemas, nil
 }
 
-func (c *InputOutputValidator) LoadImplInputTypeInstanceRefs(_ context.Context, impl gqlpublicapi.ImplementationRevision) (TypeRefCollection, error) {
+func (c *InputOutputValidator) LoadImplInputTypeInstanceRefs(_ context.Context, impl gqlpublicapi.ImplementationRevision) (validate.TypeRefCollection, error) {
 	if impl.Spec == nil ||
 		impl.Spec.AdditionalInput == nil ||
 		impl.Spec.AdditionalInput.TypeInstances == nil {
 		return nil, nil
 	}
 
-	var typeInstancesTypeRefs = TypeRefCollection{}
+	var typeInstancesTypeRefs = validate.TypeRefCollection{}
 
 	for _, param := range impl.Spec.AdditionalInput.TypeInstances {
 		if param.TypeRef != nil {
-			typeInstancesTypeRefs[param.Name] = TypeRef{
-				TypeReference: *param.TypeRef,
-				Required:      false, // The Implementaiton input TypeInstances are not required.
+			typeInstancesTypeRefs[param.Name] = validate.TypeRef{
+				TypeRef:  types.TypeRef(*param.TypeRef),
+				Required: false, // The Implementation input TypeInstances are not required.
 			}
 		}
 	}

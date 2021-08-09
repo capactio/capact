@@ -2,16 +2,14 @@ package action
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
+
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/validate"
 	"capact.io/capact/pkg/validate/action"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"strings"
-
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
 	"sigs.k8s.io/yaml"
@@ -38,8 +36,8 @@ type CreateOptions struct {
 	isInputParamsRequired bool
 	isInputTypesRequired  bool
 	validator             *action.InputOutputValidator
-	ifaceSchemas          action.SchemaCollection
-	ifaceTypes            action.TypeRefCollection
+	ifaceSchemas          validate.SchemaCollection
+	ifaceTypes            validate.TypeRefCollection
 }
 
 // setDefaults defaults not provided options.
@@ -57,31 +55,9 @@ func (c *CreateOptions) setDefaults() {
 // - try to remove isInputParamsRequired isInputTypesRequired
 // - maybe introduce printers for ValidationResults
 // - adapter for Survey
-type result struct {
-	merr      []string
-	issuesCnt int
-}
-
-func (r *result) Report(result validate.ValidationResult, err error) error {
-	if err != nil {
-		return err
-	}
-	r.issuesCnt += result.Len()
-	if err := result.ErrorOrNil(); err != nil {
-		r.merr = append(r.merr, err.Error())
-	}
-	return nil
-}
-
-func (r *result) ErrorOrNil() error {
-	if len(r.merr) > 0 {
-		return errors.New(fmt.Sprintf("%d validation errors detected:\n%s", r.issuesCnt, strings.Join(r.merr, "\n")))
-	}
-	return nil
-}
 
 func (c *CreateOptions) preValidate() error {
-	r := result{}
+	r := validate.ValidationResultAggregator{}
 	if c.TypeInstancesFilePath == "" && c.isInputTypesRequired && !c.Interactive {
 		bldr := validate.NewResultBuilder("TypeInstances")
 		for tiName, tiType := range c.ifaceTypes {
@@ -103,17 +79,10 @@ func (c *CreateOptions) preValidate() error {
 	return r.ErrorOrNil()
 }
 
-// TODO: known bug that we accept only one input parameter
-func givenInputParams(parameters interface{}) map[string]string {
-	return map[string]string{
-		argo.UserInputName: parameters.(string),
-	}
-}
-
 func (c *CreateOptions) validate() error {
-	r := result{}
+	r := validate.ValidationResultAggregator{}
 	if c.parameters != nil {
-		err := r.Report(c.validator.ValidateParameters(c.ifaceSchemas, givenInputParams(*c.parameters)))
+		err := r.Report(c.validator.ValidateParameters(c.ifaceSchemas, argo.ToInputParams(*c.parameters)))
 		if err != nil {
 			return err
 		}
@@ -146,11 +115,7 @@ func (c *CreateOptions) resolve() error {
 
 	c.setDefaults()
 
-	if err := c.validate(); err != nil {
-		return err
-	}
-
-	return nil
+	return c.validate()
 }
 
 func (c *CreateOptions) resolveWithSurvey() error {
@@ -253,7 +218,7 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 		survey.Required,
 		isYAML,
 		areParamsValid(func(inputParams string) error {
-			result, err := c.validator.ValidateParameters(c.ifaceSchemas, givenInputParams(inputParams))
+			result, err := c.validator.ValidateParameters(c.ifaceSchemas, argo.ToInputParams(inputParams))
 			if err != nil {
 				return err
 			}

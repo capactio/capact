@@ -26,7 +26,7 @@ func isDNSSubdomain(val interface{}) error {
 	return nil
 }
 
-func areParamsValid(validate func(inputParams string) error ) survey.Validator {
+func areParamsValid(validate func(inputParams string) error) survey.Validator {
 	return func(val interface{}) error {
 		str, ok := val.(string)
 		if !ok {

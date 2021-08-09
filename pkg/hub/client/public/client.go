@@ -50,8 +50,11 @@ func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Int
 
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
 // It will return nil, if the InterfaceRevision is not found.
-func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference) (*gqlpublicapi.InterfaceRevision, error) {
-	query, params := c.interfaceQueryForRef(ref)
+func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...FindInterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error) {
+	findOpts := &FindInterfaceRevisionOptions{}
+	findOpts.Apply(opts...)
+
+	query, params := c.interfaceQueryForRef(findOpts.Fields, ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query FindInterfaceRevision($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s
@@ -204,7 +207,7 @@ func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, re
 	getOpts := &ListImplementationRevisionsOptions{}
 	getOpts.Apply(opts...)
 
-	query, params := c.interfaceQueryForRef(ref)
+	query, params := c.interfaceQueryForRef(InterfaceRevisionAllFields, ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query ListImplementationRevisionsForInterface($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s
@@ -319,28 +322,28 @@ func (a Args) PopulateVars(req *graphql.Request) {
 	}
 }
 
-func (c *Client) interfaceQueryForRef(ref gqlpublicapi.InterfaceReference) (string, Args) {
+func (c *Client) interfaceQueryForRef(fields string, ref gqlpublicapi.InterfaceReference) (string, Args) {
 	if ref.Revision == "" {
-		return c.latestInterfaceRevision()
+		return c.latestInterfaceRevision(fields)
 	}
 
-	return c.specificInterfaceRevision(ref.Revision)
+	return c.specificInterfaceRevision(fields, ref.Revision)
 }
 
-func (c *Client) latestInterfaceRevision() (string, Args) {
+func (c *Client) latestInterfaceRevision(fields string) (string, Args) {
 	latestRevision := fmt.Sprintf(`
 			rev: latestRevision {
 				%s
-			}`, InterfaceRevisionFields)
+			}`, fields)
 
 	return latestRevision, Args{}
 }
 
-func (c *Client) specificInterfaceRevision(rev string) (string, Args) {
+func (c *Client) specificInterfaceRevision(fields string, rev string) (string, Args) {
 	specificRevision := fmt.Sprintf(`
 			rev: revision(revision: $interfaceRev) {
 				%s
-			}`, InterfaceRevisionFields)
+			}`, fields)
 
 	return specificRevision, Args{
 		"$interfaceRev: Version!": rev,

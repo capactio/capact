@@ -1,9 +1,10 @@
 package action
 
 import (
-	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"context"
 	"testing"
+
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"capact.io/capact/internal/cli/heredoc"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
@@ -59,9 +60,9 @@ func Test_ValidateParameters(t *testing.T) {
 		givenParameters       map[string]string
 		expectedIssues        string
 	}{
-		"Happy path": {
+		"Happy path JSON": {
 			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixType("cap.type.aws.auth.creds", "0.1.0", "{}"),
+				fixAWSCredsType(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": true}`,
@@ -69,9 +70,19 @@ func Test_ValidateParameters(t *testing.T) {
 				"aws-creds":        `{"key": "true"}`,
 			},
 		},
+		"Happy path YAML": {
+			givenHubTypeInstances: []*gqlpublicapi.Type{
+				fixAWSCredsType(),
+			},
+			givenParameters: map[string]string{
+				"input-parameters": `key: true`,
+				"db-settings":      `key: true`,
+				"aws-creds":        `key: "true"`,
+			},
+		},
 		"Not found `aws-creds`": {
 			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixType("cap.type.aws.auth.creds", "0.1.0", "{}"),
+				fixAWSCredsType(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": true}`,
@@ -83,7 +94,7 @@ func Test_ValidateParameters(t *testing.T) {
 		},
 		"Invalid parameters": {
 			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixType("cap.type.aws.auth.creds", "0.1.0", "{}"),
+				fixAWSCredsType(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": "true"}`,
@@ -91,9 +102,9 @@ func Test_ValidateParameters(t *testing.T) {
 				"aws-creds":        `{"key": "true"}`,
 			},
 			expectedIssues: heredoc.Doc(`
-        	            	- Parameters "input-parameters":
-        	            	    * key: Invalid type. Expected: boolean, given: string
         	            	- Parameters "db-settings":
+        	            	    * key: Invalid type. Expected: boolean, given: string
+        	            	- Parameters "input-parameters":
         	            	    * key: Invalid type. Expected: boolean, given: string`),
 		},
 	}
@@ -246,14 +257,14 @@ func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter g
 	return f.Types, nil
 }
 
-func fixType(path, revision, schema string) *gqlpublicapi.Type {
+func fixAWSCredsType() *gqlpublicapi.Type {
 	return &gqlpublicapi.Type{
-		Path: path,
+		Path: "cap.type.aws.auth.creds",
 		Revisions: []*gqlpublicapi.TypeRevision{
 			{
-				Revision: revision,
+				Revision: "0.1.0",
 				Spec: &gqlpublicapi.TypeSpec{
-					JSONSchema: schema,
+					JSONSchema: "{}",
 				},
 			},
 		},

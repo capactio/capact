@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
 
@@ -41,7 +43,7 @@ func TestRenderHappyPath(t *testing.T) {
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
-	}, fakeCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler, &noopValidator{})
 
 	tests := []struct {
 		name                string
@@ -169,7 +171,7 @@ func TestRenderHappyPath(t *testing.T) {
 					RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
 					InterfaceRef:           tt.ref,
 					Options: []RendererOption{
-						WithSecretUserInput(tt.userInput),
+						WithSecretUserInput(tt.userInput, []byte("key: true")),
 						WithTypeInstances(tt.inputTypeInstances),
 						WithGlobalPolicy(policy),
 						WithOwnerID(ownerID),
@@ -273,7 +275,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
 				MaxDepth:      50,
-			}, fakeCli, typeInstanceHandler)
+			}, fakeCli, typeInstanceHandler, &noopValidator{})
 
 			// when
 			renderOutput, err := argoRenderer.Render(
@@ -308,7 +310,7 @@ func TestRendererMaxDepth(t *testing.T) {
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler, &noopValidator{})
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",
@@ -343,7 +345,7 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler)
+	}, fakeCli, typeInstanceHandler, &noopValidator{})
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.productivity.mattermost.install",
@@ -384,4 +386,14 @@ func genUUIDFn(prefix string) func() string {
 			return uuid
 		}
 	}()
+}
+
+var _ workflowValidator = &noopValidator{}
+
+type noopValidator struct{}
+
+func (f *noopValidator) Validate(_ context.Context, _ *gqlpublicapi.InterfaceRevision,
+	_ gqlpublicapi.ImplementationRevision, _ map[string]string,
+	_ []types.InputTypeInstanceRef, _ map[string]string, _ []types.InputTypeInstanceRef) error {
+	return nil
 }

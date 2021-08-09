@@ -143,7 +143,7 @@ func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgrap
 	return resp.TypeInstance, nil
 }
 
-// FindTypeInstance finds a TypeInstance's TypeRef.
+// FindTypeInstancesTypeRef finds a TypeInstance's TypeRef.
 // If no TypeInstances are found, it returns nil.
 func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error) {
 	if len(ids) == 0 {

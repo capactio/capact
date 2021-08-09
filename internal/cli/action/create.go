@@ -1,6 +1,10 @@
 package action
 
 import (
+	"context"
+	"fmt"
+	"io"
+
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
@@ -8,9 +12,6 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/validate/action"
-	"context"
-	"fmt"
-	"io"
 
 	"github.com/fatih/color"
 )

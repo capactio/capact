@@ -5,18 +5,19 @@ import (
 	"encoding/json"
 	"time"
 
+	"sigs.k8s.io/yaml"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
-
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
-
 	"github.com/pkg/errors"
 )
 
 const (
-	userInputName       = "input-parameters"
+	// UserInputName is exported so we can use that as a reference in `capact act create` validation process.
+	UserInputName       = "input-parameters"
 	additionalInputName = "additional-parameters"
 	runnerContext       = "runner-context"
 )
@@ -35,22 +36,28 @@ type PolicyEnforcedHubClient interface {
 	FindInterfaceRevision(ctx context.Context, ref hubpublicapi.InterfaceReference) (*hubpublicapi.InterfaceRevision, error)
 }
 
+type workflowValidator interface {
+	Validate(context.Context, *hubpublicapi.InterfaceRevision, hubpublicapi.ImplementationRevision, map[string]string, []types.InputTypeInstanceRef, map[string]string, []types.InputTypeInstanceRef) error
+}
+
 // Renderer is used to render the Capact Action workflows.
 type Renderer struct {
 	maxDepth      int
 	renderTimeout time.Duration
 
 	typeInstanceHandler *TypeInstanceHandler
+	wfValidator         workflowValidator
 	hubClient           hubclient.HubClient
 }
 
 // NewRenderer returns a new Renderer instance.
-func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler) *Renderer {
+func NewRenderer(cfg renderer.Config, hubClient hubclient.HubClient, typeInstanceHandler *TypeInstanceHandler, validator workflowValidator) *Renderer {
 	r := &Renderer{
 		typeInstanceHandler: typeInstanceHandler,
 		maxDepth:            cfg.MaxDepth,
 		renderTimeout:       cfg.RenderTimeout,
 		hubClient:           hubClient,
+		wfValidator:         validator,
 	}
 
 	return r
@@ -62,7 +69,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		input = &RenderInput{}
 	}
 
-	// policyEnforcedClient cannot be global because policy is calculated from global policy, action policy and worklfow step policies
+	// policyEnforcedClient cannot be global because policy is calculated from global policy, action policy and workflow step policies
 	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient)
 
 	// 0. Populate render options
@@ -116,18 +123,28 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 
 	// 5. List data based on policy and inject them if provided
 	// 5.1 TypeInstances
-	typeInstancesToInject := policyEnforcedClient.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
-	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
+	additionalTypeInstances := policyEnforcedClient.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
+	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, additionalTypeInstances)
 	if err != nil {
-		return nil, errors.Wrap(err, "while injecting step for downloading TypeInstances based on policy")
+		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
 	// 5.2 Additional Input
-	additionalInput := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
-	err = dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalInput)
+	allAdditionalParameters := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
+	additionalParameters, err := toInputAdditionalParams(allAdditionalParameters)
 	if err != nil {
-		return nil, errors.Wrap(err, "while injecting additional input based on policy")
+		return nil, errors.Wrap(err, "while converting additional parameters")
 	}
+	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
+	// 6. Validate given input
+	err = r.wfValidator.Validate(ctx,
+		iface, implementation,
+		ToInputParams(dedicatedRenderer.inputParametersRaw), dedicatedRenderer.inputTypeInstances,
+		additionalParameters, additionalTypeInstances,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "while validating required and additional input data")
+	}
 	// 6. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
 		return nil, err
@@ -185,6 +202,49 @@ func (r *Renderer) toMapStringInterface(w *Workflow) (map[string]interface{}, er
 
 	if err = json.Unmarshal(marshalled, &out); err != nil {
 		return nil, err
+	}
+
+	return out, nil
+}
+
+// ToInputParams maps a single parameters into an array which has this one parameter with
+// a hardcoded name.
+// Accepts only string, for all other types returns nil response.
+// Empty interface is used only to simplify usage.
+//
+// It's a known bug that we accept only one input parameter for render process
+// but we allow to specify multiple in Hub manifests definition
+func ToInputParams(parameters interface{}) map[string]string {
+	if parameters == nil {
+		return nil
+	}
+	str, ok := parameters.(string)
+	if !ok {
+		return nil
+	}
+	return map[string]string{
+		UserInputName: str,
+	}
+}
+
+// toInputAdditionalParams maps an array of additional input parameters into an array which has
+// only one parameter with hardcoded name.
+//
+// It's a known bug that we accept only one input parameter for render process
+// but we allow to specify multiple in Hub manifests definition
+func toInputAdditionalParams(additionalInput map[string]interface{}) (map[string]string, error) {
+	out := map[string]string{}
+	if len(additionalInput) == 0 {
+		return out, nil
+	}
+
+	data, err := yaml.Marshal(additionalInput[additionalInputName])
+	if err != nil {
+		return out, errors.Wrap(err, "while marshaling additional input to YAML")
+	}
+
+	if len(data) > 0 {
+		out[additionalInputName] = string(data)
 	}
 
 	return out, nil

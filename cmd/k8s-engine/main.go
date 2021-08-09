@@ -4,6 +4,9 @@ import (
 	"log"
 	"time"
 
+	actionvalidator "capact.io/capact/pkg/validate/action"
+	"capact.io/capact/pkg/validate/adapter"
+
 	"capact.io/capact/internal/k8s-engine/policy"
 
 	"capact.io/capact/internal/graphqlutil"
@@ -106,7 +109,8 @@ func main() {
 
 	hubClient := getHubClient(&cfg)
 	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
-	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler)
+	wfValidator := adapter.NewForWorkflow(actionvalidator.NewValidator(hubClient))
+	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
