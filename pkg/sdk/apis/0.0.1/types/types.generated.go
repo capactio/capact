@@ -123,7 +123,7 @@ type InterfaceSpec struct {
 
 // The input schema for Interface action.
 type Input struct {
-	Parameters    *Parameters                  `json:"parameters"`             
+	Parameters    *ParametersUnion             `json:"parameters"`             
 	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
 }
 
@@ -218,8 +218,13 @@ type Action struct {
 
 // Specifies additional input for the Implementation.
 type AdditionalInput struct {
-	Parameters    map[string]interface{}       `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
+	Parameters    *ParametersClass             `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
 	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
+}
+
+// Specifies additional input parameters for the Implementation
+type ParametersClass struct {
+	TypeRef *TypeRef `json:"typeRef,omitempty"`
 }
 
 // Specifies additional output for a given Implementation.
@@ -228,8 +233,8 @@ type AdditionalOutput struct {
 }
 
 type Implement struct {
-	Path     string  `json:"path"`              // The Interface path, for example cap.interfaces.db.mysql.install
-	Revision *string `json:"revision,omitempty"`// The exact Interface revision.
+	Path     string `json:"path"`    // The Interface path, for example cap.interfaces.db.mysql.install
+	Revision string `json:"revision"`// The exact Interface revision.
 }
 
 type Import struct {
@@ -240,8 +245,8 @@ type Import struct {
 }
 
 type Method struct {
-	Name     string  `json:"name"`              // The name of the action for a given InterfaceGroup, e.g. install.
-	Revision *string `json:"revision,omitempty"`// Revision of the Interface for a given action. If not specified, the latest revision is; used.
+	Name     string `json:"name"`    // The name of the action for a given InterfaceGroup, e.g. install.
+	Revision string `json:"revision"`// Revision of the Interface for a given action. If not specified, the latest revision is; used.
 }
 
 // Object key is an alias of the TypeInstance, used in the Implementation
@@ -418,7 +423,7 @@ const (
 	KindVendor VendorKind = "Vendor"
 )
 
-type Parameters struct {
+type ParametersUnion struct {
 	AnythingArray []interface{}
 	Bool          *bool
 	Double        *float64
@@ -427,7 +432,7 @@ type Parameters struct {
 	String        *string
 }
 
-func (x *Parameters) UnmarshalJSON(data []byte) error {
+func (x *ParametersUnion) UnmarshalJSON(data []byte) error {
 	x.AnythingArray = nil
 	x.ParameterMap = nil
 	object, err := unmarshalUnion(data, &x.Integer, &x.Double, &x.Bool, &x.String, true, &x.AnythingArray, false, nil, true, &x.ParameterMap, false, nil, true)
@@ -439,7 +444,7 @@ func (x *Parameters) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (x *Parameters) MarshalJSON() ([]byte, error) {
+func (x *ParametersUnion) MarshalJSON() ([]byte, error) {
 	return marshalUnion(x.Integer, x.Double, x.Bool, x.String, x.AnythingArray != nil, x.AnythingArray, false, nil, x.ParameterMap != nil, x.ParameterMap, false, nil, true)
 }
 
