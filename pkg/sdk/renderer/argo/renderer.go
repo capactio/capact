@@ -1,10 +1,11 @@
 package argo
 
 import (
-	"capact.io/capact/pkg/validate/facade"
 	"context"
 	"encoding/json"
 	"time"
+
+	"capact.io/capact/pkg/validate/facade"
 
 	"sigs.k8s.io/yaml"
 

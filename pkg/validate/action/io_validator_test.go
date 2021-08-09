@@ -158,7 +158,7 @@ func TestValidateParametersNoop(t *testing.T) {
 			ctx := context.Background()
 
 			// Hub client should not be used
-			var fakeCli HubClient = nil
+			var fakeCli HubClient
 
 			validator := NewValidator(fakeCli)
 
@@ -324,7 +324,7 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 			ctx := context.Background()
 
 			// Hub client should not be used
-			var fakeCli HubClient = nil
+			var fakeCli HubClient
 
 			validator := NewValidator(fakeCli)
 

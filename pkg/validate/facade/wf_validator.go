@@ -1,10 +1,11 @@
 package facade
 
 import (
+	"context"
+
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/validate"
-	"context"
 
 	"github.com/pkg/errors"
 )
@@ -30,6 +31,7 @@ func NewForWorkflow(validator Validator) *Workflow {
 	return &Workflow{validator: validator}
 }
 
+// WorkflowValidateInput holds input data for Validate method.
 type WorkflowValidateInput struct {
 	Interface               *gqlpublicapi.InterfaceRevision
 	Parameters              map[string]string
@@ -87,8 +89,5 @@ func (w *Workflow) Validate(ctx context.Context, in WorkflowValidateInput) error
 		}
 	}
 
-	if err := rs.ErrorOrNil(); err != nil {
-		return err
-	}
-	return nil
+	return rs.ErrorOrNil()
 }

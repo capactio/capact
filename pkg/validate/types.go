@@ -22,7 +22,7 @@ type (
 )
 
 type (
-	// Schema holds TypeRef and information if TypeInstance of this TypeRef is required.
+	// TypeRef holds TypeRef and information if TypeInstance of this TypeRef is required.
 	TypeRef struct {
 		types.TypeRef
 		Required bool

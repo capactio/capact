@@ -1,10 +1,11 @@
 package argo
 
 import (
-	"capact.io/capact/internal/ctxutil"
 	"context"
 	"encoding/json"
 	"fmt"
+
+	"capact.io/capact/internal/ctxutil"
 
 	"capact.io/capact/internal/ptr"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"

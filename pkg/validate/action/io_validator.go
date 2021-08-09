@@ -1,13 +1,14 @@
 package action
 
 import (
-	"capact.io/capact/internal/ctxutil"
-	"capact.io/capact/pkg/sdk/renderer/argo"
 	"context"
 	"fmt"
+	"strings"
+
+	"capact.io/capact/internal/ctxutil"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	"github.com/pkg/errors"
 	"github.com/valyala/fastjson"
-	"strings"
 
 	"capact.io/capact/internal/ptr"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"

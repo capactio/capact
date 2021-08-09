@@ -52,11 +52,6 @@ func (c *CreateOptions) setDefaults() {
 	}
 }
 
-// TODO:
-// - try to remove isInputParamsRequired isInputTypesRequired
-// - maybe introduce printers for ValidationResults
-// - adapter for Survey
-
 func (c *CreateOptions) preValidate() error {
 	r := validate.ValidationResultAggregator{}
 	if c.TypeInstancesFilePath == "" && c.isInputTypesRequired && !c.Interactive {
