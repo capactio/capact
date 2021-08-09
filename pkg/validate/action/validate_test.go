@@ -1,11 +1,11 @@
 package action
 
 import (
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"context"
 	"testing"
 
 	"capact.io/capact/internal/cli/heredoc"
-	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
@@ -146,7 +146,7 @@ func Test_ValidateTypeInstances(t *testing.T) {
 
 	tests := map[string]struct {
 		givenHubTypeInstances map[string]gqllocalapi.TypeInstanceTypeReference
-		givenTypeInstances    []*gqlengine.InputTypeInstanceData
+		givenTypeInstances    []types.InputTypeInstanceRef
 		expectedIssues        string
 	}{
 		"Happy path": {
@@ -160,7 +160,7 @@ func Test_ValidateTypeInstances(t *testing.T) {
 					Revision: "0.1.0",
 				},
 			},
-			givenTypeInstances: []*gqlengine.InputTypeInstanceData{
+			givenTypeInstances: []types.InputTypeInstanceRef{
 				{Name: "config", ID: "id-config"},
 				{Name: "database", ID: "id-database"},
 			},
@@ -176,7 +176,7 @@ func Test_ValidateTypeInstances(t *testing.T) {
 					Revision: "0.1.1",
 				},
 			},
-			givenTypeInstances: []*gqlengine.InputTypeInstanceData{
+			givenTypeInstances: []types.InputTypeInstanceRef{
 				{Name: "config", ID: "id-config"},
 				{Name: "database", ID: "id-database"},
 			},
@@ -195,7 +195,7 @@ func Test_ValidateTypeInstances(t *testing.T) {
 					Revision: "0.1.0",
 				},
 			},
-			givenTypeInstances: []*gqlengine.InputTypeInstanceData{
+			givenTypeInstances: []types.InputTypeInstanceRef{
 				{Name: "config", ID: "id-config"},
 				{Name: "database", ID: "id-database"},
 			},
