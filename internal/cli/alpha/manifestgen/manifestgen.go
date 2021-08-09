@@ -77,7 +77,7 @@ func generateManifest(cfg *templatingConfig) (string, error) {
 
 func splitPathToPrefixAndName(path string) (string, string, error) {
 	parts := strings.Split(path, ".")
-	if len(parts) < 4 {
+	if len(parts) < 3 {
 		return "", "", fmt.Errorf("manifest path must have prefix and name")
 	}
 
