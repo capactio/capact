@@ -115,9 +115,9 @@ spec:
                               - GOOGLE_PROJECT=<@ creds.project_id @>
                               - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
                             output:
-                              goTemplate: |
+                              goTemplate:
                                 {{ range $index, $output := .Outputs -}}
-                                {{ $output.Name }}: {{"{{"}} .{{ $output.Name }} {{"}}"}}
+                                {{ $output.Name }}: "{{"{{"}} .{{ $output.Name }} {{"}}"}}"
                                 {{ end }}
                             variables: |+
                               {{ range $index, $variable := .Variables -}}
