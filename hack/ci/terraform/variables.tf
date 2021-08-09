@@ -3,7 +3,7 @@ terraform {
 }
 
 provider "google" {
-  region  = "europe-west1"
+  region = "europe-west1"
 }
 
 variable "cluster_name" {

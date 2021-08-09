@@ -3,7 +3,7 @@ resource "google_compute_router" "gcr_router" {
   name    = var.cluster_name
   network = google_compute_network.gcn_vpc.name
   region  = var.region
-  
+
 }
 
 resource "google_compute_router_nat" "gcrn_nat" {
