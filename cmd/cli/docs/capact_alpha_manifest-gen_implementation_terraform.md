@@ -34,7 +34,7 @@ capact alpha manifest-gen implementation terraform cap.implementation.gcp.clouds
   -i, --interface string   Path with revision of the Interface, which is implemented by this Implementation
   -p, --provider string    Create a provider-specific workflow. Possible values: "aws", "gcp"
   -r, --revision string    Revision of the Implementation manifest (default "0.1.0")
-  -s, --source string      URL to the tarball with the Terraform module (default "https://example.com/terraform-module.tgz")
+  -s, --source string      Path to the Terraform module, such as URL to Tarball or Git repository (default "https://example.com/terraform-module.tgz")
 ```
 
 ### Options inherited from parent commands

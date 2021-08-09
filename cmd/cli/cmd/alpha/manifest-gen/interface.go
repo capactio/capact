@@ -1,13 +1,12 @@
 package manifestgen
 
 import (
-	"errors"
-	"log"
 	"strings"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +16,8 @@ var interfaceCfg manifestgen.InterfaceConfig
 func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "interface [PATH]",
-		Short: "Generate new Interface manifests",
-		Long:  "Generate new Interface and associated Type manifests",
+		Short: "Generate new Interface-related manifests",
+		Long:  "Generate new InterfaceGroup, Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.interface.database.postgresql.install Interface
 			<cli> alpha content interface cap.interface.database.postgresql install`, cli.Name),
@@ -34,17 +33,29 @@ func NewInterface() *cobra.Command {
 
 			return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			interfaceCfg.ManifestPath = args[0]
 
 			files, err := manifestgen.GenerateInterfaceManifests(&interfaceCfg)
 			if err != nil {
-				log.Fatalf("while generating content files: %v", err)
+				return errors.Wrap(err, "while generating content files")
 			}
 
-			if err := manifestgen.WriteManifestFiles(manifestOutputDirectory, files, overrideExistingManifest); err != nil {
-				log.Fatalf("while writing manifest files: %v", err)
+			outputDir, err := cmd.Flags().GetString("output")
+			if err != nil {
+				return errors.Wrap(err, "while reading output flag")
 			}
+
+			overrideManifests, err := cmd.Flags().GetBool("override")
+			if err != nil {
+				return errors.Wrap(err, "while overriding existing manifest")
+			}
+
+			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+				return errors.Wrap(err, "while writing manifest files")
+			}
+
+			return nil
 		},
 	}
 

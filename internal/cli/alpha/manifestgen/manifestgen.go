@@ -2,6 +2,7 @@ package manifestgen
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 	"text/template"
 
@@ -74,10 +75,14 @@ func generateManifest(cfg *templatingConfig) (string, error) {
 	return manifest.String(), nil
 }
 
-func splitPathToPrefixAndName(path string) (string, string) {
+func splitPathToPrefixAndName(path string) (string, string, error) {
 	parts := strings.Split(path, ".")
+	if len(parts) < 4 {
+		return "", "", fmt.Errorf("manifest path must have prefix and name")
+	}
+
 	prefix := strings.Join(parts[2:len(parts)-1], ".")
 	name := parts[len(parts)-1]
 
-	return prefix, name
+	return prefix, name, nil
 }

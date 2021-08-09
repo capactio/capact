@@ -1,10 +1,8 @@
 package manifestgen
 
-import "github.com/spf13/cobra"
-
-var (
-	manifestOutputDirectory  string
-	overrideExistingManifest bool
+import (
+	"capact.io/capact/cmd/cli/cmd/alpha/manifest-gen/implementation"
+	"github.com/spf13/cobra"
 )
 
 // NewCmd returns a cobra.Command for content generation operations.
@@ -16,10 +14,10 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewInterface())
-	cmd.AddCommand(NewImplementation())
+	cmd.AddCommand(implementation.NewCmd())
 
-	cmd.PersistentFlags().StringVarP(&manifestOutputDirectory, "output", "o", "generated", "Path to the output directory for the generated manifests")
-	cmd.PersistentFlags().BoolVar(&overrideExistingManifest, "override", false, "Override existing manifest files")
+	cmd.PersistentFlags().StringP("output", "o", "generated", "Path to the output directory for the generated manifests")
+	cmd.PersistentFlags().Bool("override", false, "Override existing manifest files")
 
 	return cmd
 }

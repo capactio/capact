@@ -15,10 +15,16 @@ type InterfaceConfig struct {
 
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
-	prefix, name := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+	}
 
 	interfaceGroupPath := getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
-	groupPrefix, groupName := splitPathToPrefixAndName(interfaceGroupPath)
+	groupPrefix, groupName, err := splitPathToPrefixAndName(interfaceGroupPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")
+	}
 
 	interfaceInput := &templatingInput{
 		Name:     name,

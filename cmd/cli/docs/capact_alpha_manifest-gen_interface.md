@@ -4,11 +4,11 @@ title: capact alpha manifest-gen interface
 
 ## capact alpha manifest-gen interface
 
-Generate new Interface manifests
+Generate new Interface-related manifests
 
 ### Synopsis
 
-Generate new Interface and associated Type manifests
+Generate new InterfaceGroup, Interface and associated Type manifests
 
 ```
 capact alpha manifest-gen interface [PATH] [flags]

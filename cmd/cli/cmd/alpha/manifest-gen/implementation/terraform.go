@@ -1,13 +1,12 @@
-package manifestgen
+package implementation
 
 import (
-	"errors"
-	"log"
 	"strings"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/alpha/manifestgen"
 	"capact.io/capact/internal/cli/heredoc"
+	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 )
 
@@ -41,24 +40,36 @@ func NewTerraform() *cobra.Command {
 
 			return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			tfContentCfg.ManifestPath = args[0]
 			tfContentCfg.ModulePath = args[1]
 
 			files, err := manifestgen.GenerateTerraformManifests(&tfContentCfg)
 			if err != nil {
-				log.Fatalf("while generating content files: %v", err)
+				return errors.Wrap(err, "while generating content files")
 			}
 
-			if err := manifestgen.WriteManifestFiles(manifestOutputDirectory, files, overrideExistingManifest); err != nil {
-				log.Fatalf("while writing manifest files: %v", err)
+			outputDir, err := cmd.Flags().GetString("output")
+			if err != nil {
+				return errors.Wrap(err, "while reading output flag")
 			}
+
+			overrideManifests, err := cmd.Flags().GetBool("override")
+			if err != nil {
+				return errors.Wrap(err, "while overriding existing manifest")
+			}
+
+			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {
+				return errors.Wrap(err, "while writing manifest files")
+			}
+
+			return nil
 		},
 	}
 
 	cmd.Flags().StringVarP(&tfContentCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
 	cmd.Flags().StringVarP(&tfContentCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
-	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "URL to the tarball with the Terraform module")
+	cmd.Flags().StringVarP(&tfContentCfg.ModuleSourceURL, "source", "s", "https://example.com/terraform-module.tgz", "Path to the Terraform module, such as URL to Tarball or Git repository")
 	cmd.Flags().VarP(&tfContentCfg.Provider, "provider", "p", `Create a provider-specific workflow. Possible values: "aws", "gcp"`)
 
 	return cmd

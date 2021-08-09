@@ -86,7 +86,10 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInpu
 		interfaceRevision = pathSlice[1]
 	}
 
-	prefix, name := splitPathToPrefixAndName(cfg.ManifestPath)
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
+	}
 
 	input := &terraformTemplatingInput{
 		templatingInput: templatingInput{

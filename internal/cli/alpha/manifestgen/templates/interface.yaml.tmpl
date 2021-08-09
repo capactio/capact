@@ -1,0 +1,31 @@
+ocfVersion: 0.0.1
+revision: {{ .Revision }}
+kind: Interface
+metadata:
+  prefix: "cap.interface.{{ .Prefix }}"
+  name: "{{ .Name }}"
+  displayName: "{{ .Name }}"
+  description: "{{ .Name }} action for {{ .Prefix }}"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  iconURL: https://example.com/icon.png
+  maintainers:
+    - email: dev@example.cop
+      name: Example Dev
+      url: https://example.com
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.{{ .Name }}-input
+          revision: 0.1.0
+    typeInstances: {}
+
+  output:
+    typeInstances:
+      config:
+        typeRef:
+          path: cap.type.{{ .Prefix }}.config
+          revision: 0.1.0
