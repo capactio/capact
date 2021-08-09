@@ -109,7 +109,6 @@ func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRu
 		implRev.Spec.AdditionalInput.Parameters == nil {
 		return nil
 	}
-	// TODO validate
 	return policyRule.Inject.AdditionalInput
 }
 

@@ -64,7 +64,7 @@ func (w *Workflow) Validate(ctx context.Context, in WorkflowValidateInput) error
 		return errors.Wrap(err, "while validating parameters")
 	}
 
-	// 2. Implementation (first level only)
+	// 2. Implementation (first level only). Do not execute if not needed.
 	if len(in.AdditionalTypeInstances) > 0 {
 		implTypes, err := w.validator.LoadImplInputTypeInstanceRefs(ctx, in.Implementation)
 		if err != nil {

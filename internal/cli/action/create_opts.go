@@ -25,15 +25,18 @@ type CreateOptions struct {
 	Namespace     string
 	DryRun        bool
 	Interactive   bool
+	Validate      bool
 
 	ParametersFilePath    string
 	TypeInstancesFilePath string
 	ActionPolicyFilePath  string
 
 	// internal fields
-	parameters            *gqlengine.JSON
-	typeInstances         []types.InputTypeInstanceRef
-	policy                *gqlengine.PolicyInput
+	parameters    *gqlengine.JSON
+	typeInstances []types.InputTypeInstanceRef
+	policy        *gqlengine.PolicyInput
+
+	// validation specific fields
 	isInputParamsRequired bool
 	isInputTypesRequired  bool
 	validator             *action.InputOutputValidator
@@ -52,9 +55,9 @@ func (c *CreateOptions) setDefaults() {
 	}
 }
 
-func (c *CreateOptions) preValidate() error {
+func (c *CreateOptions) validate(ctx context.Context) error {
 	r := validate.ValidationResultAggregator{}
-	if c.TypeInstancesFilePath == "" && c.isInputTypesRequired && !c.Interactive {
+	if len(c.typeInstances) == 0 && c.isInputTypesRequired {
 		bldr := validate.NewResultBuilder("TypeInstances")
 		for tiName, tiType := range c.ifaceTypes {
 			bldr.ReportIssue(tiName, "required but missing TypeInstance of type %s:%s", tiType.Path, tiType.Revision)
@@ -64,21 +67,16 @@ func (c *CreateOptions) preValidate() error {
 		}
 	}
 
-	if c.ParametersFilePath == "" && c.isInputParamsRequired && !c.Interactive {
+	if c.parameters == nil && c.isInputParamsRequired {
 		bldr := validate.NewResultBuilder("Parameters")
-		bldr.ReportIssue(argo.UserInputName, "Interface requires input parameters but none was specified")
+		bldr.ReportIssue(argo.UserInputName, "required but missing input parameters for Interface")
 		if err := r.Report(bldr.Result(), nil); err != nil {
 			return err
 		}
 	}
 
-	return r.ErrorOrNil()
-}
-
-func (c *CreateOptions) validate(ctx context.Context) error {
-	r := validate.ValidationResultAggregator{}
 	if c.parameters != nil {
-		err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(*c.parameters)))
+		err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(string(*c.parameters))))
 		if err != nil {
 			return err
 		}
@@ -97,10 +95,6 @@ func (c *CreateOptions) validate(ctx context.Context) error {
 // resolve resolves the CreateOptions properties with data from different sources.
 // If possible starts interactive mode.
 func (c *CreateOptions) resolve(ctx context.Context) error {
-	if err := c.preValidate(); err != nil {
-		return err
-	}
-
 	if err := c.resolveFromFiles(); err != nil {
 		return err
 	}
@@ -111,7 +105,11 @@ func (c *CreateOptions) resolve(ctx context.Context) error {
 
 	c.setDefaults()
 
-	return c.validate(ctx)
+	if c.Validate {
+		return c.validate(ctx)
+	}
+
+	return nil
 }
 
 func (c *CreateOptions) resolveWithSurvey() error {
@@ -210,19 +208,22 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 	rawInput := ""
 	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
 
-	valid := survey.ComposeValidators(
+	valid := []survey.Validator{
 		survey.Required,
 		isYAML,
-		areParamsValid(func(inputParams string) error {
+	}
+
+	if c.Validate {
+		valid = append(valid, validatorAdapter(func(inputParams string) error {
 			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, argo.ToInputParams(inputParams))
 			if err != nil {
 				return err
 			}
 			return result.ErrorOrNil()
-		}),
-	)
+		}))
+	}
 
-	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(valid)); err != nil {
+	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
 		return nil, err
 	}
 
@@ -248,6 +249,25 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 		return nil, nil
 	}
 
+	valid := []survey.Validator{
+		survey.Required,
+		isYAML,
+	}
+
+	if c.Validate {
+		valid = append(valid, validatorAdapter(func(inputParams string) error {
+			inputTI, err := toTypeInstance([]byte(inputParams))
+			if err != nil {
+				return err
+			}
+			result, err := c.validator.ValidateTypeInstances(context.Background(), c.ifaceTypes, inputTI)
+			if err != nil {
+				return err
+			}
+			return result.ErrorOrNil()
+		}))
+	}
+
 	editor := ""
 	prompt := &survey.Editor{
 		Message:       "Please type Action input TypeInstance in YAML format",
@@ -256,7 +276,7 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 
 		HideDefault: true,
 	}
-	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
 		return nil, err
 	}
 

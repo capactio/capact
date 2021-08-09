@@ -56,13 +56,13 @@ func TestValidateParameters(t *testing.T) {
 	require.NoError(t, yaml.Unmarshal(InterfaceRaw, iface))
 
 	tests := map[string]struct {
-		givenHubTypeInstances []*gqlpublicapi.Type
+		givenHubTypeInstances []*gqlpublicapi.TypeRevision
 		givenParameters       map[string]string
 		expectedIssues        string
 	}{
 		"Happy path JSON": {
-			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixAWSCredsType(),
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": true}`,
@@ -71,8 +71,8 @@ func TestValidateParameters(t *testing.T) {
 			},
 		},
 		"Happy path YAML": {
-			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixAWSCredsType(),
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `key: true`,
@@ -81,8 +81,8 @@ func TestValidateParameters(t *testing.T) {
 			},
 		},
 		"Not found `aws-creds`": {
-			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixAWSCredsType(),
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": true}`,
@@ -90,11 +90,11 @@ func TestValidateParameters(t *testing.T) {
 			},
 			expectedIssues: heredoc.Doc(`
         	            	- Parameters "aws-creds":
-        	            	    * not found but it's required`),
+        	            	    * required but missing input parameters`),
 		},
 		"Invalid parameters": {
-			givenHubTypeInstances: []*gqlpublicapi.Type{
-				fixAWSCredsType(),
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
 			},
 			givenParameters: map[string]string{
 				"input-parameters": `{"key": "true"}`,
@@ -157,10 +157,7 @@ func TestValidateParametersNoop(t *testing.T) {
 			// given
 			ctx := context.Background()
 
-			// Hub client should not be used
-			var fakeCli HubClient
-
-			validator := NewValidator(fakeCli)
+			validator := NewValidator(&fakeHubCli{})
 
 			// when
 			ifaceSchemas, err := validator.LoadIfaceInputParametersSchemas(ctx, tc.givenIface)
@@ -270,7 +267,7 @@ func TestValidateTypeInstances(t *testing.T) {
 			},
 			expectedIssues: heredoc.Doc(`
 		           - TypeInstances "database":
-		               * input TypeInstance was not found but it's required`),
+		               * required but missing TypeInstance of type cap.type.db.connection:0.1.0`),
 		},
 	}
 	for tn, tc := range tests {
@@ -323,10 +320,7 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 			// given
 			ctx := context.Background()
 
-			// Hub client should not be used
-			var fakeCli HubClient
-
-			validator := NewValidator(fakeCli)
+			validator := NewValidator(&fakeHubCli{})
 
 			// when
 			ifaceTypes, err := validator.LoadIfaceInputTypeInstanceRefs(ctx, tc.givenIface)
@@ -344,7 +338,7 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 }
 
 type fakeHubCli struct {
-	Types       []*gqlpublicapi.Type
+	Types       []*gqlpublicapi.TypeRevision
 	IDsTypeRefs map[string]gqllocalapi.TypeInstanceTypeReference
 }
 
@@ -352,20 +346,18 @@ func (f *fakeHubCli) FindTypeInstancesTypeRef(_ context.Context, ids []string) (
 	return f.IDsTypeRefs, nil
 }
 
-func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.Type, error) {
+func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
 	return f.Types, nil
 }
 
-func fixAWSCredsType() *gqlpublicapi.Type {
-	return &gqlpublicapi.Type{
-		Path: "cap.type.aws.auth.creds",
-		Revisions: []*gqlpublicapi.TypeRevision{
-			{
-				Revision: "0.1.0",
-				Spec: &gqlpublicapi.TypeSpec{
-					JSONSchema: "{}",
-				},
-			},
+func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
+	return &gqlpublicapi.TypeRevision{
+		Metadata: &gqlpublicapi.TypeMetadata{
+			Path: "cap.type.aws.auth.creds",
+		},
+		Revision: "0.1.0",
+		Spec: &gqlpublicapi.TypeSpec{
+			JSONSchema: "{}",
 		},
 	}
 }

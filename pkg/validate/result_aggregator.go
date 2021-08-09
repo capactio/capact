@@ -38,8 +38,15 @@ func (r *ValidationResultAggregator) ErrorOrNil() error {
 	r.m.RLock()
 	defer r.m.RUnlock()
 
-	if len(r.issuesMsgs) > 0 {
-		return fmt.Errorf("%d validation errors detected:\n%s", r.issuesCnt, strings.Join(r.issuesMsgs, "\n"))
+	switch r.issuesCnt {
+	case 0:
+	case 1:
+		header := "1 validation error detected"
+		return fmt.Errorf("%s:\n%s", header, strings.Join(r.issuesMsgs, "\n"))
+	default:
+		header := fmt.Sprintf("%d validation errors detected", r.issuesCnt)
+		return fmt.Errorf("%s:\n%s", header, strings.Join(r.issuesMsgs, "\n"))
 	}
+
 	return nil
 }

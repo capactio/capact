@@ -166,9 +166,7 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 		%s
 	}`, body.String()))
 
-	var resp struct {
-		TypeInstanceRefs map[string]*hublocalgraphql.TypeInstance `json:"typeInstance"`
-	}
+	var resp map[string]*hublocalgraphql.TypeInstance
 	err := retry.Do(func() error {
 		return c.client.Run(ctx, req, &resp)
 	}, retry.Attempts(retryAttempts))
@@ -177,7 +175,7 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 	}
 
 	out := map[string]hublocalgraphql.TypeInstanceTypeReference{}
-	for _, ti := range resp.TypeInstanceRefs {
+	for _, ti := range resp {
 		if ti == nil || ti.TypeRef == nil {
 			continue
 		}

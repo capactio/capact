@@ -22,7 +22,7 @@ import (
 
 // HubClient defines external Hub calls used by Validator.
 type HubClient interface {
-	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.Type, error)
+	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error)
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]gqllocalapi.TypeInstanceTypeReference, error)
 }
 
@@ -158,9 +158,9 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 
 	// 1. Check that all required parameters are specified
 	for name, schema := range paramsSchemas {
-		_, found := parameters[name]
-		if schema.Required && !found {
-			resultBldr.ReportIssue(name, "not found but it's required")
+		val, found := parameters[name]
+		if schema.Required && (!found || strings.TrimSpace(val) == "") {
+			resultBldr.ReportIssue(name, "required but missing input parameters")
 		}
 	}
 
@@ -206,17 +206,15 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error) {
 	// 1. Resolve TypeRef for given TypeInstances
 	var ids []string
+	indexedInputTINames := map[string]struct{}{}
 	for _, input := range gotTypeInstances {
 		ids = append(ids, input.ID)
+		indexedInputTINames[input.Name] = struct{}{}
 	}
 
-	var gotTypeInstancesTypeRefs map[string]gqllocalapi.TypeInstanceTypeReference
-	if len(ids) > 0 {
-		out, err := c.hubCli.FindTypeInstancesTypeRef(ctx, ids)
-		if err != nil {
-			return nil, errors.Wrap(err, "while resolving input TypeInstances' TypeRefs")
-		}
-		gotTypeInstancesTypeRefs = out
+	gotTypeInstancesTypeRefs, err := c.hubCli.FindTypeInstancesTypeRef(ctx, ids)
+	if err != nil {
+		return nil, errors.Wrap(err, "while resolving input TypeInstances' TypeRefs")
 	}
 
 	// 2. Validation
@@ -237,9 +235,11 @@ func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowe
 
 	// 2.2. Check that all required TypeInstances are specified
 	for name, ref := range allowedTypes {
-		_, found := gotTypes[name]
+		// Needs to check input typeInstance and not those found in Hub
+		// As here we check whether we got this input at all.
+		_, found := indexedInputTINames[name]
 		if ref.Required && !found {
-			resultBldr.ReportIssue(name, "input TypeInstance was not found but it's required")
+			resultBldr.ReportIssue(name, "required but missing TypeInstance of type %s:%s", ref.Path, ref.Revision)
 		}
 	}
 
@@ -306,14 +306,12 @@ func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context,
 	}
 
 	indexedTypes := map[string]interface{}{}
-	for _, t := range gotTypes {
-		for _, rev := range t.Revisions {
-			if rev == nil || rev.Spec == nil {
-				continue
-			}
-			key := fmt.Sprintf("%s:%s", t.Path, rev.Revision)
-			indexedTypes[key] = rev.Spec.JSONSchema
+	for _, rev := range gotTypes {
+		if rev == nil || rev.Spec == nil {
+			continue
 		}
+		key := fmt.Sprintf("%s:%s", rev.Metadata.Path, rev.Revision)
+		indexedTypes[key] = rev.Spec.JSONSchema
 	}
 
 	var (
