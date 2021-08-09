@@ -3,6 +3,8 @@ package action
 import (
 	"bytes"
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/validate"
 	"capact.io/capact/pkg/validate/action"
 	"errors"
@@ -31,7 +33,7 @@ type CreateOptions struct {
 
 	// internal fields
 	parameters            *gqlengine.JSON
-	typeInstances         []*gqlengine.InputTypeInstanceData
+	typeInstances         []types.InputTypeInstanceRef
 	policy                *gqlengine.PolicyInput
 	isInputParamsRequired bool
 	isInputTypesRequired  bool
@@ -92,7 +94,7 @@ func (c *CreateOptions) preValidate() error {
 
 	if c.ParametersFilePath == "" && c.isInputParamsRequired && !c.Interactive {
 		bldr := validate.NewResultBuilder("Parameters")
-		bldr.ReportIssue("input-parameters", "Interface requires input parameters but none was specified")
+		bldr.ReportIssue(argo.UserInputName, "Interface requires input parameters but none was specified")
 		if err := r.Report(bldr.Result(), nil); err != nil {
 			return err
 		}
@@ -104,7 +106,7 @@ func (c *CreateOptions) preValidate() error {
 // TODO: known bug that we accept only one input parameter
 func givenInputParams(parameters interface{}) map[string]string {
 	return map[string]string{
-		"input-parameters": parameters.(string),
+		argo.UserInputName: parameters.(string),
 	}
 }
 
@@ -238,7 +240,7 @@ func (c *CreateOptions) resolveFromFiles() error {
 func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
 		Parameters:    c.parameters,
-		TypeInstances: c.typeInstances,
+		TypeInstances: convertTypeInstancesRefsToGQL(c.typeInstances),
 		ActionPolicy:  c.policy,
 	}
 }
@@ -266,13 +268,14 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 	return toInputParameters([]byte(rawInput))
 }
 
-func (c *CreateOptions) askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
+func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
 	body, requiredTI := c.getTypeInstancesForEditor()
 
 	// If input is not required, still ask user whether he wants to specify one.
 	// REASON: we don't support advancedRendering so as a workaround we pass them directly
 	// to the created Action.
 	// TODO(advanced-rendering): remove me.
+	// TODO: or action policy already solves this problem?
 	if !requiredTI {
 		askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
 		if err := survey.AskOne(askAboutTI, &requiredTI); err != nil {
@@ -354,9 +357,9 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 	return toActionPolicy([]byte(editor))
 }
 
-func toTypeInstance(rawInput []byte) ([]*gqlengine.InputTypeInstanceData, error) {
+func toTypeInstance(rawInput []byte) ([]types.InputTypeInstanceRef, error) {
 	var resp struct {
-		TypeInstances []*gqlengine.InputTypeInstanceData `json:"typeInstances"`
+		TypeInstances []types.InputTypeInstanceRef `json:"typeInstances"`
 	}
 
 	if err := yaml.Unmarshal(rawInput, &resp); err != nil {
