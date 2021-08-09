@@ -82,6 +82,18 @@ MERGE (maintainer:Maintainer:unpublished {
   name: m.name,
   url: m.url})
 CREATE (metadata)-[:MAINTAINED_BY]->(maintainer)
+
+WITH *, value.metadata.attributes as attributes
+CALL {
+ WITH attributes, metadata
+ UNWIND keys(attributes) as path
+  MATCH (attribute:Attribute:unpublished{path: path})-[:CONTAINS]->(revision:AttributeRevision {revision: attributes[path].revision})
+  CREATE (metadata)-[:CHARACTERIZED_BY]->(revision)
+  CREATE (revision)-[:CHARACTERIZES]->(metadata)
+ RETURN count([]) as _tmp8
+}
+
+RETURN []
 `
 
 var interfaceGroupQuery = `
