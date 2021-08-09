@@ -24,6 +24,7 @@ capact action create INTERFACE [flags]
                                           typeInstances:
                                             - name: "config"
                                               id: "ABCD-1234-EFGH-4567"
+      --validate                           If true, validate created Action before sending it to server (default true)
 ```
 
 ### Options inherited from parent commands
