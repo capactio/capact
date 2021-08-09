@@ -1,0 +1,87 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: cap.implementation.mattermost.mattermost-team-edition
+  name: install
+  displayName: Install Mattermost Team Edition
+  description: Action which installs Mattermost Team Edition via Helm chart
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  license:
+    name: "Apache 2.0"
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+  attributes:
+    cap.sample.attribute:
+      revision: 0.1.0
+
+spec:
+  appVersion: "10,11,12,13"
+
+  outputTypeInstanceRelations:
+    mattermost-config:
+      uses:
+        - mattermost-helm-release
+        - postgresql
+        - database
+        - database-user
+
+  additionalInput:
+    typeInstances:
+      postgresql:
+        typeRef:
+          path: cap.type.database.postgresql.config
+          revision: 0.1.0
+        verbs: ["get"]
+    parameters:
+      typeRef:
+        path: cap.type.mattermost.helm.install-input
+        revision: 0.1.0
+
+  implements:
+    - path: cap.interface.productivity.mattermost.install
+      revision: 0.1.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.database.postgresql
+      alias: postgresql
+      methods:
+        - name: install
+          revision: 0.1.0
+        - name: create-db
+          revision: 0.1.0
+        - name: create-user
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        # Invalid workflow as it is not validated
+        entrypoint: mattermost-install
+        templates:
+          - name: mattermost-install

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"capact.io/capact/pkg/sdk/manifest"
+
 	"github.com/pkg/errors"
 )
 
@@ -32,7 +33,7 @@ func Group(paths []string) (map[string][]string, error) {
 		if err != nil {
 			return manifests, errors.Wrapf(err, "while reading file from path %s", path)
 		}
-		metadata, err := manifest.GetMetadata(content)
+		metadata, err := manifest.UnmarshalManifestMetadata(content)
 		if err != nil {
 			return manifests, errors.Wrapf(err, "while unmarshaling manifest content from path %s", path)
 		}

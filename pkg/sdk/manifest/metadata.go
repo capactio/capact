@@ -1,23 +1,22 @@
 package manifest
 
-import "sigs.k8s.io/yaml"
+import (
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
+)
 
-// Metadata holds generic metadata information for Capact manifests
-type Metadata struct {
-	OCFVersion ocfVersion `yaml:"ocfVersion"`
-	Kind       kind       `yaml:"kind"`
-	Metadata   struct {
-		Name   string `yaml:"name"`
-		Prefix string `yaml:"prefix"`
-	} `yaml:"metadata"`
-}
-
-// GetMetadata reads the manifest metadata from a byteslice of a Capact manifest
-func GetMetadata(yamlBytes []byte) (Metadata, error) {
-	mm := Metadata{}
+// UnmarshalManifestMetadata loads essential manifest metadata (kind and OCF version) from YAML bytes.
+func UnmarshalManifestMetadata(yamlBytes []byte) (types.ManifestMetadata, error) {
+	mm := types.ManifestMetadata{}
 	err := yaml.Unmarshal(yamlBytes, &mm)
 	if err != nil {
 		return mm, err
 	}
+
+	if mm.OCFVersion == "" || mm.Kind == "" {
+		return mm, errors.New("OCFVersion and Kind must not be empty")
+	}
+
 	return mm, nil
 }

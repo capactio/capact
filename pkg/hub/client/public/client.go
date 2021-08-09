@@ -203,6 +203,64 @@ func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, re
 	return result, nil
 }
 
+// CheckManifestRevisionsExist checks if manifests with provided manifest references exist.
+func (c *Client) CheckManifestRevisionsExist(ctx context.Context, manifestRefs []gqlpublicapi.ManifestReference) (map[gqlpublicapi.ManifestReference]bool, error) {
+	if len(manifestRefs) == 0 {
+		return map[gqlpublicapi.ManifestReference]bool{}, nil
+	}
+
+	getAlias := func(i int) string {
+		return fmt.Sprintf("partial%d", i)
+	}
+
+	strBuilder := strings.Builder{}
+	for i, manifestRef := range manifestRefs {
+		alias := getAlias(i)
+		queryName, err := manifestRef.GQLQueryName()
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting GraphQL query name for a given manifest")
+		}
+
+		partialQuery := fmt.Sprintf(`
+			%s: %s(path:"%s") {
+				revision(revision:"%s") {
+					revision
+				}
+			}
+		`, alias, queryName, manifestRef.Path, manifestRef.Revision)
+		strBuilder.WriteString(partialQuery)
+	}
+
+	req := graphql.NewRequest(fmt.Sprintf(`
+		query CheckManifestRevisionsExist {
+			%s
+		}`,
+		strBuilder.String(),
+	))
+
+	var resp map[string]struct {
+		Revision struct {
+			Revision *string `json:"revision"`
+		} `json:"revision"`
+	}
+
+	err := retry.Do(func() error {
+		return c.client.Run(ctx, req, &resp)
+	}, retry.Attempts(retryAttempts))
+
+	if err != nil {
+		return nil, errors.Wrap(err, "while executing query to check Type Revisions exist")
+	}
+
+	result := map[gqlpublicapi.ManifestReference]bool{}
+	for i, manifestRef := range manifestRefs {
+		alias := getAlias(i)
+		result[manifestRef] = resp[alias].Revision.Revision != nil
+	}
+
+	return result, nil
+}
+
 var key = regexp.MustCompile(`\$(\w+):`)
 
 // Args is used to store arguments to GraphQL queries.

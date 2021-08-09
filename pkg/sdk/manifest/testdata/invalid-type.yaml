@@ -1,0 +1,46 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.database.postgresql
+  displayName: PostgreSQL config
+  description: Defines configuration for PostgreSQL
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+  attributes:
+    cap.core.sample.attr:
+      revision: 0.1.0
+spec:
+  jsonSchema:
+    # Invalid JSON
+    value: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "objectdsds",
+        "title": "The schema for PostgreSQL configuration",
+        "examples": [
+          {
+            "superuser": {
+            "defaultDBName": "default_db",
+            "host": "host",
+            "port": 9000,
+          }
+        ],
+        "required": [
+            "superuser",
+            "defaultDBName",
+            "host",
+            "port"
+
+            "title": "Port",
+            "minimum": 0,
+            "maximum": 65535
+          }
+        },
+        "additionalProperties": false
+      }

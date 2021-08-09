@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"capact.io/capact/pkg/sdk/manifest"
 	"github.com/pkg/errors"
 )
 
@@ -65,7 +64,7 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 	result := make(map[string]string, len(generated))
 
 	for _, m := range generated {
-		metadata, err := manifest.GetMetadata([]byte(m))
+		metadata, err := unmarshalMetadata([]byte(m))
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting metadata for manifest")
 		}
