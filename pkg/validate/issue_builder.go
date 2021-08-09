@@ -10,12 +10,14 @@ import (
 	"github.com/hashicorp/go-multierror"
 )
 
+// IssueBuilder provides functionality to report issue by name and return aggregated result.
 type IssueBuilder struct {
 	mux    sync.Mutex
 	issues ValidationResult
 	header string
 }
 
+// NewResultBuilder returns a new IssueBuilder instance.
 func NewResultBuilder(header string) *IssueBuilder {
 	return &IssueBuilder{
 		issues: ValidationResult{},
@@ -23,6 +25,7 @@ func NewResultBuilder(header string) *IssueBuilder {
 	}
 }
 
+// ReportIssue reports issue by a given field name.
 func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{}) *IssueBuilder {
 	if bldr == nil { // TODO: error?
 		return nil
@@ -37,6 +40,7 @@ func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{})
 	return bldr
 }
 
+// Result returns validation result index by field name.
 func (bldr *IssueBuilder) Result() ValidationResult {
 	if bldr == nil {
 		return nil
@@ -52,6 +56,7 @@ func (bldr *IssueBuilder) Result() ValidationResult {
 	return bldr.issues
 }
 
+// Len returns number of all reported issues.
 func (issues ValidationResult) Len() int {
 	cnt := 0
 	for _, issues := range issues {
@@ -64,13 +69,16 @@ func (issues ValidationResult) Len() int {
 	return cnt
 }
 
-func (issues ValidationResult) ErrorOrNil() error {
+// ErrorOrNil returns error only if validation issues were reported
+// If ValidationResult is nil, returns nil.
+func (issues *ValidationResult) ErrorOrNil() error {
 	var msgs []string
 	for _, name := range issues.sortedKeys() {
-		if issues[name] == nil {
+		issue := (*issues)[name]
+		if issue == nil {
 			continue
 		}
-		msgs = append(msgs, issues[name].Error())
+		msgs = append(msgs, issue.Error())
 	}
 
 	if len(msgs) > 0 {
@@ -79,6 +87,7 @@ func (issues ValidationResult) ErrorOrNil() error {
 	return nil
 }
 
+// sortedKeys returns sorted map keys. Used to have deterministic final error messages.
 func (issues ValidationResult) sortedKeys() []string {
 	keys := make([]string, 0, len(issues))
 	for k := range issues {

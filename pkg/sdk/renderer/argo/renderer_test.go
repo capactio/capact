@@ -1,13 +1,12 @@
 package argo
 
 import (
+	"capact.io/capact/pkg/validate/facade"
 	"context"
 	"fmt"
 	"strconv"
 	"testing"
 	"time"
-
-	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
@@ -392,8 +391,6 @@ var _ workflowValidator = &noopValidator{}
 
 type noopValidator struct{}
 
-func (f *noopValidator) Validate(_ context.Context, _ *gqlpublicapi.InterfaceRevision,
-	_ gqlpublicapi.ImplementationRevision, _ map[string]string,
-	_ []types.InputTypeInstanceRef, _ map[string]string, _ []types.InputTypeInstanceRef) error {
+func (f *noopValidator) Validate(_ context.Context, _  facade.WorkflowValidateInput) error {
 	return nil
 }

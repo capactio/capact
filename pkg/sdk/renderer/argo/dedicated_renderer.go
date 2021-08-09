@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"capact.io/capact/internal/ctxutil"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -157,7 +158,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 	typeInstances []types.InputTypeInstanceRef, prefix string) (map[string]*string, error) {
 	r.currentIteration++
 
-	if shouldExit(ctx) {
+	if ctxutil.ShouldExit(ctx) {
 		return nil, ctx.Err()
 	}
 

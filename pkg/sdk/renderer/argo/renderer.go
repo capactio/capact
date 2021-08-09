@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"capact.io/capact/pkg/validate/facade"
 	"context"
 	"encoding/json"
 	"time"
@@ -17,8 +18,9 @@ import (
 
 const (
 	// UserInputName is exported so we can use that as a reference in `capact act create` validation process.
-	UserInputName       = "input-parameters"
-	additionalInputName = "additional-parameters"
+	UserInputName = "input-parameters"
+	// AdditionalInputName is exported so we can use that as a reference in `capact act create` validation process.
+	AdditionalInputName = "additional-parameters"
 	runnerContext       = "runner-context"
 )
 
@@ -37,7 +39,7 @@ type PolicyEnforcedHubClient interface {
 }
 
 type workflowValidator interface {
-	Validate(context.Context, *hubpublicapi.InterfaceRevision, hubpublicapi.ImplementationRevision, map[string]string, []types.InputTypeInstanceRef, map[string]string, []types.InputTypeInstanceRef) error
+	Validate(context.Context, facade.WorkflowValidateInput) error
 }
 
 // Renderer is used to render the Capact Action workflows.
@@ -136,33 +138,38 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
-	// 6. Validate given input
-	err = r.wfValidator.Validate(ctx,
-		iface, implementation,
-		ToInputParams(dedicatedRenderer.inputParametersRaw), dedicatedRenderer.inputTypeInstances,
-		additionalParameters, additionalTypeInstances,
-	)
+	// 6. Validate given input:
+	validateInput := facade.WorkflowValidateInput{
+		Interface:               iface,
+		Parameters:              ToInputParams(dedicatedRenderer.inputParametersRaw),
+		TypeInstances:           dedicatedRenderer.inputTypeInstances,
+		Implementation:          implementation,
+		AdditionalParameters:    additionalParameters,
+		AdditionalTypeInstances: additionalTypeInstances,
+	}
+	err = r.wfValidator.Validate(ctx, validateInput)
+
 	if err != nil {
 		return nil, errors.Wrap(err, "while validating required and additional input data")
 	}
-	// 6. Add runner context
+	// 7. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
 		return nil, err
 	}
 
-	// 7. Add steps to populate rootWorkflow with input TypeInstances
+	// 8. Add steps to populate rootWorkflow with input TypeInstances
 	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
 		return nil, err
 	}
 
 	availableArtifacts := dedicatedRenderer.tplInputArguments[dedicatedRenderer.entrypointStep.Template]
 
-	// 8 Register output TypeInstances
+	// 9. Register output TypeInstances
 	if err := dedicatedRenderer.addOutputTypeInstancesToGraph(nil, "", iface, &implementation, availableArtifacts); err != nil {
 		return nil, errors.Wrap(err, "while noting output artifacts")
 	}
 
-	// 9. Render rootWorkflow templates
+	// 10. Render rootWorkflow templates
 	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
@@ -238,13 +245,13 @@ func toInputAdditionalParams(additionalInput map[string]interface{}) (map[string
 		return out, nil
 	}
 
-	data, err := yaml.Marshal(additionalInput[additionalInputName])
+	data, err := yaml.Marshal(additionalInput[AdditionalInputName])
 	if err != nil {
 		return out, errors.Wrap(err, "while marshaling additional input to YAML")
 	}
 
 	if len(data) > 0 {
-		out[additionalInputName] = string(data)
+		out[AdditionalInputName] = string(data)
 	}
 
 	return out, nil

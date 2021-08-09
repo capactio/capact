@@ -2,6 +2,7 @@ package action
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 
@@ -79,17 +80,17 @@ func (c *CreateOptions) preValidate() error {
 	return r.ErrorOrNil()
 }
 
-func (c *CreateOptions) validate() error {
+func (c *CreateOptions) validate(ctx context.Context) error {
 	r := validate.ValidationResultAggregator{}
 	if c.parameters != nil {
-		err := r.Report(c.validator.ValidateParameters(c.ifaceSchemas, argo.ToInputParams(*c.parameters)))
+		err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(*c.parameters)))
 		if err != nil {
 			return err
 		}
 	}
 
 	if len(c.typeInstances) > 0 {
-		err := r.Report(c.validator.ValidateTypeInstances(c.ifaceTypes, c.typeInstances))
+		err := r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
 		if err != nil {
 			return err
 		}
@@ -100,7 +101,7 @@ func (c *CreateOptions) validate() error {
 
 // resolve resolves the CreateOptions properties with data from different sources.
 // If possible starts interactive mode.
-func (c *CreateOptions) resolve() error {
+func (c *CreateOptions) resolve(ctx context.Context) error {
 	if err := c.preValidate(); err != nil {
 		return err
 	}
@@ -115,7 +116,7 @@ func (c *CreateOptions) resolve() error {
 
 	c.setDefaults()
 
-	return c.validate()
+	return c.validate(ctx)
 }
 
 func (c *CreateOptions) resolveWithSurvey() error {
@@ -218,7 +219,7 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 		survey.Required,
 		isYAML,
 		areParamsValid(func(inputParams string) error {
-			result, err := c.validator.ValidateParameters(c.ifaceSchemas, argo.ToInputParams(inputParams))
+			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, argo.ToInputParams(inputParams))
 			if err != nil {
 				return err
 			}

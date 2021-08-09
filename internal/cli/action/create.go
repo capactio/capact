@@ -62,7 +62,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 	}
 	opts.isInputTypesRequired = len(opts.ifaceTypes) > 0
 
-	if err := opts.resolve(); err != nil {
+	if err := opts.resolve(ctx); err != nil {
 		return nil, err
 	}
 

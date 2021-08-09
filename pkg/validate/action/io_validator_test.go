@@ -50,7 +50,7 @@ spec:
           path: cap.type.aws.auth.creds
           revision: 0.1.0`)
 
-func Test_ValidateParameters(t *testing.T) {
+func TestValidateParameters(t *testing.T) {
 	// given
 	iface := &gqlpublicapi.InterfaceRevision{}
 	require.NoError(t, yaml.Unmarshal(InterfaceRaw, iface))
@@ -111,6 +111,7 @@ func Test_ValidateParameters(t *testing.T) {
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
+			ctx := context.Background()
 			fakeCli := &fakeHubCli{
 				Types: tc.givenHubTypeInstances,
 			}
@@ -118,13 +119,13 @@ func Test_ValidateParameters(t *testing.T) {
 			validator := NewValidator(fakeCli)
 
 			// when
-			ifaceSchemas, err := validator.LoadIfaceInputParametersSchemas(context.Background(), iface)
+			ifaceSchemas, err := validator.LoadIfaceInputParametersSchemas(ctx, iface)
 			// then
 			require.NoError(t, err)
 			require.Len(t, ifaceSchemas, 3)
 
 			// when
-			result, err := validator.ValidateParameters(ifaceSchemas, tc.givenParameters)
+			result, err := validator.ValidateParameters(ctx, ifaceSchemas, tc.givenParameters)
 			// then
 			require.NoError(t, err)
 
@@ -133,6 +134,45 @@ func Test_ValidateParameters(t *testing.T) {
 			} else {
 				assert.EqualError(t, result.ErrorOrNil(), tc.expectedIssues)
 			}
+		})
+	}
+}
+
+func TestValidateParametersNoop(t *testing.T) {
+	tests := map[string]struct {
+		givenIface      *gqlpublicapi.InterfaceRevision
+		givenParameters map[string]string
+	}{
+		"Should do nothing on nil": {
+			givenIface:      nil,
+			givenParameters: nil,
+		},
+		"Should do nothing on zero values": {
+			givenIface:      &gqlpublicapi.InterfaceRevision{},
+			givenParameters: map[string]string{},
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			ctx := context.Background()
+
+			// Hub client should not be used
+			var fakeCli HubClient = nil
+
+			validator := NewValidator(fakeCli)
+
+			// when
+			ifaceSchemas, err := validator.LoadIfaceInputParametersSchemas(ctx, tc.givenIface)
+			// then
+			require.NoError(t, err)
+			require.Len(t, ifaceSchemas, 0)
+
+			// when
+			result, err := validator.ValidateParameters(ctx, ifaceSchemas, tc.givenParameters)
+			// then
+			require.NoError(t, err)
+			assert.NoError(t, result.ErrorOrNil())
 		})
 	}
 }
@@ -150,7 +190,7 @@ spec:
           path: cap.type.mattermost.config
           revision: 0.1.0`)
 
-func Test_ValidateTypeInstances(t *testing.T) {
+func TestValidateTypeInstances(t *testing.T) {
 	// given
 	iface := &gqlpublicapi.InterfaceRevision{}
 	require.NoError(t, yaml.Unmarshal(InterfaceInputTypesRaw, iface))
@@ -214,10 +254,29 @@ func Test_ValidateTypeInstances(t *testing.T) {
                     - TypeInstances "config":
                         * must be of Type "cap.type.mattermost.config" but it's "cap.type.slack.config"`),
 		},
+		"not found required TypeInstance": {
+			givenHubTypeInstances: map[string]gqllocalapi.TypeInstanceTypeReference{
+				"id-database": {
+					Path:     "cap.type.db.connection",
+					Revision: "0.1.0",
+				},
+				"id-config": {
+					Path:     "cap.type.mattermost.config",
+					Revision: "0.1.0",
+				},
+			},
+			givenTypeInstances: []types.InputTypeInstanceRef{
+				{Name: "config", ID: "id-config"},
+			},
+			expectedIssues: heredoc.Doc(`
+		           - TypeInstances "database":
+		               * input TypeInstance was not found but it's required`),
+		},
 	}
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
 			// given
+			ctx := context.Background()
 			fakeCli := &fakeHubCli{
 				IDsTypeRefs: tc.givenHubTypeInstances,
 			}
@@ -225,13 +284,13 @@ func Test_ValidateTypeInstances(t *testing.T) {
 			validator := NewValidator(fakeCli)
 
 			// when
-			ifaceTypes, err := validator.LoadIfaceInputTypeInstanceRefs(context.Background(), iface)
+			ifaceTypes, err := validator.LoadIfaceInputTypeInstanceRefs(ctx, iface)
 			// then
 			require.NoError(t, err)
 			require.Len(t, ifaceTypes, 2)
 
 			// when
-			result, err := validator.ValidateTypeInstances(ifaceTypes, tc.givenTypeInstances)
+			result, err := validator.ValidateTypeInstances(ctx, ifaceTypes, tc.givenTypeInstances)
 			// then
 			require.NoError(t, err)
 
@@ -240,6 +299,46 @@ func Test_ValidateTypeInstances(t *testing.T) {
 			} else {
 				assert.EqualError(t, result.ErrorOrNil(), tc.expectedIssues)
 			}
+		})
+	}
+}
+
+func TestValidateTypeInstancesNoop(t *testing.T) {
+	// given
+	tests := map[string]struct {
+		givenIface         *gqlpublicapi.InterfaceRevision
+		givenTypeInstances []types.InputTypeInstanceRef
+	}{
+		"Should do nothing on nil": {
+			givenIface:         nil,
+			givenTypeInstances: nil,
+		},
+		"Should do nothing on zero values": {
+			givenIface:         &gqlpublicapi.InterfaceRevision{},
+			givenTypeInstances: []types.InputTypeInstanceRef{},
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			ctx := context.Background()
+
+			// Hub client should not be used
+			var fakeCli HubClient = nil
+
+			validator := NewValidator(fakeCli)
+
+			// when
+			ifaceTypes, err := validator.LoadIfaceInputTypeInstanceRefs(ctx, tc.givenIface)
+			// then
+			require.NoError(t, err)
+			require.Len(t, ifaceTypes, 0)
+
+			// when
+			result, err := validator.ValidateTypeInstances(ctx, ifaceTypes, tc.givenTypeInstances)
+			// then
+			require.NoError(t, err)
+			assert.NoError(t, result.ErrorOrNil())
 		})
 	}
 }

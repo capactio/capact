@@ -1,7 +1,6 @@
 package argo
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
@@ -15,15 +14,6 @@ func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReferenc
 	return hubpublicgraphql.InterfaceReference{
 		Path:     in.Path,
 		Revision: ptr.StringPtrToString(in.Revision),
-	}
-}
-
-func shouldExit(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		return true
-	default:
-		return false
 	}
 }
 

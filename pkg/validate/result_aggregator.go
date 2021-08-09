@@ -14,6 +14,8 @@ type ValidationResultAggregator struct {
 	m          sync.RWMutex
 }
 
+// Report aggregates validation result. Can be used as wrapper:
+//   err = rs.Report(validator.ValidateParameters(ctx, ifaceSchemas, params))
 func (r *ValidationResultAggregator) Report(result ValidationResult, err error) error {
 	r.m.Lock()
 	defer r.m.Unlock()
@@ -28,7 +30,11 @@ func (r *ValidationResultAggregator) Report(result ValidationResult, err error) 
 	return nil
 }
 
+// ErrorOrNil returns aggregated error for all reported issues. If no issues reported, returns nil.
 func (r *ValidationResultAggregator) ErrorOrNil() error {
+	if r == nil {
+		return nil
+	}
 	r.m.RLock()
 	defer r.m.RUnlock()
 
