@@ -26,6 +26,7 @@ require (
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/hcl/v2 v2.9.1
 	github.com/hashicorp/terraform v0.14.8
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20210625153042-09f34846faab
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2

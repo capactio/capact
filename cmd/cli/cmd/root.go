@@ -4,6 +4,7 @@ import (
 	"log"
 	"strings"
 
+	"capact.io/capact/cmd/cli/cmd/alpha"
 	"capact.io/capact/cmd/cli/cmd/environment"
 	"capact.io/capact/cmd/cli/cmd/policy"
 
@@ -89,6 +90,7 @@ func NewRoot() *cobra.Command {
 		policy.NewCmd(),
 		environment.NewCmd(),
 		typeinstance.NewCmd(),
+		alpha.NewCmd(),
 	)
 
 	cobra.OnInitialize(initConfig)
