@@ -1,6 +1,7 @@
 package capact
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -70,12 +71,12 @@ var Images = images{
 	},
 }
 
-func buildImage(w io.Writer, imgName string, img image, repository, version string) (string, error) {
+func buildImage(ctx context.Context, w io.Writer, imgName string, img image, repository, version string) (string, error) {
 	// docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
 	imageTag := fmt.Sprintf("%s/%s:%s", repository, imgName, version)
 
 	// #nosec G204
-	cmd := exec.Command("docker",
+	cmd := exec.CommandContext(ctx, "docker",
 		"build",
 		"--build-arg", fmt.Sprintf("COMPONENT=%s", imgName),
 		"-t", imageTag, ".")
@@ -107,26 +108,13 @@ func buildImage(w io.Writer, imgName string, img image, repository, version stri
 	return imageTag, nil
 }
 
-// DeleteImages deletes passed image
-func DeleteImages(images []string) error {
-	for _, image := range images {
-		// #nosec G204
-		cmd := exec.Command("docker", "rmi", image)
-		err := cmd.Run()
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // BuildImages builds passed images setting passed repository and version
-func BuildImages(w io.Writer, repository, version string, names []string) ([]string, error) {
+func BuildImages(ctx context.Context, w io.Writer, repository, version string, names []string) ([]string, error) {
 	var created []string
 
 	for _, image := range Images.All() {
 		if slices.Contains(names, image) {
-			imageTag, err := buildImage(w, image, Images[image], repository, version)
+			imageTag, err := buildImage(ctx, w, image, Images[image], repository, version)
 			if err != nil {
 				return nil, errors.Wrapf(err, "while building image %s", image)
 			}

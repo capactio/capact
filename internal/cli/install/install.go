@@ -34,7 +34,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
 		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
 		// TODO can we parallelize it?
-		created, err := capact.BuildImages(w, registryPath, registryTag, opts.BuildImages)
+		created, err := capact.BuildImages(ctx, w, registryPath, registryTag, opts.BuildImages)
 		if err != nil {
 			return errors.Wrap(err, "while building images")
 		}
