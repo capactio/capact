@@ -169,8 +169,8 @@ type ComplexityRoot struct {
 	}
 
 	InputParameter struct {
-		JSONSchema func(childComplexity int) int
-		Name       func(childComplexity int) int
+		Name    func(childComplexity int) int
+		TypeRef func(childComplexity int) int
 	}
 
 	InputTypeInstance struct {
@@ -864,19 +864,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ImplementationSpec.Requires(childComplexity), true
 
-	case "InputParameter.jsonSchema":
-		if e.complexity.InputParameter.JSONSchema == nil {
-			break
-		}
-
-		return e.complexity.InputParameter.JSONSchema(childComplexity), true
-
 	case "InputParameter.name":
 		if e.complexity.InputParameter.Name == nil {
 			break
 		}
 
 		return e.complexity.InputParameter.Name(childComplexity), true
+
+	case "InputParameter.typeRef":
+		if e.complexity.InputParameter.TypeRef == nil {
+			break
+		}
+
+		return e.complexity.InputParameter.TypeRef(childComplexity), true
 
 	case "InputTypeInstance.name":
 		if e.complexity.InputTypeInstance.Name == nil {
@@ -1816,7 +1816,7 @@ type InterfaceInput @additionalLabels(labels: ["published"]){
 
 type InputParameter @additionalLabels(labels: ["published"]){
   name: String!
-  jsonSchema: Any
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type InterfaceOutput @additionalLabels(labels: ["published"]){
@@ -6339,7 +6339,7 @@ func (ec *executionContext) _InputParameter_name(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _InputParameter_jsonSchema(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
+func (ec *executionContext) _InputParameter_typeRef(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -6356,19 +6356,60 @@ func (ec *executionContext) _InputParameter_jsonSchema(ctx context.Context, fiel
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.JSONSchema, nil
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeRef, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OF_TYPE")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.TypeReference`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
 		return graphql.Null
 	}
-	res := resTmp.(interface{})
+	res := resTmp.(*TypeReference)
 	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
+	return ec.marshalNTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputTypeInstance_name(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstance) (ret graphql.Marshaler) {
@@ -13409,8 +13450,11 @@ func (ec *executionContext) _InputParameter(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
-		case "jsonSchema":
-			out.Values[i] = ec._InputParameter_jsonSchema(ctx, field, obj)
+		case "typeRef":
+			out.Values[i] = ec._InputParameter_typeRef(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

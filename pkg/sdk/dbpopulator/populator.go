@@ -137,9 +137,14 @@ CALL {
   WITH input, parameters
   UNWIND keys(parameters) as name
     CREATE (parameter: InputParameter:unpublished {
-      name: name,
-      jsonSchema: parameters[name].jsonSchema.value})
+      name: name
+    })
     CREATE (input)-[:HAS]->(parameter)
+
+    MERGE (typeReference: TypeReference:unpublished{
+      path: parameters[name].typeRef.path,
+      revision: parameters[name].typeRef.revision})
+    CREATE (parameter)-[:OF_TYPE]->(typeReference)
   RETURN count([]) as _tmp0
 }
 

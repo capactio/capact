@@ -137,7 +137,10 @@ var InterfaceRevisionFields = fmt.Sprintf(`
         input {
           parameters {
             name
-            jsonSchema
+						typeRef {
+							path
+							revision
+						}
           }
           typeInstances {
             name
