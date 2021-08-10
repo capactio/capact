@@ -71,7 +71,9 @@ spec:
       appVersion: "5.6.x, 5.7.x"
       methods:
         - name: install
+          revision: 0.1.0
         - name: create-db
+          revision: 0.1.0
     - interfaceGroupPath: cap.interface.runner.argo
       alias: argo
       methods:

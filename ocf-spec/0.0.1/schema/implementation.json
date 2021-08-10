@@ -141,7 +141,12 @@
               "$id": "/properties/spec/properties/additionalInput/properties/parameters",
               "type": "object",
               "description": "Specifies additional input parameters for the Implementation",
-              "additionalProperties": true
+              "additionalProperties": false,
+              "properties": {
+                "typeRef": {
+                  "$ref": "https://capact.io/schemas/common/type-ref.json"
+                }
+              }
             }
           },
           "additionalProperties": false
@@ -189,7 +194,8 @@
             "$id": "#/properties/spec/properties/implements/items",
             "type": "object",
             "required": [
-              "path"
+              "path",
+              "revision"
             ],
             "properties": {
               "path": {
@@ -286,7 +292,8 @@
                 "items": {
                   "type": "object",
                   "required": [
-                    "name"
+                    "name",
+                    "revision"
                   ],
                   "properties": {
                     "name": {
