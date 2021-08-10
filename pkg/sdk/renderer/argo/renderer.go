@@ -3,6 +3,7 @@ package argo
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
@@ -234,6 +235,11 @@ func ToInputParams(parameters interface{}) map[string]string {
 	if !ok {
 		return nil
 	}
+
+	if strings.TrimSpace(str) == "" {
+		return nil
+	}
+
 	return map[string]string{
 		UserInputName: str,
 	}
