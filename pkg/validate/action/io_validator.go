@@ -160,6 +160,7 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 	for name, schema := range paramsSchemas {
 		val, found := parameters[name]
 		if schema.Required && (!found || strings.TrimSpace(val) == "") {
+			delete(parameters, name) // delete to don't validate against JSONSchema
 			resultBldr.ReportIssue(name, "required but missing input parameters")
 		}
 	}
@@ -201,9 +202,23 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 	return resultBldr.Result(), nil
 }
 
+// ValidateTypeInstancesStrict validates that a given input TypeInstances has valid TypeRefs.
+// TODO(advanced-rendering/policy): Unknown input TypeInstances are reported as not valid.
+//
+// It resolves input TypeInstances' TypeRefs by calling Hub.
+func (c *InputOutputValidator) ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error) {
+	return c.validateTypeInstances(ctx, allowedTypes, gotTypeInstances, false)
+}
+
 // ValidateTypeInstances validates that a given input TypeInstances has valid TypeRefs.
+// Unknown input TypeInstances are ignored, so on Interface we can pass additionalTypeInstances, e.g. existing database.
+//
 // It resolves input TypeInstances' TypeRefs by calling Hub.
 func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error) {
+	return c.validateTypeInstances(ctx, allowedTypes, gotTypeInstances, true)
+}
+
+func (c *InputOutputValidator) validateTypeInstances(ctx context.Context, allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef, allowUnknown bool) (validate.ValidationResult, error) {
 	// 1. Resolve TypeRef for given TypeInstances
 	var ids []string
 	indexedInputTINames := map[string]struct{}{}
@@ -247,9 +262,9 @@ func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowe
 	for name, gotTypeRef := range gotTypes {
 		expTypeRef, found := allowedTypes[name]
 		if !found {
-			// TODO(advanced-rendering): make it optional or maybe policy opt is enough?
-			// (reason allow to skip, e.g. Interface doesn't specify impl TI
-			resultBldr.ReportIssue(name, "TypeInstance was not found in manifest definition")
+			if !allowUnknown {
+				resultBldr.ReportIssue(name, "TypeInstance was not found in manifest definition")
+			}
 			continue
 		}
 

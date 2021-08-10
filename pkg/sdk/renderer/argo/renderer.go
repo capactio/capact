@@ -5,16 +5,15 @@ import (
 	"encoding/json"
 	"time"
 
-	"capact.io/capact/pkg/validate/facade"
-
-	"sigs.k8s.io/yaml"
-
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
+	"capact.io/capact/pkg/validate/facade"
+
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 const (
@@ -141,12 +140,17 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 
 	// 6. Validate given input:
 	validateInput := facade.WorkflowValidateInput{
-		Interface:               iface,
-		Parameters:              ToInputParams(dedicatedRenderer.inputParametersRaw),
-		TypeInstances:           dedicatedRenderer.inputTypeInstances,
-		Implementation:          implementation,
-		AdditionalParameters:    additionalParameters,
-		AdditionalTypeInstances: additionalTypeInstances,
+		Interface:  iface,
+		Parameters: ToInputParams(dedicatedRenderer.inputParametersRaw),
+		// TODO(advanced-rendering/policy): This holds both the Interface TypeInstances
+		// and Implementation additional TypeInstances used in workflow, e.g. already existing database.
+		// Facade knows how to handle that.
+		TypeInstances:        dedicatedRenderer.inputTypeInstances,
+		Implementation:       implementation,
+		AdditionalParameters: additionalParameters,
+		// TODO(advanced-rendering/policy): currently, additionalTypeInstances defined on policy level are
+		// connected only with `require` property on Implementation and it's already validated in policy enforced client.
+		//AdditionalTypeInstances: additionalTypeInstances,
 	}
 	err = r.wfValidator.Validate(ctx, validateInput)
 

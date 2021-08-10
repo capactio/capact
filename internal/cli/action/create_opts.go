@@ -165,11 +165,8 @@ func (c *CreateOptions) resolveFromFiles() error {
 		}
 	}
 
-	// We need to allow to pass TypeInstance which are not
-	// specified in a given Interface, as for now we don't support
-	// advancedRendering so as a workaround we pass them directly
-	// to the created Action.
-	// TODO(advanced-rendering): validate if user can specify TypeInstances.
+	// TODO(advanced-rendering/policy): We need to allow to pass additionalTypeInstances
+	// which are not specified in a given Interface, e.g. existing database.
 	if c.TypeInstancesFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.TypeInstancesFilePath)
 		if err != nil {
@@ -233,11 +230,10 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
 	body, requiredTI := c.getTypeInstancesForEditor()
 
-	// If input is not required, still ask user whether he wants to specify one.
-	// REASON: we don't support advancedRendering so as a workaround we pass them directly
-	// to the created Action.
-	// TODO(advanced-rendering): remove me.
-	// TODO: or action policy already solves this problem?
+	// TODO(advanced-rendering/policy): If input TypeInstances are not required,
+	// still ask user whether he wants to specify one.
+	// We need to allow to pass additionalTypeInstances
+	// which are not specified in a given Interface, e.g. existing database.
 	if !requiredTI {
 		askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
 		if err := survey.AskOne(askAboutTI, &requiredTI); err != nil {

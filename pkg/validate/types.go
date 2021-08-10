@@ -48,3 +48,20 @@ func MergeSchemaCollection(in ...SchemaCollection) (SchemaCollection, error) {
 	}
 	return out, nil
 }
+
+// MergeTypeRefCollection merge input typeRef collections into one collection.
+// Fast error return when name collision is found.
+func MergeTypeRefCollection(in ...TypeRefCollection) (TypeRefCollection, error) {
+	out := TypeRefCollection{}
+
+	for _, collection := range in {
+		for name, typeRef := range collection {
+			_, found := out[name]
+			if found {
+				return nil, fmt.Errorf("cannot merge input TypeRef collection, found name collision for %q", name)
+			}
+			out[name] = typeRef
+		}
+	}
+	return out, nil
+}
