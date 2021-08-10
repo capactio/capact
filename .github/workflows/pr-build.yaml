@@ -128,7 +128,7 @@ jobs:
       - id: set-matrix-tool
         run: echo "::set-output ${TOOLS}"
 
-  build-app:
+  build-apps:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
@@ -137,7 +137,6 @@ jobs:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout code
@@ -149,10 +148,50 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
-      - run: make build-app-image-${{ matrix.APP }}
+      - run: |
+          make build-app-image-${{ matrix.APP }}
+          make save-app-image-${{ matrix.APP }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.APP }}-${{github.sha}}
+          path: /tmp/${{ matrix.APP }}.tar
+          retention-days: 1
+
+  push-apps:
+    name: Push ${{ matrix.APP }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [prepare-matrix, build-apps]
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.APP }}-${{github.sha}}
+          path: /tmp
+      - name: Load image
+        run: docker load --input /tmp/${{ matrix.APP }}.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-app-image-${{ matrix.APP }}
+      - name: Delete Docker image artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: ${{ matrix.APP }}-${{github.sha}}
 
   build-tests:
     name: Build ${{ matrix.TEST }}
@@ -163,7 +202,6 @@ jobs:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
     permissions:
       contents: read
-      packages: write
 
     steps:
       - name: Checkout code
@@ -175,10 +213,50 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
-      - run: make build-test-image-${{ matrix.TEST }}
+      - run: |
+          make build-test-image-${{ matrix.TEST }}
+          make save-test-image-${{ matrix.TEST }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-${{ matrix.TEST }}-${{github.sha}}
+          path: /tmp/${{ matrix.TEST }}-test.tar
+          retention-days: 1
+
+  push-tests:
+    name: Push ${{ matrix.TEST }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [prepare-matrix, build-tests]
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: test-${{ matrix.TEST }}-${{github.sha}}
+          path: /tmp
+      - name: Load image
+        run: docker load --input /tmp/${{ matrix.TEST }}-test.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-test-image-${{ matrix.TEST }}
+      - name: Delete Docker image artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: test-${{ matrix.TEST }}-${{github.sha}}
 
   build-infra:
     name: Build ${{ matrix.INFRA }}
@@ -189,8 +267,6 @@ jobs:
       matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
     permissions:
       contents: read
-      packages: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -201,10 +277,50 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           . ./hack/ci/setup-env.sh
-      - run: make build-infra-image-${{ matrix.INFRA }}
+      - run: |
+          make build-infra-image-${{ matrix.INFRA }}
+          make save-infra-image-${{ matrix.INFRA }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: infra-${{ matrix.INFRA }}-${{github.sha}}
+          path: /tmp/infra-${{ matrix.INFRA }}.tar
+          retention-days: 1
+
+  push-infra:
+    name: Push ${{ matrix.INFRA }}
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    needs: [prepare-matrix, build-infra]
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - name: Download artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: infra-${{ matrix.INFRA }}-${{github.sha}}
+          path: /tmp
+      - name: Load image
+        run: docker load --input /tmp/infra-${{ matrix.INFRA }}.tar
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Setup environment
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          . ./hack/ci/setup-env.sh
       - run: make push-infra-image-${{ matrix.INFRA }}
+      - name: Delete Docker image artifact
+        uses: geekyeggo/delete-artifact@v1
+        with:
+          name: infra-${{ matrix.INFRA }}-${{github.sha}}
 
   build-cli:
     name: Build Capact CLI
@@ -242,7 +358,7 @@ jobs:
     name: Integration tests
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
-    needs: [ build-app, build-tests, build-cli ]
+    needs: [ push-apps, push-tests, build-cli ]
     permissions:
       contents: read
     env:
