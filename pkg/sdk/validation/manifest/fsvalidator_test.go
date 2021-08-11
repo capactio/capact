@@ -94,7 +94,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Error from Hub": {
 			manifestPath: "testdata/valid-interface.yaml",
 			expectedValidationErrorMsgs: []string{
-				"while running validator RemoteInterfaceValidator: while checking if manifest revisions exist: test error",
+				"RemoteInterfaceValidator: internal: while checking if manifest revisions exist: test error",
 			},
 			hubCli: fixHub(t, map[graphql.ManifestReference]bool{
 				manifestRef("cap.type.productivity.mattermost.config"):        true,
@@ -122,7 +122,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 
 			validator := manifest.NewDefaultFilesystemValidator(
 				&schema.LocalFileSystem{},
-				"../../../ocf-spec",
+				"../../../../ocf-spec",
 				opts...,
 			)
 
