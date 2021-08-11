@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
-	"os/signal"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/fatih/color"
 
@@ -25,6 +22,15 @@ type Options struct {
 	ServerSide     bool
 	Verbose        bool
 	MaxConcurrency int
+}
+
+// Validate validates the Options struct fields.
+func (o *Options) Validate() error {
+	if o.MaxConcurrency < 1 {
+		return errors.New("concurrency parameter cannot be less than 1")
+	}
+
+	return nil
 }
 
 // ValidationResult defines a validation error.
@@ -52,7 +58,7 @@ func (r *ValidationResult) Error() string {
 	return fmt.Sprintf("%q:\n    * %s\n", r.Path, strings.Join(errMsgs, "\n    * "))
 }
 
-// Validation defines OCF manifest validation operation.
+// Validation provides functionality to validate OCF manifests.
 type Validation struct {
 	hubCli      client.Hub
 	writer      io.Writer
@@ -63,6 +69,10 @@ type Validation struct {
 
 // New creates new Validation.
 func New(writer io.Writer, opts Options) (*Validation, error) {
+	if err := opts.Validate(); err != nil {
+		return nil, err
+	}
+
 	server := config.GetDefaultContext()
 	fs, ocfSchemaRootPath := schema.NewProvider(opts.SchemaLocation).FileSystem()
 
@@ -81,14 +91,10 @@ func New(writer io.Writer, opts Options) (*Validation, error) {
 		validatorOpts = append(validatorOpts, manifest.WithRemoteChecks(hubCli))
 	}
 
-	if opts.MaxConcurrency < 1 {
-		return nil, errors.New("concurrency parameter cannot be less than 1")
-	}
-
 	return &Validation{
 		// TODO: To improve: Share a single validator for all workers.
-		//		Current implementation makes OCF JSON schemas caching separated per worker.
-		//		That enforces thread-safe JSON validator implementations. OCF Schema validator is not thread safe.
+		//		Current implementation makes OCF JSON schemas caching separated per validationWorker.
+		//		That enforces thread-safe JSON validator implementations. OCF Schema validator is not thread-safe.
 		validatorFn: func() manifest.FileSystemValidator {
 			return manifest.NewDefaultFilesystemValidator(fs, ocfSchemaRootPath, validatorOpts...)
 		},
@@ -108,17 +114,14 @@ func (v *Validation) Run(ctx context.Context, filePaths []string) error {
 
 	v.printIntroMessage(filePaths, workersCount)
 
-	ctxWithCancel, cancelCtxOnSignalFn := v.makeCancellableContext(ctx)
-	go cancelCtxOnSignalFn()
-
 	jobsCh := make(chan string, len(filePaths))
 	resultsCh := make(chan ValidationResult, len(filePaths))
 
 	var wg sync.WaitGroup
 	for i := 0; i < workersCount; i++ {
 		wg.Add(1)
-		wrker := newWorker(&wg, v.validatorFn())
-		go wrker.Do(ctxWithCancel, jobsCh, resultsCh)
+		worker := newValidationWorker(&wg, v.validatorFn())
+		go worker.Do(ctx, jobsCh, resultsCh)
 	}
 
 	for _, filepath := range filePaths {
@@ -141,21 +144,6 @@ func (v *Validation) Run(ctx context.Context, filePaths []string) error {
 	return v.outputResultSummary(processedFilesCount, errsCount)
 }
 
-func (v *Validation) makeCancellableContext(ctx context.Context) (context.Context, func()) {
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-
-	ctxWithCancel, cancelFn := context.WithCancel(ctx)
-
-	return ctxWithCancel, func() {
-		select {
-		case <-sigCh:
-			cancelFn()
-		case <-ctx.Done():
-		}
-	}
-}
-
 func (v *Validation) printIntroMessage(filePaths []string, workersCount int) {
 	fileNoun := properNounFor("file", len(filePaths))
 	fmt.Fprintf(v.writer, "Validating %s in %d concurrent %s...\n", fileNoun, workersCount, properNounFor("job", workersCount))
@@ -176,11 +164,7 @@ func (v *Validation) outputResultSummary(processedFilesCount int, errsCount int)
 
 func (v *Validation) printPartialResult(res ValidationResult) {
 	if !res.IsSuccess() {
-		var prefix string
-		if v.verbose {
-			prefix = fmt.Sprintf("%s ", color.RedString("✗"))
-		}
-		fmt.Fprintf(v.writer, "- %s%s\n", prefix, res.Error())
+		fmt.Fprintf(v.writer, "- %s %s\n", color.RedString("✗"), res.Error())
 		return
 	}
 
@@ -191,17 +175,17 @@ func (v *Validation) printPartialResult(res ValidationResult) {
 	fmt.Fprintf(v.writer, "- %s %q\n", color.GreenString("✓"), res.Path)
 }
 
-type worker struct {
+type validationWorker struct {
 	wg        *sync.WaitGroup
 	validator manifest.FileSystemValidator
 }
 
-func newWorker(wg *sync.WaitGroup, validator manifest.FileSystemValidator) *worker {
-	return &worker{wg: wg, validator: validator}
+func newValidationWorker(wg *sync.WaitGroup, validator manifest.FileSystemValidator) *validationWorker {
+	return &validationWorker{wg: wg, validator: validator}
 }
 
-// Do executes the worker logic.
-func (w *worker) Do(ctx context.Context, jobCh <-chan string, resultCh chan<- ValidationResult) {
+// Do executes the validationWorker logic.
+func (w *validationWorker) Do(ctx context.Context, jobCh <-chan string, resultCh chan<- ValidationResult) {
 	defer w.wg.Done()
 	for {
 		select {
@@ -211,10 +195,13 @@ func (w *worker) Do(ctx context.Context, jobCh <-chan string, resultCh chan<- Va
 			if !ok {
 				return
 			}
+
+			var resultErrs []error
 			res, err := w.validator.Do(ctx, filePath)
-			resultErrs := res.Errors
 			if err != nil {
-				resultErrs = append(resultErrs, err)
+				resultErrs = append(resultErrs, errors.Wrap(err, "internal:"))
+			} else {
+				resultErrs = append(resultErrs, res.Errors...)
 			}
 
 			resultCh <- ValidationResult{

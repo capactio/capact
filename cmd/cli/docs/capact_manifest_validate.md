@@ -16,24 +16,24 @@ capact manifest validate [flags]
 # Validate interface-group.yaml file with OCF specification in default location
 capact manifest validate ocf-spec/0.0.1/examples/interface-group.yaml
 
-# Validate multiple files inside test_manifests directory
-capact manifest validate pkg/cli/test_manifests/*.yaml
+# Validate multiple files inside test_manifests directory with additional server-side checks
+capact manifest validate --server-side pkg/cli/test_manifests/*.yaml
+
+# Validate all Hub manifests with additional server-side checks
+capact manifest validate --server-side ./manifests/**/*.yaml
 
 # Validate interface-group.yaml file with custom OCF specification location 
 capact manifest validate -s my/ocf/spec/directory ocf-spec/0.0.1/examples/interface-group.yaml
-
-# Validate all Hub manifests
-capact manifest validate ./manifests/**/*.yaml
 ```
 
 ### Options
 
 ```
-      --concurrency int        Maximum number of concurrent workers. (default 5)
-  -r, --enable-remote-checks   Executes additional manifests checks against Capact Hub.
-  -h, --help                   help for validate
-  -s, --schemas string         Path to the local directory with OCF JSONSchemas. If not provided, built-in JSONSchemas are used.
-  -v, --verbose                Prints more verbose output.
+      --concurrency int   Maximum number of concurrent workers. (default 5)
+  -h, --help              help for validate
+  -s, --schemas string    Path to the local directory with OCF JSONSchemas. If not provided, built-in JSONSchemas are used.
+      --server-side       Executes additional manifests checks against Capact Hub.
+  -v, --verbose           Prints more verbose output.
 ```
 
 ### Options inherited from parent commands

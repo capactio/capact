@@ -32,7 +32,7 @@ func (v *TypeValidator) Do(_ context.Context, _ types.ManifestMetadata, jsonByte
 
 	jsonSchemaValidationResult, err := gojsonschema.Validate(schemaLoader, manifestLoader)
 	if err != nil {
-		return newValidationResult(err), nil
+		return newValidationResult(errors.Wrap(err, "spec.jsonSchema.value")), nil
 	}
 
 	result := ValidationResult{}

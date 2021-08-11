@@ -12,7 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidation_Run(t *testing.T) {
+func TestValidation_Run_SmokeTest(t *testing.T) {
+	// given
 	validation, err := validate.New(ioutil.Discard, validate.Options{MaxConcurrency: 5})
 	require.NoError(t, err)
 
@@ -32,11 +33,15 @@ func TestValidation_Run(t *testing.T) {
 	require.True(t, len(filePaths) > 0)
 	t.Log(filePaths)
 
+	// when
 	err = validation.Run(context.Background(), filePaths)
+
+	// then
 	assert.NoError(t, err)
 }
 
 func TestValidation_NoFiles(t *testing.T) {
+	// given
 	validation, err := validate.New(ioutil.Discard, validate.Options{MaxConcurrency: 5})
 	require.NoError(t, err)
 
@@ -45,7 +50,10 @@ func TestValidation_NoFiles(t *testing.T) {
 	require.True(t, len(filePaths) > 0)
 	t.Log(filePaths)
 
+	// when
 	err = validation.Run(context.Background(), filePaths)
+
+	// then
 	assert.Error(t, err)
 	assert.EqualError(t, err, "detected 2 validation errors")
 }

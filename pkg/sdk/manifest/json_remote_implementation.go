@@ -45,18 +45,12 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 		// Parameters
 		additionalInputParams := entity.Spec.AdditionalInput.Parameters
 		if additionalInputParams != nil && additionalInputParams.TypeRef != nil {
-			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference{
-				Path:     additionalInputParams.TypeRef.Path,
-				Revision: additionalInputParams.TypeRef.Revision,
-			})
+			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(*additionalInputParams.TypeRef))
 		}
 
 		// TypeInstances
 		for _, ti := range entity.Spec.AdditionalInput.TypeInstances {
-			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference{
-				Path:     ti.TypeRef.Path,
-				Revision: ti.TypeRef.Revision,
-			})
+			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(ti.TypeRef))
 		}
 	}
 
@@ -67,19 +61,13 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 				continue
 			}
 
-			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference{
-				Path:     ti.TypeRef.Path,
-				Revision: ti.TypeRef.Revision,
-			})
+			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(*ti.TypeRef))
 		}
 	}
 
 	// Implements
 	for _, implementsItem := range entity.Spec.Implements {
-		manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference{
-			Path:     implementsItem.Path,
-			Revision: implementsItem.Revision,
-		})
+		manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(implementsItem))
 	}
 
 	// Requires

@@ -84,7 +84,7 @@ func TestFilesystemValidator_ValidateFile(t *testing.T) {
 		"Invalid Type": {
 			manifestPath: "testdata/invalid-type.yaml",
 			expectedValidationErrorMsgs: []string{
-				"TypeValidator: invalid character '}' looking for beginning of object key string",
+				"TypeValidator: spec.jsonSchema.value: invalid character '}' looking for beginning of object key string",
 				"RemoteTypeValidator: manifest revision 'cap.core.sample.attr:0.1.0' doesn't exist in Hub",
 			},
 			hubCli: fixHub(t, map[graphql.ManifestReference]bool{

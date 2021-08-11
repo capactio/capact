@@ -41,7 +41,7 @@ func NewDefaultFilesystemValidator(fs http.FileSystem, ocfSchemaRootPath string,
 func (v *FSValidator) Do(ctx context.Context, path string) (ValidationResult, error) {
 	yamlBytes, err := ioutil.ReadFile(filepath.Clean(path))
 	if err != nil {
-		return newValidationResult(), err
+		return ValidationResult{}, err
 	}
 
 	metadata, err := UnmarshalManifestMetadata(yamlBytes)
@@ -60,7 +60,7 @@ func (v *FSValidator) Do(ctx context.Context, path string) (ValidationResult, er
 	for _, validator := range validators {
 		res, err := validator.Do(ctx, metadata, jsonBytes)
 		if err != nil {
-			validationErrs = append(validationErrs, errors.Wrapf(err, "while running validator %s", validator.Name()))
+			validationErrs = append(validationErrs, errors.Wrapf(err, "%s: internal", validator.Name()))
 		}
 
 		var prefixedResErrs []error
