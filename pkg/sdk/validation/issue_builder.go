@@ -1,9 +1,7 @@
-package validate
+package validation
 
 import (
-	"errors"
 	"fmt"
-	"sort"
 	"strings"
 	"sync"
 
@@ -13,14 +11,14 @@ import (
 // IssueBuilder provides functionality to report issue by name and return aggregated result.
 type IssueBuilder struct {
 	mux    sync.Mutex
-	issues ValidationResult
+	issues Result
 	header string
 }
 
 // NewResultBuilder returns a new IssueBuilder instance.
 func NewResultBuilder(header string) *IssueBuilder {
 	return &IssueBuilder{
-		issues: ValidationResult{},
+		issues: Result{},
 		header: header,
 	}
 }
@@ -41,7 +39,7 @@ func (bldr *IssueBuilder) ReportIssue(field, format string, args ...interface{})
 }
 
 // Result returns validation result index by field name.
-func (bldr *IssueBuilder) Result() ValidationResult {
+func (bldr *IssueBuilder) Result() Result {
 	if bldr == nil {
 		return nil
 	}
@@ -54,47 +52,6 @@ func (bldr *IssueBuilder) Result() ValidationResult {
 	}
 
 	return bldr.issues
-}
-
-// Len returns number of all reported issues.
-func (issues ValidationResult) Len() int {
-	cnt := 0
-	for _, issues := range issues {
-		if issues == nil {
-			continue
-		}
-		cnt += issues.Len()
-	}
-
-	return cnt
-}
-
-// ErrorOrNil returns error only if validation issues were reported
-// If ValidationResult is nil, returns nil.
-func (issues *ValidationResult) ErrorOrNil() error {
-	var msgs []string
-	for _, name := range issues.sortedKeys() {
-		issue := (*issues)[name]
-		if issue == nil {
-			continue
-		}
-		msgs = append(msgs, issue.Error())
-	}
-
-	if len(msgs) > 0 {
-		return errors.New(strings.Join(msgs, "\n"))
-	}
-	return nil
-}
-
-// sortedKeys returns sorted map keys. Used to have deterministic final error messages.
-func (issues ValidationResult) sortedKeys() []string {
-	keys := make([]string, 0, len(issues))
-	for k := range issues {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	return keys
 }
 
 // headeredErrListFormatFunc is a basic formatter that outputs the errors as

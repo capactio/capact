@@ -12,7 +12,7 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
-	"capact.io/capact/pkg/validate/action"
+	"capact.io/capact/pkg/sdk/validation/action"
 
 	"github.com/fatih/color"
 )
@@ -32,7 +32,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 	}
 
 	if opts.Validate {
-		if err := setupValidatorWithOpts(ctx, &opts, hubCli); err != nil {
+		if err := setupCreateOptsWithValidator(ctx, &opts, hubCli); err != nil {
 			return nil, err
 		}
 	}
@@ -68,7 +68,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 	}, nil
 }
 
-func setupValidatorWithOpts(ctx context.Context, opts *CreateOptions, hubCli client.Hub) error {
+func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubCli client.Hub) error {
 	opts.validator = action.NewValidator(hubCli)
 
 	// TODO: In the future, we can use client.PolicyEnforcedClient
@@ -98,7 +98,6 @@ func setupValidatorWithOpts(ctx context.Context, opts *CreateOptions, hubCli cli
 	if err != nil {
 		return err
 	}
-	opts.isInputTypesRequired = len(opts.ifaceTypes) > 0
 
 	return nil
 }

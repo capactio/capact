@@ -30,7 +30,7 @@ func validatorAdapter(validate func(inputParams string) error) survey.Validator 
 	return func(val interface{}) error {
 		str, ok := val.(string)
 		if !ok {
-			return fmt.Errorf("Cannot enforce input parameters JSONSchema validation on response of type %T", val)
+			return fmt.Errorf("Cannot enforce parameters validation on response of type %T", val)
 		}
 
 		if err := validate(str); err != nil {

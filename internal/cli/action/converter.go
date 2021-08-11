@@ -13,3 +13,11 @@ func convertTypeInstancesRefsToGQL(refs []types.InputTypeInstanceRef) []*gqlengi
 	}
 	return out
 }
+
+func convertParametersToGQL(parameters string) *gqlengine.JSON {
+	if parameters == "" {
+		return nil
+	}
+	out := gqlengine.JSON(parameters)
+	return &out
+}

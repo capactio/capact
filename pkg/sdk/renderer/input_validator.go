@@ -1,38 +1,38 @@
-package facade
+package renderer
 
 import (
 	"context"
 
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"capact.io/capact/pkg/validate"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/pkg/errors"
 )
 
-// Validator aggregates method used by workflow validator facade
+// Validator aggregates method used by workflow validator
 type Validator interface {
-	LoadIfaceInputParametersSchemas(context.Context, *gqlpublicapi.InterfaceRevision) (validate.SchemaCollection, error)
-	LoadIfaceInputTypeInstanceRefs(context.Context, *gqlpublicapi.InterfaceRevision) (validate.TypeRefCollection, error)
-	LoadImplInputParametersSchemas(context.Context, gqlpublicapi.ImplementationRevision) (validate.SchemaCollection, error)
-	LoadImplInputTypeInstanceRefs(context.Context, gqlpublicapi.ImplementationRevision) (validate.TypeRefCollection, error)
+	LoadIfaceInputParametersSchemas(context.Context, *gqlpublicapi.InterfaceRevision) (validation.SchemaCollection, error)
+	LoadIfaceInputTypeInstanceRefs(context.Context, *gqlpublicapi.InterfaceRevision) (validation.TypeRefCollection, error)
+	LoadImplInputParametersSchemas(context.Context, gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error)
+	LoadImplInputTypeInstanceRefs(context.Context, gqlpublicapi.ImplementationRevision) (validation.TypeRefCollection, error)
 
-	ValidateParameters(context.Context, validate.SchemaCollection, map[string]string) (validate.ValidationResult, error)
-	ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validate.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validate.ValidationResult, error)
+	ValidateParameters(context.Context, validation.SchemaCollection, map[string]string) (validation.Result, error)
+	ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error)
 }
 
-// Workflow provides facade to simplify validator usage in render engine.
-type Workflow struct {
+// InputValidator provides functionality to validate input data for rendered workflow.
+type InputValidator struct {
 	validator Validator
 }
 
-// NewForWorkflow returns a new Workflow instance.
-func NewForWorkflow(validator Validator) *Workflow {
-	return &Workflow{validator: validator}
+// NewInputValidator returns a new InputValidator instance.
+func NewInputValidator(validator Validator) *InputValidator {
+	return &InputValidator{validator: validator}
 }
 
-// WorkflowValidateInput holds input data for Validate method.
-type WorkflowValidateInput struct {
+// ValidateInput holds input data for Validate method.
+type ValidateInput struct {
 	Interface            *gqlpublicapi.InterfaceRevision
 	Parameters           map[string]string
 	TypeInstances        []types.InputTypeInstanceRef
@@ -41,9 +41,8 @@ type WorkflowValidateInput struct {
 }
 
 // Validate validates both the required and additional input parameters and TypeInstances.
-//
-func (w *Workflow) Validate(ctx context.Context, in WorkflowValidateInput) error {
-	rs := validate.ValidationResultAggregator{}
+func (w *InputValidator) Validate(ctx context.Context, in ValidateInput) error {
+	rs := validation.ResultAggregator{}
 
 	// 1. Validate Interface input parameters
 	ifaceSchemas, err := w.validator.LoadIfaceInputParametersSchemas(ctx, in.Interface)
@@ -79,7 +78,7 @@ func (w *Workflow) Validate(ctx context.Context, in WorkflowValidateInput) error
 		return errors.Wrap(err, "while loading additional input TypeInstances' TypeRefs")
 	}
 
-	allAllowedTypes, err := validate.MergeTypeRefCollection(ifaceTypes, implTypes)
+	allAllowedTypes, err := validation.MergeTypeRefCollection(ifaceTypes, implTypes)
 	if err != nil {
 		return errors.Wrap(err, "while merging Interface and Implementation TypeInstances' TypeRefs")
 	}

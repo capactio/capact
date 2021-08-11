@@ -18,8 +18,7 @@ import (
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/renderer"
 	"capact.io/capact/pkg/sdk/renderer/argo"
-	actionvalidator "capact.io/capact/pkg/validate/action"
-	"capact.io/capact/pkg/validate/facade"
+	actionvalidator "capact.io/capact/pkg/sdk/validation/action"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
@@ -108,7 +107,7 @@ func main() {
 
 	hubClient := getHubClient(&cfg)
 	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
-	wfValidator := facade.NewForWorkflow(actionvalidator.NewValidator(hubClient))
+	wfValidator := renderer.NewInputValidator(actionvalidator.NewValidator(hubClient))
 	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)

@@ -7,13 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"capact.io/capact/pkg/validate/facade"
-
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
-
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/golden"
@@ -392,6 +390,6 @@ var _ workflowValidator = &noopValidator{}
 
 type noopValidator struct{}
 
-func (f *noopValidator) Validate(_ context.Context, _ facade.WorkflowValidateInput) error {
+func (f *noopValidator) Validate(_ context.Context, _ renderer.ValidateInput) error {
 	return nil
 }

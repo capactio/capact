@@ -1,14 +1,17 @@
-package validate
+package validation
 
 import (
+	"errors"
 	"fmt"
+	"sort"
+	"strings"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/hashicorp/go-multierror"
 )
 
-// ValidationResult holds validation result indexed by name. For example, by TypeInstance name.
-type ValidationResult map[string]*multierror.Error
+// Result holds validation result indexed by name. For example, by TypeInstance name.
+type Result map[string]*multierror.Error
 
 type (
 	// Schema holds JSONSchema value and information if instance of this schema is required.
@@ -64,4 +67,45 @@ func MergeTypeRefCollection(in ...TypeRefCollection) (TypeRefCollection, error) 
 		}
 	}
 	return out, nil
+}
+
+// Len returns number of all reported issues.
+func (issues Result) Len() int {
+	cnt := 0
+	for _, issues := range issues {
+		if issues == nil {
+			continue
+		}
+		cnt += issues.Len()
+	}
+
+	return cnt
+}
+
+// ErrorOrNil returns error only if validation issues were reported
+// If Result is nil, returns nil.
+func (issues *Result) ErrorOrNil() error {
+	var msgs []string
+	for _, name := range issues.sortedKeys() {
+		issue := (*issues)[name]
+		if issue == nil {
+			continue
+		}
+		msgs = append(msgs, issue.Error())
+	}
+
+	if len(msgs) > 0 {
+		return errors.New(strings.Join(msgs, "\n"))
+	}
+	return nil
+}
+
+// sortedKeys returns sorted map keys. Used to have deterministic final error messages.
+func (issues Result) sortedKeys() []string {
+	keys := make([]string, 0, len(issues))
+	for k := range issues {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }

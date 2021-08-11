@@ -9,8 +9,9 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
-	"capact.io/capact/pkg/validate"
-	"capact.io/capact/pkg/validate/action"
+	"capact.io/capact/pkg/sdk/validation"
+	"capact.io/capact/pkg/sdk/validation/action"
+
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
 	"sigs.k8s.io/yaml"
@@ -32,16 +33,15 @@ type CreateOptions struct {
 	ActionPolicyFilePath  string
 
 	// internal fields
-	parameters    *gqlengine.JSON
+	parameters    string
 	typeInstances []types.InputTypeInstanceRef
 	policy        *gqlengine.PolicyInput
 
 	// validation specific fields
 	isInputParamsRequired bool
-	isInputTypesRequired  bool
 	validator             *action.InputOutputValidator
-	ifaceSchemas          validate.SchemaCollection
-	ifaceTypes            validate.TypeRefCollection
+	ifaceSchemas          validation.SchemaCollection
+	ifaceTypes            validation.TypeRefCollection
 }
 
 // setDefaults defaults not provided options.
@@ -56,37 +56,15 @@ func (c *CreateOptions) setDefaults() {
 }
 
 func (c *CreateOptions) validate(ctx context.Context) error {
-	r := validate.ValidationResultAggregator{}
-	if len(c.typeInstances) == 0 && c.isInputTypesRequired {
-		bldr := validate.NewResultBuilder("TypeInstances")
-		for tiName, tiType := range c.ifaceTypes {
-			bldr.ReportIssue(tiName, "required but missing TypeInstance of type %s:%s", tiType.Path, tiType.Revision)
-		}
-		if err := r.Report(bldr.Result(), nil); err != nil {
-			return err
-		}
+	r := validation.ResultAggregator{}
+	err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(c.parameters)))
+	if err != nil {
+		return err
 	}
 
-	if c.parameters == nil && c.isInputParamsRequired {
-		bldr := validate.NewResultBuilder("Parameters")
-		bldr.ReportIssue(argo.UserInputName, "required but missing input parameters for Interface")
-		if err := r.Report(bldr.Result(), nil); err != nil {
-			return err
-		}
-	}
-
-	if c.parameters != nil {
-		err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(string(*c.parameters))))
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(c.typeInstances) > 0 {
-		err := r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
-		if err != nil {
-			return err
-		}
+	err = r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
+	if err != nil {
+		return err
 	}
 
 	return r.ErrorOrNil()
@@ -165,7 +143,7 @@ func (c *CreateOptions) resolveFromFiles() error {
 		}
 	}
 
-	// TODO(advanced-rendering/policy): We need to allow to pass additionalTypeInstances
+	// TODO(https://github.com/capactio/capact/issues/438): We need to allow to pass additionalTypeInstances
 	// which are not specified in a given Interface, e.g. existing database.
 	if c.TypeInstancesFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.TypeInstancesFilePath)
@@ -195,13 +173,13 @@ func (c *CreateOptions) resolveFromFiles() error {
 // ActionInput returns GraphQL Action input based on the given options.
 func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
-		Parameters:    c.parameters,
+		Parameters:    convertParametersToGQL(c.parameters),
 		TypeInstances: convertTypeInstancesRefsToGQL(c.typeInstances),
 		ActionPolicy:  c.policy,
 	}
 }
 
-func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
+func (c *CreateOptions) askForInputParameters() (string, error) {
 	rawInput := ""
 	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
 
@@ -221,7 +199,7 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 	}
 
 	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	return toInputParameters([]byte(rawInput))
@@ -230,7 +208,7 @@ func (c *CreateOptions) askForInputParameters() (*gqlengine.JSON, error) {
 func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
 	body, requiredTI := c.getTypeInstancesForEditor()
 
-	// TODO(advanced-rendering/policy): If input TypeInstances are not required,
+	// TODO(https://github.com/capactio/capact/issues/438): If input TypeInstances are not required,
 	// still ask user whether he wants to specify one.
 	// We need to allow to pass additionalTypeInstances
 	// which are not specified in a given Interface, e.g. existing database.
@@ -282,11 +260,11 @@ func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef
 func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool) {
 	if len(c.ifaceTypes) == 0 {
 		return heredoc.Doc(`
-						# Interface doesn't specify input TypeInstance.
-						# You can pass Implementation specific TypeInstance like already existing database. 
-						typeInstances:
-						  - name: ""
-						    id: ""`), false
+               # Interface doesn't specify input TypeInstance.
+               # You can pass Implementation specific TypeInstance like already existing database. 
+               typeInstances:
+                 - name: ""
+                   id: ""`), false
 	}
 
 	out := bytes.Buffer{}
@@ -294,9 +272,9 @@ func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool)
 	for tiName, tiType := range c.ifaceTypes {
 		out.WriteString("\n\n")
 		out.WriteString(heredoc.Docf(`
-						  # TypeInstance ID for %s:%s
-						  - name: "%s"
-						    id: "" `,
+               # TypeInstance ID for %s:%s
+               - name: "%s"
+                 id: "" `,
 			tiType.Path, tiType.Revision, tiName))
 	}
 	return out.String(), true
@@ -346,14 +324,13 @@ func toTypeInstance(rawInput []byte) ([]types.InputTypeInstanceRef, error) {
 	return resp.TypeInstances, nil
 }
 
-func toInputParameters(rawInput []byte) (*gqlengine.JSON, error) {
+func toInputParameters(rawInput []byte) (string, error) {
 	converted, err := yaml.YAMLToJSON(rawInput)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	gqlJSON := gqlengine.JSON(converted)
-	return &gqlJSON, nil
+	return string(converted), nil
 }
 
 func toActionPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {
