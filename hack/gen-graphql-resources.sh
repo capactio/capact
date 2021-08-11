@@ -53,7 +53,7 @@ main() {
     echo "Skipping gqlgen installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
 
-  shout "Generating Volron GraphQL related resources..."
+  shout "Generating Capact GraphQL related resources..."
 
   readonly apiPaths=(
     "/pkg/engine/api/graphql"
