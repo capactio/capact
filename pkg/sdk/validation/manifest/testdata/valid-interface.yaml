@@ -1,0 +1,30 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.productivity.mattermost
+  name: install
+  displayName: "Install Mattermost Team Edition"
+  description: "Install action for Mattermost Team Edition"
+  documentationURL: https://docs.mattermost.com/
+  supportURL: https://docs.mattermost.com/
+  iconURL: https://docs.mattermost.com/_static/images/Mattermost-Logo-Blue.svg
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  input:
+    parameters:
+      input-parameters:
+        typeRef:
+          path: cap.type.productivity.mattermost.install-input
+          revision: 0.1.0
+
+  output:
+    typeInstances:
+      mattermost-config:
+        typeRef:
+          path: cap.type.productivity.mattermost.config
+          revision: 0.1.0

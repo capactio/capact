@@ -5,7 +5,6 @@ import (
 	"sort"
 	"strings"
 
-	"capact.io/capact/pkg/sdk/manifest"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 	"github.com/pkg/errors"
 )
@@ -56,7 +55,7 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 	result := make(map[string]string, len(generated))
 
 	for _, m := range generated {
-		metadata, err := manifest.GetMetadata([]byte(m))
+		metadata, err := unmarshalMetadata([]byte(m))
 		if err != nil {
 			return nil, errors.Wrap(err, "while getting metadata for manifest")
 		}

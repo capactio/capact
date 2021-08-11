@@ -1,0 +1,95 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: config
+  prefix: cap.type.database.postgresql
+  displayName: PostgreSQL config
+  description: Defines configuration for PostgreSQL
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+  attributes:
+    cap.core.attribute.workload.stateful:
+      revision: 0.1.0
+spec:
+  jsonSchema:
+    #
+    # Invalid type of root object
+    #
+    value: |-
+      {
+        "$schema":"http://json-schema.org/draft-07/schema",
+        "type":"objectdas",
+        "title":"The schema for PostgreSQL configuration",
+        "examples":[
+          {
+            "superuser":{
+              "username":"username",
+              "password":"password"
+            },
+            "defaultDBName":"default_db",
+            "host":"host",
+            "port":9000
+          }
+        ],
+        "required":[
+            "superuser",
+            "defaultDBName",
+            "host",
+            "port"
+        ],
+        "definitions":{
+          "hostname":{
+            "type":"string",
+            "format":"hostname",
+            "title":"Hostname"
+          },
+          "port":{
+            "type":"integer",
+            "title":"Port",
+            "minimum":0,
+            "maximum":65535
+          }
+        },
+        "properties":{
+          "superuser":{
+            "$id":"#/properties/superuser",
+            "type":"object",
+            "title":"Defines superuser details",
+            "required":[
+                "username",
+                "password"
+            ],
+            "properties":{
+              "username":{
+                "$id":"#/properties/superuser/properties/username",
+                "type":"string",
+                "title":"Create the specified user with superuser power and a database with the same name.",
+                "default":"postgres"
+              },
+              "password":{
+                "$id":"#/properties/superuser/properties/password",
+                "type":"string",
+                "title":"Sets the superuser password for PostgreSQL"
+              }
+            },
+            "additionalProperties":false
+          },
+          "defaultDBName":{
+            "$id":"#/properties/defaultDBName",
+            "type":"string",
+            "title":"Defines a different name for the default database that is created"
+          },
+          "host":{
+            "$ref":"#/definitions/hostname"
+          },
+          "port":{
+            "$ref":"#/definitions/port"
+          }
+        },
+        "additionalProperties":false
+      }

@@ -39,6 +39,7 @@ type Public interface {
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListInterfacesWithLatestRevision(ctx context.Context, filter hubpublicgraphql.InterfaceFilter) ([]*hubpublicgraphql.Interface, error)
 	ListImplementationRevisions(ctx context.Context, filter *hubpublicgraphql.ImplementationRevisionFilter) ([]*hubpublicgraphql.ImplementationRevision, error)
+	CheckManifestRevisionsExist(ctx context.Context, manifestRefs []hubpublicgraphql.ManifestReference) (map[hubpublicgraphql.ManifestReference]bool, error)
 }
 
 // New returns a new Client to interact with the Capact Local and Public Hub.
