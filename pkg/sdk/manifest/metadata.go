@@ -6,8 +6,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// UnmarshalManifestMetadata loads essential manifest metadata (kind and OCF version) from YAML bytes.
-func UnmarshalManifestMetadata(yamlBytes []byte) (types.ManifestMetadata, error) {
+// UnmarshalMetadata loads essential manifest metadata (kind and OCF version) from YAML bytes.
+func UnmarshalMetadata(yamlBytes []byte) (types.ManifestMetadata, error) {
 	mm := types.ManifestMetadata{}
 	err := yaml.Unmarshal(yamlBytes, &mm)
 	if err != nil {

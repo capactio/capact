@@ -4,13 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"capact.io/capact/pkg/sdk/validation/manifest"
+
 	graphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"github.com/pkg/errors"
 
 	"capact.io/capact/internal/cli/schema"
 	"github.com/stretchr/testify/assert"
-
-	"capact.io/capact/pkg/sdk/manifest"
 
 	"github.com/stretchr/testify/require"
 )

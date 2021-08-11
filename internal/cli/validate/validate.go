@@ -7,12 +7,13 @@ import (
 	"strings"
 	"sync"
 
+	"capact.io/capact/pkg/sdk/validation/manifest"
+
 	"github.com/fatih/color"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/schema"
-	"capact.io/capact/pkg/sdk/manifest"
 	"github.com/pkg/errors"
 )
 

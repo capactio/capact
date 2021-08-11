@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"capact.io/capact/pkg/sdk/manifest"
+
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
@@ -44,7 +46,7 @@ func (v *FSValidator) Do(ctx context.Context, path string) (ValidationResult, er
 		return ValidationResult{}, err
 	}
 
-	metadata, err := UnmarshalManifestMetadata(yamlBytes)
+	metadata, err := manifest.UnmarshalMetadata(yamlBytes)
 	if err != nil {
 		return newValidationResult(errors.Wrap(err, "failed to read manifest metadata")), nil
 	}
