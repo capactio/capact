@@ -1,46 +1,44 @@
-argo:
-  images:
-    # Overrides .images.namespace if defined.
-    # NOTE: argocli and argoexec was mirrored to our repository
-    namespace: "ghcr.io/capactio/argoproj"
-    tag: v2.12.11
-    pullPolicy: IfNotPresent
-
+argo-workflows:
   controller:
-    containerRuntimeExecutor: pns
     image:
-      # We need to override it until this bug will be fixed: https://github.com/argoproj/argo/issues/4772
-      # Overrides .images.tag if defined.
-      tag: "v2.12.11-disable-global-artifacts-validation"
+      registry: ghcr.io
+      repository: capactio/argoproj/workflow-controller
+      tag: v3.0.7-disabled-global-art-validation
 
+    containerRuntimeExecutor: pns
+
+  useDefaultArtifactRepo: true
   artifactRepository:
     s3:
       bucket: argo-artifacts
       endpoint: argo-minio.capact-system.svc.cluster.local:9000
+      accessKeySecret:
+        name: argo-minio
+        key: access-key
+      secretKeySecret:
+        name: argo-minio
+        key: secret-key
 
-  minio:
-    securityContext:
-      enabled: false
-    service:
-      port: 9000
-    install: true
-    defaultBucket:
-      enabled: false
-    buckets:
-      - name: argo-artifacts # Used by Argo workflows
-        policy: public
-      - name: terraform # For storing input files for Terraform Runner
-        policy: download
-    persistence:
-      size: 5Gi
-    resources:
-      requests:
-        memory: 256Mi
-        cpu: 80m
-      limits:
-        memory: 1Gi
-        cpu: 500m
-    DeploymentUpdate:
+minio:
+  forceNewKeys: true
+
+  podSecurityContext:
+    enabled: false
+  service:
+    port: 9000
+  defaultBuckets: "argo-artifacts,terraform"
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 80m
+    limits:
+      memory: 1Gi
+      cpu: 500m
+
+  deployment:
+    updateStrategy:
       type: RollingUpdate
-      maxUnavailable: 1
-      maxSurge: 1
+
+  pdb:
+    create: true
+    maxUnavailable: 1
