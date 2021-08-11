@@ -26,6 +26,24 @@ func isDNSSubdomain(val interface{}) error {
 	return nil
 }
 
+func validatorAdapter(validate func(inputParams string) error) survey.Validator {
+	return func(val interface{}) error {
+		str, ok := val.(string)
+		if !ok {
+			return fmt.Errorf("Cannot enforce parameters validation on response of type %T", val)
+		}
+
+		if err := validate(str); err != nil {
+			// without new line, error is inlined, example output:
+			//
+			// X Sorry, your reply was invalid: - TypeInstances "testUpdate":
+			//    * required but missing TypeInstance of type cap.type.capactio.capact.validation.update:0.1.0
+			return fmt.Errorf("\n%s", err.Error())
+		}
+		return nil
+	}
+}
+
 func isYAML(val interface{}) error {
 	str, ok := val.(string)
 	if !ok {
@@ -34,13 +52,6 @@ func isYAML(val interface{}) error {
 
 	out := map[string]interface{}{}
 	return yaml.Unmarshal([]byte(str), &out)
-}
-
-func toString(in bool) string {
-	if in {
-		return "true"
-	}
-	return "false"
 }
 
 func namespaceQuestion() *survey.Question {

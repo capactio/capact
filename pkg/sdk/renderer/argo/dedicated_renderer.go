@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"capact.io/capact/internal/ptr"
-	"sigs.k8s.io/yaml"
+	"capact.io/capact/internal/ctxutil"
 
+	"capact.io/capact/internal/ptr"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
@@ -26,9 +26,10 @@ type dedicatedRenderer struct {
 	typeInstanceHandler *TypeInstanceHandler
 
 	// set with options
-	userInputSecretRef *UserInputSecretRef
-	inputTypeInstances []types.InputTypeInstanceRef
-	ownerID            *string
+	inputParametersSecretRef *UserInputSecretRef
+	inputParametersRaw       string
+	inputTypeInstances       []types.InputTypeInstanceRef
+	ownerID                  *string
 
 	// internal vars
 	currentIteration   int
@@ -158,7 +159,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 	typeInstances []types.InputTypeInstanceRef, prefix string) (map[string]*string, error) {
 	r.currentIteration++
 
-	if shouldExit(ctx) {
+	if ctxutil.ShouldExit(ctx) {
 		return nil, ctx.Err()
 	}
 
@@ -290,11 +291,12 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 					// 3.7.2 Additional Input
-					additionalInput := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
-					err = r.InjectAdditionalInput(step, additionalInput)
+					allAdditionalInput := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
+					additionalInput, err := toInputAdditionalParams(allAdditionalInput)
 					if err != nil {
-						return nil, errors.Wrap(err, "while injecting additional input")
+						return nil, errors.Wrap(err, "while converting additional input")
 					}
+					r.InjectAdditionalInput(step, additionalInput)
 
 					for k, v := range newArtifactMappings {
 						artifactMappings[k] = v
@@ -438,14 +440,14 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 }
 
 func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workflow) {
-	if r.userInputSecretRef == nil {
+	if r.inputParametersSecretRef == nil {
 		return
 	}
 
 	var (
 		volumeName   = "user-secret-volume"
 		mountPath    = "/output"
-		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.userInputSecretRef.Key)
+		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.inputParametersSecretRef.Key)
 	)
 
 	// 1. Create step which consumes user data from Secret and outputs it as artifact
@@ -463,7 +465,7 @@ func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workfl
 		Outputs: wfv1.Outputs{
 			Artifacts: wfv1.Artifacts{
 				{
-					Name: userInputName,
+					Name: UserInputName,
 					Path: artifactPath,
 				},
 			},
@@ -473,11 +475,11 @@ func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workfl
 				Name: volumeName,
 				VolumeSource: apiv1.VolumeSource{
 					Secret: &apiv1.SecretVolumeSource{
-						SecretName: r.userInputSecretRef.Name,
+						SecretName: r.inputParametersSecretRef.Name,
 						Items: []apiv1.KeyToPath{
 							{
-								Key:  r.userInputSecretRef.Key,
-								Path: r.userInputSecretRef.Key,
+								Key:  r.inputParametersSecretRef.Key,
+								Path: r.inputParametersSecretRef.Key,
 							},
 						},
 						Optional: ptr.Bool(false),
@@ -502,8 +504,8 @@ func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workfl
 	// 2. Add input arguments artifacts with user data. Thanks to that Content Developer can
 	// refer to it via "{{inputs.artifacts.input-parameters}}"
 	r.entrypointStep.Arguments.Artifacts = append(r.entrypointStep.Arguments.Artifacts, wfv1.Artifact{
-		Name: userInputName,
-		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, userInputName),
+		Name: UserInputName,
+		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, UserInputName),
 	})
 }
 
@@ -576,22 +578,14 @@ func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflo
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, typeInstances)
 }
 
-func (r *dedicatedRenderer) InjectAdditionalInput(step *WorkflowStep, additionalInput map[string]interface{}) error {
-	if len(additionalInput) == 0 {
-		return nil
+func (r *dedicatedRenderer) InjectAdditionalInput(step *WorkflowStep, additionalParams map[string]string) {
+	for name, data := range additionalParams {
+		step.Arguments.Artifacts = append(step.Arguments.Artifacts, wfv1.Artifact{
+			Name: name,
+			ArtifactLocation: wfv1.ArtifactLocation{
+				Raw: &wfv1.RawArtifact{Data: data},
+			}})
 	}
-
-	data, err := yaml.Marshal(additionalInput["additional-parameters"])
-	if err != nil {
-		return errors.Wrap(err, "while marshaling additional input to YAML")
-	}
-
-	step.Arguments.Artifacts = append(step.Arguments.Artifacts, wfv1.Artifact{
-		Name: additionalInputName,
-		ArtifactLocation: wfv1.ArtifactLocation{
-			Raw: &wfv1.RawArtifact{Data: string(data)},
-		}})
-	return nil
 }
 
 func (r *dedicatedRenderer) PickImplementationRevision(in []hubpublicapi.ImplementationRevision) (hubpublicapi.ImplementationRevision, error) {

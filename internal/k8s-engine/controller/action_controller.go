@@ -349,6 +349,12 @@ func (r *ActionReconciler) fillOutputTypeInstances(ctx context.Context, action *
 		return errors.Wrap(err, "while getting TypeInstances from Action")
 	}
 
+	// Check if not nil, or empty to get rid of error:
+	//   Action.core.capact.io "test" is invalid: status.output.typeInstances: Invalid value: "null": status.output.typeInstances in body must be of type array
+	if len(typeInstances) == 0 {
+		return nil
+	}
+
 	action.Status.Output.TypeInstances = &typeInstances
 
 	return nil

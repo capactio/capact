@@ -15,12 +15,12 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
-// HubClient interface agreggates methods for interacting with the Local and Public Hub.
+// HubClient interface aggregates methods for interacting with the Local and Public Hub.
 type HubClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error)
-	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 }
 
 // PolicyEnforcedClient is a client, which can interact with the Local and Public Hub.
@@ -109,7 +109,6 @@ func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRu
 		implRev.Spec.AdditionalInput.Parameters == nil {
 		return nil
 	}
-	// TODO validate
 	return policyRule.Inject.AdditionalInput
 }
 

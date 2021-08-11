@@ -1824,7 +1824,7 @@ type InterfaceInput @additionalLabels(labels: ["published"]){
 
 type InputParameter @additionalLabels(labels: ["published"]){
   name: String!
-  jsonSchema: Any 
+  jsonSchema: Any
   typeRef: TypeReference @relation(name: "OF_TYPE", direction: "OUT")
 }
 

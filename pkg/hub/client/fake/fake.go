@@ -116,7 +116,7 @@ func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context,
 
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
 // It will return nil, if the InterfaceRevision is not found.
-func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error) {
+func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, _ ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error) {
 	for i := range s.Interfaces {
 		iface := s.Interfaces[i]
 		if iface.Metadata.Path != ref.Path {

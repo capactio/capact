@@ -34,6 +34,7 @@ func NewCreate() *cobra.Command {
 	flags.StringVar(&opts.ActionPolicyFilePath, "action-policy-from-file", "", "Path to the one-time Action policy file in YAML format")
 	flags.BoolVarP(&opts.Interactive, "interactive", "i", false, "Toggle interactive prompting in the terminal")
 	flags.BoolVar(&opts.DryRun, "dry-run", false, "Specifies whether the Action performs server-side test without actually running the Action")
+	flags.BoolVar(&opts.Validate, "validate", true, "Validate created Action before sending it to server")
 	// TODO: add support for creating an action directly from an implementation
 	return cmd
 }

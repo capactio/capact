@@ -1,29 +1,21 @@
 package argo
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"capact.io/capact/internal/ptr"
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+
 	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReference {
 	return hubpublicgraphql.InterfaceReference{
 		Path:     in.Path,
 		Revision: ptr.StringPtrToString(in.Revision),
-	}
-}
-
-func shouldExit(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		return true
-	default:
-		return false
 	}
 }
 
@@ -169,4 +161,52 @@ func findTypeInstanceInputRef(refs []types.InputTypeInstanceRef, name string) *t
 
 func addPrefix(prefix, s string) string {
 	return fmt.Sprintf("%s-%s", prefix, s)
+}
+
+// ToInputParams maps a single parameters into an array which has this one parameter with
+// a hardcoded name.
+// Accepts only string, for all other types returns nil response.
+// Empty interface is used only to simplify usage.
+//
+// It's a known bug that we accept only one input parameter for render process
+// but we allow to specify multiple in Hub manifests definition
+func ToInputParams(parameters interface{}) map[string]string {
+	if parameters == nil {
+		return nil
+	}
+	str, ok := parameters.(string)
+	if !ok {
+		return nil
+	}
+
+	if strings.TrimSpace(str) == "" {
+		return nil
+	}
+
+	return map[string]string{
+		UserInputName: str,
+	}
+}
+
+// toInputAdditionalParams maps an array of additional input parameters into an array which has
+// only one parameter with hardcoded name.
+//
+// It's a known bug that we accept only one input parameter for render process
+// but we allow to specify multiple in Hub manifests definition
+func toInputAdditionalParams(additionalInput map[string]interface{}) (map[string]string, error) {
+	out := map[string]string{}
+	if len(additionalInput) == 0 {
+		return out, nil
+	}
+
+	data, err := yaml.Marshal(additionalInput[AdditionalInputName])
+	if err != nil {
+		return out, errors.Wrap(err, "while marshaling additional input to YAML")
+	}
+
+	if len(data) > 0 {
+		out[AdditionalInputName] = string(data)
+	}
+
+	return out, nil
 }

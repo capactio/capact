@@ -29,13 +29,15 @@ type Local interface {
 	LockTypeInstances(ctx context.Context, in *hublocalgraphql.LockTypeInstancesInput) error
 	UnlockTypeInstances(ctx context.Context, in *hublocalgraphql.UnlockTypeInstancesInput) error
 	UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput) ([]hublocalgraphql.TypeInstance, error)
+	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
 }
 
 // Public interface aggregates methods to interact with Capact Public Hub.
 type Public interface {
+	ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter hubpublicgraphql.TypeFilter) ([]*hubpublicgraphql.TypeRevision, error)
 	ListInterfacesMetadata(ctx context.Context) ([]hubpublicgraphql.Interface, error)
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
-	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (*hubpublicgraphql.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListInterfacesWithLatestRevision(ctx context.Context, filter hubpublicgraphql.InterfaceFilter) ([]*hubpublicgraphql.Interface, error)
 	ListImplementationRevisions(ctx context.Context, filter *hubpublicgraphql.ImplementationRevisionFilter) ([]*hubpublicgraphql.ImplementationRevision, error)

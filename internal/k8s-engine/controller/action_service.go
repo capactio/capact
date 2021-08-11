@@ -389,7 +389,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	ownerID := ownerIDKey(action)
 	options := []argo.RendererOption{
-		argo.WithSecretUserInput(ref),
+		argo.WithSecretUserInput(ref, userInput),
 		argo.WithPolicyOrder(a.policyOrder),
 		argo.WithGlobalPolicy(policy),
 		argo.WithTypeInstances(typeInstances),

@@ -1,11 +1,16 @@
 package action
 
 import (
+	"bytes"
+	"context"
 	"fmt"
+	"io/ioutil"
 
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
-
-	"io/ioutil"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer/argo"
+	"capact.io/capact/pkg/sdk/validation"
+	"capact.io/capact/pkg/sdk/validation/action"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
@@ -21,18 +26,26 @@ type CreateOptions struct {
 	Namespace     string
 	DryRun        bool
 	Interactive   bool
+	Validate      bool
 
 	ParametersFilePath    string
 	TypeInstancesFilePath string
 	ActionPolicyFilePath  string
 
-	parameters    *gqlengine.JSON
-	typeInstances []*gqlengine.InputTypeInstanceData
+	// internal fields
+	parameters    string
+	typeInstances []types.InputTypeInstanceRef
 	policy        *gqlengine.PolicyInput
+
+	// validation specific fields
+	isInputParamsRequired bool
+	validator             *action.InputOutputValidator
+	ifaceSchemas          validation.SchemaCollection
+	ifaceTypes            validation.TypeRefCollection
 }
 
-// SetDefaults defaults not provided options.
-func (c *CreateOptions) SetDefaults() {
+// setDefaults defaults not provided options.
+func (c *CreateOptions) setDefaults() {
 	if c.ActionName == "" {
 		c.ActionName = generateDNSName()
 	}
@@ -42,9 +55,24 @@ func (c *CreateOptions) SetDefaults() {
 	}
 }
 
+func (c *CreateOptions) validate(ctx context.Context) error {
+	r := validation.ResultAggregator{}
+	err := r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, argo.ToInputParams(c.parameters)))
+	if err != nil {
+		return err
+	}
+
+	err = r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
+	if err != nil {
+		return err
+	}
+
+	return r.ErrorOrNil()
+}
+
 // resolve resolves the CreateOptions properties with data from different sources.
 // If possible starts interactive mode.
-func (c *CreateOptions) resolve() error {
+func (c *CreateOptions) resolve(ctx context.Context) error {
 	if err := c.resolveFromFiles(); err != nil {
 		return err
 	}
@@ -53,7 +81,12 @@ func (c *CreateOptions) resolve() error {
 		return c.resolveWithSurvey()
 	}
 
-	c.SetDefaults()
+	c.setDefaults()
+
+	if c.Validate {
+		return c.validate(ctx)
+	}
+
 	return nil
 }
 
@@ -71,8 +104,8 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		return err
 	}
 
-	if c.ParametersFilePath == "" {
-		gqlJSON, err := askForInputParameters()
+	if c.ParametersFilePath == "" && c.isInputParamsRequired {
+		gqlJSON, err := c.askForInputParameters()
 		if err != nil {
 			return err
 		}
@@ -80,7 +113,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 	}
 
 	if c.TypeInstancesFilePath == "" {
-		ti, err := askForInputTypeInstances()
+		ti, err := c.askForInputTypeInstances()
 		if err != nil {
 			return err
 		}
@@ -110,6 +143,8 @@ func (c *CreateOptions) resolveFromFiles() error {
 		}
 	}
 
+	// TODO(https://github.com/capactio/capact/issues/438): We need to allow to pass additionalTypeInstances
+	// which are not specified in a given Interface, e.g. existing database.
 	if c.TypeInstancesFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.TypeInstancesFilePath)
 		if err != nil {
@@ -138,60 +173,111 @@ func (c *CreateOptions) resolveFromFiles() error {
 // ActionInput returns GraphQL Action input based on the given options.
 func (c *CreateOptions) ActionInput() *gqlengine.ActionInputData {
 	return &gqlengine.ActionInputData{
-		Parameters:    c.parameters,
-		TypeInstances: c.typeInstances,
+		Parameters:    convertParametersToGQL(c.parameters),
+		TypeInstances: convertTypeInstancesRefsToGQL(c.typeInstances),
 		ActionPolicy:  c.policy,
 	}
 }
 
-// TODO: ask only if input-parameters are defined, add support for JSON Schema
-func askForInputParameters() (*gqlengine.JSON, error) {
-	provideInput := false
-	askAboutTI := &survey.Confirm{Message: "Do you want to provide input parameters?", Default: false}
-	if err := survey.AskOne(askAboutTI, &provideInput); err != nil {
-		return nil, err
-	}
-
-	if !provideInput {
-		return nil, nil
-	}
-
+func (c *CreateOptions) askForInputParameters() (string, error) {
 	rawInput := ""
 	prompt := &survey.Editor{Message: "Please type Action input parameters in YAML format"}
-	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(isYAML)); err != nil {
-		return nil, err
+
+	valid := []survey.Validator{
+		survey.Required,
+		isYAML,
+	}
+
+	if c.Validate {
+		valid = append(valid, validatorAdapter(func(inputParams string) error {
+			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, argo.ToInputParams(inputParams))
+			if err != nil {
+				return err
+			}
+			return result.ErrorOrNil()
+		}))
+	}
+
+	if err := survey.AskOne(prompt, &rawInput, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
+		return "", err
 	}
 
 	return toInputParameters([]byte(rawInput))
 }
 
-func askForInputTypeInstances() ([]*gqlengine.InputTypeInstanceData, error) {
-	provideTI := false
-	askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
-	if err := survey.AskOne(askAboutTI, &provideTI); err != nil {
-		return nil, err
+func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
+	body, requiredTI := c.getTypeInstancesForEditor()
+
+	// TODO(https://github.com/capactio/capact/issues/438): If input TypeInstances are not required,
+	// still ask user whether he wants to specify one.
+	// We need to allow to pass additionalTypeInstances
+	// which are not specified in a given Interface, e.g. existing database.
+	if !requiredTI {
+		askAboutTI := &survey.Confirm{Message: "Do you want to provide input TypeInstances?", Default: false}
+		if err := survey.AskOne(askAboutTI, &requiredTI); err != nil {
+			return nil, err
+		}
 	}
 
-	if !provideTI {
+	if !requiredTI {
 		return nil, nil
+	}
+
+	valid := []survey.Validator{
+		survey.Required,
+		isYAML,
+	}
+
+	if c.Validate {
+		valid = append(valid, validatorAdapter(func(inputParams string) error {
+			inputTI, err := toTypeInstance([]byte(inputParams))
+			if err != nil {
+				return err
+			}
+			result, err := c.validator.ValidateTypeInstances(context.Background(), c.ifaceTypes, inputTI)
+			if err != nil {
+				return err
+			}
+			return result.ErrorOrNil()
+		}))
 	}
 
 	editor := ""
 	prompt := &survey.Editor{
-		Message: "Please type Action input TypeInstance in YAML format",
-		Default: heredoc.Doc(`
-						typeInstances:
-						  - name: ""
-						    id: ""`),
+		Message:       "Please type Action input TypeInstance in YAML format",
+		Default:       body,
 		AppendDefault: true,
 
 		HideDefault: true,
 	}
-	if err := survey.AskOne(prompt, &editor, survey.WithValidator(isYAML)); err != nil {
+	if err := survey.AskOne(prompt, &editor, survey.WithValidator(survey.ComposeValidators(valid...))); err != nil {
 		return nil, err
 	}
 
 	return toTypeInstance([]byte(editor))
+}
+
+func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool) {
+	if len(c.ifaceTypes) == 0 {
+		return heredoc.Doc(`
+               # Interface doesn't specify input TypeInstance.
+               # You can pass Implementation specific TypeInstance like already existing database. 
+               typeInstances:
+                 - name: ""
+                   id: ""`), false
+	}
+
+	out := bytes.Buffer{}
+	out.WriteString("typeInstances:")
+	for tiName, tiType := range c.ifaceTypes {
+		out.WriteString("\n\n")
+		out.WriteString(heredoc.Docf(`
+               # TypeInstance ID for %s:%s
+               - name: "%s"
+                 id: "" `,
+			tiType.Path, tiType.Revision, tiName))
+	}
+	return out.String(), true
 }
 
 func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
@@ -226,9 +312,9 @@ func askForActionPolicy(ifacePath string) (*gqlengine.PolicyInput, error) {
 	return toActionPolicy([]byte(editor))
 }
 
-func toTypeInstance(rawInput []byte) ([]*gqlengine.InputTypeInstanceData, error) {
+func toTypeInstance(rawInput []byte) ([]types.InputTypeInstanceRef, error) {
 	var resp struct {
-		TypeInstances []*gqlengine.InputTypeInstanceData `json:"typeInstances"`
+		TypeInstances []types.InputTypeInstanceRef `json:"typeInstances"`
 	}
 
 	if err := yaml.Unmarshal(rawInput, &resp); err != nil {
@@ -238,20 +324,19 @@ func toTypeInstance(rawInput []byte) ([]*gqlengine.InputTypeInstanceData, error)
 	return resp.TypeInstances, nil
 }
 
-func toInputParameters(rawInput []byte) (*gqlengine.JSON, error) {
+func toInputParameters(rawInput []byte) (string, error) {
 	converted, err := yaml.YAMLToJSON(rawInput)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	gqlJSON := gqlengine.JSON(converted)
-	return &gqlJSON, nil
+	return string(converted), nil
 }
 
 func toActionPolicy(rawInput []byte) (*gqlengine.PolicyInput, error) {
 	policy := &gqlengine.PolicyInput{}
 
-	if err := yaml.Unmarshal(rawInput, policy); err != nil {
+	if err := yaml.UnmarshalStrict(rawInput, policy); err != nil {
 		return nil, err
 	}
 

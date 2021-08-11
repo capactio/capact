@@ -4,12 +4,11 @@ import (
 	"log"
 	"time"
 
-	"capact.io/capact/internal/k8s-engine/policy"
-
 	"capact.io/capact/internal/graphqlutil"
 	"capact.io/capact/internal/k8s-engine/controller"
 	domaingraphql "capact.io/capact/internal/k8s-engine/graphql"
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"capact.io/capact/internal/k8s-engine/policy"
 	"capact.io/capact/internal/k8s-engine/validate"
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/engine/api/graphql"
@@ -19,6 +18,8 @@ import (
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/renderer"
 	"capact.io/capact/pkg/sdk/renderer/argo"
+	actionvalidator "capact.io/capact/pkg/sdk/validation/action"
+
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
 	"github.com/go-logr/zapr"
@@ -106,7 +107,8 @@ func main() {
 
 	hubClient := getHubClient(&cfg)
 	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
-	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler)
+	wfValidator := renderer.NewInputValidator(actionvalidator.NewValidator(hubClient))
+	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)
 	exitOnError(err, "while creating Argo client")
