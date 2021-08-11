@@ -174,8 +174,9 @@ type ImplementationSpec struct {
 }
 
 type InputParameter struct {
-	Name       string      `json:"name"`
-	JSONSchema interface{} `json:"jsonSchema"`
+	Name       string         `json:"name"`
+	JSONSchema interface{}    `json:"jsonSchema"`
+	TypeRef    *TypeReference `json:"typeRef"`
 }
 
 type InputTypeInstance struct {

@@ -171,6 +171,7 @@ type ComplexityRoot struct {
 	InputParameter struct {
 		JSONSchema func(childComplexity int) int
 		Name       func(childComplexity int) int
+		TypeRef    func(childComplexity int) int
 	}
 
 	InputTypeInstance struct {
@@ -877,6 +878,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.InputParameter.Name(childComplexity), true
+
+	case "InputParameter.typeRef":
+		if e.complexity.InputParameter.TypeRef == nil {
+			break
+		}
+
+		return e.complexity.InputParameter.TypeRef(childComplexity), true
 
 	case "InputTypeInstance.name":
 		if e.complexity.InputTypeInstance.Name == nil {
@@ -1816,7 +1824,8 @@ type InterfaceInput @additionalLabels(labels: ["published"]){
 
 type InputParameter @additionalLabels(labels: ["published"]){
   name: String!
-  jsonSchema: Any
+  jsonSchema: Any 
+  typeRef: TypeReference @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type InterfaceOutput @additionalLabels(labels: ["published"]){
@@ -6369,6 +6378,76 @@ func (ec *executionContext) _InputParameter_jsonSchema(ctx context.Context, fiel
 	res := resTmp.(interface{})
 	fc.Result = res
 	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _InputParameter_typeRef(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InputParameter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return obj.TypeRef, nil
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			labels, err := ec.unmarshalOString2ᚕᚖstring(ctx, []interface{}{"published"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.AdditionalLabels == nil {
+				return nil, errors.New("directive additionalLabels is not implemented")
+			}
+			return ec.directives.AdditionalLabels(ctx, obj, directive0, labels)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			name, err := ec.unmarshalOString2ᚖstring(ctx, "OF_TYPE")
+			if err != nil {
+				return nil, err
+			}
+			direction, err := ec.unmarshalOString2ᚖstring(ctx, "OUT")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.Relation == nil {
+				return nil, errors.New("directive relation is not implemented")
+			}
+			return ec.directives.Relation(ctx, obj, directive1, name, direction, nil, nil)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*TypeReference); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *capact.io/capact/pkg/hub/api/graphql/public.TypeReference`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*TypeReference)
+	fc.Result = res
+	return ec.marshalOTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputTypeInstance_name(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstance) (ret graphql.Marshaler) {
@@ -13411,6 +13490,8 @@ func (ec *executionContext) _InputParameter(ctx context.Context, sel ast.Selecti
 			}
 		case "jsonSchema":
 			out.Values[i] = ec._InputParameter_jsonSchema(ctx, field, obj)
+		case "typeRef":
+			out.Values[i] = ec._InputParameter_typeRef(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16818,6 +16899,13 @@ func (ec *executionContext) unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapa
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx context.Context, sel ast.SelectionSet, v *TypeReference) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TypeReference(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOTypeReferenceWithOptionalRevision2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceWithOptionalRevision(ctx context.Context, v interface{}) ([]*TypeReferenceWithOptionalRevision, error) {

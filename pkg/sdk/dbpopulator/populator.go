@@ -138,8 +138,18 @@ CALL {
   UNWIND keys(parameters) as name
     CREATE (parameter: InputParameter:unpublished {
       name: name,
-      jsonSchema: parameters[name].jsonSchema.value})
+      jsonSchema: parameters[name].jsonSchema.value
+    })
     CREATE (input)-[:HAS]->(parameter)
+
+    WITH *
+    CALL apoc.do.when(
+      parameters[name].typeRef IS NOT NULL,
+      "MERGE (typeReference: TypeReference:unpublished{path: typeRef.path,revision: typeRef.revision}) CREATE (parameter)-[:OF_TYPE]->(typeReference)",
+      "",
+      {parameter: parameter, typeRef: parameters[name].typeRef}
+    ) YIELD value
+
   RETURN count([]) as _tmp0
 }
 
