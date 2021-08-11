@@ -235,7 +235,8 @@ type InterfaceInput @additionalLabels(labels: ["published"]){
 
 type InputParameter @additionalLabels(labels: ["published"]){
   name: String!
-  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  jsonSchema: Any 
+  typeRef: TypeReference @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type InterfaceOutput @additionalLabels(labels: ["published"]){

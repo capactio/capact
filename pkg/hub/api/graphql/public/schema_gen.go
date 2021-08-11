@@ -169,8 +169,9 @@ type ComplexityRoot struct {
 	}
 
 	InputParameter struct {
-		Name    func(childComplexity int) int
-		TypeRef func(childComplexity int) int
+		JSONSchema func(childComplexity int) int
+		Name       func(childComplexity int) int
+		TypeRef    func(childComplexity int) int
 	}
 
 	InputTypeInstance struct {
@@ -863,6 +864,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImplementationSpec.Requires(childComplexity), true
+
+	case "InputParameter.jsonSchema":
+		if e.complexity.InputParameter.JSONSchema == nil {
+			break
+		}
+
+		return e.complexity.InputParameter.JSONSchema(childComplexity), true
 
 	case "InputParameter.name":
 		if e.complexity.InputParameter.Name == nil {
@@ -1816,7 +1824,8 @@ type InterfaceInput @additionalLabels(labels: ["published"]){
 
 type InputParameter @additionalLabels(labels: ["published"]){
   name: String!
-  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
+  jsonSchema: Any 
+  typeRef: TypeReference @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type InterfaceOutput @additionalLabels(labels: ["published"]){
@@ -6339,6 +6348,38 @@ func (ec *executionContext) _InputParameter_name(ctx context.Context, field grap
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _InputParameter_jsonSchema(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "InputParameter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JSONSchema, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalOAny2interface(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _InputParameter_typeRef(ctx context.Context, field graphql.CollectedField, obj *InputParameter) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -6402,14 +6443,11 @@ func (ec *executionContext) _InputParameter_typeRef(ctx context.Context, field g
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
 	res := resTmp.(*TypeReference)
 	fc.Result = res
-	return ec.marshalNTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx, field.Selections, res)
+	return ec.marshalOTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _InputTypeInstance_name(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstance) (ret graphql.Marshaler) {
@@ -13450,11 +13488,10 @@ func (ec *executionContext) _InputParameter(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
+		case "jsonSchema":
+			out.Values[i] = ec._InputParameter_jsonSchema(ctx, field, obj)
 		case "typeRef":
 			out.Values[i] = ec._InputParameter_typeRef(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -16862,6 +16899,13 @@ func (ec *executionContext) unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapa
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) marshalOTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx context.Context, sel ast.SelectionSet, v *TypeReference) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._TypeReference(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOTypeReferenceWithOptionalRevision2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceWithOptionalRevision(ctx context.Context, v interface{}) ([]*TypeReferenceWithOptionalRevision, error) {
