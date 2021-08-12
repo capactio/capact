@@ -38,9 +38,9 @@ func main() {
 	mgr, err := runner.NewManager(cloudsqlRunner, statusReporter)
 	exitOnError(err, "failed to create manager")
 
-	stop := signals.SetupSignalHandler()
+	ctx := signals.SetupSignalHandler()
 
-	err = mgr.Execute(stop)
+	err = mgr.Execute(ctx)
 	exitOnError(err, "while executing runner")
 }
 

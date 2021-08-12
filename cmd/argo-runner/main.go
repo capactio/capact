@@ -7,7 +7,7 @@ import (
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/runner/argo"
 
-	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
+	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/manager/signals"

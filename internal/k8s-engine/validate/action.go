@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
-	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
-	"github.com/argoproj/argo/v2/workflow/templateresolution"
-	"github.com/argoproj/argo/v2/workflow/validate"
+	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
+	"github.com/argoproj/argo-workflows/v3/workflow/templateresolution"
+	"github.com/argoproj/argo-workflows/v3/workflow/validate"
 	"github.com/pkg/errors"
 )
 

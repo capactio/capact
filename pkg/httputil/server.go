@@ -12,7 +12,7 @@ import (
 type StartableServer interface {
 	// Start the server and blocks until the channel is closed or an error occurs.
 	// MUST shutdown gracefully the server when channel is closed.
-	Start(stop <-chan struct{}) error
+	Start(ctx context.Context) error
 }
 
 var _ StartableServer = &Server{}
@@ -34,10 +34,10 @@ func NewStartableServer(log *zap.Logger, addr string, handler http.Handler) *Ser
 }
 
 // Start the HTTP server and blocks until the channel is closed or an error occurs.
-func (svr *Server) Start(stop <-chan struct{}) error {
+func (svr *Server) Start(ctx context.Context) error {
 	srv := &http.Server{Addr: svr.addr, Handler: svr.mux}
 	go func() {
-		<-stop
+		<-ctx.Done()
 		// We received an interrupt signal, shut down.
 		if err := srv.Shutdown(context.Background()); err != nil {
 			svr.log.Error("shutting down HTTP server", zap.Error(err))

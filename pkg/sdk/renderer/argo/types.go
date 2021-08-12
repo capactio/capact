@@ -7,7 +7,7 @@ import (
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
+	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 )
 
 // Workflow is the specification of a Workflow.

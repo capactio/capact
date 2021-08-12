@@ -47,13 +47,13 @@ func NewManager(runner Runner, statusReporter StatusReporter) (*Manager, error) 
 }
 
 // Execute underlying runner function in a proper order.
-func (r *Manager) Execute(stop <-chan struct{}) error {
+func (r *Manager) Execute(ctx context.Context) error {
 	runnerInputData, err := r.readRunnerInput()
 	if err != nil {
 		return errors.Wrap(err, "while reading runner input")
 	}
 
-	ctx, cancel := r.cancelableContext(stop, runnerInputData.Context.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, runnerInputData.Context.Timeout.Duration())
 	defer cancel()
 
 	log := r.log.With(zap.String("runner", r.runner.Name()), zap.Bool("dryRun", runnerInputData.Context.DryRun))
