@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
@@ -67,8 +66,7 @@ args:
               name: cloudsql-instance
           name: output-cloudsql-instance
           template: output-cloudsql-instance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -90,8 +88,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -128,8 +125,7 @@ args:
         - globalName: postgres-install-cloudsql-run-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -149,8 +145,7 @@ args:
         - globalName: postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -170,8 +165,7 @@ args:
         - globalName: cloudsql-instance
           name: cloudsql-instance
           path: /typeinstance
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -214,8 +208,7 @@ args:
                     to: postgres-install-cloudsql-run-cloudsql-instance
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: DownloadAction
@@ -232,8 +225,7 @@ args:
         - globalName: gcp-sa
           name: gcp-sa
           path: /gcp-sa.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -262,8 +254,7 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: UploadAction

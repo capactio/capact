@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
@@ -60,8 +59,7 @@ args:
               name: psql-helm-release
           name: output-psql-helm-release
           template: output-psql-helm-release
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -83,8 +81,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -117,8 +114,7 @@ args:
         - globalName: postgres-install-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -138,8 +134,7 @@ args:
         - globalName: postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -159,8 +154,7 @@ args:
         - globalName: psql-helm-release
           name: psql-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -200,8 +194,7 @@ args:
                     to: postgres-install-helm-install-helm-release
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -230,8 +223,7 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: UploadAction

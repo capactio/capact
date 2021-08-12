@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: main
       outputs: {}
@@ -15,8 +14,7 @@ args:
       - - arguments: {}
           name: imported
           template: main-imported-main
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: main-imported-main
       outputs: {}
@@ -24,8 +22,7 @@ args:
       - - arguments: {}
           name: second-level
           template: main-imported-second-level
-    - arguments: {}
-      container:
+    - container:
         args:
         - cowsay hello && sleep 2
         command:
@@ -38,8 +35,7 @@ args:
       metadata: {}
       name: main-imported-second-level
       outputs: {}
-    - arguments: {}
-      container:
+    - container:
         args:
         - cowsay hello && sleep 2
         command:
@@ -52,8 +48,7 @@ args:
       metadata: {}
       name: second-level
       outputs: {}
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -64,8 +59,7 @@ args:
       - - arguments: {}
           name: start-entrypoint
           template: main
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:

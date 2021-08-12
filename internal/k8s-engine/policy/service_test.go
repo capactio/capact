@@ -103,7 +103,10 @@ func fakeK8sClient(t *testing.T, objects ...runtime.Object) client.Client {
 	err = corev1alpha1.AddToScheme(scheme)
 	require.NoError(t, err)
 
-	return fake.NewFakeClientWithScheme(scheme, objects...)
+	return fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithRuntimeObjects(objects...).
+		Build()
 }
 
 func getConfigMapAndAssertEqual(t *testing.T, k8sCli client.Client, expected policy.Policy) {
