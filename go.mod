@@ -10,26 +10,20 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/semver/v3 v3.1.1
-	github.com/Masterminds/sprig/v3 v3.2.2 // indirect
-	github.com/Masterminds/squirrel v1.5.0 // indirect
-	github.com/argoproj/argo-workflows/v3 v3.0.0-00010101000000-000000000000
+	github.com/argoproj/argo-workflows/v3 v3.1.0-rc1.0.20210811221840-88520891a037
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/briandowns/spinner v1.12.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
-	github.com/deislabs/oras v0.11.1 // indirect
 	github.com/docker/cli v20.10.5+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
-	github.com/evanphx/json-patch v4.11.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/color v1.10.0
 	github.com/fatih/structs v1.1.0
-	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/gitchander/permutation v0.0.0-20210302120832-6ab79d7de174
 	github.com/go-logr/logr v0.4.0
 	github.com/go-logr/zapr v0.4.0
 	github.com/google/uuid v1.1.2
-	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/hashicorp/go-getter v1.5.5
 	github.com/hashicorp/go-multierror v1.0.0
@@ -39,15 +33,10 @@ require (
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20210625153042-09f34846faab
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
 	github.com/iancoleman/strcase v0.1.2
-	github.com/imdario/mergo v0.3.12 // indirect
-	github.com/jmoiron/sqlx v1.3.1 // indirect
-	github.com/lib/pq v1.10.0 // indirect
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.13
-	github.com/mitchellh/copystructure v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/moby/term v0.0.0-20201216013528-df9cb8a40635 // indirect
 	github.com/nautilus/gateway v0.1.16
 	github.com/nautilus/graphql v0.0.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
@@ -55,7 +44,6 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.11.0 // indirect
 	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
@@ -70,37 +58,31 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	github.com/zclconf/go-cty v1.8.1
 	go.uber.org/zap v1.18.1
-	golang.org/x/crypto v0.0.0-20210220033148-5ea612d1eb83 // indirect
 	golang.org/x/oauth2 v0.0.0-20210402161424-2e8d93401602
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
-	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
-	gomodules.xyz/jsonpatch/v2 v2.2.0 // indirect
 	google.golang.org/api v0.44.0
 	google.golang.org/grpc/examples v0.0.0-20210322221411-d26af8e39165 // indirect
 	gotest.tools v2.2.0+incompatible
-	helm.sh/helm/v3 v3.4.2
-	k8s.io/api v0.19.14
-	k8s.io/apimachinery v0.20.2
-	k8s.io/cli-runtime v0.19.14
-	k8s.io/client-go v0.19.14
-	k8s.io/kubectl v0.19.14
+	helm.sh/helm/v3 v3.6.3
+	k8s.io/api v0.21.3
+	k8s.io/apimachinery v0.21.3
+	k8s.io/cli-runtime v0.21.0
+	k8s.io/client-go v0.21.3
+	k8s.io/kubectl v0.21.0
 	k8s.io/utils v0.0.0-20210802155522-efc7438f0176
 	rsc.io/letsencrypt v0.0.3 // indirect
-	sigs.k8s.io/controller-runtime v0.7.2
+	sigs.k8s.io/controller-runtime v0.9.6
 	sigs.k8s.io/kind v0.11.1
 	sigs.k8s.io/yaml v1.2.0
 )
 
 replace (
-	// Remove when the is resolved:
-	// - https://github.com/argoproj/argo-workflows/issues/4772
-	// - we can compile argo without static files
-	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.0.8-0.20210811155442-230a815b0c1d
+	// TODO:
+	// 	- Remove when we can compile argo without static files
+	// 	- Use stable tag once new version with Kubernetes 1.21 usage is released
+	github.com/argoproj/argo-workflows/v3 => github.com/capactio/argo-workflows/v3 v3.1.0-rc1.0.20210812143110-6bc7f066ec1f
 
-	// Remove after updating k8s libraries to v0.20+ (https://github.com/kubernetes-sigs/kustomize/issues/3262)
-	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.6
-
+	github.com/go-openapi/spec => github.com/go-openapi/spec v0.19.8
 	github.com/keybase/go-keychain => github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.14
 )
