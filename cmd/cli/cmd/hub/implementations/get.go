@@ -13,9 +13,12 @@ import (
 	"capact.io/capact/internal/cli/printer"
 	cliprinter "capact.io/capact/internal/cli/printer"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 
 	"github.com/spf13/cobra"
 )
+
+const tableRequiredFields = public.ImplRevRootFields | public.ImplRevMetadataFields
 
 type getOptions struct {
 	implementationPaths []string
@@ -52,7 +55,7 @@ func NewGet() *cobra.Command {
 func getImpl(ctx context.Context, opts getOptions, printer *cliprinter.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 
-	cli, err := client.NewHub(server)
+	hubCli, err := client.NewHub(server)
 	if err != nil {
 		return err
 	}
@@ -62,7 +65,12 @@ func getImpl(ctx context.Context, opts getOptions, printer *cliprinter.ResourceP
 		errors                  []error
 	)
 
-	impls, err := cli.ListImplementationRevisions(ctx, nil)
+	var listOpts []public.ListImplementationRevisionsOption
+	if printer.PrintFormat() == cliprinter.TableFormat {
+		listOpts = append(listOpts, public.WithImplRevCustomFields(tableRequiredFields))
+	}
+
+	impls, err := hubCli.ListImplementationRevisions(ctx, listOpts...)
 	if err != nil {
 		return err
 	}

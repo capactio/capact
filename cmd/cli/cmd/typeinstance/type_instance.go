@@ -23,6 +23,7 @@ func NewCmd() *cobra.Command {
 		NewGet(),
 		NewEdit(),
 		NewApply(),
+		NewStress(),
 	)
 	return root
 }

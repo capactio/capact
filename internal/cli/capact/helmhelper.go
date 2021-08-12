@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sort"
-	"time"
 
 	"capact.io/capact/pkg/httputil"
 	"github.com/pkg/errors"
@@ -20,7 +19,7 @@ type HelmHelper struct {
 
 // NewHelmHelper creates a new HelmHelper
 func NewHelmHelper() *HelmHelper {
-	httpClient := httputil.NewClient(30 * time.Second)
+	httpClient := httputil.NewClient()
 	return &HelmHelper{
 		HTTPClient: httpClient,
 	}

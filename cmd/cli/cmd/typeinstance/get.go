@@ -6,6 +6,11 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
+
+	"capact.io/capact/pkg/httputil"
+	"capact.io/capact/pkg/hub/client/local"
+	"github.com/fatih/color"
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/client"
@@ -17,12 +22,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const yamlFileSeparator = "---"
+const (
+	yamlFileSeparator   = "---"
+	tableRequiredFields = local.TypeInstanceRootFields | local.TypeInstanceTypeRefFields | local.TypeInstanceUsedByIDField | local.TypeInstanceUsesIDField | local.TypeInstanceLatestResourceVersionField
+)
 
 // GetOptions is used to store the configuration flags for the Get command.
 type GetOptions struct {
 	RequestedTypeInstancesIDs []string
 	ExportToUpdateFormat      bool
+	Timeout                   time.Duration
 }
 
 // ErrTableFormatWithExportFlag is used to inform that --export flag was used with table output,
@@ -59,7 +68,7 @@ func NewGet() *cobra.Command {
 				return ErrTableFormatWithExportFlag
 			}
 
-			tis, err := getTI(cmd.Context(), opts)
+			tis, err := getTI(cmd.Context(), opts, resourcePrinter.PrintFormat())
 			if err != nil {
 				return err
 			}
@@ -81,21 +90,31 @@ func NewGet() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.BoolVar(&opts.ExportToUpdateFormat, "export", false, "Converts TypeInstance to update format.")
+	flags.DurationVar(&opts.Timeout, "timeout", 30*time.Second, "Converts TypeInstance to update format.") // TODO: handle that, print warning
 	resourcePrinter.RegisterFlags(flags)
 
 	return cmd
 }
 
-func getTI(ctx context.Context, opts GetOptions) ([]gqllocalapi.TypeInstance, error) {
+func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) ([]gqllocalapi.TypeInstance, error) {
 	server := config.GetDefaultContext()
 
-	hubCli, err := client.NewHub(server)
+	hubCli, err := client.NewHub(server, httputil.WithTimeout(opts.Timeout))
 	if err != nil {
 		return nil, err
 	}
 
+	var listOpts []local.TypeInstancesOption
+	if format == cliprinter.TableFormat {
+		listOpts = append(listOpts, local.WithCustomFields(tableRequiredFields))
+	}
+
 	if len(opts.RequestedTypeInstancesIDs) == 0 {
-		return hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{})
+		if format != cliprinter.TableFormat {
+			printHugePayloadWarning()
+		}
+		out, err := hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{}, listOpts...)
+		return out, err
 	}
 
 	var (
@@ -105,7 +124,7 @@ func getTI(ctx context.Context, opts GetOptions) ([]gqllocalapi.TypeInstance, er
 
 	// TODO: make it client-side
 	for _, id := range opts.RequestedTypeInstancesIDs {
-		ti, err := hubCli.FindTypeInstance(ctx, id)
+		ti, err := hubCli.FindTypeInstance(ctx, id) // TODO: custom fields, narrow-down to latest rev
 		if err != nil {
 			errs = append(errs, err)
 			continue
@@ -157,4 +176,10 @@ func toTypeInstanceIDs(in []*gqllocalapi.TypeInstance) string {
 		return " —— "
 	}
 	return strings.Join(out, ", ")
+}
+
+func printHugePayloadWarning() {
+	warning := color.New(color.FgYellow).FprintlnFunc()
+	warning(os.Stderr,
+		"warning: Fetching all TypeInstances with all fields. This may generate huge payload and request may be canceled due to timeout. Change '--timeout' value if needed.")
 }

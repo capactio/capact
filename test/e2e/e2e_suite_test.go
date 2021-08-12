@@ -56,7 +56,7 @@ func TestE2E(t *testing.T) {
 }
 
 func waitTillServiceEndpointsAreReady() {
-	cli := httputil.NewClient(30*time.Second, httputil.WithTLSInsecureSkipVerify(true))
+	cli := httputil.NewClient(httputil.WithTLSInsecureSkipVerify(true))
 
 	for _, endpoint := range cfg.StatusEndpoints {
 		Eventually(func() error {
@@ -80,14 +80,13 @@ func waitTillDataIsPopulated() {
 	cli := getHubGraphQLClient()
 
 	Eventually(func() (int, error) {
-		ifaces, err := cli.ListInterfacesMetadata(context.Background())
+		ifaces, err := cli.ListInterfaces(context.Background())
 		return len(ifaces), err
 	}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNumerically(">", 1))
 }
 
 func getHubGraphQLClient() *hubclient.Client {
 	httpClient := httputil.NewClient(
-		30*time.Second,
 		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
@@ -96,7 +95,7 @@ func getHubGraphQLClient() *hubclient.Client {
 
 func getEngineGraphQLClient() *engineclient.Client {
 	httpClient := httputil.NewClient(
-		60*time.Second,
+		httputil.WithTimeout(60*time.Second),
 		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)

@@ -5,11 +5,13 @@ import (
 	"time"
 )
 
+const defaultTimeout = 30 * time.Second
+
 // NewClient creates a new http client with a given timeouts
-func NewClient(timeout time.Duration, opts ...ClientOption) *http.Client {
+func NewClient(opts ...ClientOption) *http.Client {
 	client := &http.Client{
 		Transport: newConfigurableTransport(),
-		Timeout:   timeout,
+		Timeout:   defaultTimeout,
 	}
 
 	for _, optionFunc := range opts {
@@ -27,6 +29,13 @@ type ClientOption func(*http.Client)
 func WithBasicAuth(user, pass string) ClientOption {
 	return func(client *http.Client) {
 		client.Transport.(*configurableTransport).SetBasicAuth(user, pass)
+	}
+}
+
+// WithTimeout returns a ClientOption to set a given timeout for client.
+func WithTimeout(timeout time.Duration) ClientOption {
+	return func(client *http.Client) {
+		client.Timeout = timeout
 	}
 }
 

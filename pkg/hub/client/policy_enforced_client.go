@@ -18,9 +18,9 @@ import (
 // HubClient interface aggregates methods for interacting with the Local and Public Hub.
 type HubClient interface {
 	GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error)
-	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error)
+	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.ListImplementationRevisionsForInterfaceOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error)
-	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
+	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
 }
 
 // PolicyEnforcedClient is a client, which can interact with the Local and Public Hub.
@@ -207,7 +207,7 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 			ctx,
 			interfaceRef,
 			public.WithFilter(filter),
-			public.WithSortingByPathAscAndRevisionDesc(),
+			public.WithSortingByPathAscAndRevisionDesc,
 		)
 		if err != nil {
 			return nil, policy.Rule{}, err

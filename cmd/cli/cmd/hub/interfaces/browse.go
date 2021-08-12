@@ -10,6 +10,7 @@ import (
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
@@ -50,9 +51,9 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		return err
 	}
 
-	interfaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
+	interfaces, err := cli.ListInterfaces(ctx, public.WithIfaceFilter(gqlpublicapi.InterfaceFilter{
 		PathPattern: &opts.pathPattern,
-	})
+	}))
 	if err != nil {
 		return err
 	}

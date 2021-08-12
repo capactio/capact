@@ -1,6 +1,11 @@
 package httputil
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+)
 
 // newConfigurableTransport
 func newConfigurableTransport() *configurableTransport {
@@ -24,9 +29,16 @@ func (t *configurableTransport) SetTLSInsecureSkipVerify(skip bool) {
 	t.transport.TLSClientConfig.InsecureSkipVerify = skip
 }
 
-func (t *configurableTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+func (t *configurableTransport) RoundTrip(req *http.Request) (resp *http.Response, err error) {
 	if t.user != "" && t.pass != "" {
 		req.SetBasicAuth(t.user, t.pass)
 	}
+	now := time.Now()
+	defer func() {
+		fmt.Printf("RoundTrip time for %v: %v", req.URL.String(), time.Since(now))
+		fmt.Printf("Request size: %v", strconv.FormatInt(req.ContentLength, 10))
+		fmt.Printf("Response size: %v", strconv.FormatInt(resp.ContentLength, 10))
+		//b, err = io.Copy(ioutil.Discard, resp.ContentLength)
+	}()
 	return t.transport.RoundTrip(req)
 }

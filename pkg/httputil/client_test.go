@@ -43,7 +43,7 @@ func TestNewClient(t *testing.T) {
 				receivedUser, receivedPass, _ = r.BasicAuth()
 			}))
 
-			cli := NewClient(tc.timeout, WithBasicAuth(tc.username, tc.password), WithTLSInsecureSkipVerify(tc.skipCertVerification))
+			cli := NewClient(WithTimeout(tc.timeout), WithBasicAuth(tc.username, tc.password), WithTLSInsecureSkipVerify(tc.skipCertVerification))
 
 			// when
 			resp, err := cli.Get(ts.URL)

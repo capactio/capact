@@ -26,4 +26,5 @@ This command consists of multiple subcommands to interact with target TypeInstan
 * [capact typeinstance delete](capact_typeinstance_delete.md)	 - Delete a given TypeInstance(s)
 * [capact typeinstance edit](capact_typeinstance_edit.md)	 - Edit a given TypeInstance via editor
 * [capact typeinstance get](capact_typeinstance_get.md)	 - Displays one or multiple TypeInstances
+* [capact typeinstance stress](capact_typeinstance_stress.md)	 - Creates N new TypeInstances
 
