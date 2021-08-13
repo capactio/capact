@@ -1,11 +1,13 @@
 package typeinstance
 
 import (
-	"capact.io/capact/pkg/httputil"
 	"fmt"
 	"math/rand"
 	"os"
 	"time"
+
+	"capact.io/capact/pkg/httputil"
+	"capact.io/capact/pkg/hub/client/local"
 
 	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/config"
@@ -43,7 +45,7 @@ func NewStress() *cobra.Command {
 			case "create":
 				for _, ti := range fixedTypeInstances(number, int(payloadSize*megabyte)) {
 					// we need to send one per req, to do not be timed out
-					_, err = hubCli.CreateTypeInstance(cmd.Context(), ti)
+					_, err = hubCli.CreateTypeInstance(cmd.Context(), ti, local.WithCustomFields(local.TypeInstanceRootFields))
 					if err != nil {
 						return err
 					}
@@ -70,7 +72,7 @@ func NewStress() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.IntVarP(&number, "repeat", "r", 5, "repeat create request")
-	flags.Float32VarP(&payloadSize, "payload-size", "s", 0.5, "payload size for `value`")
+	flags.Float32VarP(&payloadSize, "payload-size", "s", 1, "payload size for `value`")
 
 	return cmd
 }
@@ -79,8 +81,9 @@ func fixedTypeInstances(n, sizeBytes int) []*gqllocalapi.CreateTypeInstanceInput
 	var typeInstances []*gqllocalapi.CreateTypeInstanceInput
 	for i := 1; i <= n; i++ {
 		ti := gqllocalapi.CreateTypeInstanceInput{
-			Alias:     ptr.String(fmt.Sprintf("id_%d", i)),
-			CreatedBy: ptr.String(creator),
+			Alias:      ptr.String(fmt.Sprintf("id_%d", i)),
+			CreatedBy:  ptr.String(creator),
+			Attributes: []*gqllocalapi.AttributeReferenceInput{},
 			TypeRef: &gqllocalapi.TypeInstanceTypeReferenceInput{
 				Path:     "cap.type.terraform.state",
 				Revision: "0.1.0",

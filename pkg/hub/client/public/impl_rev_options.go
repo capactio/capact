@@ -39,19 +39,22 @@ func (o *ListImplementationRevisionsOptions) Apply(opts ...ListImplementationRev
 type ListImplementationRevisionsOption func(*ListImplementationRevisionsOptions)
 
 // WithImplRevCustomFields narrows down the request query fields to the specified ones.
-func WithImplRevCustomFields(requestedFlags ImplementationRevisionQueryFields) ListImplementationRevisionsOption {
-	return func(ops *ListImplementationRevisionsOptions) {
-		if requestedFlags.Has(ImplRevAllFields) {
-			ops.fields = implRevisionFieldsRegistry[ImplRevAllFields]
-			return
-		}
-
-		var names []string
-		for fieldOpt := ImplRevRootFields; fieldOpt < implRevMaxKey; fieldOpt <<= 1 {
-			if requestedFlags.Has(fieldOpt) {
-				names = append(names, implRevisionFieldsRegistry[fieldOpt])
-			}
-		}
-		ops.fields = strings.Join(names, "\n")
+func WithImplRevCustomFields(queryFields ImplementationRevisionQueryFields) ListImplementationRevisionsOption {
+	return func(opts *ListImplementationRevisionsOptions) {
+		opts.fields = getImplRevCustomFieldsFromFlags(queryFields)
 	}
+}
+
+func getImplRevCustomFieldsFromFlags(queryFields ImplementationRevisionQueryFields) string {
+	if queryFields.Has(ImplRevAllFields) {
+		return implRevisionFieldsRegistry[ImplRevAllFields]
+	}
+
+	var names []string
+	for fieldOpt := ImplRevRootFields; fieldOpt < implRevMaxKey; fieldOpt <<= 1 {
+		if queryFields.Has(fieldOpt) {
+			names = append(names, implRevisionFieldsRegistry[fieldOpt])
+		}
+	}
+	return strings.Join(names, "\n")
 }

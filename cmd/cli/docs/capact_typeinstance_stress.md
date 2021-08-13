@@ -14,7 +14,7 @@ capact typeinstance stress [flags]
 
 ```
   -h, --help                 help for stress
-  -s, --payload-size value   payload size for value (default 0.5)
+  -s, --payload-size value   payload size for value (default 1)
   -r, --repeat int           repeat create request (default 5)
 ```
 

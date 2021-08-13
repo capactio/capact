@@ -24,7 +24,7 @@ type getOptions struct {
 
 const (
 	allPathPrefix       = "cap.interface.*"
-	tableRequiredFields = public.IfaceRevRootFields | public.IfaceRevMetadataFields
+	tableRequiredFields = public.IfaceRevRootFields | public.IfaceRevMetadataFields | public.IfaceRevImplRevisionsMetadata
 )
 
 // NewGet returns a cobra.Command for getting available Implementations in a Public Hub.

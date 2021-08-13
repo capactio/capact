@@ -3,6 +3,7 @@ package httputil
 import (
 	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"strconv"
 	"time"
 )
@@ -35,10 +36,11 @@ func (t *configurableTransport) RoundTrip(req *http.Request) (resp *http.Respons
 	}
 	now := time.Now()
 	defer func() {
-		fmt.Printf("RoundTrip time for %v: %v", req.URL.String(), time.Since(now))
-		fmt.Printf("Request size: %v", strconv.FormatInt(req.ContentLength, 10))
-		fmt.Printf("Response size: %v", strconv.FormatInt(resp.ContentLength, 10))
-		//b, err = io.Copy(ioutil.Discard, resp.ContentLength)
+		fmt.Printf("RoundTrip time for %v: %v ", req.URL.String(), time.Since(now))
+		fmt.Printf("Request size: %v ", strconv.FormatInt(req.ContentLength, 10))
+		b, _ := httputil.DumpResponse(resp, true)
+		fmt.Printf("Response byte size: %v", len(b))
 	}()
-	return t.transport.RoundTrip(req)
+	resp, err = t.transport.RoundTrip(req)
+	return
 }

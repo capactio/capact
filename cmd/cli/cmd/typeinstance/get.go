@@ -179,7 +179,7 @@ func toTypeInstanceIDs(in []*gqllocalapi.TypeInstance) string {
 }
 
 func printHugePayloadWarning() {
-	warning := color.New(color.FgYellow).FprintlnFunc()
-	warning(os.Stderr,
-		"warning: Fetching all TypeInstances with all fields. This may generate huge payload and request may be canceled due to timeout. Change '--timeout' value if needed.")
+	warning := color.New(color.FgYellow).FprintfFunc()
+	warning(os.Stderr, "  Warning: ")
+	fmt.Fprintln(os.Stderr, "Fetching all TypeInstances with all fields. This may generate huge payload and request may be canceled due to timeout. Change '--timeout' value if needed.")
 }

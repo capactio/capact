@@ -6,9 +6,10 @@ import "fmt"
 var ifaceRevisionFieldsRegistry = map[InterfaceRevisionQueryFields]string{
 	IfaceRevRootFields: `
 		revision`,
-	IfaceRevMetadataFields: ifaceRevisionMetadataFields,
-	IfaceRevInputFields:    ifaceRevisionInputDataFields,
-	IfaceRevAllFields:      ifaceRevisionAllFields,
+	IfaceRevMetadataFields:        ifaceRevisionMetadataFields,
+	IfaceRevInputFields:           ifaceRevisionInputDataFields,
+	IfaceRevImplRevisionsMetadata: ifaceRevisionImplRevisionsMetadata,
+	IfaceRevAllFields:             ifaceRevisionAllFields,
 }
 
 // ifaceRevisionAllFields for querying InterfaceRevision fields with GenericMetadata and all revisions.
@@ -48,6 +49,11 @@ var ifaceRevisionAllFields = fmt.Sprintf(`
           %s
       }
 `, ifaceRevisionMetadataFields, implRevisionAllFields)
+
+// ifaceRevisionMetadataFields for querying InterfaceRevision's implementationRevisions fields.
+var ifaceRevisionImplRevisionsMetadata = fmt.Sprintf(`implementationRevisions {
+          %s
+      }`, implRevisionMetadataFields)
 
 // ifaceRevisionMetadataFields for querying InterfaceRevision's Metadata fields.
 var ifaceRevisionMetadataFields = fmt.Sprintf(`

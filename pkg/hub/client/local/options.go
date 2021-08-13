@@ -23,7 +23,8 @@ const (
 	// TypeInstanceAllFieldsWithUses returns all TypeInstance fields with UsedBy and Uses.
 	// It may generate a huge payload as the UsedBy and Uses fields has relations to next UsedBy and Uses fields.
 	TypeInstanceAllFieldsWithUses
-	maxKey
+
+	typeInstanceMaxKey
 )
 
 // Has returns true if flag is set
@@ -53,16 +54,16 @@ func (o *TypeInstancesOptions) Apply(opts ...TypeInstancesOption) {
 type TypeInstancesOption func(*TypeInstancesOptions)
 
 // WithCustomFields narrows down the request query fields to the specified ones.
-func WithCustomFields(i TypeInstancesQueryFields) TypeInstancesOption {
-	return func(ops *TypeInstancesOptions) {
-		ops.fields = getTypeInstanceFieldsFromFlags(i)
+func WithCustomFields(queryFields TypeInstancesQueryFields) TypeInstancesOption {
+	return func(opts *TypeInstancesOptions) {
+		opts.fields = getTypeInstanceFieldsFromFlags(queryFields)
 	}
 }
 
-func getTypeInstanceFieldsFromFlags(i TypeInstancesQueryFields) string {
+func getTypeInstanceFieldsFromFlags(queryFields TypeInstancesQueryFields) string {
 	var names []string
-	for key := TypeInstanceRootFields; key < maxKey; key <<= 1 {
-		if i.Has(key) {
+	for key := TypeInstanceRootFields; key < typeInstanceMaxKey; key <<= 1 {
+		if queryFields.Has(key) {
 			names = append(names, typeInstancesFieldsRegistry[key])
 		}
 	}

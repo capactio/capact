@@ -10,6 +10,8 @@ const (
 	IfaceRevRootFields InterfaceRevisionQueryFields = 1 << iota
 	// IfaceRevMetadataFields returns InterfaceRevision's metadata fields.
 	IfaceRevMetadataFields
+	// IfaceRevImplRevisionsMetadata returns ImplementationRevisions's metadata fields for a given InterfaceRevision.
+	IfaceRevImplRevisionsMetadata
 	// IfaceRevInputFields returns InterfaceRevision's input data fields.
 	IfaceRevInputFields
 	// IfaceRevAllFields returns all InterfaceRevision fields.
@@ -40,20 +42,20 @@ func (o *InterfaceRevisionOptions) Apply(opts ...InterfaceRevisionOption) {
 }
 
 // WithIfaceRevCustomFields narrows down the request query fields to the specified ones.
-func WithIfaceRevCustomFields(requestedFields InterfaceRevisionQueryFields) InterfaceRevisionOption {
+func WithIfaceRevCustomFields(queryFields InterfaceRevisionQueryFields) InterfaceRevisionOption {
 	return func(opts *InterfaceRevisionOptions) {
-		opts.fields = getIfaceRevisionFieldsFromFlags(requestedFields)
+		opts.fields = getIfaceRevisionFieldsFromFlags(queryFields)
 	}
 }
 
-func getIfaceRevisionFieldsFromFlags(requestedFields InterfaceRevisionQueryFields) string {
-	if requestedFields.Has(IfaceRevAllFields) {
+func getIfaceRevisionFieldsFromFlags(queryFields InterfaceRevisionQueryFields) string {
+	if queryFields.Has(IfaceRevAllFields) {
 		return ifaceRevisionFieldsRegistry[IfaceRevAllFields]
 	}
 
 	var names []string
 	for fieldOpt := IfaceRevRootFields; fieldOpt < ifaceRevMaxKey; fieldOpt <<= 1 {
-		if requestedFields.Has(fieldOpt) {
+		if queryFields.Has(fieldOpt) {
 			names = append(names, ifaceRevisionFieldsRegistry[fieldOpt])
 		}
 	}

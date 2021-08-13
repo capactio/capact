@@ -1,6 +1,8 @@
 package public
 
 import (
+	"fmt"
+
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 )
 
@@ -24,7 +26,10 @@ func (o *InterfaceOptions) Apply(opts ...InterfaceOption) {
 // WithLatestIfaceRevision adds latestRevision fields for Interface query.
 func WithLatestIfaceRevision(requestedFields InterfaceRevisionQueryFields) InterfaceOption {
 	return func(opts *InterfaceOptions) {
-		opts.additionalFields = getIfaceRevisionFieldsFromFlags(requestedFields)
+		opts.additionalFields = fmt.Sprintf(`
+				latestRevision {
+					%s
+				}`, getIfaceRevisionFieldsFromFlags(requestedFields))
 	}
 }
 
