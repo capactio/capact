@@ -40,6 +40,7 @@ func (t *configurableTransport) RoundTrip(req *http.Request) (resp *http.Respons
 		fmt.Printf("Request size: %v ", strconv.FormatInt(req.ContentLength, 10))
 		b, _ := httputil.DumpResponse(resp, true)
 		fmt.Printf("Response byte size: %v", len(b))
+		fmt.Println()
 	}()
 	resp, err = t.transport.RoundTrip(req)
 	return

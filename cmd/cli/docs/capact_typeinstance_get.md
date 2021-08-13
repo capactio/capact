@@ -28,7 +28,7 @@ capact typeinstance get c49b 4793 -oyaml --export > /tmp/typeinstances.yaml
       --export             Converts TypeInstance to update format.
   -h, --help               help for get
   -o, --output string      Output format. One of: json | table | yaml (default "table")
-      --timeout duration   Converts TypeInstance to update format. (default 30s)
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

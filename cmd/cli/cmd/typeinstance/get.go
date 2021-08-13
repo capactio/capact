@@ -90,7 +90,7 @@ func NewGet() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.BoolVar(&opts.ExportToUpdateFormat, "export", false, "Converts TypeInstance to update format.")
-	flags.DurationVar(&opts.Timeout, "timeout", 30*time.Second, "Converts TypeInstance to update format.") // TODO: handle that, print warning
+	flags.DurationVar(&opts.Timeout, "timeout", 30*time.Second, "Timeout for HTTP request")
 	resourcePrinter.RegisterFlags(flags)
 
 	return cmd
@@ -113,8 +113,7 @@ func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) 
 		if format != cliprinter.TableFormat {
 			printHugePayloadWarning()
 		}
-		out, err := hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{}, listOpts...)
-		return out, err
+		return hubCli.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{}, listOpts...)
 	}
 
 	var (
@@ -124,7 +123,7 @@ func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) 
 
 	// TODO: make it client-side
 	for _, id := range opts.RequestedTypeInstancesIDs {
-		ti, err := hubCli.FindTypeInstance(ctx, id) // TODO: custom fields, narrow-down to latest rev
+		ti, err := hubCli.FindTypeInstance(ctx, id, listOpts...)
 		if err != nil {
 			errs = append(errs, err)
 			continue
