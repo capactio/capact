@@ -184,6 +184,11 @@ func TestService_List(t *testing.T) {
 
 			// then
 			require.NoError(t, err)
+			require.Len(t, actual, len(testCase.Expected))
+			// Reset ResourceVersion set by fake K8s client
+			for i := range actual {
+				actual[i].SetResourceVersion("")
+			}
 			assert.ElementsMatch(t, testCase.Expected, actual)
 		})
 	}
