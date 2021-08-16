@@ -18,7 +18,7 @@ require (
 	github.com/docker/cli v20.10.5+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.12.0
 	github.com/fatih/structs v1.1.0
 	github.com/gitchander/permutation v0.0.0-20210302120832-6ab79d7de174
 	github.com/go-logr/logr v0.4.0
