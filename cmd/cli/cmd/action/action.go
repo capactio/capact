@@ -20,6 +20,7 @@ var argoHiddenFlags = []string{
 	"password",
 	"request-timeout",
 	"server",
+	"tls-server-name",
 	"token",
 	"user",
 	"username",

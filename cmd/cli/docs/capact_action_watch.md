@@ -38,7 +38,6 @@ capact action watch @latest
   -n, --namespace string             If present, the namespace scope for this CLI request
       --node-field-selector string   selector of node to display, eg: --node-field-selector phase=abc
       --status string                Filter by status (Pending, Running, Succeeded, Skipped, Failed, Error)
-      --tls-server-name string       If provided, this name will be used to validate server certificate. If this is not provided, hostname used to contact the server is used.
 ```
 
 ### Options inherited from parent commands
