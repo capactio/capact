@@ -7,8 +7,8 @@ import (
 
 	header_forwarder "capact.io/capact/internal/gateway/header"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestSaveAndReadFromContext_HappyPath(t *testing.T) {
@@ -25,5 +25,5 @@ func TestSaveAndReadFromContext_HappyPath(t *testing.T) {
 
 	// then
 	require.True(t, ok)
-	assert.DeepEqual(t, headers, readHeaders)
+	assert.Equal(t, headers, readHeaders)
 }
