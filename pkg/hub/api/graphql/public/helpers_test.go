@@ -3,7 +3,7 @@ package graphql
 import (
 	"testing"
 
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResolveActionFromImports(t *testing.T) {
