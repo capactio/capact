@@ -11,6 +11,7 @@ func NewCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewTerraform())
+	cmd.AddCommand(NewHelm())
 
 	return cmd
 }

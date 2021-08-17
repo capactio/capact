@@ -6,6 +6,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
 	"github.com/pkg/errors"
 )
 
@@ -18,30 +19,6 @@ type Config struct {
 type templatingConfig struct {
 	Template string
 	Input    interface{}
-}
-
-type templatingInput struct {
-	Name      string
-	Prefix    string
-	Revision  string
-	Variables []inputVariable
-}
-
-type inputVariable struct {
-	Name        string
-	Type        string
-	Description string
-	Default     interface{}
-}
-
-type outputVariable struct {
-	Name string
-}
-
-var tmplFuncs = template.FuncMap{
-	"add": func(a, b int) int {
-		return a + b
-	},
 }
 
 func generateManifests(cfgs []*templatingConfig) ([]string, error) {
@@ -61,7 +38,7 @@ func generateManifests(cfgs []*templatingConfig) ([]string, error) {
 
 func generateManifest(cfg *templatingConfig) (string, error) {
 	tmpl, err := template.New("manifest").
-		Funcs(tmplFuncs).
+		Funcs(template.FuncMap(sprig.FuncMap())).
 		Parse(cfg.Template)
 	if err != nil {
 		return "", errors.Wrap(err, "while creating new template")
