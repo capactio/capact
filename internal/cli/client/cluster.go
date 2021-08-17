@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"capact.io/capact/internal/cli/credstore"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
@@ -34,7 +33,7 @@ type EngineClient interface {
 
 // TypeInstanceClient aggregates operations that are executed against Local Hub by Capact CLI.
 type TypeInstanceClient interface {
-	FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error)
+	FindTypeInstance(ctx context.Context, id string, opts ...local.TypeInstancesOption) (*hublocalgraphql.TypeInstance, error)
 }
 
 type clusterClient struct {
@@ -56,8 +55,9 @@ func NewCluster(serverURL string) (ClusterClient, error) {
 func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterClient, error) {
 	endpoint := fmt.Sprintf("%s/graphql", server)
 
-	httpClient := httputil.NewClient(30*time.Second,
-		httputil.WithBasicAuth(creds.Username, creds.Secret))
+	httpClient := httputil.NewClient(
+		httputil.WithBasicAuth(creds.Username, creds.Secret),
+		httputil.WithTimeout(timeout))
 
 	gqlClient := graphql.NewClient(endpoint, graphql.WithHTTPClient(httpClient))
 

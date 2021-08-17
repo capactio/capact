@@ -29,8 +29,8 @@ func TestSortImplementationRevisionsByPathAndRevision(t *testing.T) {
 		fixImplementationRevision("path1", "0.2.0"),
 	}
 
-	getOpts := &ListImplementationRevisionsOptions{}
-	getOpts.Apply(WithSortingByPathAscAndRevisionDesc())
+	getOpts := &ListImplementationRevisionsForInterfaceOptions{}
+	getOpts.Apply(WithSortingByPathAscAndRevisionDesc)
 
 	// when
 	gotRevs := SortImplementationRevisions(revisionToSort, getOpts)

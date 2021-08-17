@@ -23,6 +23,7 @@ capact hub interfaces browse [flags]
 ```
   -h, --help                  help for browse
       --path-pattern string   The pattern of the path of a given Interface, e.g. cap.interface.* (default "cap.interface.*")
+      --timeout duration      Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

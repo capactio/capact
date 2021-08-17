@@ -1,24 +1,61 @@
 package local
 
-import "fmt"
+import (
+	"fmt"
+)
 
-var typeInstanceWithUsesFields = fmt.Sprintf(`
-		%s
-		uses {
-			%s
-		}
-		usedBy {
-			%s
-		}
-`, typeInstanceFields, typeInstanceFields, typeInstanceFields)
+var typeInstancesFieldsRegistry = map[TypeInstancesQueryFields]string{
+	TypeInstanceRootFields:                 rootFields,
+	TypeInstanceTypeRefFields:              typeRefFields,
+	TypeInstanceUsesIDField:                usesIDField,
+	TypeInstanceUsedByIDField:              usedByIDField,
+	TypeInstanceLatestResourceVersionField: latestResourceVersionField,
+	TypeInstanceAllFields:                  typeInstanceAllFields,
+	TypeInstanceUsesAllFields:              typeInstanceUsesAllFields,
+	TypeInstanceUsedByAllFields:            typeInstanceUsedByAllFields,
+	// grow the extracted fields if needed
+}
 
-var typeInstanceFields = fmt.Sprintf(`
+var (
+	rootFields = `
 		id
+		lockedBy`
+
+	typeRefFields = `
 		typeRef {
 			path
 			revision
-		}
-		lockedBy
+		}`
+
+	usedByIDField = `
+			usedBy {
+				id
+			}`
+
+	usesIDField = `
+			uses {
+				id
+			}`
+
+	latestResourceVersionField = `
+			latestResourceVersion {
+				resourceVersion
+			}`
+
+	typeInstanceUsesAllFields = fmt.Sprintf(`
+		uses {
+			%s
+		}`, typeInstanceAllFields)
+
+	typeInstanceUsedByAllFields = fmt.Sprintf(`
+		usedBy {
+			%s
+		}`, typeInstanceAllFields)
+
+	typeInstanceAllFields = fmt.Sprintf(`
+		%s
+
+		%s
 
 		latestResourceVersion {
 			%s
@@ -38,8 +75,9 @@ var typeInstanceFields = fmt.Sprintf(`
 	
 		resourceVersion(resourceVersion: 1) {
 			%s
-		}
-`, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion)
+		}`, rootFields, typeRefFields,
+		typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion, typeInstanceResourceVersion)
+)
 
 const typeInstanceResourceVersion = `
 		resourceVersion

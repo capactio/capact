@@ -4,6 +4,8 @@ import (
 	"os"
 
 	"capact.io/capact/internal/cli/action"
+	"capact.io/capact/internal/cli/client"
+
 	"github.com/spf13/cobra"
 )
 
@@ -23,5 +25,7 @@ func NewRun() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created")
+	client.RegisterFlags(flags)
+
 	return cmd
 }

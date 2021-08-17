@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"time"
 
 	"capact.io/capact/pkg/httputil"
 
@@ -14,10 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	retryAttempts      = 1
-	httpRequestTimeout = 30 * time.Second
-)
+const retryAttempts = 1
 
 // Client used to communicate with the Capact Local Hub GraphQL APIs
 type Client struct {
@@ -31,9 +27,7 @@ func NewClient(cli *graphql.Client) *Client {
 
 // NewDefaultClient creates ready to use client with default values.
 func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
-	httpClient := httputil.NewClient(
-		httpRequestTimeout,
-	)
+	httpClient := httputil.NewClient(opts...)
 	clientOpt := graphql.WithHTTPClient(httpClient)
 	client := graphql.NewClient(endpoint, clientOpt)
 
@@ -41,14 +35,16 @@ func NewDefaultClient(endpoint string, opts ...httputil.ClientOption) *Client {
 }
 
 // CreateTypeInstance creates a new TypeInstances in the local Hub.
-func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput) (*hublocalgraphql.TypeInstance, error) {
+func (c *Client) CreateTypeInstance(ctx context.Context, in *hublocalgraphql.CreateTypeInstanceInput, opts ...TypeInstancesOption) (*hublocalgraphql.TypeInstance, error) {
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFields)
+	tiOpts.Apply(opts...)
 	query := fmt.Sprintf(`mutation CreateTypeInstance($in: CreateTypeInstanceInput!) {
 		createTypeInstance(
 			in: $in
 		) {
 			%s
 		}
-	}`, typeInstanceWithUsesFields)
+	}`, tiOpts.fields)
 
 	req := graphql.NewRequest(query)
 	req.Var("in", in)
@@ -94,14 +90,17 @@ func (c *Client) CreateTypeInstances(ctx context.Context, in *hublocalgraphql.Cr
 }
 
 // UpdateTypeInstances updates multiple TypeInstances in the local Hub.
-func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput) ([]hublocalgraphql.TypeInstance, error) {
+func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.UpdateTypeInstancesInput, opts ...TypeInstancesOption) ([]hublocalgraphql.TypeInstance, error) {
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFields)
+	tiOpts.Apply(opts...)
+
 	query := fmt.Sprintf(`mutation UpdateTypeInstances($in: [UpdateTypeInstancesInput]!) {
 		updateTypeInstances(
 			in: $in
 		) {
 			%s
 		}
-	}`, typeInstanceFields)
+	}`, tiOpts.fields)
 
 	req := graphql.NewRequest(query)
 	req.Var("in", in)
@@ -120,12 +119,15 @@ func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.U
 }
 
 // FindTypeInstance finds a TypeInstance with the given ID. If no TypeInstance is found, it returns nil.
-func (c *Client) FindTypeInstance(ctx context.Context, id string) (*hublocalgraphql.TypeInstance, error) {
+func (c *Client) FindTypeInstance(ctx context.Context, id string, opts ...TypeInstancesOption) (*hublocalgraphql.TypeInstance, error) {
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithRelations)
+	tiOpts.Apply(opts...)
+
 	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
 		typeInstance(id: $id) {
 			%s	
 		}
-	}`, typeInstanceWithUsesFields)
+	}`, tiOpts.fields)
 
 	req := graphql.NewRequest(query)
 	req.Var("id", id)
@@ -186,12 +188,15 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 }
 
 // ListTypeInstances lists the TypeInstances in the local Hub. You can pass a filter limit the list of returned TypeInstances.
-func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter) ([]hublocalgraphql.TypeInstance, error) {
+func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter, opts ...TypeInstancesOption) ([]hublocalgraphql.TypeInstance, error) {
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithRelations)
+	tiOpts.Apply(opts...)
+
 	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {
 		typeInstances(filter: $filter) {
 			%s	
 		}
-	}`, typeInstanceWithUsesFields)
+	}`, tiOpts.fields)
 
 	req := graphql.NewRequest(query)
 	req.Var("filter", filter)

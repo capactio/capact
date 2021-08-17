@@ -21,7 +21,8 @@ capact typeinstance delete c49b 4793
 ### Options
 
 ```
-  -h, --help   help for delete
+  -h, --help               help for delete
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

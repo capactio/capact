@@ -10,7 +10,7 @@ import (
 // FilterImplementationRevisions filters the provided ImplementationRevisions using the given filter options.
 // It is used to perform client-side filtering during rendering to find an ImplementationRevision,
 // which matches the given constraints.
-func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsOptions) []gqlpublicapi.ImplementationRevision {
+func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, opts *ListImplementationRevisionsForInterfaceOptions) []gqlpublicapi.ImplementationRevision {
 	if opts == nil {
 		return revs
 	}

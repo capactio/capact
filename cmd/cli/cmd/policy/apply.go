@@ -4,8 +4,10 @@ import (
 	"os"
 
 	"capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/policy"
+
 	"github.com/spf13/cobra"
 )
 
@@ -28,6 +30,7 @@ func NewApply() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.PolicyFilePath, cli.FromFileFlagName, "f", "", "The path to new Policy in YAML format")
 	panicOnError(cmd.MarkFlagRequired(cli.FromFileFlagName)) // this cannot happen
+	client.RegisterFlags(flags)
 
 	return cmd
 }

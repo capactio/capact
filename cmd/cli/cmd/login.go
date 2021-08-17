@@ -53,6 +53,7 @@ func NewLogin() *cobra.Command {
 
 	flags.StringVarP(&opts.user, "username", "u", "", "Username")
 	flags.StringVarP(&opts.password, "password", "p", "", "Password")
+	client.RegisterFlags(flags)
 
 	return login
 }

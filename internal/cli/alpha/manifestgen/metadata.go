@@ -7,7 +7,7 @@ import (
 
 // Metadata holds generic metadata information for Capact manifests.
 type Metadata struct {
-	OCFVersion types.OcfVersion   `yaml:"ocfVersion"`
+	OCFVersion types.OCFVersion   `yaml:"ocfVersion"`
 	Kind       types.ManifestKind `yaml:"kind"`
 	Metadata   struct {
 		Name   string `yaml:"name"`

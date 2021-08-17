@@ -15,6 +15,7 @@ capact action run ACTION [flags]
 ```
   -h, --help               help for run
   -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

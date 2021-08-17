@@ -11,7 +11,9 @@ import (
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/heredoc"
 	cliprinter "capact.io/capact/internal/cli/printer"
+	"capact.io/capact/internal/ptr"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/public"
 
 	"github.com/spf13/cobra"
 )
@@ -20,8 +22,9 @@ type getOptions struct {
 	interfacePaths []string
 }
 
-var (
-	allPathPrefix = "cap.interface.*"
+const (
+	allPathPrefix       = "cap.interface.*"
+	tableRequiredFields = public.InterfaceRevisionRootFields | public.InterfaceRevisionMetadataFields | public.InterfaceRevisionImplementationRevisionsMetadata
 )
 
 // NewGet returns a cobra.Command for getting available Implementations in a Public Hub.
@@ -48,6 +51,7 @@ func NewGet() *cobra.Command {
 
 	flags := get.Flags()
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return get
 }
@@ -55,7 +59,7 @@ func NewGet() *cobra.Command {
 func listInterfaces(ctx context.Context, opts getOptions, printer *cliprinter.ResourcePrinter) error {
 	server := config.GetDefaultContext()
 
-	cli, err := client.NewHub(server)
+	hubCli, err := client.NewHub(server)
 	if err != nil {
 		return err
 	}
@@ -65,9 +69,19 @@ func listInterfaces(ctx context.Context, opts getOptions, printer *cliprinter.Re
 		errors     []error
 	)
 
-	ifaces, err := cli.ListInterfacesWithLatestRevision(ctx, gqlpublicapi.InterfaceFilter{
-		PathPattern: &allPathPrefix,
-	})
+	revisionFields := public.InterfaceRevisionAllFields
+	if printer.PrintFormat() == cliprinter.TableFormat {
+		revisionFields = tableRequiredFields
+	}
+
+	listOpts := []public.InterfaceOption{
+		public.WithInterfaceFilter(gqlpublicapi.InterfaceFilter{
+			PathPattern: ptr.String(allPathPrefix),
+		}),
+		public.WithLatestInterfaceRevision(revisionFields),
+	}
+
+	ifaces, err := hubCli.ListInterfaces(ctx, listOpts...)
 	if err != nil {
 		return err
 	}

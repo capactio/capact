@@ -39,6 +39,9 @@ func NewEdit() *cobra.Command {
 		},
 	}
 
+	flags := cmd.Flags()
+	client.RegisterFlags(flags)
+
 	return cmd
 }
 

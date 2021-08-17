@@ -27,6 +27,7 @@ capact action get funny-stallman -ojson
   -h, --help               help for get
   -n, --namespace string   Kubernetes namespace where the Action was created (default "default")
   -o, --output string      Output format. One of: json | table | yaml (default "table")
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

@@ -14,8 +14,9 @@ import (
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"capact.io/capact/pkg/engine/k8s/policy"
-	hublocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
@@ -48,7 +49,7 @@ const (
 type (
 	// HubImplementationGetter allows to fetch a specific Implementation from Hub.
 	HubImplementationGetter interface {
-		GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*hubpublicapi.ImplementationRevision, error)
+		GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*gqlpublicapi.ImplementationRevision, error)
 	}
 	// ArgoRenderer allows to render Capact Action defines in Argo format.
 	ArgoRenderer interface {
@@ -64,12 +65,12 @@ type (
 	}
 	// TypeInstanceLocker allows to lock and unlock given TypeInstances.
 	TypeInstanceLocker interface {
-		LockTypeInstances(ctx context.Context, in *hublocalapi.LockTypeInstancesInput) error
-		UnlockTypeInstances(ctx context.Context, in *hublocalapi.UnlockTypeInstancesInput) error
+		LockTypeInstances(ctx context.Context, in *gqllocalapi.LockTypeInstancesInput) error
+		UnlockTypeInstances(ctx context.Context, in *gqllocalapi.UnlockTypeInstancesInput) error
 	}
 	// TypeInstanceGetter allow to fetch given TypeInstances from Hub.
 	TypeInstanceGetter interface {
-		ListTypeInstances(ctx context.Context, filter *hublocalapi.TypeInstanceFilter) ([]hublocalapi.TypeInstance, error)
+		ListTypeInstances(ctx context.Context, filter *gqllocalapi.TypeInstanceFilter, opts ...local.TypeInstancesOption) ([]gqllocalapi.TypeInstance, error)
 	}
 )
 
@@ -339,7 +340,7 @@ func (a *ActionService) LockTypeInstances(ctx context.Context, action *v1alpha1.
 
 	ownerID := ownerIDKey(action)
 
-	return a.typeInstanceLocker.LockTypeInstances(ctx, &hublocalapi.LockTypeInstancesInput{
+	return a.typeInstanceLocker.LockTypeInstances(ctx, &gqllocalapi.LockTypeInstancesInput{
 		OwnerID: ownerID,
 		Ids:     action.Status.Rendering.TypeInstancesToLock,
 	})
@@ -353,7 +354,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 
 	ownerID := ownerIDKey(action)
 
-	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &hublocalapi.UnlockTypeInstancesInput{
+	return a.typeInstanceLocker.UnlockTypeInstances(ctx, &gqllocalapi.UnlockTypeInstancesInput{
 		OwnerID: ownerID,
 		Ids:     action.Status.Rendering.TypeInstancesToLock,
 	})
@@ -564,9 +565,9 @@ func jobFinishStatus(j *batchv1.Job) (batchv1.JobConditionType, bool) {
 func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *v1alpha1.Action) ([]v1alpha1.OutputTypeInstanceDetails, error) {
 	ownerID := ownerIDKey(action)
 
-	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &hublocalapi.TypeInstanceFilter{
+	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
 		CreatedBy: &ownerID,
-	})
+	}, local.WithFields(local.TypeInstanceRootFields|local.TypeInstanceTypeRefFields))
 	if err != nil {
 		return nil, errors.Wrap(err, "while listing TypeInstances")
 	}

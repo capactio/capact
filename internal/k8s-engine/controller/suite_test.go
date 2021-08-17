@@ -3,6 +3,7 @@
 package controller
 
 import (
+	"capact.io/capact/pkg/hub/client/local"
 	"context"
 	"io/ioutil"
 	"path/filepath"
@@ -147,6 +148,6 @@ func (p policyServiceFake) Get(ctx context.Context) (policy.Policy, error) {
 
 type typeInstanceGetterFake struct{}
 
-func (g *typeInstanceGetterFake) ListTypeInstances(ctx context.Context, f *graphql.TypeInstanceFilter) ([]graphql.TypeInstance, error) {
+func (g *typeInstanceGetterFake) ListTypeInstances(ctx context.Context, f *graphql.TypeInstanceFilter, opts ...local.TypeInstancesOption) ([]graphql.TypeInstance, error) {
 	return []graphql.TypeInstance{}, nil
 }

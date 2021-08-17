@@ -30,6 +30,9 @@ func NewDelete() *cobra.Command {
 		},
 	}
 
+	flags := cmd.Flags()
+	client.RegisterFlags(flags)
+
 	return cmd
 }
 
