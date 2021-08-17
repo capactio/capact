@@ -14,20 +14,6 @@ metadata:
       url: https://example.com
 spec:
   jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
     value: |-
-      {
-        "$schema": "http://json-schema.org/draft-07/schema",
-        "type": "object",
-        "required": [],
-        "properties": {
-          {{ $length := len .Variables -}}
-          {{ range $index, $variable := .Variables -}}
-          "{{ $variable.Name }}": {
-            "$id": "#/properties/{{ $variable.Name }}",
-            "type": "{{ $variable.Type }}",
-            "description": "{{ $variable.Description }}"{{if $variable.Default }},
-            "default": "{{ $variable.Default }}"{{ end }}
-          }{{ if ne $index (add $length -1) }},{{ end }}
-          {{ end }}
-        }
-      }
+{{ .JSONSchema | toPrettyJson | indent 6 }}
