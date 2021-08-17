@@ -2,8 +2,8 @@ package public
 
 import "fmt"
 
-// GenericMetadataFields for querying the GenericMetadata fields.
-var GenericMetadataFields = `
+// genericMetadataFields for querying the GenericMetadata fields.
+var genericMetadataFields = `
       prefix
       path
       name
@@ -19,8 +19,8 @@ var GenericMetadataFields = `
       iconURL
       `
 
-// AttributeFields for querying the Attributes fields and GenericMetadata.
-var AttributeFields = fmt.Sprintf(`
+// attributeFields for querying the Attributes fields and GenericMetadata.
+var attributeFields = fmt.Sprintf(`
       metadata {
         %s
       }
@@ -28,4 +28,4 @@ var AttributeFields = fmt.Sprintf(`
       spec {
         additionalRefs
       }
-      `, GenericMetadataFields)
+      `, genericMetadataFields)

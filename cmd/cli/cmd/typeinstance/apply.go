@@ -57,6 +57,7 @@ func NewApply() *cobra.Command {
 	panicOnError(cmd.MarkFlagRequired(cli.FromFileFlagName)) // this cannot happen
 
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return cmd
 }

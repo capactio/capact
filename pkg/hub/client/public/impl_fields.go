@@ -4,10 +4,10 @@ import "fmt"
 
 // ifaceRevisionFieldsRegistry holds possible fields configuration for ImplementationRevision query.
 var implRevisionFieldsRegistry = map[ImplementationRevisionQueryFields]string{
-	ImplRevRootFields: `
+	ImplementationRevisionRootFields: `
 		revision`,
-	ImplRevMetadataFields: implRevisionMetadataFields,
-	ImplRevAllFields:      implRevisionAllFields,
+	ImplementationRevisionMetadataFields: implRevisionMetadataFields,
+	ImplementationRevisionAllFields:      implRevisionAllFields,
 }
 
 var implRevisionMetadataFields = fmt.Sprintf(`
@@ -16,7 +16,7 @@ var implRevisionMetadataFields = fmt.Sprintf(`
         attributes {
       	%s
         }
-      }`, GenericMetadataFields, AttributeFields)
+      }`, genericMetadataFields, attributeFields)
 
 var implRevisionAllFields = fmt.Sprintf(`
       revision

@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"capact.io/capact/pkg/httputil"
 	"capact.io/capact/pkg/hub/client/local"
 	"github.com/fatih/color"
 
@@ -90,8 +89,8 @@ func NewGet() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.BoolVar(&opts.ExportToUpdateFormat, "export", false, "Converts TypeInstance to update format.")
-	flags.DurationVar(&opts.Timeout, "timeout", 30*time.Second, "Timeout for HTTP request")
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return cmd
 }
@@ -99,14 +98,14 @@ func NewGet() *cobra.Command {
 func getTI(ctx context.Context, opts GetOptions, format cliprinter.PrintFormat) ([]gqllocalapi.TypeInstance, error) {
 	server := config.GetDefaultContext()
 
-	hubCli, err := client.NewHub(server, httputil.WithTimeout(opts.Timeout))
+	hubCli, err := client.NewHub(server)
 	if err != nil {
 		return nil, err
 	}
 
 	var listOpts []local.TypeInstancesOption
 	if format == cliprinter.TableFormat {
-		listOpts = append(listOpts, local.WithCustomFields(tableRequiredFields))
+		listOpts = append(listOpts, local.WithFields(tableRequiredFields))
 	}
 
 	if len(opts.RequestedTypeInstancesIDs) == 0 {
@@ -180,5 +179,5 @@ func toTypeInstanceIDs(in []*gqllocalapi.TypeInstance) string {
 func printHugePayloadWarning() {
 	warning := color.New(color.FgYellow).FprintfFunc()
 	warning(os.Stderr, "  Warning: ")
-	fmt.Fprintln(os.Stderr, "Fetching all TypeInstances with all fields. This may generate huge payload and request may be canceled due to timeout. Change '--timeout' value if needed.")
+	fmt.Fprintln(os.Stderr, "Fetching full details of all TypeInstances. This may take a while and generate huge output. Use '--timeout' flag to increase timeout if needed.")
 }

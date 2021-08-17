@@ -3,6 +3,7 @@ package policy
 import (
 	"os"
 
+	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/policy"
 	"capact.io/capact/internal/cli/printer"
 
@@ -24,6 +25,7 @@ func NewGet() *cobra.Command {
 
 	flags := cmd.Flags()
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return cmd
 }

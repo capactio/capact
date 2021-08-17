@@ -24,7 +24,7 @@ type getOptions struct {
 
 const (
 	allPathPrefix       = "cap.interface.*"
-	tableRequiredFields = public.IfaceRevRootFields | public.IfaceRevMetadataFields | public.IfaceRevImplRevisionsMetadata
+	tableRequiredFields = public.InterfaceRevisionRootFields | public.InterfaceRevisionMetadataFields | public.InterfaceRevisionImplementationRevisionsMetadata
 )
 
 // NewGet returns a cobra.Command for getting available Implementations in a Public Hub.
@@ -51,6 +51,7 @@ func NewGet() *cobra.Command {
 
 	flags := get.Flags()
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return get
 }
@@ -68,16 +69,16 @@ func listInterfaces(ctx context.Context, opts getOptions, printer *cliprinter.Re
 		errors     []error
 	)
 
-	revisionFields := public.IfaceRevAllFields
+	revisionFields := public.InterfaceRevisionAllFields
 	if printer.PrintFormat() == cliprinter.TableFormat {
 		revisionFields = tableRequiredFields
 	}
 
 	listOpts := []public.InterfaceOption{
-		public.WithIfaceFilter(gqlpublicapi.InterfaceFilter{
+		public.WithInterfaceFilter(gqlpublicapi.InterfaceFilter{
 			PathPattern: ptr.String(allPathPrefix),
 		}),
-		public.WithLatestIfaceRevision(revisionFields),
+		public.WithLatestInterfaceRevision(revisionFields),
 	}
 
 	ifaces, err := hubCli.ListInterfaces(ctx, listOpts...)

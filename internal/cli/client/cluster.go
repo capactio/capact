@@ -56,7 +56,8 @@ func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterCl
 	endpoint := fmt.Sprintf("%s/graphql", server)
 
 	httpClient := httputil.NewClient(
-		httputil.WithBasicAuth(creds.Username, creds.Secret))
+		httputil.WithBasicAuth(creds.Username, creds.Secret),
+		httputil.WithTimeout(timeout))
 
 	gqlClient := graphql.NewClient(endpoint, graphql.WithHTTPClient(httpClient))
 

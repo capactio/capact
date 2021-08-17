@@ -24,8 +24,9 @@ capact hub implementations get cap.interface.database.postgresql.install -oyaml
 ### Options
 
 ```
-  -h, --help            help for get
-  -o, --output string   Output format. One of: json | table | yaml (default "table")
+  -h, --help               help for get
+  -o, --output string      Output format. One of: json | table | yaml (default "table")
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

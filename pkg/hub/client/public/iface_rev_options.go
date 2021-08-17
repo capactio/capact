@@ -6,16 +6,16 @@ import "strings"
 type InterfaceRevisionQueryFields uint64
 
 const (
-	// IfaceRevRootFields returns all primitive fields specified on root.
-	IfaceRevRootFields InterfaceRevisionQueryFields = 1 << iota
-	// IfaceRevMetadataFields returns InterfaceRevision's metadata fields.
-	IfaceRevMetadataFields
-	// IfaceRevImplRevisionsMetadata returns ImplementationRevisions's metadata fields for a given InterfaceRevision.
-	IfaceRevImplRevisionsMetadata
-	// IfaceRevInputFields returns InterfaceRevision's input data fields.
-	IfaceRevInputFields
-	// IfaceRevAllFields returns all InterfaceRevision fields.
-	IfaceRevAllFields
+	// InterfaceRevisionRootFields returns all primitive fields specified on root.
+	InterfaceRevisionRootFields InterfaceRevisionQueryFields = 1 << iota
+	// InterfaceRevisionMetadataFields returns InterfaceRevision's metadata fields.
+	InterfaceRevisionMetadataFields
+	// InterfaceRevisionImplementationRevisionsMetadata returns ImplementationRevisions' metadata fields for a given InterfaceRevision.
+	InterfaceRevisionImplementationRevisionsMetadata
+	// InterfaceRevisionInputFields returns InterfaceRevision's input data fields.
+	InterfaceRevisionInputFields
+	// InterfaceRevisionAllFields returns all InterfaceRevision fields.
+	InterfaceRevisionAllFields
 
 	ifaceRevMaxKey
 )
@@ -33,7 +33,7 @@ type InterfaceRevisionOptions struct {
 
 // Apply is used to configure the InterfaceRevisionOption.
 func (o *InterfaceRevisionOptions) Apply(opts ...InterfaceRevisionOption) {
-	o.fields = ifaceRevisionFieldsRegistry[IfaceRevAllFields] // defaults to all fields, backward compatible
+	o.fields = ifaceRevisionFieldsRegistry[InterfaceRevisionAllFields] // defaults to all fields, backward compatible
 
 	// Apply overrides
 	for _, opt := range opts {
@@ -41,20 +41,20 @@ func (o *InterfaceRevisionOptions) Apply(opts ...InterfaceRevisionOption) {
 	}
 }
 
-// WithIfaceRevCustomFields narrows down the request query fields to the specified ones.
-func WithIfaceRevCustomFields(queryFields InterfaceRevisionQueryFields) InterfaceRevisionOption {
+// WithInterfaceRevisionFields narrows down the request query fields to the specified ones.
+func WithInterfaceRevisionFields(queryFields InterfaceRevisionQueryFields) InterfaceRevisionOption {
 	return func(opts *InterfaceRevisionOptions) {
 		opts.fields = getIfaceRevisionFieldsFromFlags(queryFields)
 	}
 }
 
 func getIfaceRevisionFieldsFromFlags(queryFields InterfaceRevisionQueryFields) string {
-	if queryFields.Has(IfaceRevAllFields) {
-		return ifaceRevisionFieldsRegistry[IfaceRevAllFields]
+	if queryFields.Has(InterfaceRevisionAllFields) {
+		return ifaceRevisionFieldsRegistry[InterfaceRevisionAllFields]
 	}
 
 	var names []string
-	for fieldOpt := IfaceRevRootFields; fieldOpt < ifaceRevMaxKey; fieldOpt <<= 1 {
+	for fieldOpt := InterfaceRevisionRootFields; fieldOpt < ifaceRevMaxKey; fieldOpt <<= 1 {
 		if queryFields.Has(fieldOpt) {
 			names = append(names, ifaceRevisionFieldsRegistry[fieldOpt])
 		}

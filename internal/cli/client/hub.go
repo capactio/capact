@@ -31,18 +31,15 @@ type Hub interface {
 }
 
 // NewHub returns client for Capact Hub configured with saved credentials for a given server URL.
-func NewHub(server string, opts ...httputil.ClientOption) (Hub, error) {
+func NewHub(server string) (Hub, error) {
 	creds, err := credstore.GetHub(server)
 	if err != nil {
 		return nil, err
 	}
 
-	// default opts, can be overridden as options are applied in ordered way
-	defaultOpts := []httputil.ClientOption{
+	httpClient := httputil.NewClient(
 		httputil.WithBasicAuth(creds.Username, creds.Secret),
-	}
-	finalOpts := append(defaultOpts, opts...)
-	httpClient := httputil.NewClient(finalOpts...)
+		httputil.WithTimeout(timeout))
 
 	return client.New(fmt.Sprintf("%s/graphql", server), httpClient), nil
 }

@@ -4,8 +4,10 @@ import (
 	"os"
 
 	"capact.io/capact/internal/cli"
+	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/policy"
+
 	"github.com/spf13/cobra"
 )
 
@@ -24,6 +26,9 @@ func NewEdit() *cobra.Command {
 			return policy.Edit(cmd.Context(), os.Stdout)
 		},
 	}
+
+	flags := cmd.Flags()
+	client.RegisterFlags(flags)
 
 	return cmd
 }

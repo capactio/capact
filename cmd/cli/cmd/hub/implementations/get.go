@@ -18,7 +18,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const tableRequiredFields = public.ImplRevRootFields | public.ImplRevMetadataFields
+const tableRequiredFields = public.ImplementationRevisionRootFields | public.ImplementationRevisionMetadataFields
 
 type getOptions struct {
 	implementationPaths []string
@@ -48,6 +48,7 @@ func NewGet() *cobra.Command {
 
 	flags := get.Flags()
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
 
 	return get
 }
@@ -67,7 +68,7 @@ func getImpl(ctx context.Context, opts getOptions, printer *cliprinter.ResourceP
 
 	var listOpts []public.ListImplementationRevisionsOption
 	if printer.PrintFormat() == cliprinter.TableFormat {
-		listOpts = append(listOpts, public.WithImplRevCustomFields(tableRequiredFields))
+		listOpts = append(listOpts, public.WithImplementationRevisionFields(tableRequiredFields))
 	}
 
 	impls, err := hubCli.ListImplementationRevisions(ctx, listOpts...)

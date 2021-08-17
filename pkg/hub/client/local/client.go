@@ -120,7 +120,7 @@ func (c *Client) UpdateTypeInstances(ctx context.Context, in []hublocalgraphql.U
 
 // FindTypeInstance finds a TypeInstance with the given ID. If no TypeInstance is found, it returns nil.
 func (c *Client) FindTypeInstance(ctx context.Context, id string, opts ...TypeInstancesOption) (*hublocalgraphql.TypeInstance, error) {
-	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithUses)
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithRelations)
 	tiOpts.Apply(opts...)
 
 	query := fmt.Sprintf(`query FindTypeInstance($id: ID!) {
@@ -189,7 +189,7 @@ func (c *Client) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (ma
 
 // ListTypeInstances lists the TypeInstances in the local Hub. You can pass a filter limit the list of returned TypeInstances.
 func (c *Client) ListTypeInstances(ctx context.Context, filter *hublocalgraphql.TypeInstanceFilter, opts ...TypeInstancesOption) ([]hublocalgraphql.TypeInstance, error) {
-	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithUses)
+	tiOpts := newTypeInstancesOptions(TypeInstanceAllFieldsWithRelations)
 	tiOpts.Apply(opts...)
 
 	query := fmt.Sprintf(`query ListTypeInstances($filter: TypeInstanceFilter) {

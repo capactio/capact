@@ -23,8 +23,8 @@ func (o *InterfaceOptions) Apply(opts ...InterfaceOption) {
 	}
 }
 
-// WithLatestIfaceRevision adds latestRevision fields for Interface query.
-func WithLatestIfaceRevision(requestedFields InterfaceRevisionQueryFields) InterfaceOption {
+// WithLatestInterfaceRevision adds latestRevision fields for Interface query.
+func WithLatestInterfaceRevision(requestedFields InterfaceRevisionQueryFields) InterfaceOption {
 	return func(opts *InterfaceOptions) {
 		opts.additionalFields = fmt.Sprintf(`
 				latestRevision {
@@ -33,8 +33,8 @@ func WithLatestIfaceRevision(requestedFields InterfaceRevisionQueryFields) Inter
 	}
 }
 
-// WithIfaceFilter adds a given filter to Interface query.
-func WithIfaceFilter(filter gqlpublicapi.InterfaceFilter) InterfaceOption {
+// WithInterfaceFilter adds a given filter to Interface query.
+func WithInterfaceFilter(filter gqlpublicapi.InterfaceFilter) InterfaceOption {
 	return func(opts *InterfaceOptions) {
 		opts.filter = filter
 	}

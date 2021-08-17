@@ -39,6 +39,7 @@ func NewBrowse() *cobra.Command {
 
 	flags := cmd.Flags()
 	flags.StringVar(&opts.pathPattern, "path-pattern", "cap.interface.*", "The pattern of the path of a given Interface, e.g. cap.interface.*")
+	client.RegisterFlags(flags)
 
 	return cmd
 }
@@ -51,7 +52,7 @@ func interactiveSelection(ctx context.Context, opts browseOptions, w io.Writer) 
 		return err
 	}
 
-	interfaces, err := cli.ListInterfaces(ctx, public.WithIfaceFilter(gqlpublicapi.InterfaceFilter{
+	interfaces, err := cli.ListInterfaces(ctx, public.WithInterfaceFilter(gqlpublicapi.InterfaceFilter{
 		PathPattern: &opts.pathPattern,
 	}))
 	if err != nil {

@@ -20,17 +20,25 @@ const (
 	TypeInstanceLatestResourceVersionField
 	// TypeInstanceAllFields returns all TypeInstance fields.
 	TypeInstanceAllFields
-	// TypeInstanceAllFieldsWithUses returns all TypeInstance fields with UsedBy and Uses.
-	// It may generate a huge payload as the UsedBy and Uses fields has relations to next UsedBy and Uses fields.
-	TypeInstanceAllFieldsWithUses
+	// TypeInstanceUsesAllFields returns TypeInstance's Uses field.
+	TypeInstanceUsesAllFields
+	// TypeInstanceUsedByAllFields returns TypeInstance's UsedBy field.
+	TypeInstanceUsedByAllFields
 
 	typeInstanceMaxKey
 )
 
-// Has returns true if flag is set
+// Holds combined options for easy usage.
+const (
+	// TypeInstanceAllFieldsWithRelations returns all TypeInstance fields with UsedBy and Uses.
+	// It may generate a huge payload as the UsedBy and Uses fields has relations to next UsedBy and Uses fields.
+	TypeInstanceAllFieldsWithRelations = TypeInstanceAllFields | TypeInstanceUsesAllFields | TypeInstanceUsedByAllFields
+)
+
+// Has returns true if flag is set.
 func (f TypeInstancesQueryFields) Has(flag TypeInstancesQueryFields) bool { return f&flag != 0 }
 
-// Clear clears the given flag
+// Clear clears the given flag.
 func (f *TypeInstancesQueryFields) Clear(flag TypeInstancesQueryFields) { *f &= ^flag }
 
 // TypeInstancesOptions stores configurations for TypeInstances request.
@@ -38,8 +46,8 @@ type TypeInstancesOptions struct {
 	fields string
 }
 
-func newTypeInstancesOptions(defaultFieldsKey TypeInstancesQueryFields) *TypeInstancesOptions {
-	return &TypeInstancesOptions{fields: typeInstancesFieldsRegistry[defaultFieldsKey]}
+func newTypeInstancesOptions(defaultFields TypeInstancesQueryFields) *TypeInstancesOptions {
+	return &TypeInstancesOptions{fields: getTypeInstanceFieldsFromFlags(defaultFields)}
 }
 
 // Apply is used to configure the ListImplementationRevisionsOptions.
@@ -53,8 +61,8 @@ func (o *TypeInstancesOptions) Apply(opts ...TypeInstancesOption) {
 // TypeInstancesOption provides an option to configure the list request for TypeInstances.
 type TypeInstancesOption func(*TypeInstancesOptions)
 
-// WithCustomFields narrows down the request query fields to the specified ones.
-func WithCustomFields(queryFields TypeInstancesQueryFields) TypeInstancesOption {
+// WithFields narrows down the request query fields to the specified ones.
+func WithFields(queryFields TypeInstancesQueryFields) TypeInstancesOption {
 	return func(opts *TypeInstancesOptions) {
 		opts.fields = getTypeInstanceFieldsFromFlags(queryFields)
 	}

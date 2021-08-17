@@ -11,7 +11,8 @@ var typeInstancesFieldsRegistry = map[TypeInstancesQueryFields]string{
 	TypeInstanceUsedByIDField:              usedByIDField,
 	TypeInstanceLatestResourceVersionField: latestResourceVersionField,
 	TypeInstanceAllFields:                  typeInstanceAllFields,
-	TypeInstanceAllFieldsWithUses:          typeInstanceWithUsesFields,
+	TypeInstanceUsesAllFields:              typeInstanceUsesAllFields,
+	TypeInstanceUsedByAllFields:            typeInstanceUsedByAllFields,
 	// grow the extracted fields if needed
 }
 
@@ -40,14 +41,16 @@ var (
 			latestResourceVersion {
 				resourceVersion
 			}`
-	typeInstanceWithUsesFields = fmt.Sprintf(`
-		%s
+
+	typeInstanceUsesAllFields = fmt.Sprintf(`
 		uses {
 			%s
-		}
+		}`, typeInstanceAllFields)
+
+	typeInstanceUsedByAllFields = fmt.Sprintf(`
 		usedBy {
 			%s
-		}`, typeInstanceAllFields, typeInstanceAllFields, typeInstanceAllFields)
+		}`, typeInstanceAllFields)
 
 	typeInstanceAllFields = fmt.Sprintf(`
 		%s

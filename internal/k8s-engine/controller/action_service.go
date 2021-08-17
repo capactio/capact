@@ -567,7 +567,7 @@ func (a *ActionService) GetTypeInstancesFromAction(ctx context.Context, action *
 
 	typeInstances, err := a.typeInstanceGetter.ListTypeInstances(ctx, &gqllocalapi.TypeInstanceFilter{
 		CreatedBy: &ownerID,
-	}, local.WithCustomFields(local.TypeInstanceRootFields|local.TypeInstanceTypeRefFields))
+	}, local.WithFields(local.TypeInstanceRootFields|local.TypeInstanceTypeRefFields))
 	if err != nil {
 		return nil, errors.Wrap(err, "while listing TypeInstances")
 	}
