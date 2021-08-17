@@ -5,6 +5,7 @@ import (
 
 	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/action"
+	"capact.io/capact/internal/cli/client"
 	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/cli/printer"
 
@@ -36,5 +37,7 @@ func NewGet() *cobra.Command {
 	flags := cmd.Flags()
 	flags.StringVarP(&opts.Namespace, "namespace", "n", "default", "Kubernetes namespace where the Action was created")
 	resourcePrinter.RegisterFlags(flags)
+	client.RegisterFlags(flags)
+
 	return cmd
 }

@@ -50,8 +50,8 @@ func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient
 }
 
 // ListImplementationRevisionsForInterface returns ImplementationRevisions for the given Interface.
-func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.GetImplementationOption) ([]hubpublicgraphql.ImplementationRevision, error) {
-	getOpts := &public.ListImplementationRevisionsOptions{}
+func (s *FileSystemClient) ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.ListImplementationRevisionsForInterfaceOption) ([]hubpublicgraphql.ImplementationRevision, error) {
+	getOpts := &public.ListImplementationRevisionsForInterfaceOptions{}
 	getOpts.Apply(opts...)
 
 	var out []hubpublicgraphql.ImplementationRevision
@@ -116,7 +116,7 @@ func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context,
 
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
 // It will return nil, if the InterfaceRevision is not found.
-func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, _ ...public.FindInterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error) {
+func (s *FileSystemClient) FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, _ ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error) {
 	for i := range s.Interfaces {
 		iface := s.Interfaces[i]
 		if iface.Metadata.Path != ref.Path {

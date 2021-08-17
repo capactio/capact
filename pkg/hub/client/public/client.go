@@ -25,36 +25,13 @@ func NewClient(cli *graphql.Client) *Client {
 	return &Client{client: cli}
 }
 
-// ListInterfacesMetadata returns only name, prefix and path. Rest fields have zero value.
-func (c *Client) ListInterfacesMetadata(ctx context.Context) ([]gqlpublicapi.Interface, error) {
-	req := graphql.NewRequest(`query ListInterfacesMetadata {
-		interfaces {
-			name
-			prefix
-			path
-		}		
-	}`)
-
-	var resp struct {
-		Interfaces []gqlpublicapi.Interface `json:"interfaces"`
-	}
-	err := retry.Do(func() error {
-		return c.client.Run(ctx, req, &resp)
-	}, retry.Attempts(retryAttempts))
-	if err != nil {
-		return nil, errors.Wrap(err, "while executing query to fetch Hub Implementation")
-	}
-
-	return resp.Interfaces, nil
-}
-
 // FindInterfaceRevision returns the InterfaceRevision for the given InterfaceReference.
 // It will return nil, if the InterfaceRevision is not found.
-func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...FindInterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error) {
-	findOpts := &FindInterfaceRevisionOptions{}
+func (c *Client) FindInterfaceRevision(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...InterfaceRevisionOption) (*gqlpublicapi.InterfaceRevision, error) {
+	findOpts := &InterfaceRevisionOptions{}
 	findOpts.Apply(opts...)
 
-	query, params := c.interfaceQueryForRef(findOpts.Fields, ref)
+	query, params := c.interfaceQueryForRef(findOpts.fields, ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query FindInterfaceRevision($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s
@@ -118,16 +95,22 @@ func (c *Client) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter gql
 	return out, nil
 }
 
-// ListInterfacesWithLatestRevision returns the latest revision of the Interfaces,
-// which match the provided filter.
-func (c *Client) ListInterfacesWithLatestRevision(ctx context.Context, filter gqlpublicapi.InterfaceFilter) ([]*gqlpublicapi.Interface, error) {
-	req := graphql.NewRequest(fmt.Sprintf(`query ListInterfacesWithLatestRevision($interfaceFilter: InterfaceFilter!)  {
+// ListInterfaces returns all Interfaces. By default only root fields are populated. Use options to add
+// latestRevision fields or apply additional filtering.
+func (c *Client) ListInterfaces(ctx context.Context, opts ...InterfaceOption) ([]*gqlpublicapi.Interface, error) {
+	ifaceOpts := &InterfaceOptions{}
+	ifaceOpts.Apply(opts...)
+
+	req := graphql.NewRequest(fmt.Sprintf(`query ListInterfaces($interfaceFilter: InterfaceFilter!)  {
 		  interfaces(filter: $interfaceFilter) {
+			path
+			name
+			prefix
 			%s
 		  }
-		}`, InterfacesFields))
+		}`, ifaceOpts.additionalFields))
 
-	req.Var("interfaceFilter", filter)
+	req.Var("interfaceFilter", ifaceOpts.filter)
 
 	var resp struct {
 		Interfaces []*gqlpublicapi.Interface `json:"interfaces"`
@@ -177,14 +160,18 @@ func (c *Client) GetInterfaceLatestRevisionString(ctx context.Context, ref gqlpu
 	return resp.Interface.LatestRevision.Revision, nil
 }
 
-// ListImplementationRevisions returns ImplementationRevisions,
-// which match the given filter.
-func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpublicapi.ImplementationRevisionFilter) ([]*gqlpublicapi.ImplementationRevision, error) {
+// ListImplementationRevisions returns ImplementationRevisions. Use options to apply additional filtering.
+func (c *Client) ListImplementationRevisions(ctx context.Context, opts ...ListImplementationRevisionsOption) ([]*gqlpublicapi.ImplementationRevision, error) {
+	getOpts := &ListImplementationRevisionsOptions{}
+	getOpts.Apply(opts...)
+
 	req := graphql.NewRequest(fmt.Sprintf(`query ListImplementationRevisions{
 		implementations {
-			%s
-		}		
-	}`, ImplementationFields))
+			revisions {
+				%s
+			}
+		}
+	}`, getOpts.fields))
 
 	var resp struct {
 		Implementations []gqlpublicapi.Implementation `json:"implementations"`
@@ -208,11 +195,11 @@ func (c *Client) ListImplementationRevisions(ctx context.Context, filter *gqlpub
 }
 
 // ListImplementationRevisionsForInterface returns ImplementationRevisions for the given Interface.
-func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...GetImplementationOption) ([]gqlpublicapi.ImplementationRevision, error) {
-	getOpts := &ListImplementationRevisionsOptions{}
+func (c *Client) ListImplementationRevisionsForInterface(ctx context.Context, ref gqlpublicapi.InterfaceReference, opts ...ListImplementationRevisionsForInterfaceOption) ([]gqlpublicapi.ImplementationRevision, error) {
+	getOpts := &ListImplementationRevisionsForInterfaceOptions{}
 	getOpts.Apply(opts...)
 
-	query, params := c.interfaceQueryForRef(InterfaceRevisionAllFields, ref)
+	query, params := c.interfaceQueryForRef(ifaceRevisionAllFields, ref)
 	req := graphql.NewRequest(fmt.Sprintf(`query ListImplementationRevisionsForInterface($interfacePath: NodePath!, %s) {
 		  interface(path: $interfacePath) {
 				%s

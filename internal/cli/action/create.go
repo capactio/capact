@@ -77,7 +77,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 	// For now, fetch latest - the same strategy is used by renderer.
 	iface, err := hubCli.FindInterfaceRevision(ctx, gqlpublicapi.InterfaceReference{
 		Path: opts.InterfacePath,
-	}, public.WithInputDataOnly)
+	}, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
 	if err != nil {
 		return err
 	}

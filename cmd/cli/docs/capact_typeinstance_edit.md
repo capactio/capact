@@ -19,7 +19,8 @@ capact typeinstance edit TYPE_INSTANCE_ID [flags]
 ### Options
 
 ```
-  -h, --help   help for edit
+  -h, --help               help for edit
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

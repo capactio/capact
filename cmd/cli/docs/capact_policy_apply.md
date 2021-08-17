@@ -23,6 +23,7 @@ capact policy apply -f /tmp/policy.yaml
 ```
   -f, --from-file string   The path to new Policy in YAML format
   -h, --help               help for apply
+      --timeout duration   Timeout for HTTP request (default 30s)
 ```
 
 ### Options inherited from parent commands

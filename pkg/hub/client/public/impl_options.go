@@ -1,9 +1,14 @@
 package public
 
-import gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+import (
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
+)
 
-// ListImplementationRevisionsOptions stores Implementation Revision filtering parameters.
-type ListImplementationRevisionsOptions struct {
+// ListImplementationRevisionsForInterfaceOption provides an option to configure the get request for Implementations.
+type ListImplementationRevisionsForInterfaceOption func(*ListImplementationRevisionsForInterfaceOptions)
+
+// ListImplementationRevisionsForInterfaceOptions stores Implementation Revision filtering parameters.
+type ListImplementationRevisionsForInterfaceOptions struct {
 	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
 	implPathPattern              *string
 	requirementsSatisfiedBy      map[string]*string
@@ -11,19 +16,16 @@ type ListImplementationRevisionsOptions struct {
 	sortByPathAscAndRevisionDesc bool
 }
 
-// Apply is used to configure the ListImplementationRevisionsOptions.
-func (o *ListImplementationRevisionsOptions) Apply(opts ...GetImplementationOption) {
+// Apply is used to configure the ListImplementationRevisionsForInterfaceOptions.
+func (o *ListImplementationRevisionsForInterfaceOptions) Apply(opts ...ListImplementationRevisionsForInterfaceOption) {
 	for _, opt := range opts {
 		opt(o)
 	}
 }
 
-// GetImplementationOption provides an option to configure the get request for Implementations.
-type GetImplementationOption func(*ListImplementationRevisionsOptions)
-
 // WithFilter returns an options, which adds a filter for ImplementationRevisions.
-func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementationOption {
-	return func(opt *ListImplementationRevisionsOptions) {
+func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementationRevisionsForInterfaceOption {
+	return func(opt *ListImplementationRevisionsForInterfaceOptions) {
 		// 1. Process attributes
 		opt.attrFilter = map[gqlpublicapi.FilterRule]map[string]*string{}
 
@@ -70,8 +72,6 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) GetImplementat
 // that the returned ImplementationRevision slice will be sorted
 // in ascending order by the Implementation path
 // and descending by the Implementation revision.
-func WithSortingByPathAscAndRevisionDesc() GetImplementationOption {
-	return func(options *ListImplementationRevisionsOptions) {
-		options.sortByPathAscAndRevisionDesc = true
-	}
+func WithSortingByPathAscAndRevisionDesc(options *ListImplementationRevisionsForInterfaceOptions) {
+	options.sortByPathAscAndRevisionDesc = true
 }

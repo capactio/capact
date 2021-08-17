@@ -24,9 +24,10 @@ capact login localhost:8080 -u user
 ### Options
 
 ```
-  -h, --help              help for login
-  -p, --password string   Password
-  -u, --username string   Username
+  -h, --help               help for login
+  -p, --password string    Password
+      --timeout duration   Timeout for HTTP request (default 30s)
+  -u, --username string    Username
 ```
 
 ### Options inherited from parent commands

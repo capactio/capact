@@ -2,7 +2,6 @@ package main
 
 import (
 	"log"
-	"time"
 
 	"capact.io/capact/internal/graphqlutil"
 	"capact.io/capact/internal/k8s-engine/controller"
@@ -160,7 +159,7 @@ func main() {
 }
 
 func getHubClient(cfg *Config) *hubclient.Client {
-	httpClient := httputil.NewClient(30*time.Second,
+	httpClient := httputil.NewClient(
 		httputil.WithBasicAuth(cfg.GraphQLGateway.Username, cfg.GraphQLGateway.Password))
 	return hubclient.New(cfg.GraphQLGateway.Endpoint, httpClient)
 }

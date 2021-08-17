@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"capact.io/capact/internal/cli/action"
+	"capact.io/capact/internal/cli/client"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
@@ -35,6 +36,8 @@ func NewCreate() *cobra.Command {
 	flags.BoolVarP(&opts.Interactive, "interactive", "i", false, "Toggle interactive prompting in the terminal")
 	flags.BoolVar(&opts.DryRun, "dry-run", false, "Specifies whether the Action performs server-side test without actually running the Action")
 	flags.BoolVar(&opts.Validate, "validate", true, "Validate created Action before sending it to server")
+	client.RegisterFlags(flags)
+
 	// TODO: add support for creating an action directly from an implementation
 	return cmd
 }

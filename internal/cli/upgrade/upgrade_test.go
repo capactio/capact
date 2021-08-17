@@ -38,7 +38,7 @@ func TestGetLatestVersion(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			// given
-			fakeCli := httputil.NewClient(0)
+			fakeCli := httputil.NewClient()
 			// mock transport to do not execute a real call
 			fakeCli.Transport = roundTripperFunc(func(request *http.Request) (*http.Response, error) {
 				assert.True(t, strings.HasPrefix(request.URL.String(), tc.url))
