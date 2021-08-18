@@ -336,6 +336,7 @@ func (s *Service) createInputParamsSecretIfShould(ctx context.Context, item mode
 
 	owner := item.Action
 	secret := item.InputParamsSecret
+	secret.SetResourceVersion("") // ResourceVersion can be not empty when using the Service directly
 	secret.SetOwnerReferences([]v1.OwnerReference{
 		{
 			APIVersion: v1alpha1.GroupVersion.Identifier(),

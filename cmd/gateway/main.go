@@ -65,7 +65,7 @@ func main() {
 	err := envconfig.InitWithPrefix(&cfg, "APP")
 	exitOnError(err, "while loading configuration")
 
-	stop := signals.SetupSignalHandler()
+	ctx := signals.SetupSignalHandler()
 
 	// setup logger
 	unnamedLogger, err := logger.New(cfg.Logger)
@@ -77,7 +77,7 @@ func main() {
 
 	// healthz server
 	healthzServer := healthz.NewHTTPServer(logger, cfg.HealthzAddr, appName)
-	parallelServers.Go(func() error { return healthzServer.Start(stop) })
+	parallelServers.Go(func() error { return healthzServer.Start(ctx) })
 
 	// graphql server
 	schemas, err := introspectGraphQLSchemas(logger, cfg.Introspection)
@@ -86,7 +86,7 @@ func main() {
 	gqlServer, err := setupGatewayServerFromSchemas(logger, schemas, cfg.Auth, cfg.GraphQLAddr)
 	exitOnError(err, "while gateway setup")
 
-	parallelServers.Go(func() error { return gqlServer.Start(stop) })
+	parallelServers.Go(func() error { return gqlServer.Start(ctx) })
 
 	err = parallelServers.Wait()
 	exitOnError(err, "while waiting for servers to finish gracefully")

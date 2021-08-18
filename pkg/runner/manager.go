@@ -47,13 +47,13 @@ func NewManager(runner Runner, statusReporter StatusReporter) (*Manager, error) 
 }
 
 // Execute underlying runner function in a proper order.
-func (r *Manager) Execute(stop <-chan struct{}) error {
+func (r *Manager) Execute(ctx context.Context) error {
 	runnerInputData, err := r.readRunnerInput()
 	if err != nil {
 		return errors.Wrap(err, "while reading runner input")
 	}
 
-	ctx, cancel := r.cancelableContext(stop, runnerInputData.Context.Timeout)
+	ctx, cancel := context.WithTimeout(ctx, runnerInputData.Context.Timeout.Duration())
 	defer cancel()
 
 	log := r.log.With(zap.String("runner", r.runner.Name()), zap.Bool("dryRun", runnerInputData.Context.DryRun))
@@ -115,24 +115,6 @@ func (r *Manager) unmarshalFromFile(path string, out interface{}) error {
 	}
 
 	return nil
-}
-
-// cancelableContext returns context that is canceled when stop signal is received or configured timeout elapsed.
-func (r *Manager) cancelableContext(stop <-chan struct{}, timeout Duration) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(context.Background())
-	if timeout > 0 {
-		ctx, cancel = context.WithTimeout(ctx, timeout.Duration())
-	}
-
-	go func() {
-		select {
-		case <-ctx.Done():
-		case <-stop:
-			cancel()
-		}
-	}()
-
-	return ctx, cancel
 }
 
 // LoggerInjector is used by the Manager to inject logger to Runner.

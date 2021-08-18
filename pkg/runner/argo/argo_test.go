@@ -11,10 +11,10 @@ import (
 
 	"capact.io/capact/pkg/runner"
 
-	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
-	"github.com/argoproj/argo/v2/pkg/client/clientset/versioned/fake"
-	"github.com/argoproj/argo/v2/pkg/client/clientset/versioned/scheme"
-	argoprojv1alpha1 "github.com/argoproj/argo/v2/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
+	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
+	"github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned/fake"
+	"github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned/scheme"
+	argoprojv1alpha1 "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned/typed/workflow/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sync/errgroup"
@@ -29,6 +29,7 @@ const testdataWorkflow = "./testdata/workflow.yaml"
 func TestRunnerStartHappyPath(t *testing.T) {
 	t.Run("Should create Argo Workflow if not exits", func(t *testing.T) {
 		// given
+		ctx := context.Background()
 		input, expOutStatus := fixStartInputAndOutput(t)
 
 		var expWf = struct {
@@ -48,7 +49,7 @@ func TestRunnerStartHappyPath(t *testing.T) {
 		require.NotNil(t, gotOutStatus)
 		assert.Equal(t, expOutStatus, *gotOutStatus)
 
-		gotWf, err := fakeCli.ArgoprojV1alpha1().Workflows(input.RunnerCtx.Platform.Namespace).Get(input.RunnerCtx.Name, metav1.GetOptions{})
+		gotWf, err := fakeCli.ArgoprojV1alpha1().Workflows(input.RunnerCtx.Platform.Namespace).Get(ctx, input.RunnerCtx.Name, metav1.GetOptions{})
 		require.NoError(t, err)
 		assert.EqualValues(t, expWf.Spec, gotWf.Spec)
 	})
@@ -195,7 +196,7 @@ func fixFinishedArgoWorkflow(t *testing.T, name, ns string) wfv1.Workflow {
 		Spec: wf.Spec,
 		Status: wfv1.WorkflowStatus{
 			FinishedAt: metav1.Now(),
-			Phase:      wfv1.NodeSucceeded,
+			Phase:      wfv1.WorkflowSucceeded,
 		},
 	}
 }

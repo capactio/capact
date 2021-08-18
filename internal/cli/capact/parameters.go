@@ -3,7 +3,7 @@ package capact
 import (
 	"github.com/fatih/structs"
 	"github.com/pkg/errors"
-	"k8s.io/helm/pkg/strvals"
+	"helm.sh/helm/v3/pkg/strvals"
 	"sigs.k8s.io/yaml"
 )
 

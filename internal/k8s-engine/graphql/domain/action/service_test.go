@@ -184,6 +184,11 @@ func TestService_List(t *testing.T) {
 
 			// then
 			require.NoError(t, err)
+			require.Len(t, actual, len(testCase.Expected))
+			// Reset ResourceVersion set by fake K8s client
+			for i := range actual {
+				actual[i].SetResourceVersion("")
+			}
 			assert.ElementsMatch(t, testCase.Expected, actual)
 		})
 	}
@@ -559,5 +564,8 @@ func fakeK8sClient(t *testing.T, objects ...runtime.Object) client.Client {
 	err = corev1alpha1.AddToScheme(scheme)
 	require.NoError(t, err)
 
-	return fake.NewFakeClientWithScheme(scheme, objects...)
+	return fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithRuntimeObjects(objects...).
+		Build()
 }

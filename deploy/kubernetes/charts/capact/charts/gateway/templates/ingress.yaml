@@ -1,5 +1,5 @@
 {{- if .Values.ingress.enabled }}
-apiVersion: networking.k8s.io/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ include "gateway.fullname" . }}
@@ -22,9 +22,10 @@ spec:
       http:
         paths:
           - path: /
-            # pathType was introduced in K8s 1.18+. On GKE we have 1.17, so we cannot use it yet.
-            # pathType: Prefix
+            pathType: Prefix
             backend:
-              serviceName: {{ include "gateway.fullname" . }}
-              servicePort: {{ .Values.service.port }}
+              service:
+                name: {{ include "gateway.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
   {{- end}}

@@ -62,13 +62,13 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 	}
 
 	status.Step("Creating namespace %s", opts.Namespace)
-	err = capact.CreateNamespace(k8sCfg, opts.Namespace)
+	err = capact.CreateNamespace(ctx, k8sCfg, opts.Namespace)
 	if err != nil {
 		return err
 	}
 
 	log.SetOutput(io.Discard)
-	err = helm.InstallComponents(w, status)
+	err = helm.InstallComponents(ctx, w, status)
 	if err != nil {
 		return err
 	}

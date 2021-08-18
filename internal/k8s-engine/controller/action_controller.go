@@ -84,11 +84,8 @@ func NewActionReconciler(log logr.Logger, svc actionService, maxRetriesForAction
 
 // Reconcile handles the reconcile logic for the Action CR.
 // TODO: introduce and ignore permanent error in reconcile loop
-func (r *ActionReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	var (
-		ctx = context.Background()
-		log = r.log.WithValues("action", req.NamespacedName)
-	)
+func (r *ActionReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	var log = r.log.WithValues("action", req.NamespacedName)
 
 	action := &v1alpha1.Action{}
 	if err := r.k8sCli.Get(ctx, req.NamespacedName, action); err != nil {

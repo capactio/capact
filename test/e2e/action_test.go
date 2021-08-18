@@ -122,7 +122,7 @@ var _ = Describe("Action", func() {
 
 			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
 			typeInstanceID := typeInstance.ID
-			cfgMapCleanupFn := updateGlobalPolicyConfigMap(globalPolicyTokenToReplace, typeInstanceID)
+			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, typeInstanceID)
 			defer cfgMapCleanupFn()
 
 			By("4. Expecting Implementation B is picked based on test policy...")
@@ -360,12 +360,12 @@ func createTypeInstance(ctx context.Context, hubClient *hubclient.Client, in *hu
 	return createdTypeInstance, cleanupFn
 }
 
-func updateGlobalPolicyConfigMap(stringToFind, stringToReplace string) func() {
-	err := replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace)
+func updateGlobalPolicyConfigMap(ctx context.Context, stringToFind, stringToReplace string) func() {
+	err := replaceInGlobalPolicyConfigMap(ctx, stringToFind, stringToReplace)
 	Expect(err).ToNot(HaveOccurred())
 
 	cleanupFn := func() {
-		err := replaceInGlobalPolicyConfigMap(stringToReplace, stringToFind)
+		err := replaceInGlobalPolicyConfigMap(ctx, stringToReplace, stringToFind)
 		if err != nil {
 			log(errors.Wrap(err, "while cleaning up ConfigMap with cluster policy").Error())
 		}
@@ -408,7 +408,7 @@ func assertOutputTypeInstancesInActionStatus(ctx context.Context, engineClient *
 	}, 10*time.Second).Should(match)
 }
 
-func replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace string) error {
+func replaceInGlobalPolicyConfigMap(ctx context.Context, stringToFind, stringToReplace string) error {
 	k8sCfg, err := config.GetConfig()
 	if err != nil {
 		return err
@@ -421,7 +421,7 @@ func replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace string) error 
 
 	cfgMapCli := clientset.CoreV1().ConfigMaps(cfg.ClusterPolicy.Namespace)
 
-	globalPolicyCfgMap, err := cfgMapCli.Get(cfg.ClusterPolicy.Name, metav1.GetOptions{})
+	globalPolicyCfgMap, err := cfgMapCli.Get(ctx, cfg.ClusterPolicy.Name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -430,7 +430,7 @@ func replaceInGlobalPolicyConfigMap(stringToFind, stringToReplace string) error 
 	newContent := strings.ReplaceAll(oldContent, stringToFind, stringToReplace)
 	globalPolicyCfgMap.Data[globalPolicyConfigMapKey] = newContent
 
-	_, err = cfgMapCli.Update(globalPolicyCfgMap)
+	_, err = cfgMapCli.Update(ctx, globalPolicyCfgMap, metav1.UpdateOptions{})
 	if err != nil {
 		return err
 	}

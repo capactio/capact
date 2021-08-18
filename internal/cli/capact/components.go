@@ -2,6 +2,7 @@ package capact
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -19,10 +20,10 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/strvals"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
-	"k8s.io/helm/pkg/strvals"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -34,7 +35,7 @@ import (
 
 // Component is a Capact component which can be installed in the environement
 type Component interface {
-	InstallUpgrade(version string) (*release.Release, error)
+	InstallUpgrade(ctx context.Context, version string) (*release.Release, error)
 	Name() string
 	Chart() string
 	withOptions(*Options)
@@ -307,7 +308,7 @@ type Capact struct {
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (n *Neo4j) InstallUpgrade(version string) (*release.Release, error) {
+func (n *Neo4j) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := n.upgradeAction(version)
 
 	values := tools.MergeMaps(n.opts.Parameters.Override.Neo4jValues.AsMap(), n.Overrides)
@@ -316,7 +317,7 @@ func (n *Neo4j) InstallUpgrade(version string) (*release.Release, error) {
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (a *Argo) InstallUpgrade(version string) (*release.Release, error) {
+func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := a.upgradeAction(version)
 
 	values := tools.MergeMaps(map[string]interface{}{}, a.Overrides)
@@ -325,7 +326,7 @@ func (a *Argo) InstallUpgrade(version string) (*release.Release, error) {
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (i *IngressController) InstallUpgrade(version string) (*release.Release, error) {
+func (i *IngressController) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	var err error
 	upgradeCli := i.upgradeAction(version)
 
@@ -354,7 +355,7 @@ func (i *IngressController) InstallUpgrade(version string) (*release.Release, er
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
+func (c *CertManager) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	var err error
 	upgradeCli := c.upgradeAction(version)
 
@@ -396,7 +397,7 @@ func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 			"tls.key": []byte(tlsKey),
 		},
 	}
-	err = CreateUpdateSecret(restConfig, secret, c.opts.Namespace)
+	err = CreateUpdateSecret(ctx, restConfig, secret, c.opts.Namespace)
 	if err != nil {
 		return nil, errors.Wrapf(err, "while creating %s Secret", certManagerSecretName)
 	}
@@ -411,7 +412,7 @@ func (c *CertManager) InstallUpgrade(version string) (*release.Release, error) {
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (k *Kubed) InstallUpgrade(version string) (*release.Release, error) {
+func (k *Kubed) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	restConfig, err := k.configuration.RESTClientGetter.ToRESTConfig()
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting k8s REST config")
@@ -424,12 +425,12 @@ func (k *Kubed) InstallUpgrade(version string) (*release.Release, error) {
 		return nil, errors.Wrap(err, "while running action")
 	}
 
-	err = AnnotateSecret(restConfig, "argo-minio", k.opts.Namespace, "kubed.appscode.com/sync", "")
+	err = AnnotateSecret(ctx, restConfig, "argo-minio", k.opts.Namespace, "kubed.appscode.com/sync", "")
 	return r, errors.Wrap(err, "while annotating secret")
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
+func (c *Capact) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := c.upgradeAction(version)
 
 	capactValues := c.opts.Parameters.Override.CapactValues.AsMap()
@@ -453,7 +454,7 @@ func (c *Capact) InstallUpgrade(version string) (*release.Release, error) {
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
-func (m *Monitoring) InstallUpgrade(version string) (*release.Release, error) {
+func (m *Monitoring) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeAction := m.upgradeAction(version)
 
 	values := map[string]interface{}{}
@@ -502,7 +503,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 }
 
 // InstallComponents installs Helm components
-func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
+func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status *printer.Status) error {
 	if h.opts.Verbose {
 		status.Step("Resolving installation config")
 		status.End(true)
@@ -519,7 +520,7 @@ func (h *Helm) InstallComponents(w io.Writer, status *printer.Status) error {
 		component.withWriter(w)
 
 		status.Step("Installing %s Helm chart", component.Name())
-		newRelease, err := component.InstallUpgrade(h.opts.Parameters.Version)
+		newRelease, err := component.InstallUpgrade(ctx, h.opts.Parameters.Version)
 		status.End(err == nil)
 		if err != nil {
 			return err

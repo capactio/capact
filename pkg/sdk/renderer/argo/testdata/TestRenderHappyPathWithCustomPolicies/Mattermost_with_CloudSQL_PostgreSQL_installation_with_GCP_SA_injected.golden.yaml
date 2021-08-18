@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -413,8 +412,7 @@ args:
               name: mattermost-helm-release
           name: output-mattermost-helm-release
           template: output-mattermost-helm-release
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
@@ -480,8 +478,7 @@ args:
               name: cloudsql-instance
           name: output-cloudsql-instance
           template: output-mattermost-install-install-db-cloudsql-instance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -503,8 +500,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -541,8 +537,7 @@ args:
         - globalName: mattermost-install-install-db-postgres-install-cloudsql-run-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -562,8 +557,7 @@ args:
         - globalName: mattermost-install-install-db-postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -583,8 +577,7 @@ args:
         - globalName: mattermost-install-install-db-cloudsql-instance
           name: cloudsql-instance
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: DownloadAction
@@ -601,8 +594,7 @@ args:
         - globalName: gcp-sa
           name: gcp-sa
           path: /gcp-sa.yaml
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: postgresql
         - name: user-input
@@ -660,8 +652,7 @@ args:
               name: user
           name: output-user
           template: output-mattermost-install-create-user-user
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -683,8 +674,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -706,8 +696,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1 && chmod +x /script.sh && /script.sh
         command:
@@ -726,8 +715,7 @@ args:
         artifacts:
         - name: user
           path: /user.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -747,8 +735,7 @@ args:
         - globalName: mattermost-install-create-user-user
           name: user
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -770,8 +757,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: postgresql
         - name: database-input
@@ -821,8 +807,7 @@ args:
               name: database
           name: output-database
           template: output-mattermost-install-create-db-database
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -844,8 +829,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -867,8 +851,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1 && chmod +x /script.sh && /script.sh
         command:
@@ -887,8 +870,7 @@ args:
         artifacts:
         - name: database
           path: /database.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -908,8 +890,7 @@ args:
         - globalName: mattermost-install-create-db-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -931,8 +912,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -954,8 +934,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -977,8 +956,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -1000,8 +978,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -1034,8 +1011,7 @@ args:
         - globalName: mattermost-install-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1055,8 +1031,7 @@ args:
         - globalName: postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1076,8 +1051,7 @@ args:
         - globalName: database-user
           name: database-user
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1097,8 +1071,7 @@ args:
         - globalName: database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1118,8 +1091,7 @@ args:
         - globalName: mattermost-config
           name: mattermost-config
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1139,8 +1111,7 @@ args:
         - globalName: mattermost-helm-release
           name: mattermost-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -1234,8 +1205,7 @@ args:
                     to: mattermost-install-install-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1264,8 +1234,7 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: DownloadAction
@@ -1282,8 +1251,7 @@ args:
         - globalName: foo
           name: foo
           path: /foo.yaml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: UploadAction

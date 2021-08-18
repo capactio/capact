@@ -9,7 +9,7 @@ import (
 
 	graphqllocal "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	wfv1 "github.com/argoproj/argo/v2/pkg/apis/workflow/v1alpha1"
+	wfv1 "github.com/argoproj/argo-workflows/v3/pkg/apis/workflow/v1alpha1"
 	apiv1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/yaml"
 )
