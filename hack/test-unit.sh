@@ -63,12 +63,27 @@ function test::unit() {
   fi
 }
 
+function test::ocf_spec() {
+  shout "? OCF spec test "
+
+  # Check if tests passed
+  if ! go test --tags=ocfmanifests ./ocf-spec/...;
+ then
+    echo -e "${RED}✗ OCF spec\n${NC}"
+    exit 1
+  else
+    echo -e "${GREEN}√ OCF spec${NC}"
+  fi
+}
+
 function main() {
   print_info
 
   test::go_modules
 
   test::unit
+
+  test::ocf_spec
 }
 
 main
