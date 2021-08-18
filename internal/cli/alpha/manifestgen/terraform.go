@@ -11,16 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// TerraformConfig stores input parameters for Terraform based content generation
-type TerraformConfig struct {
-	Config
-
-	ModulePath                string
-	ModuleSourceURL           string
-	InterfacePathWithRevision string
-	Provider                  Provider
-}
-
 // GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
 func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
 	module, diags := tfconfig.LoadModule(cfg.ModulePath)

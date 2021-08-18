@@ -1,8 +1,6 @@
 package manifestgen
 
 import (
-	"bytes"
-	"encoding/gob"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -16,17 +14,6 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"sigs.k8s.io/yaml"
 )
-
-// HelmConfig stores input parameters for Helm based content generation.
-type HelmConfig struct {
-	Config
-
-	ChartName string
-	RepoURL   string
-	Version   string
-
-	InterfacePathWithRevision string
-}
 
 // GenerateHelmManifests generates manifest files for a Helm module based Implementation
 func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
@@ -72,8 +59,8 @@ func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
 
 func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
 	cpo := action.ChartPathOptions{}
-	cpo.RepoURL = cfg.RepoURL
-	cpo.Version = cfg.Version
+	cpo.RepoURL = cfg.ChartRepoURL
+	cpo.Version = cfg.ChartVersion
 
 	chartLocation, err := cpo.LocateChart(cfg.ChartName, &cli.EnvSettings{
 		RepositoryCache: "/tmp/helm",
@@ -102,7 +89,7 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
 		},
-		JSONSchema: generateValueJSONSchema(helmChart.Values, []string{"#"}),
+		JSONSchema: generateJSONSchemaForValue(helmChart.Values, []string{"#"}),
 	}
 
 	return &templatingConfig{
@@ -133,7 +120,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		return nil, errors.Wrap(err, "while deep copying Helm values")
 	}
 
-	if err := deepSetHelmValues(helmValues, []string{}); err != nil {
+	if err := injectJinjaTemplatingToHelmValues(helmValues, []string{}); err != nil {
 		return nil, errors.Wrap(err, "while setting values for Helm input values")
 	}
 
@@ -152,7 +139,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		InterfaceRevision: interfaceRevision,
 		HelmChartName:     helmChart.Name(),
 		HelmChartVersion:  helmChart.Metadata.Version,
-		HelmRepoURL:       cfg.RepoURL,
+		HelmRepoURL:       cfg.ChartRepoURL,
 		ValuesYAML:        string(valuesYAMLBytes),
 	}
 
@@ -162,14 +149,14 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 	}, nil
 }
 
-func deepSetHelmValues(values map[string]interface{}, parentKeyPath []string) error {
+func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyPath []string) error {
 	for key, v := range values {
 		keyPath := append(parentKeyPath, key)
-		keyPathString := buildValueKeyPath(keyPath)
+		keyPathString := buildValueKeyPathForJinja(keyPath)
 
 		switch value := v.(type) {
 		case map[string]interface{}:
-			if err := deepSetHelmValues(value, keyPath); err != nil {
+			if err := injectJinjaTemplatingToHelmValues(value, keyPath); err != nil {
 				return err
 			}
 		case string:
@@ -204,7 +191,7 @@ func deepSetHelmValues(values map[string]interface{}, parentKeyPath []string) er
 	return nil
 }
 
-func buildValueKeyPath(keys []string) string {
+func buildValueKeyPathForJinja(keys []string) string {
 	if len(keys) == 0 {
 		return ""
 	}
@@ -222,7 +209,7 @@ func buildValueKeyPath(keys []string) string {
 	return acc
 }
 
-func generateValueJSONSchema(value interface{}, parentKeyPath []string) *jsonschema.Type {
+func generateJSONSchemaForValue(value interface{}, parentKeyPath []string) *jsonschema.Type {
 	ID := strings.Join(parentKeyPath, "/properties/")
 
 	schema := &jsonschema.Type{
@@ -245,7 +232,7 @@ func generateValueJSONSchema(value interface{}, parentKeyPath []string) *jsonsch
 		schema.Properties = orderedmap.New()
 
 		for k, val := range v {
-			propSchema := generateValueJSONSchema(val, append(parentKeyPath, k))
+			propSchema := generateJSONSchemaForValue(val, append(parentKeyPath, k))
 			schema.Properties.Set(k, propSchema)
 		}
 
@@ -255,12 +242,4 @@ func generateValueJSONSchema(value interface{}, parentKeyPath []string) *jsonsch
 	}
 
 	return schema
-}
-
-func deepCopy(dst, src interface{}) error {
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
-		return err
-	}
-	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
 }
