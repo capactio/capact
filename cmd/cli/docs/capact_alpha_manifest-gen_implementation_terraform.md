@@ -8,7 +8,7 @@ Generate Terraform based manifests
 
 ### Synopsis
 
-Generate Terraform based manifests based on a Terraform module
+Generate Implementation manifests based on a Terraform module
 
 ```
 capact alpha manifest-gen implementation terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH] [flags]

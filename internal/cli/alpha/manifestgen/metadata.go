@@ -15,7 +15,7 @@ type Metadata struct {
 	} `yaml:"metadata"`
 }
 
-// unmarshalMetadata reads the manifest metadata from a bytes lice of a Capact manifest.
+// unmarshalMetadata reads the manifest metadata from a bytes slice of a Capact manifest.
 func unmarshalMetadata(yamlBytes []byte) (Metadata, error) {
 	mm := Metadata{}
 	err := yaml.Unmarshal(yamlBytes, &mm)

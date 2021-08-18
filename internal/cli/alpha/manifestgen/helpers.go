@@ -1,6 +1,8 @@
 package manifestgen
 
 import (
+	"bytes"
+	"encoding/gob"
 	"fmt"
 	"os"
 	"path"
@@ -34,4 +36,24 @@ func WriteManifestFiles(outputDir string, files map[string]string, override bool
 	}
 
 	return nil
+}
+
+func deepCopy(dst, src interface{}) error {
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(src); err != nil {
+		return err
+	}
+	return gob.NewDecoder(bytes.NewBuffer(buf.Bytes())).Decode(dst)
+}
+
+func splitPathToPrefixAndName(path string) (string, string, error) {
+	parts := strings.Split(path, ".")
+	if len(parts) < 3 {
+		return "", "", fmt.Errorf("manifest path must have prefix and name")
+	}
+
+	prefix := strings.Join(parts[2:len(parts)-1], ".")
+	name := parts[len(parts)-1]
+
+	return prefix, name, nil
 }

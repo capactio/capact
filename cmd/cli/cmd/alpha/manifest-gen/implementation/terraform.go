@@ -13,14 +13,11 @@ import (
 var tfContentCfg manifestgen.TerraformConfig
 
 // NewTerraform returns a cobra.Command to bootstrap Terraform based manifests.
-// Issues:
-// - if user provides an empty parameter value for a string, it will be interpreted as null.
-// - if a key in Helm values.yaml contains a dot, then Jinja will have problem with interpreting it correctly.
 func NewTerraform() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH]",
 		Short: "Generate Terraform based manifests",
-		Long:  "Generate Terraform based manifests based on a Terraform module",
+		Long:  "Generate Implementation manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Generate Implementation manifests 
 		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds

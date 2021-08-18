@@ -8,11 +8,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-// InterfaceConfig stores the input parameters for Interface content generation
-type InterfaceConfig struct {
-	Config
-}
-
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
 	cfgs := make([]*templatingConfig, 0, 4)

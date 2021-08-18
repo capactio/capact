@@ -34,39 +34,45 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 		{
 			name: "Implementation manifests",
 			cfg: &manifestgen.TerraformConfig{
-				Config: manifestgen.Config{
-					ManifestPath:     "cap.implementation.terraform.generic.test",
-					ManifestRevision: "0.1.0",
+				ImplementationConfig: manifestgen.ImplementationConfig{
+					Config: manifestgen.Config{
+						ManifestPath:     "cap.implementation.terraform.generic.test",
+						ManifestRevision: "0.1.0",
+					},
+					InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
 				},
-				ModulePath:                "./testdata/terraform",
-				ModuleSourceURL:           "https://example.com/module.tgz",
-				InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
+				ModulePath:      "./testdata/terraform",
+				ModuleSourceURL: "https://example.com/module.tgz",
 			},
 		},
 		{
 			name: "Implementation manifests with AWS provider",
 			cfg: &manifestgen.TerraformConfig{
-				Config: manifestgen.Config{
-					ManifestPath:     "cap.implementation.terraform.aws.test",
-					ManifestRevision: "0.1.0",
+				ImplementationConfig: manifestgen.ImplementationConfig{
+					Config: manifestgen.Config{
+						ManifestPath:     "cap.implementation.terraform.aws.test",
+						ManifestRevision: "0.1.0",
+					},
+					InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
 				},
-				ModulePath:                "./testdata/terraform",
-				ModuleSourceURL:           "https://example.com/module.tgz",
-				InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
-				Provider:                  manifestgen.ProviderAWS,
+				ModulePath:      "./testdata/terraform",
+				ModuleSourceURL: "https://example.com/module.tgz",
+				Provider:        manifestgen.ProviderAWS,
 			},
 		},
 		{
 			name: "Implementation manifests with GCP provider",
 			cfg: &manifestgen.TerraformConfig{
-				Config: manifestgen.Config{
-					ManifestPath:     "cap.implementation.terraform.gcp.test",
-					ManifestRevision: "0.1.0",
+				ImplementationConfig: manifestgen.ImplementationConfig{
+					Config: manifestgen.Config{
+						ManifestPath:     "cap.implementation.terraform.gcp.test",
+						ManifestRevision: "0.1.0",
+					},
+					InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
 				},
-				ModulePath:                "./testdata/terraform",
-				ModuleSourceURL:           "https://example.com/module.tgz",
-				InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
-				Provider:                  manifestgen.ProviderGCP,
+				ModulePath:      "./testdata/terraform",
+				ModuleSourceURL: "https://example.com/module.tgz",
+				Provider:        manifestgen.ProviderGCP,
 			},
 		},
 	}
@@ -86,14 +92,16 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 
 func TestGenerateHelmImplementationManifests(t *testing.T) {
 	cfg := &manifestgen.HelmConfig{
-		Config: manifestgen.Config{
-			ManifestPath:     "cap.implementation.helm.test",
-			ManifestRevision: "0.1.0",
+		ImplementationConfig: manifestgen.ImplementationConfig{
+			Config: manifestgen.Config{
+				ManifestPath:     "cap.implementation.helm.test",
+				ManifestRevision: "0.1.0",
+			},
+			InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
 		},
-		ChartName:                 "postgresql",
-		RepoURL:                   "https://charts.bitnami.com/bitnami",
-		Version:                   "10.9.2",
-		InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
+		ChartName:    "postgresql",
+		ChartRepoURL: "https://charts.bitnami.com/bitnami",
+		ChartVersion: "10.9.2",
 	}
 
 	manifests, err := manifestgen.GenerateHelmManifests(cfg)

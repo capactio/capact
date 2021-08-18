@@ -8,7 +8,7 @@ Generate Helm chart based manifests
 
 ### Synopsis
 
-Generate Helm based manifests based on a Helm chart
+Generate Implementation manifests based on a Helm chart
 
 ```
 capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] [flags]
