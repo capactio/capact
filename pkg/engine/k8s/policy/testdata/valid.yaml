@@ -19,8 +19,10 @@ rules:
               typeRef: # this should be ignored during loading YAML
                 path: "cap.type.gcp.auth.service-account"
                 revision: "0.1.0"
-          additionalInput:
-            snapshot: true
+          additionalParameters: # Injects additional parameters for the Implementation
+            - name: additional-parameters # Name must match one of the parameter defined under `additionalInput.parameters` in the Implementation
+              value:
+                snapshot: true
       - implementationConstraints:
           attributes:
             - path: cap.attribute.cloud.provider.aws

@@ -325,12 +325,13 @@ CALL {
 }
 CALL {
  WITH parameters, implementationAdditionalInput
- UNWIND parameters as _
- CREATE (additionalParameter: ImplementationAdditionalInputParameters:unpublished)
+ UNWIND keys(parameters) as name
+ CREATE (additionalParameter: ImplementationAdditionalInputParameter:unpublished {
+    name: name})
  CREATE (implementationAdditionalInput)-[:CONTAINS]->(additionalParameter)
  MERGE (typeReference: TypeReference:unpublished{
-   path: parameters.typeRef.path,
-   revision: parameters.typeRef.revision})
+   path: parameters[name].typeRef.path,
+   revision: parameters[name].typeRef.revision})
  CREATE (additionalParameter)-[:OF_TYPE]->(typeReference)
  RETURN count([]) as _tmpAdditionalParameters
 }

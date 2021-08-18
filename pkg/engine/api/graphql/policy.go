@@ -28,7 +28,7 @@ type ManifestReferenceWithOptionalRevision struct {
 // PolicyRuleInjectData describes injection data for a given Policy rule.
 type PolicyRuleInjectData struct {
 	RequiredTypeInstances []*RequiredTypeInstanceReference `json:"requiredTypeInstances,omitempty"`
-	AdditionalInput       interface{}                      `json:"additionalInput,omitempty"`
+	AdditionalParameters  []*AdditionalParameter           `json:"additionalParameters,omitempty"`
 }
 
 // RequiredTypeInstanceReference is used to represent required TypeInstance injection for Policy.

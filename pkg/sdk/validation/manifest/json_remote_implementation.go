@@ -40,12 +40,11 @@ func (v *RemoteImplementationValidator) Do(ctx context.Context, _ types.Manifest
 		})
 	}
 
-	// AdditionalInput
+	// AdditionalParameters
 	if entity.Spec.AdditionalInput != nil {
 		// Parameters
-		additionalInputParams := entity.Spec.AdditionalInput.Parameters
-		if additionalInputParams != nil && additionalInputParams.TypeRef != nil {
-			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(*additionalInputParams.TypeRef))
+		for _, param := range entity.Spec.AdditionalInput.Parameters {
+			manifestRefsToCheck = append(manifestRefsToCheck, hubpublicgraphql.ManifestReference(param.TypeRef))
 		}
 
 		// TypeInstances

@@ -330,9 +330,7 @@ func fixK8sActionForRenderingIteration(name, namespace string) v1alpha1.Action {
 
 func fixGQLInputActionPolicy() *graphql.PolicyInput {
 	additionalInput := map[string]interface{}{
-		"additional-parameters": map[string]interface{}{
-			"snapshot": true,
-		},
+		"snapshot": true,
 	}
 
 	return &graphql.PolicyInput{
@@ -353,7 +351,12 @@ func fixGQLInputActionPolicy() *graphql.PolicyInput {
 									Description: ptr.String("Sample description"),
 								},
 							},
-							AdditionalInput: &additionalInput,
+							AdditionalParameters: []*graphql.AdditionalParameterInput{
+								{
+									Name:  "additional-parameters",
+									Value: additionalInput,
+								},
+							},
 						},
 					},
 				},
@@ -448,7 +451,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 		sec.StringData["parameters.json"] = `{"param":"one"}`
 	}
 	if policyEnabled {
-		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`
+		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}]}}]}]}`
 	}
 
 	return sec

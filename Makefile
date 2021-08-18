@@ -171,8 +171,7 @@ gen-docs: gen-docs-cli ## Generate all documentation
 .PHONY: gen-docs
 
 gen-docs-cli:
-	rm -rf ./cmd/cli/docs
-	mkdir -p ./cmd/cli/docs
+	rm -f ./cmd/cli/docs/*
 	go run cmd/cli/main.go gen-usage-docs
 .PHONY: gen-docs-cli
 

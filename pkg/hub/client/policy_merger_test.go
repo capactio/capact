@@ -38,9 +38,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"name": "capact",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"name": "capact",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -73,9 +78,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"name": "capact",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"name": "capact",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -111,9 +121,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"address": "1.2.3.4",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"address": "1.2.3.4",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -146,9 +161,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"address": "1.2.3.4",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"address": "1.2.3.4",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -184,10 +204,15 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"address": "1.2.3.4",
-											"alias":   "karpatka",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"address": "1.2.3.4",
+													"alias":   "karpatka",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -219,10 +244,15 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"name":  "capact",
-											"alias": "capactio",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"name":  "capact",
+													"alias": "capactio",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -259,11 +289,16 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"host": map[string]interface{}{
-											"name":    "capact",
-											"address": "1.2.3.4",
-											"alias":   "karpatka",
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"host": map[string]interface{}{
+													"name":    "capact",
+													"address": "1.2.3.4",
+													"alias":   "karpatka",
+												},
+											},
 										},
 									},
 									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
@@ -368,9 +403,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									AdditionalInput: map[string]interface{}{
-										"additional-input": map[string]interface{}{
-											"a": 1,
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"additional-input": map[string]interface{}{
+													"a": 1,
+												},
+											},
 										},
 									},
 								},
@@ -431,9 +471,14 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 										},
 									},
-									AdditionalInput: map[string]interface{}{
-										"additional-input": map[string]interface{}{
-											"a": 1,
+									AdditionalParameters: []policy.AdditionalParametersToInject{
+										{
+											Name: "additional-parameters",
+											Value: map[string]interface{}{
+												"additional-input": map[string]interface{}{
+													"a": 1,
+												},
+											},
 										},
 									},
 								},
@@ -500,7 +545,12 @@ func workflowPolicyWithAdditionalInput(input map[string]interface{}) policy.Work
 							Path: &implementation,
 						},
 						Inject: &policy.WorkflowInjectData{
-							AdditionalInput: input,
+							AdditionalParameters: []policy.AdditionalParametersToInject{
+								{
+									Name:  "additional-parameters",
+									Value: input,
+								},
+							},
 						},
 					},
 				},

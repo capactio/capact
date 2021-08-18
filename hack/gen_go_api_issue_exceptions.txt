@@ -6,4 +6,4 @@ Issue in line 269: quicktype cannot infer this type because there is no data abo
 269: 	ValueConstraints map[string]interface{} `json:"valueConstraints,omitempty"`// Holds the configuration constraints for the given entry. It needs to be valid against the; Type JSONSchema. CURRENTLY NOT IMPLEMENTED.
 
 Issue in line 427: quicktype cannot infer this type because there is no data about it in the input.
-427: 	AnythingArray []interface{}
+427: 	AnythingArray          []interface{}

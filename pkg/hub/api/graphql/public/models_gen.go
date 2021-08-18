@@ -76,11 +76,12 @@ type ImplementationAction struct {
 }
 
 type ImplementationAdditionalInput struct {
-	TypeInstances []*InputTypeInstance                     `json:"typeInstances"`
-	Parameters    *ImplementationAdditionalInputParameters `json:"parameters"`
+	TypeInstances []*InputTypeInstance                      `json:"typeInstances"`
+	Parameters    []*ImplementationAdditionalInputParameter `json:"parameters"`
 }
 
-type ImplementationAdditionalInputParameters struct {
+type ImplementationAdditionalInputParameter struct {
+	Name    string         `json:"name"`
 	TypeRef *TypeReference `json:"typeRef"`
 }
 

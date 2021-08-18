@@ -82,8 +82,13 @@ func fixValidPolicy() policy.Policy {
 									},
 								},
 							},
-							AdditionalInput: map[string]interface{}{
-								"snapshot": true,
+							AdditionalParameters: []policy.AdditionalParametersToInject{
+								{
+									Name: "additional-parameters",
+									Value: map[string]interface{}{
+										"snapshot": true,
+									},
+								},
 							},
 						},
 					},

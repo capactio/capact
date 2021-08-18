@@ -123,12 +123,12 @@ type InterfaceSpec struct {
 
 // The input schema for Interface action.
 type Input struct {
-	Parameters    *ParametersUnion             `json:"parameters"`             
+	Parameters    *Parameters                  `json:"parameters"`             
 	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
 }
 
 // The input parameters for a given Action.
-type Parameter struct {
+type ParametersParameter struct {
 	JSONSchema *JSONSchema `json:"jsonSchema,omitempty"`
 	TypeRef    *TypeRef    `json:"typeRef,omitempty"`   
 }
@@ -218,13 +218,13 @@ type Action struct {
 
 // Specifies additional input for the Implementation.
 type AdditionalInput struct {
-	Parameters    *ParametersClass             `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
-	TypeInstances map[string]InputTypeInstance `json:"typeInstances,omitempty"`
+	Parameters    map[string]AdditionalInputParameter `json:"parameters,omitempty"`   // Specifies additional input parameters for the Implementation
+	TypeInstances map[string]InputTypeInstance        `json:"typeInstances,omitempty"`
 }
 
-// Specifies additional input parameters for the Implementation
-type ParametersClass struct {
-	TypeRef *TypeRef `json:"typeRef,omitempty"`
+// Object key is a name of the additional parameters, used in the Implementation.
+type AdditionalInputParameter struct {
+	TypeRef TypeRef `json:"typeRef"`
 }
 
 // Specifies additional output for a given Implementation.
@@ -423,19 +423,19 @@ const (
 	KindVendor VendorKind = "Vendor"
 )
 
-type ParametersUnion struct {
-	AnythingArray []interface{}
-	Bool          *bool
-	Double        *float64
-	Integer       *int64
-	ParameterMap  map[string]Parameter
-	String        *string
+type Parameters struct {
+	AnythingArray          []interface{}
+	Bool                   *bool
+	Double                 *float64
+	Integer                *int64
+	ParametersParameterMap map[string]ParametersParameter
+	String                 *string
 }
 
-func (x *ParametersUnion) UnmarshalJSON(data []byte) error {
+func (x *Parameters) UnmarshalJSON(data []byte) error {
 	x.AnythingArray = nil
-	x.ParameterMap = nil
-	object, err := unmarshalUnion(data, &x.Integer, &x.Double, &x.Bool, &x.String, true, &x.AnythingArray, false, nil, true, &x.ParameterMap, false, nil, true)
+	x.ParametersParameterMap = nil
+	object, err := unmarshalUnion(data, &x.Integer, &x.Double, &x.Bool, &x.String, true, &x.AnythingArray, false, nil, true, &x.ParametersParameterMap, false, nil, true)
 	if err != nil {
 		return err
 	}
@@ -444,8 +444,8 @@ func (x *ParametersUnion) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-func (x *ParametersUnion) MarshalJSON() ([]byte, error) {
-	return marshalUnion(x.Integer, x.Double, x.Bool, x.String, x.AnythingArray != nil, x.AnythingArray, false, nil, x.ParameterMap != nil, x.ParameterMap, false, nil, true)
+func (x *Parameters) MarshalJSON() ([]byte, error) {
+	return marshalUnion(x.Integer, x.Double, x.Bool, x.String, x.AnythingArray != nil, x.AnythingArray, false, nil, x.ParametersParameterMap != nil, x.ParametersParameterMap, false, nil, true)
 }
 
 func unmarshalUnion(data []byte, pi **int64, pf **float64, pb **bool, ps **string, haveArray bool, pa interface{}, haveObject bool, pc interface{}, haveMap bool, pm interface{}, haveEnum bool, pe interface{}, nullable bool) (bool, error) {

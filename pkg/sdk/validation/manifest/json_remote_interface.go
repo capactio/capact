@@ -33,7 +33,7 @@ func (v *RemoteInterfaceValidator) Do(ctx context.Context, _ types.ManifestMetad
 
 	// Input Parameters
 	if entity.Spec.Input.Parameters != nil {
-		for _, param := range entity.Spec.Input.Parameters.ParameterMap {
+		for _, param := range entity.Spec.Input.Parameters.ParametersParameterMap {
 			if param.TypeRef == nil {
 				continue
 			}

@@ -17,9 +17,7 @@ import (
 const (
 	// UserInputName is exported so we can use that as a reference in `capact act create` validation process.
 	UserInputName = "input-parameters"
-	// AdditionalInputName is exported so we can use that as a reference in `capact act create` validation process.
-	AdditionalInputName = "additional-parameters"
-	runnerContext       = "runner-context"
+	runnerContext = "runner-context"
 )
 
 // PolicyEnforcedHubClient is a interfaces used to interact with the Capact Hubs
@@ -27,7 +25,7 @@ const (
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
 	ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
-	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) map[string]interface{}
+	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error)
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
 	PushWorkflowStepPolicy(policy policy.WorkflowPolicy) error
@@ -133,8 +131,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
 	// 5.2 Additional Input
-	allAdditionalParameters := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
-	additionalParameters, err := toInputAdditionalParams(allAdditionalParameters)
+	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule)
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting additional parameters")
 	}

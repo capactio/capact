@@ -98,7 +98,10 @@ const policyFields = `
 					id
 					description
 				}
-				additionalInput
+				additionalParameters {
+					name
+					value
+				}
 			}
 		}
 	}

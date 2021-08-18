@@ -102,6 +102,16 @@ type ActionStatus struct {
 	CanceledBy *UserInfo `json:"canceledBy"`
 }
 
+type AdditionalParameter struct {
+	Name  string      `json:"name"`
+	Value interface{} `json:"value"`
+}
+
+type AdditionalParameterInput struct {
+	Name  string      `json:"name"`
+	Value interface{} `json:"value"`
+}
+
 // Input used for continuing Action rendering in advanced mode
 type AdvancedModeContinueRenderingInput struct {
 	// Optional TypeInstances for a given rendering iteration
@@ -170,7 +180,7 @@ type PolicyRuleImplementationConstraintsInput struct {
 
 type PolicyRuleInjectDataInput struct {
 	RequiredTypeInstances []*RequiredTypeInstanceReferenceInput `json:"requiredTypeInstances"`
-	AdditionalInput       interface{}                           `json:"additionalInput"`
+	AdditionalParameters  []*AdditionalParameterInput           `json:"additionalParameters"`
 }
 
 type PolicyRuleInput struct {

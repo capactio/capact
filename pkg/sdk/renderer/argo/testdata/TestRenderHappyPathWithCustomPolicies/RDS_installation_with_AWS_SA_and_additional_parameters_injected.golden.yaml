@@ -1,0 +1,588 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: capact-root
+    templates:
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: additional-parameters
+          optional: true
+      metadata: {}
+      name: rds-provision
+      outputs:
+        artifacts:
+        - from: '{{steps.render-postgresql.outputs.artifacts.render}}'
+          name: postgresql
+        - from: '{{steps.render-rds.outputs.artifacts.render}}'
+          name: rds-instance
+      steps:
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - name: template
+              raw:
+                data: |
+                  superuser:
+                    username: "<@ input.superuser.username | default('postgres') @>"
+                    password: "<@ input.superuser.password | default(random_word(length=16)) @>"
+            - name: configuration
+              raw:
+                data: |
+                  prefix: input
+          name: fill-default-input
+          template: rds-provision-fill-default-input-template
+      - - arguments:
+            artifacts:
+            - from: '{{inputs.artifacts.additional-parameters}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: additionalinput
+            - name: template
+              raw:
+                data: |
+                  variables: |+
+                    user_name = "<@ input.superuser.username @>"
+                    user_password = "<@ input.superuser.password @>"
+
+                    region = "<@ additionalinput.region | default('eu-west-1') @>"
+                    ingress_rule_cidr_blocks = "<@ additionalinput.ingress_rule_cidr_blocks | default('0.0.0.0/0') @>"
+                    tier = "<@ additionalinput.tier | default('db.t3.micro') @>"
+                    publicly_accessible = <@ additionalinput.publicly_accessible | default(true) | tojson @>
+                    engine_version = "<@ additionalinput.engine_version | default('11.10') @>"
+                    major_engine_version = "<@ additionalinput.major_engine_version | default('11') @>"
+                    performance_insights_enabled = <@ additionalinput.performance_insights_enabled | default(true) | tojson @>
+
+                    <% if additionalinput.engine -%>
+                    engine = "<@ additionalinput.engine @>"
+                    <%- endif %>
+
+                    <% if additionalinput.res_name -%>
+                    res_name = "<@ additionalinput.res_name @>"
+                    <%- endif %>
+
+                    <% if additionalinput.allocated_storage -%>
+                    allocated_storage = <@ additionalinput.allocated_storage @>
+                    <%- endif %>
+
+                    <% if additionalinput.max_allocated_storage -%>
+                    max_allocated_storage = <@ additionalinput.max_allocated_storage @>
+                    <%- endif %>
+
+                    <% if additionalinput.storage_encrypted -%>
+                    storage_encrypted = <@ additionalinput.storage_encrypted | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.multi_az -%>
+                    multi_az = <@ additionalinput.multi_az | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.deletion_protection -%>
+                    deletion_protection = <@ additionalinput.deletion_protection | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.backup_retention_period -%>
+                    backup_retention_period = <@ additionalinput.backup_retention_period @>
+                    <%- endif %>
+
+                    <% if additionalinput.performance_insights_retention_period -%>
+                    performance_insights_retention_period = <@ additionalinput.performance_insights_retention_period @>
+                    <%- endif %>
+
+                    <% if additionalinput.monitoring_interval -%>
+                    monitoring_interval = <@ additionalinput.monitoring_interval @>
+                    <%- endif %>
+
+                    <% if additionalinput.skip_final_snapshot -%>
+                    skip_final_snapshot = <@ additionalinput.skip_final_snapshot | tojson @>
+                    <%- endif %>
+
+                    <% if additionalinput.maintenance_window -%>
+                    maintenance_window = "<@ additionalinput.maintenance_window @>"
+                    <%- endif %>
+
+                    <% if additionalinput.backup_window -%>
+                    backup_window = "<@ additionalinput.backup_window @>"
+                    <%- endif %>
+
+                  command: "apply"
+                  module:
+                    name: "rds"
+                    source: "https://storage.googleapis.com/capactio-terraform-modules/terraform.aws.rds.postgresql.provision/0.1.0/module.tgz"
+                  env:
+                  - AWS_ACCESS_KEY_ID=<@ aws.accessKeyID @>
+                  - AWS_SECRET_ACCESS_KEY=<@ aws.secretAccessKey @>
+                  output:
+                    goTemplate:
+                      host: "{{ .instance_ip_addr }}"
+                      port: "{{ .port }}"
+                      defaultDBName: "{{ .defaultDBName }}"
+                      superuser:
+                        username: "{{ .username }}"
+                        password: "{{ .password }}"
+                      identifier: "{{ .identifier }}"
+                      availability_zone: "{{ .availability_zone }}"
+                      class: "{{ .class }}"
+          name: create-module-args
+          template: rds-provision-create-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.create-module-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{steps.fill-default-input.outputs.artifacts.render}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: input
+          name: fill-input-in-module-args
+          template: rds-provision-fill-input-in-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-input-in-module-args.outputs.artifacts.render}}'
+              name: template
+            - from: '{{workflow.outputs.artifacts.aws-credentials}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: |
+                  prefix: aws
+          name: fill-aws-params-in-module-args
+          template: rds-provision-fill-aws-params-in-module-args-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.fill-aws-params-in-module-args.outputs.artifacts.render}}'
+              name: input-parameters
+            - from: '{{workflow.outputs.artifacts.runner-context}}'
+              name: runner-context
+          name: terraform-apply
+          template: rds-provision-terraform-apply-terraform
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: ""
+            - name: template
+              raw:
+                data: |
+                  host: "<@ host @>"
+                  port: <@ port @>
+                  defaultDBName: "<@ defaultDBName @>"
+                  superuser:
+                    username: "<@ superuser.username @>"
+                    password: "<@ superuser.password @>"
+          name: render-postgresql
+          template: rds-provision-render-postgresql-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.additional}}'
+              name: input-parameters
+            - name: configuration
+              raw:
+                data: ""
+            - name: template
+              raw:
+                data: |
+                  identifier: "<@ identifier @>"
+                  availability_zone: "<@ availability_zone @>"
+                  class: "<@ class @>"
+          name: render-rds
+          template: rds-provision-render-rds-template
+      - - arguments:
+            artifacts:
+            - from: '{{steps.terraform-apply.outputs.artifacts.terraform-release}}'
+              name: terraform-release
+          name: output-terraform-release
+          template: output-terraform-release
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-postgresql.outputs.artifacts.render}}'
+              name: postgresql
+          name: output-postgresql
+          template: output-postgresql
+      - - arguments:
+            artifacts:
+            - from: '{{steps.render-rds.outputs.artifacts.render}}'
+              name: rds-instance
+          name: output-rds-instance
+          template: output-rds-instance
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-fill-default-input-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-create-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-fill-input-in-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-fill-aws-params-in-module-args-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        env:
+        - name: RUNNER_CONTEXT_PATH
+          value: '{{inputs.artifacts.runner-context.path}}'
+        - name: RUNNER_ARGS_PATH
+          value: '{{inputs.artifacts.input-parameters.path}}'
+        - name: RUNNER_OUTPUT_TERRAFORM_RELEASE_FILE_PATH
+          value: '{{outputs.artifacts.terraform-release.path}}'
+        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
+          value: '{{outputs.artifacts.additional.path}}'
+        - name: RUNNER_OUTPUT_TFSTATE_FILE_PATH
+          value: '{{outputs.artifacts.tfstate.path}}'
+        - name: RUNNER_LOGGER_DEV_MODE
+          value: "true"
+        image: ghcr.io/capactio/terraform-runner:PR-252
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: input-parameters
+          path: /terraform-args
+        - name: runner-context
+          path: /runner-context
+        - name: additional
+          optional: true
+          path: /additional
+      metadata: {}
+      name: rds-provision-terraform-apply-terraform
+      outputs:
+        artifacts:
+        - globalName: rds-provision-terraform-apply-terraform-release
+          name: terraform-release
+          path: /terraform-release.yaml
+        - globalName: rds-provision-terraform-apply-additional
+          name: additional
+          path: /terraform.yaml
+        - globalName: rds-provision-terraform-apply-tfstate
+          name: tfstate
+          path: /terraform.tfstate
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-render-postgresql-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - /template.yml
+        - /values.yml
+        - --format=yaml
+        - -o
+        - /render.yml
+        image: ghcr.io/capactio/jinja2:v2.11.2
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: template
+          path: /template.yml
+        - name: input-parameters
+          path: /values.yml
+      metadata: {}
+      name: rds-provision-render-rds-template
+      outputs:
+        artifacts:
+        - name: render
+          path: /render.yml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: terraform-release
+          path: /typeinstance
+      metadata: {}
+      name: output-terraform-release
+      outputs:
+        artifacts:
+        - globalName: terraform-release
+          name: terraform-release
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /typeinstance
+      metadata: {}
+      name: output-postgresql
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /typeinstance
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: rds-instance
+          path: /typeinstance
+      metadata: {}
+      name: output-rds-instance
+      outputs:
+        artifacts:
+        - globalName: rds-instance
+          name: rds-instance
+          path: /typeinstance
+    - inputs: {}
+      metadata: {}
+      name: capact-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: inject-input-type-instances-2-0-step
+          template: inject-input-type-instances-2-0
+      - - arguments:
+            artifacts:
+            - name: additional-parameters
+              raw:
+                data: |
+                  region: eu-central-1
+          name: start-entrypoint
+          template: rds-provision
+      - - arguments:
+            artifacts:
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
+            - from: '{{workflow.outputs.artifacts.rds-instance}}'
+              name: rds-instance
+            - from: '{{workflow.outputs.artifacts.rds-provision-terraform-apply-terraform-release}}'
+              name: rds-provision-terraform-apply-terraform-release
+            - from: '{{workflow.outputs.artifacts.rds-provision-terraform-apply-tfstate}}'
+              name: rds-provision-terraform-apply-tfstate
+            - name: payload
+              raw:
+                data: |
+                  typeInstances:
+                  - alias: postgresql
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.database.postgresql.config
+                      revision: 0.1.0
+                    value: null
+                  - alias: rds-instance
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.aws.rds.instance
+                      revision: 0.1.0
+                    value: null
+                  - alias: rds-provision-terraform-apply-terraform-release
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.type.terraform.release
+                      revision: 0.1.0
+                    value: null
+                  - alias: rds-provision-terraform-apply-tfstate
+                    attributes: []
+                    createdBy: owner
+                    typeRef:
+                      path: cap.core.type.generic.value
+                      revision: 0.1.0
+                    value: null
+                  usesRelations:
+                  - from: postgresql
+                    to: rds-provision-terraform-apply-terraform-release
+                  - from: postgresql
+                    to: rds-instance
+                  - from: rds-provision-terraform-apply-terraform-release
+                    to: rds-provision-terraform-apply-tfstate
+          name: upload-output-type-instances-step
+          template: upload-output-type-instances
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{517cf827-233c-4bf1-8fc9-48534424dd58,/aws-credentials.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-2-0
+      outputs:
+        artifacts:
+        - globalName: aws-credentials
+          name: aws-credentials
+          path: /aws-credentials.yaml
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+    - container:
+        env:
+        - name: APP_ACTION
+          value: UploadAction
+        - name: APP_UPLOAD_CONFIG_PAYLOAD_FILEPATH
+          value: /upload/payload
+        - name: APP_UPLOAD_CONFIG_TYPE_INSTANCES_DIR
+          value: /upload/typeInstances
+        image: alpine:3.7
+        imagePullPolicy: IfNotPresent
+        name: ""
+        resources: {}
+      inputs:
+        artifacts:
+        - name: postgresql
+          path: /upload/typeInstances/postgresql
+        - name: rds-instance
+          path: /upload/typeInstances/rds-instance
+        - name: rds-provision-terraform-apply-terraform-release
+          path: /upload/typeInstances/rds-provision-terraform-apply-terraform-release
+        - name: rds-provision-terraform-apply-tfstate
+          path: /upload/typeInstances/rds-provision-terraform-apply-tfstate
+        - name: payload
+          path: /upload/payload
+      metadata: {}
+      name: upload-output-type-instances
+      outputs: {}
+runnerInterface: cap.interface.runner.argo.run

@@ -1,7 +1,7 @@
 # This file contains example GraphQL operations for Engine.
 
 # How to use it: Copy and paste the full content to GraphQL Playground or external GraphQL client.
-# To learn more, read the document from `docs/engine-graphql-api.md` on repository root.
+# To learn more, read https://capact.io/docs/architecture/engine-graphql-api.
 
 # To use all queries without specifying your own variables, use the JSON from `examples.variables.json` file.
 
@@ -163,29 +163,56 @@ query Policy {
 }
 
 mutation UpdatePolicy {
-    updatePolicy(in: {
-        rules: [{
-            interface:{
-                path:"cap.*"
-            }
-            oneOf: [
+    updatePolicy(
+        in: {
+            rules: [
                 {
-                    implementationConstraints: {
-                        requires:{
-                            path: "cap.core.type.platform.kubernetes"
+                    interface: {
+                        path: "cap.interface.capactio.capact.validation.hub.install"
+                    }
+                    oneOf: [
+                        {
+                            implementationConstraints: {
+                                path: "cap.implementation.capactio.capact.validation.io.install"
+                            }
+                            inject: {
+                                requiredTypeInstances: [{
+                                    id: "edf854df-86cf-4855-9d38-8d88545fb9c9"
+                                    description: "My TypeInstance"
+                                }]
+                                additionalParameters: [
+                                    {
+                                        name: "mattermost-parameters"
+                                        value: { revisionHistoryLimit: 123 }
+                                    }
+                                    {
+                                        name: "rocketchat-parameters"
+                                        value: { replicaCount: 3 }
+                                    }
+                                ]
+                            }
                         }
-                    }
-                    inject: {
-                        requiredTypeInstances: [{
-                            id: "edf854df-86cf-4855-9d38-8d88545fb9c9"
-                            description: "My TypeInstance"
-                        }]
-                    }
-                },
-                {},
+                        {
+                            implementationConstraints: {
+                                requires: { path: "cap.core.type.platform.kubernetes" }
+                            }
+                        }
+                    ]
+                }
+                {
+                    interface: { path: "cap.*" }
+                    oneOf: [
+                        {
+                            implementationConstraints: {
+                                requires: { path: "cap.core.type.platform.kubernetes" }
+                            }
+                        }
+                        {}
+                    ]
+                }
             ]
-        }]
-    }) {
+        }
+    ) {
         ...PolicyFields
     }
 }
@@ -286,6 +313,10 @@ fragment PolicyFields on Policy {
                 requiredTypeInstances {
                     id
                     description
+                }
+                additionalParameters {
+                    name
+                    value
                 }
             }
         }

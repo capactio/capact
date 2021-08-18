@@ -2,7 +2,10 @@ package action
 
 import (
 	"context"
+	"errors"
 	"testing"
+
+	"capact.io/capact/pkg/sdk/validation"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
@@ -15,7 +18,7 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-var InterfaceRaw = []byte(`
+var interfaceRevisionRaw = []byte(`
 spec:
   input:
     parameters:
@@ -50,21 +53,21 @@ spec:
           path: cap.type.aws.auth.creds
           revision: 0.1.0`)
 
-func TestValidateParameters(t *testing.T) {
+func TestValidateInterfaceInputParameters(t *testing.T) {
 	// given
 	iface := &gqlpublicapi.InterfaceRevision{}
-	require.NoError(t, yaml.Unmarshal(InterfaceRaw, iface))
+	require.NoError(t, yaml.Unmarshal(interfaceRevisionRaw, iface))
 
 	tests := map[string]struct {
 		givenHubTypeInstances []*gqlpublicapi.TypeRevision
-		givenParameters       map[string]string
+		givenParameters       types.ParametersCollection
 		expectedIssues        string
 	}{
 		"Happy path JSON": {
 			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
 				fixAWSCredsTypeRev(),
 			},
-			givenParameters: map[string]string{
+			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": true}`,
 				"db-settings":      `{"key": true}`,
 				"aws-creds":        `{"key": "true"}`,
@@ -74,7 +77,7 @@ func TestValidateParameters(t *testing.T) {
 			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
 				fixAWSCredsTypeRev(),
 			},
-			givenParameters: map[string]string{
+			givenParameters: types.ParametersCollection{
 				"input-parameters": `key: true`,
 				"db-settings":      `key: true`,
 				"aws-creds":        `key: "true"`,
@@ -84,7 +87,7 @@ func TestValidateParameters(t *testing.T) {
 			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
 				fixAWSCredsTypeRev(),
 			},
-			givenParameters: map[string]string{
+			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": true}`,
 				"db-settings":      `{"key": true}`,
 			},
@@ -96,7 +99,7 @@ func TestValidateParameters(t *testing.T) {
 			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
 				fixAWSCredsTypeRev(),
 			},
-			givenParameters: map[string]string{
+			givenParameters: types.ParametersCollection{
 				"input-parameters": `{"key": "true"}`,
 				"db-settings":      `{"key": "true"}`,
 				"aws-creds":        `{"key": "true"}`,
@@ -141,7 +144,7 @@ func TestValidateParameters(t *testing.T) {
 func TestValidateParametersNoop(t *testing.T) {
 	tests := map[string]struct {
 		givenIface      *gqlpublicapi.InterfaceRevision
-		givenParameters map[string]string
+		givenParameters types.ParametersCollection
 	}{
 		"Should do nothing on nil": {
 			givenIface:      nil,
@@ -149,7 +152,7 @@ func TestValidateParametersNoop(t *testing.T) {
 		},
 		"Should do nothing on zero values": {
 			givenIface:      &gqlpublicapi.InterfaceRevision{},
-			givenParameters: map[string]string{},
+			givenParameters: types.ParametersCollection{},
 		},
 	}
 	for tn, tc := range tests {
@@ -337,9 +340,200 @@ func TestValidateTypeInstancesNoop(t *testing.T) {
 	}
 }
 
+var implementationRevisionRaw = []byte(`
+revision: 0.1.0
+spec:
+  additionalInput:
+    parameters:
+    - name: additional-parameters
+      typeRef:
+        path: cap.type.aws.auth.creds
+        revision: 0.1.0
+    - name: impl-specific-config
+      typeRef:
+        path: cap.type.aws.elasticsearch.install-input
+        revision: 0.1.0
+`)
+
+func TestValidateImplementationParameters(t *testing.T) {
+	// given
+	impl := gqlpublicapi.ImplementationRevision{}
+	require.NoError(t, yaml.Unmarshal(implementationRevisionRaw, &impl))
+
+	tests := map[string]struct {
+		givenHubTypeInstances []*gqlpublicapi.TypeRevision
+		givenParameters       types.ParametersCollection
+		expectedIssues        string
+	}{
+		"Happy path JSON": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
+				fixAWSElasticsearchTypeRev(),
+			},
+			givenParameters: types.ParametersCollection{
+				"additional-parameters": `{"key": "true"}`,
+				"impl-specific-config":  `{"replicas": "3"}`,
+			},
+		},
+		"Happy path YAML": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
+				fixAWSElasticsearchTypeRev(),
+			},
+			givenParameters: types.ParametersCollection{
+				"additional-parameters": `key: "true"`,
+				"impl-specific-config":  `replicas: "3"`,
+			},
+		},
+		"Not found `db-settings`": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
+				fixAWSElasticsearchTypeRev(),
+			},
+			givenParameters: types.ParametersCollection{
+				"db-settings": `{"key": true}`,
+			},
+			expectedIssues: heredoc.Doc(`
+			    - Parameters "db-settings":
+			        * Unknown parameter. Cannot validate it against JSONSchema.`),
+		},
+		"Invalid parameters": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
+				fixAWSElasticsearchTypeRev(),
+			},
+			givenParameters: types.ParametersCollection{
+				"additional-parameters": `{"key": true}`,
+				"impl-specific-config":  `{"key": true}`,
+			},
+			expectedIssues: heredoc.Doc(`
+			            	- Parameters "additional-parameters":
+			            	    * key: Invalid type. Expected: string, given: boolean
+			            	- Parameters "impl-specific-config":
+			            	    * (root): replicas is required
+			            	    * (root): Additional property key is not allowed`),
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			ctx := context.Background()
+			fakeCli := &fakeHubCli{
+				Types: tc.givenHubTypeInstances,
+			}
+
+			validator := NewValidator(fakeCli)
+
+			// when
+			implSchemas, err := validator.LoadImplInputParametersSchemas(ctx, impl)
+			// then
+			require.NoError(t, err)
+			require.Len(t, implSchemas, 2)
+
+			// when
+			result, err := validator.ValidateParameters(ctx, implSchemas, tc.givenParameters)
+			// then
+			require.NoError(t, err)
+
+			if tc.expectedIssues == "" {
+				assert.NoError(t, result.ErrorOrNil())
+			} else {
+				assert.EqualError(t, result.ErrorOrNil(), tc.expectedIssues)
+			}
+		})
+	}
+}
+
+func TestResolveTypeRefsToJSONSchemasFailures(t *testing.T) {
+	// given
+	tests := map[string]struct {
+		givenTypeRefs                           validation.TypeRefCollection
+		givenHubTypeInstances                   []*gqlpublicapi.TypeRevision
+		givenListTypeRefRevisionsJSONSchemasErr error
+		expectedErrorMsg                        string
+	}{
+		"Not existing TypeRef": {
+			givenHubTypeInstances: nil,
+			givenTypeRefs: validation.TypeRefCollection{
+				"aws-creds": {
+					TypeRef: types.TypeRef{
+						Path:     "cap.type.aws.auth.creds",
+						Revision: "0.1.0",
+					},
+				},
+			},
+			expectedErrorMsg: heredoc.Doc(`
+		          1 error occurred:
+		          	* TypeRef "cap.type.aws.auth.creds:0.1.0" was not found in Hub`),
+		},
+		"Not existing Revision": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				fixAWSCredsTypeRev(),
+			},
+			givenTypeRefs: validation.TypeRefCollection{
+				"aws-creds": {
+					TypeRef: types.TypeRef{
+						Path:     "cap.type.aws.auth.creds",
+						Revision: "1.1.1",
+					},
+				},
+			},
+			expectedErrorMsg: heredoc.Doc(`
+		          1 error occurred:
+		          	* TypeRef "cap.type.aws.auth.creds:1.1.1" was not found in Hub`),
+		},
+		"Unexpected JSONSchema type": {
+			givenHubTypeInstances: []*gqlpublicapi.TypeRevision{
+				func() *gqlpublicapi.TypeRevision {
+					ti := fixAWSCredsTypeRev()
+					ti.Spec.JSONSchema = 123 // change type to int, but should be string
+					return ti
+				}(),
+			},
+			givenTypeRefs: validation.TypeRefCollection{
+				"aws-creds": {
+					TypeRef: types.TypeRef{
+						Path:     "cap.type.aws.auth.creds",
+						Revision: "0.1.0",
+					},
+				},
+			},
+			expectedErrorMsg: heredoc.Doc(`
+		          1 error occurred:
+		          	* unexpected JSONSchema type for "cap.type.aws.auth.creds:0.1.0": expected string, got int`),
+		},
+		"Hub call error": {
+			givenListTypeRefRevisionsJSONSchemasErr: errors.New("hub error for testing purposes"),
+			givenTypeRefs: validation.TypeRefCollection{
+				"aws-creds": {},
+			},
+			expectedErrorMsg: "while fetching JSONSchemas for input TypeRefs: hub error for testing purposes",
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			ctx := context.Background()
+			fakeCli := &fakeHubCli{
+				Types:                                tc.givenHubTypeInstances,
+				ListTypeRefRevisionsJSONSchemasError: tc.givenListTypeRefRevisionsJSONSchemasErr,
+			}
+
+			validator := NewValidator(fakeCli)
+
+			// when
+			_, err := validator.resolveTypeRefsToJSONSchemas(ctx, tc.givenTypeRefs)
+
+			// then
+			assert.EqualError(t, err, tc.expectedErrorMsg)
+		})
+	}
+}
+
 type fakeHubCli struct {
-	Types       []*gqlpublicapi.TypeRevision
-	IDsTypeRefs map[string]gqllocalapi.TypeInstanceTypeReference
+	Types                                []*gqlpublicapi.TypeRevision
+	IDsTypeRefs                          map[string]gqllocalapi.TypeInstanceTypeReference
+	ListTypeRefRevisionsJSONSchemasError error
 }
 
 func (f *fakeHubCli) FindTypeInstancesTypeRef(_ context.Context, ids []string) (map[string]gqllocalapi.TypeInstanceTypeReference, error) {
@@ -347,7 +541,7 @@ func (f *fakeHubCli) FindTypeInstancesTypeRef(_ context.Context, ids []string) (
 }
 
 func (f *fakeHubCli) ListTypeRefRevisionsJSONSchemas(_ context.Context, filter gqlpublicapi.TypeFilter) ([]*gqlpublicapi.TypeRevision, error) {
-	return f.Types, nil
+	return f.Types, f.ListTypeRefRevisionsJSONSchemasError
 }
 
 func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
@@ -357,7 +551,42 @@ func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
 		},
 		Revision: "0.1.0",
 		Spec: &gqlpublicapi.TypeSpec{
-			JSONSchema: "{}",
+			JSONSchema: heredoc.Doc(`
+                    {
+                      "$schema": "http://json-schema.org/draft-07/schema",
+                      "type": "object",
+                      "required": [ "key" ],
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        }
+                      }
+                    }`),
+		},
+	}
+}
+
+func fixAWSElasticsearchTypeRev() *gqlpublicapi.TypeRevision {
+	return &gqlpublicapi.TypeRevision{
+		Metadata: &gqlpublicapi.TypeMetadata{
+			Path: "cap.type.aws.elasticsearch.install-input",
+		},
+		Revision: "0.1.0",
+		Spec: &gqlpublicapi.TypeSpec{
+			JSONSchema: heredoc.Doc(`
+                    {
+                      "$schema": "http://json-schema.org/draft-07/schema",
+                      "type": "object",
+                      "title": "The schema for Elasticsearch input parameters.",
+                      "required": ["replicas"],
+                      "properties": {
+                        "replicas": {
+                          "type": "string",
+                          "title": "Replica count for the Elasticsearch"
+                        }
+                      },
+                      "additionalProperties": false
+                    }`),
 		},
 	}
 }

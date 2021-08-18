@@ -227,6 +227,13 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			policy: fixGCPGlobalPolicy(),
 		},
 		{
+			name: "RDS installation with AWS SA and additional parameters injected",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.database.postgresql.install",
+			},
+			policy: fixAWSRDSPolicy(),
+		},
+		{
 			name: "Mattermost with CloudSQL using Terraform",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",

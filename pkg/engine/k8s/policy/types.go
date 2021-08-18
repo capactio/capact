@@ -97,7 +97,15 @@ func (in *Rule) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanc
 // InjectData holds the data, which should be injected into the Action.
 type InjectData struct {
 	RequiredTypeInstances []RequiredTypeInstanceToInject `json:"requiredTypeInstances,omitempty"`
-	AdditionalInput       map[string]interface{}         `json:"additionalInput,omitempty"`
+	AdditionalParameters  []AdditionalParametersToInject `json:"additionalParameters,omitempty"`
+}
+
+// AdditionalParametersToInject holds parameters to be injected to the Action.
+type AdditionalParametersToInject struct {
+	// Name refers to parameter name.
+	Name string `json:"name"`
+	// Value holds provided parameters.
+	Value map[string]interface{} `json:"value"`
 }
 
 // ImplementationConstraints represents the constraints
@@ -147,11 +155,10 @@ func (in *RequiredTypeInstanceToInject) UnmarshalJSON(bytes []byte) error {
 }
 
 // ToYAMLString converts the Policy to a string.
-func (p Policy) ToYAMLString() (string, error) {
-	bytes, err := yaml.Marshal(&p)
-
+func (in Policy) ToYAMLString() (string, error) {
+	bytes, err := yaml.Marshal(&in)
 	if err != nil {
-		return "", errors.Wrap(err, "while marshaling policy to YAML bytes")
+		return "", errors.Wrap(err, "while marshaling policy to YAML")
 	}
 
 	return string(bytes), nil
@@ -163,8 +170,8 @@ type HubClient interface {
 }
 
 // ResolveTypeInstanceMetadata resolves needed TypeInstance metadata based on IDs.
-func (p *Policy) ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient) error {
-	if p == nil {
+func (in *Policy) ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient) error {
+	if in == nil {
 		return errors.New("policy cannot be nil")
 	}
 
@@ -172,12 +179,12 @@ func (p *Policy) ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClie
 		return errors.New("hub client cannot be nil")
 	}
 
-	err := p.resolveTypeRefsForRequiredTypeInstances(ctx, hubCli)
+	err := in.resolveTypeRefsForRequiredTypeInstances(ctx, hubCli)
 	if err != nil {
 		return err
 	}
 
-	err = p.ValidateTypeInstancesMetadata()
+	err = in.ValidateTypeInstancesMetadata()
 	if err != nil {
 		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
 	}
@@ -186,20 +193,20 @@ func (p *Policy) ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClie
 }
 
 // AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
-func (p *Policy) AreTypeInstancesMetadataResolved() bool {
-	unresolvedTypeInstances := p.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
+func (in *Policy) AreTypeInstancesMetadataResolved() bool {
+	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
 
 	return len(unresolvedTypeInstances) == 0
 }
 
 // ValidateTypeInstancesMetadata validates that every TypeInstance has metadata resolved.
-func (p *Policy) ValidateTypeInstancesMetadata() error {
-	unresolvedTypeInstances := p.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
+func (in *Policy) ValidateTypeInstancesMetadata() error {
+	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
 	return validateTypeInstancesMetadata(unresolvedTypeInstances)
 }
 
-func (p *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClient) error {
-	unresolvedTypeInstances := p.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
+func (in *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClient) error {
+	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
 
 	var idsToQuery []string
 	for _, ti := range unresolvedTypeInstances {
@@ -215,7 +222,7 @@ func (p *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hu
 		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
 	}
 
-	for ruleIdx, rule := range p.Rules {
+	for ruleIdx, rule := range in.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {
 				continue
@@ -226,7 +233,7 @@ func (p *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hu
 					continue
 				}
 
-				p.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
+				in.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
 					Path:     typeRef.Path,
 					Revision: typeRef.Revision,
 				}
@@ -237,9 +244,9 @@ func (p *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hu
 	return nil
 }
 
-func (p *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
+func (in *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
 	var typeInstances []RequiredTypeInstanceToInject
-	for _, rule := range p.Rules {
+	for _, rule := range in.Rules {
 		for _, ruleItem := range rule.OneOf {
 			typeInstances = append(typeInstances, ruleItem.filterRequiredTypeInstances(filterFn)...)
 		}
@@ -250,6 +257,24 @@ func (p *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstan
 
 var filterTypeInstancesWithEmptyTypeRef = func(ti RequiredTypeInstanceToInject) bool {
 	return ti.TypeRef == nil || ti.TypeRef.Path == "" || ti.TypeRef.Revision == ""
+}
+
+// DeepCopyInto writes a deep copy of AdditionalParametersToInject into out.
+// controller-gen doesn't support interface{} so writing it manually
+func (in *AdditionalParametersToInject) DeepCopyInto(out *AdditionalParametersToInject) {
+	*out = *in
+	out.Value = maps.Merge(out.Value, in.Value)
+}
+
+// DeepCopy returns a new deep copy of AdditionalParametersToInject.
+// controller-gen doesn't support interface{} so writing it manually
+func (in *AdditionalParametersToInject) DeepCopy() *AdditionalParametersToInject {
+	if in == nil {
+		return nil
+	}
+	out := new(AdditionalParametersToInject)
+	in.DeepCopyInto(out)
+	return out
 }
 
 // DeepCopy returns a new deep copy of InjectData.
@@ -263,7 +288,7 @@ func (in *InjectData) DeepCopy() *InjectData {
 	return out
 }
 
-// DeepCopyInto writes a deep copy of InjectedData into out.
+// DeepCopyInto writes a deep copy of InjectData into out.
 // controller-gen doesn't support interface{} so writing it manually
 func (in *InjectData) DeepCopyInto(out *InjectData) {
 	*out = *in
@@ -274,8 +299,12 @@ func (in *InjectData) DeepCopyInto(out *InjectData) {
 			(*in)[i].DeepCopyInto(&(*out)[i])
 		}
 	}
-	if in.AdditionalInput != nil {
-		out.AdditionalInput = maps.Merge(out.AdditionalInput, in.AdditionalInput)
+	if in.AdditionalParameters != nil {
+		in, out := &in.AdditionalParameters, &out.AdditionalParameters
+		*out = make([]AdditionalParametersToInject, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
 	}
 }
 
