@@ -19,6 +19,12 @@ kube-prometheus-stack:
         limits:
           cpu: 200m
           memory: 800Mi
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            resources:
+              requests:
+                storage: 40Gi    
 
   grafana:
     adminPassword: okon

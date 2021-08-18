@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
@@ -38,8 +37,7 @@ args:
               name: input-parameters
           name: app2-install
           template: app2-install
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
       metadata: {}
@@ -95,8 +93,7 @@ args:
               name: psql-helm-release
           name: output-psql-helm-release
           template: output-stack-install-install-shared-db-psql-helm-release
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -118,8 +115,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -152,8 +148,7 @@ args:
         - globalName: stack-install-install-shared-db-postgres-install-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -173,8 +168,7 @@ args:
         - globalName: stack-install-install-shared-db-postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -194,8 +188,7 @@ args:
         - globalName: stack-install-install-shared-db-psql-helm-release
           name: psql-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -221,8 +214,7 @@ args:
               name: input-parameters
           name: app1-install
           template: app1-install-app1-install-app1-install
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -244,8 +236,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -336,8 +327,7 @@ args:
               name: app1-helm-release
           name: output-app1-helm-release
           template: output-app1-install-app1-install-app1-helm-release
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -356,8 +346,7 @@ args:
         artifacts:
         - name: postgresql
           path: output/postgresql
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: postgresql
         - name: database-input
@@ -407,8 +396,7 @@ args:
               name: database
           name: output-database
           template: output-app1-install-app1-install-app1-install-create-db-database
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -430,8 +418,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -453,8 +440,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1 && chmod +x /script.sh && /script.sh
         command:
@@ -473,8 +459,7 @@ args:
         artifacts:
         - name: database
           path: /database.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -494,8 +479,7 @@ args:
         - globalName: app1-install-app1-install-app1-install-create-db-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -517,8 +501,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -551,8 +534,7 @@ args:
         - globalName: app1-install-app1-install-app1-install-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -572,8 +554,7 @@ args:
         - globalName: app1-install-app1-install-postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -593,8 +574,7 @@ args:
         - globalName: app1-install-app1-install-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -614,8 +594,7 @@ args:
         - globalName: app1-install-app1-install-app1-config
           name: app1-config
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -635,8 +614,7 @@ args:
         - globalName: app1-install-app1-install-app1-helm-release
           name: app1-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -662,8 +640,7 @@ args:
               name: input-parameters
           name: app2-install
           template: app2-install-app2-install-main
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -685,8 +662,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -777,8 +753,7 @@ args:
               name: app2-helm-release
           name: output-app2-helm-release
           template: output-app2-install-app2-install-app2-helm-release
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -797,8 +772,7 @@ args:
         artifacts:
         - name: postgresql
           path: output/postgresql
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: postgresql
         - name: database-input
@@ -848,8 +822,7 @@ args:
               name: database
           name: output-database
           template: output-app2-install-app2-install-main-create-db-database
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -871,8 +844,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -894,8 +866,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1 && chmod +x /script.sh && /script.sh
         command:
@@ -914,8 +885,7 @@ args:
         artifacts:
         - name: database
           path: /database.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -935,8 +905,7 @@ args:
         - globalName: app2-install-app2-install-main-create-db-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -958,8 +927,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -992,8 +960,7 @@ args:
         - globalName: app2-install-app2-install-main-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1013,8 +980,7 @@ args:
         - globalName: app2-install-app2-install-postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1034,8 +1000,7 @@ args:
         - globalName: app2-install-app2-install-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1055,8 +1020,7 @@ args:
         - globalName: app2-install-app2-install-app2-config
           name: app2-config
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1076,8 +1040,7 @@ args:
         - globalName: app2-install-app2-install-app2-helm-release
           name: app2-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -1183,8 +1146,7 @@ args:
                     to: stack-install-install-shared-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -1213,8 +1175,7 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: UploadAction

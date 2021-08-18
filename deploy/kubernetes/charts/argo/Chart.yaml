@@ -7,7 +7,11 @@ type: application
 version: 0.4.0
 
 dependencies:
-  - name: argo
-    version: "1.0.0"
+  - name: argo-workflows
+    version: "0.3.0"
     repository: https://argoproj.github.io/argo-helm
-    condition: argo.enabled
+    condition: argo-workflows.enabled
+  - name: minio
+    version: "7.1.6"
+    repository: https://charts.bitnami.com/bitnami
+    condition: minio.enabled

@@ -20,7 +20,7 @@ import (
 	actionvalidator "capact.io/capact/pkg/sdk/validation/action"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
-	wfclientset "github.com/argoproj/argo/v2/pkg/client/clientset/versioned"
+	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
 	"github.com/go-logr/zapr"
 	"github.com/vrischmann/envconfig"
 	uber_zap "go.uber.org/zap"

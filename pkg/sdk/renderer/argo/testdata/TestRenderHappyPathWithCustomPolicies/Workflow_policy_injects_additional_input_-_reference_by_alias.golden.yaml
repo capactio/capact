@@ -3,8 +3,7 @@ args:
     arguments: {}
     entrypoint: capact-root
     templates:
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: postgresql
@@ -104,8 +103,7 @@ args:
               name: app2-helm-release
           name: output-app2-helm-release
           template: output-app2-helm-release
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: input-parameters
         - name: additional-parameters
@@ -313,8 +311,7 @@ args:
               name: rds-instance
           name: output-rds-instance
           template: output-main-install-db-rds-instance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -336,8 +333,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -359,8 +355,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -382,8 +377,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -405,8 +399,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -445,8 +438,7 @@ args:
         - globalName: main-install-db-rds-provision-terraform-apply-tfstate
           name: tfstate
           path: /terraform.tfstate
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -468,8 +460,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -491,8 +482,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -512,8 +502,7 @@ args:
         - globalName: main-install-db-terraform-release
           name: terraform-release
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -533,8 +522,7 @@ args:
         - globalName: main-install-db-postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -554,8 +542,7 @@ args:
         - globalName: main-install-db-rds-instance
           name: rds-instance
           path: /typeinstance
-    - arguments: {}
-      inputs:
+    - inputs:
         artifacts:
         - name: postgresql
         - name: database-input
@@ -605,8 +592,7 @@ args:
               name: database
           name: output-database
           template: output-main-create-db-database
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -628,8 +614,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -651,8 +636,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1 && chmod +x /script.sh && /script.sh
         command:
@@ -671,8 +655,7 @@ args:
         artifacts:
         - name: database
           path: /database.yml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -692,8 +675,7 @@ args:
         - globalName: main-create-db-database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - /template.yml
         - /values.yml
@@ -715,8 +697,7 @@ args:
         artifacts:
         - name: render
           path: /render.yml
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: RUNNER_CONTEXT_PATH
           value: '{{inputs.artifacts.runner-context.path}}'
@@ -749,8 +730,7 @@ args:
         - globalName: main-helm-install-additional
           name: additional
           path: /additional.yaml
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -770,8 +750,7 @@ args:
         - globalName: postgresql
           name: postgresql
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -791,8 +770,7 @@ args:
         - globalName: database
           name: database
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -812,8 +790,7 @@ args:
         - globalName: app2-config
           name: app2-config
           path: /typeinstance
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -833,8 +810,7 @@ args:
         - globalName: app2-helm-release
           name: app2-helm-release
           path: /typeinstance
-    - arguments: {}
-      inputs: {}
+    - inputs: {}
       metadata: {}
       name: capact-root
       outputs: {}
@@ -929,8 +905,7 @@ args:
                     to: main-install-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
-    - arguments: {}
-      container:
+    - container:
         args:
         - sleep 1
         command:
@@ -959,8 +934,7 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - arguments: {}
-      container:
+    - container:
         env:
         - name: APP_ACTION
           value: UploadAction

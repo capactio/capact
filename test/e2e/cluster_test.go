@@ -3,6 +3,9 @@
 package e2e
 
 import (
+	"context"
+	"strings"
+
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
@@ -13,7 +16,6 @@ import (
 	"k8s.io/kubectl/pkg/util/podutils"
 	k8sstrings "k8s.io/utils/strings"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
-	"strings"
 )
 
 var _ = Describe("Cluster check", func() {
@@ -28,13 +30,14 @@ var _ = Describe("Cluster check", func() {
 	Describe("Capact cluster health", func() {
 		Context("Pods in cluster", func() {
 			It("should be in running phase (ignored Namespace: [kube-system, default], ignored evicted Pods)", func() {
+				ctx := context.Background()
 				k8sCfg, err := config.GetConfig()
 				Expect(err).ToNot(HaveOccurred())
 
 				clientset, err := kubernetes.NewForConfig(k8sCfg)
 				Expect(err).ToNot(HaveOccurred())
 				Eventually(func() error {
-					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(metav1.ListOptions{
+					pods, err := clientset.CoreV1().Pods(v1.NamespaceAll).List(ctx, metav1.ListOptions{
 						FieldSelector: fields.AndSelectors(
 							fields.OneTermNotEqualSelector("metadata.namespace", "kube-system"),
 							fields.OneTermNotEqualSelector("metadata.namespace", "default"),
