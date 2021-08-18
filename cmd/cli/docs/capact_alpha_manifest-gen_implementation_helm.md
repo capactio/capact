@@ -11,15 +11,17 @@ Generate Helm chart based manifests
 Generate Helm based manifests based on a Helm chart
 
 ```
-capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_PATH] [flags]
+capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help             help for helm
-  -r, --repo string      URL of the Helm repository
-  -v, --version string   Version of the Helm chart
+  -h, --help               help for helm
+  -i, --interface string   Path with revision of the Interface, which is implemented by this Implementation
+      --repo string        URL of the Helm repository
+  -r, --revision string    Revision of the Implementation manifest (default "0.1.0")
+  -v, --version string     Version of the Helm chart
 ```
 
 ### Options inherited from parent commands
@@ -27,7 +29,7 @@ capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_PATH] 
 ```
   -c, --config string   Path to the YAML config file
   -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --override        Override existing manifest files
+      --overwrite       Override existing manifest files
 ```
 
 ### SEE ALSO

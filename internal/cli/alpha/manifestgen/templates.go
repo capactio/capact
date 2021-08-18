@@ -61,6 +61,15 @@ type terraformImplementationTemplatingInput struct {
 	Variables         []*tfconfig.Variable
 }
 
-//type helmImplementationTemplatingInput struct {
-//	templatingInput
-//}
+type helmImplementationTemplatingInput struct {
+	templatingInput
+
+	InterfacePath     string
+	InterfaceRevision string
+
+	HelmChartName    string
+	HelmChartVersion string
+	HelmRepoURL      string
+
+	ValuesYAML string
+}

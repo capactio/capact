@@ -21,7 +21,7 @@ Generate new Implementation manifests for various tools.
 ```
   -c, --config string   Path to the YAML config file
   -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --override        Override existing manifest files
+      --overwrite       Override existing manifest files
 ```
 
 ### SEE ALSO

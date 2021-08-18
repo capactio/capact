@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
 
@@ -111,6 +112,9 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 				Name:     name,
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
+			},
+			JSONSchema: &jsonschema.Type{
+				Type: "object",
 			},
 		},
 	}, nil

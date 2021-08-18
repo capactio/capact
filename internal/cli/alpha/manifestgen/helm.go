@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/alecthomas/jsonschema"
+	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -26,36 +28,26 @@ type HelmConfig struct {
 	InterfacePathWithRevision string
 }
 
-type helmTemplatingInput struct {
-	templatingInput
-
-	InterfacePath     string
-	InterfaceRevision string
-
-	HelmChartName    string
-	HelmChartVersion string
-	HelmRepoURL      string
-
-	Values interface{}
-}
-
 // GenerateHelmManifests generates manifest files for a Helm module based Implementation
 func GenerateHelmManifests(cfg *HelmConfig) (map[string]string, error) {
-	input, err := getHelmTemplatingInput(cfg)
+	helmChart, err := loadHelmChart(cfg)
+	if err != nil {
+		return nil, err
+	}
+
+	cfgs := make([]*templatingConfig, 0, 2)
+
+	inputTypeCfg, err := getHelmInputTypeTemplatingConfig(cfg, helmChart)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting Helm templating input")
 	}
+	cfgs = append(cfgs, inputTypeCfg)
 
-	cfgs := []*templatingConfig{
-		{
-			Template: typeManifestTemplate,
-			Input:    input,
-		},
-		{
-			Template: helmImplementationManifestTemplate,
-			Input:    input,
-		},
+	implCfg, err := getHelmImplementationTemplatingConfig(cfg, helmChart)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Helm templating input")
 	}
+	cfgs = append(cfgs, implCfg)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
@@ -98,17 +90,38 @@ func loadHelmChart(cfg *HelmConfig) (*chart.Chart, error) {
 	return chart, nil
 }
 
-func getHelmTemplatingInput(cfg *HelmConfig) (*helmTemplatingInput, error) {
-	helmChart, err := loadHelmChart(cfg)
+func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
+	input := &typeTemplatingInput{
+		templatingInput: templatingInput{
+			Name:     name,
+			Prefix:   prefix,
+			Revision: cfg.ManifestRevision,
+		},
+		JSONSchema: generateValueJSONSchema(helmChart.Values, []string{"#"}),
+	}
+
+	return &templatingConfig{
+		Template: typeManifestTemplate,
+		Input:    input,
+	}, nil
+}
+
+func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (*templatingConfig, error) {
 	var (
+		helmValues        = make(map[string]interface{})
 		interfacePath     = cfg.InterfacePathWithRevision
 		interfaceRevision = "0.1.0"
-		helmValues        = make(map[string]interface{})
 	)
+
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
+	}
 
 	pathSlice := strings.Split(cfg.InterfacePathWithRevision, ":")
 	if len(pathSlice) == 2 {
@@ -116,25 +129,20 @@ func getHelmTemplatingInput(cfg *HelmConfig) (*helmTemplatingInput, error) {
 		interfaceRevision = pathSlice[1]
 	}
 
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
-	}
-
 	if err := deepCopy(&helmValues, helmChart.Values); err != nil {
 		return nil, errors.Wrap(err, "while deep copying Helm values")
 	}
 
-	if err := deepSetHelmValues(helmChart.Values, []string{}); err != nil {
+	if err := deepSetHelmValues(helmValues, []string{}); err != nil {
 		return nil, errors.Wrap(err, "while setting values for Helm input values")
 	}
 
-	valuesBytes, err := yaml.Marshal(helmChart.Values)
+	valuesYAMLBytes, err := yaml.Marshal(helmValues)
 	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling values YAML")
+		return nil, errors.Wrap(err, "while marshaling Helm runner values")
 	}
 
-	return &helmTemplatingInput{
+	input := &helmImplementationTemplatingInput{
 		templatingInput: templatingInput{
 			Name:     name,
 			Prefix:   prefix,
@@ -145,14 +153,19 @@ func getHelmTemplatingInput(cfg *HelmConfig) (*helmTemplatingInput, error) {
 		HelmChartName:     helmChart.Name(),
 		HelmChartVersion:  helmChart.Metadata.Version,
 		HelmRepoURL:       cfg.RepoURL,
-		Values:            string(valuesBytes),
-	}, err
+		ValuesYAML:        string(valuesYAMLBytes),
+	}
+
+	return &templatingConfig{
+		Template: helmImplementationManifestTemplate,
+		Input:    input,
+	}, nil
 }
 
 func deepSetHelmValues(values map[string]interface{}, parentKeyPath []string) error {
 	for key, v := range values {
 		keyPath := append(parentKeyPath, key)
-		keyPathString := strings.Join(keyPath, ".")
+		keyPathString := buildValueKeyPath(keyPath)
 
 		switch value := v.(type) {
 		case map[string]interface{}:
@@ -167,12 +180,16 @@ func deepSetHelmValues(values map[string]interface{}, parentKeyPath []string) er
 			}
 
 			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default("%v") @>`, keyPathString, value)
-
 		case bool:
 			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(%v) | tojson @>`, keyPathString, value)
 		case float64:
 			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(%v) @>`, keyPathString, value)
 		case []interface{}:
+			if value == nil {
+				values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(None | tojson) @>`, keyPathString)
+				break
+			}
+
 			sliceBytes, err := json.Marshal(value)
 			if err != nil {
 				return errors.Wrapf(err, "while marshaling slice %v", value)
@@ -180,38 +197,65 @@ func deepSetHelmValues(values map[string]interface{}, parentKeyPath []string) er
 
 			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(%v) @>`, keyPathString, string(sliceBytes))
 		default:
-			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(%s) @>`, keyPathString, value)
+			values[key] = fmt.Sprintf(`<@ additionalInput.%s | default(%v) | tojson @>`, keyPathString, value)
 		}
 	}
 
 	return nil
 }
 
-//func generateValueJSONSchema(value interface{}, parentKeyPath []string) *jsonschema.Type {
-//	schema := &jsonschema.Type{
-//		Title: "",
-//	}
-//
-//	if len(parentKeyPath) > 0 {
-//		schema.Title = parentKeyPath[len(parentKeyPath)-1]
-//	}
-//
-//	switch v := value.(type) {
-//	case string:
-//		schema.Type = "string"
-//		schema.Default = v
-//
-//	case map[string]interface{}:
-//		schema.Properties = orderedmap.New()
-//
-//		for k, val := range v {
-//			propSchema := generateValueJSONSchema(val, append(parentKeyPath, k))
-//			schema.Properties.Set(k, propSchema)
-//		}
-//	}
-//
-//	return schema
-//}
+func buildValueKeyPath(keys []string) string {
+	if len(keys) == 0 {
+		return ""
+	}
+
+	acc := keys[0]
+
+	for _, key := range keys[1:] {
+		if strings.ContainsRune(key, '.') {
+			acc += fmt.Sprintf(`["%s"]`, key)
+		} else {
+			acc += fmt.Sprintf(".%s", key)
+		}
+	}
+
+	return acc
+}
+
+func generateValueJSONSchema(value interface{}, parentKeyPath []string) *jsonschema.Type {
+	ID := strings.Join(parentKeyPath, "/properties/")
+
+	schema := &jsonschema.Type{
+		Title: "",
+		Extras: map[string]interface{}{
+			"$id": ID,
+		},
+	}
+
+	if len(parentKeyPath) > 0 {
+		schema.Title = parentKeyPath[len(parentKeyPath)-1]
+	}
+
+	switch v := value.(type) {
+	case string:
+		schema.Type = "string"
+		schema.Default = v
+
+	case map[string]interface{}:
+		schema.Properties = orderedmap.New()
+
+		for k, val := range v {
+			propSchema := generateValueJSONSchema(val, append(parentKeyPath, k))
+			schema.Properties.Set(k, propSchema)
+		}
+
+		schema.Properties.Sort(func(a, b *orderedmap.Pair) bool {
+			return a.Key() < b.Key()
+		})
+	}
+
+	return schema
+}
 
 func deepCopy(dst, src interface{}) error {
 	var buf bytes.Buffer

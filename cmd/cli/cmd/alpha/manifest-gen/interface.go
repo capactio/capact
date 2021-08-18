@@ -46,7 +46,7 @@ func NewInterface() *cobra.Command {
 				return errors.Wrap(err, "while reading output flag")
 			}
 
-			overrideManifests, err := cmd.Flags().GetBool("override")
+			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
 				return errors.Wrap(err, "while overriding existing manifest")
 			}

@@ -13,12 +13,12 @@ var helmCfg manifestgen.HelmConfig
 // NewHelm returns a cobra.Command to bootstrap Helm based manifests.
 func NewHelm() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "helm [MANIFEST_PATH] [HELM_CHART_PATH]",
+		Use:   "helm [MANIFEST_PATH] [HELM_CHART_NAME]",
 		Short: "Generate Helm chart based manifests",
 		Long:  "Generate Helm based manifests based on a Helm chart",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 2 {
-				return errors.New("accepts two arguments: [MANIFEST_PATH] [HELM_CHART_PATH]")
+				return errors.New("accepts two arguments: [MANIFEST_PATH] [HELM_CHART_NAME]")
 			}
 
 			path := args[0]
@@ -42,7 +42,7 @@ func NewHelm() *cobra.Command {
 				return errors.Wrap(err, "while reading output flag")
 			}
 
-			overrideManifests, err := cmd.Flags().GetBool("override")
+			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
 				return errors.Wrap(err, "while overriding existing manifest")
 			}
@@ -55,7 +55,9 @@ func NewHelm() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVarP(&helmCfg.RepoURL, "repo", "r", "", "URL of the Helm repository")
+	cmd.Flags().StringVarP(&helmCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
+	cmd.Flags().StringVarP(&helmCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
+	cmd.Flags().StringVar(&helmCfg.RepoURL, "repo", "", "URL of the Helm repository")
 	cmd.Flags().StringVarP(&helmCfg.Version, "version", "v", "", "Version of the Helm chart")
 
 	return cmd
