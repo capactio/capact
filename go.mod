@@ -16,7 +16,7 @@ require (
 	github.com/briandowns/spinner v1.12.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/docker/cli v20.10.5+incompatible
-	github.com/docker/docker v17.12.0-ce-rc1.0.20200618181300-9dc6525e6118+incompatible
+	github.com/docker/docker v20.10.8+incompatible
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/color v1.12.0
 	github.com/fatih/structs v1.1.0
@@ -37,6 +37,7 @@ require (
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.13
 	github.com/mitchellh/mapstructure v1.4.1
+	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/nautilus/gateway v0.1.16
 	github.com/nautilus/graphql v0.0.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
