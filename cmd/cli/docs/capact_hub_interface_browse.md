@@ -1,13 +1,13 @@
 ---
-title: capact hub interfaces browse
+title: capact hub interface browse
 ---
 
-## capact hub interfaces browse
+## capact hub interface browse
 
 Browse provides the ability to browse through the available OCF Interfaces in interactive mode. Optionally create a Target Action.
 
 ```
-capact hub interfaces browse [flags]
+capact hub interface browse [flags]
 ```
 
 ### Examples
@@ -34,5 +34,5 @@ capact hub interfaces browse [flags]
 
 ### SEE ALSO
 
-* [capact hub interfaces](capact_hub_interfaces.md)	 - This command consists of multiple subcommands to interact with Interfaces stored on the Hub server
+* [capact hub interface](capact_hub_interface.md)	 - This command consists of multiple subcommands to interact with Interfaces stored on the Hub server
 

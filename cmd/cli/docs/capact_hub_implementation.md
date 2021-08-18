@@ -1,15 +1,15 @@
 ---
-title: capact hub implementations
+title: capact hub implementation
 ---
 
-## capact hub implementations
+## capact hub implementation
 
 This command consists of multiple subcommands to interact with Implementations stored on the Hub server
 
 ### Options
 
 ```
-  -h, --help   help for implementations
+  -h, --help   help for implementation
 ```
 
 ### Options inherited from parent commands
@@ -21,5 +21,5 @@ This command consists of multiple subcommands to interact with Implementations s
 ### SEE ALSO
 
 * [capact hub](capact_hub.md)	 - This command consists of multiple subcommands to interact with Hub server.
-* [capact hub implementations get](capact_hub_implementations_get.md)	 - Displays one or multiple Implementations available on the Hub server
+* [capact hub implementation get](capact_hub_implementation_get.md)	 - Displays one or multiple Implementations available on the Hub server
 

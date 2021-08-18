@@ -7,8 +7,9 @@ import (
 // NewInterfaces returns a cobra.Command for Hub Interfaces related operations.
 func NewInterfaces() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "interfaces",
-		Short: "This command consists of multiple subcommands to interact with Interfaces stored on the Hub server",
+		Use:     "interface",
+		Aliases: []string{"iface", "interfaces"},
+		Short:   "This command consists of multiple subcommands to interact with Interfaces stored on the Hub server",
 	}
 
 	cmd.AddCommand(
