@@ -6,7 +6,7 @@ import "github.com/spf13/cobra"
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "manifest",
-		Aliases: []string{"mf"},
+		Aliases: []string{"mf", "manifests"},
 		Short:   "This command consists of multiple subcommands to interact with OCF manifests",
 	}
 

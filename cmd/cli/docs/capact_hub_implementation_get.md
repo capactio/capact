@@ -1,13 +1,13 @@
 ---
-title: capact hub implementations get
+title: capact hub implementation get
 ---
 
-## capact hub implementations get
+## capact hub implementation get
 
 Displays one or multiple Implementations available on the Hub server
 
 ```
-capact hub implementations get [flags]
+capact hub implementation get [flags]
 ```
 
 ### Examples
@@ -37,5 +37,5 @@ capact hub implementations get cap.interface.database.postgresql.install -oyaml
 
 ### SEE ALSO
 
-* [capact hub implementations](capact_hub_implementations.md)	 - This command consists of multiple subcommands to interact with Implementations stored on the Hub server
+* [capact hub implementation](capact_hub_implementation.md)	 - This command consists of multiple subcommands to interact with Implementations stored on the Hub server
 

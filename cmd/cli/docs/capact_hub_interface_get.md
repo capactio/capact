@@ -1,13 +1,13 @@
 ---
-title: capact hub interfaces get
+title: capact hub interface get
 ---
 
-## capact hub interfaces get
+## capact hub interface get
 
 Displays one or multiple Interfaces available on the Hub server
 
 ```
-capact hub interfaces get [flags]
+capact hub interface get [flags]
 ```
 
 ### Examples
@@ -37,5 +37,5 @@ capact hub interfaces get cap.interface.database.postgresql.install -ojson
 
 ### SEE ALSO
 
-* [capact hub interfaces](capact_hub_interfaces.md)	 - This command consists of multiple subcommands to interact with Interfaces stored on the Hub server
+* [capact hub interface](capact_hub_interface.md)	 - This command consists of multiple subcommands to interact with Interfaces stored on the Hub server
 
