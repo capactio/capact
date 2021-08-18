@@ -1,0 +1,32 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  prefix: "cap.type.terraform.aws"
+  name: test-input
+  displayName: "Input for terraform.aws.test"
+  description: Input for the "terraform.aws.test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+    value: |-
+      {
+        "properties": {
+          "count": {
+            "type": "number",
+            "title": "count",
+            "description": "Number of instances"
+          },
+          "name": {
+            "type": "string",
+            "title": "name",
+            "description": "Name of environment"
+          }
+        }
+      }

@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: {{ .Revision }}
+revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: "cap.implementation.{{ .Prefix }}"
-  name: {{ .Name }}
-  displayName: "{{ .Name }} Action"
-  description: "{{ .Name }} Action"
+  prefix: "cap.implementation.terraform"
+  name: test
+  displayName: "test Action"
+  description: "test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -20,22 +20,23 @@ spec:
   additionalInput:
     parameters:
       typeRef:
-        path: "cap.type.{{ .Prefix }}.{{ .Name }}-input"
+        path: "cap.type.terraform.test-input"
         revision: 0.1.0
 
   outputTypeInstanceRelations:
     config:
       uses:
-        - helm-release
+        - terraform-release
 
   implements:
-    - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
-      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
+    - path: cap.interface.group.test
+      revision: 0.2.0
 
-  requires:
-    cap.core.type.platform:
-      oneOf:
-        - name: kubernetes
+  requires: 
+    cap.type.aws.auth:
+      allOf:
+        - name: credentials
+          alias: aws-credentials
           revision: 0.1.0
 
   imports:
@@ -49,10 +50,10 @@ spec:
       methods:
         - name: template
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.runner.helm
-      alias: helm
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
       methods:
-        - name: install
+        - name: apply
           revision: 0.1.0
 
   action:
@@ -75,7 +76,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}inputs.artifacts.input-parameters{{"}}"}}"
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: template
                         raw:
                           # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
@@ -86,12 +87,12 @@ spec:
                           data: |
                             prefix: input
 
-              - - name: create-helm-args
+              - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}inputs.artifacts.additional-parameters{{"}}"}}"
+                        from: "{{inputs.artifacts.additional-parameters}}"
                       - name: configuration
                         raw:
                           data: |
@@ -99,41 +100,65 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            generateName: true
-                            chart:
-                              name: "{{ .HelmChartName }}"
-                              repo: "{{ .HelmRepoURL }}"
-                              version: "{{ .HelmChartVersion }}"
-                            values: # TODO(ContentDeveloper): Adjust the input values to use parameters from the Interface
-{{ .ValuesYAML | indent 30 }}
+                            command: "apply"
+                            module:
+                              name: "test"
+                              source: "https://example.com/module.tgz"
+                            env: 
+                              - AWS_ACCESS_KEY_ID=<@ creds.accessKeyID @>
+                              - AWS_SECRET_ACCESS_KEY=<@ creds.secretAccessKey @>
                             output:
-                              goTemplate: |
-                                # TODO(ContentDeveloper): Add output template in YAML
+                              goTemplate:
+                                instance_ids: "{{ .instance_ids }}"
+                                random_number: "{{ .random_number }}"
+                                
+                            variables: |+
+                              <% if additionalInput.count -%>
+                              count = "<@ additionalInput.count @>"
+                              <%- endif %>
 
+                              <% if additionalInput.name -%>
+                              name = "<@ additionalInput.name @>"
+                              <%- endif %>
+
+                              
               - - name: fill-parameters
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: template
-                        from: "{{"{{"}}steps.create-helm-args.outputs.artifacts.render{{"}}"}}"
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
                       - name: input-parameters
-                        from: "{{"{{"}}steps.fill-default-input.outputs.artifacts.render{{"}}"}}"
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
                       - name: configuration
                         raw:
                           data: |
                             prefix: input
-
-              - - name: helm-install
-                  capact-action: helm.install
+              
+              - - name: fill-creds
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: creds
+              
+              - - name: terraform-apply
+                  capact-action: terraform.apply
                   capact-outputTypeInstances:
-                    - name: helm-release
-                      from: helm-release
+                    - name: terraform-release
+                      from: terraform-release
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
+                        from: "{{steps.fill-creds.outputs.artifacts.render}}"
                       - name: runner-context
-                        from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
 
               - - name: render-config
                   capact-outputTypeInstances:
@@ -143,7 +168,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.helm-install.outputs.artifacts.additional{{"}}"}}"
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
                       - name: configuration
                         raw:
                           data: ""
@@ -152,3 +177,4 @@ spec:
                           # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
                           data: |
                             property: value
+          

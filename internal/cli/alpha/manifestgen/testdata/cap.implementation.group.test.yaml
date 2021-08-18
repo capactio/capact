@@ -1,0 +1,436 @@
+ocfVersion: 0.0.1
+revision: 0.2.0
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.group"
+  name: test
+  displayName: "test Action"
+  description: "test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+  license:
+    name: "Apache 2.0"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      typeRef:
+        path: "cap.type.group.test-input"
+        revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    config:
+      uses:
+        - helm-release
+
+  implements:
+    - path: cap.interface.group.test
+      revision: 0.2.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: deploy
+        templates:
+          - name: deploy
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:
+              artifacts: []
+            steps:
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
+                          data: |
+                            my_property: <@ input.my_property | default("default_value") @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: additionalInput
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "postgresql"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "10.9.2"
+                            values: # TODO(ContentDeveloper): Adjust the input values to use parameters from the Interface
+                              audit:
+                                clientMinMessages: <@ additionalInput.audit.clientMinMessages | default("error") @>
+                                logConnections: <@ additionalInput.audit.logConnections | default(false) | tojson @>
+                                logDisconnections: <@ additionalInput.audit.logDisconnections | default(false) | tojson @>
+                                logHostname: <@ additionalInput.audit.logHostname | default(false) | tojson @>
+                                logLinePrefix: <@ additionalInput.audit.logLinePrefix | default("''") @>
+                                logTimezone: <@ additionalInput.audit.logTimezone | default("''") @>
+                                pgAuditLog: <@ additionalInput.audit.pgAuditLog | default("''") @>
+                                pgAuditLogCatalog: <@ additionalInput.audit.pgAuditLogCatalog | default("off") @>
+                              commonAnnotations: {}
+                              configurationConfigMap: <@ additionalInput.configurationConfigMap | default("''") @>
+                              containerSecurityContext:
+                                enabled: <@ additionalInput.containerSecurityContext.enabled | default(true) | tojson @>
+                                runAsUser: <@ additionalInput.containerSecurityContext.runAsUser | default(1001) @>
+                              customLivenessProbe: {}
+                              customReadinessProbe: {}
+                              customStartupProbe: {}
+                              diagnosticMode:
+                                args: <@ additionalInput.diagnosticMode.args | default(["infinity"]) @>
+                                command: <@ additionalInput.diagnosticMode.command | default(["sleep"]) @>
+                                enabled: <@ additionalInput.diagnosticMode.enabled | default(false) | tojson @>
+                              existingSecret: <@ additionalInput.existingSecret | default("''") @>
+                              extendedConfConfigMap: <@ additionalInput.extendedConfConfigMap | default("''") @>
+                              extraDeploy: <@ additionalInput.extraDeploy | default(None | tojson) @>
+                              extraEnv: <@ additionalInput.extraEnv | default(None | tojson) @>
+                              extraEnvVarsCM: <@ additionalInput.extraEnvVarsCM | default("''") @>
+                              fullnameOverride: <@ additionalInput.fullnameOverride | default("''") @>
+                              global:
+                                imagePullSecrets: <@ additionalInput.global.imagePullSecrets | default(None | tojson) @>
+                                imageRegistry: <@ additionalInput.global.imageRegistry | default("''") @>
+                                postgresql:
+                                  existingSecret: <@ additionalInput.global.postgresql.existingSecret | default("''") @>
+                                  postgresqlDatabase: <@ additionalInput.global.postgresql.postgresqlDatabase | default("''") @>
+                                  postgresqlPassword: <@ additionalInput.global.postgresql.postgresqlPassword | default("''") @>
+                                  postgresqlUsername: <@ additionalInput.global.postgresql.postgresqlUsername | default("''") @>
+                                  replicationPassword: <@ additionalInput.global.postgresql.replicationPassword | default("''") @>
+                                  servicePort: <@ additionalInput.global.postgresql.servicePort | default("''") @>
+                                storageClass: <@ additionalInput.global.storageClass | default("''") @>
+                              image:
+                                debug: <@ additionalInput.image.debug | default(false) | tojson @>
+                                pullPolicy: <@ additionalInput.image.pullPolicy | default("IfNotPresent") @>
+                                pullSecrets: <@ additionalInput.image.pullSecrets | default(None | tojson) @>
+                                registry: <@ additionalInput.image.registry | default("docker.io") @>
+                                repository: <@ additionalInput.image.repository | default("bitnami/postgresql") @>
+                                tag: <@ additionalInput.image.tag | default("11.13.0-debian-10-r0") @>
+                              initdbPassword: <@ additionalInput.initdbPassword | default("''") @>
+                              initdbScripts: {}
+                              initdbScriptsConfigMap: <@ additionalInput.initdbScriptsConfigMap | default("''") @>
+                              initdbScriptsSecret: <@ additionalInput.initdbScriptsSecret | default("''") @>
+                              initdbUser: <@ additionalInput.initdbUser | default("''") @>
+                              ldap:
+                                baseDN: <@ additionalInput.ldap.baseDN | default("''") @>
+                                bind_password: <@ additionalInput.ldap.bind_password | default("''") @>
+                                bindDN: <@ additionalInput.ldap.bindDN | default("''") @>
+                                enabled: <@ additionalInput.ldap.enabled | default(false) | tojson @>
+                                port: <@ additionalInput.ldap.port | default("''") @>
+                                prefix: <@ additionalInput.ldap.prefix | default("''") @>
+                                scheme: <@ additionalInput.ldap.scheme | default("''") @>
+                                search_attr: <@ additionalInput.ldap.search_attr | default("''") @>
+                                search_filter: <@ additionalInput.ldap.search_filter | default("''") @>
+                                server: <@ additionalInput.ldap.server | default("''") @>
+                                suffix: <@ additionalInput.ldap.suffix | default("''") @>
+                                tls: <@ additionalInput.ldap.tls | default("''") @>
+                                url: <@ additionalInput.ldap.url | default("''") @>
+                              lifecycleHooks: {}
+                              livenessProbe:
+                                enabled: <@ additionalInput.livenessProbe.enabled | default(true) | tojson @>
+                                failureThreshold: <@ additionalInput.livenessProbe.failureThreshold | default(6) @>
+                                initialDelaySeconds: <@ additionalInput.livenessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ additionalInput.livenessProbe.periodSeconds | default(10) @>
+                                successThreshold: <@ additionalInput.livenessProbe.successThreshold | default(1) @>
+                                timeoutSeconds: <@ additionalInput.livenessProbe.timeoutSeconds | default(5) @>
+                              metrics:
+                                customMetrics: {}
+                                enabled: <@ additionalInput.metrics.enabled | default(false) | tojson @>
+                                extraEnvVars: <@ additionalInput.metrics.extraEnvVars | default(None | tojson) @>
+                                image:
+                                  pullPolicy: <@ additionalInput.metrics.image.pullPolicy | default("IfNotPresent") @>
+                                  pullSecrets: <@ additionalInput.metrics.image.pullSecrets | default(None | tojson) @>
+                                  registry: <@ additionalInput.metrics.image.registry | default("docker.io") @>
+                                  repository: <@ additionalInput.metrics.image.repository | default("bitnami/postgres-exporter") @>
+                                  tag: <@ additionalInput.metrics.image.tag | default("0.10.0-debian-10-r27") @>
+                                livenessProbe:
+                                  enabled: <@ additionalInput.metrics.livenessProbe.enabled | default(true) | tojson @>
+                                  failureThreshold: <@ additionalInput.metrics.livenessProbe.failureThreshold | default(6) @>
+                                  initialDelaySeconds: <@ additionalInput.metrics.livenessProbe.initialDelaySeconds | default(5) @>
+                                  periodSeconds: <@ additionalInput.metrics.livenessProbe.periodSeconds | default(10) @>
+                                  successThreshold: <@ additionalInput.metrics.livenessProbe.successThreshold | default(1) @>
+                                  timeoutSeconds: <@ additionalInput.metrics.livenessProbe.timeoutSeconds | default(5) @>
+                                prometheusRule:
+                                  additionalLabels: {}
+                                  enabled: <@ additionalInput.metrics.prometheusRule.enabled | default(false) | tojson @>
+                                  namespace: <@ additionalInput.metrics.prometheusRule.namespace | default("''") @>
+                                  rules: <@ additionalInput.metrics.prometheusRule.rules | default(None | tojson) @>
+                                readinessProbe:
+                                  enabled: <@ additionalInput.metrics.readinessProbe.enabled | default(true) | tojson @>
+                                  failureThreshold: <@ additionalInput.metrics.readinessProbe.failureThreshold | default(6) @>
+                                  initialDelaySeconds: <@ additionalInput.metrics.readinessProbe.initialDelaySeconds | default(5) @>
+                                  periodSeconds: <@ additionalInput.metrics.readinessProbe.periodSeconds | default(10) @>
+                                  successThreshold: <@ additionalInput.metrics.readinessProbe.successThreshold | default(1) @>
+                                  timeoutSeconds: <@ additionalInput.metrics.readinessProbe.timeoutSeconds | default(5) @>
+                                resources: {}
+                                securityContext:
+                                  enabled: <@ additionalInput.metrics.securityContext.enabled | default(false) | tojson @>
+                                  runAsUser: <@ additionalInput.metrics.securityContext.runAsUser | default(1001) @>
+                                service:
+                                  annotations:
+                                    prometheus.io/port: <@ additionalInput.metrics.service.annotations["prometheus.io/port"] | default("9187") @>
+                                    prometheus.io/scrape: <@ additionalInput.metrics.service.annotations["prometheus.io/scrape"] | default("true") @>
+                                  loadBalancerIP: <@ additionalInput.metrics.service.loadBalancerIP | default("''") @>
+                                  type: <@ additionalInput.metrics.service.type | default("ClusterIP") @>
+                                serviceMonitor:
+                                  additionalLabels: {}
+                                  enabled: <@ additionalInput.metrics.serviceMonitor.enabled | default(false) | tojson @>
+                                  interval: <@ additionalInput.metrics.serviceMonitor.interval | default("''") @>
+                                  metricRelabelings: <@ additionalInput.metrics.serviceMonitor.metricRelabelings | default(None | tojson) @>
+                                  namespace: <@ additionalInput.metrics.serviceMonitor.namespace | default("''") @>
+                                  relabelings: <@ additionalInput.metrics.serviceMonitor.relabelings | default(None | tojson) @>
+                                  scrapeTimeout: <@ additionalInput.metrics.serviceMonitor.scrapeTimeout | default("''") @>
+                              nameOverride: <@ additionalInput.nameOverride | default("''") @>
+                              networkPolicy:
+                                allowExternal: <@ additionalInput.networkPolicy.allowExternal | default(true) | tojson @>
+                                enabled: <@ additionalInput.networkPolicy.enabled | default(false) | tojson @>
+                                explicitNamespacesSelector: {}
+                              persistence:
+                                accessModes: <@ additionalInput.persistence.accessModes | default(["ReadWriteOnce"]) @>
+                                annotations: {}
+                                enabled: <@ additionalInput.persistence.enabled | default(true) | tojson @>
+                                existingClaim: <@ additionalInput.persistence.existingClaim | default("''") @>
+                                mountPath: <@ additionalInput.persistence.mountPath | default("/bitnami/postgresql") @>
+                                selector: {}
+                                size: <@ additionalInput.persistence.size | default("8Gi") @>
+                                storageClass: <@ additionalInput.persistence.storageClass | default("''") @>
+                                subPath: <@ additionalInput.persistence.subPath | default("''") @>
+                              pgHbaConfiguration: <@ additionalInput.pgHbaConfiguration | default("''") @>
+                              postgresqlConfiguration: {}
+                              postgresqlDataDir: <@ additionalInput.postgresqlDataDir | default("/bitnami/postgresql/data") @>
+                              postgresqlDatabase: <@ additionalInput.postgresqlDatabase | default("''") @>
+                              postgresqlDbUserConnectionLimit: <@ additionalInput.postgresqlDbUserConnectionLimit | default("''") @>
+                              postgresqlExtendedConf: {}
+                              postgresqlInitdbArgs: <@ additionalInput.postgresqlInitdbArgs | default("''") @>
+                              postgresqlInitdbWalDir: <@ additionalInput.postgresqlInitdbWalDir | default("''") @>
+                              postgresqlMaxConnections: <@ additionalInput.postgresqlMaxConnections | default("''") @>
+                              postgresqlPassword: <@ additionalInput.postgresqlPassword | default("''") @>
+                              postgresqlPghbaRemoveFilters: <@ additionalInput.postgresqlPghbaRemoveFilters | default("''") @>
+                              postgresqlPostgresConnectionLimit: <@ additionalInput.postgresqlPostgresConnectionLimit | default("''") @>
+                              postgresqlPostgresPassword: <@ additionalInput.postgresqlPostgresPassword | default("''") @>
+                              postgresqlSharedPreloadLibraries: <@ additionalInput.postgresqlSharedPreloadLibraries | default("pgaudit") @>
+                              postgresqlStatementTimeout: <@ additionalInput.postgresqlStatementTimeout | default("''") @>
+                              postgresqlTcpKeepalivesCount: <@ additionalInput.postgresqlTcpKeepalivesCount | default("''") @>
+                              postgresqlTcpKeepalivesIdle: <@ additionalInput.postgresqlTcpKeepalivesIdle | default("''") @>
+                              postgresqlTcpKeepalivesInterval: <@ additionalInput.postgresqlTcpKeepalivesInterval | default("''") @>
+                              postgresqlUsername: <@ additionalInput.postgresqlUsername | default("postgres") @>
+                              primary:
+                                affinity: {}
+                                annotations: {}
+                                extraInitContainers: <@ additionalInput.primary.extraInitContainers | default(None | tojson) @>
+                                extraVolumeMounts: <@ additionalInput.primary.extraVolumeMounts | default(None | tojson) @>
+                                extraVolumes: <@ additionalInput.primary.extraVolumes | default(None | tojson) @>
+                                labels: {}
+                                nodeAffinityPreset:
+                                  key: <@ additionalInput.primary.nodeAffinityPreset.key | default("''") @>
+                                  type: <@ additionalInput.primary.nodeAffinityPreset.type | default("''") @>
+                                  values: <@ additionalInput.primary.nodeAffinityPreset.values | default(None | tojson) @>
+                                nodeSelector: {}
+                                podAffinityPreset: <@ additionalInput.primary.podAffinityPreset | default("''") @>
+                                podAnnotations: {}
+                                podAntiAffinityPreset: <@ additionalInput.primary.podAntiAffinityPreset | default("soft") @>
+                                podLabels: {}
+                                priorityClassName: <@ additionalInput.primary.priorityClassName | default("''") @>
+                                service:
+                                  clusterIP: <@ additionalInput.primary.service.clusterIP | default("''") @>
+                                  nodePort: <@ additionalInput.primary.service.nodePort | default("''") @>
+                                  type: <@ additionalInput.primary.service.type | default("''") @>
+                                sidecars: <@ additionalInput.primary.sidecars | default(None | tojson) @>
+                                tolerations: <@ additionalInput.primary.tolerations | default(None | tojson) @>
+                              primaryAsStandBy:
+                                enabled: <@ additionalInput.primaryAsStandBy.enabled | default(false) | tojson @>
+                                primaryHost: <@ additionalInput.primaryAsStandBy.primaryHost | default("''") @>
+                                primaryPort: <@ additionalInput.primaryAsStandBy.primaryPort | default("''") @>
+                              psp:
+                                create: <@ additionalInput.psp.create | default(false) | tojson @>
+                              rbac:
+                                create: <@ additionalInput.rbac.create | default(false) | tojson @>
+                              readReplicas:
+                                affinity: {}
+                                annotations: {}
+                                extraInitContainers: <@ additionalInput.readReplicas.extraInitContainers | default(None | tojson) @>
+                                extraVolumeMounts: <@ additionalInput.readReplicas.extraVolumeMounts | default(None | tojson) @>
+                                extraVolumes: <@ additionalInput.readReplicas.extraVolumes | default(None | tojson) @>
+                                labels: {}
+                                nodeAffinityPreset:
+                                  key: <@ additionalInput.readReplicas.nodeAffinityPreset.key | default("''") @>
+                                  type: <@ additionalInput.readReplicas.nodeAffinityPreset.type | default("''") @>
+                                  values: <@ additionalInput.readReplicas.nodeAffinityPreset.values | default(None | tojson) @>
+                                nodeSelector: {}
+                                persistence:
+                                  enabled: <@ additionalInput.readReplicas.persistence.enabled | default(true) | tojson @>
+                                podAffinityPreset: <@ additionalInput.readReplicas.podAffinityPreset | default("''") @>
+                                podAnnotations: {}
+                                podAntiAffinityPreset: <@ additionalInput.readReplicas.podAntiAffinityPreset | default("soft") @>
+                                podLabels: {}
+                                priorityClassName: <@ additionalInput.readReplicas.priorityClassName | default("''") @>
+                                resources: {}
+                                service:
+                                  clusterIP: <@ additionalInput.readReplicas.service.clusterIP | default("''") @>
+                                  nodePort: <@ additionalInput.readReplicas.service.nodePort | default("''") @>
+                                  type: <@ additionalInput.readReplicas.service.type | default("''") @>
+                                sidecars: <@ additionalInput.readReplicas.sidecars | default(None | tojson) @>
+                                tolerations: <@ additionalInput.readReplicas.tolerations | default(None | tojson) @>
+                              readinessProbe:
+                                enabled: <@ additionalInput.readinessProbe.enabled | default(true) | tojson @>
+                                failureThreshold: <@ additionalInput.readinessProbe.failureThreshold | default(6) @>
+                                initialDelaySeconds: <@ additionalInput.readinessProbe.initialDelaySeconds | default(5) @>
+                                periodSeconds: <@ additionalInput.readinessProbe.periodSeconds | default(10) @>
+                                successThreshold: <@ additionalInput.readinessProbe.successThreshold | default(1) @>
+                                timeoutSeconds: <@ additionalInput.readinessProbe.timeoutSeconds | default(5) @>
+                              replication:
+                                applicationName: <@ additionalInput.replication.applicationName | default("my_application") @>
+                                enabled: <@ additionalInput.replication.enabled | default(false) | tojson @>
+                                numSynchronousReplicas: <@ additionalInput.replication.numSynchronousReplicas | default(0) @>
+                                password: <@ additionalInput.replication.password | default("repl_password") @>
+                                readReplicas: <@ additionalInput.replication.readReplicas | default(1) @>
+                                singleService: <@ additionalInput.replication.singleService | default(true) | tojson @>
+                                synchronousCommit: <@ additionalInput.replication.synchronousCommit | default("off") @>
+                                uniqueServices: <@ additionalInput.replication.uniqueServices | default(false) | tojson @>
+                                user: <@ additionalInput.replication.user | default("repl_user") @>
+                              resources:
+                                requests:
+                                  cpu: <@ additionalInput.resources.requests.cpu | default("250m") @>
+                                  memory: <@ additionalInput.resources.requests.memory | default("256Mi") @>
+                              schedulerName: <@ additionalInput.schedulerName | default("''") @>
+                              securityContext:
+                                enabled: <@ additionalInput.securityContext.enabled | default(true) | tojson @>
+                                fsGroup: <@ additionalInput.securityContext.fsGroup | default(1001) @>
+                              service:
+                                annotations: {}
+                                clusterIP: <@ additionalInput.service.clusterIP | default("''") @>
+                                loadBalancerIP: <@ additionalInput.service.loadBalancerIP | default("''") @>
+                                loadBalancerSourceRanges: <@ additionalInput.service.loadBalancerSourceRanges | default(None | tojson) @>
+                                nodePort: <@ additionalInput.service.nodePort | default("''") @>
+                                port: <@ additionalInput.service.port | default(5432) @>
+                                type: <@ additionalInput.service.type | default("ClusterIP") @>
+                              serviceAccount:
+                                autoMount: <@ additionalInput.serviceAccount.autoMount | default(false) | tojson @>
+                                enabled: <@ additionalInput.serviceAccount.enabled | default(false) | tojson @>
+                                name: <@ additionalInput.serviceAccount.name | default("''") @>
+                              shmVolume:
+                                chmod:
+                                  enabled: <@ additionalInput.shmVolume.chmod.enabled | default(true) | tojson @>
+                                enabled: <@ additionalInput.shmVolume.enabled | default(true) | tojson @>
+                                sizeLimit: <@ additionalInput.shmVolume.sizeLimit | default("''") @>
+                              startupProbe:
+                                enabled: <@ additionalInput.startupProbe.enabled | default(false) | tojson @>
+                                failureThreshold: <@ additionalInput.startupProbe.failureThreshold | default(10) @>
+                                initialDelaySeconds: <@ additionalInput.startupProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ additionalInput.startupProbe.periodSeconds | default(15) @>
+                                successThreshold: <@ additionalInput.startupProbe.successThreshold | default(1) @>
+                                timeoutSeconds: <@ additionalInput.startupProbe.timeoutSeconds | default(5) @>
+                              terminationGracePeriodSeconds: <@ additionalInput.terminationGracePeriodSeconds | default("''") @>
+                              tls:
+                                autoGenerated: <@ additionalInput.tls.autoGenerated | default(false) | tojson @>
+                                certCAFilename: <@ additionalInput.tls.certCAFilename | default("''") @>
+                                certFilename: <@ additionalInput.tls.certFilename | default("''") @>
+                                certKeyFilename: <@ additionalInput.tls.certKeyFilename | default("''") @>
+                                certificatesSecret: <@ additionalInput.tls.certificatesSecret | default("''") @>
+                                crlFilename: <@ additionalInput.tls.crlFilename | default("''") @>
+                                enabled: <@ additionalInput.tls.enabled | default(false) | tojson @>
+                                preferServerCiphers: <@ additionalInput.tls.preferServerCiphers | default(true) | tojson @>
+                              updateStrategy:
+                                type: <@ additionalInput.updateStrategy.type | default("RollingUpdate") @>
+                              usePasswordFile: <@ additionalInput.usePasswordFile | default(false) | tojson @>
+                              volumePermissions:
+                                enabled: <@ additionalInput.volumePermissions.enabled | default(false) | tojson @>
+                                image:
+                                  pullPolicy: <@ additionalInput.volumePermissions.image.pullPolicy | default("Always") @>
+                                  pullSecrets: <@ additionalInput.volumePermissions.image.pullSecrets | default(None | tojson) @>
+                                  registry: <@ additionalInput.volumePermissions.image.registry | default("docker.io") @>
+                                  repository: <@ additionalInput.volumePermissions.image.repository | default("bitnami/bitnami-shell") @>
+                                  tag: <@ additionalInput.volumePermissions.image.tag | default("10-debian-10-r159") @>
+                                securityContext:
+                                  runAsUser: <@ additionalInput.volumePermissions.securityContext.runAsUser | default(0) @>
+                              
+                            output:
+                              goTemplate: |
+                                # TODO(ContentDeveloper): Add output template in YAML
+
+              - - name: fill-parameters
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: render-config
+                  capact-outputTypeInstances:
+                    - name: config
+                      from: render
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.helm-install.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
+                          data: |
+                            property: value

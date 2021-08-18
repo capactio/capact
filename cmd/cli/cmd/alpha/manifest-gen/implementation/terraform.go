@@ -13,6 +13,9 @@ import (
 var tfContentCfg manifestgen.TerraformConfig
 
 // NewTerraform returns a cobra.Command to bootstrap Terraform based manifests.
+// Issues:
+// - if user provides an empty parameter value for a string, it will be interpreted as null.
+// - if a key in Helm values.yaml contains a dot, then Jinja will have problem with interpreting it correctly.
 func NewTerraform() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH]",
@@ -54,7 +57,7 @@ func NewTerraform() *cobra.Command {
 				return errors.Wrap(err, "while reading output flag")
 			}
 
-			overrideManifests, err := cmd.Flags().GetBool("override")
+			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
 				return errors.Wrap(err, "while overriding existing manifest")
 			}
