@@ -3,16 +3,18 @@
 package examples
 
 import (
+	"context"
 	"testing"
 
 	"capact.io/capact/internal/cli/schema"
-	"capact.io/capact/pkg/sdk/manifest"
+	"capact.io/capact/pkg/sdk/validation/manifest"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestManifestsValid(t *testing.T) {
-	validator := manifest.NewFilesystemValidator(&schema.LocalFileSystem{}, "../..")
+	fs, ocfSchemaRootPath := schema.NewProvider("../..").FileSystem()
+	validator := manifest.NewDefaultFilesystemValidator(fs, ocfSchemaRootPath)
 
 	tests := map[string]struct {
 		manifestPath string
@@ -42,10 +44,8 @@ func TestManifestsValid(t *testing.T) {
 
 	for tn, tc := range tests {
 		t.Run(tn, func(t *testing.T) {
-			// given
-
 			// when
-			result, err := validator.Do(tc.manifestPath)
+			result, err := validator.Do(context.Background(), tc.manifestPath)
 
 			// then
 			require.Nil(t, err, "returned error: %v", err)
