@@ -31,9 +31,7 @@ spec:
         - name: {{ .Chart.Name }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
-          # image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
-          # Use PR image
-          image: "ghcr.io/capactio/pr/k8s-engine:PR-424"
+          image: "{{ .Values.global.containerRegistry.path }}/{{ .Values.image.name }}:{{ .Values.global.containerRegistry.overrideTag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           env:
             - name: APP_GRAPH_QL_ADDR
