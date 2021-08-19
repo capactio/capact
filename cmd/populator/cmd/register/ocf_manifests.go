@@ -122,7 +122,7 @@ func runDBPopulate(ctx context.Context, src string) (err error) {
 			log.Info("Populated new data", zap.Duration("duration (seconds)", end.Sub(start)))
 		}
 		return nil
-	}, retry.Attempts(3), retry.Delay(1*time.Minute))
+	}, retry.Attempts(6), retry.Delay(30*time.Second))
 	if err != nil {
 		return errors.Wrap(err, "while populating manifests")
 	}
