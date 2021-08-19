@@ -35,6 +35,9 @@ minio:
       memory: 1Gi
       cpu: 500m
 
+  volumePermissions:
+    enabled: true
+
   deployment:
     updateStrategy:
       type: RollingUpdate
