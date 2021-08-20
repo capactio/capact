@@ -46,7 +46,7 @@ var _ = BeforeSuite(func() {
 	err := envconfig.Init(&cfg)
 	Expect(err).ToNot(HaveOccurred())
 
-	//waitTillServiceEndpointsAreReady()
+	waitTillServiceEndpointsAreReady()
 	waitTillDataIsPopulated()
 })
 
@@ -81,8 +81,6 @@ func waitTillDataIsPopulated() {
 
 	Eventually(func() (int, error) {
 		ifaces, err := cli.ListInterfaces(context.Background())
-		fmt.Println(err)
-		fmt.Println(ifaces)
 		return len(ifaces), err
 	}, cfg.PollingTimeout, cfg.PollingInterval).Should(BeNumerically(">", 1))
 }
