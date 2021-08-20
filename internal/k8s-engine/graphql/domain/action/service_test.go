@@ -32,7 +32,7 @@ func TestService_Create(t *testing.T) {
 
 	svc, k8sCli := newServiceWithFakeClient(t)
 
-	inputActionModel := fixModel(name, fixModelInputParametersTypeInstancesAndPolicy)
+	inputActionModel := fixModel(name)
 
 	expected := inputActionModel.Action.DeepCopy()
 	expected.Namespace = ns
@@ -57,7 +57,7 @@ func TestService_Update(t *testing.T) {
 		ns   = "bar"
 	)
 
-	inputActionModel := fixModel(name, fixModelInputParametersTypeInstancesAndPolicy)
+	inputActionModel := fixModel(name)
 	inputActionModel.SetNamespace(ns)
 
 	svc, k8sCli := newServiceWithFakeClient(t, &inputActionModel.Action, inputActionModel.InputParamsSecret)
@@ -92,7 +92,7 @@ func TestService_GetByName(t *testing.T) {
 
 	t.Run("Success", func(t *testing.T) {
 		// given
-		inputAction := fixModel(name, fixModelInputParametersTypeInstancesAndPolicy).Action
+		inputAction := fixModel(name).Action
 		inputAction.Namespace = ns
 
 		svc, _ := newServiceWithFakeClient(t, &inputAction)
@@ -201,7 +201,7 @@ func TestService_DeleteByName(t *testing.T) {
 		ns   = "bar"
 	)
 
-	inputAction := fixModel(name, fixModelInputParametersTypeInstancesAndPolicy).Action
+	inputAction := fixModel(name).Action
 	inputAction.Namespace = ns
 
 	svc, k8sCli := newServiceWithFakeClient(t, &inputAction)

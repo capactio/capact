@@ -10,33 +10,51 @@ import (
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 )
 
-func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
+func TestConverter_FromGraphQLInput_HappyPath1(t *testing.T) {
 	// given
 	const (
 		name = "name"
 	)
 
 	tests := map[string]struct {
-		givenGQLInput graphql.ActionDetailsInput
-		expectedModel model.ActionToCreateOrUpdate
+		givenGQLParams *graphql.JSON
+		givenGQLTI     []*graphql.InputTypeInstanceData
+		givenGQLPolicy *graphql.PolicyInput
+
+		expectedModelParams *v1alpha1.InputParameters
+		expectedModelPolicy *v1alpha1.ActionPolicy
+		expectedModelSecret *v1.Secret
+		expectedModelTI     *[]v1alpha1.InputTypeInstance
 	}{
 		"Should convert all inputs": {
-			givenGQLInput: fixGQLActionInput(name, fixGQLInputParameters(), fixGQLInputTypeInstances(), fixGQLInputActionPolicy()),
-			expectedModel: fixModel(name, fixModelInputParametersTypeInstancesAndPolicy),
+			givenGQLParams: fixGQLInputParameters(),
+			givenGQLTI:     fixGQLInputTypeInstances(),
+			givenGQLPolicy: fixGQLInputActionPolicy(),
+
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelTI:     fixModelInputTypeInstances(),
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, true, true),
 		},
 		"Should convert only input parameters": {
-			givenGQLInput: fixGQLActionInput(name, fixGQLInputParameters(), nil, nil),
-			expectedModel: fixModel(name, fixModelInputOnlyParameters),
+			givenGQLParams: fixGQLInputParameters(),
+
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelSecret: fixModelInputSecret(name, true, false),
 		},
 		"Should convert only input TypeInstances": {
-			givenGQLInput: fixGQLActionInput(name, nil, fixGQLInputTypeInstances(), nil),
-			expectedModel: fixModel(name, fixModelInputOnlyTypeInstances),
+			givenGQLTI: fixGQLInputTypeInstances(),
+
+			expectedModelTI: fixModelInputTypeInstances(),
 		},
 		"Should convert only Action policy": {
-			givenGQLInput: fixGQLActionInput(name, nil, nil, fixGQLInputActionPolicy()),
-			expectedModel: fixModel(name, fixModelInputOnlyPolicy),
+			givenGQLPolicy: fixGQLInputActionPolicy(),
+
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, false, true),
 		},
 	}
 	for tn, tc := range tests {
@@ -44,12 +62,15 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 			// given
 			c := action.NewConverter()
 
+			givenGQLInput := fixGQLActionInput(name, tc.givenGQLParams, tc.givenGQLTI, tc.givenGQLPolicy)
+			expectedModel := fixActionModel(name, tc.expectedModelParams, tc.expectedModelTI, tc.expectedModelPolicy, tc.expectedModelSecret)
+
 			// when
-			actualModel, err := c.FromGraphQLInput(tc.givenGQLInput)
+			actualModel, err := c.FromGraphQLInput(givenGQLInput)
 
 			// then
 			require.NoError(t, err)
-			assert.Equal(t, tc.expectedModel, actualModel)
+			assert.Equal(t, expectedModel, actualModel)
 		})
 	}
 }
