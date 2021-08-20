@@ -30,6 +30,7 @@ import (
 
 	tools "capact.io/capact/internal"
 	"capact.io/capact/internal/ptr"
+	util "github.com/Masterminds/goutils"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -320,7 +321,31 @@ func (n *Neo4j) InstallUpgrade(ctx context.Context, version string) (*release.Re
 func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := a.upgradeAction(version)
 
-	values := tools.MergeMaps(map[string]interface{}{}, a.Overrides)
+	values := make(map[string]interface{})
+	minioValues := make(map[string]interface{})
+	values["minio"] = minioValues
+
+	accessKeyMap := make(map[string]interface{})
+	minioValues["accessKey"] = accessKeyMap
+
+	secretKeyMap := make(map[string]interface{})
+	minioValues["secretKey"] = secretKeyMap
+
+	k8sClient, _ := a.configuration.KubernetesClientSet()
+	s, err := k8sClient.CoreV1().Secrets(a.opts.Namespace).Get(ctx, a.ReleaseName+"-minio", metav1.GetOptions{})
+
+	if apierrors.IsNotFound(err) {
+		// Chart does not exist, so we have to generate and set the credentials
+		accessKeyMap["password"], _ = util.CryptoRandomAlphaNumeric(10)
+		secretKeyMap["password"], _ = util.CryptoRandomAlphaNumeric(40)
+	} else if err != nil {
+		return nil, errors.Wrap(err, "while getting minio secret")
+	} else {
+		accessKeyMap["password"] = string(s.Data["access-key"])
+		secretKeyMap["password"] = string(s.Data["secret-key"])
+	}
+
+	values = tools.MergeMaps(values, a.Overrides)
 
 	return a.runUpgrade(upgradeCli, values)
 }

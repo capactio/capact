@@ -9,6 +9,7 @@ require (
 	github.com/BurntSushi/toml v0.4.1 // indirect
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
+	github.com/Masterminds/goutils v1.1.1
 	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/argoproj/argo-workflows/v3 v3.1.0-rc1.0.20210811221840-88520891a037
 	github.com/avast/retry-go v3.0.0+incompatible
