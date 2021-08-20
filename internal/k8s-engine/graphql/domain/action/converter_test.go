@@ -17,17 +17,41 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	const (
 		name = "name"
 	)
-	gqlInput := fixGQLInput(name)
-	expectedModel := fixModel(name)
 
-	c := action.NewConverter()
+	tests := map[string]struct {
+		givenGQLInput graphql.ActionDetailsInput
+		expectedModel model.ActionToCreateOrUpdate
+	}{
+		"Should convert all inputs": {
+			givenGQLInput: fixGQLActionInput(name, fixGQLInputParameters(), fixGQLInputTypeInstances(), fixGQLInputActionPolicy()),
+			expectedModel: fixModel(name, fixModelInputParametersTypeInstancesAndPolicy),
+		},
+		"Should convert only input parameters": {
+			givenGQLInput: fixGQLActionInput(name, fixGQLInputParameters(), nil, nil),
+			expectedModel: fixModel(name, fixModelInputOnlyParameters),
+		},
+		"Should convert only input TypeInstances": {
+			givenGQLInput: fixGQLActionInput(name, nil, fixGQLInputTypeInstances(), nil),
+			expectedModel: fixModel(name, fixModelInputOnlyTypeInstances),
+		},
+		"Should convert only Action policy": {
+			givenGQLInput: fixGQLActionInput(name, nil, nil, fixGQLInputActionPolicy()),
+			expectedModel: fixModel(name, fixModelInputOnlyPolicy),
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			c := action.NewConverter()
 
-	// when
-	actualModel, err := c.FromGraphQLInput(gqlInput)
+			// when
+			actualModel, err := c.FromGraphQLInput(tc.givenGQLInput)
 
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, expectedModel, actualModel)
+			// then
+			require.NoError(t, err)
+			assert.Equal(t, tc.expectedModel, actualModel)
+		})
+	}
 }
 
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
