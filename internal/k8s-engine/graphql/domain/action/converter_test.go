@@ -20,41 +20,29 @@ func TestConverter_FromGraphQLInput_HappyPath1(t *testing.T) {
 	)
 
 	tests := map[string]struct {
-		givenGQLParams *graphql.JSON
-		givenGQLTI     []*graphql.InputTypeInstanceData
-		givenGQLPolicy *graphql.PolicyInput
-
-		expectedModelParams *v1alpha1.InputParameters
-		expectedModelPolicy *v1alpha1.ActionPolicy
-		expectedModelSecret *v1.Secret
-		expectedModelTI     *[]v1alpha1.InputTypeInstance
+		paramsDefined        bool
+		typeInstancesDefined bool
+		policyDefined        bool
 	}{
 		"Should convert all inputs": {
-			givenGQLParams: fixGQLInputParameters(),
-			givenGQLTI:     fixGQLInputTypeInstances(),
-			givenGQLPolicy: fixGQLInputActionPolicy(),
-
-			expectedModelParams: fixModelInputParameters(name),
-			expectedModelTI:     fixModelInputTypeInstances(),
-			expectedModelPolicy: fixModelInputPolicy(name),
-			expectedModelSecret: fixModelInputSecret(name, true, true),
+			paramsDefined:        true,
+			typeInstancesDefined: true,
+			policyDefined:        true,
 		},
 		"Should convert only input parameters": {
-			givenGQLParams: fixGQLInputParameters(),
-
-			expectedModelParams: fixModelInputParameters(name),
-			expectedModelSecret: fixModelInputSecret(name, true, false),
+			paramsDefined:        true,
+			typeInstancesDefined: false,
+			policyDefined:        false,
 		},
 		"Should convert only input TypeInstances": {
-			givenGQLTI: fixGQLInputTypeInstances(),
-
-			expectedModelTI: fixModelInputTypeInstances(),
+			paramsDefined:        false,
+			typeInstancesDefined: true,
+			policyDefined:        false,
 		},
 		"Should convert only Action policy": {
-			givenGQLPolicy: fixGQLInputActionPolicy(),
-
-			expectedModelPolicy: fixModelInputPolicy(name),
-			expectedModelSecret: fixModelInputSecret(name, false, true),
+			paramsDefined:        false,
+			typeInstancesDefined: false,
+			policyDefined:        true,
 		},
 	}
 	for tn, tc := range tests {
@@ -62,8 +50,32 @@ func TestConverter_FromGraphQLInput_HappyPath1(t *testing.T) {
 			// given
 			c := action.NewConverter()
 
-			givenGQLInput := fixGQLActionInput(name, tc.givenGQLParams, tc.givenGQLTI, tc.givenGQLPolicy)
-			expectedModel := fixActionModel(name, tc.expectedModelParams, tc.expectedModelTI, tc.expectedModelPolicy, tc.expectedModelSecret)
+			var (
+				givenGQLParams *graphql.JSON
+				givenGQLTI     []*graphql.InputTypeInstanceData
+				givenGQLPolicy *graphql.PolicyInput
+
+				expectedModelParams *v1alpha1.InputParameters
+				expectedModelPolicy *v1alpha1.ActionPolicy
+				expectedModelSecret *v1.Secret
+				expectedModelTI     *[]v1alpha1.InputTypeInstance
+			)
+			if tc.paramsDefined {
+				givenGQLParams = fixGQLInputParameters()
+				expectedModelParams = fixModelInputParameters(name)
+			}
+			if tc.policyDefined {
+				givenGQLPolicy = fixGQLInputActionPolicy()
+				expectedModelPolicy = fixModelInputPolicy(name)
+			}
+			if tc.typeInstancesDefined {
+				givenGQLTI = fixGQLInputTypeInstances()
+				expectedModelTI = fixModelInputTypeInstances()
+			}
+			expectedModelSecret = fixModelInputSecret(name, tc.paramsDefined, tc.policyDefined)
+
+			givenGQLInput := fixGQLActionInput(name, givenGQLParams, givenGQLTI, givenGQLPolicy)
+			expectedModel := fixActionModel(name, expectedModelParams, expectedModelTI, expectedModelPolicy, expectedModelSecret)
 
 			// when
 			actualModel, err := c.FromGraphQLInput(givenGQLInput)
