@@ -322,32 +322,90 @@ func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Rel
 	upgradeCli := a.upgradeAction(version)
 
 	values := make(map[string]interface{})
-	minioValues := make(map[string]interface{})
-	values["minio"] = minioValues
 
-	accessKeyMap := make(map[string]interface{})
-	minioValues["accessKey"] = accessKeyMap
+	isReleased, err := a.isReleased()
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Argo Helm release")
+	}
 
-	secretKeyMap := make(map[string]interface{})
-	minioValues["secretKey"] = secretKeyMap
+	if !isReleased && !a.areMinioCredentialsProvided(a.Overrides) {
+		accessKey, err := util.CryptoRandomAlphaNumeric(10)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating accessKey")
+		}
+		secretKey, err := util.CryptoRandomAlphaNumeric(40)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating secretKey")
+		}
 
-	k8sClient, _ := a.configuration.KubernetesClientSet()
-	s, err := k8sClient.CoreV1().Secrets(a.opts.Namespace).Get(ctx, a.ReleaseName+"-minio", metav1.GetOptions{})
+		credentials := map[string]interface{}{
+			"minio": map[string]interface{}{
+				"accessKey": map[string]interface{}{
+					"password": accessKey,
+				},
+				"secretKey": map[string]interface{}{
+					"password": secretKey,
+				},
+			},
+		}
 
-	if apierrors.IsNotFound(err) {
-		// Chart does not exist, so we have to generate and set the credentials
-		accessKeyMap["password"], _ = util.CryptoRandomAlphaNumeric(10)
-		secretKeyMap["password"], _ = util.CryptoRandomAlphaNumeric(40)
-	} else if err != nil {
-		return nil, errors.Wrap(err, "while getting minio secret")
-	} else {
-		accessKeyMap["password"] = string(s.Data["access-key"])
-		secretKeyMap["password"] = string(s.Data["secret-key"])
+		values = tools.MergeMaps(values, credentials)
 	}
 
 	values = tools.MergeMaps(values, a.Overrides)
 
 	return a.runUpgrade(upgradeCli, values)
+}
+
+func (a *Argo) isReleased() (bool, error) {
+	getAction := action.NewGet(a.configuration)
+	_, err := getAction.Run(a.ReleaseName)
+
+	if errors.Is(err, driver.ErrReleaseNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
+func (a *Argo) areMinioCredentialsProvided(values map[string]interface{}) bool {
+	minio, ok := values["minio"].(map[string]interface{})
+	if !ok {
+		// if minio key is not set
+		return false
+	}
+
+	if existingSecret, ok := minio["existingSecret"]; ok && existingSecret != "" {
+		// if minio.existingSecret is set
+		return true
+	}
+
+	accessKey, ok := minio["accessKey"].(map[string]interface{})
+	if !ok {
+		// if minio.accessKey is not set
+		return false
+	}
+
+	if accessKeyPassword, ok := accessKey["password"]; !ok || accessKeyPassword == "" {
+		// if minio.accessKey.password is not set
+		return false
+	}
+
+	secretKey, ok := minio["secretKey"].(map[string]interface{})
+	if !ok {
+		// if minio.secretKey is not set
+		return false
+	}
+
+	if secretKeyPassword, ok := secretKey["password"]; !ok || secretKeyPassword == "" {
+		// if minio.secretKey.password is not set
+		return false
+	}
+
+	// minio.accessKey.password and minio.secretKey.password is set
+	return true
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
