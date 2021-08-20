@@ -101,16 +101,35 @@ func (c *Client) ListInterfaces(ctx context.Context, opts ...InterfaceOption) ([
 	ifaceOpts := &InterfaceOptions{}
 	ifaceOpts.Apply(opts...)
 
-	req := graphql.NewRequest(fmt.Sprintf(`query ListInterfaces($interfaceFilter: InterfaceFilter!)  {
-		  interfaces(filter: $interfaceFilter) {
+	queryFields := fmt.Sprintf(`
 			path
 			name
 			prefix
+			%s`, ifaceOpts.additionalFields)
+
+	var req *graphql.Request
+	if ifaceOpts.filter.PathPattern != nil {
+		// Send query with filter only if defined.
+		// Sending without `interfaceFilter` or with
+		//   {
+		//    "interfaceFilter": {
+		//      "pathPattern": null
+		//    }
+		//   }
+		// always results in empty response and no error.
+		req = graphql.NewRequest(fmt.Sprintf(`query ListInterfaces($interfaceFilter: InterfaceFilter!)  {
+		  interfaces(filter: $interfaceFilter) {
+		  	%s
+		  }
+		}`, queryFields))
+		req.Var("interfaceFilter", ifaceOpts.filter)
+	} else {
+		req = graphql.NewRequest(fmt.Sprintf(`query ListInterfaces{
+		  interfaces {
 			%s
 		  }
-		}`, ifaceOpts.additionalFields))
-
-	req.Var("interfaceFilter", ifaceOpts.filter)
+		}`, queryFields))
+	}
 
 	var resp struct {
 		Interfaces []*gqlpublicapi.Interface `json:"interfaces"`
