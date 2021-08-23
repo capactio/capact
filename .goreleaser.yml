@@ -19,9 +19,9 @@ builds:
       - linux
       - windows
       - darwin
-    hooks: &build-hooks
-      # Install upx first, https://github.com/upx/upx/releases
-      post: upx -9 "{{ .Path }}"
+    #hooks: &build-hooks
+    #  # Install upx first, https://github.com/upx/upx/releases
+    #  post: upx -9 "{{ .Path }}"
     main: ./cmd/cli
     binary: 'capact-{{ .Os }}-{{ .Arch }}'
     ldflags:
@@ -32,7 +32,7 @@ builds:
   - id: populator
     env: *build-env
     goos: *build-goos
-    hooks: *build-hooks
+    #hooks: *build-hooks
     main: ./cmd/populator
     binary: 'populator-{{ .Os }}-{{ .Arch }}'
     no_unique_dist_dir: true
@@ -41,15 +41,15 @@ archives:
   - format: binary
     name_template: '{{ .Binary }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
 
-dockers:
-  - dockerfile: Dockerfile.cli
-    ids:
-      - capact
-    image_templates:
-      - "ghcr.io/capactio/tools/capact-cli:stable"
-      - "ghcr.io/capactio/tools/capact-cli:{{ .Tag }}"
-      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
-      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}"
+#dockers:
+#  - dockerfile: Dockerfile.cli
+#    ids:
+#      - capact
+#    image_templates:
+#      - "ghcr.io/capactio/tools/capact-cli:stable"
+#      - "ghcr.io/capactio/tools/capact-cli:{{ .Tag }}"
+#      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
+#      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}"
 
 checksum:
   name_template: 'checksums.txt'
@@ -66,13 +66,13 @@ changelog:
 
 dist: bin
 
-blobs:
-  -
-    provider: gs
-    bucket: capactio-binaries
-    folder: '{{ .Tag }}'
+#blobs:
+#  -
+#    provider: gs
+#    bucket: capactio-binaries
+#    folder: '{{ .Tag }}'
 
 release:
-  # You can disable this pipe in order to not upload any artifacts.
-  # Defaults to false.
-  disable: true
+  github:
+    owner: trojan295
+    name: capact
