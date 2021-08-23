@@ -1,5 +1,4 @@
 name: Main branch
-
 on:
   push:
     paths:
@@ -27,7 +26,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -46,7 +44,6 @@ jobs:
       - name: Check generated files
         run: |
           make test-generated
-
   prepare-matrix:
     name: Prepare components build matrix
     runs-on: ubuntu-latest
@@ -56,7 +53,6 @@ jobs:
       matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
     permissions:
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -70,7 +66,6 @@ jobs:
         run: echo "::set-output ${TESTS}"
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
-
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
@@ -80,7 +75,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -91,7 +85,6 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-app-image-${{ matrix.APP }}
-
   build-tests:
     name: Build ${{ matrix.TEST }}
     runs-on: ubuntu-latest
@@ -101,7 +94,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -112,7 +104,6 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-test-image-${{ matrix.TEST }}
-
   build-infra:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
@@ -123,7 +114,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -134,14 +124,12 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-infra-image-${{ matrix.INFRA }}
-
   release-helm-chart:
     name: Release Helm Charts
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -156,7 +144,6 @@ jobs:
           MAIN_BUILD: "true"
         run: |
           make release-charts
-
   release-cli:
     name: Release the latest Capact CLIs
     runs-on: ubuntu-latest
@@ -164,7 +151,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -200,14 +186,12 @@ jobs:
       - name: Release latest CLI
         run: |
           make release-latest-binaries
-
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: [ entry-tests, build-app, build-tests ]
+    needs: [entry-tests, build-app, build-tests]
     permissions:
       contents: read
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -240,15 +224,13 @@ jobs:
           name: cluster_dump_${{github.sha}}
           path: "output"
           retention-days: 5 # Default 90 days
-
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
-    needs: [ release-helm-chart, release-cli, build-app, build-tests ]
+    needs: [release-helm-chart, release-cli, build-app, build-tests]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
-
     env:
       CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE: "no-pass"
       CAPACT_CREDENTIALS_STORE_BACKEND: "file"
@@ -286,14 +268,11 @@ jobs:
             --name-regex 'capact-upgrade-*' \
             --namespace 'capact-system' \
             --phase 'SUCCEEDED'
-
-
   slackNotification:
     name: Slack Notification
     runs-on: ubuntu-latest
-    needs: [ update-cluster ]
+    needs: [update-cluster]
     if: always()
-
     steps:
       - name: Slack Notification
         if: ${{ always() && needs.update-cluster.result != 'success' }}

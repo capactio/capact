@@ -1,0 +1,22 @@
+name: Make release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version in semver
+        required: true
+
+jobs:
+  make-release:
+    name: Make release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Create release commit and tag
+        env:
+          RELEASE_VERSION: "${{ github.event.inputs.version }}"
+        run: |
+          ./hack/create-release.sh
