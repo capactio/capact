@@ -13,11 +13,9 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func TestConverter_FromGraphQLInput_HappyPath1(t *testing.T) {
+func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
-	const (
-		name = "name"
-	)
+	const name = "name"
 
 	tests := map[string]struct {
 		paramsDefined        bool
@@ -50,32 +48,7 @@ func TestConverter_FromGraphQLInput_HappyPath1(t *testing.T) {
 			// given
 			c := action.NewConverter()
 
-			var (
-				givenGQLParams *graphql.JSON
-				givenGQLTI     []*graphql.InputTypeInstanceData
-				givenGQLPolicy *graphql.PolicyInput
-
-				expectedModelParams *v1alpha1.InputParameters
-				expectedModelPolicy *v1alpha1.ActionPolicy
-				expectedModelSecret *v1.Secret
-				expectedModelTI     *[]v1alpha1.InputTypeInstance
-			)
-			if tc.paramsDefined {
-				givenGQLParams = fixGQLInputParameters()
-				expectedModelParams = fixModelInputParameters(name)
-			}
-			if tc.policyDefined {
-				givenGQLPolicy = fixGQLInputActionPolicy()
-				expectedModelPolicy = fixModelInputPolicy(name)
-			}
-			if tc.typeInstancesDefined {
-				givenGQLTI = fixGQLInputTypeInstances()
-				expectedModelTI = fixModelInputTypeInstances()
-			}
-			expectedModelSecret = fixModelInputSecret(name, tc.paramsDefined, tc.policyDefined)
-
-			givenGQLInput := fixGQLActionInput(name, givenGQLParams, givenGQLTI, givenGQLPolicy)
-			expectedModel := fixActionModel(name, expectedModelParams, expectedModelTI, expectedModelPolicy, expectedModelSecret)
+			givenGQLInput, expectedModel := buildFixGQLAndExpectedModels(name, tc.paramsDefined, tc.typeInstancesDefined, tc.policyDefined)
 
 			// when
 			actualModel, err := c.FromGraphQLInput(givenGQLInput)
@@ -156,4 +129,37 @@ func TestConverter_AdvancedModeContinueRenderingInputFromGraphQL_HappyPath(t *te
 
 	// then
 	assert.Equal(t, expectedModelAdvancedModeIterationInput, modelActionFilter)
+}
+
+func buildFixGQLAndExpectedModels(name string, paramsDefined, typeInstancesDefined, policyDefined bool) (graphql.ActionDetailsInput, model.ActionToCreateOrUpdate) {
+	var (
+		givenGQLParams *graphql.JSON
+		givenGQLTI     []*graphql.InputTypeInstanceData
+		givenGQLPolicy *graphql.PolicyInput
+
+		expectedModelParams *v1alpha1.InputParameters
+		expectedModelPolicy *v1alpha1.ActionPolicy
+		expectedModelSecret *v1.Secret
+		expectedModelTI     *[]v1alpha1.InputTypeInstance
+	)
+
+	if paramsDefined {
+		givenGQLParams = fixGQLInputParameters()
+		expectedModelParams = fixModelInputParameters(name)
+	}
+	if policyDefined {
+		givenGQLPolicy = fixGQLInputActionPolicy()
+		expectedModelPolicy = fixModelInputPolicy(name)
+	}
+	if typeInstancesDefined {
+		givenGQLTI = fixGQLInputTypeInstances()
+		expectedModelTI = fixModelInputTypeInstances()
+	}
+
+	expectedModelSecret = fixModelInputSecret(name, paramsDefined, policyDefined)
+
+	givenGQLInput := fixGQLActionInput(name, givenGQLParams, givenGQLTI, givenGQLPolicy)
+	expectedModel := fixActionModel(name, expectedModelParams, expectedModelTI, expectedModelPolicy, expectedModelSecret)
+
+	return givenGQLInput, expectedModel
 }
