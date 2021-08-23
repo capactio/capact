@@ -323,12 +323,12 @@ func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Rel
 
 	values := make(map[string]interface{})
 
-	isReleased, err := a.isReleased()
+	installed, err := a.isInstalled()
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting Argo Helm release")
 	}
 
-	if !isReleased && !a.areMinioCredentialsProvided(a.Overrides) {
+	if !installed && !a.areMinioCredentialsProvided(a.Overrides) {
 		accessKey, err := util.CryptoRandomAlphaNumeric(10)
 		if err != nil {
 			return nil, errors.Wrap(err, "while generating accessKey")
@@ -357,14 +357,14 @@ func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Rel
 	return a.runUpgrade(upgradeCli, values)
 }
 
-func (a *Argo) isReleased() (bool, error) {
+func (a *Argo) isInstalled() (bool, error) {
 	getAction := action.NewGet(a.configuration)
 	_, err := getAction.Run(a.ReleaseName)
 
 	if errors.Is(err, driver.ErrReleaseNotFound) {
 		return false, nil
 	} else if err != nil {
-		return false, err
+		return false, errors.Wrap(err, "while checking if the Argo release exists")
 	}
 
 	return true, nil
