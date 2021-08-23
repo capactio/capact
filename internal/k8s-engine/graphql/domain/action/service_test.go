@@ -26,7 +26,7 @@ import (
 func TestService_Create(t *testing.T) {
 	// given
 	const (
-		name = "foo"
+		name = "create"
 		ns   = "bar"
 	)
 
@@ -53,7 +53,7 @@ func TestService_Create(t *testing.T) {
 func TestService_Update(t *testing.T) {
 	// given
 	const (
-		name = "foo"
+		name = "update"
 		ns   = "bar"
 	)
 
@@ -86,7 +86,7 @@ func TestService_Update(t *testing.T) {
 
 func TestService_GetByName(t *testing.T) {
 	const (
-		name = "foo"
+		name = "get-by-name"
 		ns   = "bar"
 	)
 

@@ -186,12 +186,13 @@ func (c *Converter) AdvancedModeContinueRenderingInputFromGraphQL(in graphql.Adv
 }
 
 func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name string) (*v1.Secret, error) {
-	if in == nil || in.Parameters == nil {
+	if in == nil || (in.Parameters == nil && in.ActionPolicy == nil) {
 		return nil, nil
 	}
 
-	data := map[string]string{
-		ParametersSecretDataKey: string(*in.Parameters),
+	data := map[string]string{}
+	if in.Parameters != nil {
+		data[ParametersSecretDataKey] = string(*in.Parameters)
 	}
 
 	if in.ActionPolicy != nil {

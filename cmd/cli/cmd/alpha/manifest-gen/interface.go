@@ -15,9 +15,10 @@ var interfaceCfg manifestgen.InterfaceConfig
 // NewInterface returns a cobra.Command to bootstrap new Interface manifests.
 func NewInterface() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "interface [PATH]",
-		Short: "Generate new Interface-related manifests",
-		Long:  "Generate new InterfaceGroup, Interface and associated Type manifests",
+		Use:     "interface [PATH]",
+		Aliases: []string{"iface", "interfaces"},
+		Short:   "Generate new Interface-related manifests",
+		Long:    "Generate new InterfaceGroup, Interface and associated Type manifests",
 		Example: heredoc.WithCLIName(`
 			# Generate manifests for the cap.interface.database.postgresql.install Interface
 			<cli> alpha content interface cap.interface.database.postgresql install`, cli.Name),
