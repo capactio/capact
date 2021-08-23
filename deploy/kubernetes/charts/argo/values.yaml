@@ -20,8 +20,6 @@ argo-workflows:
         key: secret-key
 
 minio:
-  forceNewKeys: true
-
   podSecurityContext:
     enabled: false
   service:

@@ -30,6 +30,7 @@ import (
 
 	tools "capact.io/capact/internal"
 	"capact.io/capact/internal/ptr"
+	util "github.com/Masterminds/goutils"
 	"k8s.io/utils/strings/slices"
 )
 
@@ -320,9 +321,91 @@ func (n *Neo4j) InstallUpgrade(ctx context.Context, version string) (*release.Re
 func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := a.upgradeAction(version)
 
-	values := tools.MergeMaps(map[string]interface{}{}, a.Overrides)
+	values := make(map[string]interface{})
+
+	installed, err := a.isInstalled()
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Argo Helm release")
+	}
+
+	if !installed && !a.areMinioCredentialsProvided(a.Overrides) {
+		accessKey, err := util.CryptoRandomAlphaNumeric(10)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating accessKey")
+		}
+		secretKey, err := util.CryptoRandomAlphaNumeric(40)
+		if err != nil {
+			return nil, errors.Wrap(err, "while generating secretKey")
+		}
+
+		credentials := map[string]interface{}{
+			"minio": map[string]interface{}{
+				"accessKey": map[string]interface{}{
+					"password": accessKey,
+				},
+				"secretKey": map[string]interface{}{
+					"password": secretKey,
+				},
+			},
+		}
+
+		values = tools.MergeMaps(values, credentials)
+	}
+
+	values = tools.MergeMaps(values, a.Overrides)
 
 	return a.runUpgrade(upgradeCli, values)
+}
+
+func (a *Argo) isInstalled() (bool, error) {
+	getAction := action.NewGet(a.configuration)
+	_, err := getAction.Run(a.ReleaseName)
+
+	if errors.Is(err, driver.ErrReleaseNotFound) {
+		return false, nil
+	} else if err != nil {
+		return false, errors.Wrap(err, "while checking if the Argo release exists")
+	}
+
+	return true, nil
+}
+
+func (a *Argo) areMinioCredentialsProvided(values map[string]interface{}) bool {
+	minio, ok := values["minio"].(map[string]interface{})
+	if !ok {
+		// if minio key is not set
+		return false
+	}
+
+	if existingSecret, ok := minio["existingSecret"]; ok && existingSecret != "" {
+		// if minio.existingSecret is set
+		return true
+	}
+
+	accessKey, ok := minio["accessKey"].(map[string]interface{})
+	if !ok {
+		// if minio.accessKey is not set
+		return false
+	}
+
+	if accessKeyPassword, ok := accessKey["password"]; !ok || accessKeyPassword == "" {
+		// if minio.accessKey.password is not set
+		return false
+	}
+
+	secretKey, ok := minio["secretKey"].(map[string]interface{})
+	if !ok {
+		// if minio.secretKey is not set
+		return false
+	}
+
+	if secretKeyPassword, ok := secretKey["password"]; !ok || secretKeyPassword == "" {
+		// if minio.secretKey.password is not set
+		return false
+	}
+
+	// minio.accessKey.password and minio.secretKey.password is set
+	return true
 }
 
 // InstallUpgrade upgrades or if not available, installs the component
