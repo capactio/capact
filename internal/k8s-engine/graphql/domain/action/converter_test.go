@@ -15,32 +15,44 @@ import (
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
-	const name = "name"
+	const name = "from-gql"
 
 	tests := map[string]struct {
-		paramsDefined        bool
-		typeInstancesDefined bool
-		policyDefined        bool
+		givenGQLParams *graphql.JSON
+		givenGQLTI     []*graphql.InputTypeInstanceData
+		givenGQLPolicy *graphql.PolicyInput
+
+		expectedModelParams *v1alpha1.InputParameters
+		expectedModelPolicy *v1alpha1.ActionPolicy
+		expectedModelSecret *v1.Secret
+		expectedModelTI     *[]v1alpha1.InputTypeInstance
 	}{
 		"Should convert all inputs": {
-			paramsDefined:        true,
-			typeInstancesDefined: true,
-			policyDefined:        true,
+			givenGQLParams: fixGQLInputParameters(),
+			givenGQLTI:     fixGQLInputTypeInstances(),
+			givenGQLPolicy: fixGQLInputActionPolicy(),
+
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelTI:     fixModelInputTypeInstances(),
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, true, true),
 		},
 		"Should convert only input parameters": {
-			paramsDefined:        true,
-			typeInstancesDefined: false,
-			policyDefined:        false,
+			givenGQLParams: fixGQLInputParameters(),
+
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelSecret: fixModelInputSecret(name, true, false),
 		},
 		"Should convert only input TypeInstances": {
-			paramsDefined:        false,
-			typeInstancesDefined: true,
-			policyDefined:        false,
+			givenGQLTI: fixGQLInputTypeInstances(),
+
+			expectedModelTI: fixModelInputTypeInstances(),
 		},
 		"Should convert only Action policy": {
-			paramsDefined:        false,
-			typeInstancesDefined: false,
-			policyDefined:        true,
+			givenGQLPolicy: fixGQLInputActionPolicy(),
+
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, false, true),
 		},
 	}
 	for tn, tc := range tests {
@@ -48,7 +60,8 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 			// given
 			c := action.NewConverter()
 
-			givenGQLInput, expectedModel := buildFixGQLAndExpectedModels(name, tc.paramsDefined, tc.typeInstancesDefined, tc.policyDefined)
+			givenGQLInput := fixGQLActionInput(name, tc.givenGQLParams, tc.givenGQLTI, tc.givenGQLPolicy)
+			expectedModel := fixActionModel(name, tc.expectedModelParams, tc.expectedModelTI, tc.expectedModelPolicy, tc.expectedModelSecret)
 
 			// when
 			actualModel, err := c.FromGraphQLInput(givenGQLInput)
@@ -63,7 +76,7 @@ func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	// given
 	const (
-		name = "name"
+		name = "to-gql"
 		ns   = "ns"
 	)
 
@@ -129,37 +142,4 @@ func TestConverter_AdvancedModeContinueRenderingInputFromGraphQL_HappyPath(t *te
 
 	// then
 	assert.Equal(t, expectedModelAdvancedModeIterationInput, modelActionFilter)
-}
-
-func buildFixGQLAndExpectedModels(name string, paramsDefined, typeInstancesDefined, policyDefined bool) (graphql.ActionDetailsInput, model.ActionToCreateOrUpdate) {
-	var (
-		givenGQLParams *graphql.JSON
-		givenGQLTI     []*graphql.InputTypeInstanceData
-		givenGQLPolicy *graphql.PolicyInput
-
-		expectedModelParams *v1alpha1.InputParameters
-		expectedModelPolicy *v1alpha1.ActionPolicy
-		expectedModelSecret *v1.Secret
-		expectedModelTI     *[]v1alpha1.InputTypeInstance
-	)
-
-	if paramsDefined {
-		givenGQLParams = fixGQLInputParameters()
-		expectedModelParams = fixModelInputParameters(name)
-	}
-	if policyDefined {
-		givenGQLPolicy = fixGQLInputActionPolicy()
-		expectedModelPolicy = fixModelInputPolicy(name)
-	}
-	if typeInstancesDefined {
-		givenGQLTI = fixGQLInputTypeInstances()
-		expectedModelTI = fixModelInputTypeInstances()
-	}
-
-	expectedModelSecret = fixModelInputSecret(name, paramsDefined, policyDefined)
-
-	givenGQLInput := fixGQLActionInput(name, givenGQLParams, givenGQLTI, givenGQLPolicy)
-	expectedModel := fixActionModel(name, expectedModelParams, expectedModelTI, expectedModelPolicy, expectedModelSecret)
-
-	return givenGQLInput, expectedModel
 }

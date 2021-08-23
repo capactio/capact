@@ -383,7 +383,6 @@ func fixGQLInputTypeInstances() []*graphql.InputTypeInstanceData {
 	}
 }
 
-//nolint:unparam
 func fixGQLActionInput(name string, parameters *graphql.JSON, instances []*graphql.InputTypeInstanceData, policy *graphql.PolicyInput) graphql.ActionDetailsInput {
 	override := graphql.JSON(`{"foo":"bar"}`)
 
@@ -489,7 +488,6 @@ func fixActionModel(name string, params *v1alpha1.InputParameters, ti *[]v1alpha
 	}
 }
 
-//nolint:unparam
 func fixModel(name string) model.ActionToCreateOrUpdate {
 	return model.ActionToCreateOrUpdate{
 		Action: v1alpha1.Action{
