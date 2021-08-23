@@ -11,7 +11,7 @@ type ListImplementationRevisionsForInterfaceOption func(*ListImplementationRevis
 type ListImplementationRevisionsForInterfaceOptions struct {
 	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
 	implPathPattern              *string
-	requirementsSatisfiedBy      map[string]*string
+	requirementsSatisfiedBy      map[string]string
 	requires                     map[string]*string
 	sortByPathAscAndRevisionDesc bool
 }
@@ -46,7 +46,7 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 
 		// 3. Process TypeInstances, which should satisfy requirements
 		if len(filter.RequirementsSatisfiedBy) > 0 {
-			opt.requirementsSatisfiedBy = map[string]*string{}
+			opt.requirementsSatisfiedBy = make(map[string]string)
 			for _, req := range filter.RequirementsSatisfiedBy {
 				if req.TypeRef == nil {
 					continue

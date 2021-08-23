@@ -81,11 +81,13 @@ input ImplementationRevisionFilter {
   such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
   """
   requires: [TypeReferenceWithOptionalRevision]
+
+  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
 }
 # lint-enable defined-types-are-used
 
 input TypeInstanceValue {
-  typeRef: TypeReferenceWithOptionalRevision
+  typeRef: TypeReferenceInput!
 
   """
   Currently not supported.
@@ -97,6 +99,11 @@ input TypeInstanceValue {
 input TypeReferenceWithOptionalRevision {
   path: NodePath!
   revision: Version
+}
+
+input TypeReferenceInput {
+  path: NodePath!
+  revision: Version!
 }
 
 input AttributeFilterInput {

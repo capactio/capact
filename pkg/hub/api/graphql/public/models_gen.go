@@ -160,7 +160,8 @@ type ImplementationRevisionFilter struct {
 	//
 	// For every item in the array, the returned ImplementationRevisions must specify
 	// such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
-	Requires []*TypeReferenceWithOptionalRevision `json:"requires"`
+	Requires                                  []*TypeReferenceWithOptionalRevision `json:"requires"`
+	RequiredTypeInstancesInjectionSatisfiedBy []*TypeInstanceValue                 `json:"requiredTypeInstancesInjectionSatisfiedBy"`
 }
 
 type ImplementationSpec struct {
@@ -316,7 +317,7 @@ type TypeInstanceRelationItem struct {
 }
 
 type TypeInstanceValue struct {
-	TypeRef *TypeReferenceWithOptionalRevision `json:"typeRef"`
+	TypeRef *TypeReferenceInput `json:"typeRef"`
 	// Currently not supported.
 	// Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
 	Value interface{} `json:"value"`
@@ -338,6 +339,11 @@ type TypeMetadata struct {
 func (TypeMetadata) IsMetadataBaseFields() {}
 
 type TypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type TypeReferenceInput struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
 }

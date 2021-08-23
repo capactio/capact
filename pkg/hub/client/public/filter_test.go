@@ -122,9 +122,9 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 			},
 			requirementsSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
 				{
-					TypeRef: &gqlpublicapi.TypeReferenceWithOptionalRevision{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
 						Path:     "cap.type.gcp.sa",
-						Revision: ptr.String("0.1.1"),
+						Revision: "0.1.1",
 					},
 				},
 			},
@@ -159,9 +159,9 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 			},
 			requirementsSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
 				{
-					TypeRef: &gqlpublicapi.TypeReferenceWithOptionalRevision{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
 						Path:     "cap.type.gcp.sa",
-						Revision: ptr.String("0.1.1"),
+						Revision: "0.1.1",
 					},
 				},
 			},
