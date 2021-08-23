@@ -23,5 +23,5 @@ jobs:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
         run: |
           git remote remove origin
-          git remote add origin https://${{secrets.PAT}}@github.com/capactio/capact.git
+          git remote add origin https://${{secrets.PAT}}@github.com/${{github.repository}}.git
           ./hack/create-release.sh
