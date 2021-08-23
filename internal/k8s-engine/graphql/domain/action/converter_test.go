@@ -10,30 +10,73 @@ import (
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
 )
 
 func TestConverter_FromGraphQLInput_HappyPath(t *testing.T) {
 	// given
-	const (
-		name = "name"
-	)
-	gqlInput := fixGQLInput(name)
-	expectedModel := fixModel(name)
+	const name = "from-gql"
 
-	c := action.NewConverter()
+	tests := map[string]struct {
+		givenGQLParams *graphql.JSON
+		givenGQLTI     []*graphql.InputTypeInstanceData
+		givenGQLPolicy *graphql.PolicyInput
 
-	// when
-	actualModel, err := c.FromGraphQLInput(gqlInput)
+		expectedModelParams *v1alpha1.InputParameters
+		expectedModelPolicy *v1alpha1.ActionPolicy
+		expectedModelSecret *v1.Secret
+		expectedModelTI     *[]v1alpha1.InputTypeInstance
+	}{
+		"Should convert all inputs": {
+			givenGQLParams: fixGQLInputParameters(),
+			givenGQLTI:     fixGQLInputTypeInstances(),
+			givenGQLPolicy: fixGQLInputActionPolicy(),
 
-	// then
-	require.NoError(t, err)
-	assert.Equal(t, expectedModel, actualModel)
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelTI:     fixModelInputTypeInstances(),
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, true, true),
+		},
+		"Should convert only input parameters": {
+			givenGQLParams: fixGQLInputParameters(),
+
+			expectedModelParams: fixModelInputParameters(name),
+			expectedModelSecret: fixModelInputSecret(name, true, false),
+		},
+		"Should convert only input TypeInstances": {
+			givenGQLTI: fixGQLInputTypeInstances(),
+
+			expectedModelTI: fixModelInputTypeInstances(),
+		},
+		"Should convert only Action policy": {
+			givenGQLPolicy: fixGQLInputActionPolicy(),
+
+			expectedModelPolicy: fixModelInputPolicy(name),
+			expectedModelSecret: fixModelInputSecret(name, false, true),
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			c := action.NewConverter()
+
+			givenGQLInput := fixGQLActionInput(name, tc.givenGQLParams, tc.givenGQLTI, tc.givenGQLPolicy)
+			expectedModel := fixActionModel(name, tc.expectedModelParams, tc.expectedModelTI, tc.expectedModelPolicy, tc.expectedModelSecret)
+
+			// when
+			actualModel, err := c.FromGraphQLInput(givenGQLInput)
+
+			// then
+			require.NoError(t, err)
+			assert.Equal(t, expectedModel, actualModel)
+		})
+	}
 }
 
 func TestConverter_ToGraphQL_HappyPath(t *testing.T) {
 	// given
 	const (
-		name = "name"
+		name = "to-gql"
 		ns   = "ns"
 	)
 

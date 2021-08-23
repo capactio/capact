@@ -13,7 +13,7 @@ const (
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "typeinstance",
-		Aliases: []string{"ti", "TypeInstance"},
+		Aliases: []string{"ti", "TypeInstance", "typeinstances"},
 		Short:   "This command consists of multiple subcommands to interact with target TypeInstances",
 	}
 

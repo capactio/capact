@@ -31,7 +31,7 @@ var argoHiddenFlags = []string{
 func NewCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:     "action",
-		Aliases: []string{"act"},
+		Aliases: []string{"act", "actions"},
 		Short:   "This command consists of multiple subcommands to interact with target Actions",
 	}
 

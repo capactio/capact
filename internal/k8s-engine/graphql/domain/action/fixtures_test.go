@@ -328,58 +328,70 @@ func fixK8sActionForRenderingIteration(name, namespace string) v1alpha1.Action {
 	}
 }
 
-func fixGQLInput(name string) graphql.ActionDetailsInput {
-	params := graphql.JSON(`{"param":"one"}`)
-	override := graphql.JSON(`{"foo":"bar"}`)
-
+func fixGQLInputActionPolicy() *graphql.PolicyInput {
 	additionalInput := map[string]interface{}{
 		"additional-parameters": map[string]interface{}{
 			"snapshot": true,
 		},
 	}
 
-	return graphql.ActionDetailsInput{
-		Name: name,
-		Input: &graphql.ActionInputData{
-			Parameters: &params,
-			TypeInstances: []*graphql.InputTypeInstanceData{
-				{
-					Name: "in1",
-					ID:   "in-id1",
+	return &graphql.PolicyInput{
+		Rules: []*graphql.RulesForInterfaceInput{
+			{
+				Interface: &graphql.ManifestReferenceInput{
+					Path: "cap.interface.dummy",
 				},
-				{
-					Name: "in2",
-					ID:   "in-id2",
-				},
-			},
-			ActionPolicy: &graphql.PolicyInput{
-				Rules: []*graphql.RulesForInterfaceInput{
+				OneOf: []*graphql.PolicyRuleInput{
 					{
-						Interface: &graphql.ManifestReferenceInput{
-							Path: "cap.interface.dummy",
+						ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
+							Path: ptr.String("cap.implementation.dummy"),
 						},
-						OneOf: []*graphql.PolicyRuleInput{
-							{
-								ImplementationConstraints: &graphql.PolicyRuleImplementationConstraintsInput{
-									Path: ptr.String("cap.implementation.dummy"),
-								},
-								Inject: &graphql.PolicyRuleInjectDataInput{
-									TypeInstances: []*graphql.TypeInstanceReferenceInput{
-										{
-											ID: "policy-ti-id",
-											TypeRef: &graphql.ManifestReferenceInput{
-												Path:     "cap.type.dummy",
-												Revision: ptr.String("0.1.0"),
-											},
-										},
+						Inject: &graphql.PolicyRuleInjectDataInput{
+							TypeInstances: []*graphql.TypeInstanceReferenceInput{
+								{
+									ID: "policy-ti-id",
+									TypeRef: &graphql.ManifestReferenceInput{
+										Path:     "cap.type.dummy",
+										Revision: ptr.String("0.1.0"),
 									},
-									AdditionalInput: &additionalInput,
 								},
 							},
+							AdditionalInput: &additionalInput,
 						},
 					},
 				},
 			},
+		},
+	}
+}
+
+func fixGQLInputParameters() *graphql.JSON {
+	params := graphql.JSON(`{"param":"one"}`)
+	return &params
+}
+
+func fixGQLInputTypeInstances() []*graphql.InputTypeInstanceData {
+	return []*graphql.InputTypeInstanceData{
+		{
+			Name: "in1",
+			ID:   "in-id1",
+		},
+		{
+			Name: "in2",
+			ID:   "in-id2",
+		},
+	}
+}
+
+func fixGQLActionInput(name string, parameters *graphql.JSON, instances []*graphql.InputTypeInstanceData, policy *graphql.PolicyInput) graphql.ActionDetailsInput {
+	override := graphql.JSON(`{"foo":"bar"}`)
+
+	return graphql.ActionDetailsInput{
+		Name: name,
+		Input: &graphql.ActionInputData{
+			Parameters:    parameters,
+			TypeInstances: instances,
+			ActionPolicy:  policy,
 		},
 		DryRun: ptr.Bool(true),
 		ActionRef: &graphql.ManifestReferenceInput{
@@ -388,6 +400,91 @@ func fixGQLInput(name string) graphql.ActionDetailsInput {
 		},
 		AdvancedRendering:      ptr.Bool(true),
 		RenderedActionOverride: &override,
+	}
+}
+
+func fixModelInputParameters(name string) *v1alpha1.InputParameters {
+	return &v1alpha1.InputParameters{
+		SecretRef: corev1.LocalObjectReference{
+			Name: name,
+		},
+	}
+}
+
+func fixModelInputTypeInstances() *[]v1alpha1.InputTypeInstance {
+	return &[]v1alpha1.InputTypeInstance{
+		{
+			Name: "in1",
+			ID:   "in-id1",
+		},
+		{
+			Name: "in2",
+			ID:   "in-id2",
+		},
+	}
+}
+
+func fixModelInputPolicy(name string) *v1alpha1.ActionPolicy {
+	return &v1alpha1.ActionPolicy{
+		SecretRef: corev1.LocalObjectReference{
+			Name: name,
+		},
+	}
+}
+
+func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1.Secret {
+	if !paramsEnabled && !policyEnabled {
+		return nil
+	}
+	sec := &corev1.Secret{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Secret",
+			APIVersion: corev1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		StringData: map[string]string{},
+	}
+
+	if paramsEnabled {
+		sec.StringData["parameters.json"] = `{"param":"one"}`
+	}
+	if policyEnabled {
+		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`
+	}
+
+	return sec
+}
+
+func fixActionModel(name string, params *v1alpha1.InputParameters, ti *[]v1alpha1.InputTypeInstance, policy *v1alpha1.ActionPolicy, sec *corev1.Secret) model.ActionToCreateOrUpdate {
+	return model.ActionToCreateOrUpdate{
+		Action: v1alpha1.Action{
+			TypeMeta: metav1.TypeMeta{
+				Kind:       v1alpha1.ActionKind,
+				APIVersion: v1alpha1.GroupVersion.String(),
+			},
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+			},
+			Spec: v1alpha1.ActionSpec{
+				ActionRef: v1alpha1.ManifestReference{
+					Path:     "sample.action",
+					Revision: ptr.String("0.1.0"),
+				},
+				DryRun: ptr.Bool(true),
+				Input: &v1alpha1.ActionInput{
+					Parameters:    params,
+					TypeInstances: ti,
+					ActionPolicy:  policy,
+				},
+				AdvancedRendering: &v1alpha1.AdvancedRendering{
+					Enabled: true,
+				},
+				RenderedActionOverride: &runtime.RawExtension{Raw: []byte(`{"foo":"bar"}`)},
+			},
+		},
+		InputParamsSecret: sec,
 	}
 }
 
@@ -408,26 +505,9 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				},
 				DryRun: ptr.Bool(true),
 				Input: &v1alpha1.ActionInput{
-					Parameters: &v1alpha1.InputParameters{
-						SecretRef: corev1.LocalObjectReference{
-							Name: name,
-						},
-					},
-					TypeInstances: &[]v1alpha1.InputTypeInstance{
-						{
-							Name: "in1",
-							ID:   "in-id1",
-						},
-						{
-							Name: "in2",
-							ID:   "in-id2",
-						},
-					},
-					ActionPolicy: &v1alpha1.ActionPolicy{
-						SecretRef: corev1.LocalObjectReference{
-							Name: name,
-						},
-					},
+					Parameters:    fixModelInputParameters(name),
+					TypeInstances: fixModelInputTypeInstances(),
+					ActionPolicy:  fixModelInputPolicy(name),
 				},
 				AdvancedRendering: &v1alpha1.AdvancedRendering{
 					Enabled: true,
@@ -435,19 +515,7 @@ func fixModel(name string) model.ActionToCreateOrUpdate {
 				RenderedActionOverride: &runtime.RawExtension{Raw: []byte(`{"foo":"bar"}`)},
 			},
 		},
-		InputParamsSecret: &corev1.Secret{
-			TypeMeta: metav1.TypeMeta{
-				Kind:       "Secret",
-				APIVersion: corev1.SchemeGroupVersion.String(),
-			},
-			ObjectMeta: metav1.ObjectMeta{
-				Name: name,
-			},
-			StringData: map[string]string{
-				"parameters.json":    `{"param":"one"}`,
-				"action-policy.json": `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`,
-			},
-		},
+		InputParamsSecret: fixModelInputSecret(name, true, true),
 	}
 }
 

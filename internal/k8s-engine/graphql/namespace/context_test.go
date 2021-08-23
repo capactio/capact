@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestSaveAndReadFromContext_HappyPath(t *testing.T) {
