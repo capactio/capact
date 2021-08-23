@@ -11,12 +11,17 @@ jobs:
   make-release:
     name: Make release
     runs-on: ubuntu-latest
+    environment: Release
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          persist-credentials: false
       - name: Create release commit and tag
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
         run: |
+          git remote remove origin
+          git remote add origin https://${{secrets.PAT}}@github.com/capactio/capact.git
           ./hack/create-release.sh
