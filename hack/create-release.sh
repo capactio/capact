@@ -41,16 +41,15 @@ release::make_release_commit() {
 
   git add .
   git commit -m "Set fixed Capact image tag and Populator source branch"
-  git tag v${version} HEAD
+  git tag "v${version}" HEAD
 
-  git push origin ${release_branch}
-  git push origin v${version}
+  git push origin "${release_branch}"
+  git push origin "v${version}"
 }
 
 # required inputs:
 # RELEASE_VERSION - new version in semver format: x.y.z
-
-RELEASE_VERSION="${RELEASE_VERSION}"
+[ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
 
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0-9])\.[0-9]/\1/g')"
@@ -73,6 +72,9 @@ main() {
   release::set_hub_manifest_source_branch "${RELEASE_BRANCH}"
   
   release::make_release_commit "${RELEASE_VERSION}" "${RELEASE_BRANCH}"
+
+  make release-charts
+  make release-binaries
 }
 
 main
