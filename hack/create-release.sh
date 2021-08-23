@@ -2,11 +2,6 @@
 
 set -e
 
-release::append_branch_to_ci() {
-  local -r release_branch="$1"
-  yq e -i ".on.push.branches |= . + [\"${release_branch}\"]" ".github/workflows/branch-build.yaml"
-}
-
 release::update_helm_charts_version() {
   local -r release_version="$1"
   local -r deploy_dir=deploy/kubernetes/charts
@@ -65,10 +60,6 @@ main() {
   git config --global user.email "bot@capact.io"
   git config --global user.name "Capact Bot"
 
-  if [ "${SOURCE_BRANCH}" == "main" ]; then
-    release::append_branch_to_ci "${RELEASE_BRANCH}"
-  fi
-  
   release::update_helm_charts_version "${RELEASE_VERSION}"
   release::update_cli_version "${RELEASE_VERSION}"
   release::make_prepare_release_commit "${RELEASE_VERSION}" "${SOURCE_BRANCH}"

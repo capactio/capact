@@ -11,8 +11,6 @@ jobs:
   make-release:
     name: Make release
     runs-on: ubuntu-latest
-    permissions:
-      workflows: write
 
     steps:
       - name: Checkout repository
