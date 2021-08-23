@@ -62,6 +62,9 @@ RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0
 RELEASE_BRANCH="release-${RELEASE_VERSION_MAJOR_MINOR}"
 
 main() {
+  git config --global user.email "bot@capact.io"
+  git config --global user.name "Capact Bot"
+
   if [ "${SOURCE_BRANCH}" == "main" ]; then
     release::append_branch_to_ci "${RELEASE_BRANCH}"
   fi
