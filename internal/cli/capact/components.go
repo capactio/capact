@@ -11,6 +11,8 @@ import (
 	"path"
 	"time"
 
+	"capact.io/capact/internal/maps"
+
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 
@@ -28,7 +30,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	tools "capact.io/capact/internal"
 	"capact.io/capact/internal/ptr"
 	util "github.com/Masterminds/goutils"
 	"k8s.io/utils/strings/slices"
@@ -222,7 +223,7 @@ func (h Helm) writeHelmDetails(out io.Writer) {
 	fmt.Fprintf(out, "\tHelm repository: %s\n\n", helmRepo)
 }
 
-// Components is a list of all Capact components available to install
+// Components is a list of all Capact components available to install.
 var Components = components{
 	&Neo4j{
 		ComponentData{
@@ -312,7 +313,7 @@ type Capact struct {
 func (n *Neo4j) InstallUpgrade(ctx context.Context, version string) (*release.Release, error) {
 	upgradeCli := n.upgradeAction(version)
 
-	values := tools.MergeMaps(n.opts.Parameters.Override.Neo4jValues.AsMap(), n.Overrides)
+	values := maps.Merge(n.opts.Parameters.Override.Neo4jValues.AsMap(), n.Overrides)
 
 	return n.runUpgrade(upgradeCli, values)
 }
@@ -349,10 +350,10 @@ func (a *Argo) InstallUpgrade(ctx context.Context, version string) (*release.Rel
 			},
 		}
 
-		values = tools.MergeMaps(values, credentials)
+		values = maps.Merge(values, credentials)
 	}
 
-	values = tools.MergeMaps(values, a.Overrides)
+	values = maps.Merge(values, a.Overrides)
 
 	return a.runUpgrade(upgradeCli, values)
 }
@@ -524,7 +525,7 @@ func (c *Capact) InstallUpgrade(ctx context.Context, version string) (*release.R
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
-		capactValues = tools.MergeMaps(values, capactValues)
+		capactValues = maps.Merge(values, capactValues)
 	}
 
 	for _, value := range c.opts.Parameters.Override.CapactStringOverrides {

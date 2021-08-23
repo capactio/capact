@@ -2,19 +2,28 @@
 package types
 
 // InterfaceRef holds the full path and revision to the Interface
-type InterfaceRef ManifestRef
+type InterfaceRef ManifestRefWithOptRevision
 
 // ImplementationRef holds the full path and revision to the Implementation
-type ImplementationRef ManifestRef
+type ImplementationRef ManifestRefWithOptRevision
 
 // AttributeRef holds the full path and revision to the Attribute
-type AttributeRef ManifestRef
+type AttributeRef ManifestRefWithOptRevision
 
 // ManifestRef holds the full path and the revision to a given manifest.
 // +kubebuilder:object:generate=true
 type ManifestRef struct {
-	Path     string  `json:"path"`               // Path of a given manifest
-	Revision *string `json:"revision,omitempty"` // Version of the manifest content in the SemVer format.
+	Path     string `json:"path"`     // Path of a given manifest
+	Revision string `json:"revision"` // Version of the manifest content in the SemVer format.
+}
+
+// ManifestRefWithOptRevision specifies type by path and optional revision.
+// +kubebuilder:object:generate=true
+type ManifestRefWithOptRevision struct {
+	// Path of a given Type.
+	Path string `json:"path"`
+	// Version of the manifest content in the SemVer format.
+	Revision *string `json:"revision"`
 }
 
 // InputTypeInstanceRef holds input TypeInstance reference.
@@ -25,14 +34,6 @@ type InputTypeInstanceRef struct {
 
 	// ID is a unique identifier for the input TypeInstance.
 	ID string `json:"id"`
-}
-
-// TypeRefWithOptRevision specifies type by path and optional revision.
-type TypeRefWithOptRevision struct {
-	// Path of a given Type.
-	Path string `json:"path"`
-	// Version of the manifest content in the SemVer format.
-	Revision *string `json:"revision"`
 }
 
 // ManifestKind specifies OCF manifest kind.

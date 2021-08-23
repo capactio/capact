@@ -3,6 +3,8 @@ package client_test
 import (
 	"testing"
 
+	"capact.io/capact/internal/ptr"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -27,7 +29,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -41,10 +43,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"name": "capact",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -59,7 +64,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -73,10 +78,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"name": "capact",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -94,7 +102,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -108,10 +116,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"address": "1.2.3.4",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -126,7 +137,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -140,10 +151,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"address": "1.2.3.4",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -161,7 +175,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -176,10 +190,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"alias":   "karpatka",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123-111",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123-111",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -193,7 +210,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -208,10 +225,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"alias": "capactio",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123-222",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123-222",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -230,7 +250,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -246,10 +266,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											"alias":   "karpatka",
 										},
 									},
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "1314-142-123-111",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123-111",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
 											},
 										},
@@ -272,7 +295,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -288,7 +311,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: secondInterfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -304,7 +327,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -316,7 +339,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 						},
 					},
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: secondInterfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -336,7 +359,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			action: policy.ActionPolicy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -359,7 +382,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			global: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -368,10 +391,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "123-321-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "123-321-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.x",
 											},
 										},
@@ -385,7 +411,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 			expected: policy.Policy{
 				Rules: policy.RulesList{
 					policy.RulesForInterface{
-						Interface: types.ManifestRef{
+						Interface: types.ManifestRefWithOptRevision{
 							Path: interfacePath,
 						},
 						OneOf: []policy.Rule{
@@ -394,10 +420,13 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 									Path: &implementationPath,
 								},
 								Inject: &policy.InjectData{
-									TypeInstances: []policy.TypeInstanceToInject{
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 										{
-											ID: "123-321-123",
-											TypeRef: types.ManifestRef{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "123-321-123",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
 												Path: "cap.type.x",
 											},
 										},

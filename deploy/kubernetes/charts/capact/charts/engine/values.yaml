@@ -121,10 +121,6 @@ testSetup:
             attributes:
               - path: "cap.attribute.capactio.capact.validation.policy.most-preferred"
           inject:
-            typeInstances:
-              - id: "{typeInstanceUUID}"
-                typeRef:
-                  path: "cap.type.capactio.capact.validation.single-key"
-                  revision: "0.1.0"
+            requiredTypeInstances: [] # DO NOT MODIFY this line, as it is found and replaced during integration tests
         - implementationConstraints:
             path: cap.implementation.capactio.capact.validation.action.passing-a

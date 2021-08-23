@@ -26,4 +26,8 @@ models:
     model: "capact.io/capact/pkg/engine/api/graphql.PolicyRuleImplementationConstraints"
   ManifestReferenceWithOptionalRevision:
     model: "capact.io/capact/pkg/engine/api/graphql.ManifestReferenceWithOptionalRevision"
+  PolicyRuleInjectData:
+    model: "capact.io/capact/pkg/engine/api/graphql.PolicyRuleInjectData"
+  RequiredTypeInstanceReference:
+    model: "capact.io/capact/pkg/engine/api/graphql.RequiredTypeInstanceReference"
 

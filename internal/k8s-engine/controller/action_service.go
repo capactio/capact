@@ -15,7 +15,6 @@ import (
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
-	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/runner"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -47,10 +46,6 @@ const (
 )
 
 type (
-	// HubImplementationGetter allows to fetch a specific Implementation from Hub.
-	HubImplementationGetter interface {
-		GetLatestRevisionOfImplementationForInterface(ctx context.Context, path string) (*gqlpublicapi.ImplementationRevision, error)
-	}
 	// ArgoRenderer allows to render Capact Action defines in Argo format.
 	ArgoRenderer interface {
 		Render(ctx context.Context, input *argo.RenderInput) (*argo.RenderOutput, error)

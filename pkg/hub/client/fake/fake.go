@@ -89,6 +89,23 @@ func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]hubl
 	return typeInstanceTypeRefs, nil
 }
 
+// FindTypeInstancesTypeRef finds a TypeInstance's TypeRef.
+// If no TypeInstances are found, it returns nil.
+func (s *FileSystemClient) FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error) {
+	out := map[string]hublocalgraphql.TypeInstanceTypeReference{}
+	for _, id := range ids {
+		ti := s.TypeInstances[id]
+
+		if ti.TypeRef == nil {
+			continue
+		}
+
+		out[ti.ID] = *ti.TypeRef
+	}
+
+	return out, nil
+}
+
 // GetInterfaceLatestRevisionString returns the latest revision of the available Interfaces.
 // Semantic versioning is used to determine the latest revision.
 func (s *FileSystemClient) GetInterfaceLatestRevisionString(ctx context.Context, ref hubpublicgraphql.InterfaceReference) (string, error) {

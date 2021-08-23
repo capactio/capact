@@ -347,13 +347,10 @@ func fixGQLInputActionPolicy() *graphql.PolicyInput {
 							Path: ptr.String("cap.implementation.dummy"),
 						},
 						Inject: &graphql.PolicyRuleInjectDataInput{
-							TypeInstances: []*graphql.TypeInstanceReferenceInput{
+							RequiredTypeInstances: []*graphql.RequiredTypeInstanceReferenceInput{
 								{
-									ID: "policy-ti-id",
-									TypeRef: &graphql.ManifestReferenceInput{
-										Path:     "cap.type.dummy",
-										Revision: ptr.String("0.1.0"),
-									},
+									ID:          "policy-ti-id",
+									Description: ptr.String("Sample description"),
 								},
 							},
 							AdditionalInput: &additionalInput,
@@ -451,7 +448,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 		sec.StringData["parameters.json"] = `{"param":"one"}`
 	}
 	if policyEnabled {
-		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"typeInstances":[{"id":"policy-ti-id","typeRef":{"path":"cap.type.dummy","revision":"0.1.0"}}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`
+		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalInput":{"additional-parameters":{"snapshot":true}}}}]}]}`
 	}
 
 	return sec

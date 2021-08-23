@@ -1,8 +1,8 @@
-package tools
+package maps
 
-// MergeMaps performs a deep merge of two maps.
+// Merge performs a deep merge of two maps.
 // It is used to merge the additional parameters in the policies.
-func MergeMaps(current, overwrite map[string]interface{}) map[string]interface{} {
+func Merge(current, overwrite map[string]interface{}) map[string]interface{} {
 	out := make(map[string]interface{}, len(current))
 	for k, v := range current {
 		out[k] = v
@@ -11,7 +11,7 @@ func MergeMaps(current, overwrite map[string]interface{}) map[string]interface{}
 		if v, ok := v.(map[string]interface{}); ok {
 			if bv, ok := out[k]; ok {
 				if bv, ok := bv.(map[string]interface{}); ok {
-					out[k] = MergeMaps(bv, v)
+					out[k] = Merge(bv, v)
 					continue
 				}
 			}

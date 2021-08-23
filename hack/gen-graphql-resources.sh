@@ -39,7 +39,7 @@ host::install::gqlgen() {
   pushd "$TMP_DIR" >/dev/null
 
   go mod init tmp
-  go install github.com/99designs/gqlgen@$STABLE_GQLGEN_VERSION
+  go install "github.com/99designs/gqlgen@${STABLE_GQLGEN_VERSION}"
 
   popd >/dev/null
 
@@ -53,7 +53,7 @@ main() {
     echo "Skipping gqlgen installation cause SKIP_DEPS_INSTALLATION is set to true."
   fi
 
-  shout "Generating Volron GraphQL related resources..."
+  shout "Generating Capact GraphQL related resources..."
 
   readonly apiPaths=(
     "/pkg/engine/api/graphql"

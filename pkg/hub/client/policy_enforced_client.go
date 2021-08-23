@@ -21,6 +21,7 @@ type HubClient interface {
 	ListImplementationRevisionsForInterface(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.ListImplementationRevisionsForInterfaceOption) ([]hubpublicgraphql.ImplementationRevision, error)
 	ListTypeInstancesTypeRef(ctx context.Context) ([]hublocalgraphql.TypeInstanceTypeReference, error)
 	FindInterfaceRevision(ctx context.Context, ref hubpublicgraphql.InterfaceReference, opts ...public.InterfaceRevisionOption) (*hubpublicgraphql.InterfaceRevision, error)
+	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
 }
 
 // PolicyEnforcedClient is a client, which can interact with the Local and Public Hub.
@@ -53,6 +54,11 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 		interfaceRef.Revision = interfaceRevision
 	}
 
+	err := e.resolvePolicyTIMetadataIfShould(ctx)
+	if err != nil {
+		return nil, policy.Rule{}, err
+	}
+
 	rules := e.findRulesForInterface(interfaceRef)
 	if len(rules.OneOf) == 0 {
 		return nil, policy.Rule{}, nil
@@ -72,15 +78,19 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 	return implementations, rule, nil
 }
 
-// ListTypeInstancesToInjectBasedOnPolicy returns the input TypeInstance references,
+// ListRequiredTypeInstancesToInjectBasedOnPolicy returns the input TypeInstance references,
 // which have to be injected into the Action, based on the current policies.
-func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) []types.InputTypeInstanceRef {
-	if policyRule.Inject == nil || len(policyRule.Inject.TypeInstances) == 0 {
-		return nil
+func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
+	if len(policyRule.RequiredTypeInstancesToInject()) == 0 {
+		return nil, nil
+	}
+
+	if err := policyRule.ValidateTypeInstanceMetadata(); err != nil {
+		return nil, errors.Wrap(err, "while validating Policy rule")
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
-	for _, typeInstance := range policyRule.Inject.TypeInstances {
+	for _, typeInstance := range policyRule.Inject.RequiredTypeInstances {
 		alias, found := e.findAliasForTypeInstance(typeInstance, implRev)
 		if !found {
 			// Implementation doesn't require such TypeInstance, skip injecting it
@@ -95,7 +105,7 @@ func (e *PolicyEnforcedClient) ListTypeInstancesToInjectBasedOnPolicy(policyRule
 		typeInstancesToInject = append(typeInstancesToInject, typeInstanceToInject)
 	}
 
-	return typeInstancesToInject
+	return typeInstancesToInject, nil
 }
 
 // ListAdditionalInputToInjectBasedOnPolicy returns additional input parameters,
@@ -193,6 +203,19 @@ func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraph
 	return policy.RulesForInterface{}
 }
 
+func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Context) error {
+	if e.mergedPolicy.AreTypeInstancesMetadataResolved() {
+		return nil
+	}
+
+	err := e.mergedPolicy.ResolveTypeInstanceMetadata(ctx, e.hubCli)
+	if err != nil {
+		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
+	}
+
+	return nil
+}
+
 func (e *PolicyEnforcedClient) findImplementationsForRules(
 	ctx context.Context,
 	interfaceRef hubpublicgraphql.InterfaceReference,
@@ -223,7 +246,7 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 	return nil, policy.Rule{}, nil
 }
 
-func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.TypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) (string, bool) {
+func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.RequiredTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) (string, bool) {
 	if implRev.Spec == nil || len(implRev.Spec.Requires) == 0 {
 		return "", false
 	}
@@ -279,9 +302,14 @@ func (e *PolicyEnforcedClient) implementationConstraintsToHubFilter(constraints 
 	return filter
 }
 
-func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance policy.TypeInstanceToInject, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool {
+func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance policy.RequiredTypeInstanceToInject, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool {
 	// check requirement item valid
 	if reqItem == nil || reqItem.TypeRef == nil || reqItem.Alias == nil {
+		return false
+	}
+
+	// check RequiredTypeInstance to inject valid
+	if typeInstance.TypeRef == nil {
 		return false
 	}
 
@@ -291,7 +319,7 @@ func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance policy.TypeIn
 	}
 
 	// check revision (if provided)
-	if typeInstance.TypeRef.Revision != nil && *typeInstance.TypeRef.Revision != reqItem.TypeRef.Revision {
+	if typeInstance.TypeRef.Revision != reqItem.TypeRef.Revision {
 		return false
 	}
 

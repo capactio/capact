@@ -168,19 +168,19 @@ type PolicyRuleImplementationConstraintsInput struct {
 	Path *string `json:"path"`
 }
 
-type PolicyRuleInjectData struct {
-	TypeInstances   []*TypeInstanceReference `json:"typeInstances"`
-	AdditionalInput interface{}              `json:"additionalInput"`
-}
-
 type PolicyRuleInjectDataInput struct {
-	TypeInstances   []*TypeInstanceReferenceInput `json:"typeInstances"`
-	AdditionalInput interface{}                   `json:"additionalInput"`
+	RequiredTypeInstances []*RequiredTypeInstanceReferenceInput `json:"requiredTypeInstances"`
+	AdditionalInput       interface{}                           `json:"additionalInput"`
 }
 
 type PolicyRuleInput struct {
 	ImplementationConstraints *PolicyRuleImplementationConstraintsInput `json:"implementationConstraints"`
 	Inject                    *PolicyRuleInjectDataInput                `json:"inject"`
+}
+
+type RequiredTypeInstanceReferenceInput struct {
+	ID          string  `json:"id"`
+	Description *string `json:"description"`
 }
 
 type RulesForInterface struct {
@@ -197,16 +197,6 @@ type RulesForInterfaceInput struct {
 type RunnerStatus struct {
 	// Status of a given Runner e.g. Argo Workflow Runner status object with argoWorkflowRef field
 	Status interface{} `json:"status"`
-}
-
-type TypeInstanceReference struct {
-	ID      string                                 `json:"id"`
-	TypeRef *ManifestReferenceWithOptionalRevision `json:"typeRef"`
-}
-
-type TypeInstanceReferenceInput struct {
-	ID      string                  `json:"id"`
-	TypeRef *ManifestReferenceInput `json:"typeRef"`
 }
 
 // Stores user information
