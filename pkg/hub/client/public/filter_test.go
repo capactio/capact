@@ -194,6 +194,37 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 						},
 					},
 				}),
+				fixImplementationRevisionWithRequire("any-of", "0.1.0", gqlpublicapi.ImplementationRequirement{
+					Prefix: "cap.core.type.platform",
+					AnyOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.not-existing",
+								Revision: "0.1.0",
+							},
+						},
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.sample",
+								Revision: "0.1.0",
+							},
+						},
+					},
+					OneOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.not-existing",
+								Revision: "0.1.0",
+							},
+						},
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.sample",
+								Revision: "0.1.0",
+							},
+						},
+					},
+				}),
 			},
 			revisionToFilterOut: []gqlpublicapi.ImplementationRevision{
 				fixImplementationRevisionWithRequire("with-gcp-sa-requirement-alias", "0.1.0", gqlpublicapi.ImplementationRequirement{
@@ -203,6 +234,23 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 							TypeRef: &gqlpublicapi.TypeReference{
 								Path:     "cap.core.type.platform.cf",
 								Revision: "0.1.1",
+							},
+						},
+					},
+				}),
+				fixImplementationRevisionWithRequire("any-of", "0.1.0", gqlpublicapi.ImplementationRequirement{
+					Prefix: "cap.core.type.platform",
+					OneOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.gcp.sa",
+								Revision: "0.1.1",
+							},
+						},
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.sample",
+								Revision: "0.1.0",
 							},
 						},
 					},
