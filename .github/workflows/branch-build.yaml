@@ -29,16 +29,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-      - name: Setup environment
-        run: |
-          . ./hack/ci/setup-env.sh
-      - name: Setup Go
-        uses: actions/setup-go@v2
-        with:
-          go-version: ${{env.GO_VERSION}}
-      - name: Run linting
-        run: |
-          make test-lint
+  #    - name: Setup environment
+  #      run: |
+  #        . ./hack/ci/setup-env.sh
+  #    - name: Setup Go
+  #      uses: actions/setup-go@v2
+  #      with:
+  #        go-version: ${{env.GO_VERSION}}
+  #    - name: Run linting
+  #      run: |
+  #        make test-lint
   #    - name: Run unit tests
   #      run: make test-unit
   #    - name: Check generated files

@@ -6,7 +6,10 @@ name: Create release
 on:
   workflow_run:
     workflows: ["Main branch"]
-    tags: [ "v*" ]
+    types:
+      - completed
+    push:
+      tags: [ "v*" ]
 
 jobs:
   create-release:
