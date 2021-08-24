@@ -61,7 +61,7 @@ func fixGCPGlobalPolicy() policy.Policy {
 	}
 }
 
-func fixAWSGlobalPolicy() policy.Policy {
+func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInject) policy.Policy {
 	return policy.Policy{
 		Rules: policy.RulesList{
 			{
@@ -116,6 +116,7 @@ func fixAWSGlobalPolicy() policy.Policy {
 									},
 								},
 							},
+							AdditionalParameters: additionalParameters,
 						},
 					},
 					{
@@ -208,6 +209,54 @@ func fixTerraformPolicy() policy.Policy {
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
 										ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 										Description: ptr.String("GCP SA"),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Interface: types.ManifestRefWithOptRevision{
+					Path: "cap.*",
+				},
+				OneOf: []policy.Rule{
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{},
+					},
+				},
+			},
+		},
+	}
+}
+
+func fixAWSRDSPolicy() policy.Policy {
+	return policy.Policy{
+		Rules: policy.RulesList{
+			{
+				Interface: types.ManifestRefWithOptRevision{
+					Path:     "cap.interface.database.postgresql.install",
+					Revision: ptr.String("0.1.0"),
+				},
+				OneOf: []policy.Rule{
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{
+							Path: ptr.String("cap.implementation.aws.rds.postgresql.install"),
+						},
+						Inject: &policy.InjectData{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+								{
+									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
+										Description: ptr.String("AWS SA"),
+									},
+								},
+							},
+							AdditionalParameters: []policy.AdditionalParametersToInject{
+								{
+									Name: "additional-parameters",
+									Value: map[string]interface{}{
+										"region": "eu-central-1",
 									},
 								},
 							},

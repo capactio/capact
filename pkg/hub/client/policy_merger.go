@@ -58,9 +58,8 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 		rule.Inject = &policy.InjectData{}
 	}
 	// merge Additional Input
-	if newRule.Inject.AdditionalInput != nil {
-		newMap := maps.Merge(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
-		rule.Inject.AdditionalInput = newMap
+	if newRule.Inject.AdditionalParameters != nil {
+		rule.Inject.AdditionalParameters = mergeAdditionalParameters(newRule.Inject.AdditionalParameters, rule.Inject.AdditionalParameters)
 	}
 	// merge RequiredTypeInstances
 	if newRule.Inject.RequiredTypeInstances != nil {
@@ -118,6 +117,26 @@ func mergeTypeInstances(current, overwrite []policy.RequiredTypeInstanceToInject
 		}
 		if !found {
 			out = append(out, newTI)
+		}
+	}
+	return out
+}
+
+func mergeAdditionalParameters(current, overwrite []policy.AdditionalParametersToInject) []policy.AdditionalParametersToInject {
+	out := append([]policy.AdditionalParametersToInject{}, current...)
+	for _, newParam := range overwrite {
+		found := false
+		for i, param := range current {
+			if newParam.Name == param.Name {
+				found = true
+				out[i] = policy.AdditionalParametersToInject{
+					Name:  param.Name,
+					Value: maps.Merge(param.Value, newParam.Value),
+				}
+			}
+		}
+		if !found {
+			out = append(out, newParam)
 		}
 	}
 	return out

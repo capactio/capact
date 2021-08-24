@@ -83,6 +83,11 @@ type ComplexityRoot struct {
 		Timestamp  func(childComplexity int) int
 	}
 
+	AdditionalParameter struct {
+		Name  func(childComplexity int) int
+		Value func(childComplexity int) int
+	}
+
 	InputTypeInstanceDetails struct {
 		ID       func(childComplexity int) int
 		Name     func(childComplexity int) int
@@ -137,7 +142,7 @@ type ComplexityRoot struct {
 	}
 
 	PolicyRuleInjectData struct {
-		AdditionalInput       func(childComplexity int) int
+		AdditionalParameters  func(childComplexity int) int
 		RequiredTypeInstances func(childComplexity int) int
 	}
 
@@ -373,6 +378,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.ActionStatus.Timestamp(childComplexity), true
 
+	case "AdditionalParameter.name":
+		if e.complexity.AdditionalParameter.Name == nil {
+			break
+		}
+
+		return e.complexity.AdditionalParameter.Name(childComplexity), true
+
+	case "AdditionalParameter.value":
+		if e.complexity.AdditionalParameter.Value == nil {
+			break
+		}
+
+		return e.complexity.AdditionalParameter.Value(childComplexity), true
+
 	case "InputTypeInstanceDetails.id":
 		if e.complexity.InputTypeInstanceDetails.ID == nil {
 			break
@@ -590,12 +609,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.PolicyRuleImplementationConstraints.Requires(childComplexity), true
 
-	case "PolicyRuleInjectData.additionalInput":
-		if e.complexity.PolicyRuleInjectData.AdditionalInput == nil {
+	case "PolicyRuleInjectData.additionalParameters":
+		if e.complexity.PolicyRuleInjectData.AdditionalParameters == nil {
 			break
 		}
 
-		return e.complexity.PolicyRuleInjectData.AdditionalInput(childComplexity), true
+		return e.complexity.PolicyRuleInjectData.AdditionalParameters(childComplexity), true
 
 	case "PolicyRuleInjectData.requiredTypeInstances":
 		if e.complexity.PolicyRuleInjectData.RequiredTypeInstances == nil {
@@ -1079,7 +1098,12 @@ input PolicyRuleInput {
 
 input PolicyRuleInjectDataInput {
   requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
-  additionalInput: Any
+  additionalParameters: [AdditionalParameterInput!]
+}
+
+input AdditionalParameterInput {
+    name: String!
+    value: Any!
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -1115,7 +1139,12 @@ type PolicyRule {
 
 type PolicyRuleInjectData {
   requiredTypeInstances: [RequiredTypeInstanceReference!]
-  additionalInput: Any
+  additionalParameters: [AdditionalParameter!]
+}
+
+type AdditionalParameter {
+    name: String!
+    value: Any!
 }
 
 type PolicyRuleImplementationConstraints {
@@ -2209,6 +2238,76 @@ func (ec *executionContext) _ActionStatus_canceledBy(ctx context.Context, field 
 	return ec.marshalOUserInfo2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐUserInfo(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _AdditionalParameter_name(ctx context.Context, field graphql.CollectedField, obj *AdditionalParameter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AdditionalParameter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _AdditionalParameter_value(ctx context.Context, field graphql.CollectedField, obj *AdditionalParameter) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:     "AdditionalParameter",
+		Field:      field,
+		Args:       nil,
+		IsMethod:   false,
+		IsResolver: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Value, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(interface{})
+	fc.Result = res
+	return ec.marshalNAny2interface(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _InputTypeInstanceDetails_id(ctx context.Context, field graphql.CollectedField, obj *InputTypeInstanceDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -3182,7 +3281,7 @@ func (ec *executionContext) _PolicyRuleInjectData_requiredTypeInstances(ctx cont
 	return ec.marshalORequiredTypeInstanceReference2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐRequiredTypeInstanceReferenceᚄ(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _PolicyRuleInjectData_additionalInput(ctx context.Context, field graphql.CollectedField, obj *PolicyRuleInjectData) (ret graphql.Marshaler) {
+func (ec *executionContext) _PolicyRuleInjectData_additionalParameters(ctx context.Context, field graphql.CollectedField, obj *PolicyRuleInjectData) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -3200,7 +3299,7 @@ func (ec *executionContext) _PolicyRuleInjectData_additionalInput(ctx context.Co
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.AdditionalInput, nil
+		return obj.AdditionalParameters, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3209,9 +3308,9 @@ func (ec *executionContext) _PolicyRuleInjectData_additionalInput(ctx context.Co
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(interface{})
+	res := resTmp.([]*AdditionalParameter)
 	fc.Result = res
-	return ec.marshalOAny2interface(ctx, field.Selections, res)
+	return ec.marshalOAdditionalParameter2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_action(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -4891,6 +4990,34 @@ func (ec *executionContext) unmarshalInputActionInputData(ctx context.Context, o
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdditionalParameterInput(ctx context.Context, obj interface{}) (AdditionalParameterInput, error) {
+	var it AdditionalParameterInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "value":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
+			it.Value, err = ec.unmarshalNAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdvancedModeContinueRenderingInput(ctx context.Context, obj interface{}) (AdvancedModeContinueRenderingInput, error) {
 	var it AdvancedModeContinueRenderingInput
 	var asMap = obj.(map[string]interface{})
@@ -5037,11 +5164,11 @@ func (ec *executionContext) unmarshalInputPolicyRuleInjectDataInput(ctx context.
 			if err != nil {
 				return it, err
 			}
-		case "additionalInput":
+		case "additionalParameters":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalInput"))
-			it.AdditionalInput, err = ec.unmarshalOAny2interface(ctx, v)
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalParameters"))
+			it.AdditionalParameters, err = ec.unmarshalOAdditionalParameterInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -5351,6 +5478,38 @@ func (ec *executionContext) _ActionStatus(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._ActionStatus_runBy(ctx, field, obj)
 		case "canceledBy":
 			out.Values[i] = ec._ActionStatus_canceledBy(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var additionalParameterImplementors = []string{"AdditionalParameter"}
+
+func (ec *executionContext) _AdditionalParameter(ctx context.Context, sel ast.SelectionSet, obj *AdditionalParameter) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, additionalParameterImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("AdditionalParameter")
+		case "name":
+			out.Values[i] = ec._AdditionalParameter_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "value":
+			out.Values[i] = ec._AdditionalParameter_value(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -5689,8 +5848,8 @@ func (ec *executionContext) _PolicyRuleInjectData(ctx context.Context, sel ast.S
 			out.Values[i] = graphql.MarshalString("PolicyRuleInjectData")
 		case "requiredTypeInstances":
 			out.Values[i] = ec._PolicyRuleInjectData_requiredTypeInstances(ctx, field, obj)
-		case "additionalInput":
-			out.Values[i] = ec._PolicyRuleInjectData_additionalInput(ctx, field, obj)
+		case "additionalParameters":
+			out.Values[i] = ec._PolicyRuleInjectData_additionalParameters(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6201,9 +6360,45 @@ func (ec *executionContext) marshalNActionStatusPhase2capactᚗioᚋcapactᚋpkg
 	return v
 }
 
+func (ec *executionContext) marshalNAdditionalParameter2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameter(ctx context.Context, sel ast.SelectionSet, v *AdditionalParameter) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._AdditionalParameter(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNAdditionalParameterInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInput(ctx context.Context, v interface{}) (*AdditionalParameterInput, error) {
+	res, err := ec.unmarshalInputAdditionalParameterInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAdvancedModeContinueRenderingInput2capactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdvancedModeContinueRenderingInput(ctx context.Context, v interface{}) (AdvancedModeContinueRenderingInput, error) {
 	res, err := ec.unmarshalInputAdvancedModeContinueRenderingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAny2interface(ctx context.Context, v interface{}) (interface{}, error) {
+	res, err := graphql.UnmarshalAny(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNAny2interface(ctx context.Context, sel ast.SelectionSet, v interface{}) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := graphql.MarshalAny(v)
+	if res == graphql.Null {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+	}
+	return res
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v interface{}) (bool, error) {
@@ -6974,6 +7169,70 @@ func (ec *executionContext) marshalOActionStatusPhase2ᚖcapactᚗioᚋcapactᚋ
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOAdditionalParameter2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterᚄ(ctx context.Context, sel ast.SelectionSet, v []*AdditionalParameter) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNAdditionalParameter2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameter(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
+}
+
+func (ec *executionContext) unmarshalOAdditionalParameterInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInputᚄ(ctx context.Context, v interface{}) ([]*AdditionalParameterInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*AdditionalParameterInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAdditionalParameterInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
 }
 
 func (ec *executionContext) unmarshalOAny2interface(ctx context.Context, v interface{}) (interface{}, error) {

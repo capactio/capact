@@ -32,9 +32,10 @@ spec:
           revision: 0.1.0
         verbs: [ "get", "update" ]
     parameters:
-      typeRef:
-        path: cap.type.wordpress.helm.install-input
-        revision: 0.1.0
+      wordpress-input:
+        typeRef:
+          path: cap.type.wordpress.helm.install-input
+          revision: 0.1.0
 
   additionalOutput:
     typeInstances:

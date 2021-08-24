@@ -73,6 +73,7 @@ var implRevisionAllFields = fmt.Sprintf(`
             verbs
           }
           parameters {
+            name
             typeRef {
               path
               revision

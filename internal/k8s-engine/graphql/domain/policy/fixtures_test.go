@@ -37,6 +37,14 @@ func fixGQLInput() graphql.PolicyInput {
 									Description: ptr.String("Sample description"),
 								},
 							},
+							AdditionalParameters: []*graphql.AdditionalParameterInput{
+								{
+									Name: "additional-parameters",
+									Value: map[string]interface{}{
+										"key1": "boom",
+									},
+								},
+							},
 						},
 					},
 					{
@@ -90,7 +98,14 @@ func fixGQL() graphql.Policy {
 									Description: ptr.String("Sample description"),
 								},
 							},
-							AdditionalInput: map[string]interface{}(nil),
+							AdditionalParameters: []*graphql.AdditionalParameter{
+								{
+									Name: "additional-parameters",
+									Value: map[string]interface{}{
+										"key1": "boom",
+									},
+								},
+							},
 						},
 					},
 					{
@@ -143,6 +158,15 @@ func fixModel() policy.Policy {
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
 										ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
 										Description: ptr.String("Sample description"),
+									},
+								},
+							},
+
+							AdditionalParameters: []policy.AdditionalParametersToInject{
+								{
+									Name: "additional-parameters",
+									Value: map[string]interface{}{
+										"key1": "boom",
 									},
 								},
 							},

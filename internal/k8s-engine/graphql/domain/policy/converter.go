@@ -78,7 +78,7 @@ func (c *Converter) policyInjectDataToGraphQL(data *policy.InjectData) *graphql.
 
 	return &graphql.PolicyRuleInjectData{
 		RequiredTypeInstances: c.typeInstancesToInjectToGraphQL(data.RequiredTypeInstances),
-		AdditionalInput:       data.AdditionalInput,
+		AdditionalParameters:  c.additionalParametersToInjectToGraphQL(data.AdditionalParameters),
 	}
 }
 
@@ -116,19 +116,14 @@ func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleIn
 		return nil, nil
 	}
 
-	var additionalInput map[string]interface{}
-
-	if input.AdditionalInput != nil {
-		var ok bool
-		additionalInput, ok = input.AdditionalInput.(map[string]interface{})
-		if !ok {
-			return nil, ErrCannotConvertAdditionalInput
-		}
+	params, err := c.additionalParametersToInjectFromGraphQLInput(input.AdditionalParameters)
+	if err != nil {
+		return nil, errors.Wrap(err, "while converting additional parameters")
 	}
 
 	return &policy.InjectData{
 		RequiredTypeInstances: c.typeInstancesToInjectFromGraphQLInput(input.RequiredTypeInstances),
-		AdditionalInput:       additionalInput,
+		AdditionalParameters:  params,
 	}, nil
 }
 
@@ -159,6 +154,19 @@ func (c *Converter) typeInstancesToInjectToGraphQL(in []policy.RequiredTypeInsta
 		out = append(out, &graphql.RequiredTypeInstanceReference{
 			ID:          item.ID,
 			Description: item.Description,
+		})
+	}
+
+	return out
+}
+
+func (c *Converter) additionalParametersToInjectToGraphQL(in []policy.AdditionalParametersToInject) []*graphql.AdditionalParameter {
+	var out []*graphql.AdditionalParameter
+
+	for _, item := range in {
+		out = append(out, &graphql.AdditionalParameter{
+			Name:  item.Name,
+			Value: item.Value,
 		})
 	}
 
@@ -209,4 +217,20 @@ func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.Required
 	}
 
 	return out
+}
+
+func (c *Converter) additionalParametersToInjectFromGraphQLInput(in []*graphql.AdditionalParameterInput) ([]policy.AdditionalParametersToInject, error) {
+	var out []policy.AdditionalParametersToInject
+	for _, item := range in {
+		additionalInput, ok := item.Value.(map[string]interface{})
+		if !ok {
+			return nil, ErrCannotConvertAdditionalInput
+		}
+		out = append(out, policy.AdditionalParametersToInject{
+			Name:  item.Name,
+			Value: additionalInput,
+		})
+	}
+
+	return out, nil
 }

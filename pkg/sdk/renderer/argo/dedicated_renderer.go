@@ -295,12 +295,11 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 					// 3.7.2 Additional Input
-					allAdditionalInput := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule, implementation)
-					additionalInput, err := toInputAdditionalParams(allAdditionalInput)
+					additionalParameters, err := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule)
 					if err != nil {
-						return nil, errors.Wrap(err, "while converting additional input")
+						return nil, errors.Wrap(err, "while converting additional input parameters")
 					}
-					r.InjectAdditionalInput(step, additionalInput)
+					r.InjectAdditionalInput(step, additionalParameters)
 
 					for k, v := range newArtifactMappings {
 						artifactMappings[k] = v
@@ -582,7 +581,7 @@ func (r *dedicatedRenderer) InjectDownloadStepForTypeInstancesIfProvided(workflo
 	return r.typeInstanceHandler.AddInputTypeInstances(workflow, typeInstances)
 }
 
-func (r *dedicatedRenderer) InjectAdditionalInput(step *WorkflowStep, additionalParams map[string]string) {
+func (r *dedicatedRenderer) InjectAdditionalInput(step *WorkflowStep, additionalParams types.ParametersCollection) {
 	for name, data := range additionalParams {
 		step.Arguments.Artifacts = append(step.Arguments.Artifacts, wfv1.Artifact{
 			Name: name,

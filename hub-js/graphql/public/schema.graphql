@@ -349,13 +349,13 @@ type ImplementationSpec @additionalLabels(labels: ["published"]){
 type ImplementationAdditionalInput @additionalLabels(labels: ["published"]){
   typeInstances: [InputTypeInstance!]
     @relation(name: "CONTAINS", direction: "OUT")
-  parameters: ImplementationAdditionalInputParameters
+  parameters: [ImplementationAdditionalInputParameter!]
     @relation(name: "CONTAINS", direction: "OUT")
 }
 
-type ImplementationAdditionalInputParameters @additionalLabels(labels: ["published"]) {
-  typeRef: TypeReference!
-    @relation(name: "OF_TYPE", direction: "OUT")
+type ImplementationAdditionalInputParameter @additionalLabels(labels: ["published"]){
+  name: String!
+  typeRef: TypeReference! @relation(name: "OF_TYPE", direction: "OUT")
 }
 
 type ImplementationAdditionalOutput @additionalLabels(labels: ["published"]){

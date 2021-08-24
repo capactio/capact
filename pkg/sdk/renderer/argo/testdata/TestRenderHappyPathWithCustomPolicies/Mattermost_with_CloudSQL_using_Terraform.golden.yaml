@@ -423,8 +423,8 @@ args:
           name: postgresql
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-2-0-step
-          template: inject-input-type-instances-2-0
+          name: inject-input-type-instances-3-0-step
+          template: inject-input-type-instances-3-0
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -649,7 +649,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-2-0
+      name: inject-input-type-instances-3-0
       outputs:
         artifacts:
         - globalName: gcp-sa

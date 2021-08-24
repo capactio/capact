@@ -36,6 +36,9 @@ type InputTypeInstanceRef struct {
 	ID string `json:"id"`
 }
 
+// ParametersCollection holds input parameters collection indexed by name.
+type ParametersCollection map[string]string
+
 // ManifestKind specifies OCF manifest kind.
 type ManifestKind string
 

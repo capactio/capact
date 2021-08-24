@@ -48,7 +48,7 @@ type WorkflowRule struct {
 // Compared to other policies, injecting RequiredTypeInstances
 // is not supported in the Workflow step policy.
 type WorkflowInjectData struct {
-	AdditionalInput map[string]interface{} `json:"additionalInput,omitempty"`
+	AdditionalParameters []AdditionalParametersToInject `json:"additionalParameters,omitempty"`
 }
 
 // ResolveImports is used to resolve the Manifest Reference for the rules,
@@ -73,7 +73,7 @@ func (p WorkflowPolicy) ToYAMLBytes() ([]byte, error) {
 	bytes, err := yaml.Marshal(&p)
 
 	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling policy to YAML bytes")
+		return nil, errors.Wrap(err, "while marshaling policy to YAML")
 	}
 
 	return bytes, nil

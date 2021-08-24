@@ -249,9 +249,10 @@ spec:
     runnerInterface: argo.run
   additionalInput:
     parameters:
-      typeRef:
-        path: cap.type.aws.rds.postgresql.install-input
-        revision: 0.1.0
+      - name: additional-parameters
+        typeRef:
+          path: cap.type.aws.rds.postgresql.install-input
+          revision: 0.1.0
     typeInstances: []
   additionalOutput:
     typeInstances:

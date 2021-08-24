@@ -9,7 +9,6 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 
 	"github.com/pkg/errors"
-	"sigs.k8s.io/yaml"
 )
 
 func interfaceRefToHub(in types.InterfaceRef) hubpublicgraphql.InterfaceReference {
@@ -170,7 +169,7 @@ func addPrefix(prefix, s string) string {
 //
 // It's a known bug that we accept only one input parameter for render process
 // but we allow to specify multiple in Hub manifests definition
-func ToInputParams(parameters interface{}) map[string]string {
+func ToInputParams(parameters interface{}) types.ParametersCollection {
 	if parameters == nil {
 		return nil
 	}
@@ -183,30 +182,7 @@ func ToInputParams(parameters interface{}) map[string]string {
 		return nil
 	}
 
-	return map[string]string{
+	return types.ParametersCollection{
 		UserInputName: str,
 	}
-}
-
-// toInputAdditionalParams maps an array of additional input parameters into an array which has
-// only one parameter with hardcoded name.
-//
-// It's a known bug that we accept only one input parameter for render process
-// but we allow to specify multiple in Hub manifests definition
-func toInputAdditionalParams(additionalInput map[string]interface{}) (map[string]string, error) {
-	out := map[string]string{}
-	if len(additionalInput) == 0 {
-		return out, nil
-	}
-
-	data, err := yaml.Marshal(additionalInput[AdditionalInputName])
-	if err != nil {
-		return out, errors.Wrap(err, "while marshaling additional input to YAML")
-	}
-
-	if len(data) > 0 {
-		out[AdditionalInputName] = string(data)
-	}
-
-	return out, nil
 }

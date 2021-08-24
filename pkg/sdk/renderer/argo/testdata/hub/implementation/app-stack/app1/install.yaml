@@ -98,9 +98,10 @@ spec:
                               - path: cap.type.aws.auth.credentials
                                 revision: 0.1.0
                             inject:
-                              additionalInput:
-                                additional-parameters:
-                                  region: eu-west-2
+                              additionalParameters: # Injects additional parameters for the Implementation
+                                - name: additional-parameters # Name must match one of the parameter defined under `additionalInput.parameters` in the Implementation
+                                  value:
+                                    region: eu-west-2
                   capact-outputTypeInstances:
                     - name: postgresql
                       from: postgresql

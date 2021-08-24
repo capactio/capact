@@ -322,7 +322,12 @@ input PolicyRuleInput {
 
 input PolicyRuleInjectDataInput {
   requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
-  additionalInput: Any
+  additionalParameters: [AdditionalParameterInput!]
+}
+
+input AdditionalParameterInput {
+    name: String!
+    value: Any!
 }
 
 input PolicyRuleImplementationConstraintsInput {
@@ -358,7 +363,12 @@ type PolicyRule {
 
 type PolicyRuleInjectData {
   requiredTypeInstances: [RequiredTypeInstanceReference!]
-  additionalInput: Any
+  additionalParameters: [AdditionalParameter!]
+}
+
+type AdditionalParameter {
+    name: String!
+    value: Any!
 }
 
 type PolicyRuleImplementationConstraints {

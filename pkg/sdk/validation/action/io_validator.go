@@ -10,7 +10,6 @@ import (
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/sdk/validation"
 
 	"github.com/hashicorp/go-multierror"
@@ -112,29 +111,27 @@ func (c *InputOutputValidator) LoadIfaceInputTypeInstanceRefs(_ context.Context,
 // LoadImplInputParametersSchemas returns JSONSchemas for additional parameters defined on a given Implementation.
 // It resolves TypeRefs to a given JSONSchema by calling Hub.
 func (c *InputOutputValidator) LoadImplInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error) {
-	if impl.Spec == nil ||
-		impl.Spec.AdditionalInput == nil ||
-		impl.Spec.AdditionalInput.Parameters == nil ||
-		impl.Spec.AdditionalInput.Parameters.TypeRef == nil {
+	if c.implHasNoInputParams(impl) {
 		return nil, nil
 	}
 
-	// Current simplification on Implementation manifest, that only one additional
-	// input parameter can be specified.
-	in := validation.TypeRefCollection{
-		argo.AdditionalInputName: {
-			TypeRef:  types.TypeRef(*impl.Spec.AdditionalInput.Parameters.TypeRef),
+	var paramsTypeRefs = validation.TypeRefCollection{}
+	for _, param := range impl.Spec.AdditionalInput.Parameters {
+		if param.TypeRef == nil {
+			continue
+		}
+		paramsTypeRefs[param.Name] = validation.TypeRef{
+			TypeRef:  types.TypeRef(*param.TypeRef),
 			Required: false, // additional parameters are not required on Implementation.
-		},
+		}
 	}
-	return c.resolveTypeRefsToJSONSchemas(ctx, in)
+
+	return c.resolveTypeRefsToJSONSchemas(ctx, paramsTypeRefs)
 }
 
 // LoadImplInputTypeInstanceRefs returns input TypeInstances' TypeRefs defined on a given Implementation.
 func (c *InputOutputValidator) LoadImplInputTypeInstanceRefs(_ context.Context, impl gqlpublicapi.ImplementationRevision) (validation.TypeRefCollection, error) {
-	if impl.Spec == nil ||
-		impl.Spec.AdditionalInput == nil ||
-		impl.Spec.AdditionalInput.TypeInstances == nil {
+	if c.implHasNoInputInstances(impl) {
 		return nil, nil
 	}
 
@@ -153,7 +150,7 @@ func (c *InputOutputValidator) LoadImplInputTypeInstanceRefs(_ context.Context, 
 }
 
 // ValidateParameters validates that a given input parameters are valid against JSONSchema defined in SchemaCollection.
-func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters map[string]string) (validation.Result, error) {
+func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters types.ParametersCollection) (validation.Result, error) {
 	resultBldr := validation.NewResultBuilder("Parameters")
 
 	// 1. Check that all required parameters are specified
@@ -180,7 +177,7 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 
 		schema, found := paramsSchemas[paramName]
 		if !found {
-			resultBldr.ReportIssue(paramName, "JSONSchema was not found")
+			resultBldr.ReportIssue(paramName, "Unknown parameter. Cannot validate it against JSONSchema.")
 			continue
 		}
 
@@ -330,7 +327,7 @@ func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context,
 	}
 
 	var (
-		merr    = &multierror.Error{}
+		merr    = &multierror.Error{ErrorFormat: listFormatFunc}
 		schemas = validation.SchemaCollection{}
 	)
 	for name, ref := range inTypeRefs {
@@ -338,13 +335,13 @@ func (c *InputOutputValidator) resolveTypeRefsToJSONSchemas(ctx context.Context,
 		schema, found := indexedTypes[refKey]
 		if !found {
 			// It means that manifest refers to not existing TypeRef.
-			// From our perspective it's error - we should have invalid manifests in Hub.
-			merr = multierror.Append(merr)
+			// From our perspective it's error - we shouldn't have invalid manifests in Hub.
+			merr = multierror.Append(merr, fmt.Errorf("TypeRef %q was not found in Hub", refKey))
 			continue
 		}
 		str, ok := schema.(string)
 		if !ok {
-			merr = multierror.Append(merr, fmt.Errorf("unexpected JSONSchema type for %s, expected %T, got %T", refKey, "", schema))
+			merr = multierror.Append(merr, fmt.Errorf("unexpected JSONSchema type for %q: expected %T, got %T", refKey, "", schema))
 			continue
 		}
 		schemas[name] = validation.Schema{
@@ -365,4 +362,40 @@ func (c *InputOutputValidator) ifaceHasNoInput(iface *gqlpublicapi.InterfaceRevi
 		return true
 	}
 	return false
+}
+
+func (c *InputOutputValidator) implHasNoInputParams(impl gqlpublicapi.ImplementationRevision) bool {
+	if impl.Spec == nil || impl.Spec.AdditionalInput == nil || impl.Spec.AdditionalInput.Parameters == nil {
+		return true
+	}
+
+	return false
+}
+
+func (c *InputOutputValidator) implHasNoInputInstances(impl gqlpublicapi.ImplementationRevision) bool {
+	if impl.Spec == nil || impl.Spec.AdditionalInput == nil || impl.Spec.AdditionalInput.TypeInstances == nil {
+		return true
+	}
+
+	return false
+}
+
+// listFormatFunc is a basic formatter that outputs the number of errors
+// that occurred along with a bullet point list of the errors.
+//
+// it's a copy of https://github.com/hashicorp/go-multierror/blob/9974e9ec57696378079ecc3accd3d6f29401b3a0/format.go#L14
+// with removed additional two new lines (`\n\n`) added to error message.
+func listFormatFunc(es []error) string {
+	if len(es) == 1 {
+		return fmt.Sprintf("1 error occurred:\n\t* %s", es[0])
+	}
+
+	points := make([]string, len(es))
+	for i, err := range es {
+		points[i] = fmt.Sprintf("* %s", err)
+	}
+
+	return fmt.Sprintf(
+		"%d errors occurred:\n\t%s",
+		len(es), strings.Join(points, "\n\t"))
 }

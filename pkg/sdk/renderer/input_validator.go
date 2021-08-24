@@ -17,7 +17,7 @@ type Validator interface {
 	LoadImplInputParametersSchemas(context.Context, gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error)
 	LoadImplInputTypeInstanceRefs(context.Context, gqlpublicapi.ImplementationRevision) (validation.TypeRefCollection, error)
 
-	ValidateParameters(context.Context, validation.SchemaCollection, map[string]string) (validation.Result, error)
+	ValidateParameters(context.Context, validation.SchemaCollection, types.ParametersCollection) (validation.Result, error)
 	ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error)
 }
 
@@ -34,10 +34,10 @@ func NewInputValidator(validator Validator) *InputValidator {
 // ValidateInput holds input data for Validate method.
 type ValidateInput struct {
 	Interface            *gqlpublicapi.InterfaceRevision
-	Parameters           map[string]string
+	Parameters           types.ParametersCollection
 	TypeInstances        []types.InputTypeInstanceRef
 	Implementation       gqlpublicapi.ImplementationRevision
-	AdditionalParameters map[string]string
+	AdditionalParameters types.ParametersCollection
 }
 
 // Validate validates both the required and additional input parameters and TypeInstances.

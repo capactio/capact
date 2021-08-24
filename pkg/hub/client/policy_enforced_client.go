@@ -7,12 +7,12 @@ import (
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
-
-	"github.com/pkg/errors"
-
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+
+	"github.com/pkg/errors"
+	"sigs.k8s.io/yaml"
 )
 
 // HubClient interface aggregates methods for interacting with the Local and Public Hub.
@@ -110,16 +110,24 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(ct
 
 // ListAdditionalInputToInjectBasedOnPolicy returns additional input parameters,
 // which have to be injected into the Action, based on the current policies.
-// TODO: check if rules has AdditionalInput to inject and if implementation expects AdditionalInput
-func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) map[string]interface{} {
-	if policyRule.Inject == nil ||
-		len(policyRule.Inject.AdditionalInput) == 0 ||
-		implRev.Spec == nil ||
-		implRev.Spec.AdditionalInput == nil ||
-		implRev.Spec.AdditionalInput.Parameters == nil {
-		return nil
+//
+// We return all additional parameters assigned to a given Implementation. It's validated by a dedicated function if
+// implementation expects additional parameters and if they are valid against JSONSchema.
+func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error) {
+	if policyRule.Inject == nil || len(policyRule.Inject.AdditionalParameters) == 0 {
+		return nil, nil
 	}
-	return policyRule.Inject.AdditionalInput
+
+	out := types.ParametersCollection{}
+	for _, param := range policyRule.Inject.AdditionalParameters {
+		data, err := yaml.Marshal(param.Value)
+		if err != nil {
+			return nil, errors.Wrap(err, "while marshaling additional input parameters to YAML")
+		}
+
+		out[param.Name] = string(data)
+	}
+	return out, nil
 }
 
 // FindInterfaceRevision finds InterfaceRevision for the provided reference.

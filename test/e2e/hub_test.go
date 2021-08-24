@@ -43,7 +43,7 @@ var _ = Describe("GraphQL API", func() {
 				})
 
 				Expect(err).ToNot(HaveOccurred())
-				Expect(revisionsForInterface).To(HaveLen(2))
+				Expect(revisionsForInterface).To(HaveLen(3))
 				for _, rev := range revisionsForInterface {
 					Expect(rev.Spec.Implements).To(HaveLen(1))
 					Expect(rev.Spec.Implements[0].Path).To(Equal(interfacePath))
