@@ -32,8 +32,6 @@ release::make_prepare_release_commit() {
 [ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
 
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-#RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0-9])\.[0-9]/\1/g')"
-#RELEASE_BRANCH="release-${RELEASE_VERSION_MAJOR_MINOR}"
 
 main() {
   git config --global user.email "bot@capact.io"
