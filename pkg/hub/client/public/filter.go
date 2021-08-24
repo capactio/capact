@@ -40,7 +40,10 @@ func filterImplementationRevisionsByPathPattern(revs []gqlpublicapi.Implementati
 	return out
 }
 
-func filterImplementationRevisionsByRequirementsSatisfiedBy(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]string, requiredTIInjectionSatisfiedBy map[string]string) []gqlpublicapi.ImplementationRevision {
+func filterImplementationRevisionsByRequirementsSatisfiedBy(
+	revs []gqlpublicapi.ImplementationRevision,
+	requirementsSatisfiedBy, requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{},
+) []gqlpublicapi.ImplementationRevision {
 	if len(requirementsSatisfiedBy) == 0 {
 		return revs
 	}
@@ -124,7 +127,7 @@ func filterImplementationRevisionsByRequires(revs []gqlpublicapi.ImplementationR
 	return out
 }
 
-func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
+func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{}) bool {
 	if len(implReq) == 0 {
 		return true
 	}
@@ -134,13 +137,13 @@ func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequire
 		if item.TypeRef == nil {
 			continue
 		}
-		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		satisfied := contains(availableReq, *item.TypeRef)
 		if !satisfied {
 			continue
 		}
 
 		// required TypeInstance injection
-		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
+		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, *item.TypeRef) {
 			satisfiedCnt++
 		}
 
@@ -152,7 +155,7 @@ func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequire
 	return satisfiedCnt == 1
 }
 
-func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
+func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{}) bool {
 	if len(implReq) == 0 {
 		return true
 	}
@@ -161,13 +164,13 @@ func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequ
 		if item.TypeRef == nil {
 			continue
 		}
-		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		satisfied := contains(availableReq, *item.TypeRef)
 		if !satisfied {
 			continue
 		}
 
 		// required TypeInstance injection
-		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
+		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, *item.TypeRef) {
 			return true
 		}
 	}
@@ -175,7 +178,7 @@ func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequ
 	return false
 }
 
-func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
+func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{}) bool {
 	if len(implReq) == 0 {
 		return true
 	}
@@ -184,7 +187,7 @@ func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequireme
 		if item.TypeRef == nil {
 			continue
 		}
-		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		satisfied := contains(availableReq, *item.TypeRef)
 		if !satisfied { // all needs to be satisfied, so we can already give up
 			return false
 		}
@@ -195,7 +198,7 @@ func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequireme
 			continue
 		}
 
-		if !contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
+		if !contains(requiredTIInjectionSatisfiedBy, *item.TypeRef) {
 			// injection needed and TypeInstance for injection not found
 			return false
 		}
@@ -229,14 +232,14 @@ func filterImplementationRevisionsByAttr(revs []gqlpublicapi.ImplementationRevis
 	return out
 }
 
-//  contains returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
+//  containsAtLeastOne returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
 func containsAtLeastOne(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*string) bool {
 	for _, atr := range attr {
 		if atr == nil || atr.Metadata == nil {
 			continue
 		}
 
-		if containsForOptionalRevision(expAttr, atr.Metadata.Path, atr.Revision) {
+		if containsWithOptionalRevision(expAttr, atr.Metadata.Path, atr.Revision) {
 			return true
 		}
 	}
@@ -244,7 +247,7 @@ func containsAtLeastOne(attr []*gqlpublicapi.AttributeRevision, expAttr map[stri
 	return false
 }
 
-//  contains returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
+//  containsAll returns true if all items from expAtr are defined in implAtr. Duplicates are skipped.
 func containsAll(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*string) bool {
 	matchedEntities := 0
 	for _, atr := range attr {
@@ -252,7 +255,7 @@ func containsAll(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*str
 			continue
 		}
 
-		if containsForOptionalRevision(expAttr, atr.Metadata.Path, atr.Revision) {
+		if containsWithOptionalRevision(expAttr, atr.Metadata.Path, atr.Revision) {
 			matchedEntities++
 		}
 	}
@@ -260,7 +263,7 @@ func containsAll(attr []*gqlpublicapi.AttributeRevision, expAttr map[string]*str
 	return len(expAttr) == matchedEntities
 }
 
-func containsForOptionalRevision(attr map[string]*string, path, rev string) bool {
+func containsWithOptionalRevision(attr map[string]*string, path, rev string) bool {
 	revision, found := attr[path]
 	if !found {
 		return false
@@ -273,13 +276,9 @@ func containsForOptionalRevision(attr map[string]*string, path, rev string) bool
 	return true
 }
 
-func contains(attr map[string]string, path, rev string) bool {
-	revision, found := attr[path]
-	if !found || revision != rev {
-		return false
-	}
-
-	return true
+func contains(attr map[gqlpublicapi.TypeReference]struct{}, typeRef gqlpublicapi.TypeReference) bool {
+	_, found := attr[typeRef]
+	return found
 }
 
 func visitedMapForTypeInstances(typeInstances map[string]*string) map[string]bool {

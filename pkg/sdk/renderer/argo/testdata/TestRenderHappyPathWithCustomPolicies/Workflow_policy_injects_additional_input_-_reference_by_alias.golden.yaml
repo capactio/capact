@@ -118,8 +118,8 @@ args:
           name: rds-instance
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-6-0-step
-          template: inject-input-type-instances-6-0
+          name: inject-input-type-instances-7-0-step
+          template: inject-input-type-instances-7-0
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -556,7 +556,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-6-0
+      name: inject-input-type-instances-7-0
       outputs:
         artifacts:
         - globalName: aws-credentials

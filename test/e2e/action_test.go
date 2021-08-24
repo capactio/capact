@@ -119,6 +119,9 @@ var _ = Describe("Action", func() {
 			err = engineClient.DeleteAction(ctx, actionName)
 			Expect(err).ToNot(HaveOccurred())
 
+			By("3.4 Waiting for Action deleted")
+			waitForActionDeleted(ctx, engineClient, actionName)
+
 			By("4. Modifying Policy to make Implementation B picked for next run...")
 			globalPolicyRequiredTypeInstances := fmt.Sprintf(globalPolicyRequiredTypeInstancesFmt, injectedTypeInstanceID)
 			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, globalPolicyRequiredTypeInstances)
@@ -241,7 +244,21 @@ func getActionStatusFunc(ctx context.Context, cl *engine.Client, name string) fu
 		if err != nil {
 			return "", err
 		}
+		if action == nil || action.Status == nil {
+			return "", errors.New("Action and its status cannot be nil")
+		}
+
 		return action.Status.Phase, err
+	}
+}
+
+func getActionFunc(ctx context.Context, cl *engine.Client, name string) func() (*enginegraphql.Action, error) {
+	return func() (*enginegraphql.Action, error) {
+		action, err := cl.GetAction(ctx, name)
+		if err != nil {
+			return nil, err
+		}
+		return action, err
 	}
 }
 
@@ -329,6 +346,13 @@ func assertActionRenderedWorkflowContains(action *enginegraphql.Action, stringTo
 func runActionAndWaitForSucceeded(ctx context.Context, engineClient *engine.Client, actionName string) {
 	runActionAndWaitForStatus(ctx, engineClient, actionName,
 		enginegraphql.ActionStatusPhaseSucceeded)
+}
+
+func waitForActionDeleted(ctx context.Context, engineClient *engine.Client, actionName string) {
+	Eventually(
+		getActionFunc(ctx, engineClient, actionName),
+		cfg.PollingTimeout, cfg.PollingInterval,
+	).Should(BeNil())
 }
 
 func runActionAndWaitForStatus(ctx context.Context, engineClient *engine.Client, actionName string, statuses ...enginegraphql.ActionStatusPhase) {

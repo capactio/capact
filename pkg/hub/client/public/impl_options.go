@@ -11,8 +11,8 @@ type ListImplementationRevisionsForInterfaceOption func(*ListImplementationRevis
 type ListImplementationRevisionsForInterfaceOptions struct {
 	attrFilter                     map[gqlpublicapi.FilterRule]map[string]*string
 	implPathPattern                *string
-	requirementsSatisfiedBy        map[string]string
-	requiredTIInjectionSatisfiedBy map[string]string
+	requirementsSatisfiedBy        map[gqlpublicapi.TypeReference]struct{}
+	requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{}
 	requires                       map[string]*string
 	sortByPathAscAndRevisionDesc   bool
 }
@@ -47,23 +47,32 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 
 		// 3. Process TypeInstances, which should satisfy requirements
 		if len(filter.RequirementsSatisfiedBy) > 0 {
-			opt.requirementsSatisfiedBy = make(map[string]string)
+			opt.requirementsSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
 			for _, req := range filter.RequirementsSatisfiedBy {
 				if req.TypeRef == nil {
 					continue
 				}
-				opt.requirementsSatisfiedBy[req.TypeRef.Path] = req.TypeRef.Revision
+				typeRef := gqlpublicapi.TypeReference{
+					Path:     req.TypeRef.Path,
+					Revision: req.TypeRef.Revision,
+				}
+				opt.requirementsSatisfiedBy[typeRef] = struct{}{}
 			}
 		}
 
 		// 4. Process TypeInstances which should satisfy required TypeInstances injection
 		if len(filter.RequiredTypeInstancesInjectionSatisfiedBy) > 0 {
-			opt.requiredTIInjectionSatisfiedBy = make(map[string]string)
+			opt.requiredTIInjectionSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
 			for _, req := range filter.RequiredTypeInstancesInjectionSatisfiedBy {
 				if req.TypeRef == nil {
 					continue
 				}
-				opt.requiredTIInjectionSatisfiedBy[req.TypeRef.Path] = req.TypeRef.Revision
+
+				typeRef := gqlpublicapi.TypeReference{
+					Path:     req.TypeRef.Path,
+					Revision: req.TypeRef.Revision,
+				}
+				opt.requiredTIInjectionSatisfiedBy[typeRef] = struct{}{}
 			}
 		}
 
