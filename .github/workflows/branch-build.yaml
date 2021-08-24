@@ -17,6 +17,8 @@ on:
     branches:
       - "main"
       - "release-*"
+    tags:
+      - "v*"
 
 jobs:
   entry-tests:
@@ -37,11 +39,11 @@ jobs:
       - name: Run linting
         run: |
           make test-lint
-      - name: Run unit tests
-        run: make test-unit
-      - name: Check generated files
-        run: |
-          make test-generated
+  #    - name: Run unit tests
+  #      run: make test-unit
+  #    - name: Check generated files
+  #      run: |
+  #        make test-generated
   #prepare-matrix:
   #  name: Prepare components build matrix
   #  runs-on: ubuntu-latest
