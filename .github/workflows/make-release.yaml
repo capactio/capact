@@ -30,6 +30,11 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
+      - name: Set up GCS
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.GCS_CREDS }}
+          export_default_credentials: true
       - name: Push release commits and tag
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"

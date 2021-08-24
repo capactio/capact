@@ -72,7 +72,7 @@ dist: bin
 blobs:
   -
     provider: gs
-    bucket: capactio-binaries
+    bucket: capactio-release-testing
     folder: '{{ .Tag }}'
 
 release:
