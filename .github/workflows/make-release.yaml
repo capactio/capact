@@ -30,11 +30,16 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
-      - name: Create release commit and tag
+      - name: Create prerelease-commit
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
         run: |
           ./hack/prepare-release.sh
+      - name: Create release commit and tag
+        env:
+          RELEASE_VERSION: "${{ github.event.inputs.version }}"
+        run: |
+          ./hack/create-release.sh
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -43,10 +48,3 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Create release commit and tag
-        env:
-          RELEASE_VERSION: "${{ github.event.inputs.version }}"
-        run: |
-          git remote remove origin
-          git remote add origin https://${{secrets.PAT}}@github.com/${{github.repository}}.git
-          ./hack/create-release.sh
