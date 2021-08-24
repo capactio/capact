@@ -216,7 +216,7 @@ func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Conte
 		return nil
 	}
 
-	err := e.mergedPolicy.ResolveTypeInstanceMetadata(ctx, e.hubCli)
+	err := policy.ResolveTypeInstanceMetadata(ctx, e.hubCli, &e.mergedPolicy)
 	if err != nil {
 		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
 	}

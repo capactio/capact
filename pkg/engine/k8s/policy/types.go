@@ -1,15 +1,9 @@
 package policy
 
 import (
-	"context"
 	"encoding/json"
-	"fmt"
 
-	"capact.io/capact/internal/maps"
-
-	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
@@ -164,84 +158,11 @@ func (in Policy) ToYAMLString() (string, error) {
 	return string(bytes), nil
 }
 
-// HubClient defines Hub client which is able to find TypeInstance Type references.
-type HubClient interface {
-	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
-}
-
-// ResolveTypeInstanceMetadata resolves needed TypeInstance metadata based on IDs.
-func (in *Policy) ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient) error {
-	if in == nil {
-		return errors.New("policy cannot be nil")
-	}
-
-	if hubCli == nil {
-		return errors.New("hub client cannot be nil")
-	}
-
-	err := in.resolveTypeRefsForRequiredTypeInstances(ctx, hubCli)
-	if err != nil {
-		return err
-	}
-
-	err = in.ValidateTypeInstancesMetadata()
-	if err != nil {
-		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
-	}
-
-	return nil
-}
-
 // AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
 func (in *Policy) AreTypeInstancesMetadataResolved() bool {
 	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
 
 	return len(unresolvedTypeInstances) == 0
-}
-
-// ValidateTypeInstancesMetadata validates that every TypeInstance has metadata resolved.
-func (in *Policy) ValidateTypeInstancesMetadata() error {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
-	return validateTypeInstancesMetadata(unresolvedTypeInstances)
-}
-
-func (in *Policy) resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClient) error {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
-
-	var idsToQuery []string
-	for _, ti := range unresolvedTypeInstances {
-		idsToQuery = append(idsToQuery, ti.ID)
-	}
-
-	if len(idsToQuery) == 0 {
-		return nil
-	}
-
-	res, err := hubCli.FindTypeInstancesTypeRef(ctx, idsToQuery)
-	if err != nil {
-		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
-	}
-
-	for ruleIdx, rule := range in.Rules {
-		for ruleItemIdx, ruleItem := range rule.OneOf {
-			if ruleItem.Inject == nil {
-				continue
-			}
-			for reqTIIdx, reqTI := range ruleItem.Inject.RequiredTypeInstances {
-				typeRef, exists := res[reqTI.ID]
-				if !exists {
-					continue
-				}
-
-				in.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.RequiredTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
-					Path:     typeRef.Path,
-					Revision: typeRef.Revision,
-				}
-			}
-		}
-	}
-
-	return nil
 }
 
 func (in *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
@@ -257,74 +178,4 @@ func (in *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInsta
 
 var filterTypeInstancesWithEmptyTypeRef = func(ti RequiredTypeInstanceToInject) bool {
 	return ti.TypeRef == nil || ti.TypeRef.Path == "" || ti.TypeRef.Revision == ""
-}
-
-// DeepCopyInto writes a deep copy of AdditionalParametersToInject into out.
-// controller-gen doesn't support interface{} so writing it manually
-func (in *AdditionalParametersToInject) DeepCopyInto(out *AdditionalParametersToInject) {
-	*out = *in
-	out.Value = maps.Merge(out.Value, in.Value)
-}
-
-// DeepCopy returns a new deep copy of AdditionalParametersToInject.
-// controller-gen doesn't support interface{} so writing it manually
-func (in *AdditionalParametersToInject) DeepCopy() *AdditionalParametersToInject {
-	if in == nil {
-		return nil
-	}
-	out := new(AdditionalParametersToInject)
-	in.DeepCopyInto(out)
-	return out
-}
-
-// DeepCopy returns a new deep copy of InjectData.
-// controller-gen doesn't support interface{} so writing it manually
-func (in *InjectData) DeepCopy() *InjectData {
-	if in == nil {
-		return nil
-	}
-	out := new(InjectData)
-	in.DeepCopyInto(out)
-	return out
-}
-
-// DeepCopyInto writes a deep copy of InjectData into out.
-// controller-gen doesn't support interface{} so writing it manually
-func (in *InjectData) DeepCopyInto(out *InjectData) {
-	*out = *in
-	if in.RequiredTypeInstances != nil {
-		in, out := &in.RequiredTypeInstances, &out.RequiredTypeInstances
-		*out = make([]RequiredTypeInstanceToInject, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
-	if in.AdditionalParameters != nil {
-		in, out := &in.AdditionalParameters, &out.AdditionalParameters
-		*out = make([]AdditionalParametersToInject, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
-}
-
-func validateTypeInstancesMetadata(requiredTypeInstances []RequiredTypeInstanceToInject) error {
-	if len(requiredTypeInstances) == 0 {
-		return nil
-	}
-
-	multiErr := &multierror.Error{}
-	for _, ti := range requiredTypeInstances {
-		tiDesc := ""
-		if ti.Description != nil {
-			tiDesc = *ti.Description
-		}
-
-		multiErr = multierror.Append(
-			multiErr,
-			fmt.Errorf("missing Type reference for TypeInstance %q (description: %q)", ti.ID, tiDesc),
-		)
-	}
-
-	return errors.Wrap(multiErr, "while validating TypeInstance metadata for Policy")
 }
