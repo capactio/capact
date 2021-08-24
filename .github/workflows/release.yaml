@@ -11,7 +11,7 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: ["integration-tests"]
+    environment: Release
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -24,6 +24,13 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
+      - name: Create release commit and tag
+        env:
+          GIT_TAG_REF: "${{ github.ref }}"
+        run: |
+          git remote remove origin
+          git remote add origin https://${{secrets.PAT}}@github.com/${{github.repository}}.git
+          ./hack/create-release.sh
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:

@@ -27,28 +27,6 @@ release::make_prepare_release_commit() {
   git push origin "v${version}"
 }
 
-release::set_capact_images_in_charts() {
-  local -r image_tag="$1"
-  sed -i.bak "s/overrideTag: \"latest\"/overrideTag: \"${image_tag}\"/g" "deploy/kubernetes/charts/capact/values.yaml"
-}
-
-release::set_hub_manifest_source_branch() {
-  local -r branch="$1"
-  sed -i.bak "s/branch: main/branch: ${branch}/g" "deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
-}
-
-release::make_release_commit() {
-  local -r version="$1"
-  local -r release_branch="$2"
-
-  git add .
-  git commit -m "Set fixed Capact image tag and Populator source branch"
-  git tag "v${version}" HEAD
-
-  git push origin "${release_branch}"
-  git push origin "v${version}"
-}
-
 # required inputs:
 # RELEASE_VERSION - new version in semver format: x.y.z
 [ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
