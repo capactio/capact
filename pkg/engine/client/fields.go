@@ -94,12 +94,9 @@ const policyFields = `
 				path
 			}
 			inject {
-				typeInstances {
+				requiredTypeInstances {
 					id
-					typeRef {
-						path
-						revision
-					}
+					description
 				}
 				additionalInput
 			}

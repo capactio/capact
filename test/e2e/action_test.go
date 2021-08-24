@@ -28,7 +28,8 @@ import (
 )
 
 const globalPolicyConfigMapKey = "cluster-policy.yaml"
-const globalPolicyTokenToReplace = "{typeInstanceUUID}"
+const globalPolicyTokenToReplace = "requiredTypeInstances: []"
+const globalPolicyRequiredTypeInstancesFmt = `requiredTypeInstances: [{ "id": "%s", "description": "Test TypeInstance" }]`
 
 func getActionName() string {
 	return fmt.Sprintf("e2e-test-%d-%s", GinkgoParallelNode(), strconv.Itoa(rand.Intn(10000)))
@@ -122,7 +123,8 @@ var _ = Describe("Action", func() {
 
 			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
 			typeInstanceID := typeInstance.ID
-			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, typeInstanceID)
+			globalPolicyRequiredTypeInstances := fmt.Sprintf(globalPolicyRequiredTypeInstancesFmt, typeInstanceID)
+			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, globalPolicyRequiredTypeInstances)
 			defer cfgMapCleanupFn()
 
 			By("4. Expecting Implementation B is picked based on test policy...")

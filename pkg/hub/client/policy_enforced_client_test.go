@@ -1,7 +1,11 @@
 package client_test
 
 import (
+	"context"
 	"testing"
+
+	"capact.io/capact/pkg/hub/client/fake"
+	"github.com/stretchr/testify/require"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
@@ -21,6 +25,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 		implRev               gqlpublicapi.ImplementationRevision
 		policyRule            policy.Rule
 		expectedTypeInstances []types.InputTypeInstanceRef
+		expectedErrMessage    *string
 	}{
 		{
 			name: "Empty inject in policy",
@@ -37,7 +42,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			}),
 			policyRule: policy.Rule{
 				Inject: &policy.InjectData{
-					TypeInstances: []policy.TypeInstanceToInject{},
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{},
 				},
 			},
 			expectedTypeInstances: nil,
@@ -70,12 +75,15 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			}),
 			policyRule: policy.Rule{
 				Inject: &policy.InjectData{
-					TypeInstances: []policy.TypeInstanceToInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							ID: "my-uuid",
-							TypeRef: types.ManifestRef{
+							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+								ID:          "my-uuid",
+								Description: ptr.String("My UUID"),
+							},
+							TypeRef: &types.ManifestRef{
 								Path:     "cap.type.gcp.auth.service-account",
-								Revision: ptr.String("0.1.1"),
+								Revision: "0.1.1",
 							},
 						},
 					},
@@ -84,7 +92,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			expectedTypeInstances: nil,
 		},
 		{
-			name: "Inject GCP SA with specific revision",
+			name: "Inject GCP SA",
 			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
 				Prefix: "cap.type.gcp.auth",
 				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
@@ -99,12 +107,15 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			}),
 			policyRule: policy.Rule{
 				Inject: &policy.InjectData{
-					TypeInstances: []policy.TypeInstanceToInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							ID: "my-uuid",
-							TypeRef: types.ManifestRef{
+							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+								ID:          "my-uuid",
+								Description: ptr.String("My UUID"),
+							},
+							TypeRef: &types.ManifestRef{
 								Path:     "cap.type.gcp.auth.service-account",
-								Revision: ptr.String("0.1.1"),
+								Revision: "0.1.1",
 							},
 						},
 					},
@@ -118,10 +129,10 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			},
 		},
 		{
-			name: "Inject GCP SA with any revision",
+			name: "No TypeRef for injected required TypeInstance",
 			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
 				Prefix: "cap.type.gcp.auth",
-				AnyOf: []*gqlpublicapi.ImplementationRequirementItem{
+				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
 					{
 						Alias: ptr.String("gcp-sa"),
 						TypeRef: &gqlpublicapi.TypeReference{
@@ -133,35 +144,37 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			}),
 			policyRule: policy.Rule{
 				Inject: &policy.InjectData{
-					TypeInstances: []policy.TypeInstanceToInject{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 						{
-							ID: "my-uuid",
-							TypeRef: types.ManifestRef{
-								Path: "cap.type.gcp.auth.service-account",
+							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+								ID:          "my-uuid",
+								Description: ptr.String("My UUID"),
 							},
 						},
 					},
 				},
 			},
-			expectedTypeInstances: []types.InputTypeInstanceRef{
-				{
-					Name: "gcp-sa",
-					ID:   "my-uuid",
-				},
-			},
+			expectedErrMessage: ptr.String("while validating Policy rule: while validating TypeInstance metadata for Policy: 1 error occurred:\n\t* missing Type reference for TypeInstance \"my-uuid\" (description: \"My UUID\")\n\n"),
 		},
 	}
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			// given
-			cli := client.NewPolicyEnforcedClient(nil)
+			hubCli := &fake.FileSystemClient{}
+			cli := client.NewPolicyEnforcedClient(hubCli)
 
 			// when
-			actual := cli.ListTypeInstancesToInjectBasedOnPolicy(tt.policyRule, tt.implRev)
+			actual, err := cli.ListRequiredTypeInstancesToInjectBasedOnPolicy(context.Background(), tt.policyRule, tt.implRev)
 
 			// then
-			assert.Equal(t, tt.expectedTypeInstances, actual)
+			if tt.expectedErrMessage != nil {
+				require.Error(t, err)
+				assert.EqualError(t, err, *tt.expectedErrMessage)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedTypeInstances, actual)
+			}
 		})
 	}
 }

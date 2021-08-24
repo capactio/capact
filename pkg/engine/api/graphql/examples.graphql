@@ -175,6 +175,12 @@ mutation UpdatePolicy {
                             path: "cap.core.type.platform.kubernetes"
                         }
                     }
+                    inject: {
+                        requiredTypeInstances: [{
+                            id: "edf854df-86cf-4855-9d38-8d88545fb9c9"
+                            description: "My TypeInstance"
+                        }]
+                    }
                 },
                 {},
             ]
@@ -277,12 +283,9 @@ fragment PolicyFields on Policy {
                 path
             }
             inject {
-                typeInstances {
+                requiredTypeInstances {
                     id
-                    typeRef {
-                        path
-                        revision
-                    }
+                    description
                 }
             }
         }

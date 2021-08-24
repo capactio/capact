@@ -3,7 +3,7 @@ package client
 import (
 	"reflect"
 
-	tools "capact.io/capact/internal"
+	"capact.io/capact/internal/maps"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 )
@@ -59,12 +59,12 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 	}
 	// merge Additional Input
 	if newRule.Inject.AdditionalInput != nil {
-		newMap := tools.MergeMaps(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
+		newMap := maps.Merge(newRule.Inject.AdditionalInput, rule.Inject.AdditionalInput)
 		rule.Inject.AdditionalInput = newMap
 	}
-	// merge TypeInstances
-	if newRule.Inject.TypeInstances != nil {
-		rule.Inject.TypeInstances = mergeTypeInstances(newRule.Inject.TypeInstances, rule.Inject.TypeInstances)
+	// merge RequiredTypeInstances
+	if newRule.Inject.RequiredTypeInstances != nil {
+		rule.Inject.RequiredTypeInstances = mergeTypeInstances(newRule.Inject.RequiredTypeInstances, rule.Inject.RequiredTypeInstances)
 	}
 }
 
@@ -106,8 +106,8 @@ func areImplementationConstraintsEqual(a, b policy.Rule) bool {
 	return reflect.DeepEqual(a.ImplementationConstraints, b.ImplementationConstraints)
 }
 
-func mergeTypeInstances(current, overwrite []policy.TypeInstanceToInject) []policy.TypeInstanceToInject {
-	out := append([]policy.TypeInstanceToInject{}, current...)
+func mergeTypeInstances(current, overwrite []policy.RequiredTypeInstanceToInject) []policy.RequiredTypeInstanceToInject {
+	out := append([]policy.RequiredTypeInstanceToInject{}, current...)
 	for _, newTI := range overwrite {
 		found := false
 		for i, ti := range current {

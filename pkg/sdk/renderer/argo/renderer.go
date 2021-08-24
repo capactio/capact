@@ -26,7 +26,7 @@ const (
 // and enforce the policies.
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
-	ListTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) []types.InputTypeInstanceRef
+	ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) map[string]interface{}
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
@@ -122,9 +122,13 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
 
 	// 5. List data based on policy and inject them if provided
-	// 5.1 TypeInstances
-	additionalTypeInstances := policyEnforcedClient.ListTypeInstancesToInjectBasedOnPolicy(rule, implementation)
-	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, additionalTypeInstances)
+	// 5.1 Required TypeInstances
+	requiredTypeInstances, err := policyEnforcedClient.ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+	if err != nil {
+		return nil, errors.Wrapf(err, "while listing RequiredTypeInstances based on policy for root workflow")
+	}
+
+	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, requiredTypeInstances)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}

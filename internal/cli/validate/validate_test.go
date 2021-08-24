@@ -31,7 +31,6 @@ func TestValidation_Run_SmokeTest(t *testing.T) {
 	}
 
 	require.True(t, len(filePaths) > 0)
-	t.Log(filePaths)
 
 	// when
 	err = validation.Run(context.Background(), filePaths)
@@ -48,7 +47,6 @@ func TestValidation_NoFiles(t *testing.T) {
 	filePaths := []string{"/this/file/doesnt/exist", "/same/here"}
 
 	require.True(t, len(filePaths) > 0)
-	t.Log(filePaths)
 
 	// when
 	err = validation.Run(context.Background(), filePaths)

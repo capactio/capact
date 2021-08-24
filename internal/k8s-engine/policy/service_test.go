@@ -36,7 +36,7 @@ func TestService_Update(t *testing.T) {
 	model.Rules[1].OneOf = []policy.Rule{
 		{
 			ImplementationConstraints: policy.ImplementationConstraints{
-				Requires: &[]types.ManifestRef{
+				Requires: &[]types.ManifestRefWithOptRevision{
 					{
 						Path: "cap.core.type.platform.kubernetes",
 					},

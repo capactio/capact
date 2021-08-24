@@ -32,35 +32,33 @@ func fixCfgMap(t *testing.T, in policy.Policy) *v1.ConfigMap {
 
 func fixModel() policy.Policy {
 	return policy.Policy{
-		APIVersion: policy.CurrentAPIVersion,
 		Rules: policy.RulesList{
 			{
-				Interface: types.ManifestRef{
+				Interface: types.ManifestRefWithOptRevision{
 					Path:     "cap.interface.database.postgresql.install",
 					Revision: ptr.String("0.1.0"),
 				},
 				OneOf: []policy.Rule{
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{
-							Requires: &[]types.ManifestRef{
+							Requires: &[]types.ManifestRefWithOptRevision{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
 							},
-							Attributes: &[]types.ManifestRef{
+							Attributes: &[]types.ManifestRefWithOptRevision{
 								{
 									Path: "cap.attribute.cloud.provider.gcp",
 								},
 							},
 						},
 						Inject: &policy.InjectData{
-							TypeInstances: []policy.TypeInstanceToInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
-									ID: "c268d3f5-8834-434b-bea2-b677793611c5",
-									TypeRef: types.ManifestRef{
-										Path:     "cap.type.gcp.auth.service-account",
-										Revision: ptr.String("0.1.0"),
+									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										ID:          "c268d3f5-8834-434b-bea2-b677793611c5",
+										Description: ptr.String("Sample description"),
 									},
 								},
 							},
@@ -74,7 +72,7 @@ func fixModel() policy.Policy {
 				},
 			},
 			{
-				Interface: types.ManifestRef{
+				Interface: types.ManifestRefWithOptRevision{
 					Path: "cap.*",
 				},
 				OneOf: []policy.Rule{

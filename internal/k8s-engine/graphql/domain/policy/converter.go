@@ -32,8 +32,7 @@ func (c *Converter) FromGraphQLInput(in graphql.PolicyInput) (policy.Policy, err
 	}
 
 	return policy.Policy{
-		APIVersion: policy.CurrentAPIVersion,
-		Rules:      rules,
+		Rules: rules,
 	}, nil
 }
 
@@ -78,8 +77,8 @@ func (c *Converter) policyInjectDataToGraphQL(data *policy.InjectData) *graphql.
 	}
 
 	return &graphql.PolicyRuleInjectData{
-		TypeInstances:   c.typeInstancesToInjectToGraphQL(data.TypeInstances),
-		AdditionalInput: data.AdditionalInput,
+		RequiredTypeInstances: c.typeInstancesToInjectToGraphQL(data.RequiredTypeInstances),
+		AdditionalInput:       data.AdditionalInput,
 	}
 }
 
@@ -128,19 +127,19 @@ func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleIn
 	}
 
 	return &policy.InjectData{
-		TypeInstances:   c.typeInstancesToInjectFromGraphQLInput(input.TypeInstances),
-		AdditionalInput: additionalInput,
+		RequiredTypeInstances: c.typeInstancesToInjectFromGraphQLInput(input.RequiredTypeInstances),
+		AdditionalInput:       additionalInput,
 	}, nil
 }
 
-func (c *Converter) manifestRefToGraphQL(in types.ManifestRef) *graphql.ManifestReferenceWithOptionalRevision {
+func (c *Converter) manifestRefToGraphQL(in types.ManifestRefWithOptRevision) *graphql.ManifestReferenceWithOptionalRevision {
 	return &graphql.ManifestReferenceWithOptionalRevision{
 		Path:     in.Path,
 		Revision: in.Revision,
 	}
 }
 
-func (c *Converter) manifestRefsToGraphQL(in *[]types.ManifestRef) []*graphql.ManifestReferenceWithOptionalRevision {
+func (c *Converter) manifestRefsToGraphQL(in *[]types.ManifestRefWithOptRevision) []*graphql.ManifestReferenceWithOptionalRevision {
 	if in == nil {
 		return nil
 	}
@@ -153,36 +152,36 @@ func (c *Converter) manifestRefsToGraphQL(in *[]types.ManifestRef) []*graphql.Ma
 	return out
 }
 
-func (c *Converter) typeInstancesToInjectToGraphQL(in []policy.TypeInstanceToInject) []*graphql.TypeInstanceReference {
-	var out []*graphql.TypeInstanceReference
+func (c *Converter) typeInstancesToInjectToGraphQL(in []policy.RequiredTypeInstanceToInject) []*graphql.RequiredTypeInstanceReference {
+	var out []*graphql.RequiredTypeInstanceReference
 
 	for _, item := range in {
-		out = append(out, &graphql.TypeInstanceReference{
-			ID:      item.ID,
-			TypeRef: c.manifestRefToGraphQL(item.TypeRef),
+		out = append(out, &graphql.RequiredTypeInstanceReference{
+			ID:          item.ID,
+			Description: item.Description,
 		})
 	}
 
 	return out
 }
 
-func (c *Converter) manifestRefFromGraphQLInput(in *graphql.ManifestReferenceInput) types.ManifestRef {
+func (c *Converter) manifestRefFromGraphQLInput(in *graphql.ManifestReferenceInput) types.ManifestRefWithOptRevision {
 	if in == nil {
-		return types.ManifestRef{}
+		return types.ManifestRefWithOptRevision{}
 	}
 
-	return types.ManifestRef{
+	return types.ManifestRefWithOptRevision{
 		Path:     in.Path,
 		Revision: in.Revision,
 	}
 }
 
-func (c *Converter) manifestRefsFromGraphQLInput(in []*graphql.ManifestReferenceInput) *[]types.ManifestRef {
+func (c *Converter) manifestRefsFromGraphQLInput(in []*graphql.ManifestReferenceInput) *[]types.ManifestRefWithOptRevision {
 	if in == nil {
 		return nil
 	}
 
-	var out []types.ManifestRef
+	var out []types.ManifestRefWithOptRevision
 	for _, item := range in {
 		if item == nil {
 			continue
@@ -194,16 +193,18 @@ func (c *Converter) manifestRefsFromGraphQLInput(in []*graphql.ManifestReference
 	return &out
 }
 
-func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.TypeInstanceReferenceInput) []policy.TypeInstanceToInject {
+func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.RequiredTypeInstanceReferenceInput) []policy.RequiredTypeInstanceToInject {
 	if in == nil {
 		return nil
 	}
 
-	var out []policy.TypeInstanceToInject
+	var out []policy.RequiredTypeInstanceToInject
 	for _, item := range in {
-		out = append(out, policy.TypeInstanceToInject{
-			ID:      item.ID,
-			TypeRef: c.manifestRefFromGraphQLInput(item.TypeRef),
+		out = append(out, policy.RequiredTypeInstanceToInject{
+			RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+				ID:          item.ID,
+				Description: item.Description,
+			},
 		})
 	}
 

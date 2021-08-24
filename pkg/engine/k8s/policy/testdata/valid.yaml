@@ -1,4 +1,3 @@
-apiVersion: 0.2.0
 rules:
   - interface:
       path: cap.interface.database.postgresql.install
@@ -14,9 +13,10 @@ rules:
             - path: "cap.core.attribute.workload.stateful"
               revision: "0.1.0"
         inject:
-          typeInstances:
+          requiredTypeInstances:
             - id: sample-uuid
-              typeRef:
+              description: Google Cloud Platform Service Account
+              typeRef: # this should be ignored during loading YAML
                 path: "cap.type.gcp.auth.service-account"
                 revision: "0.1.0"
           additionalInput:

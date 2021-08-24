@@ -13,8 +13,7 @@ import (
 
 // WorkflowPolicy represents a Workflow step policy.
 type WorkflowPolicy struct {
-	APIVersion string            `json:"apiVersion"`
-	Rules      WorkflowRulesList `json:"rules"`
+	Rules WorkflowRulesList `json:"rules"`
 }
 
 // WorkflowRulesList holds the list of the rules in the policy.
@@ -46,7 +45,7 @@ type WorkflowRule struct {
 }
 
 // WorkflowInjectData holds the data, which should be injected into the Action.
-// Compared to other policies, injecting TypeInstances
+// Compared to other policies, injecting RequiredTypeInstances
 // is not supported in the Workflow step policy.
 type WorkflowInjectData struct {
 	AdditionalInput map[string]interface{} `json:"additionalInput,omitempty"`
@@ -64,7 +63,7 @@ func (p *WorkflowPolicy) ResolveImports(imports []*hubpublicapi.ImplementationIm
 			return errors.Wrap(err, "while resolving Action path")
 		}
 		p.Rules[i].Interface.ManifestRef.Path = actionRef.Path
-		p.Rules[i].Interface.ManifestRef.Revision = &actionRef.Revision
+		p.Rules[i].Interface.ManifestRef.Revision = actionRef.Revision
 	}
 	return nil
 }

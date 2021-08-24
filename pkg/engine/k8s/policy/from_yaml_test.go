@@ -1,7 +1,6 @@
 package policy_test
 
 import (
-	"fmt"
 	"io/ioutil"
 	"path/filepath"
 	"testing"
@@ -13,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFromYAMLBytes_Valid(t *testing.T) {
+func TestFromYAMLBytes_ValidWithIgnoredTypeRef(t *testing.T) {
 	// given
 	in := loadInput(t, "testdata/valid.yaml")
 	expected := fixValidPolicy()
@@ -30,15 +29,14 @@ func TestFromYAMLBytes_Invalid(t *testing.T) {
 	// given
 	in := loadInput(t, "testdata/invalid.yaml")
 
-	expectedConstraintErrs := []error{fmt.Errorf("2.0.0 does not have same major version as 0.2")}
-	expectedErr := policy.NewUnsupportedAPIVersionError(expectedConstraintErrs)
+	expectedErrMessage := "while unmarshalling Policy from YAML bytes: error unmarshaling JSON: while decoding JSON: json: cannot unmarshal string into Go value of type policy.Policy"
 
 	// when
 	_, err := policy.FromYAMLString(in)
 
 	// then
 	require.Error(t, err)
-	assert.Equal(t, expectedErr, err)
+	assert.EqualError(t, err, expectedErrMessage)
 }
 
 func loadInput(t *testing.T, path string) string {
@@ -49,23 +47,22 @@ func loadInput(t *testing.T, path string) string {
 
 func fixValidPolicy() policy.Policy {
 	return policy.Policy{
-		APIVersion: policy.CurrentAPIVersion,
 		Rules: policy.RulesList{
 			{
-				Interface: types.ManifestRef{
+				Interface: types.ManifestRefWithOptRevision{
 					Path:     "cap.interface.database.postgresql.install",
 					Revision: ptr.String("0.1.0"),
 				},
 				OneOf: []policy.Rule{
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{
-							Requires: &[]types.ManifestRef{
+							Requires: &[]types.ManifestRefWithOptRevision{
 								{
 									Path:     "cap.type.gcp.auth.service-account",
 									Revision: ptr.String("0.1.0"),
 								},
 							},
-							Attributes: &[]types.ManifestRef{
+							Attributes: &[]types.ManifestRefWithOptRevision{
 								{
 									Path:     "cap.attribute.cloud.provider.gcp",
 									Revision: ptr.String("0.1.1"),
@@ -77,12 +74,11 @@ func fixValidPolicy() policy.Policy {
 							},
 						},
 						Inject: &policy.InjectData{
-							TypeInstances: []policy.TypeInstanceToInject{
+							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
-									ID: "sample-uuid",
-									TypeRef: types.ManifestRef{
-										Path:     "cap.type.gcp.auth.service-account",
-										Revision: ptr.String("0.1.0"),
+									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+										ID:          "sample-uuid",
+										Description: ptr.String("Google Cloud Platform Service Account"),
 									},
 								},
 							},
@@ -93,7 +89,7 @@ func fixValidPolicy() policy.Policy {
 					},
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{
-							Attributes: &[]types.ManifestRef{
+							Attributes: &[]types.ManifestRefWithOptRevision{
 								{
 									Path: "cap.attribute.cloud.provider.aws",
 								},
@@ -108,13 +104,13 @@ func fixValidPolicy() policy.Policy {
 				},
 			},
 			{
-				Interface: types.ManifestRef{
+				Interface: types.ManifestRefWithOptRevision{
 					Path: "cap.*",
 				},
 				OneOf: []policy.Rule{
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{
-							Requires: &[]types.ManifestRef{
+							Requires: &[]types.ManifestRefWithOptRevision{
 								{
 									Path: "cap.core.type.platform.kubernetes",
 								},

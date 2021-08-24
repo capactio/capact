@@ -38,14 +38,14 @@ type ManifestReferenceWithOptionalRevision {
   revision: Version
 }
 
-type TypeInstanceReference {
+type RequiredTypeInstanceReference {
   id: ID!
-  typeRef: ManifestReferenceWithOptionalRevision!
+  description: String
 }
 
-input TypeInstanceReferenceInput {
+input RequiredTypeInstanceReferenceInput {
   id: ID!
-  typeRef: ManifestReferenceInput!
+  description: String
 }
 
 """
@@ -321,7 +321,7 @@ input PolicyRuleInput {
 }
 
 input PolicyRuleInjectDataInput {
-  typeInstances: [TypeInstanceReferenceInput!]
+  requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
   additionalInput: Any
 }
 
@@ -357,7 +357,7 @@ type PolicyRule {
 }
 
 type PolicyRuleInjectData {
-  typeInstances: [TypeInstanceReference!]
+  requiredTypeInstances: [RequiredTypeInstanceReference!]
   additionalInput: Any
 }
 
