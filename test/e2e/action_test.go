@@ -60,14 +60,14 @@ var _ = Describe("Action", func() {
 			actionPath := "cap.interface.capactio.capact.validation.action.passing"
 			testValue := "Implementation A"
 
-			By("Preparing input Type Instances")
+			By("1. Preparing input Type Instances")
 
-			// TypeInstance which will be downloaded
+			By("1.1 Creating TypeInstance which will be downloaded")
 			download := getTypeInstanceInputForDownload(testValue)
 			downloadTI, downloadTICleanup := createTypeInstance(ctx, hubClient, download)
 			defer downloadTICleanup()
 
-			// TypeInstance which will be downloaded and updated
+			By("1.2 Creating TypeInstance which will be downloaded and updated")
 			update := getTypeInstanceInputForUpdate()
 			updateTI, updateTICleanup := createTypeInstance(ctx, hubClient, update)
 			defer updateTICleanup()
@@ -81,14 +81,20 @@ var _ = Describe("Action", func() {
 				TypeInstances: typeInstances,
 			}
 
-			By("1. Expecting Implementation A is picked based on test policy and requirements met...")
+			By("1.3 Create TypeInstance which is required for Implementation B to be picked based on Policy")
+			typeInstanceValue := getTypeInstanceInputForPolicy()
+			typeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
+			defer tiCleanupFn()
+			injectedTypeInstanceID := typeInstance.ID
+
+			By("2. Expecting Implementation A is picked based on test policy and requirements met...")
 
 			action := createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation A'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			By("2. Check TypeInstances")
-			By("2.1. Check uploaded TypeInstances")
+			By("3. Check TypeInstances")
+			By("3.1 Check uploaded TypeInstances")
 			assertUploadedTypeInstance(ctx, hubClient, testValue)
 
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, And(ContainElement(
@@ -101,7 +107,7 @@ var _ = Describe("Action", func() {
 				},
 			), HaveLen(2)))
 
-			By("2.1. Check updated TypeInstances")
+			By("3.2 Check updated TypeInstances")
 			updateTI, err := hubClient.FindTypeInstance(ctx, updateTI.ID)
 			Expect(err).ToNot(HaveOccurred())
 			Expect(updateTI).ToNot(BeNil())
@@ -109,34 +115,24 @@ var _ = Describe("Action", func() {
 			_, err = getTypeInstanceWithValue([]hublocalgraphql.TypeInstance{*updateTI}, testValue)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("2. Deleting Action...")
-
+			By("3.3 Deleting Action...")
 			err = engineClient.DeleteAction(ctx, actionName)
 			Expect(err).ToNot(HaveOccurred())
 
-			By("3. Creating TypeInstance and modifying Policy to make Implementation B picked for next run...")
-
-			// 3.1. Create TypeInstance which is required for second Implementation to be picked
-			typeInstanceValue := getTypeInstanceInputForPolicy()
-			typeInstance, tiCleanupFn := createTypeInstance(ctx, hubClient, typeInstanceValue)
-			defer tiCleanupFn()
-
-			// 3.2. Update cluster policy with the TypeInstance ID to inject for the most preferred Implementation (Implementation B)
-			typeInstanceID := typeInstance.ID
-			globalPolicyRequiredTypeInstances := fmt.Sprintf(globalPolicyRequiredTypeInstancesFmt, typeInstanceID)
+			By("4. Modifying Policy to make Implementation B picked for next run...")
+			globalPolicyRequiredTypeInstances := fmt.Sprintf(globalPolicyRequiredTypeInstancesFmt, injectedTypeInstanceID)
 			cfgMapCleanupFn := updateGlobalPolicyConfigMap(ctx, globalPolicyTokenToReplace, globalPolicyRequiredTypeInstances)
 			defer cfgMapCleanupFn()
 
-			By("4. Expecting Implementation B is picked based on test policy...")
-
+			By("5. Expecting Implementation B is picked based on test policy...")
 			action = createActionAndWaitForReadyToRunPhase(ctx, engineClient, actionName, actionPath, inputData)
 			assertActionRenderedWorkflowContains(action, "echo 'Implementation B'")
 			runActionAndWaitForSucceeded(ctx, engineClient, actionName)
 
-			By("5. Check Uploaded TypeInstances")
+			By("6. Check Uploaded TypeInstances")
 			assertUploadedTypeInstance(ctx, hubClient, testValue)
 
-			By("6. Check output TypeInstances in Action status")
+			By("7. Check output TypeInstances in Action status")
 			assertOutputTypeInstancesInActionStatus(ctx, engineClient, action.Name, HaveLen(1))
 		})
 
