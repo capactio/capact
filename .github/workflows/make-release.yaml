@@ -35,6 +35,8 @@ jobs:
         with:
           service_account_key: ${{ secrets.GCS_CREDS }}
           export_default_credentials: true
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - name: Push release commits and tag
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
