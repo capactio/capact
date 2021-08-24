@@ -15,9 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          persist-credentials: false
       - name: Setup Git credentials
+        # Setup PAT git credentials is required to trigger the branch-build workflow on a commit:
+        # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token
         run: |
           git remote remove origin
           git remote add origin https://${{secrets.PAT}}@github.com/${{github.repository}}.git
@@ -30,16 +30,10 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
-      - name: Create prerelease-commit
+      - name: Push release commits and tag
         env:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
-        run: |
-          ./hack/prepare-release.sh
-      - name: Create release commit and tag
-        env:
-          RELEASE_VERSION: "${{ github.event.inputs.version }}"
-        run: |
-          ./hack/create-release.sh
+        run: ./hack/make-release.sh
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v2
         with:
@@ -52,3 +46,6 @@ jobs:
         run: |
           npm install -g github-release-notes
           gren release -T "${{ secrets.GITHUB_TOKEN }}" --tags "v${{ github.event.inputs.version }}" --override
+      - name: Release Helm charts
+        run: make release-charts
+

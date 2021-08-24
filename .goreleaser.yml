@@ -44,15 +44,15 @@ archives:
   - format: binary
     name_template: '{{ .Binary }}{{ if .Arm }}v{{ .Arm }}{{ end }}{{ if .Mips }}_{{ .Mips }}{{ end }}'
 
-#dockers:
-#  - dockerfile: Dockerfile.cli
-#    ids:
-#      - capact
-#    image_templates:
-#      - "ghcr.io/capactio/tools/capact-cli:stable"
-#      - "ghcr.io/capactio/tools/capact-cli:{{ .Tag }}"
-#      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
-#      - "ghcr.io/capactio/tools/capact-cli:v{{ .Major }}"
+dockers:
+  - dockerfile: Dockerfile.cli
+    ids:
+      - capact
+    image_templates:
+      - "ghcr.io/trojan295/tools/capact-cli:stable"
+      - "ghcr.io/trojan295/tools/capact-cli:{{ .Tag }}"
+      - "ghcr.io/trojan295/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/trojan295/tools/capact-cli:v{{ .Major }}"
 
 checksum:
   name_template: 'checksums.txt'
@@ -69,11 +69,11 @@ changelog:
 
 dist: bin
 
-#blobs:
-#  -
-#    provider: gs
-#    bucket: capactio-binaries
-#    folder: '{{ .Tag }}'
+blobs:
+  -
+    provider: gs
+    bucket: capactio-binaries
+    folder: '{{ .Tag }}'
 
 release:
   github:
