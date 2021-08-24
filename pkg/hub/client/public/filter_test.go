@@ -192,6 +192,95 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 	}
 }
 
+func TestImplementationRequiredTypeInstancesInjectionSatisfiedByFilters(t *testing.T) {
+	tests := []struct {
+		name                           string
+		expRevision                    []gqlpublicapi.ImplementationRevision
+		revisionToFilterOut            []gqlpublicapi.ImplementationRevision
+		requiredTIInjectionSatisfiedBy []*gqlpublicapi.TypeInstanceValue
+	}{
+		{
+			name: "Return Implementations satisfied by injected RequiredTypeInstances",
+			expRevision: []gqlpublicapi.ImplementationRevision{
+				fixImplementationRevision("without-any-requirements", "0.0.1"),
+				fixImplementationRevisionWithRequire("with-gcp-sa-requirement", "0.1.0", gqlpublicapi.ImplementationRequirement{
+					Prefix: "cap.core.type.platform",
+					AllOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							Alias: ptr.String("gcp-sa"),
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.gcp.sa",
+								Revision: "0.1.1",
+							},
+						},
+					},
+				}),
+				fixImplementationRevisionWithRequire("with-gcp-sa-requirement", "0.1.0", gqlpublicapi.ImplementationRequirement{
+					Prefix: "cap.core.type.platform",
+					AllOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.type.sample",
+								Revision: "0.1.0",
+							},
+						},
+					},
+				}),
+			},
+			revisionToFilterOut: []gqlpublicapi.ImplementationRevision{
+				fixImplementationRevisionWithRequire("with-gcp-sa-requirement-alias", "0.1.0", gqlpublicapi.ImplementationRequirement{
+					AllOf: []*gqlpublicapi.ImplementationRequirementItem{
+						{
+							Alias: ptr.String("foo"),
+							TypeRef: &gqlpublicapi.TypeReference{
+								Path:     "cap.core.type.platform.cf",
+								Revision: "0.1.1",
+							},
+						},
+					},
+				}),
+			},
+			requiredTIInjectionSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
+				{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
+						Path:     "cap.type.gcp.sa",
+						Revision: "0.1.1",
+					},
+				},
+				{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
+						Path:     "cap.type.sample",
+						Revision: "0.1.0",
+					},
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			filter := gqlpublicapi.ImplementationRevisionFilter{
+				RequiredTypeInstancesInjectionSatisfiedBy: tt.requiredTIInjectionSatisfiedBy,
+			}
+
+			getOpts := &ListImplementationRevisionsForInterfaceOptions{}
+			getOpts.Apply(WithFilter(filter))
+
+			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
+
+			// when
+			gotRevs := FilterImplementationRevisions(allRevs, getOpts)
+
+			// then
+			assert.Len(t, gotRevs, len(tt.expRevision))
+			for idx := range tt.expRevision {
+				assert.Contains(t, gotRevs, tt.expRevision[idx])
+			}
+		})
+	}
+}
+
 func TestImplementationPathPatternFilters(t *testing.T) {
 	// given
 	expRevision := []gqlpublicapi.ImplementationRevision{

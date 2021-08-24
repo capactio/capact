@@ -9,11 +9,12 @@ type ListImplementationRevisionsForInterfaceOption func(*ListImplementationRevis
 
 // ListImplementationRevisionsForInterfaceOptions stores Implementation Revision filtering parameters.
 type ListImplementationRevisionsForInterfaceOptions struct {
-	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
-	implPathPattern              *string
-	requirementsSatisfiedBy      map[string]string
-	requires                     map[string]*string
-	sortByPathAscAndRevisionDesc bool
+	attrFilter                     map[gqlpublicapi.FilterRule]map[string]*string
+	implPathPattern                *string
+	requirementsSatisfiedBy        map[string]string
+	requiredTIInjectionSatisfiedBy map[string]string
+	requires                       map[string]*string
+	sortByPathAscAndRevisionDesc   bool
 }
 
 // Apply is used to configure the ListImplementationRevisionsForInterfaceOptions.
