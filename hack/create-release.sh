@@ -15,25 +15,24 @@ release::set_hub_manifest_source_branch() {
 release::make_release_commit() {
   local -r version="$1"
   local -r release_branch="$2"
+  local -r tag="v${version}"
 
   git add .
   git commit -m "Set fixed Capact image tag and Populator source branch"
+  git tag "${tag}"
   git push origin "${release_branch}"
+  git push origin "${tag}"
 }
 
 # required inputs:
 # GIT_TAG_REF - Git tag ref in format 'refs/tags/vx.y.z.'
-[ -z "${GIT_TAG_REF}" ] && echo "Need to set GIT_TAG_REF " && exit 1;
+[ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
 
-RELEASE_VERSION="$(echo "${GIT_TAG_REF}" | sed 's|^refs/tags/v||')"
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 RELEASE_VERSION_MAJOR_MINOR="$(echo "${RELEASE_VERSION}" | sed -E 's/([0-9]+\.[0-9])\.[0-9]/\1/g')"
 RELEASE_BRANCH="release-${RELEASE_VERSION_MAJOR_MINOR}"
 
 main() {
-  git config --global user.email "bot@capact.io"
-  git config --global user.name "Capact Bot"
-
   local -r capact_image_tag=$(git rev-parse --short HEAD | sed 's/.$//')
 
   git checkout -B "${RELEASE_BRANCH}"

@@ -34,9 +34,6 @@ release::make_prepare_release_commit() {
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
 
 main() {
-  git config --global user.email "bot@capact.io"
-  git config --global user.name "Capact Bot"
-
   release::update_helm_charts_version "${RELEASE_VERSION}"
   release::update_cli_version "${RELEASE_VERSION}"
   release::make_prepare_release_commit "${RELEASE_VERSION}" "${SOURCE_BRANCH}"
