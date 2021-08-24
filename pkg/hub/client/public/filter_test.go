@@ -108,10 +108,11 @@ func TestImplementationAttributeFilters(t *testing.T) {
 
 func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 	tests := []struct {
-		name                    string
-		expRevision             []gqlpublicapi.ImplementationRevision
-		revisionToFilterOut     []gqlpublicapi.ImplementationRevision
-		requirementsSatisfiedBy []*gqlpublicapi.TypeInstanceValue
+		name                           string
+		expRevision                    []gqlpublicapi.ImplementationRevision
+		revisionToFilterOut            []gqlpublicapi.ImplementationRevision
+		requirementsSatisfiedBy        []*gqlpublicapi.TypeInstanceValue
+		requiredTIInjectionSatisfiedBy []*gqlpublicapi.TypeInstanceValue
 	}{
 		{
 			name: "Return all Implementations as they are without requirements",
@@ -166,39 +167,6 @@ func TestImplementationRequirementsSatisfiedByFilters(t *testing.T) {
 				},
 			},
 		},
-	}
-	for _, test := range tests {
-		tt := test
-		t.Run(tt.name, func(t *testing.T) {
-			// given
-			filter := gqlpublicapi.ImplementationRevisionFilter{
-				RequirementsSatisfiedBy: tt.requirementsSatisfiedBy,
-			}
-
-			getOpts := &ListImplementationRevisionsForInterfaceOptions{}
-			getOpts.Apply(WithFilter(filter))
-
-			allRevs := append(tt.expRevision, tt.revisionToFilterOut...)
-
-			// when
-			gotRevs := FilterImplementationRevisions(allRevs, getOpts)
-
-			// then
-			assert.Len(t, gotRevs, len(tt.expRevision))
-			for idx := range tt.expRevision {
-				assert.Contains(t, gotRevs, tt.expRevision[idx])
-			}
-		})
-	}
-}
-
-func TestImplementationRequiredTypeInstancesInjectionSatisfiedByFilters(t *testing.T) {
-	tests := []struct {
-		name                           string
-		expRevision                    []gqlpublicapi.ImplementationRevision
-		revisionToFilterOut            []gqlpublicapi.ImplementationRevision
-		requiredTIInjectionSatisfiedBy []*gqlpublicapi.TypeInstanceValue
-	}{
 		{
 			name: "Return Implementations satisfied by injected RequiredTypeInstances",
 			expRevision: []gqlpublicapi.ImplementationRevision{
@@ -247,10 +215,24 @@ func TestImplementationRequiredTypeInstancesInjectionSatisfiedByFilters(t *testi
 						Revision: "0.1.1",
 					},
 				},
+			},
+			requirementsSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
+				{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
+						Path:     "cap.type.gcp.sa",
+						Revision: "0.1.1",
+					},
+				},
 				{
 					TypeRef: &gqlpublicapi.TypeReferenceInput{
 						Path:     "cap.type.sample",
 						Revision: "0.1.0",
+					},
+				},
+				{
+					TypeRef: &gqlpublicapi.TypeReferenceInput{
+						Path:     "cap.core.type.platform.cf",
+						Revision: "0.1.1",
 					},
 				},
 			},
@@ -261,6 +243,7 @@ func TestImplementationRequiredTypeInstancesInjectionSatisfiedByFilters(t *testi
 		t.Run(tt.name, func(t *testing.T) {
 			// given
 			filter := gqlpublicapi.ImplementationRevisionFilter{
+				RequirementsSatisfiedBy:                   tt.requirementsSatisfiedBy,
 				RequiredTypeInstancesInjectionSatisfiedBy: tt.requiredTIInjectionSatisfiedBy,
 			}
 

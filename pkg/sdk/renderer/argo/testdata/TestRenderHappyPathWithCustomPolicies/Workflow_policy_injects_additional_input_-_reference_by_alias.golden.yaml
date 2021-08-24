@@ -117,6 +117,9 @@ args:
         - from: '{{steps.render-rds.outputs.artifacts.render}}'
           name: rds-instance
       steps:
+      - - arguments: {}
+          name: inject-input-type-instances-6-0-step
+          template: inject-input-type-instances-6-0
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -542,6 +545,23 @@ args:
         - globalName: main-install-db-rds-instance
           name: rds-instance
           path: /typeinstance
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{517cf827-233c-4bf1-8fc9-48534424dd58,/aws-credentials.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-6-0
+      outputs:
+        artifacts:
+        - globalName: aws-credentials
+          name: aws-credentials
+          path: /aws-credentials.yaml
     - inputs:
         artifacts:
         - name: postgresql

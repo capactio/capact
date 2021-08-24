@@ -1668,6 +1668,12 @@ input ImplementationRevisionFilter {
   """
   requirementsSatisfiedBy: [TypeInstanceValue!]
 
+  """
+  Used along with ` + "`" + `requirementsSatisfiedBy` + "`" + ` filter. It brings additional level of filtering by Implementations, which have requirements injection satisfied.
+  Ignored if used without ` + "`" + `requirementsSatisfiedBy` + "`" + `.
+  """
+  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
+
   attributes: [AttributeFilterInput!]
 
   """
@@ -1678,8 +1684,6 @@ input ImplementationRevisionFilter {
   such TypeReference in ` + "`" + `Implementation.spec.requires` + "`" + ` in any of the sections: oneOf, anyOf or allOf.
   """
   requires: [TypeReferenceWithOptionalRevision]
-
-  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
 }
 # lint-enable defined-types-are-used
 
@@ -12687,6 +12691,14 @@ func (ec *executionContext) unmarshalInputImplementationRevisionFilter(ctx conte
 			if err != nil {
 				return it, err
 			}
+		case "requiredTypeInstancesInjectionSatisfiedBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requiredTypeInstancesInjectionSatisfiedBy"))
+			it.RequiredTypeInstancesInjectionSatisfiedBy, err = ec.unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "attributes":
 			var err error
 
@@ -12700,14 +12712,6 @@ func (ec *executionContext) unmarshalInputImplementationRevisionFilter(ctx conte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requires"))
 			it.Requires, err = ec.unmarshalOTypeReferenceWithOptionalRevision2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceWithOptionalRevision(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "requiredTypeInstancesInjectionSatisfiedBy":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requiredTypeInstancesInjectionSatisfiedBy"))
-			it.RequiredTypeInstancesInjectionSatisfiedBy, err = ec.unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx, v)
 			if err != nil {
 				return it, err
 			}

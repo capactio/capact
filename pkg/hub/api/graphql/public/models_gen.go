@@ -153,15 +153,17 @@ type ImplementationRevisionFilter struct {
 	PathPattern *string `json:"pathPattern"`
 	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
 	// For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-	RequirementsSatisfiedBy []*TypeInstanceValue    `json:"requirementsSatisfiedBy"`
-	Attributes              []*AttributeFilterInput `json:"attributes"`
+	RequirementsSatisfiedBy []*TypeInstanceValue `json:"requirementsSatisfiedBy"`
+	// Used along with `requirementsSatisfiedBy` filter. It brings additional level of filtering by Implementations, which have requirements injection satisfied.
+	// Ignored if used without `requirementsSatisfiedBy`.
+	RequiredTypeInstancesInjectionSatisfiedBy []*TypeInstanceValue    `json:"requiredTypeInstancesInjectionSatisfiedBy"`
+	Attributes                                []*AttributeFilterInput `json:"attributes"`
 	// If provided, the ImplementationRevisions for a given Interface will be filtered
 	// according to provided Type references looked up in the `Implementation.spec.requires` field.
 	//
 	// For every item in the array, the returned ImplementationRevisions must specify
 	// such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
-	Requires                                  []*TypeReferenceWithOptionalRevision `json:"requires"`
-	RequiredTypeInstancesInjectionSatisfiedBy []*TypeInstanceValue                 `json:"requiredTypeInstancesInjectionSatisfiedBy"`
+	Requires []*TypeReferenceWithOptionalRevision `json:"requires"`
 }
 
 type ImplementationSpec struct {

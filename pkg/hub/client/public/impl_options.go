@@ -56,7 +56,18 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 			}
 		}
 
-		// 4. Process TypeInstances, which should be defined in `requires` section
+		// 4. Process TypeInstances which should satisfy required TypeInstances injection
+		if len(filter.RequiredTypeInstancesInjectionSatisfiedBy) > 0 {
+			opt.requiredTIInjectionSatisfiedBy = make(map[string]string)
+			for _, req := range filter.RequiredTypeInstancesInjectionSatisfiedBy {
+				if req.TypeRef == nil {
+					continue
+				}
+				opt.requiredTIInjectionSatisfiedBy[req.TypeRef.Path] = req.TypeRef.Revision
+			}
+		}
+
+		// 5. Process TypeInstances, which should be defined in `requires` section
 		if len(filter.Requires) > 0 {
 			opt.requires = map[string]*string{}
 			for _, req := range filter.Requires {

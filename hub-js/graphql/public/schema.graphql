@@ -71,6 +71,12 @@ input ImplementationRevisionFilter {
   """
   requirementsSatisfiedBy: [TypeInstanceValue!]
 
+  """
+  Used along with `requirementsSatisfiedBy` filter. It brings additional level of filtering by Implementations, which have requirements injection satisfied.
+  Ignored if used without `requirementsSatisfiedBy`.
+  """
+  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
+
   attributes: [AttributeFilterInput!]
 
   """
@@ -81,8 +87,6 @@ input ImplementationRevisionFilter {
   such TypeReference in `Implementation.spec.requires` in any of the sections: oneOf, anyOf or allOf.
   """
   requires: [TypeReferenceWithOptionalRevision]
-
-  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
 }
 # lint-enable defined-types-are-used
 

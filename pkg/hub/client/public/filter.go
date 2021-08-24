@@ -17,9 +17,8 @@ func FilterImplementationRevisions(revs []gqlpublicapi.ImplementationRevision, o
 
 	revs = filterImplementationRevisionsByPathPattern(revs, opts.implPathPattern)
 	revs = filterImplementationRevisionsByAttr(revs, opts.attrFilter)
-	revs = filterImplementationRevisionsByRequirementsSatisfiedBy(revs, opts.requirementsSatisfiedBy)
+	revs = filterImplementationRevisionsByRequirementsSatisfiedBy(revs, opts.requirementsSatisfiedBy, opts.requiredTIInjectionSatisfiedBy)
 	revs = filterImplementationRevisionsByRequires(revs, opts.requires)
-	revs = filterImplementationRevisionsByRequiredTypeInstancesInjection(revs, opts.requiredTIInjectionSatisfiedBy)
 
 	return revs
 }
@@ -41,7 +40,7 @@ func filterImplementationRevisionsByPathPattern(revs []gqlpublicapi.Implementati
 	return out
 }
 
-func filterImplementationRevisionsByRequirementsSatisfiedBy(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]string) []gqlpublicapi.ImplementationRevision {
+func filterImplementationRevisionsByRequirementsSatisfiedBy(revs []gqlpublicapi.ImplementationRevision, requirementsSatisfiedBy map[string]string, requiredTIInjectionSatisfiedBy map[string]string) []gqlpublicapi.ImplementationRevision {
 	if len(requirementsSatisfiedBy) == 0 {
 		return revs
 	}
@@ -60,17 +59,17 @@ requirements:
 		}
 
 		for _, req := range impl.Spec.Requires {
-			satisfied := allRequirementsAreSatisfied(req.AllOf, requirementsSatisfiedBy)
+			satisfied := allRequirementsAreSatisfied(req.AllOf, requirementsSatisfiedBy, requiredTIInjectionSatisfiedBy)
 			if !satisfied {
 				continue requirements
 			}
 
-			atLeastOneSatisfied := atLeastOneRequirementIsSatisfied(req.AnyOf, requirementsSatisfiedBy)
+			atLeastOneSatisfied := atLeastOneRequirementIsSatisfied(req.AnyOf, requirementsSatisfiedBy, requiredTIInjectionSatisfiedBy)
 			if !atLeastOneSatisfied {
 				continue requirements
 			}
 
-			onlyOneSatisfied := onlyOneRequirementIsSatisfied(req.OneOf, requirementsSatisfiedBy)
+			onlyOneSatisfied := onlyOneRequirementIsSatisfied(req.OneOf, requirementsSatisfiedBy, requiredTIInjectionSatisfiedBy)
 			if !onlyOneSatisfied {
 				continue requirements
 			}
@@ -125,57 +124,26 @@ func filterImplementationRevisionsByRequires(revs []gqlpublicapi.ImplementationR
 	return out
 }
 
-func filterImplementationRevisionsByRequiredTypeInstancesInjection(revs []gqlpublicapi.ImplementationRevision, requiredTIInjectionSatisfiedBy map[string]string) []gqlpublicapi.ImplementationRevision {
-	var out []gqlpublicapi.ImplementationRevision
-
-reqInjection:
-	for _, impl := range revs {
-		if impl.Spec == nil {
-			continue
-		}
-
-		if len(impl.Spec.Requires) == 0 {
-			out = append(out, impl)
-			continue
-		}
-
-		for _, req := range impl.Spec.Requires {
-
-			satisfied := allRequiredTypeInstancesInjectionsAreSatisfied(req.AllOf, requiredTIInjectionSatisfiedBy)
-			if !satisfied {
-				continue reqInjection
-			}
-
-			atLeastOneSatisfied := atLeastOneRequiredTypeInstancesInjectionIsSatisfied(req.AnyOf, requiredTIInjectionSatisfiedBy)
-			if !atLeastOneSatisfied {
-				continue reqInjection
-			}
-
-			onlyOneSatisfied := onlyOneRequiredTypeInstancesInjectionIsSatisfied(req.OneOf, requiredTIInjectionSatisfiedBy)
-			if !onlyOneSatisfied {
-				continue reqInjection
-			}
-		}
-
-		out = append(out, impl)
-	}
-	return out
-}
-
-func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq map[string]string) bool {
+func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
 	if len(implReq) == 0 {
 		return true
 	}
 
 	satisfiedCnt := 0
-	for _, all := range implReq {
-		if all.TypeRef == nil {
+	for _, item := range implReq {
+		if item.TypeRef == nil {
 			continue
 		}
-		satisfied := contains(availableReq, all.TypeRef.Path, all.TypeRef.Revision)
-		if satisfied {
+		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		if !satisfied {
+			continue
+		}
+
+		// required TypeInstance injection
+		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
 			satisfiedCnt++
 		}
+
 		if satisfiedCnt > 1 {
 			return false
 		}
@@ -184,73 +152,55 @@ func onlyOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequire
 	return satisfiedCnt == 1
 }
 
-func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq map[string]string) bool {
+func atLeastOneRequirementIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
 	if len(implReq) == 0 {
 		return true
 	}
 
-	for _, all := range implReq {
-		if all.TypeRef == nil {
+	for _, item := range implReq {
+		if item.TypeRef == nil {
 			continue
 		}
-		satisfied := contains(availableReq, all.TypeRef.Path, all.TypeRef.Revision)
-		if satisfied {
+		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		if !satisfied {
+			continue
+		}
+
+		// required TypeInstance injection
+		if item.Alias == nil || contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
 			return true
 		}
 	}
+
 	return false
 }
 
-func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq map[string]string) bool {
-	if len(implReq) == 0 {
-		return true
-	}
-
-	for _, all := range implReq {
-		if all.TypeRef == nil {
-			continue
-		}
-		satisfied := contains(availableReq, all.TypeRef.Path, all.TypeRef.Revision)
-		if !satisfied { // all needs to be satisfied so we can already give up
-			return false
-		}
-	}
-	return true
-}
-
-func allRequiredTypeInstancesInjectionsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, requiredTIInjectionSatisfiedBy map[string]string) bool {
+func allRequirementsAreSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, availableReq, requiredTIInjectionSatisfiedBy map[string]string) bool {
 	if len(implReq) == 0 {
 		return true
 	}
 
 	for _, item := range implReq {
+		if item.TypeRef == nil {
+			continue
+		}
+		satisfied := contains(availableReq, item.TypeRef.Path, item.TypeRef.Revision)
+		if !satisfied { // all needs to be satisfied, so we can already give up
+			return false
+		}
+
+		// required TypeInstance injection
 		if item.Alias == nil {
+			// no injection needed
 			continue
 		}
 
 		if !contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
+			// injection needed and TypeInstance for injection not found
 			return false
 		}
 	}
-
 	return true
-}
-
-func atLeastOneRequiredTypeInstancesInjectionIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, requiredTIInjectionSatisfiedBy map[string]string) bool {
-	for _, item := range implReq {
-		if item.Alias == nil {
-			// satisfied
-			return true
-		}
-
-		if !contains(requiredTIInjectionSatisfiedBy, item.TypeRef.Path, item.TypeRef.Revision) {
-			continue req
-		}
-	}
-}
-
-func onlyOneRequiredTypeInstancesInjectionIsSatisfied(implReq []*gqlpublicapi.ImplementationRequirementItem, requiredTIInjectionSatisfiedBy map[string]string) bool {
-
 }
 
 func filterImplementationRevisionsByAttr(revs []gqlpublicapi.ImplementationRevision, attrFilter map[gqlpublicapi.FilterRule]map[string]*string) []gqlpublicapi.ImplementationRevision {
