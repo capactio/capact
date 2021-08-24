@@ -22,7 +22,9 @@ release::make_prepare_release_commit() {
 
   git add .
   git commit -m "Prepare ${version} release"
+  git tag "v${version}"
   git push origin "${branch}"
+  git push origin "v${version}"
 }
 
 release::set_capact_images_in_charts() {
@@ -63,18 +65,18 @@ main() {
   release::update_cli_version "${RELEASE_VERSION}"
   release::make_prepare_release_commit "${RELEASE_VERSION}" "${SOURCE_BRANCH}"
   
-  if [ "${SOURCE_BRANCH}" == "main" ]; then
-    git checkout -b "${RELEASE_BRANCH}"
-  fi
+  #if [ "${SOURCE_BRANCH}" == "main" ]; then
+  #  git checkout -b "${RELEASE_BRANCH}"
+  #fi
   
-  local -r capact_image_tag=$(git rev-parse --short HEAD | sed 's/.$//')
-  release::set_capact_images_in_charts "${capact_image_tag}"
-  release::set_hub_manifest_source_branch "${RELEASE_BRANCH}"
+  #local -r capact_image_tag=$(git rev-parse --short HEAD | sed 's/.$//')
+  #release::set_capact_images_in_charts "${capact_image_tag}"
+  #release::set_hub_manifest_source_branch "${RELEASE_BRANCH}"
   
-  release::make_release_commit "${RELEASE_VERSION}" "${RELEASE_BRANCH}"
+  #release::make_release_commit "${RELEASE_VERSION}" "${RELEASE_BRANCH}"
 
-  make release-charts
-  make release-binaries
+  #make release-charts
+  #make release-binaries
 }
 
 main

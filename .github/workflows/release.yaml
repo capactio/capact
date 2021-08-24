@@ -4,9 +4,9 @@ name: Create release
 # and publishes the binaries.
 
 on:
-  push:
-    tags:
-      - v*
+  workflow_run:
+    workflows: ["Main branch"]
+    tags: [ "v*" ]
 
 jobs:
   create-release:
