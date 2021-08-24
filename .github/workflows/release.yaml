@@ -8,8 +8,7 @@ on:
     workflows: ["Main branch"]
     types:
       - completed
-    push:
-      tags: [ "v*" ]
+    tags: [ "v*" ]
 
 jobs:
   create-release:
