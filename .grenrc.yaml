@@ -1,0 +1,6 @@
+groupBy:
+  "🚀 Enhancements": [enhancement]
+  "🔧 Bug Fixes": ["bug"]
+template:
+  issue: "- {{name}} [{{text}}]({{url}})"
+  group: "\n### {{heading}}\n"

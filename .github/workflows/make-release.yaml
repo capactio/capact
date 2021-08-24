@@ -48,3 +48,7 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Generate release notes
+        run: |
+          npm install -g github-release-notes
+          gren release -T "${{ secrets.GITHUB_TOKEN }}" --tags "v${{ github.event.inputs.version }}" --override
