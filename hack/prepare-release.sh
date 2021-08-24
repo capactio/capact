@@ -22,9 +22,7 @@ release::make_prepare_release_commit() {
 
   git add .
   git commit -m "Prepare ${version} release"
-  git tag "v${version}"
   git push origin "${branch}"
-  git push origin "v${version}"
 }
 
 # required inputs:
