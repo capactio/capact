@@ -4,3 +4,5 @@ groupBy:
 template:
   issue: "- {{name}} [{{text}}]({{url}})"
   group: "\n### {{heading}}\n"
+# simulate bugfix
+  
