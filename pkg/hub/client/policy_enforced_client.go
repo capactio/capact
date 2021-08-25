@@ -64,13 +64,13 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 		return nil, policy.Rule{}, nil
 	}
 
-	typeInstanceValues, err := e.listCurrentTypeInstanceValues(ctx)
+	allTypeInstances, err := e.listAllTypeInstanceValues(ctx)
 	if err != nil {
 		return nil, policy.Rule{}, err
 	}
-	typeInstanceValues = append(typeInstanceValues, e.constantTypeInstanceValues()...)
+	allTypeInstances = append(allTypeInstances, e.constantTypeInstanceValues()...)
 
-	implementations, rule, err := e.findImplementationsForRules(ctx, interfaceRef, rules, typeInstanceValues)
+	implementations, rule, err := e.findImplementationsForRules(ctx, interfaceRef, rules, allTypeInstances)
 	if err != nil {
 		return nil, policy.Rule{}, err
 	}
@@ -216,7 +216,7 @@ func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Conte
 		return nil
 	}
 
-	err := e.mergedPolicy.ResolveTypeInstanceMetadata(ctx, e.hubCli)
+	err := policy.ResolveTypeInstanceMetadata(ctx, e.hubCli, &e.mergedPolicy)
 	if err != nil {
 		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
 	}
@@ -228,11 +228,10 @@ func (e *PolicyEnforcedClient) findImplementationsForRules(
 	ctx context.Context,
 	interfaceRef hubpublicgraphql.InterfaceReference,
 	rules policy.RulesForInterface,
-	currentTypeInstances []*hubpublicgraphql.TypeInstanceValue,
+	allTypeInstances []*hubpublicgraphql.TypeInstanceValue,
 ) ([]hubpublicgraphql.ImplementationRevision, policy.Rule, error) {
 	for _, rule := range rules.OneOf {
-		filter := e.implementationConstraintsToHubFilter(rule.ImplementationConstraints)
-		filter.RequirementsSatisfiedBy = currentTypeInstances
+		filter := e.hubFilterForPolicyRule(rule, allTypeInstances)
 
 		implementations, err := e.hubCli.ListImplementationRevisionsForInterface(
 			ctx,
@@ -277,8 +276,10 @@ func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.Requ
 	return "", false
 }
 
-func (e *PolicyEnforcedClient) implementationConstraintsToHubFilter(constraints policy.ImplementationConstraints) hubpublicgraphql.ImplementationRevisionFilter {
+func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeInstances []*hubpublicgraphql.TypeInstanceValue) hubpublicgraphql.ImplementationRevisionFilter {
 	filter := hubpublicgraphql.ImplementationRevisionFilter{}
+
+	constraints := rule.ImplementationConstraints
 
 	// Path
 	if constraints.Path != nil {
@@ -305,6 +306,24 @@ func (e *PolicyEnforcedClient) implementationConstraintsToHubFilter(constraints 
 				Revision: attrConstraint.Revision,
 			})
 		}
+	}
+
+	// Requirements
+	filter.RequirementsSatisfiedBy = allTypeInstances
+
+	// Requirements Injection
+	if rule.Inject != nil {
+		var injectedRequiredTypeInstances []*hubpublicgraphql.TypeInstanceValue
+		for _, ti := range rule.Inject.RequiredTypeInstances {
+			injectedRequiredTypeInstances = append(injectedRequiredTypeInstances, &hubpublicgraphql.TypeInstanceValue{
+				TypeRef: &hubpublicgraphql.TypeReferenceInput{
+					Path:     ti.TypeRef.Path,
+					Revision: ti.TypeRef.Revision,
+				},
+				Value: nil, // not supported right now
+			})
+		}
+		filter.RequiredTypeInstancesInjectionSatisfiedBy = injectedRequiredTypeInstances
 	}
 
 	return filter
@@ -334,7 +353,7 @@ func (e *PolicyEnforcedClient) isTypeRefValidAndEqual(typeInstance policy.Requir
 	return true
 }
 
-func (e *PolicyEnforcedClient) listCurrentTypeInstanceValues(ctx context.Context) ([]*hubpublicgraphql.TypeInstanceValue, error) {
+func (e *PolicyEnforcedClient) listAllTypeInstanceValues(ctx context.Context) ([]*hubpublicgraphql.TypeInstanceValue, error) {
 	currentTypeInstancesTypeRef, err := e.hubCli.ListTypeInstancesTypeRef(ctx)
 	if err != nil {
 		return nil, err
@@ -351,9 +370,9 @@ func (e *PolicyEnforcedClient) typeInstancesToTypeInstanceValues(in []hublocalgr
 	for i := range in {
 		typeRef := in[i]
 		out = append(out, &hubpublicgraphql.TypeInstanceValue{
-			TypeRef: &hubpublicgraphql.TypeReferenceWithOptionalRevision{
+			TypeRef: &hubpublicgraphql.TypeReferenceInput{
 				Path:     typeRef.Path,
-				Revision: &typeRef.Revision,
+				Revision: typeRef.Revision,
 			},
 		})
 	}
@@ -365,8 +384,9 @@ func (e *PolicyEnforcedClient) typeInstancesToTypeInstanceValues(in []hublocalgr
 func (e *PolicyEnforcedClient) constantTypeInstanceValues() []*hubpublicgraphql.TypeInstanceValue {
 	return []*hubpublicgraphql.TypeInstanceValue{
 		{
-			TypeRef: &hubpublicgraphql.TypeReferenceWithOptionalRevision{
-				Path: "cap.core.type.platform.kubernetes",
+			TypeRef: &hubpublicgraphql.TypeReferenceInput{
+				Path:     "cap.core.type.platform.kubernetes",
+				Revision: "0.1.0",
 			},
 		},
 	}

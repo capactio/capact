@@ -148,9 +148,9 @@ var _ = Describe("GraphQL API", func() {
 				filter := gqlpublicapi.ImplementationRevisionFilter{
 					RequirementsSatisfiedBy: []*gqlpublicapi.TypeInstanceValue{
 						{
-							TypeRef: &gqlpublicapi.TypeReferenceWithOptionalRevision{
+							TypeRef: &gqlpublicapi.TypeReferenceInput{
 								Path:     "cap.core.type.platform.kubernetes",
-								Revision: ptr.String("0.1.0"),
+								Revision: "0.1.0",
 							},
 						},
 					},

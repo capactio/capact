@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"capact.io/capact/internal/k8s-engine/graphql/model"
+	"capact.io/capact/internal/multierror"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
-	"github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 

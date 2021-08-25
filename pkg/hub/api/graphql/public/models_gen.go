@@ -153,8 +153,12 @@ type ImplementationRevisionFilter struct {
 	PathPattern *string `json:"pathPattern"`
 	// If provided, Implementations are filtered by the ones that have satisfied requirements with provided TypeInstance values.
 	// For example, to find all Implementations that can be run on a given system, user can provide values of all existing TypeInstances.
-	RequirementsSatisfiedBy []*TypeInstanceValue    `json:"requirementsSatisfiedBy"`
-	Attributes              []*AttributeFilterInput `json:"attributes"`
+	RequirementsSatisfiedBy []*TypeInstanceValue `json:"requirementsSatisfiedBy"`
+	// Filter by Implementations, which have requirements injection satisfied.
+	// If provided, all TypeInstance values are merged into `requirementsSatisfiedBy` filter values, and, in a result,
+	// both filters `requirementsSatisfiedBy` and `requiredTypeInstancesInjectionSatisfiedBy` are used.
+	RequiredTypeInstancesInjectionSatisfiedBy []*TypeInstanceValue    `json:"requiredTypeInstancesInjectionSatisfiedBy"`
+	Attributes                                []*AttributeFilterInput `json:"attributes"`
 	// If provided, the ImplementationRevisions for a given Interface will be filtered
 	// according to provided Type references looked up in the `Implementation.spec.requires` field.
 	//
@@ -316,7 +320,7 @@ type TypeInstanceRelationItem struct {
 }
 
 type TypeInstanceValue struct {
-	TypeRef *TypeReferenceWithOptionalRevision `json:"typeRef"`
+	TypeRef *TypeReferenceInput `json:"typeRef"`
 	// Currently not supported.
 	// Value of the available requirement. If not provided, all valueConstraints conditions are treated as satisfied.
 	Value interface{} `json:"value"`
@@ -338,6 +342,11 @@ type TypeMetadata struct {
 func (TypeMetadata) IsMetadataBaseFields() {}
 
 type TypeReference struct {
+	Path     string `json:"path"`
+	Revision string `json:"revision"`
+}
+
+type TypeReferenceInput struct {
 	Path     string `json:"path"`
 	Revision string `json:"revision"`
 }

@@ -71,6 +71,13 @@ input ImplementationRevisionFilter {
   """
   requirementsSatisfiedBy: [TypeInstanceValue!]
 
+  """
+  Filter by Implementations, which have requirements injection satisfied.
+  If provided, all TypeInstance values are merged into `requirementsSatisfiedBy` filter values, and, in a result,
+  both filters `requirementsSatisfiedBy` and `requiredTypeInstancesInjectionSatisfiedBy` are used.
+  """
+  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
+
   attributes: [AttributeFilterInput!]
 
   """
@@ -85,7 +92,7 @@ input ImplementationRevisionFilter {
 # lint-enable defined-types-are-used
 
 input TypeInstanceValue {
-  typeRef: TypeReferenceWithOptionalRevision
+  typeRef: TypeReferenceInput!
 
   """
   Currently not supported.
@@ -97,6 +104,11 @@ input TypeInstanceValue {
 input TypeReferenceWithOptionalRevision {
   path: NodePath!
   revision: Version
+}
+
+input TypeReferenceInput {
+  path: NodePath!
+  revision: Version!
 }
 
 input AttributeFilterInput {

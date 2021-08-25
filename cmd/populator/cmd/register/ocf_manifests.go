@@ -16,9 +16,9 @@ import (
 	"capact.io/capact/internal/logger"
 	"capact.io/capact/pkg/sdk/dbpopulator"
 
+	"capact.io/capact/internal/multierror"
 	"github.com/avast/retry-go"
 	"github.com/docker/cli/cli"
-	"github.com/hashicorp/go-multierror"
 	"github.com/neo4j/neo4j-go-driver/v4/neo4j"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
