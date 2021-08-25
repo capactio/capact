@@ -27,12 +27,12 @@ release::make_prepare_release_commit() {
 
 release::set_capact_images_in_charts() {
   local -r image_tag="$1"
-  sed -i.bak "s/overrideTag: \"latest\"/overrideTag: \"${image_tag}\"/g" "deploy/kubernetes/charts/capact/values.yaml"
+  sed -E -i.bak "s/overrideTag: \".+\"/overrideTag: \"${image_tag}\"/g" "deploy/kubernetes/charts/capact/values.yaml"
 }
 
 release::set_hub_manifest_source_branch() {
   local -r branch="$1"
-  sed -i.bak "s/branch: main/branch: ${branch}/g" "deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
+  sed -E -i.bak "s/branch: .+/branch: ${branch}/g" "deploy/kubernetes/charts/capact/charts/hub-public/values.yaml"
 }
 
 release::make_release_commit() {
