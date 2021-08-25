@@ -17,13 +17,13 @@ builds:
       - CGO_ENABLED=0
     goos: &build-goos
       - linux
-      #- windows
-      #- darwin
+      - windows
+      - darwin
     goarch: &build-goarch #TODO to remove
       - amd64
-    #hooks: &build-hooks
+    hooks: &build-hooks
     #  # Install upx first, https://github.com/upx/upx/releases
-    #  post: upx -9 "{{ .Path }}"
+      post: upx -9 "{{ .Path }}"
     main: ./cmd/cli
     binary: 'capact-{{ .Os }}-{{ .Arch }}'
     ldflags:
@@ -34,8 +34,7 @@ builds:
   - id: populator
     env: *build-env
     goos: *build-goos
-    goarch: *build-goarch
-    #hooks: *build-hooks
+    hooks: *build-hooks
     main: ./cmd/populator
     binary: 'populator-{{ .Os }}-{{ .Arch }}'
     no_unique_dist_dir: true
@@ -48,7 +47,7 @@ dockers:
   - dockerfile: Dockerfile.cli
     ids:
       - capact
-    image_templates:
+    image_templates: #TODO change this
       - "ghcr.io/trojan295/tools/capact-cli:stable"
       - "ghcr.io/trojan295/tools/capact-cli:{{ .Tag }}"
       - "ghcr.io/trojan295/tools/capact-cli:v{{ .Major }}.{{ .Minor }}"
@@ -72,10 +71,10 @@ dist: bin
 blobs:
   -
     provider: gs
-    bucket: capactio-release-testing
+    bucket: capactio-release-testing #TODO change this
     folder: '{{ .Tag }}'
 
-release:
+release: #TODO change this
   github:
     owner: trojan295
     name: capact
