@@ -824,6 +824,11 @@ input RequiredTypeInstanceReferenceInput {
   description: String
 }
 
+input AdditionalTypeInstanceReferenceInput {
+  name: String!
+  id: ID!
+}
+
 """
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
@@ -1099,6 +1104,7 @@ input PolicyRuleInput {
 input PolicyRuleInjectDataInput {
   requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
   additionalParameters: [AdditionalParameterInput!]
+  additionalTypeInstances: [AdditionalTypeInstanceReferenceInput!]
 }
 
 input AdditionalParameterInput {
@@ -5018,6 +5024,34 @@ func (ec *executionContext) unmarshalInputAdditionalParameterInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAdditionalTypeInstanceReferenceInput(ctx context.Context, obj interface{}) (AdditionalTypeInstanceReferenceInput, error) {
+	var it AdditionalTypeInstanceReferenceInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			it.Name, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAdvancedModeContinueRenderingInput(ctx context.Context, obj interface{}) (AdvancedModeContinueRenderingInput, error) {
 	var it AdvancedModeContinueRenderingInput
 	var asMap = obj.(map[string]interface{})
@@ -5169,6 +5203,14 @@ func (ec *executionContext) unmarshalInputPolicyRuleInjectDataInput(ctx context.
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalParameters"))
 			it.AdditionalParameters, err = ec.unmarshalOAdditionalParameterInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "additionalTypeInstances":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("additionalTypeInstances"))
+			it.AdditionalTypeInstances, err = ec.unmarshalOAdditionalTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalTypeInstanceReferenceInputᚄ(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -6375,6 +6417,11 @@ func (ec *executionContext) unmarshalNAdditionalParameterInput2ᚖcapactᚗioᚋ
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNAdditionalTypeInstanceReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalTypeInstanceReferenceInput(ctx context.Context, v interface{}) (*AdditionalTypeInstanceReferenceInput, error) {
+	res, err := ec.unmarshalInputAdditionalTypeInstanceReferenceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAdvancedModeContinueRenderingInput2capactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdvancedModeContinueRenderingInput(ctx context.Context, v interface{}) (AdvancedModeContinueRenderingInput, error) {
 	res, err := ec.unmarshalInputAdvancedModeContinueRenderingInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -7228,6 +7275,30 @@ func (ec *executionContext) unmarshalOAdditionalParameterInput2ᚕᚖcapactᚗio
 	for i := range vSlice {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
 		res[i], err = ec.unmarshalNAdditionalParameterInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalParameterInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalOAdditionalTypeInstanceReferenceInput2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalTypeInstanceReferenceInputᚄ(ctx context.Context, v interface{}) ([]*AdditionalTypeInstanceReferenceInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*AdditionalTypeInstanceReferenceInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNAdditionalTypeInstanceReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋengineᚋapiᚋgraphqlᚐAdditionalTypeInstanceReferenceInput(ctx, vSlice[i])
 		if err != nil {
 			return nil, err
 		}

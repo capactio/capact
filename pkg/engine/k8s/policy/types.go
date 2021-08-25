@@ -90,8 +90,9 @@ func (in *Rule) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanc
 
 // InjectData holds the data, which should be injected into the Action.
 type InjectData struct {
-	RequiredTypeInstances []RequiredTypeInstanceToInject `json:"requiredTypeInstances,omitempty"`
-	AdditionalParameters  []AdditionalParametersToInject `json:"additionalParameters,omitempty"`
+	RequiredTypeInstances   []RequiredTypeInstanceToInject   `json:"requiredTypeInstances,omitempty"`
+	AdditionalParameters    []AdditionalParametersToInject   `json:"additionalParameters,omitempty"`
+	AdditionalTypeInstances []AdditionalTypeInstanceToInject `json:"additionalTypeInstances,omitempty"`
 }
 
 // AdditionalParametersToInject holds parameters to be injected to the Action.
@@ -134,6 +135,16 @@ type RequiredTypeInstanceReference struct {
 
 	// Description contains user's description for a given RequiredTypeInstanceToInject.
 	Description *string `json:"description,omitempty"`
+}
+
+// AdditionalTypeInstanceToInject is used to represent additional TypeInstance injection for a given Implementation.
+// +kubebuilder:object:generate=true
+type AdditionalTypeInstanceToInject struct {
+	// Name is the TypeInstance name specific for a given Implementation.
+	Name string `json:"name"`
+
+	// ID is the TypeInstance identifier.
+	ID string `json:"id"`
 }
 
 // UnmarshalJSON unmarshalls RequiredTypeInstanceToInject from bytes. It ignores all fields apart from RequiredTypeInstanceReference files.

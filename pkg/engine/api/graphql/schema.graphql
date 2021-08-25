@@ -48,6 +48,11 @@ input RequiredTypeInstanceReferenceInput {
   description: String
 }
 
+input AdditionalTypeInstanceReferenceInput {
+  name: String!
+  id: ID!
+}
+
 """
 Client input of Action details, that are used for create and update Action operations (PUT-like operation)
 """
@@ -323,6 +328,7 @@ input PolicyRuleInput {
 input PolicyRuleInjectDataInput {
   requiredTypeInstances: [RequiredTypeInstanceReferenceInput!]
   additionalParameters: [AdditionalParameterInput!]
+  additionalTypeInstances: [AdditionalTypeInstanceReferenceInput!]
 }
 
 input AdditionalParameterInput {
