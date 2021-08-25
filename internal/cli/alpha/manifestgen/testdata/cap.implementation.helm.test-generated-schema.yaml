@@ -1,0 +1,296 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.helm"
+  name: test-generated-schema
+  displayName: "test-generated-schema Action"
+  description: "test-generated-schema Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+  license:
+    name: "Apache 2.0"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      typeRef:
+        path: "cap.type.helm.test-generated-schema-input"
+        revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    config:
+      uses:
+        - helm-release
+
+  implements:
+    - path: cap.interface.group.test
+      revision: 0.2.0
+
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
+      methods:
+        - name: install
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: deploy
+        templates:
+          - name: deploy
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:
+              artifacts: []
+            steps:
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
+                          data: |
+                            my_property: <@ input.my_property | default("default_value") @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: create-helm-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: additionalInput
+                      - name: template
+                        raw:
+                          data: |
+                            generateName: true
+                            chart:
+                              name: "dokuwiki"
+                              repo: "https://charts.bitnami.com/bitnami"
+                              version: "11.2.3"
+                            values: # TODO(ContentDeveloper): Adjust the input values to use parameters from the Interface
+                              affinity: {}
+                              args: <@ additionalInput.args | default(None | tojson) @>
+                              certificates:
+                                args: <@ additionalInput.certificates.args | default(None | tojson) @>
+                                command: <@ additionalInput.certificates.command | default(None | tojson) @>
+                                customCAs: <@ additionalInput.certificates.customCAs | default(None | tojson) @>
+                                customCertificate:
+                                  certificateLocation: <@ additionalInput.certificates.customCertificate.certificateLocation | default("/etc/ssl/certs/ssl-cert-snakeoil.pem") @>
+                                  certificateSecret: <@ additionalInput.certificates.customCertificate.certificateSecret | default("''") @>
+                                  chainLocation: <@ additionalInput.certificates.customCertificate.chainLocation | default("/etc/ssl/certs/mychain.pem") @>
+                                  chainSecret:
+                                    key: <@ additionalInput.certificates.customCertificate.chainSecret.key | default("''") @>
+                                    name: <@ additionalInput.certificates.customCertificate.chainSecret.name | default("''") @>
+                                  keyLocation: <@ additionalInput.certificates.customCertificate.keyLocation | default("/etc/ssl/private/ssl-cert-snakeoil.key") @>
+                                extraEnvVars: <@ additionalInput.certificates.extraEnvVars | default(None | tojson) @>
+                                extraEnvVarsCM: <@ additionalInput.certificates.extraEnvVarsCM | default("''") @>
+                                extraEnvVarsSecret: <@ additionalInput.certificates.extraEnvVarsSecret | default("''") @>
+                                image:
+                                  pullPolicy: <@ additionalInput.certificates.image.pullPolicy | default("IfNotPresent") @>
+                                  pullSecrets: <@ additionalInput.certificates.image.pullSecrets | default(None | tojson) @>
+                                  registry: <@ additionalInput.certificates.image.registry | default("docker.io") @>
+                                  repository: <@ additionalInput.certificates.image.repository | default("bitnami/bitnami-shell") @>
+                                  tag: <@ additionalInput.certificates.image.tag | default("10-debian-10-r151") @>
+                              command: <@ additionalInput.command | default(None | tojson) @>
+                              commonAnnotations: {}
+                              commonLabels: {}
+                              containerSecurityContext:
+                                enabled: <@ additionalInput.containerSecurityContext.enabled | default(true) | tojson @>
+                                runAsUser: <@ additionalInput.containerSecurityContext.runAsUser | default(1001) @>
+                              customLivenessProbe: {}
+                              customReadinessProbe: {}
+                              dokuwikiEmail: <@ additionalInput.dokuwikiEmail | default("user@example.com") @>
+                              dokuwikiFullName: <@ additionalInput.dokuwikiFullName | default("User Name") @>
+                              dokuwikiPassword: <@ additionalInput.dokuwikiPassword | default("''") @>
+                              dokuwikiUsername: <@ additionalInput.dokuwikiUsername | default("user") @>
+                              dokuwikiWikiName: <@ additionalInput.dokuwikiWikiName | default("My Wiki") @>
+                              existingSecret: <@ additionalInput.existingSecret | default("''") @>
+                              extraDeploy: <@ additionalInput.extraDeploy | default(None | tojson) @>
+                              extraEnvVars: <@ additionalInput.extraEnvVars | default(None | tojson) @>
+                              extraEnvVarsCM: <@ additionalInput.extraEnvVarsCM | default("''") @>
+                              extraEnvVarsSecret: <@ additionalInput.extraEnvVarsSecret | default("''") @>
+                              extraVolumeMounts: <@ additionalInput.extraVolumeMounts | default(None | tojson) @>
+                              extraVolumes: <@ additionalInput.extraVolumes | default(None | tojson) @>
+                              fullnameOverride: <@ additionalInput.fullnameOverride | default("''") @>
+                              global:
+                                imagePullSecrets: <@ additionalInput.global.imagePullSecrets | default(None | tojson) @>
+                                imageRegistry: <@ additionalInput.global.imageRegistry | default("''") @>
+                                storageClass: <@ additionalInput.global.storageClass | default("''") @>
+                              hostAliases: <@ additionalInput.hostAliases | default([{"hostnames":["status.localhost"],"ip":"127.0.0.1"}]) @>
+                              image:
+                                debug: <@ additionalInput.image.debug | default(false) | tojson @>
+                                pullPolicy: <@ additionalInput.image.pullPolicy | default("IfNotPresent") @>
+                                pullSecrets: <@ additionalInput.image.pullSecrets | default(None | tojson) @>
+                                registry: <@ additionalInput.image.registry | default("docker.io") @>
+                                repository: <@ additionalInput.image.repository | default("bitnami/dokuwiki") @>
+                                tag: <@ additionalInput.image.tag | default("20200729.0.0-debian-10-r319") @>
+                              ingress:
+                                annotations: {}
+                                apiVersion: <@ additionalInput.ingress.apiVersion | default("''") @>
+                                certManager: <@ additionalInput.ingress.certManager | default(false) | tojson @>
+                                enabled: <@ additionalInput.ingress.enabled | default(false) | tojson @>
+                                extraHosts: <@ additionalInput.ingress.extraHosts | default(None | tojson) @>
+                                extraPaths: <@ additionalInput.ingress.extraPaths | default(None | tojson) @>
+                                extraTls: <@ additionalInput.ingress.extraTls | default(None | tojson) @>
+                                hostname: <@ additionalInput.ingress.hostname | default("dokuwiki.local") @>
+                                path: <@ additionalInput.ingress.path | default("/") @>
+                                pathType: <@ additionalInput.ingress.pathType | default("ImplementationSpecific") @>
+                                secrets: <@ additionalInput.ingress.secrets | default(None | tojson) @>
+                                tls: <@ additionalInput.ingress.tls | default(false) | tojson @>
+                              kubeVersion: <@ additionalInput.kubeVersion | default("''") @>
+                              lifecycleHooks: {}
+                              livenessProbe:
+                                enabled: <@ additionalInput.livenessProbe.enabled | default(true) | tojson @>
+                                failureThreshold: <@ additionalInput.livenessProbe.failureThreshold | default(6) @>
+                                initialDelaySeconds: <@ additionalInput.livenessProbe.initialDelaySeconds | default(120) @>
+                                periodSeconds: <@ additionalInput.livenessProbe.periodSeconds | default(10) @>
+                                successThreshold: <@ additionalInput.livenessProbe.successThreshold | default(1) @>
+                                timeoutSeconds: <@ additionalInput.livenessProbe.timeoutSeconds | default(5) @>
+                              metrics:
+                                enabled: <@ additionalInput.metrics.enabled | default(false) | tojson @>
+                                image:
+                                  pullPolicy: <@ additionalInput.metrics.image.pullPolicy | default("IfNotPresent") @>
+                                  pullSecrets: <@ additionalInput.metrics.image.pullSecrets | default(None | tojson) @>
+                                  registry: <@ additionalInput.metrics.image.registry | default("docker.io") @>
+                                  repository: <@ additionalInput.metrics.image.repository | default("bitnami/apache-exporter") @>
+                                  tag: <@ additionalInput.metrics.image.tag | default("0.10.0-debian-10-r5") @>
+                                podAnnotations:
+                                  prometheus.io/port: <@ additionalInput.metrics.podAnnotations["prometheus.io/port"] | default("9117") @>
+                                  prometheus.io/scrape: <@ additionalInput.metrics.podAnnotations["prometheus.io/scrape"] | default("true") @>
+                                resources: {}
+                              nameOverride: <@ additionalInput.nameOverride | default("''") @>
+                              nodeAffinityPreset:
+                                key: <@ additionalInput.nodeAffinityPreset.key | default("''") @>
+                                type: <@ additionalInput.nodeAffinityPreset.type | default("''") @>
+                                values: <@ additionalInput.nodeAffinityPreset.values | default(None | tojson) @>
+                              nodeSelector: {}
+                              persistence:
+                                accessMode: <@ additionalInput.persistence.accessMode | default("ReadWriteOnce") @>
+                                enabled: <@ additionalInput.persistence.enabled | default(true) | tojson @>
+                                existingClaim: <@ additionalInput.persistence.existingClaim | default("''") @>
+                                size: <@ additionalInput.persistence.size | default("8Gi") @>
+                                storageClass: <@ additionalInput.persistence.storageClass | default("''") @>
+                              podAffinityPreset: <@ additionalInput.podAffinityPreset | default("''") @>
+                              podAnnotations: {}
+                              podAntiAffinityPreset: <@ additionalInput.podAntiAffinityPreset | default("soft") @>
+                              podLabels: {}
+                              podSecurityContext:
+                                enabled: <@ additionalInput.podSecurityContext.enabled | default(true) | tojson @>
+                                fsGroup: <@ additionalInput.podSecurityContext.fsGroup | default(1001) @>
+                              readinessProbe:
+                                enabled: <@ additionalInput.readinessProbe.enabled | default(true) | tojson @>
+                                failureThreshold: <@ additionalInput.readinessProbe.failureThreshold | default(6) @>
+                                initialDelaySeconds: <@ additionalInput.readinessProbe.initialDelaySeconds | default(30) @>
+                                periodSeconds: <@ additionalInput.readinessProbe.periodSeconds | default(10) @>
+                                successThreshold: <@ additionalInput.readinessProbe.successThreshold | default(1) @>
+                                timeoutSeconds: <@ additionalInput.readinessProbe.timeoutSeconds | default(5) @>
+                              resources:
+                                requests:
+                                  cpu: <@ additionalInput.resources.requests.cpu | default("300m") @>
+                                  memory: <@ additionalInput.resources.requests.memory | default("512Mi") @>
+                              service:
+                                externalTrafficPolicy: <@ additionalInput.service.externalTrafficPolicy | default("Cluster") @>
+                                httpsPort: <@ additionalInput.service.httpsPort | default(443) @>
+                                loadBalancerIP: <@ additionalInput.service.loadBalancerIP | default("''") @>
+                                nodePorts:
+                                  http: <@ additionalInput.service.nodePorts.http | default("''") @>
+                                  https: <@ additionalInput.service.nodePorts.https | default("''") @>
+                                port: <@ additionalInput.service.port | default(80) @>
+                                type: <@ additionalInput.service.type | default("LoadBalancer") @>
+                              sidecars: <@ additionalInput.sidecars | default(None | tojson) @>
+                              tolerations: <@ additionalInput.tolerations | default(None | tojson) @>
+                              volumePermissions:
+                                enabled: <@ additionalInput.volumePermissions.enabled | default(false) | tojson @>
+                                image:
+                                  pullPolicy: <@ additionalInput.volumePermissions.image.pullPolicy | default("Always") @>
+                                  pullSecrets: <@ additionalInput.volumePermissions.image.pullSecrets | default(None | tojson) @>
+                                  registry: <@ additionalInput.volumePermissions.image.registry | default("docker.io") @>
+                                  repository: <@ additionalInput.volumePermissions.image.repository | default("bitnami/bitnami-shell") @>
+                                  tag: <@ additionalInput.volumePermissions.image.tag | default("10-debian-10-r151") @>
+                                resources:
+                                  limits: {}
+                                  requests: {}
+                              
+                            output:
+                              goTemplate: |
+                                # TODO(ContentDeveloper): Add output template in YAML
+
+              - - name: fill-parameters
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: helm-install
+                  capact-action: helm.install
+                  capact-outputTypeInstances:
+                    - name: helm-release
+                      from: helm-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: render-config
+                  capact-outputTypeInstances:
+                    - name: config
+                      from: render
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.helm-install.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
+                          data: |
+                            property: value

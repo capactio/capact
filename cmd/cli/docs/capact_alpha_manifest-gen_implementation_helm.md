@@ -29,7 +29,7 @@ capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] 
 ```
   -c, --config string   Path to the YAML config file
   -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --overwrite       Override existing manifest files
+      --overwrite       Overwrite existing manifest files
 ```
 
 ### SEE ALSO

@@ -91,24 +91,51 @@ func TestGenerateTerraformImplementationManifests(t *testing.T) {
 }
 
 func TestGenerateHelmImplementationManifests(t *testing.T) {
-	cfg := &manifestgen.HelmConfig{
-		ImplementationConfig: manifestgen.ImplementationConfig{
-			Config: manifestgen.Config{
-				ManifestPath:     "cap.implementation.helm.test",
-				ManifestRevision: "0.1.0",
+	tests := []struct {
+		name string
+		cfg  *manifestgen.HelmConfig
+	}{
+		{
+			name: "Helm Implementation manifests with values.scheme.json",
+			cfg: &manifestgen.HelmConfig{
+				ImplementationConfig: manifestgen.ImplementationConfig{
+					Config: manifestgen.Config{
+						ManifestPath:     "cap.implementation.helm.test",
+						ManifestRevision: "0.1.0",
+					},
+					InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
+				},
+				ChartName:    "postgresql",
+				ChartRepoURL: "https://charts.bitnami.com/bitnami",
+				ChartVersion: "10.9.2",
 			},
-			InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
 		},
-		ChartName:    "postgresql",
-		ChartRepoURL: "https://charts.bitnami.com/bitnami",
-		ChartVersion: "10.9.2",
+		{
+			name: "Helm Implementation manifests without values.scheme.json",
+			cfg: &manifestgen.HelmConfig{
+				ImplementationConfig: manifestgen.ImplementationConfig{
+					Config: manifestgen.Config{
+						ManifestPath:     "cap.implementation.helm.test-generated-schema",
+						ManifestRevision: "0.1.0",
+					},
+					InterfacePathWithRevision: "cap.interface.group.test:0.2.0",
+				},
+				ChartName:    "dokuwiki",
+				ChartRepoURL: "https://charts.bitnami.com/bitnami",
+				ChartVersion: "11.2.3",
+			},
+		},
 	}
 
-	manifests, err := manifestgen.GenerateHelmManifests(cfg)
-	require.NoError(t, err)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			manifests, err := manifestgen.GenerateHelmManifests(test.cfg)
+			require.NoError(t, err)
 
-	for name, manifestData := range manifests {
-		filename := fmt.Sprintf("%s.yaml", name)
-		golden.Assert(t, manifestData, filename)
+			for name, manifestData := range manifests {
+				filename := fmt.Sprintf("%s.yaml", name)
+				golden.Assert(t, manifestData, filename)
+			}
+		})
 	}
 }

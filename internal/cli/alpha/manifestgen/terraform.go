@@ -1,6 +1,7 @@
 package manifestgen
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
@@ -59,7 +60,10 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
-	jsonSchema := getTerraformInputTypeJSONSchema(module.Variables)
+	jsonSchema, err := getTerraformInputTypeJSONSchema(module.Variables)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input type JSON Schema")
+	}
 
 	return &templatingConfig{
 		Template: typeManifestTemplate,
@@ -69,7 +73,7 @@ func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfi
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
 			},
-			JSONSchema: jsonSchema,
+			JSONSchema: string(jsonSchema),
 		},
 	}, nil
 }
@@ -127,7 +131,7 @@ func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tf
 	}, nil
 }
 
-func getTerraformInputTypeJSONSchema(variables map[string]*tfconfig.Variable) *jsonschema.Type {
+func getTerraformInputTypeJSONSchema(variables map[string]*tfconfig.Variable) ([]byte, error) {
 	schema := &jsonschema.Type{
 		Title:      "",
 		Properties: orderedmap.New(),
@@ -146,7 +150,12 @@ func getTerraformInputTypeJSONSchema(variables map[string]*tfconfig.Variable) *j
 		return a.Key() < b.Key()
 	})
 
-	return schema
+	schemaBytes, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling JSON schema")
+	}
+
+	return schemaBytes, nil
 }
 
 // Terraform types: https://www.terraform.io/docs/language/expressions/types.html

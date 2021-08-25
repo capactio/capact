@@ -1,7 +1,6 @@
 package manifestgen
 
 import (
-	"github.com/alecthomas/jsonschema"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
 )
 
@@ -65,7 +64,7 @@ type outputTypeTemplatingInput struct {
 
 type typeTemplatingInput struct {
 	templatingInput
-	JSONSchema *jsonschema.Type
+	JSONSchema string
 }
 
 type terraformImplementationTemplatingInput struct {

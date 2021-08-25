@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var helmCfg manifestgen.HelmConfig
-
 // NewHelm returns a cobra.Command to bootstrap Helm based manifests.
 func NewHelm() *cobra.Command {
+	var helmCfg manifestgen.HelmConfig
+
 	cmd := &cobra.Command{
 		Use:   "helm [MANIFEST_PATH] [HELM_CHART_NAME]",
 		Short: "Generate Helm chart based manifests",
@@ -44,7 +44,7 @@ func NewHelm() *cobra.Command {
 
 			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
-				return errors.Wrap(err, "while overriding existing manifest")
+				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
 			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {

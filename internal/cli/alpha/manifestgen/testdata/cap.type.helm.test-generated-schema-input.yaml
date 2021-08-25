@@ -1,0 +1,907 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  prefix: "cap.type.helm"
+  name: test-generated-schema-input
+  displayName: "Input for helm.test-generated-schema"
+  description: Input for the "helm.test-generated-schema Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+    value: |-
+      {
+        "properties": {
+          "affinity": {
+            "properties": {},
+            "type": "object",
+            "title": "affinity",
+            "$id": "#/properties/affinity"
+          },
+          "args": {
+            "type": "array",
+            "title": "args",
+            "default": [],
+            "$id": "#/properties/args"
+          },
+          "certificates": {
+            "properties": {
+              "args": {
+                "type": "array",
+                "title": "args",
+                "default": [],
+                "$id": "#/properties/certificates/properties/args"
+              },
+              "command": {
+                "type": "array",
+                "title": "command",
+                "default": [],
+                "$id": "#/properties/certificates/properties/command"
+              },
+              "customCAs": {
+                "type": "array",
+                "title": "customCAs",
+                "default": [],
+                "$id": "#/properties/certificates/properties/customCAs"
+              },
+              "customCertificate": {
+                "properties": {
+                  "certificateLocation": {
+                    "type": "string",
+                    "title": "certificateLocation",
+                    "default": "/etc/ssl/certs/ssl-cert-snakeoil.pem",
+                    "$id": "#/properties/certificates/properties/customCertificate/properties/certificateLocation"
+                  },
+                  "certificateSecret": {
+                    "type": "string",
+                    "title": "certificateSecret",
+                    "default": "",
+                    "$id": "#/properties/certificates/properties/customCertificate/properties/certificateSecret"
+                  },
+                  "chainLocation": {
+                    "type": "string",
+                    "title": "chainLocation",
+                    "default": "/etc/ssl/certs/mychain.pem",
+                    "$id": "#/properties/certificates/properties/customCertificate/properties/chainLocation"
+                  },
+                  "chainSecret": {
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "title": "key",
+                        "default": "",
+                        "$id": "#/properties/certificates/properties/customCertificate/properties/chainSecret/properties/key"
+                      },
+                      "name": {
+                        "type": "string",
+                        "title": "name",
+                        "default": "",
+                        "$id": "#/properties/certificates/properties/customCertificate/properties/chainSecret/properties/name"
+                      }
+                    },
+                    "type": "object",
+                    "title": "chainSecret",
+                    "$id": "#/properties/certificates/properties/customCertificate/properties/chainSecret"
+                  },
+                  "keyLocation": {
+                    "type": "string",
+                    "title": "keyLocation",
+                    "default": "/etc/ssl/private/ssl-cert-snakeoil.key",
+                    "$id": "#/properties/certificates/properties/customCertificate/properties/keyLocation"
+                  }
+                },
+                "type": "object",
+                "title": "customCertificate",
+                "$id": "#/properties/certificates/properties/customCertificate"
+              },
+              "extraEnvVars": {
+                "type": "array",
+                "title": "extraEnvVars",
+                "default": [],
+                "$id": "#/properties/certificates/properties/extraEnvVars"
+              },
+              "extraEnvVarsCM": {
+                "type": "string",
+                "title": "extraEnvVarsCM",
+                "default": "",
+                "$id": "#/properties/certificates/properties/extraEnvVarsCM"
+              },
+              "extraEnvVarsSecret": {
+                "type": "string",
+                "title": "extraEnvVarsSecret",
+                "default": "",
+                "$id": "#/properties/certificates/properties/extraEnvVarsSecret"
+              },
+              "image": {
+                "properties": {
+                  "pullPolicy": {
+                    "type": "string",
+                    "title": "pullPolicy",
+                    "default": "IfNotPresent",
+                    "$id": "#/properties/certificates/properties/image/properties/pullPolicy"
+                  },
+                  "pullSecrets": {
+                    "type": "array",
+                    "title": "pullSecrets",
+                    "default": [],
+                    "$id": "#/properties/certificates/properties/image/properties/pullSecrets"
+                  },
+                  "registry": {
+                    "type": "string",
+                    "title": "registry",
+                    "default": "docker.io",
+                    "$id": "#/properties/certificates/properties/image/properties/registry"
+                  },
+                  "repository": {
+                    "type": "string",
+                    "title": "repository",
+                    "default": "bitnami/bitnami-shell",
+                    "$id": "#/properties/certificates/properties/image/properties/repository"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "title": "tag",
+                    "default": "10-debian-10-r151",
+                    "$id": "#/properties/certificates/properties/image/properties/tag"
+                  }
+                },
+                "type": "object",
+                "title": "image",
+                "$id": "#/properties/certificates/properties/image"
+              }
+            },
+            "type": "object",
+            "title": "certificates",
+            "$id": "#/properties/certificates"
+          },
+          "command": {
+            "type": "array",
+            "title": "command",
+            "default": [],
+            "$id": "#/properties/command"
+          },
+          "commonAnnotations": {
+            "properties": {},
+            "type": "object",
+            "title": "commonAnnotations",
+            "$id": "#/properties/commonAnnotations"
+          },
+          "commonLabels": {
+            "properties": {},
+            "type": "object",
+            "title": "commonLabels",
+            "$id": "#/properties/commonLabels"
+          },
+          "containerSecurityContext": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": true,
+                "$id": "#/properties/containerSecurityContext/properties/enabled"
+              },
+              "runAsUser": {
+                "type": "number",
+                "title": "runAsUser",
+                "default": 1001,
+                "$id": "#/properties/containerSecurityContext/properties/runAsUser"
+              }
+            },
+            "type": "object",
+            "title": "containerSecurityContext",
+            "$id": "#/properties/containerSecurityContext"
+          },
+          "customLivenessProbe": {
+            "properties": {},
+            "type": "object",
+            "title": "customLivenessProbe",
+            "$id": "#/properties/customLivenessProbe"
+          },
+          "customReadinessProbe": {
+            "properties": {},
+            "type": "object",
+            "title": "customReadinessProbe",
+            "$id": "#/properties/customReadinessProbe"
+          },
+          "dokuwikiEmail": {
+            "type": "string",
+            "title": "dokuwikiEmail",
+            "default": "user@example.com",
+            "$id": "#/properties/dokuwikiEmail"
+          },
+          "dokuwikiFullName": {
+            "type": "string",
+            "title": "dokuwikiFullName",
+            "default": "User Name",
+            "$id": "#/properties/dokuwikiFullName"
+          },
+          "dokuwikiPassword": {
+            "type": "string",
+            "title": "dokuwikiPassword",
+            "default": "",
+            "$id": "#/properties/dokuwikiPassword"
+          },
+          "dokuwikiUsername": {
+            "type": "string",
+            "title": "dokuwikiUsername",
+            "default": "user",
+            "$id": "#/properties/dokuwikiUsername"
+          },
+          "dokuwikiWikiName": {
+            "type": "string",
+            "title": "dokuwikiWikiName",
+            "default": "My Wiki",
+            "$id": "#/properties/dokuwikiWikiName"
+          },
+          "existingSecret": {
+            "type": "string",
+            "title": "existingSecret",
+            "default": "",
+            "$id": "#/properties/existingSecret"
+          },
+          "extraDeploy": {
+            "type": "array",
+            "title": "extraDeploy",
+            "default": [],
+            "$id": "#/properties/extraDeploy"
+          },
+          "extraEnvVars": {
+            "type": "array",
+            "title": "extraEnvVars",
+            "default": [],
+            "$id": "#/properties/extraEnvVars"
+          },
+          "extraEnvVarsCM": {
+            "type": "string",
+            "title": "extraEnvVarsCM",
+            "default": "",
+            "$id": "#/properties/extraEnvVarsCM"
+          },
+          "extraEnvVarsSecret": {
+            "type": "string",
+            "title": "extraEnvVarsSecret",
+            "default": "",
+            "$id": "#/properties/extraEnvVarsSecret"
+          },
+          "extraVolumeMounts": {
+            "type": "array",
+            "title": "extraVolumeMounts",
+            "default": [],
+            "$id": "#/properties/extraVolumeMounts"
+          },
+          "extraVolumes": {
+            "type": "array",
+            "title": "extraVolumes",
+            "default": [],
+            "$id": "#/properties/extraVolumes"
+          },
+          "fullnameOverride": {
+            "type": "string",
+            "title": "fullnameOverride",
+            "default": "",
+            "$id": "#/properties/fullnameOverride"
+          },
+          "global": {
+            "properties": {
+              "imagePullSecrets": {
+                "type": "array",
+                "title": "imagePullSecrets",
+                "default": [],
+                "$id": "#/properties/global/properties/imagePullSecrets"
+              },
+              "imageRegistry": {
+                "type": "string",
+                "title": "imageRegistry",
+                "default": "",
+                "$id": "#/properties/global/properties/imageRegistry"
+              },
+              "storageClass": {
+                "type": "string",
+                "title": "storageClass",
+                "default": "",
+                "$id": "#/properties/global/properties/storageClass"
+              }
+            },
+            "type": "object",
+            "title": "global",
+            "$id": "#/properties/global"
+          },
+          "hostAliases": {
+            "type": "array",
+            "title": "hostAliases",
+            "default": [
+              {
+                "hostnames": [
+                  "status.localhost"
+                ],
+                "ip": "127.0.0.1"
+              }
+            ],
+            "$id": "#/properties/hostAliases"
+          },
+          "image": {
+            "properties": {
+              "debug": {
+                "type": "boolean",
+                "title": "debug",
+                "default": false,
+                "$id": "#/properties/image/properties/debug"
+              },
+              "pullPolicy": {
+                "type": "string",
+                "title": "pullPolicy",
+                "default": "IfNotPresent",
+                "$id": "#/properties/image/properties/pullPolicy"
+              },
+              "pullSecrets": {
+                "type": "array",
+                "title": "pullSecrets",
+                "default": [],
+                "$id": "#/properties/image/properties/pullSecrets"
+              },
+              "registry": {
+                "type": "string",
+                "title": "registry",
+                "default": "docker.io",
+                "$id": "#/properties/image/properties/registry"
+              },
+              "repository": {
+                "type": "string",
+                "title": "repository",
+                "default": "bitnami/dokuwiki",
+                "$id": "#/properties/image/properties/repository"
+              },
+              "tag": {
+                "type": "string",
+                "title": "tag",
+                "default": "20200729.0.0-debian-10-r319",
+                "$id": "#/properties/image/properties/tag"
+              }
+            },
+            "type": "object",
+            "title": "image",
+            "$id": "#/properties/image"
+          },
+          "ingress": {
+            "properties": {
+              "annotations": {
+                "properties": {},
+                "type": "object",
+                "title": "annotations",
+                "$id": "#/properties/ingress/properties/annotations"
+              },
+              "apiVersion": {
+                "type": "string",
+                "title": "apiVersion",
+                "default": "",
+                "$id": "#/properties/ingress/properties/apiVersion"
+              },
+              "certManager": {
+                "type": "boolean",
+                "title": "certManager",
+                "default": false,
+                "$id": "#/properties/ingress/properties/certManager"
+              },
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": false,
+                "$id": "#/properties/ingress/properties/enabled"
+              },
+              "extraHosts": {
+                "type": "array",
+                "title": "extraHosts",
+                "default": [],
+                "$id": "#/properties/ingress/properties/extraHosts"
+              },
+              "extraPaths": {
+                "type": "array",
+                "title": "extraPaths",
+                "default": [],
+                "$id": "#/properties/ingress/properties/extraPaths"
+              },
+              "extraTls": {
+                "type": "array",
+                "title": "extraTls",
+                "default": [],
+                "$id": "#/properties/ingress/properties/extraTls"
+              },
+              "hostname": {
+                "type": "string",
+                "title": "hostname",
+                "default": "dokuwiki.local",
+                "$id": "#/properties/ingress/properties/hostname"
+              },
+              "path": {
+                "type": "string",
+                "title": "path",
+                "default": "/",
+                "$id": "#/properties/ingress/properties/path"
+              },
+              "pathType": {
+                "type": "string",
+                "title": "pathType",
+                "default": "ImplementationSpecific",
+                "$id": "#/properties/ingress/properties/pathType"
+              },
+              "secrets": {
+                "type": "array",
+                "title": "secrets",
+                "default": [],
+                "$id": "#/properties/ingress/properties/secrets"
+              },
+              "tls": {
+                "type": "boolean",
+                "title": "tls",
+                "default": false,
+                "$id": "#/properties/ingress/properties/tls"
+              }
+            },
+            "type": "object",
+            "title": "ingress",
+            "$id": "#/properties/ingress"
+          },
+          "kubeVersion": {
+            "type": "string",
+            "title": "kubeVersion",
+            "default": "",
+            "$id": "#/properties/kubeVersion"
+          },
+          "lifecycleHooks": {
+            "properties": {},
+            "type": "object",
+            "title": "lifecycleHooks",
+            "$id": "#/properties/lifecycleHooks"
+          },
+          "livenessProbe": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": true,
+                "$id": "#/properties/livenessProbe/properties/enabled"
+              },
+              "failureThreshold": {
+                "type": "number",
+                "title": "failureThreshold",
+                "default": 6,
+                "$id": "#/properties/livenessProbe/properties/failureThreshold"
+              },
+              "initialDelaySeconds": {
+                "type": "number",
+                "title": "initialDelaySeconds",
+                "default": 120,
+                "$id": "#/properties/livenessProbe/properties/initialDelaySeconds"
+              },
+              "periodSeconds": {
+                "type": "number",
+                "title": "periodSeconds",
+                "default": 10,
+                "$id": "#/properties/livenessProbe/properties/periodSeconds"
+              },
+              "successThreshold": {
+                "type": "number",
+                "title": "successThreshold",
+                "default": 1,
+                "$id": "#/properties/livenessProbe/properties/successThreshold"
+              },
+              "timeoutSeconds": {
+                "type": "number",
+                "title": "timeoutSeconds",
+                "default": 5,
+                "$id": "#/properties/livenessProbe/properties/timeoutSeconds"
+              }
+            },
+            "type": "object",
+            "title": "livenessProbe",
+            "$id": "#/properties/livenessProbe"
+          },
+          "metrics": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": false,
+                "$id": "#/properties/metrics/properties/enabled"
+              },
+              "image": {
+                "properties": {
+                  "pullPolicy": {
+                    "type": "string",
+                    "title": "pullPolicy",
+                    "default": "IfNotPresent",
+                    "$id": "#/properties/metrics/properties/image/properties/pullPolicy"
+                  },
+                  "pullSecrets": {
+                    "type": "array",
+                    "title": "pullSecrets",
+                    "default": [],
+                    "$id": "#/properties/metrics/properties/image/properties/pullSecrets"
+                  },
+                  "registry": {
+                    "type": "string",
+                    "title": "registry",
+                    "default": "docker.io",
+                    "$id": "#/properties/metrics/properties/image/properties/registry"
+                  },
+                  "repository": {
+                    "type": "string",
+                    "title": "repository",
+                    "default": "bitnami/apache-exporter",
+                    "$id": "#/properties/metrics/properties/image/properties/repository"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "title": "tag",
+                    "default": "0.10.0-debian-10-r5",
+                    "$id": "#/properties/metrics/properties/image/properties/tag"
+                  }
+                },
+                "type": "object",
+                "title": "image",
+                "$id": "#/properties/metrics/properties/image"
+              },
+              "podAnnotations": {
+                "properties": {
+                  "prometheus.io/port": {
+                    "type": "string",
+                    "title": "prometheus.io/port",
+                    "default": "9117",
+                    "$id": "#/properties/metrics/properties/podAnnotations/properties/prometheus.io/port"
+                  },
+                  "prometheus.io/scrape": {
+                    "type": "string",
+                    "title": "prometheus.io/scrape",
+                    "default": "true",
+                    "$id": "#/properties/metrics/properties/podAnnotations/properties/prometheus.io/scrape"
+                  }
+                },
+                "type": "object",
+                "title": "podAnnotations",
+                "$id": "#/properties/metrics/properties/podAnnotations"
+              },
+              "resources": {
+                "properties": {},
+                "type": "object",
+                "title": "resources",
+                "$id": "#/properties/metrics/properties/resources"
+              }
+            },
+            "type": "object",
+            "title": "metrics",
+            "$id": "#/properties/metrics"
+          },
+          "nameOverride": {
+            "type": "string",
+            "title": "nameOverride",
+            "default": "",
+            "$id": "#/properties/nameOverride"
+          },
+          "nodeAffinityPreset": {
+            "properties": {
+              "key": {
+                "type": "string",
+                "title": "key",
+                "default": "",
+                "$id": "#/properties/nodeAffinityPreset/properties/key"
+              },
+              "type": {
+                "type": "string",
+                "title": "type",
+                "default": "",
+                "$id": "#/properties/nodeAffinityPreset/properties/type"
+              },
+              "values": {
+                "type": "array",
+                "title": "values",
+                "default": [],
+                "$id": "#/properties/nodeAffinityPreset/properties/values"
+              }
+            },
+            "type": "object",
+            "title": "nodeAffinityPreset",
+            "$id": "#/properties/nodeAffinityPreset"
+          },
+          "nodeSelector": {
+            "properties": {},
+            "type": "object",
+            "title": "nodeSelector",
+            "$id": "#/properties/nodeSelector"
+          },
+          "persistence": {
+            "properties": {
+              "accessMode": {
+                "type": "string",
+                "title": "accessMode",
+                "default": "ReadWriteOnce",
+                "$id": "#/properties/persistence/properties/accessMode"
+              },
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": true,
+                "$id": "#/properties/persistence/properties/enabled"
+              },
+              "existingClaim": {
+                "type": "string",
+                "title": "existingClaim",
+                "default": "",
+                "$id": "#/properties/persistence/properties/existingClaim"
+              },
+              "size": {
+                "type": "string",
+                "title": "size",
+                "default": "8Gi",
+                "$id": "#/properties/persistence/properties/size"
+              },
+              "storageClass": {
+                "type": "string",
+                "title": "storageClass",
+                "default": "",
+                "$id": "#/properties/persistence/properties/storageClass"
+              }
+            },
+            "type": "object",
+            "title": "persistence",
+            "$id": "#/properties/persistence"
+          },
+          "podAffinityPreset": {
+            "type": "string",
+            "title": "podAffinityPreset",
+            "default": "",
+            "$id": "#/properties/podAffinityPreset"
+          },
+          "podAnnotations": {
+            "properties": {},
+            "type": "object",
+            "title": "podAnnotations",
+            "$id": "#/properties/podAnnotations"
+          },
+          "podAntiAffinityPreset": {
+            "type": "string",
+            "title": "podAntiAffinityPreset",
+            "default": "soft",
+            "$id": "#/properties/podAntiAffinityPreset"
+          },
+          "podLabels": {
+            "properties": {},
+            "type": "object",
+            "title": "podLabels",
+            "$id": "#/properties/podLabels"
+          },
+          "podSecurityContext": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": true,
+                "$id": "#/properties/podSecurityContext/properties/enabled"
+              },
+              "fsGroup": {
+                "type": "number",
+                "title": "fsGroup",
+                "default": 1001,
+                "$id": "#/properties/podSecurityContext/properties/fsGroup"
+              }
+            },
+            "type": "object",
+            "title": "podSecurityContext",
+            "$id": "#/properties/podSecurityContext"
+          },
+          "readinessProbe": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": true,
+                "$id": "#/properties/readinessProbe/properties/enabled"
+              },
+              "failureThreshold": {
+                "type": "number",
+                "title": "failureThreshold",
+                "default": 6,
+                "$id": "#/properties/readinessProbe/properties/failureThreshold"
+              },
+              "initialDelaySeconds": {
+                "type": "number",
+                "title": "initialDelaySeconds",
+                "default": 30,
+                "$id": "#/properties/readinessProbe/properties/initialDelaySeconds"
+              },
+              "periodSeconds": {
+                "type": "number",
+                "title": "periodSeconds",
+                "default": 10,
+                "$id": "#/properties/readinessProbe/properties/periodSeconds"
+              },
+              "successThreshold": {
+                "type": "number",
+                "title": "successThreshold",
+                "default": 1,
+                "$id": "#/properties/readinessProbe/properties/successThreshold"
+              },
+              "timeoutSeconds": {
+                "type": "number",
+                "title": "timeoutSeconds",
+                "default": 5,
+                "$id": "#/properties/readinessProbe/properties/timeoutSeconds"
+              }
+            },
+            "type": "object",
+            "title": "readinessProbe",
+            "$id": "#/properties/readinessProbe"
+          },
+          "resources": {
+            "properties": {
+              "requests": {
+                "properties": {
+                  "cpu": {
+                    "type": "string",
+                    "title": "cpu",
+                    "default": "300m",
+                    "$id": "#/properties/resources/properties/requests/properties/cpu"
+                  },
+                  "memory": {
+                    "type": "string",
+                    "title": "memory",
+                    "default": "512Mi",
+                    "$id": "#/properties/resources/properties/requests/properties/memory"
+                  }
+                },
+                "type": "object",
+                "title": "requests",
+                "$id": "#/properties/resources/properties/requests"
+              }
+            },
+            "type": "object",
+            "title": "resources",
+            "$id": "#/properties/resources"
+          },
+          "service": {
+            "properties": {
+              "externalTrafficPolicy": {
+                "type": "string",
+                "title": "externalTrafficPolicy",
+                "default": "Cluster",
+                "$id": "#/properties/service/properties/externalTrafficPolicy"
+              },
+              "httpsPort": {
+                "type": "number",
+                "title": "httpsPort",
+                "default": 443,
+                "$id": "#/properties/service/properties/httpsPort"
+              },
+              "loadBalancerIP": {
+                "type": "string",
+                "title": "loadBalancerIP",
+                "default": "",
+                "$id": "#/properties/service/properties/loadBalancerIP"
+              },
+              "nodePorts": {
+                "properties": {
+                  "http": {
+                    "type": "string",
+                    "title": "http",
+                    "default": "",
+                    "$id": "#/properties/service/properties/nodePorts/properties/http"
+                  },
+                  "https": {
+                    "type": "string",
+                    "title": "https",
+                    "default": "",
+                    "$id": "#/properties/service/properties/nodePorts/properties/https"
+                  }
+                },
+                "type": "object",
+                "title": "nodePorts",
+                "$id": "#/properties/service/properties/nodePorts"
+              },
+              "port": {
+                "type": "number",
+                "title": "port",
+                "default": 80,
+                "$id": "#/properties/service/properties/port"
+              },
+              "type": {
+                "type": "string",
+                "title": "type",
+                "default": "LoadBalancer",
+                "$id": "#/properties/service/properties/type"
+              }
+            },
+            "type": "object",
+            "title": "service",
+            "$id": "#/properties/service"
+          },
+          "sidecars": {
+            "type": "array",
+            "title": "sidecars",
+            "default": [],
+            "$id": "#/properties/sidecars"
+          },
+          "tolerations": {
+            "type": "array",
+            "title": "tolerations",
+            "default": [],
+            "$id": "#/properties/tolerations"
+          },
+          "volumePermissions": {
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "enabled",
+                "default": false,
+                "$id": "#/properties/volumePermissions/properties/enabled"
+              },
+              "image": {
+                "properties": {
+                  "pullPolicy": {
+                    "type": "string",
+                    "title": "pullPolicy",
+                    "default": "Always",
+                    "$id": "#/properties/volumePermissions/properties/image/properties/pullPolicy"
+                  },
+                  "pullSecrets": {
+                    "type": "array",
+                    "title": "pullSecrets",
+                    "default": [],
+                    "$id": "#/properties/volumePermissions/properties/image/properties/pullSecrets"
+                  },
+                  "registry": {
+                    "type": "string",
+                    "title": "registry",
+                    "default": "docker.io",
+                    "$id": "#/properties/volumePermissions/properties/image/properties/registry"
+                  },
+                  "repository": {
+                    "type": "string",
+                    "title": "repository",
+                    "default": "bitnami/bitnami-shell",
+                    "$id": "#/properties/volumePermissions/properties/image/properties/repository"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "title": "tag",
+                    "default": "10-debian-10-r151",
+                    "$id": "#/properties/volumePermissions/properties/image/properties/tag"
+                  }
+                },
+                "type": "object",
+                "title": "image",
+                "$id": "#/properties/volumePermissions/properties/image"
+              },
+              "resources": {
+                "properties": {
+                  "limits": {
+                    "properties": {},
+                    "type": "object",
+                    "title": "limits",
+                    "$id": "#/properties/volumePermissions/properties/resources/properties/limits"
+                  },
+                  "requests": {
+                    "properties": {},
+                    "type": "object",
+                    "title": "requests",
+                    "$id": "#/properties/volumePermissions/properties/resources/properties/requests"
+                  }
+                },
+                "type": "object",
+                "title": "resources",
+                "$id": "#/properties/volumePermissions/properties/resources"
+              }
+            },
+            "type": "object",
+            "title": "volumePermissions",
+            "$id": "#/properties/volumePermissions"
+          }
+        },
+        "type": "object",
+        "title": "#",
+        "$id": "#"
+      }

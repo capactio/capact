@@ -1,6 +1,7 @@
 package manifestgen
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -100,6 +101,11 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
 	}
 
+	jsonSchema, err := getInterfaceInputTypeJSONSchema()
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input type JSON schema")
+	}
+
 	return &templatingConfig{
 		Template: typeManifestTemplate,
 		Input: &typeTemplatingInput{
@@ -108,9 +114,7 @@ func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCon
 				Prefix:   prefix,
 				Revision: cfg.ManifestRevision,
 			},
-			JSONSchema: &jsonschema.Type{
-				Type: "object",
-			},
+			JSONSchema: string(jsonSchema),
 		},
 	}, nil
 }
@@ -131,6 +135,19 @@ func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingCo
 			},
 		},
 	}, nil
+}
+
+func getInterfaceInputTypeJSONSchema() ([]byte, error) {
+	schema := &jsonschema.Type{
+		Type: "object",
+	}
+
+	schemaBytes, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling JSON schema")
+	}
+
+	return schemaBytes, nil
 }
 
 func getInterfaceGroupPathFromInterfacePath(ifacePath string) string {

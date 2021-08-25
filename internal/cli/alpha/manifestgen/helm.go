@@ -1,6 +1,7 @@
 package manifestgen
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -8,11 +9,11 @@ import (
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
+	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
-	"sigs.k8s.io/yaml"
 )
 
 // GenerateHelmManifests generates manifest files for a Helm module based Implementation
@@ -83,13 +84,18 @@ func getHelmInputTypeTemplatingConfig(cfg *HelmConfig, helmChart *chart.Chart) (
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
+	jsonSchema, err := getJSONSchemaForValues(helmChart)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting JSON schema for Helm chart values")
+	}
+
 	input := &typeTemplatingInput{
 		templatingInput: templatingInput{
 			Name:     name,
 			Prefix:   prefix,
 			Revision: cfg.ManifestRevision,
 		},
-		JSONSchema: generateJSONSchemaForValue(helmChart.Values, []string{"#"}),
+		JSONSchema: string(jsonSchema),
 	}
 
 	return &templatingConfig{
@@ -110,7 +116,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
-	pathSlice := strings.Split(cfg.InterfacePathWithRevision, ":")
+	pathSlice := strings.SplitN(cfg.InterfacePathWithRevision, ":", 2)
 	if len(pathSlice) == 2 {
 		interfacePath = pathSlice[0]
 		interfaceRevision = pathSlice[1]
@@ -124,8 +130,11 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		return nil, errors.Wrap(err, "while setting values for Helm input values")
 	}
 
-	valuesYAMLBytes, err := yaml.Marshal(helmValues)
-	if err != nil {
+	var helmValuesBuf bytes.Buffer
+	enc := yaml.NewEncoder(&helmValuesBuf)
+	enc.SetIndent(2)
+
+	if err := enc.Encode(helmValues); err != nil {
 		return nil, errors.Wrap(err, "while marshaling Helm runner values")
 	}
 
@@ -140,7 +149,7 @@ func getHelmImplementationTemplatingConfig(cfg *HelmConfig, helmChart *chart.Cha
 		HelmChartName:     helmChart.Name(),
 		HelmChartVersion:  helmChart.Metadata.Version,
 		HelmRepoURL:       cfg.ChartRepoURL,
-		ValuesYAML:        string(valuesYAMLBytes),
+		ValuesYAML:        helmValuesBuf.String(),
 	}
 
 	return &templatingConfig{
@@ -209,6 +218,21 @@ func buildValueKeyPathForJinja(keys []string) string {
 	return acc
 }
 
+func getJSONSchemaForValues(helmChart *chart.Chart) ([]byte, error) {
+	if helmChart.Schema != nil {
+		return helmChart.Schema, nil
+	}
+
+	jsonSchema := generateJSONSchemaForValue(helmChart.Values, []string{"#"})
+
+	schemaBytes, err := json.MarshalIndent(jsonSchema, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling jsonSchema")
+	}
+
+	return schemaBytes, nil
+}
+
 func generateJSONSchemaForValue(value interface{}, parentKeyPath []string) *jsonschema.Type {
 	ID := strings.Join(parentKeyPath, "/properties/")
 
@@ -228,7 +252,20 @@ func generateJSONSchemaForValue(value interface{}, parentKeyPath []string) *json
 		schema.Type = "string"
 		schema.Default = v
 
+	case float64:
+		schema.Type = "number"
+		schema.Default = v
+
+	case bool:
+		schema.Type = "boolean"
+		schema.Default = v
+
+	case []interface{}:
+		schema.Type = "array"
+		schema.Default = v
+
 	case map[string]interface{}:
+		schema.Type = "object"
 		schema.Properties = orderedmap.New()
 
 		for k, val := range v {
