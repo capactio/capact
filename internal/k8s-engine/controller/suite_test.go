@@ -1,4 +1,5 @@
-//+build controllertests
+//go:build controllertests
+// +build controllertests
 
 package controller
 
@@ -81,12 +82,12 @@ var _ = BeforeSuite(func(done Done) {
 			Image:   "not-needed",
 		},
 	}
-	err = (&ActionReconciler{
-		log: ctrl.Log.WithName("controllers").WithName("Action"),
-		svc: NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(),
-			&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, policy.MergeOrder{policy.Action, policy.Global}, &typeInstanceLockerFake{},
-			&typeInstanceGetterFake{}, cfg),
-	}).SetupWithManager(mgr, maxConcurrentReconciles)
+
+	svc := NewActionService(zap.NewRaw(zap.WriteTo(ioutil.Discard)), mgr.GetClient(),
+		&argoRendererFake{}, &actionValidatorFake{}, &policyServiceFake{}, policy.MergeOrder{policy.Action, policy.Global}, &typeInstanceLockerFake{},
+		&typeInstanceGetterFake{}, cfg)
+
+	err = NewActionReconciler(ctrl.Log, svc, 25).SetupWithManager(mgr, maxConcurrentReconciles)
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
