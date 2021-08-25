@@ -15,7 +15,7 @@ readonly REPO_ROOT_DIR
 readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
-readonly CAPACTIO_OFFICIAL_BUCKET="capactio-stable-charts"
+readonly CAPACTIO_OFFICIAL_BUCKET="capactio-release-testing"
 readonly CAPACTIO_LATEST_BUCKET="capactio-latest-charts"
 
 readonly charts=(

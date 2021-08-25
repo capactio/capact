@@ -1,9 +1,8 @@
+dataSource: prs
 groupBy:
+  "🚨 Breaking": [breaking]
+  "🔧 Bug Fixes": [bug]
   "🚀 Enhancements": [enhancement]
-  "🔧 Bug Fixes": ["bug"]
 template:
-  issue: "- {{name}} [{{text}}]({{url}})"
+  issue: "- {{name}} [{{text}}]({{url}}) ([@{{user_login}}]({{user_url}}))"
   group: "\n### {{heading}}\n"
-# simulate bugfix
-# added feature
-  
