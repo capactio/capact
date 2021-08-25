@@ -85,48 +85,40 @@ type FailingKubeClient struct {
 	CreateCallsCnt int
 }
 
-// Create returns the configured error if set or prints
+// Create returns the configured error.
 func (f *FailingKubeClient) Create(resources kube.ResourceList) (*kube.Result, error) {
 	f.CreateCallsCnt++
 	return nil, f.CreateError
 }
 
-// Build returns the configured error if set or prints
 func (f *FailingKubeClient) Build(r io.Reader, _ bool) (kube.ResourceList, error) {
 	return []*resource.Info{}, nil
 }
 
-// Wait returns the configured error if set or prints
 func (f *FailingKubeClient) Wait(resources kube.ResourceList, d time.Duration) error {
 	return errors.New("not implemented")
 }
 
-// WaitWithJobs returns the configured error if set or prints
 func (f *FailingKubeClient) WaitWithJobs(resources kube.ResourceList, d time.Duration) error {
 	return errors.New("not implemented")
 }
 
-// Delete returns the configured error if set or prints
 func (f *FailingKubeClient) Delete(resources kube.ResourceList) (*kube.Result, []error) {
 	return nil, []error{errors.New("not implemented")}
 }
 
-// WatchUntilReady returns the configured error if set or prints
 func (f *FailingKubeClient) WatchUntilReady(resources kube.ResourceList, d time.Duration) error {
 	return errors.New("not implemented")
 }
 
-// Update returns the configured error if set or prints
 func (f *FailingKubeClient) Update(r, modified kube.ResourceList, ignoreMe bool) (*kube.Result, error) {
 	return nil, errors.New("not implemented")
 }
 
-// WaitAndGetCompletedPodPhase returns the configured error if set or prints
 func (f *FailingKubeClient) WaitAndGetCompletedPodPhase(s string, d time.Duration) (v1.PodPhase, error) {
 	return v1.PodFailed, errors.New("not implemented")
 }
 
-// IsReachable checks if the cluster is reachable
 func (f *FailingKubeClient) IsReachable() error {
 	return nil
 }
