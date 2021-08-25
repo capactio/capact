@@ -63,6 +63,10 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 		// 4. Process TypeInstances which should satisfy required TypeInstances injection
 		if len(filter.RequiredTypeInstancesInjectionSatisfiedBy) > 0 {
 			opt.requiredTIInjectionSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
+			if opt.requirementsSatisfiedBy == nil {
+				opt.requirementsSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
+			}
+
 			for _, req := range filter.RequiredTypeInstancesInjectionSatisfiedBy {
 				if req.TypeRef == nil {
 					continue

@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"capact.io/capact/internal/multierror"
-	gomultierror "github.com/hashicorp/go-multierror"
+	multierr "github.com/hashicorp/go-multierror"
 )
 
 // IssueBuilder provides functionality to report issue by name and return aggregated result.
@@ -57,7 +57,7 @@ func (bldr *IssueBuilder) Result() Result {
 
 // headeredErrListFormatFunc is a basic formatter that outputs the errors as
 // a bullet point list with a given header.
-func headeredErrListFormatFunc(fieldName string) gomultierror.ErrorFormatFunc {
+func headeredErrListFormatFunc(fieldName string) multierr.ErrorFormatFunc {
 	return func(es []error) string {
 		points := make([]string, len(es))
 		for i, err := range es {
