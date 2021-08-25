@@ -1,4 +1,5 @@
-//+build controllertests
+//go:build controllertests
+// +build controllertests
 
 package controller
 

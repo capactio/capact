@@ -52,7 +52,7 @@ func TestCreateObjectRetrySuccess(t *testing.T) {
 
 func TestCreateObjectRetryFailed(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skipping TestCreateObjectRetry as it takes up to 2s")
+		t.Skip("Skipping TestCreateObjectRetry as it takes up to 1.5s")
 	}
 
 	// given
@@ -74,7 +74,7 @@ func TestCreateObjectRetryFailed(t *testing.T) {
 	err := createObject(actionCfg, []byte(objToCreate))
 
 	// then
-	assert.EqualError(t, err, internalError.Error())
+	assert.Contains(t, err.Error(), internalError.Error())
 	assert.Equal(t, 5, failingCli.CreateCallsCnt)
 	assert.InDelta(t, expTotalRetryDurationInSec, time.Since(startedCall).Seconds(), 0.2)
 }
