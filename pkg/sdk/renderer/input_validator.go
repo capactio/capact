@@ -18,7 +18,7 @@ type Validator interface {
 	LoadImplInputTypeInstanceRefs(context.Context, gqlpublicapi.ImplementationRevision) (validation.TypeRefCollection, error)
 
 	ValidateParameters(context.Context, validation.SchemaCollection, types.ParametersCollection) (validation.Result, error)
-	ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error)
+	ValidateTypeInstances(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error)
 }
 
 // InputValidator provides functionality to validate input data for rendered workflow.
@@ -82,7 +82,7 @@ func (w *InputValidator) Validate(ctx context.Context, in ValidateInput) error {
 	if err != nil {
 		return errors.Wrap(err, "while merging Interface and Implementation TypeInstances' TypeRefs")
 	}
-	err = rs.Report(w.validator.ValidateTypeInstancesStrict(ctx, allAllowedTypes, in.TypeInstances))
+	err = rs.Report(w.validator.ValidateTypeInstances(ctx, allAllowedTypes, in.TypeInstances))
 	if err != nil {
 		return errors.Wrap(err, "while validating TypeInstances")
 	}

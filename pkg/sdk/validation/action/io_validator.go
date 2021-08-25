@@ -200,23 +200,11 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 	return resultBldr.Result(), nil
 }
 
-// ValidateTypeInstancesStrict validates that a given input TypeInstances has valid TypeRefs.
-// TODO(https://github.com/capactio/capact/issues/438): Unknown input TypeInstances are reported as not valid.
-//
-// It resolves input TypeInstances' TypeRefs by calling Hub.
-func (c *InputOutputValidator) ValidateTypeInstancesStrict(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error) {
-	return c.validateTypeInstances(ctx, allowedTypes, gotTypeInstances, false)
-}
-
 // ValidateTypeInstances validates that a given input TypeInstances has valid TypeRefs.
 // Unknown input TypeInstances are ignored, so on Interface we can pass additionalTypeInstances, e.g. existing database.
 //
 // It resolves input TypeInstances' TypeRefs by calling Hub.
 func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error) {
-	return c.validateTypeInstances(ctx, allowedTypes, gotTypeInstances, true)
-}
-
-func (c *InputOutputValidator) validateTypeInstances(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef, allowUnknown bool) (validation.Result, error) {
 	// 1. Resolve TypeRef for given TypeInstances
 	var ids []string
 	indexedInputTINames := map[string]struct{}{}
@@ -260,9 +248,7 @@ func (c *InputOutputValidator) validateTypeInstances(ctx context.Context, allowe
 	for name, gotTypeRef := range gotTypes {
 		expTypeRef, found := allowedTypes[name]
 		if !found {
-			if !allowUnknown {
-				resultBldr.ReportIssue(name, "TypeInstance was not found in manifest definition")
-			}
+			resultBldr.ReportIssue(name, "TypeInstance was not found in manifest definition")
 			continue
 		}
 
