@@ -73,6 +73,9 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 					Revision: req.TypeRef.Revision,
 				}
 				opt.requiredTIInjectionSatisfiedBy[typeRef] = struct{}{}
+
+				// append to RequirementsSatisfiedBy as well
+				opt.requirementsSatisfiedBy[typeRef] = struct{}{}
 			}
 		}
 

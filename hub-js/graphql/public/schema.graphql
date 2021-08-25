@@ -72,8 +72,9 @@ input ImplementationRevisionFilter {
   requirementsSatisfiedBy: [TypeInstanceValue!]
 
   """
-  Used along with `requirementsSatisfiedBy` filter. It brings additional level of filtering by Implementations, which have requirements injection satisfied.
-  Ignored if used without `requirementsSatisfiedBy`.
+  Filter by Implementations, which have requirements injection satisfied.
+  If provided, all TypeInstance values are merged into `requirementsSatisfiedBy` filter values, and, in a result,
+  both filters `requirementsSatisfiedBy` and `requiredTypeInstancesInjectionSatisfiedBy` are used.
   """
   requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
 

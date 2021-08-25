@@ -3,6 +3,8 @@ package policy_test
 import (
 	"testing"
 
+	"capact.io/capact/internal/cli/heredoc"
+
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"github.com/stretchr/testify/assert"
@@ -25,9 +27,15 @@ func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
 			Input: fixPolicyWithTypeRef(),
 		},
 		{
-			Name:               "Invalid",
-			Input:              fixPolicyWithoutTypeRef(),
-			ExpectedErrMessage: ptr.String("while validating TypeInstance metadata for Policy: 2 errors occurred:\n\t* missing Type reference for TypeInstance \"id\" (description: \"\")\n\t* missing Type reference for TypeInstance \"id2\" (description: \"ID 2\")\n\n"),
+			Name:  "Invalid",
+			Input: fixPolicyWithoutTypeRef(),
+			ExpectedErrMessage: ptr.String(
+				heredoc.Docf(`
+				while validating TypeInstance metadata for Policy: 2 errors occurred:
+					* missing Type reference for TypeInstance "id" (description: "")
+					* missing Type reference for TypeInstance "id2" (description: "ID 2")`,
+				),
+			),
 		},
 	}
 
@@ -64,9 +72,15 @@ func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
 			Input: fixPolicyWithTypeRef().Rules[0].OneOf[0],
 		},
 		{
-			Name:               "Invalid",
-			Input:              fixPolicyWithoutTypeRef().Rules[0].OneOf[0],
-			ExpectedErrMessage: ptr.String("while validating TypeInstance metadata for Policy: 2 errors occurred:\n\t* missing Type reference for TypeInstance \"id\" (description: \"\")\n\t* missing Type reference for TypeInstance \"id2\" (description: \"ID 2\")\n\n"),
+			Name:  "Invalid",
+			Input: fixPolicyWithoutTypeRef().Rules[0].OneOf[0],
+			ExpectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while validating TypeInstance metadata for Policy: 2 errors occurred:
+					* missing Type reference for TypeInstance "id" (description: "")
+					* missing Type reference for TypeInstance "id2" (description: "ID 2")`,
+				),
+			),
 		},
 	}
 

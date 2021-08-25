@@ -22,5 +22,5 @@ func Doc(raw string) string {
 // Docf returns unindented and formatted string as here-document.
 // Formatting is done as for fmt.Printf().
 func Docf(raw string, args ...interface{}) string {
-	return heredoc.Docf(raw)
+	return heredoc.Docf(raw, args...)
 }

@@ -3,7 +3,8 @@ package policy
 import (
 	"fmt"
 
-	"github.com/hashicorp/go-multierror"
+	"capact.io/capact/internal/multierror"
+
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ func validateTypeInstancesMetadata(requiredTypeInstances []RequiredTypeInstanceT
 		return nil
 	}
 
-	multiErr := &multierror.Error{}
+	multiErr := multierror.New()
 	for _, ti := range requiredTypeInstances {
 		tiDesc := ""
 		if ti.Description != nil {

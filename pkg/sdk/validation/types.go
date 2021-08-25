@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"github.com/hashicorp/go-multierror"
+	gomultierror "github.com/hashicorp/go-multierror"
 )
 
 // Result holds validation result indexed by name. For example, by TypeInstance name.
-type Result map[string]*multierror.Error
+type Result map[string]*gomultierror.Error
 
 type (
 	// Schema holds JSONSchema value and information if instance of this schema is required.
