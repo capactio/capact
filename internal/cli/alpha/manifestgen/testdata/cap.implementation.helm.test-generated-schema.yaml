@@ -19,9 +19,10 @@ spec:
   appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
   additionalInput:
     parameters:
-      typeRef:
-        path: "cap.type.helm.test-generated-schema-input"
-        revision: 0.1.0
+      additional-parameters:
+        typeRef:
+          path: "cap.type.helm.test-generated-schema-input"
+          revision: 0.1.0
 
   outputTypeInstanceRelations:
     config:
@@ -253,7 +254,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                        from: "{{steps.create-helm-args.outputs.artifacts.render}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 

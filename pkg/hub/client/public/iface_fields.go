@@ -68,6 +68,10 @@ var ifaceRevisionInputDataFields = `
           parameters {
             name
             jsonSchema
+            typeRef {
+              path
+              revision
+            }
           }
           typeInstances {
             name
