@@ -11,31 +11,28 @@ import (
 	"path"
 	"time"
 
-	"capact.io/capact/internal/maps"
-
-	"helm.sh/helm/v3/pkg/release"
-	"helm.sh/helm/v3/pkg/storage/driver"
-
 	"capact.io/capact/internal/cli/printer"
+	"capact.io/capact/internal/maps"
+	"capact.io/capact/internal/ptr"
 
+	util "github.com/Masterminds/goutils"
+	"github.com/avast/retry-go"
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
+	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/cli-runtime/pkg/genericclioptions"
 	"k8s.io/client-go/rest"
-
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"capact.io/capact/internal/ptr"
-	util "github.com/Masterminds/goutils"
 	"k8s.io/utils/strings/slices"
 )
 
-// Component is a Capact component which can be installed in the environement
+// Component is a Capact component which can be installed in the environment
 type Component interface {
 	InstallUpgrade(ctx context.Context, version string) (*release.Release, error)
 	Name() string
@@ -648,12 +645,26 @@ func createObject(configuration *action.Configuration, content []byte) error {
 		return errors.Wrap(err, "while validating the object")
 	}
 
-	if _, err := configuration.KubeClient.Create(res); err != nil {
-		// If the error is CRD already exists, return.
-		if apierrors.IsAlreadyExists(err) {
-			return nil
-		}
-		return errors.Wrapf(err, "while creating the object")
+	// 4 exponential retries: ~102ms ~302ms ~700ms 1.5s
+	err = retry.Do(
+		func() error {
+			_, err = configuration.KubeClient.Create(res)
+			return ignoreAlreadyExistError(err)
+		},
+		retry.Attempts(5),
+		retry.DelayType(retry.BackOffDelay),
+	)
+	if err != nil {
+		// May be conflict if max retries were hit, or may be something unrelated like permissions error
+		return err
 	}
+
 	return nil
+}
+
+func ignoreAlreadyExistError(err error) error {
+	if apierrors.IsAlreadyExists(err) {
+		return nil
+	}
+	return err
 }
