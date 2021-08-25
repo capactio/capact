@@ -77,32 +77,42 @@ spec:
             outputs:
               artifacts: []
             steps:
-              - - name: fill-default-input
-                  capact-action: jinja2.template
+              {{ if eq .Provider "gcp" }}
+              - - name: convert-gcp-yaml-to-json
+                  template: convert-yaml-to-json
+                  arguments:
+                    artifacts:
+                      - name: in
+                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-sa{{"}}"}}"
+              {{ end }}
+
+              - - name: prepare-parameters
+                  template: prepare-parameters
                   arguments:
                     artifacts:
                       - name: input-parameters
                         from: "{{"{{"}}inputs.artifacts.input-parameters{{"}}"}}"
-                      - name: template
-                        raw:
-                          # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
-                          data: |
-                            my_property: <@ input.my_property | default("default_value") @>
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
+                      - name: additional-parameters
+                        from: "{{"{{"}}inputs.artifacts.additional-parameters{{"}}"}}"
+                        optional: true
+                      - name: provider-credentials
+                        {{if eq .Provider "aws" -}}
+                        from: "{{"{{"}}workflow.outputs.artifacts.aws-credentials{{"}}"}}"
+                        {{- else if eq .Provider "gcp" -}}
+                        from: "{{"{{"}}steps.convert-gcp-yaml-to-json.outputs.artifacts.out{{"}}"}}"
+                        {{- else -}}
+                        from: "" # TODO(ContentDeveloper): Set credentials to the Terraform provider
+                        {{- end}}
 
               - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}inputs.artifacts.additional-parameters{{"}}"}}"
+                        from: "{{"{{"}}steps.prepare-parameters.outputs.artifacts.merged{{"}}"}}"
                       - name: configuration
                         raw:
-                          data: |
-                            prefix: additionalInput
+                          data:
                       - name: template
                         raw:
                           data: |
@@ -111,9 +121,9 @@ spec:
                               name: "{{ .Name }}"
                               source: "{{ .ModuleSourceURL }}"
                             env: {{if eq .Provider "aws"}}
-                              - AWS_ACCESS_KEY_ID=<@ creds.accessKeyID @>
-                              - AWS_SECRET_ACCESS_KEY=<@ creds.secretAccessKey @>{{else if eq .Provider "gcp"}}
-                              - GOOGLE_PROJECT=<@ creds.project_id @>
+                              - AWS_ACCESS_KEY_ID=<@ providercredentials.accessKeyID @>
+                              - AWS_SECRET_ACCESS_KEY=<@ providercredentials.secretAccessKey @>{{else if eq .Provider "gcp"}}
+                              - GOOGLE_PROJECT=<@ providercredentials.project_id @>
                               - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
                             output:
                               goTemplate:
@@ -122,48 +132,12 @@ spec:
                                 {{ end }}
                             variables: |+
                               {{ range $index, $variable := .Variables -}}
-                              <% if additionalInput.{{ $variable.Name }} -%>
-                              {{ $variable.Name }} = "<@ additionalInput.{{ $variable.Name }} @>"
+                              <% if additionalinput.{{ $variable.Name }} -%>
+                              {{ $variable.Name }} = "<@ additionalinput.{{ $variable.Name }} @>"
                               <%- endif %>
 
                               {{ end }}
-              - - name: fill-parameters
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{"{{"}}steps.create-module-args.outputs.artifacts.render{{"}}"}}"
-                      - name: input-parameters
-                        from: "{{"{{"}}steps.fill-default-input.outputs.artifacts.render{{"}}"}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
-              {{ if eq .Provider "gcp" }}
-              - - name: convert-gcp-yaml-to-json
-                  template: convert-yaml-to-json
-                  arguments:
-                    artifacts:
-                      - name: in
-                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-sa{{"}}"}}"
-              {{ end }}{{ if .Provider }}
-              - - name: fill-creds
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
-                      - name: input-parameters
-                        {{if eq .Provider "aws" -}}
-                        from: "{{"{{"}}workflow.outputs.artifacts.aws-credentials{{"}}"}}"
-                        {{- else if eq .Provider "gcp" -}}
-                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-sa{{"}}"}}"
-                        {{- end}}
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: creds
-              {{ end }}
+
               - - name: terraform-apply
                   capact-action: terraform.apply
                   capact-outputTypeInstances:
@@ -172,11 +146,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        {{if .Provider -}}
-                        from: "{{"{{"}}steps.fill-creds.outputs.artifacts.render{{"}}"}}"
-                        {{- else -}}
-                        from: "{{"{{"}}steps.fill-parameters.outputs.artifacts.render{{"}}"}}"
-                        {{- end}}
+                        from: "{{"{{"}}steps.create-module-args.outputs.artifacts.redner{{"}}"}}"
                       - name: runner-context
                         from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
                         {{- if eq .Provider "gcp"}}
@@ -201,6 +171,7 @@ spec:
                           # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
                           data: |
                             property: value
+
           {{ if eq .Provider "gcp" }}
           - name: convert-yaml-to-json
             inputs:
@@ -216,3 +187,20 @@ spec:
                 - name: out
                   path: /file
           {{ end -}}
+
+          - name: prepare-parameters
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: /yamls/input.yaml
+                - name: additional-parameters
+                  path: /yamls/additionalinput.yaml
+                  optional: true
+                - name: provider-credentials
+                  path: /yamls/providercredentials.yaml
+            container:
+              image: ghcr.io/capactio/pr/infra/merger:PR-428
+            outputs:
+              artifacts:
+              - name: merged
+                path: /merged.yaml

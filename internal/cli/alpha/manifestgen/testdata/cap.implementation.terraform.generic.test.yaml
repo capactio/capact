@@ -66,32 +66,29 @@ spec:
             outputs:
               artifacts: []
             steps:
-              - - name: fill-default-input
-                  capact-action: jinja2.template
+              
+
+              - - name: prepare-parameters
+                  template: prepare-parameters
                   arguments:
                     artifacts:
                       - name: input-parameters
                         from: "{{inputs.artifacts.input-parameters}}"
-                      - name: template
-                        raw:
-                          # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
-                          data: |
-                            my_property: <@ input.my_property | default("default_value") @>
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
+                      - name: additional-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                        optional: true
+                      - name: provider-credentials
+                        from: "" # TODO(ContentDeveloper): Set credentials to the Terraform provider
 
               - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{inputs.artifacts.additional-parameters}}"
+                        from: "{{steps.prepare-parameters.outputs.artifacts.merged}}"
                       - name: configuration
                         raw:
-                          data: |
-                            prefix: additionalInput
+                          data:
                       - name: template
                         raw:
                           data: |
@@ -106,28 +103,16 @@ spec:
                                 random_number: "{{ .random_number }}"
                                 
                             variables: |+
-                              <% if additionalInput.count -%>
-                              count = "<@ additionalInput.count @>"
+                              <% if additionalinput.count -%>
+                              count = "<@ additionalinput.count @>"
                               <%- endif %>
 
-                              <% if additionalInput.name -%>
-                              name = "<@ additionalInput.name @>"
+                              <% if additionalinput.name -%>
+                              name = "<@ additionalinput.name @>"
                               <%- endif %>
 
                               
-              - - name: fill-parameters
-                  capact-action: jinja2.template
-                  arguments:
-                    artifacts:
-                      - name: template
-                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
-                      - name: input-parameters
-                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
-                      - name: configuration
-                        raw:
-                          data: |
-                            prefix: input
-              
+
               - - name: terraform-apply
                   capact-action: terraform.apply
                   capact-outputTypeInstances:
@@ -136,7 +121,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                        from: "{{steps.create-module-args.outputs.artifacts.redner}}"
                       - name: runner-context
                         from: "{{workflow.outputs.artifacts.runner-context}}"
 
@@ -157,4 +142,20 @@ spec:
                           # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
                           data: |
                             property: value
-          
+
+          - name: prepare-parameters
+            inputs:
+              artifacts:
+                - name: input-parameters
+                  path: /yamls/input.yaml
+                - name: additional-parameters
+                  path: /yamls/additionalinput.yaml
+                  optional: true
+                - name: provider-credentials
+                  path: /yamls/providercredentials.yaml
+            container:
+              image: ghcr.io/capactio/pr/infra/merger:PR-428
+            outputs:
+              artifacts:
+              - name: merged
+                path: /merged.yaml
