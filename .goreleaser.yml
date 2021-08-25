@@ -17,8 +17,12 @@ builds:
       - CGO_ENABLED=0
     goos: &build-goos
       - linux
-      - windows
-      - darwin
+    #  - windows
+    #  - darwin
+    goarch: &build-arch
+      #- "386"
+      - amd64
+      #- arm64
     hooks: &build-hooks
     #  # Install upx first, https://github.com/upx/upx/releases
       post: upx -9 "{{ .Path }}"
@@ -32,6 +36,7 @@ builds:
   - id: populator
     env: *build-env
     goos: *build-goos
+    goarch: *build-arch
     hooks: *build-hooks
     main: ./cmd/populator
     binary: 'populator-{{ .Os }}-{{ .Arch }}'
