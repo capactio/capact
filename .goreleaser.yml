@@ -19,8 +19,6 @@ builds:
       - linux
       - windows
       - darwin
-    goarch: &build-goarch #TODO to remove
-      - amd64
     hooks: &build-hooks
     #  # Install upx first, https://github.com/upx/upx/releases
       post: upx -9 "{{ .Path }}"
