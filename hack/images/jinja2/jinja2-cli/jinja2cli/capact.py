@@ -34,6 +34,9 @@ class Undefined(Undefined):
     def __getattr__(self, attr):
         return Undefined(name=".".join([self._undefined_name, attr]))
 
+    def __getitem__(self, attr):
+        return Undefined(name=f'{self._undefined_name}["{attr}"]')
+
 
 # Dict is a special type of dict which always returns an item before checking an attribute
 class Dict(dict):
@@ -58,7 +61,7 @@ class Dict(dict):
 
     def __getattribute__(self, name):
         try:
-            return Dict(self[name])
+            return self[name]
         except Exception as e:
             return super().__getattribute__(name)
 

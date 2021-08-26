@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/alecthomas/jsonschema"
@@ -206,7 +205,6 @@ func buildValueKeyPathForJinja(keys []string) string {
 	for _, key := range keys[1:] {
 		if strings.ContainsRune(key, '.') {
 			newAcc := acc + fmt.Sprintf(`["%s"]`, key)
-			fmt.Fprintf(os.Stderr, "WARNING: Helm chart values key contains a dot, so we fallback to square brackets in \"%s\". You have to manually check, if %s is not undefined using \"<%% if %s -%%>...<%%- endif %%>\"!\n", newAcc, acc, acc)
 			acc = newAcc
 		} else {
 			acc += fmt.Sprintf(".%s", key)
