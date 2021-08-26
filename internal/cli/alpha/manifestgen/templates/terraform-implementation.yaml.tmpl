@@ -83,7 +83,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: in
-                        from: "{{"{{"}}workflow.outputs.artifacts.gcp-sa{{"}}"}}"
+                        from: "{{`{{workflow.outputs.artifacts.gcp-sa}}`}}"
               {{ end }}
 
               - - name: prepare-parameters
@@ -91,15 +91,15 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}inputs.artifacts.input-parameters{{"}}"}}"
+                        from: "{{`{{inputs.artifacts.input-parameters}}`}}"
                       - name: additional-parameters
-                        from: "{{"{{"}}inputs.artifacts.additional-parameters{{"}}"}}"
+                        from: "{{`{{inputs.artifacts.additional-parameters}}`}}"
                         optional: true
                       - name: provider-credentials
                         {{if eq .Provider "aws" -}}
-                        from: "{{"{{"}}workflow.outputs.artifacts.aws-credentials{{"}}"}}"
+                        from: "{{`{{workflow.outputs.artifacts.aws-credentials}}`}}"
                         {{- else if eq .Provider "gcp" -}}
-                        from: "{{"{{"}}steps.convert-gcp-yaml-to-json.outputs.artifacts.out{{"}}"}}"
+                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
                         {{- else -}}
                         from: "" # TODO(ContentDeveloper): Set credentials to the Terraform provider
                         {{- end}}
@@ -109,7 +109,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.prepare-parameters.outputs.artifacts.merged{{"}}"}}"
+                        from: "{{`{{steps.prepare-parameters.outputs.artifacts.merged}}`}}"
                       - name: configuration
                         raw:
                           data:
@@ -128,7 +128,7 @@ spec:
                             output:
                               goTemplate:
                                 {{ range $index, $output := .Outputs -}}
-                                {{ $output.Name }}: "{{"{{"}} .{{ $output.Name }} {{"}}"}}"
+                                {{ $output.Name }}: "{{`{{`}} .{{ $output.Name }} {{`}}`}}"
                                 {{ end }}
                             variables: |+
                               {{ range $index, $variable := .Variables -}}
@@ -146,12 +146,12 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.create-module-args.outputs.artifacts.redner{{"}}"}}"
+                        from: "{{`{{steps.create-module-args.outputs.artifacts.redner}}`}}"
                       - name: runner-context
-                        from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
+                        from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
                         {{- if eq .Provider "gcp"}}
                       - name: additional
-                        from: "{{"{{"}}steps.convert-gcp-yaml-to-json.outputs.artifacts.out{{"}}"}}"
+                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
                         {{- end}}
 
               - - name: render-config
@@ -162,7 +162,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.terraform-apply.outputs.artifacts.additional{{"}}"}}"
+                        from: "{{`{{steps.terraform-apply.outputs.artifacts.additional}}`}}"
                       - name: configuration
                         raw:
                           data: ""

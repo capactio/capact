@@ -76,9 +76,9 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}inputs.artifacts.input-parameters{{"}}"}}"
+                        from: "{{`{{inputs.artifacts.input-parameters}}`}}"
                       - name: additional-parameters
-                        from: "{{"{{"}}inputs.artifacts.additional-parameters{{"}}"}}"
+                        from: "{{`{{inputs.artifacts.additional-parameters}}`}}"
                         optional: true
 
               - - name: create-helm-args
@@ -86,7 +86,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.prepare-parameters.outputs.artifacts.merged{{"}}"}}"
+                        from: "{{`{{steps.prepare-parameters.outputs.artifacts.merged}}`}}"
                       - name: configuration
                         raw:
                           data:
@@ -112,9 +112,9 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.create-helm-args.outputs.artifacts.render{{"}}"}}"
+                        from: "{{`{{steps.create-helm-args.outputs.artifacts.render}}`}}"
                       - name: runner-context
-                        from: "{{"{{"}}workflow.outputs.artifacts.runner-context{{"}}"}}"
+                        from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
 
               - - name: render-config
                   capact-outputTypeInstances:
@@ -124,7 +124,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{"{{"}}steps.helm-install.outputs.artifacts.additional{{"}}"}}"
+                        from: "{{`{{steps.helm-install.outputs.artifacts.additional}}`}}"
                       - name: configuration
                         raw:
                           data: ""

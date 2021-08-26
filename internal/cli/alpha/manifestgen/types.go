@@ -88,5 +88,6 @@ type helmImplementationTemplatingInput struct {
 	HelmChartVersion string
 	HelmRepoURL      string
 
-	ValuesYAML string
+	ValuesYAML  string
+	ArgsWarning string
 }
