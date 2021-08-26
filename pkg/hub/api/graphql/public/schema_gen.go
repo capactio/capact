@@ -1668,6 +1668,13 @@ input ImplementationRevisionFilter {
   """
   requirementsSatisfiedBy: [TypeInstanceValue!]
 
+  """
+  Filter by Implementations, which have requirements injection satisfied.
+  If provided, all TypeInstance values are merged into ` + "`" + `requirementsSatisfiedBy` + "`" + ` filter values, and, in a result,
+  both filters ` + "`" + `requirementsSatisfiedBy` + "`" + ` and ` + "`" + `requiredTypeInstancesInjectionSatisfiedBy` + "`" + ` are used.
+  """
+  requiredTypeInstancesInjectionSatisfiedBy: [TypeInstanceValue]
+
   attributes: [AttributeFilterInput!]
 
   """
@@ -1682,7 +1689,7 @@ input ImplementationRevisionFilter {
 # lint-enable defined-types-are-used
 
 input TypeInstanceValue {
-  typeRef: TypeReferenceWithOptionalRevision
+  typeRef: TypeReferenceInput!
 
   """
   Currently not supported.
@@ -1694,6 +1701,11 @@ input TypeInstanceValue {
 input TypeReferenceWithOptionalRevision {
   path: NodePath!
   revision: Version
+}
+
+input TypeReferenceInput {
+  path: NodePath!
+  revision: Version!
 }
 
 input AttributeFilterInput {
@@ -12680,6 +12692,14 @@ func (ec *executionContext) unmarshalInputImplementationRevisionFilter(ctx conte
 			if err != nil {
 				return it, err
 			}
+		case "requiredTypeInstancesInjectionSatisfiedBy":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("requiredTypeInstancesInjectionSatisfiedBy"))
+			it.RequiredTypeInstancesInjectionSatisfiedBy, err = ec.unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "attributes":
 			var err error
 
@@ -12772,7 +12792,7 @@ func (ec *executionContext) unmarshalInputTypeInstanceValue(ctx context.Context,
 			var err error
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("typeRef"))
-			it.TypeRef, err = ec.unmarshalOTypeReferenceWithOptionalRevision2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceWithOptionalRevision(ctx, v)
+			it.TypeRef, err = ec.unmarshalNTypeReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceInput(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -12781,6 +12801,34 @@ func (ec *executionContext) unmarshalInputTypeInstanceValue(ctx context.Context,
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("value"))
 			it.Value, err = ec.unmarshalOAny2interface(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTypeReferenceInput(ctx context.Context, obj interface{}) (TypeReferenceInput, error) {
+	var it TypeReferenceInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "path":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("path"))
+			it.Path, err = ec.unmarshalNNodePath2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "revision":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revision"))
+			it.Revision, err = ec.unmarshalNVersion2string(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -16116,6 +16164,11 @@ func (ec *executionContext) marshalNTypeReference2ᚖcapactᚗioᚋcapactᚋpkg�
 	return ec._TypeReference(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNTypeReferenceInput2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReferenceInput(ctx context.Context, v interface{}) (*TypeReferenceInput, error) {
+	res, err := ec.unmarshalInputTypeReferenceInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNTypeRevision2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeRevisionᚄ(ctx context.Context, sel ast.SelectionSet, v []*TypeRevision) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -16968,6 +17021,30 @@ func (ec *executionContext) unmarshalOTypeFilter2ᚖcapactᚗioᚋcapactᚋpkg�
 	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx context.Context, v interface{}) ([]*TypeInstanceValue, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]*TypeInstanceValue, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalOTypeInstanceValue2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
 func (ec *executionContext) unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValueᚄ(ctx context.Context, v interface{}) ([]*TypeInstanceValue, error) {
 	if v == nil {
 		return nil, nil
@@ -16990,6 +17067,14 @@ func (ec *executionContext) unmarshalOTypeInstanceValue2ᚕᚖcapactᚗioᚋcapa
 		}
 	}
 	return res, nil
+}
+
+func (ec *executionContext) unmarshalOTypeInstanceValue2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeInstanceValue(ctx context.Context, v interface{}) (*TypeInstanceValue, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTypeInstanceValue(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalOTypeReference2ᚖcapactᚗioᚋcapactᚋpkgᚋhubᚋapiᚋgraphqlᚋpublicᚐTypeReference(ctx context.Context, sel ast.SelectionSet, v *TypeReference) graphql.Marshaler {

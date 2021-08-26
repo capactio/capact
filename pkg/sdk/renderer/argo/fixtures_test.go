@@ -70,29 +70,6 @@ func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInj
 					Revision: ptr.String("0.1.0"),
 				},
 				OneOf: []policy.Rule{
-
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{
-							Requires: &[]types.ManifestRefWithOptRevision{
-								{
-									Path:     "cap.type.aws.auth.credentials",
-									Revision: ptr.String("0.1.0"),
-								},
-							},
-							Attributes: &[]types.ManifestRefWithOptRevision{
-								{
-									Path: "cap.attribute.cloud.provider.aws",
-								},
-							},
-						},
-					},
-				},
-			},
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.interface.aws.rds.postgresql.provision",
-				},
-				OneOf: []policy.Rule{
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{
 							Requires: &[]types.ManifestRefWithOptRevision{
@@ -112,16 +89,11 @@ func fixAWSGlobalPolicy(additionalParameters ...policy.AdditionalParametersToInj
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
 										ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
-										Description: ptr.String("GCP SA"),
+										Description: ptr.String("AWS Credentials"),
 									},
 								},
 							},
 							AdditionalParameters: additionalParameters,
-						},
-					},
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{
-							Path: ptr.String("cap.implementation.bitnami.postgresql.install"),
 						},
 					},
 				},
@@ -163,11 +135,27 @@ func fixGlobalPolicyForFallback() policy.Policy {
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
 										ID:          "517cf827-233c-4bf1-8fc9-48534424dd58",
-										Description: ptr.String("GCP SA"),
+										Description: ptr.String("AWS Credentials"),
 									},
 								},
 							},
 						},
+					},
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{
+							Requires: &[]types.ManifestRefWithOptRevision{
+								{
+									Path:     "cap.type.aws.auth.credentials",
+									Revision: ptr.String("0.1.0"),
+								},
+							},
+							Attributes: &[]types.ManifestRefWithOptRevision{
+								{
+									Path: "cap.attribute.cloud.provider.aws",
+								},
+							},
+						},
+						// No injects, even if the requirements are satisfied this Implementation should be ignored
 					},
 					{
 						ImplementationConstraints: policy.ImplementationConstraints{

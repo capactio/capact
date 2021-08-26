@@ -84,8 +84,8 @@ func fixPolicyWithTypeRef() policy.Policy {
 	}
 }
 
-func fixComplexPolicyWithoutTypeRef() policy.Policy {
-	return policy.Policy{
+func fixComplexPolicyWithoutTypeRef() *policy.Policy {
+	return &policy.Policy{
 		Rules: policy.RulesList{
 			{
 				Interface: types.ManifestRefWithOptRevision{
@@ -147,8 +147,8 @@ func fixComplexPolicyWithoutTypeRef() policy.Policy {
 	}
 }
 
-func fixComplexPolicyWithTypeRef() policy.Policy {
-	return policy.Policy{
+func fixComplexPolicyWithTypeRef() *policy.Policy {
+	return &policy.Policy{
 		Rules: policy.RulesList{
 			{
 				Interface: types.ManifestRefWithOptRevision{

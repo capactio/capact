@@ -9,11 +9,12 @@ type ListImplementationRevisionsForInterfaceOption func(*ListImplementationRevis
 
 // ListImplementationRevisionsForInterfaceOptions stores Implementation Revision filtering parameters.
 type ListImplementationRevisionsForInterfaceOptions struct {
-	attrFilter                   map[gqlpublicapi.FilterRule]map[string]*string
-	implPathPattern              *string
-	requirementsSatisfiedBy      map[string]*string
-	requires                     map[string]*string
-	sortByPathAscAndRevisionDesc bool
+	attrFilter                     map[gqlpublicapi.FilterRule]map[string]*string
+	implPathPattern                *string
+	requirementsSatisfiedBy        map[gqlpublicapi.TypeReference]struct{}
+	requiredTIInjectionSatisfiedBy map[gqlpublicapi.TypeReference]struct{}
+	requires                       map[string]*string
+	sortByPathAscAndRevisionDesc   bool
 }
 
 // Apply is used to configure the ListImplementationRevisionsForInterfaceOptions.
@@ -46,16 +47,43 @@ func WithFilter(filter gqlpublicapi.ImplementationRevisionFilter) ListImplementa
 
 		// 3. Process TypeInstances, which should satisfy requirements
 		if len(filter.RequirementsSatisfiedBy) > 0 {
-			opt.requirementsSatisfiedBy = map[string]*string{}
+			opt.requirementsSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
 			for _, req := range filter.RequirementsSatisfiedBy {
 				if req.TypeRef == nil {
 					continue
 				}
-				opt.requirementsSatisfiedBy[req.TypeRef.Path] = req.TypeRef.Revision
+				typeRef := gqlpublicapi.TypeReference{
+					Path:     req.TypeRef.Path,
+					Revision: req.TypeRef.Revision,
+				}
+				opt.requirementsSatisfiedBy[typeRef] = struct{}{}
 			}
 		}
 
-		// 4. Process TypeInstances, which should be defined in `requires` section
+		// 4. Process TypeInstances which should satisfy required TypeInstances injection
+		if len(filter.RequiredTypeInstancesInjectionSatisfiedBy) > 0 {
+			opt.requiredTIInjectionSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
+			if opt.requirementsSatisfiedBy == nil {
+				opt.requirementsSatisfiedBy = make(map[gqlpublicapi.TypeReference]struct{})
+			}
+
+			for _, req := range filter.RequiredTypeInstancesInjectionSatisfiedBy {
+				if req.TypeRef == nil {
+					continue
+				}
+
+				typeRef := gqlpublicapi.TypeReference{
+					Path:     req.TypeRef.Path,
+					Revision: req.TypeRef.Revision,
+				}
+				opt.requiredTIInjectionSatisfiedBy[typeRef] = struct{}{}
+
+				// append to RequirementsSatisfiedBy as well
+				opt.requirementsSatisfiedBy[typeRef] = struct{}{}
+			}
+		}
+
+		// 5. Process TypeInstances, which should be defined in `requires` section
 		if len(filter.Requires) > 0 {
 			opt.requires = map[string]*string{}
 			for _, req := range filter.Requires {

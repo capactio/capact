@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"capact.io/capact/internal/cli/heredoc"
+
 	"capact.io/capact/pkg/hub/client/fake"
 	"github.com/stretchr/testify/require"
 
@@ -154,7 +156,11 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 					},
 				},
 			},
-			expectedErrMessage: ptr.String("while validating Policy rule: while validating TypeInstance metadata for Policy: 1 error occurred:\n\t* missing Type reference for TypeInstance \"my-uuid\" (description: \"My UUID\")\n\n"),
+			expectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while validating Policy rule: while validating TypeInstance metadata for Policy: 1 error occurred:
+					* missing Type reference for TypeInstance "my-uuid" (description: "My UUID")`),
+			),
 		},
 	}
 	for _, test := range tests {
