@@ -234,7 +234,7 @@ jobs:
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
-    needs: [release-helm-chart, release-cli, build-app, build-tests]
+    needs: [ release-helm-chart, release-cli, build-app, build-tests ]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -279,7 +279,7 @@ jobs:
   slackNotification:
     name: Slack Notification
     runs-on: ubuntu-latest
-    needs: [update-cluster]
+    needs: [ update-cluster ]
     if: always()
     steps:
       - name: Slack Notification
