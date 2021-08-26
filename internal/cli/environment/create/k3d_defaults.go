@@ -7,29 +7,31 @@ const (
 	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.19.7-k3s1"
 )
 
+type vals []string
+
 // Flags are used to set default values for k3d.
 type Flags struct {
 	Name   string
-	Values []string
+	Values vals
 }
 
 // K3dDefaultConfig returns default set of values for k3d.
 var K3dDefaultConfig = []Flags{
 	{
 		Name:   "port",
-		Values: []string{"80:80@loadbalancer", "443:443@loadbalancer"},
+		Values: vals{"80:80@loadbalancer", "443:443@loadbalancer"},
 	},
 	{
 		Name:   "k3s-server-arg",
-		Values: []string{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
+		Values: vals{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
 	},
 	{
 		Name:   "wait",
-		Values: []string{"true"},
+		Values: vals{"true"},
 	},
 	{
 		Name:   "timeout",
-		Values: []string{"60s"},
+		Values: vals{"60s"},
 	},
 }
 

@@ -28,12 +28,12 @@ main() {
     capact::validate::tools
 
     export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
-    capact::create_cluster
+#    capact::create_cluster
 
     export DOCKER_TAG=dev
     export DOCKER_REPOSITORY="local"
     export CLUSTER_NAME="${KIND_CLUSTER_NAME}"
-    export CLUSTER_TYPE="kind"
+    export CLUSTER_TYPE="k3d"
     export PRINT_INSECURE_NOTES="true"
     shout "Installing Capact on development local cluster..."
     capact::install

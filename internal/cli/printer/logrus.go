@@ -38,7 +38,7 @@ func (f *LogrusSpinnerFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 
 	// Here is a naive assumption that if the first message word is not a gerund,
 	// it's not a long-running task and can be already marked as done.
-	// In the worst case, we will mark a message indicating long-running task a little to fast.
+	// In the worst case, we will mark as done a message indicating long-running task a bit to fast.
 	words := strings.Fields(entry.Message)
 	if isEmpty(words) || isNotGerund(words[0]) {
 		f.spinner.End(!f.failedPreviously)

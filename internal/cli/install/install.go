@@ -41,7 +41,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 		created := []string{"local/argo-actions:dev", "local/argo-runner:dev", "local/e2e-test:dev", "local/gateway:dev", "local/hub-js:dev", "local/k8s-engine:dev", "local/populator:dev"}
 		//status.Step("Loading Docker images")
-		if err := capact.LoadImages(ctx, opts.Environment, opts.Name, created); err != nil {
+		if err := capact.LoadImages(ctx, created, opts); err != nil {
 			return err
 		}
 	}
