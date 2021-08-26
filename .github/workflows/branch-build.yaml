@@ -43,6 +43,7 @@ jobs:
       - name: Check generated files
         run: |
           make test-generated
+
   prepare-matrix:
     name: Prepare components build matrix
     runs-on: ubuntu-latest
@@ -65,6 +66,7 @@ jobs:
         run: echo "::set-output ${TESTS}"
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
+        
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
@@ -84,6 +86,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-app-image-${{ matrix.APP }}
+
   build-tests:
     name: Build ${{ matrix.TEST }}
     runs-on: ubuntu-latest
@@ -103,6 +106,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-test-image-${{ matrix.TEST }}
+
   build-infra:
     name: Build ${{ matrix.INFRA }}
     runs-on: ubuntu-latest
@@ -123,6 +127,7 @@ jobs:
       - name: Log into registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
       - run: make push-infra-image-${{ matrix.INFRA }}
+
   release-helm-chart:
     name: Release Helm Charts
     runs-on: ubuntu-latest
@@ -143,6 +148,7 @@ jobs:
           MAIN_BUILD: "true"
         run: |
           make release-charts
+
   release-cli:
     name: Release the latest Capact CLIs
     runs-on: ubuntu-latest
@@ -185,6 +191,7 @@ jobs:
       - name: Release latest CLI
         run: |
           make release-latest-binaries
+
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
@@ -223,6 +230,7 @@ jobs:
           name: cluster_dump_${{github.sha}}
           path: "output"
           retention-days: 5 # Default 90 days
+
   update-cluster:
     name: Update cluster
     runs-on: ubuntu-latest
@@ -267,6 +275,7 @@ jobs:
             --name-regex 'capact-upgrade-*' \
             --namespace 'capact-system' \
             --phase 'SUCCEEDED'
+
   slackNotification:
     name: Slack Notification
     runs-on: ubuntu-latest

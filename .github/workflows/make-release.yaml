@@ -2,7 +2,7 @@ name: Make release
 
 # Required secrets:
 # GCS_CREDS - Credentials to Google Cloud Storage for binary and chart releases
-# PAT - GitHub personal access token with permissions to make commits to repository
+# GITHUB_PAT - GitHub personal access token with permissions to make commits to repository
 
 on:
   workflow_dispatch:
@@ -16,6 +16,10 @@ jobs:
     name: Make release
     runs-on: ubuntu-latest
     environment: Release
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -24,7 +28,7 @@ jobs:
         # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token
         run: |
           git remote remove origin
-          git remote add origin https://${{secrets.PAT}}@github.com/${{github.repository}}.git
+          git remote add origin https://${{secrets.GITHUB_PAT}}@github.com/${{github.repository}}.git
           git config --global user.email "bot@capact.io"
           git config --global user.name "Capact Bot"
       - name: Setup environment
