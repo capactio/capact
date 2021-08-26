@@ -1,10 +1,14 @@
 name: Make release
 
+# Required secrets:
+# GCS_CREDS - Credentials to Google Cloud Storage for binary and chart releases
+# PAT - GitHub personal access token with permissions to make commits to repository
+
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version in semver (e.g. '0.5.0')
+        description: Version in SemVer (e.g. '0.5.0')
         required: true
 
 jobs:
@@ -16,7 +20,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
       - name: Setup Git credentials
-        # Setup PAT git credentials is required to trigger the branch-build workflow on a commit:
+        # Replacing the GH Action token with PAT is required to trigger the branch-build workflow on a commit:
         # https://docs.github.com/en/actions/reference/events-that-trigger-workflows#triggering-new-workflows-using-a-personal-access-token
         run: |
           git remote remove origin
@@ -55,4 +59,3 @@ jobs:
           gren release -T "${{ secrets.GITHUB_TOKEN }}" --tags "v${{ github.event.inputs.version }}" --override
       - name: Release Helm charts
         run: make release-charts
-

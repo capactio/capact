@@ -1,4 +1,5 @@
 name: Main branch
+
 on:
   push:
     paths:
@@ -27,260 +28,260 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - name: Setup Go
-  #      uses: actions/setup-go@v2
-  #      with:
-  #        go-version: ${{env.GO_VERSION}}
-  #    - name: Run linting
-  #      run: |
-  #        make test-lint
-  #    - name: Run unit tests
-  #      run: make test-unit
-  #    - name: Check generated files
-  #      run: |
-  #        make test-generated
-  #prepare-matrix:
-  #  name: Prepare components build matrix
-  #  runs-on: ubuntu-latest
-  #  outputs:
-  #    matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
-  #    matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
-  #    matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
-  #  permissions:
-  #    contents: read
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #      with:
-  #        fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
-  #    - name: setup env
-  #      run: . ./hack/ci/setup-env.sh
-  #    - id: set-matrix-app
-  #      run: echo "::set-output ${APPS}"
-  #    - id: set-matrix-test
-  #      run: echo "::set-output ${TESTS}"
-  #    - id: set-matrix-infra
-  #      run: echo "::set-output ${INFRAS}"
-  #build-app:
-  #  name: Build ${{ matrix.APP }}
-  #  runs-on: ubuntu-latest
-  #  needs: prepare-matrix
-  #  strategy:
-  #    matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
-  #  permissions:
-  #    contents: read
-  #    packages: write
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - run: make build-app-image-${{ matrix.APP }}
-  #    - name: Log into registry
-  #      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  #    - run: make push-app-image-${{ matrix.APP }}
-  #build-tests:
-  #  name: Build ${{ matrix.TEST }}
-  #  runs-on: ubuntu-latest
-  #  needs: prepare-matrix
-  #  strategy:
-  #    matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
-  #  permissions:
-  #    contents: read
-  #    packages: write
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - run: make build-test-image-${{ matrix.TEST }}
-  #    - name: Log into registry
-  #      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  #    - run: make push-test-image-${{ matrix.TEST }}
-  #build-infra:
-  #  name: Build ${{ matrix.INFRA }}
-  #  runs-on: ubuntu-latest
-  #  needs: prepare-matrix
-  #  if: needs.prepare-matrix.outputs.matrix-infra != ''
-  #  strategy:
-  #    matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
-  #  permissions:
-  #    contents: read
-  #    packages: write
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - run: make build-infra-image-${{ matrix.INFRA }}
-  #    - name: Log into registry
-  #      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  #    - run: make push-infra-image-${{ matrix.INFRA }}
-  #release-helm-chart:
-  #  name: Release Helm Charts
-  #  runs-on: ubuntu-latest
-  #  if: github.ref == 'refs/heads/main'
-  #  permissions:
-  #    contents: read
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #      with:
-  #        fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
-  #    - uses: google-github-actions/setup-gcloud@master
-  #      with:
-  #        service_account_key: ${{ secrets.CAPACT_GCS_CREDS }}
-  #        export_default_credentials: true
-  #    - name: Release Helm Charts if were changed
-  #      env:
-  #        MAIN_BUILD: "true"
-  #      run: |
-  #        make release-charts
-  #release-cli:
-  #  name: Release the latest Capact CLIs
-  #  runs-on: ubuntu-latest
-  #  if: github.ref == 'refs/heads/main'
-  #  permissions:
-  #    contents: read
-  #    packages: write
-  #  steps:
-  #    - name: Checkout
-  #      uses: actions/checkout@v2
-  #      with:
-  #        fetch-depth: 0
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - name: Set up Go
-  #      uses: actions/setup-go@v2
-  #      with:
-  #        go-version: ${{env.GO_VERSION}}
-  #    - uses: actions/cache@v2
-  #      with:
-  #        # In order:
-  #        # * Module download cache
-  #        # * Build cache (Linux)
-  #        path: |
-  #          ~/go/pkg/mod
-  #          ~/.cache/go-build
-  #        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-  #        restore-keys: |
-  #          ${{ runner.os }}-go-
-  #    - name: Log into registry
-  #      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  #    - name: Set up GoReleaser
-  #      run: go install github.com/goreleaser/goreleaser@v0.173.2
-  #    - name: Set up GCS
-  #      uses: google-github-actions/setup-gcloud@master
-  #      with:
-  #        service_account_key: ${{ secrets.CAPACT_GCS_CREDS }}
-  #        export_default_credentials: true
-  #    - name: Release latest CLI
-  #      run: |
-  #        make release-latest-binaries
-  #integration-tests:
-  #  name: Integration tests
-  #  runs-on: ubuntu-latest
-  #  needs: [entry-tests, build-app, build-tests]
-  #  permissions:
-  #    contents: read
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - name: Setup Go
-  #      uses: actions/setup-go@v2
-  #      with:
-  #        go-version: ${{env.GO_VERSION}}
-  #    - name: Run K8s Controller integration tests
-  #      run: |
-  #        make test-k8s-controller
-  #    - name: Get Capact CLI for linux
-  #      run: |
-  #        curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
-  #        chmod +x ./capact
-  #    - name: Run cross-functional integration tests
-  #      env:
-  #        BUILD_IMAGES: "false"
-  #        ARTIFACTS: "output/"
-  #        DISABLE_MONITORING_INSTALLATION: "true"
-  #        CAPACT_BINARY: "./capact"
-  #      run: |
-  #        make test-integration
-  #    - name: Upload artifacts
-  #      uses: actions/upload-artifact@v2
-  #      if: ${{ always() }}
-  #      with:
-  #        name: cluster_dump_${{github.sha}}
-  #        path: "output"
-  #        retention-days: 5 # Default 90 days
-  #update-cluster:
-  #  name: Update cluster
-  #  runs-on: ubuntu-latest
-  #  needs: [release-helm-chart, release-cli, build-app, build-tests]
-  #  if: github.ref == 'refs/heads/main'
-  #  permissions:
-  #    contents: read
-  #  env:
-  #    CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE: "no-pass"
-  #    CAPACT_CREDENTIALS_STORE_BACKEND: "file"
-  #  steps:
-  #    - name: Checkout code
-  #      uses: actions/checkout@v2
-  #    - name: Setup environment
-  #      run: |
-  #        . ./hack/ci/setup-env.sh
-  #    - name: Build Capact CLI for linux
-  #      run: |
-  #        curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
-  #        chmod +x ./capact
-  #    - name: Log into Capact long-running cluster
-  #      env:
-  #        GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
-  #      run: |
-  #        ./capact login https://gateway.stage.cluster.capact.dev -u graphql -p $GATEWAY_PASSWORD
-  #    - name: Upgrade Capact long-running cluster
-  #      env:
-  #        USE_TEST_SETUP: "true"
-  #      run: |
-  #        ./capact upgrade \
-  #          --action-name-prefix 'capact-upgrade-' \
-  #          --version @latest \
-  #          --helm-repo-url @latest \
-  #          --override-capact-image-repo ${DOCKER_REPOSITORY} \
-  #          --override-capact-image-tag ${DOCKER_TAG} \
-  #          --enable-test-setup ${USE_TEST_SETUP} \
-  #          --increase-resource-limits \
-  #          --wait
-  #    - name: Clean-up
-  #      run: |
-  #        ./capact action delete \
-  #          --name-regex 'capact-upgrade-*' \
-  #          --namespace 'capact-system' \
-  #          --phase 'SUCCEEDED'
-  #slackNotification:
-  #  name: Slack Notification
-  #  runs-on: ubuntu-latest
-  #  needs: [update-cluster]
-  #  if: always()
-  #  steps:
-  #    - name: Slack Notification
-  #      if: ${{ always() && needs.update-cluster.result != 'success' }}
-  #      uses: rtCamp/action-slack-notify@v2
-  #      env:
-  #        SLACK_USERNAME: Capact CI Notifier
-  #        SLACK_COLOR: 'red'
-  #        SLACK_TITLE: 'Message'
-  #        SLACK_CHANNEL: 'capact-dev-private'
-  #        SLACK_MESSAGE: 'Main branch build failed :ahhhhhhhhh:'
-  #        SLACK_ICON_EMOJI: ':this-is-fine:'
-  #        SLACK_FOOTER: "Hopefully it is not an error, it's gorgeous feature"
-  #        SLACK_WEBHOOK: ${{ secrets.SLACK_PRIV_DEV_TEAM_WEBHOOK }}
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run linting
+        run: |
+          make test-lint
+      - name: Run unit tests
+        run: make test-unit
+      - name: Check generated files
+        run: |
+          make test-generated
+  prepare-matrix:
+    name: Prepare components build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix-app: ${{ steps.set-matrix-app.outputs.matrix }}
+      matrix-test: ${{ steps.set-matrix-test.outputs.matrix }}
+      matrix-infra: ${{ steps.set-matrix-infra.outputs.matrix }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
+      - name: setup env
+        run: . ./hack/ci/setup-env.sh
+      - id: set-matrix-app
+        run: echo "::set-output ${APPS}"
+      - id: set-matrix-test
+        run: echo "::set-output ${TESTS}"
+      - id: set-matrix-infra
+        run: echo "::set-output ${INFRAS}"
+  build-app:
+    name: Build ${{ matrix.APP }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-app)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-app-image-${{ matrix.APP }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-app-image-${{ matrix.APP }}
+  build-tests:
+    name: Build ${{ matrix.TEST }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-test)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-test-image-${{ matrix.TEST }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-test-image-${{ matrix.TEST }}
+  build-infra:
+    name: Build ${{ matrix.INFRA }}
+    runs-on: ubuntu-latest
+    needs: prepare-matrix
+    if: needs.prepare-matrix.outputs.matrix-infra != ''
+    strategy:
+      matrix: ${{fromJson(needs.prepare-matrix.outputs.matrix-infra)}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - run: make build-infra-image-${{ matrix.INFRA }}
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - run: make push-infra-image-${{ matrix.INFRA }}
+  release-helm-chart:
+    name: Release Helm Charts
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2 # To be able to compare with the previous commit and detect changed files
+      - uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.CAPACT_GCS_CREDS }}
+          export_default_credentials: true
+      - name: Release Helm Charts if were changed
+        env:
+          MAIN_BUILD: "true"
+        run: |
+          make release-charts
+  release-cli:
+    name: Release the latest Capact CLIs
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - uses: actions/cache@v2
+        with:
+          # In order:
+          # * Module download cache
+          # * Build cache (Linux)
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+      - name: Log into registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Set up GoReleaser
+        run: go install github.com/goreleaser/goreleaser@v0.173.2
+      - name: Set up GCS
+        uses: google-github-actions/setup-gcloud@master
+        with:
+          service_account_key: ${{ secrets.CAPACT_GCS_CREDS }}
+          export_default_credentials: true
+      - name: Release latest CLI
+        run: |
+          make release-latest-binaries
+  integration-tests:
+    name: Integration tests
+    runs-on: ubuntu-latest
+    needs: [entry-tests, build-app, build-tests]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Setup Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Run K8s Controller integration tests
+        run: |
+          make test-k8s-controller
+      - name: Get Capact CLI for linux
+        run: |
+          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
+          chmod +x ./capact
+      - name: Run cross-functional integration tests
+        env:
+          BUILD_IMAGES: "false"
+          ARTIFACTS: "output/"
+          DISABLE_MONITORING_INSTALLATION: "true"
+          CAPACT_BINARY: "./capact"
+        run: |
+          make test-integration
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ always() }}
+        with:
+          name: cluster_dump_${{github.sha}}
+          path: "output"
+          retention-days: 5 # Default 90 days
+  update-cluster:
+    name: Update cluster
+    runs-on: ubuntu-latest
+    needs: [release-helm-chart, release-cli, build-app, build-tests]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    env:
+      CAPACT_CREDENTIALS_STORE_FILE_PASSPHRASE: "no-pass"
+      CAPACT_CREDENTIALS_STORE_BACKEND: "file"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Setup environment
+        run: |
+          . ./hack/ci/setup-env.sh
+      - name: Build Capact CLI for linux
+        run: |
+          curl -Lo ./capact https://storage.googleapis.com/capactio-binaries/latest/capact-linux-amd64
+          chmod +x ./capact
+      - name: Log into Capact long-running cluster
+        env:
+          GATEWAY_PASSWORD: ${{ secrets.STAGE_CAPACT_GATEWAY_PASSWORD }}
+        run: |
+          ./capact login https://gateway.stage.cluster.capact.dev -u graphql -p $GATEWAY_PASSWORD
+      - name: Upgrade Capact long-running cluster
+        env:
+          USE_TEST_SETUP: "true"
+        run: |
+          ./capact upgrade \
+            --action-name-prefix 'capact-upgrade-' \
+            --version @latest \
+            --helm-repo-url @latest \
+            --override-capact-image-repo ${DOCKER_REPOSITORY} \
+            --override-capact-image-tag ${DOCKER_TAG} \
+            --enable-test-setup ${USE_TEST_SETUP} \
+            --increase-resource-limits \
+            --wait
+      - name: Clean-up
+        run: |
+          ./capact action delete \
+            --name-regex 'capact-upgrade-*' \
+            --namespace 'capact-system' \
+            --phase 'SUCCEEDED'
+  slackNotification:
+    name: Slack Notification
+    runs-on: ubuntu-latest
+    needs: [update-cluster]
+    if: always()
+    steps:
+      - name: Slack Notification
+        if: ${{ always() && needs.update-cluster.result != 'success' }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_USERNAME: Capact CI Notifier
+          SLACK_COLOR: 'red'
+          SLACK_TITLE: 'Message'
+          SLACK_CHANNEL: 'capact-dev-private'
+          SLACK_MESSAGE: 'Main branch build failed :ahhhhhhhhh:'
+          SLACK_ICON_EMOJI: ':this-is-fine:'
+          SLACK_FOOTER: "Hopefully it is not an error, it's gorgeous feature"
+          SLACK_WEBHOOK: ${{ secrets.SLACK_PRIV_DEV_TEAM_WEBHOOK }}

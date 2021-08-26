@@ -48,7 +48,7 @@ release::make_release_commit() {
 }
 
 # required inputs:
-# RELEASE_VERSION - new version in semver format: x.y.z
+# RELEASE_VERSION - new version in SemVer format: x.y.z
 [ -z "${RELEASE_VERSION}" ] && echo "Need to set RELEASE_VERSION" && exit 1;
 
 SOURCE_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
