@@ -195,7 +195,7 @@ jobs:
   integration-tests:
     name: Integration tests
     runs-on: ubuntu-latest
-    needs: [entry-tests, build-app, build-tests]
+    needs: [ entry-tests, build-app, build-tests ]
     permissions:
       contents: read
     steps:
