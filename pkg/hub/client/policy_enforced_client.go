@@ -78,10 +78,11 @@ func (e *PolicyEnforcedClient) ListImplementationRevisionForInterface(ctx contex
 	return implementations, rule, nil
 }
 
-// ListRequiredTypeInstancesToInjectBasedOnPolicy returns the input TypeInstance references,
-// which have to be injected into the Action, based on the current policies.
-func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
-	if len(policyRule.RequiredTypeInstancesToInject()) == 0 {
+// ListRequiredTypeInstancesToInjectBasedOnPolicy returns the required TypeInstance references,
+// which have to be injected into the Action, based on the current policy rules.
+func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
+	requiredTIs := policyRule.RequiredTypeInstancesToInject()
+	if len(requiredTIs) == 0 {
 		return nil, nil
 	}
 
@@ -90,7 +91,7 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(ct
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
-	for _, typeInstance := range policyRule.Inject.RequiredTypeInstances {
+	for _, typeInstance := range requiredTIs {
 		alias, found := e.findAliasForTypeInstance(typeInstance, implRev)
 		if !found {
 			// Implementation doesn't require such TypeInstance, skip injecting it
@@ -99,6 +100,50 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(ct
 
 		typeInstanceToInject := types.InputTypeInstanceRef{
 			Name: alias,
+			ID:   typeInstance.ID,
+		}
+
+		typeInstancesToInject = append(typeInstancesToInject, typeInstanceToInject)
+	}
+
+	return typeInstancesToInject, nil
+}
+
+// ListAdditionalTypeInstancesToInjectBasedOnPolicy returns the additional TypeInstance references,
+// which have to be injected into the Action, based on the current policy rules.
+func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
+	additionalTIs := policyRule.AdditionalTypeInstancesToInject()
+	if len(additionalTIs) == 0 {
+		return nil, nil
+	}
+
+	if err := policyRule.ValidateTypeInstanceMetadata(); err != nil {
+		return nil, errors.Wrap(err, "while validating Policy rule")
+	}
+
+	var typeInstancesToInject []types.InputTypeInstanceRef
+	for _, typeInstance := range additionalTIs {
+		if exists := e.isAdditionalTypeInstanceDefinedInImpl(typeInstance, implRev); !exists {
+			// TODO(review):
+			//		- option 1: return error <-- CURRENT APPROACH
+			// 	- option 2: continue - skip injecting it, similarly to requiredTypeInstances
+			//		- option 3: return error, but also support implementationConstraints based on additionalInput
+			//		- we can think about other options as well
+
+			implPath := "nil"
+			if implRev.Metadata != nil {
+				implPath = implRev.Metadata.Path
+			}
+			tiTypeRef := "nil"
+			if typeInstance.TypeRef != nil {
+				tiTypeRef = fmt.Sprintf("%s:%s", typeInstance.TypeRef.Path, typeInstance.TypeRef.Revision)
+			}
+
+			return nil, fmt.Errorf(`cannot find additional TypeInstance with name %q (Type reference: %q) in Implementation %q`, typeInstance.Name, tiTypeRef, implPath)
+		}
+
+		typeInstanceToInject := types.InputTypeInstanceRef{
+			Name: typeInstance.Name,
 			ID:   typeInstance.ID,
 		}
 
@@ -274,6 +319,30 @@ func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.Requ
 	}
 
 	return "", false
+}
+
+// isAdditionalTypeInstanceDefinedInImpl tries to match TypeInstance name and its Type reference against Implementation's `.spec.additionalInput.typeInstances` items.
+func (e *PolicyEnforcedClient) isAdditionalTypeInstanceDefinedInImpl(typeInstance policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) bool {
+	if typeInstance.TypeRef == nil ||  implRev.Spec == nil || implRev.Spec.AdditionalInput == nil || len(implRev.Spec.AdditionalInput.TypeInstances) == 0 {
+		return false
+	}
+
+	for _, additionalTi := range implRev.Spec.AdditionalInput.TypeInstances {
+		if additionalTi == nil || additionalTi.TypeRef != nil {
+			continue
+		}
+
+		if additionalTi.Name != typeInstance.Name ||
+			additionalTi.TypeRef.Path != typeInstance.TypeRef.Path ||
+			additionalTi.TypeRef.Revision != typeInstance.TypeRef.Revision {
+
+			continue
+		}
+
+		return true
+	}
+
+	return false
 }
 
 func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeInstances []*hubpublicgraphql.TypeInstanceValue) hubpublicgraphql.ImplementationRevisionFilter {

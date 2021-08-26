@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"context"
 	"testing"
 
 	"capact.io/capact/internal/cli/heredoc"
@@ -171,7 +170,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			cli := client.NewPolicyEnforcedClient(hubCli)
 
 			// when
-			actual, err := cli.ListRequiredTypeInstancesToInjectBasedOnPolicy(context.Background(), tt.policyRule, tt.implRev)
+			actual, err := cli.ListRequiredTypeInstancesToInjectBasedOnPolicy(tt.policyRule, tt.implRev)
 
 			// then
 			if tt.expectedErrMessage != nil {

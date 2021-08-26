@@ -285,7 +285,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					// 3.7. List data based on policy and inject them if provided
 					// 3.7.1 Required TypeInstances
-					requiredTypeInstances, err := r.policyEnforcedCli.ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+					requiredTypeInstances, err := r.policyEnforcedCli.ListRequiredTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 					if err != nil {
 						return nil, errors.Wrapf(err, "while listing RequiredTypeInstances based on policy for step: %s", step.Name)
 					}

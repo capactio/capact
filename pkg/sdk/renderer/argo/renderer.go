@@ -24,7 +24,8 @@ const (
 // and enforce the policies.
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
-	ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error)
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
@@ -121,16 +122,24 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 
 	// 5. List data based on policy and inject them if provided
 	// 5.1 Required TypeInstances
-	requiredTypeInstances, err := policyEnforcedClient.ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+	requiredTypeInstances, err := policyEnforcedClient.ListRequiredTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	if err != nil {
 		return nil, errors.Wrapf(err, "while listing RequiredTypeInstances based on policy for root workflow")
 	}
 
-	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, requiredTypeInstances)
+	// 5.2 Additional TypeInstances
+	additionalTypeInstances, err := policyEnforcedClient.ListAdditionalTypeInstancesToInjectBasedOnPolicy(rule, implementation)
+	if err != nil {
+		return nil, errors.Wrap(err, "while listing AdditionalTypeInstances based on policy for root workflow")
+	}
+
+	// 5.3 Inject TypeInstances
+	typeInstancesToInject := append(requiredTypeInstances, additionalTypeInstances...)
+	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
-	// 5.2 Additional Input
+	// 5.4 Additional Input
 	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule)
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting additional parameters")

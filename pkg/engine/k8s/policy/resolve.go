@@ -23,24 +23,14 @@ func ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient, policy *
 		return errors.New("hub client cannot be nil")
 	}
 
-	err := resolveTypeRefsForRequiredTypeInstances(ctx, hubCli, policy)
-	if err != nil {
-		return err
-	}
-
-	err = policy.ValidateTypeInstancesMetadata()
-	if err != nil {
-		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
-	}
-
-	return nil
-}
-
-func resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClient, policy *Policy) error {
-	unresolvedTypeInstances := policy.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
+	unresolvedReqTIs := policy.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
+	unresolvedAddTIs := policy.filterAdditionalTypeInstances(filterAddTypeInstancesWithEmptyTypeRef)
 
 	var idsToQuery []string
-	for _, ti := range unresolvedTypeInstances {
+	for _, ti := range unresolvedReqTIs {
+		idsToQuery = append(idsToQuery, ti.ID)
+	}
+	for _, ti := range unresolvedAddTIs {
 		idsToQuery = append(idsToQuery, ti.ID)
 	}
 
@@ -53,13 +43,31 @@ func resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClie
 		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
 	}
 
+	resolveTypeRefsForRequiredTypeInstances(policy, res)
+	resolveTypeRefsForAdditionalTypeInstances(policy, res)
+
+	err = policy.ValidateTypeInstancesMetadata()
+	if err != nil {
+		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
+	}
+
+	return nil
+}
+
+// AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
+func (in *Policy) AreTypeInstancesMetadataResolved() bool {
+	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
+	return len(unresolvedTypeInstances) == 0
+}
+
+func resolveTypeRefsForRequiredTypeInstances(policy *Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
 	for ruleIdx, rule := range policy.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {
 				continue
 			}
 			for reqTIIdx, reqTI := range ruleItem.Inject.RequiredTypeInstances {
-				typeRef, exists := res[reqTI.ID]
+				typeRef, exists := typeRefs[reqTI.ID]
 				if !exists {
 					continue
 				}
@@ -71,6 +79,25 @@ func resolveTypeRefsForRequiredTypeInstances(ctx context.Context, hubCli HubClie
 			}
 		}
 	}
+}
 
-	return nil
+func resolveTypeRefsForAdditionalTypeInstances(policy *Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
+	for ruleIdx, rule := range policy.Rules {
+		for ruleItemIdx, ruleItem := range rule.OneOf {
+			if ruleItem.Inject == nil {
+				continue
+			}
+			for reqTIIdx, reqTI := range ruleItem.Inject.AdditionalTypeInstances {
+				typeRef, exists := typeRefs[reqTI.ID]
+				if !exists {
+					continue
+				}
+
+				policy.Rules[ruleIdx].OneOf[ruleItemIdx].Inject.AdditionalTypeInstances[reqTIIdx].TypeRef = &types.ManifestRef{
+					Path:     typeRef.Path,
+					Revision: typeRef.Revision,
+				}
+			}
+		}
+	}
 }
