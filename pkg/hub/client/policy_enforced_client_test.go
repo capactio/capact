@@ -158,7 +158,7 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			expectedErrMessage: ptr.String(
 				heredoc.Doc(`
 				while validating Policy rule: while validating TypeInstance metadata for Policy: 1 error occurred:
-					* missing Type reference for TypeInstance "my-uuid" (description: "My UUID")`),
+					* missing Type reference for RequiredTypeInstance "my-uuid" (description: "My UUID")`),
 			),
 		},
 	}

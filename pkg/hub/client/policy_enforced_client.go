@@ -323,7 +323,7 @@ func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.Requ
 
 // isAdditionalTypeInstanceDefinedInImpl tries to match TypeInstance name and its Type reference against Implementation's `.spec.additionalInput.typeInstances` items.
 func (e *PolicyEnforcedClient) isAdditionalTypeInstanceDefinedInImpl(typeInstance policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) bool {
-	if typeInstance.TypeRef == nil ||  implRev.Spec == nil || implRev.Spec.AdditionalInput == nil || len(implRev.Spec.AdditionalInput.TypeInstances) == 0 {
+	if typeInstance.TypeRef == nil || implRev.Spec == nil || implRev.Spec.AdditionalInput == nil || len(implRev.Spec.AdditionalInput.TypeInstances) == 0 {
 		return false
 	}
 
@@ -335,7 +335,6 @@ func (e *PolicyEnforcedClient) isAdditionalTypeInstanceDefinedInImpl(typeInstanc
 		if additionalTi.Name != typeInstance.Name ||
 			additionalTi.TypeRef.Path != typeInstance.TypeRef.Path ||
 			additionalTi.TypeRef.Revision != typeInstance.TypeRef.Revision {
-
 			continue
 		}
 

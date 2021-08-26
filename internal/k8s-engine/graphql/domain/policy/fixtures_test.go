@@ -183,8 +183,10 @@ func fixModel() policy.Policy {
 							},
 							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
 								{
-									Name: "sample",
-									ID:   "0b6dba9a-d111-419d-b236-357cf0e8603a",
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										Name: "sample",
+										ID:   "0b6dba9a-d111-419d-b236-357cf0e8603a",
+									},
 								},
 							},
 						},

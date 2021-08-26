@@ -32,8 +32,8 @@ func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
 			ExpectedErrMessage: ptr.String(
 				heredoc.Docf(`
 				while validating TypeInstance metadata for Policy: 2 errors occurred:
-					* missing Type reference for TypeInstance "id" (description: "")
-					* missing Type reference for TypeInstance "id2" (description: "ID 2")`,
+					* missing Type reference for RequiredTypeInstance "id"
+					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")`,
 				),
 			),
 		},
@@ -77,8 +77,8 @@ func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
 				while validating TypeInstance metadata for Policy: 2 errors occurred:
-					* missing Type reference for TypeInstance "id" (description: "")
-					* missing Type reference for TypeInstance "id2" (description: "ID 2")`,
+					* missing Type reference for RequiredTypeInstance "id"
+					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")`,
 				),
 			),
 		},

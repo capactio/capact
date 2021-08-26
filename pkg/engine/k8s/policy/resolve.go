@@ -23,14 +23,10 @@ func ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient, policy *
 		return errors.New("hub client cannot be nil")
 	}
 
-	unresolvedReqTIs := policy.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
-	unresolvedAddTIs := policy.filterAdditionalTypeInstances(filterAddTypeInstancesWithEmptyTypeRef)
+	unresolvedTIs := policy.typeInstanceIDsWithUnresolvedMetadata()
 
 	var idsToQuery []string
-	for _, ti := range unresolvedReqTIs {
-		idsToQuery = append(idsToQuery, ti.ID)
-	}
-	for _, ti := range unresolvedAddTIs {
+	for _, ti := range unresolvedTIs {
 		idsToQuery = append(idsToQuery, ti.ID)
 	}
 
@@ -52,12 +48,6 @@ func ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient, policy *
 	}
 
 	return nil
-}
-
-// AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
-func (in *Policy) AreTypeInstancesMetadataResolved() bool {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
-	return len(unresolvedTypeInstances) == 0
 }
 
 func resolveTypeRefsForRequiredTypeInstances(policy *Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {

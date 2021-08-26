@@ -10,99 +10,105 @@ import (
 
 // ValidateTypeInstancesMetadata validates that every TypeInstance has metadata resolved.
 func (in *Policy) ValidateTypeInstancesMetadata() error {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
-	return validateTypeInstancesMetadata(unresolvedTypeInstances)
+	unresolvedTypeInstances := in.typeInstanceIDsWithUnresolvedMetadata()
+	return errorOrNil(unresolvedTypeInstances)
 }
 
 // ValidateTypeInstanceMetadata validates whether the TypeInstance injection metadata are resolved.
 func (in *Rule) ValidateTypeInstanceMetadata() error {
-	//var unresolvedTypeInstances []/
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterReqTypeInstancesWithEmptyTypeRef)
-
-	return validateTypeInstancesMetadata(unresolvedTypeInstances)
+	unresolvedTypeInstances := in.typeInstanceIDsWithUnresolvedMetadata()
+	return errorOrNil(unresolvedTypeInstances)
 }
 
+// AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
+func (in *Policy) AreTypeInstancesMetadataResolved() bool {
+	unresolvedTypeInstances := in.typeInstanceIDsWithUnresolvedMetadata()
+	return len(unresolvedTypeInstances) == 0
+}
 
+type typeInstanceKind string
 
+const (
+	requiredTypeInstance   typeInstanceKind = "RequiredTypeInstance"
+	additionalTypeInstance typeInstanceKind = "AdditionalTypeInstance"
+)
 
-func (in *Rule) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
+type typeInstanceData struct {
+	ID          string
+	Name        *string
+	Description *string
+	Kind        typeInstanceKind
+}
+
+func (in *Policy) typeInstanceIDsWithUnresolvedMetadata() []typeInstanceData {
+	var tis []typeInstanceData
+	for _, rule := range in.Rules {
+		for _, ruleItem := range rule.OneOf {
+			tis = append(tis, ruleItem.typeInstanceIDsWithUnresolvedMetadata()...)
+		}
+	}
+
+	return tis
+}
+
+func (in *Rule) typeInstanceIDsWithUnresolvedMetadata() []typeInstanceData {
 	if in.Inject == nil {
 		return nil
 	}
 
-	var typeInstances []RequiredTypeInstanceToInject
-	for _, tiToInject := range in.Inject.RequiredTypeInstances {
-		if !filterFn(tiToInject) {
+	var tis []typeInstanceData
+
+	// Required TypeInstances
+	for _, ti := range in.Inject.RequiredTypeInstances {
+		if ti.TypeRef != nil && ti.TypeRef.Path != "" && ti.TypeRef.Revision != "" {
 			continue
 		}
 
-		typeInstances = append(typeInstances, tiToInject)
+		tis = append(tis, typeInstanceData{
+			ID:          ti.ID,
+			Description: ti.Description,
+			Kind:        requiredTypeInstance,
+		})
 	}
 
-	return typeInstances
-}
-
-func (in *Rule) filterAdditionalTypeInstances(filterFn func(ti AdditionalTypeInstanceToInject) bool) []AdditionalTypeInstanceToInject {
-	if in.Inject == nil {
-		return nil
-	}
-
-	var typeInstances []AdditionalTypeInstanceToInject
-	for _, tiToInject := range in.Inject.AdditionalTypeInstances {
-		if !filterFn(tiToInject) {
+	// Additional TypeInstances
+	for _, ti := range in.Inject.AdditionalTypeInstances {
+		if ti.TypeRef != nil && ti.TypeRef.Path != "" && ti.TypeRef.Revision != "" {
 			continue
 		}
 
-		typeInstances = append(typeInstances, tiToInject)
+		tiName := ti.Name
+		tis = append(tis, typeInstanceData{
+			ID:   ti.ID,
+			Name: &tiName,
+			Kind: additionalTypeInstance,
+		})
 	}
 
-	return typeInstances
+	return tis
 }
 
-
-
-func (in *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
-	var typeInstances []RequiredTypeInstanceToInject
-	for _, rule := range in.Rules {
-		for _, ruleItem := range rule.OneOf {
-			typeInstances = append(typeInstances, ruleItem.filterRequiredTypeInstances(filterFn)...)
-		}
-	}
-
-	return typeInstances
-}
-
-func (in *Policy) filterAdditionalTypeInstances(filterFn func(ti AdditionalTypeInstanceToInject) bool) []AdditionalTypeInstanceToInject {
-	var typeInstances []RequiredTypeInstanceToInject
-	for _, rule := range in.Rules {
-		for _, ruleItem := range rule.OneOf {
-			typeInstances = append(typeInstances, ruleItem.filterRequiredTypeInstances(filterFn)...)
-		}
-	}
-
-	return typeInstances
-}
-
-var filterReqTypeInstancesWithEmptyTypeRef = func(ti RequiredTypeInstanceToInject) bool {
-	return ti.TypeRef == nil || ti.TypeRef.Path == "" || ti.TypeRef.Revision == ""
-}
-
-func validateTypeInstancesMetadata(requiredTypeInstances []RequiredTypeInstanceToInject) error {
-	if len(requiredTypeInstances) == 0 {
+func errorOrNil(tis []typeInstanceData) error {
+	if len(tis) == 0 {
 		return nil
 	}
 
 	multiErr := multierror.New()
-	for _, ti := range requiredTypeInstances {
-		tiDesc := ""
-		if ti.Description != nil {
-			tiDesc = *ti.Description
+	for _, ti := range tis {
+		tiDetails := ""
+		if ti.Name != nil {
+			tiDetails = fmt.Sprintf("name: %q", *ti.Name)
+		} else if ti.Description != nil {
+			tiDetails = fmt.Sprintf("description: %q", *ti.Description)
+		}
+
+		if tiDetails != "" {
+			tiDetails = fmt.Sprintf(" (%s)", tiDetails)
 		}
 
 		multiErr = multierror.Append(
 			multiErr,
-			fmt.Errorf("missing Type reference for TypeInstance %q (description: %q)", ti.ID, tiDesc),
+			fmt.Errorf("missing Type reference for %s %q%s", ti.Kind, ti.ID, tiDetails),
 		)
 	}
 

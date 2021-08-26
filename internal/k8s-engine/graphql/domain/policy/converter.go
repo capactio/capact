@@ -242,8 +242,10 @@ func (c *Converter) additionalTypeInstancesToInjectFromGraphQLInput(in []*graphq
 	var out []policy.AdditionalTypeInstanceToInject
 	for _, item := range in {
 		out = append(out, policy.AdditionalTypeInstanceToInject{
-			Name: item.Name,
-			ID:   item.ID,
+			AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+				Name: item.Name,
+				ID:   item.ID,
+			},
 		})
 	}
 

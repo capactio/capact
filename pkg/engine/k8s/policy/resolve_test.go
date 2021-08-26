@@ -45,8 +45,8 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
 				while TypeInstance metadata validation after resolving TypeRefs: while validating TypeInstance metadata for Policy: 2 errors occurred:
-					* missing Type reference for TypeInstance "id2" (description: "ID 2")
-					* missing Type reference for TypeInstance "id4" (description: "")`,
+					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")
+					* missing Type reference for RequiredTypeInstance "id4"`,
 				),
 			),
 		},

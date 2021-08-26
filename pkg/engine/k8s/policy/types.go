@@ -175,4 +175,3 @@ func (in Policy) ToYAMLString() (string, error) {
 
 	return string(bytes), nil
 }
-
