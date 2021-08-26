@@ -2,7 +2,7 @@ name: Make release
 
 # Required secrets:
 # GCS_CREDS - Credentials to Google Cloud Storage for binary and chart releases
-# GH_PAT - GitHub personal access token with permissions to make commits to repository
+# GH_PAT - GitHub username with personal access token with permissions to make commits to repository, must be in format "<username>:<PAT>"
 
 on:
   workflow_dispatch:
