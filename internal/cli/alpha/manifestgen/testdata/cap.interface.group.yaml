@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: {{ .Revision }}
+revision: 0.2.0
 kind: InterfaceGroup
 metadata:
-  prefix: "cap.interface{{ if .Prefix }}.{{ .Prefix }}{{ end }}"
-  name: "{{ .Name }}"
-  displayName: "{{ .Name }}"
-  description: "{{ .Name }} related Interfaces"
+  prefix: "cap.interface"
+  name: "group"
+  displayName: "group"
+  description: "group related Interfaces"
   documentationURL: https://example.com
   supportURL: https://example.com
   iconURL: https://example.com/icon.png

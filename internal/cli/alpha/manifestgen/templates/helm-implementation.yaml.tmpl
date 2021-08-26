@@ -27,23 +27,17 @@ spec:
   outputTypeInstanceRelations:
     config:
       uses:
-        - terraform-release
+        - helm-release
 
   implements:
     - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
       revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
 
-  requires: {{if eq .Provider "aws"}}
-    cap.type.aws.auth:
-      allOf:
-        - name: credentials
-          alias: aws-credentials
-          revision: 0.1.0{{else if eq .Provider "gcp"}}
-    cap.type.gcp.auth:
-      allOf:
-        - name: service-account
-          alias: gcp-sa
-          revision: 0.1.0{{else}}{}{{end}}
+  requires:
+    cap.core.type.platform:
+      oneOf:
+        - name: kubernetes
+          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -56,10 +50,10 @@ spec:
       methods:
         - name: template
           revision: 0.1.0
-    - interfaceGroupPath: cap.interface.runner.terraform
-      alias: terraform
+    - interfaceGroupPath: cap.interface.runner.helm
+      alias: helm
       methods:
-        - name: apply
+        - name: install
           revision: 0.1.0
 
   action:
@@ -77,15 +71,6 @@ spec:
             outputs:
               artifacts: []
             steps:
-              {{ if eq .Provider "gcp" }}
-              - - name: convert-gcp-yaml-to-json
-                  template: convert-yaml-to-json
-                  arguments:
-                    artifacts:
-                      - name: in
-                        from: "{{`{{workflow.outputs.artifacts.gcp-sa}}`}}"
-              {{ end }}
-
               - - name: prepare-parameters
                   template: prepare-parameters
                   arguments:
@@ -95,16 +80,8 @@ spec:
                       - name: additional-parameters
                         from: "{{`{{inputs.artifacts.additional-parameters}}`}}"
                         optional: true
-                      - name: provider-credentials
-                        {{if eq .Provider "aws" -}}
-                        from: "{{`{{workflow.outputs.artifacts.aws-credentials}}`}}"
-                        {{- else if eq .Provider "gcp" -}}
-                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
-                        {{- else -}}
-                        from: "" # TODO(ContentDeveloper): Set credentials to the Terraform provider
-                        {{- end}}
 
-              - - name: create-module-args
+              - - name: create-helm-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
@@ -116,43 +93,28 @@ spec:
                       - name: template
                         raw:
                           data: |
-                            command: "apply"
-                            module:
-                              name: "{{ .Name }}"
-                              source: "{{ .ModuleSourceURL }}"
-                            env: {{if eq .Provider "aws"}}
-                              - AWS_ACCESS_KEY_ID=<@ providercredentials.accessKeyID @>
-                              - AWS_SECRET_ACCESS_KEY=<@ providercredentials.secretAccessKey @>{{else if eq .Provider "gcp"}}
-                              - GOOGLE_PROJECT=<@ providercredentials.project_id @>
-                              - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
+                            generateName: true
+                            chart:
+                              name: "{{ .HelmChartName }}"
+                              repo: "{{ .HelmRepoURL }}"
+                              version: "{{ .HelmChartVersion }}"
+                            values: # TODO(ContentDeveloper): Adjust the input values to use parameters from the Interface
+{{ .ValuesYAML | indent 30 }}
                             output:
-                              goTemplate:
-                                {{ range $index, $output := .Outputs -}}
-                                {{ $output.Name }}: "{{`{{`}} .{{ $output.Name }} {{`}}`}}"
-                                {{ end }}
-                            variables: |+
-                              {{ range $index, $variable := .Variables -}}
-                              <% if additionalinput.{{ $variable.Name }} -%>
-                              {{ $variable.Name }} = "<@ additionalinput.{{ $variable.Name }} @>"
-                              <%- endif %>
+                              goTemplate: |
+                                # TODO(ContentDeveloper): Add output template in YAML
 
-                              {{ end }}
-
-              - - name: terraform-apply
-                  capact-action: terraform.apply
+              - - name: helm-install
+                  capact-action: helm.install
                   capact-outputTypeInstances:
-                    - name: terraform-release
-                      from: terraform-release
+                    - name: helm-release
+                      from: helm-release
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.create-module-args.outputs.artifacts.redner}}`}}"
+                        from: "{{`{{steps.create-helm-args.outputs.artifacts.render}}`}}"
                       - name: runner-context
                         from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
-                        {{- if eq .Provider "gcp"}}
-                      - name: additional
-                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
-                        {{- end}}
 
               - - name: render-config
                   capact-outputTypeInstances:
@@ -162,7 +124,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.terraform-apply.outputs.artifacts.additional}}`}}"
+                        from: "{{`{{steps.helm-install.outputs.artifacts.additional}}`}}"
                       - name: configuration
                         raw:
                           data: ""
@@ -172,22 +134,6 @@ spec:
                           data: |
                             property: value
 
-          {{ if eq .Provider "gcp" }}
-          - name: convert-yaml-to-json
-            inputs:
-              artifacts:
-                - name: in
-                  path: /file
-            container:
-              image: ghcr.io/capactio/yq:4 # Original image: mikefarah/yq:4
-              command: ["sh", "-c"]
-              args: ["sleep 1 && yq eval -j -i /file"]
-            outputs:
-              artifacts:
-                - name: out
-                  path: /file
-          {{ end -}}
-
           - name: prepare-parameters
             inputs:
               artifacts:
@@ -196,8 +142,6 @@ spec:
                 - name: additional-parameters
                   path: /yamls/additionalinput.yaml
                   optional: true
-                - name: provider-credentials
-                  path: /yamls/providercredentials.yaml
             container:
               image: ghcr.io/capactio/pr/infra/merger:PR-428
             outputs:

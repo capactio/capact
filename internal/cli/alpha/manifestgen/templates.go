@@ -1,6 +1,8 @@
 package manifestgen
 
-import _ "embed"
+import (
+	_ "embed"
+)
 
 var (
 	//go:embed templates/interface-group.yaml.tmpl
@@ -17,4 +19,7 @@ var (
 
 	//go:embed templates/terraform-implementation.yaml.tmpl
 	terraformImplementationManifestTemplate string
+
+	//go:embed templates/helm-implementation.yaml.tmpl
+	helmImplementationManifestTemplate string
 )

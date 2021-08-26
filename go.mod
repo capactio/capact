@@ -11,6 +11,8 @@ require (
 	github.com/MakeNowJust/heredoc v0.0.0-20170808103936-bb23615498cd
 	github.com/Masterminds/goutils v1.1.1
 	github.com/Masterminds/semver/v3 v3.1.1
+	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/argoproj/argo-workflows/v3 v3.1.0-rc1.0.20210811221840-88520891a037
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
@@ -33,6 +35,7 @@ require (
 	github.com/hashicorp/terraform v0.11.12-beta1
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20210625153042-09f34846faab
 	github.com/hokaccha/go-prettyjson v0.0.0-20210113012101-fb4e108d2519
+	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0
 	github.com/iancoleman/strcase v0.1.2
 	github.com/machinebox/graphql v0.2.2
 	github.com/matryer/is v1.4.0 // indirect
@@ -65,6 +68,7 @@ require (
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	google.golang.org/api v0.44.0
 	google.golang.org/grpc/examples v0.0.0-20210322221411-d26af8e39165 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
 	k8s.io/api v0.21.3

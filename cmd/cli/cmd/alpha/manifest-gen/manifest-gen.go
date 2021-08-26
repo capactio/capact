@@ -17,7 +17,7 @@ func NewCmd() *cobra.Command {
 	cmd.AddCommand(implementation.NewCmd())
 
 	cmd.PersistentFlags().StringP("output", "o", "generated", "Path to the output directory for the generated manifests")
-	cmd.PersistentFlags().Bool("override", false, "Override existing manifest files")
+	cmd.PersistentFlags().Bool("overwrite", false, "Overwrite existing manifest files")
 
 	return cmd
 }

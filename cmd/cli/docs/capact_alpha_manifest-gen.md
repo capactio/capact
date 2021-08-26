@@ -15,7 +15,7 @@ Subcommand for various manifest generation operations
 ```
   -h, --help            help for manifest-gen
   -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --override        Override existing manifest files
+      --overwrite       Overwrite existing manifest files
 ```
 
 ### Options inherited from parent commands

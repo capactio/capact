@@ -1,0 +1,180 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Implementation
+metadata:
+  prefix: "cap.implementation.terraform"
+  name: test
+  displayName: "test Action"
+  description: "test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+  license:
+    name: "Apache 2.0"
+
+spec:
+  appVersion: "1.0.x" # TODO(ContentDeveloper): Set the supported application version here
+  additionalInput:
+    parameters:
+      typeRef:
+        path: "cap.type.terraform.test-input"
+        revision: 0.1.0
+
+  outputTypeInstanceRelations:
+    config:
+      uses:
+        - terraform-release
+
+  implements:
+    - path: cap.interface.group.test
+      revision: 0.2.0
+
+  requires: 
+    cap.type.aws.auth:
+      allOf:
+        - name: credentials
+          alias: aws-credentials
+          revision: 0.1.0
+
+  imports:
+    - interfaceGroupPath: cap.interface.runner.argo
+      alias: argo
+      methods:
+        - name: run
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.templating.jinja2
+      alias: jinja2
+      methods:
+        - name: template
+          revision: 0.1.0
+    - interfaceGroupPath: cap.interface.runner.terraform
+      alias: terraform
+      methods:
+        - name: apply
+          revision: 0.1.0
+
+  action:
+    runnerInterface: argo.run
+    args:
+      workflow:
+        entrypoint: deploy
+        templates:
+          - name: deploy
+            inputs:
+              artifacts:
+                - name: input-parameters
+                - name: additional-parameters
+                  optional: true
+            outputs:
+              artifacts: []
+            steps:
+              - - name: fill-default-input
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.input-parameters}}"
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Put the input parameters from the Interface here and set default values for it:
+                          data: |
+                            my_property: <@ input.my_property | default("default_value") @>
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+
+              - - name: create-module-args
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{inputs.artifacts.additional-parameters}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: additionalInput
+                      - name: template
+                        raw:
+                          data: |
+                            command: "apply"
+                            module:
+                              name: "test"
+                              source: "https://example.com/module.tgz"
+                            env: 
+                              - AWS_ACCESS_KEY_ID=<@ creds.accessKeyID @>
+                              - AWS_SECRET_ACCESS_KEY=<@ creds.secretAccessKey @>
+                            output:
+                              goTemplate:
+                                instance_ids: "{{ .instance_ids }}"
+                                random_number: "{{ .random_number }}"
+                                
+                            variables: |+
+                              <% if additionalInput.count -%>
+                              count = "<@ additionalInput.count @>"
+                              <%- endif %>
+
+                              <% if additionalInput.name -%>
+                              name = "<@ additionalInput.name @>"
+                              <%- endif %>
+
+                              
+              - - name: fill-parameters
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.create-module-args.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{steps.fill-default-input.outputs.artifacts.render}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: input
+              
+              - - name: fill-creds
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: template
+                        from: "{{steps.fill-parameters.outputs.artifacts.render}}"
+                      - name: input-parameters
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
+                      - name: configuration
+                        raw:
+                          data: |
+                            prefix: creds
+              
+              - - name: terraform-apply
+                  capact-action: terraform.apply
+                  capact-outputTypeInstances:
+                    - name: terraform-release
+                      from: terraform-release
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.fill-creds.outputs.artifacts.render}}"
+                      - name: runner-context
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
+
+              - - name: render-config
+                  capact-outputTypeInstances:
+                    - name: config
+                      from: render
+                  capact-action: jinja2.template
+                  arguments:
+                    artifacts:
+                      - name: input-parameters
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
+                      - name: configuration
+                        raw:
+                          data: ""
+                      - name: template
+                        raw:
+                          # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
+                          data: |
+                            property: value
+          

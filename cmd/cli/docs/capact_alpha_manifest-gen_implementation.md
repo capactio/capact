@@ -21,11 +21,12 @@ Generate new Implementation manifests for various tools.
 ```
   -c, --config string   Path to the YAML config file
   -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --override        Override existing manifest files
+      --overwrite       Overwrite existing manifest files
 ```
 
 ### SEE ALSO
 
 * [capact alpha manifest-gen](capact_alpha_manifest-gen.md)	 - Manifests generation
+* [capact alpha manifest-gen implementation helm](capact_alpha_manifest-gen_implementation_helm.md)	 - Generate Helm chart based manifests
 * [capact alpha manifest-gen implementation terraform](capact_alpha_manifest-gen_implementation_terraform.md)	 - Generate Terraform based manifests
 

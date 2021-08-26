@@ -10,14 +10,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var tfContentCfg manifestgen.TerraformConfig
-
 // NewTerraform returns a cobra.Command to bootstrap Terraform based manifests.
 func NewTerraform() *cobra.Command {
+	var tfContentCfg manifestgen.TerraformConfig
+
 	cmd := &cobra.Command{
 		Use:   "terraform [MANIFEST_PATH] [TERRAFORM_MODULE_PATH]",
 		Short: "Generate Terraform based manifests",
-		Long:  "Generate Terraform based manifests based on a Terraform module",
+		Long:  "Generate Implementation manifests based on a Terraform module",
 		Example: heredoc.WithCLIName(`
 		# Generate Implementation manifests 
 		<cli> alpha manifest-gen implementation terraform cap.implementation.aws.rds.deploy ./terraform-modules/aws-rds
@@ -54,9 +54,9 @@ func NewTerraform() *cobra.Command {
 				return errors.Wrap(err, "while reading output flag")
 			}
 
-			overrideManifests, err := cmd.Flags().GetBool("override")
+			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
-				return errors.Wrap(err, "while overriding existing manifest")
+				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
 			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {

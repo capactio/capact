@@ -1,60 +1,41 @@
 package manifestgen
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
+	"github.com/alecthomas/jsonschema"
 	"github.com/pkg/errors"
 )
 
-// InterfaceConfig stores the input parameters for Interface content generation
-type InterfaceConfig struct {
-	Config
-}
-
 // GenerateInterfaceManifests generates manifest files for a new Interface.
 func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error) {
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	cfgs := make([]*templatingConfig, 0, 4)
+
+	interfaceGroupCfg, err := getInterfaceGroupTemplatingConfig(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+		return nil, errors.Wrap(err, "while getting InterfaceGroup templating config")
 	}
+	cfgs = append(cfgs, interfaceGroupCfg)
 
-	interfaceGroupPath := getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
-	groupPrefix, groupName, err := splitPathToPrefixAndName(interfaceGroupPath)
+	interfaceCfg, err := getInterfaceTemplatingConfig(cfg)
 	if err != nil {
-		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")
+		return nil, errors.Wrap(err, "while getting Interface templating config")
 	}
+	cfgs = append(cfgs, interfaceCfg)
 
-	interfaceInput := &templatingInput{
-		Name:     name,
-		Prefix:   prefix,
-		Revision: cfg.ManifestRevision,
+	inputTypeCfg, err := getInterfaceInputTypeTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Interface input Type templating config")
 	}
+	cfgs = append(cfgs, inputTypeCfg)
 
-	interfaceGroupInput := &templatingInput{
-		Name:     groupName,
-		Prefix:   groupPrefix,
-		Revision: cfg.ManifestRevision,
+	outputTypeCfg, err := getInterfaceOutputTypeTemplatingConfig(cfg)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Interface output Type templating config")
 	}
-
-	cfgs := []*templatingConfig{
-		{
-			Template: interfaceGroupManifestTemplate,
-			Input:    interfaceGroupInput,
-		},
-		{
-			Template: typeManifestTemplate,
-			Input:    interfaceInput,
-		},
-		{
-			Template: outputTypeManifestTemplate,
-			Input:    interfaceInput,
-		},
-		{
-			Template: interfaceManifestTemplate,
-			Input:    interfaceInput,
-		},
-	}
+	cfgs = append(cfgs, outputTypeCfg)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
@@ -75,6 +56,98 @@ func GenerateInterfaceManifests(cfg *InterfaceConfig) (map[string]string, error)
 	}
 
 	return result, nil
+}
+
+func getInterfaceGroupTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+	interfaceGroupPath := getInterfaceGroupPathFromInterfacePath(cfg.ManifestPath)
+	groupPrefix, groupName, err := splitPathToPrefixAndName(interfaceGroupPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting InterfaceGroup prefix and path")
+	}
+
+	return &templatingConfig{
+		Template: interfaceGroupManifestTemplate,
+		Input: &interfaceGroupTemplatingInput{
+			templatingInput: templatingInput{
+				Name:     groupName,
+				Prefix:   groupPrefix,
+				Revision: cfg.ManifestRevision,
+			},
+		},
+	}, nil
+}
+
+func getInterfaceTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+	}
+
+	return &templatingConfig{
+		Template: interfaceManifestTemplate,
+		Input: &interfaceTemplatingInput{
+			templatingInput: templatingInput{
+				Name:     name,
+				Prefix:   prefix,
+				Revision: cfg.ManifestRevision,
+			},
+		},
+	}, nil
+}
+
+func getInterfaceInputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+	}
+
+	jsonSchema, err := getInterfaceInputTypeJSONSchema()
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input type JSON schema")
+	}
+
+	return &templatingConfig{
+		Template: typeManifestTemplate,
+		Input: &typeTemplatingInput{
+			templatingInput: templatingInput{
+				Name:     name,
+				Prefix:   prefix,
+				Revision: cfg.ManifestRevision,
+			},
+			JSONSchema: string(jsonSchema),
+		},
+	}, nil
+}
+
+func getInterfaceOutputTypeTemplatingConfig(cfg *InterfaceConfig) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting path and prefix for manifests")
+	}
+
+	return &templatingConfig{
+		Template: outputTypeManifestTemplate,
+		Input: &outputTypeTemplatingInput{
+			templatingInput: templatingInput{
+				Name:     name,
+				Prefix:   prefix,
+				Revision: cfg.ManifestRevision,
+			},
+		},
+	}, nil
+}
+
+func getInterfaceInputTypeJSONSchema() ([]byte, error) {
+	schema := &jsonschema.Type{
+		Type: "object",
+	}
+
+	schemaBytes, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling JSON schema")
+	}
+
+	return schemaBytes, nil
 }
 
 func getInterfaceGroupPathFromInterfacePath(ifacePath string) string {

@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: {{ .Revision }}
+revision: 0.1.0
 kind: Implementation
 metadata:
-  prefix: "cap.implementation.{{ .Prefix }}"
-  name: {{ .Name }}
-  displayName: "{{ .Name }} Action"
-  description: "{{ .Name }} Action"
+  prefix: "cap.implementation.terraform.aws"
+  name: test
+  displayName: "test Action"
+  description: "test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -21,7 +21,7 @@ spec:
     parameters:
       additional-parameters:
         typeRef:
-          path: "cap.type.{{ .Prefix }}.{{ .Name }}-input"
+          path: "cap.type.terraform.aws.test-input"
           revision: 0.1.0
 
   outputTypeInstanceRelations:
@@ -30,20 +30,15 @@ spec:
         - terraform-release
 
   implements:
-    - path: {{if .InterfacePath}}{{ .InterfacePath }}{{else}}"cap.interface..." # TODO(ContentDeveloper): Put here the path of the implemented Interface{{end}}
-      revision: {{if .InterfaceRevision}}{{ .InterfaceRevision }}{{else}}0.1.0{{end}}
+    - path: cap.interface.group.test
+      revision: 0.2.0
 
-  requires: {{if eq .Provider "aws"}}
+  requires: 
     cap.type.aws.auth:
       allOf:
         - name: credentials
           alias: aws-credentials
-          revision: 0.1.0{{else if eq .Provider "gcp"}}
-    cap.type.gcp.auth:
-      allOf:
-        - name: service-account
-          alias: gcp-sa
-          revision: 0.1.0{{else}}{}{{end}}
+          revision: 0.1.0
 
   imports:
     - interfaceGroupPath: cap.interface.runner.argo
@@ -77,39 +72,26 @@ spec:
             outputs:
               artifacts: []
             steps:
-              {{ if eq .Provider "gcp" }}
-              - - name: convert-gcp-yaml-to-json
-                  template: convert-yaml-to-json
-                  arguments:
-                    artifacts:
-                      - name: in
-                        from: "{{`{{workflow.outputs.artifacts.gcp-sa}}`}}"
-              {{ end }}
+              
 
               - - name: prepare-parameters
                   template: prepare-parameters
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{inputs.artifacts.input-parameters}}`}}"
+                        from: "{{inputs.artifacts.input-parameters}}"
                       - name: additional-parameters
-                        from: "{{`{{inputs.artifacts.additional-parameters}}`}}"
+                        from: "{{inputs.artifacts.additional-parameters}}"
                         optional: true
                       - name: provider-credentials
-                        {{if eq .Provider "aws" -}}
-                        from: "{{`{{workflow.outputs.artifacts.aws-credentials}}`}}"
-                        {{- else if eq .Provider "gcp" -}}
-                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
-                        {{- else -}}
-                        from: "" # TODO(ContentDeveloper): Set credentials to the Terraform provider
-                        {{- end}}
+                        from: "{{workflow.outputs.artifacts.aws-credentials}}"
 
               - - name: create-module-args
                   capact-action: jinja2.template
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.prepare-parameters.outputs.artifacts.merged}}`}}"
+                        from: "{{steps.prepare-parameters.outputs.artifacts.merged}}"
                       - name: configuration
                         raw:
                           data:
@@ -118,25 +100,26 @@ spec:
                           data: |
                             command: "apply"
                             module:
-                              name: "{{ .Name }}"
-                              source: "{{ .ModuleSourceURL }}"
-                            env: {{if eq .Provider "aws"}}
+                              name: "test"
+                              source: "https://example.com/module.tgz"
+                            env: 
                               - AWS_ACCESS_KEY_ID=<@ providercredentials.accessKeyID @>
-                              - AWS_SECRET_ACCESS_KEY=<@ providercredentials.secretAccessKey @>{{else if eq .Provider "gcp"}}
-                              - GOOGLE_PROJECT=<@ providercredentials.project_id @>
-                              - GOOGLE_APPLICATION_CREDENTIALS=/additional{{else}}[]{{end}}
+                              - AWS_SECRET_ACCESS_KEY=<@ providercredentials.secretAccessKey @>
                             output:
                               goTemplate:
-                                {{ range $index, $output := .Outputs -}}
-                                {{ $output.Name }}: "{{`{{`}} .{{ $output.Name }} {{`}}`}}"
-                                {{ end }}
+                                instance_ids: "{{ .instance_ids }}"
+                                random_number: "{{ .random_number }}"
+                                
                             variables: |+
-                              {{ range $index, $variable := .Variables -}}
-                              <% if additionalinput.{{ $variable.Name }} -%>
-                              {{ $variable.Name }} = "<@ additionalinput.{{ $variable.Name }} @>"
+                              <% if additionalinput.count -%>
+                              count = "<@ additionalinput.count @>"
                               <%- endif %>
 
-                              {{ end }}
+                              <% if additionalinput.name -%>
+                              name = "<@ additionalinput.name @>"
+                              <%- endif %>
+
+                              
 
               - - name: terraform-apply
                   capact-action: terraform.apply
@@ -146,13 +129,9 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.create-module-args.outputs.artifacts.redner}}`}}"
+                        from: "{{steps.create-module-args.outputs.artifacts.redner}}"
                       - name: runner-context
-                        from: "{{`{{workflow.outputs.artifacts.runner-context}}`}}"
-                        {{- if eq .Provider "gcp"}}
-                      - name: additional
-                        from: "{{`{{steps.convert-gcp-yaml-to-json.outputs.artifacts.out}}`}}"
-                        {{- end}}
+                        from: "{{workflow.outputs.artifacts.runner-context}}"
 
               - - name: render-config
                   capact-outputTypeInstances:
@@ -162,7 +141,7 @@ spec:
                   arguments:
                     artifacts:
                       - name: input-parameters
-                        from: "{{`{{steps.terraform-apply.outputs.artifacts.additional}}`}}"
+                        from: "{{steps.terraform-apply.outputs.artifacts.additional}}"
                       - name: configuration
                         raw:
                           data: ""
@@ -171,22 +150,6 @@ spec:
                           # TODO(ContentDeveloper): Fill the properties of the output TypeInstance here
                           data: |
                             property: value
-
-          {{ if eq .Provider "gcp" }}
-          - name: convert-yaml-to-json
-            inputs:
-              artifacts:
-                - name: in
-                  path: /file
-            container:
-              image: ghcr.io/capactio/yq:4 # Original image: mikefarah/yq:4
-              command: ["sh", "-c"]
-              args: ["sleep 1 && yq eval -j -i /file"]
-            outputs:
-              artifacts:
-                - name: out
-                  path: /file
-          {{ end -}}
 
           - name: prepare-parameters
             inputs:

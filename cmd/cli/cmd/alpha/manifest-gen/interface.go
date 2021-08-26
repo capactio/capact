@@ -10,10 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var interfaceCfg manifestgen.InterfaceConfig
-
 // NewInterface returns a cobra.Command to bootstrap new Interface manifests.
 func NewInterface() *cobra.Command {
+	var interfaceCfg manifestgen.InterfaceConfig
+
 	cmd := &cobra.Command{
 		Use:     "interface [PATH]",
 		Aliases: []string{"iface", "interfaces"},
@@ -47,9 +47,9 @@ func NewInterface() *cobra.Command {
 				return errors.Wrap(err, "while reading output flag")
 			}
 
-			overrideManifests, err := cmd.Flags().GetBool("override")
+			overrideManifests, err := cmd.Flags().GetBool("overwrite")
 			if err != nil {
-				return errors.Wrap(err, "while overriding existing manifest")
+				return errors.Wrap(err, "while reading overwrite flag")
 			}
 
 			if err := manifestgen.WriteManifestFiles(outputDir, files, overrideManifests); err != nil {

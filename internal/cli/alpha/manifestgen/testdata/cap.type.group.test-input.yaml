@@ -1,11 +1,11 @@
 ocfVersion: 0.0.1
-revision: {{ .Revision }}
+revision: 0.2.0
 kind: Type
 metadata:
-  prefix: "cap.type.{{ .Prefix }}"
-  name: {{ .Name }}-input
-  displayName: "Input for {{ .Prefix }}.{{ .Name }}"
-  description: Input for the "{{ .Prefix }}.{{ .Name }} Action"
+  prefix: "cap.type.group"
+  name: test-input
+  displayName: "Input for group.test"
+  description: Input for the "group.test Action"
   documentationURL: https://example.com
   supportURL: https://example.com
   maintainers:
@@ -16,4 +16,6 @@ spec:
   jsonSchema:
     # TODO(ContentDeveloper): Adjust the JSON schema if needed.
     value: |-
-{{ .JSONSchema | indent 6 }}
+      {
+        "type": "object"
+      }

@@ -1,0 +1,122 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  prefix: "cap.type.helm"
+  name: test-input
+  displayName: "Input for helm.test"
+  description: Input for the "helm.test Action"
+  documentationURL: https://example.com
+  supportURL: https://example.com
+  maintainers:
+    - email: dev@example.com
+      name: Example Dev
+      url: https://example.com
+spec:
+  jsonSchema:
+    # TODO(ContentDeveloper): Adjust the JSON schema if needed.
+    value: |-
+      {
+        "$schema": "http://json-schema.org/schema#",
+        "type": "object",
+        "properties": {
+          "postgresqlUsername": {
+            "type": "string",
+            "title": "Admin user",
+            "form": true
+          },
+          "postgresqlPassword": {
+            "type": "string",
+            "title": "Password",
+            "form": true
+          },
+          "persistence": {
+            "type": "object",
+            "properties": {
+              "size": {
+                "type": "string",
+                "title": "Persistent Volume Size",
+                "form": true,
+                "render": "slider",
+                "sliderMin": 1,
+                "sliderMax": 100,
+                "sliderUnit": "Gi"
+              }
+            }
+          },
+          "resources": {
+            "type": "object",
+            "title": "Required Resources",
+            "description": "Configure resource requests",
+            "form": true,
+            "properties": {
+              "requests": {
+                "type": "object",
+                "properties": {
+                  "memory": {
+                    "type": "string",
+                    "form": true,
+                    "render": "slider",
+                    "title": "Memory Request",
+                    "sliderMin": 10,
+                    "sliderMax": 2048,
+                    "sliderUnit": "Mi"
+                  },
+                  "cpu": {
+                    "type": "string",
+                    "form": true,
+                    "render": "slider",
+                    "title": "CPU Request",
+                    "sliderMin": 10,
+                    "sliderMax": 2000,
+                    "sliderUnit": "m"
+                  }
+                }
+              }
+            }
+          },
+          "replication": {
+            "type": "object",
+            "form": true,
+            "title": "Replication Details",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "Enable Replication",
+                "form": true
+              },
+              "readReplicas": {
+                "type": "integer",
+                "title": "read Replicas",
+                "form": true,
+                "hidden": {
+                  "value": false,
+                  "path": "replication/enabled"
+                }
+              }
+            }
+          },
+          "volumePermissions": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "form": true,
+                "title": "Enable Init Containers",
+                "description": "Change the owner of the persist volume mountpoint to RunAsUser:fsGroup"
+              }
+            }
+          },
+          "metrics": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "title": "Configure metrics exporter",
+                "form": true
+              }
+            }
+          }
+        }
+      }
+      

@@ -1,51 +1,37 @@
 package manifestgen
 
 import (
+	"encoding/json"
 	"fmt"
 	"sort"
 	"strings"
 
+	"github.com/alecthomas/jsonschema"
 	"github.com/hashicorp/terraform-config-inspect/tfconfig"
+	"github.com/iancoleman/orderedmap"
 	"github.com/pkg/errors"
 )
 
-// TerraformConfig stores input parameters for Terraform based content generation
-type TerraformConfig struct {
-	Config
-
-	ModulePath                string
-	ModuleSourceURL           string
-	InterfacePathWithRevision string
-	Provider                  Provider
-}
-
-type terraformTemplatingInput struct {
-	templatingInput
-
-	InterfacePath     string
-	InterfaceRevision string
-	ModuleSourceURL   string
-	Outputs           []outputVariable
-	Provider          Provider
-}
-
 // GenerateTerraformManifests generates manifest files for a Terraform module based Implementation
 func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error) {
-	input, err := getTerraformTemplatingInput(cfg)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting templating input")
+	module, diags := tfconfig.LoadModule(cfg.ModulePath)
+	if diags.Err() != nil {
+		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
 	}
 
-	cfgs := []*templatingConfig{
-		{
-			Template: typeManifestTemplate,
-			Input:    input,
-		},
-		{
-			Template: terraformImplementationManifestTemplate,
-			Input:    input,
-		},
+	cfgs := make([]*templatingConfig, 0, 2)
+
+	inputTypeCfg, err := getTerraformInputTypeTemplatingConfig(cfg, module)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input Type templating config")
 	}
+	cfgs = append(cfgs, inputTypeCfg)
+
+	implCfg, err := getTerraformImplementationTemplatingConfig(cfg, module)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting Implementation templating config")
+	}
+	cfgs = append(cfgs, implCfg)
 
 	generated, err := generateManifests(cfgs)
 	if err != nil {
@@ -68,10 +54,34 @@ func GenerateTerraformManifests(cfg *TerraformConfig) (map[string]string, error)
 	return result, nil
 }
 
-func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInput, error) {
-	module, diags := tfconfig.LoadModule(cfg.ModulePath)
-	if diags.Err() != nil {
-		return nil, errors.Wrap(diags.Err(), "while loading Terraform module")
+func getTerraformInputTypeTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
+	}
+
+	jsonSchema, err := getTerraformInputTypeJSONSchema(module.Variables)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting input type JSON Schema")
+	}
+
+	return &templatingConfig{
+		Template: typeManifestTemplate,
+		Input: &typeTemplatingInput{
+			templatingInput: templatingInput{
+				Name:     name,
+				Prefix:   prefix,
+				Revision: cfg.ManifestRevision,
+			},
+			JSONSchema: string(jsonSchema),
+		},
+	}, nil
+}
+
+func getTerraformImplementationTemplatingConfig(cfg *TerraformConfig, module *tfconfig.Module) (*templatingConfig, error) {
+	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
 	}
 
 	var (
@@ -85,49 +95,67 @@ func getTerraformTemplatingInput(cfg *TerraformConfig) (*terraformTemplatingInpu
 		interfaceRevision = pathSlice[1]
 	}
 
-	prefix, name, err := splitPathToPrefixAndName(cfg.ManifestPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "while getting prefix and path for manifests")
-	}
-
-	input := &terraformTemplatingInput{
+	input := &terraformImplementationTemplatingInput{
 		templatingInput: templatingInput{
-			Name:      name,
-			Prefix:    prefix,
-			Revision:  cfg.ManifestRevision,
-			Variables: make([]inputVariable, 0, len(module.Variables)),
+			Name:     name,
+			Prefix:   prefix,
+			Revision: cfg.ManifestRevision,
 		},
 		InterfacePath:     interfacePath,
 		InterfaceRevision: interfaceRevision,
 		ModuleSourceURL:   cfg.ModuleSourceURL,
-		Outputs:           make([]outputVariable, 0, len(module.Outputs)),
 		Provider:          cfg.Provider,
+		Outputs:           make([]*tfconfig.Output, 0, len(module.Outputs)),
+		Variables:         make([]*tfconfig.Variable, 0, len(module.Variables)),
 	}
 
-	for _, tfVar := range module.Variables {
-		// Skip default for now, as there are problems, when it is a multiline string or with doublequotes in it.
-		input.Variables = append(input.Variables, inputVariable{
-			Name:        tfVar.Name,
-			Type:        getTypeFromTerraformType(tfVar.Type),
-			Description: tfVar.Description,
-		})
+	for i := range module.Variables {
+		input.Variables = append(input.Variables, module.Variables[i])
 	}
 
 	sort.Slice(input.Variables, func(i, j int) bool {
 		return input.Variables[i].Name < input.Variables[j].Name
 	})
 
-	for _, tfOut := range module.Outputs {
-		input.Outputs = append(input.Outputs, outputVariable{
-			Name: tfOut.Name,
-		})
+	for i := range module.Outputs {
+		input.Outputs = append(input.Outputs, module.Outputs[i])
 	}
 
 	sort.Slice(input.Outputs, func(i, j int) bool {
 		return input.Outputs[i].Name < input.Outputs[j].Name
 	})
 
-	return input, nil
+	return &templatingConfig{
+		Template: terraformImplementationManifestTemplate,
+		Input:    input,
+	}, nil
+}
+
+func getTerraformInputTypeJSONSchema(variables map[string]*tfconfig.Variable) ([]byte, error) {
+	schema := &jsonschema.Type{
+		Title:      "",
+		Properties: orderedmap.New(),
+	}
+
+	for _, value := range variables {
+		propSchema := &jsonschema.Type{
+			Title:       value.Name,
+			Type:        getTypeFromTerraformType(value.Type),
+			Description: value.Description,
+		}
+		schema.Properties.Set(value.Name, propSchema)
+	}
+
+	schema.Properties.Sort(func(a, b *orderedmap.Pair) bool {
+		return a.Key() < b.Key()
+	})
+
+	schemaBytes, err := json.MarshalIndent(schema, "", "  ")
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling JSON schema")
+	}
+
+	return schemaBytes, nil
 }
 
 // Terraform types: https://www.terraform.io/docs/language/expressions/types.html
