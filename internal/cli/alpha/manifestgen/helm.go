@@ -169,13 +169,7 @@ func injectJinjaTemplatingToHelmValues(values map[string]interface{}, parentKeyP
 				return err
 			}
 		case string:
-			if value == "" {
-				// Needed, so empty string will not be interpreted as null in evaluated YAML.
-				// TODO: Unfortunately, it does not cover the scenario, where user provides empty string to a parameter.
-				value = "''"
-			}
-
-			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v") @>`, keyPathString, value)
+			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default("%v") | tojson @>`, keyPathString, value)
 		case bool:
 			values[key] = fmt.Sprintf(`<@ additionalinput.%s | default(%v) | tojson @>`, keyPathString, value)
 		case float64:

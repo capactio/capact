@@ -106,22 +106,22 @@ spec:
                                 command: <@ additionalinput.certificates.command | default(None | tojson) @>
                                 customCAs: <@ additionalinput.certificates.customCAs | default(None | tojson) @>
                                 customCertificate:
-                                  certificateLocation: <@ additionalinput.certificates.customCertificate.certificateLocation | default("/etc/ssl/certs/ssl-cert-snakeoil.pem") @>
-                                  certificateSecret: <@ additionalinput.certificates.customCertificate.certificateSecret | default("''") @>
-                                  chainLocation: <@ additionalinput.certificates.customCertificate.chainLocation | default("/etc/ssl/certs/mychain.pem") @>
+                                  certificateLocation: <@ additionalinput.certificates.customCertificate.certificateLocation | default("/etc/ssl/certs/ssl-cert-snakeoil.pem") | tojson @>
+                                  certificateSecret: <@ additionalinput.certificates.customCertificate.certificateSecret | default("") | tojson @>
+                                  chainLocation: <@ additionalinput.certificates.customCertificate.chainLocation | default("/etc/ssl/certs/mychain.pem") | tojson @>
                                   chainSecret:
-                                    key: <@ additionalinput.certificates.customCertificate.chainSecret.key | default("''") @>
-                                    name: <@ additionalinput.certificates.customCertificate.chainSecret.name | default("''") @>
-                                  keyLocation: <@ additionalinput.certificates.customCertificate.keyLocation | default("/etc/ssl/private/ssl-cert-snakeoil.key") @>
+                                    key: <@ additionalinput.certificates.customCertificate.chainSecret.key | default("") | tojson @>
+                                    name: <@ additionalinput.certificates.customCertificate.chainSecret.name | default("") | tojson @>
+                                  keyLocation: <@ additionalinput.certificates.customCertificate.keyLocation | default("/etc/ssl/private/ssl-cert-snakeoil.key") | tojson @>
                                 extraEnvVars: <@ additionalinput.certificates.extraEnvVars | default(None | tojson) @>
-                                extraEnvVarsCM: <@ additionalinput.certificates.extraEnvVarsCM | default("''") @>
-                                extraEnvVarsSecret: <@ additionalinput.certificates.extraEnvVarsSecret | default("''") @>
+                                extraEnvVarsCM: <@ additionalinput.certificates.extraEnvVarsCM | default("") | tojson @>
+                                extraEnvVarsSecret: <@ additionalinput.certificates.extraEnvVarsSecret | default("") | tojson @>
                                 image:
-                                  pullPolicy: <@ additionalinput.certificates.image.pullPolicy | default("IfNotPresent") @>
+                                  pullPolicy: <@ additionalinput.certificates.image.pullPolicy | default("IfNotPresent") | tojson @>
                                   pullSecrets: <@ additionalinput.certificates.image.pullSecrets | default(None | tojson) @>
-                                  registry: <@ additionalinput.certificates.image.registry | default("docker.io") @>
-                                  repository: <@ additionalinput.certificates.image.repository | default("bitnami/bitnami-shell") @>
-                                  tag: <@ additionalinput.certificates.image.tag | default("10-debian-10-r151") @>
+                                  registry: <@ additionalinput.certificates.image.registry | default("docker.io") | tojson @>
+                                  repository: <@ additionalinput.certificates.image.repository | default("bitnami/bitnami-shell") | tojson @>
+                                  tag: <@ additionalinput.certificates.image.tag | default("10-debian-10-r151") | tojson @>
                               command: <@ additionalinput.command | default(None | tojson) @>
                               commonAnnotations: {}
                               commonLabels: {}
@@ -130,45 +130,45 @@ spec:
                                 runAsUser: <@ additionalinput.containerSecurityContext.runAsUser | default(1001) @>
                               customLivenessProbe: {}
                               customReadinessProbe: {}
-                              dokuwikiEmail: <@ additionalinput.dokuwikiEmail | default("user@example.com") @>
-                              dokuwikiFullName: <@ additionalinput.dokuwikiFullName | default("User Name") @>
-                              dokuwikiPassword: <@ additionalinput.dokuwikiPassword | default("''") @>
-                              dokuwikiUsername: <@ additionalinput.dokuwikiUsername | default("user") @>
-                              dokuwikiWikiName: <@ additionalinput.dokuwikiWikiName | default("My Wiki") @>
-                              existingSecret: <@ additionalinput.existingSecret | default("''") @>
+                              dokuwikiEmail: <@ additionalinput.dokuwikiEmail | default("user@example.com") | tojson @>
+                              dokuwikiFullName: <@ additionalinput.dokuwikiFullName | default("User Name") | tojson @>
+                              dokuwikiPassword: <@ additionalinput.dokuwikiPassword | default("") | tojson @>
+                              dokuwikiUsername: <@ additionalinput.dokuwikiUsername | default("user") | tojson @>
+                              dokuwikiWikiName: <@ additionalinput.dokuwikiWikiName | default("My Wiki") | tojson @>
+                              existingSecret: <@ additionalinput.existingSecret | default("") | tojson @>
                               extraDeploy: <@ additionalinput.extraDeploy | default(None | tojson) @>
                               extraEnvVars: <@ additionalinput.extraEnvVars | default(None | tojson) @>
-                              extraEnvVarsCM: <@ additionalinput.extraEnvVarsCM | default("''") @>
-                              extraEnvVarsSecret: <@ additionalinput.extraEnvVarsSecret | default("''") @>
+                              extraEnvVarsCM: <@ additionalinput.extraEnvVarsCM | default("") | tojson @>
+                              extraEnvVarsSecret: <@ additionalinput.extraEnvVarsSecret | default("") | tojson @>
                               extraVolumeMounts: <@ additionalinput.extraVolumeMounts | default(None | tojson) @>
                               extraVolumes: <@ additionalinput.extraVolumes | default(None | tojson) @>
-                              fullnameOverride: <@ additionalinput.fullnameOverride | default("''") @>
+                              fullnameOverride: <@ additionalinput.fullnameOverride | default("") | tojson @>
                               global:
                                 imagePullSecrets: <@ additionalinput.global.imagePullSecrets | default(None | tojson) @>
-                                imageRegistry: <@ additionalinput.global.imageRegistry | default("''") @>
-                                storageClass: <@ additionalinput.global.storageClass | default("''") @>
+                                imageRegistry: <@ additionalinput.global.imageRegistry | default("") | tojson @>
+                                storageClass: <@ additionalinput.global.storageClass | default("") | tojson @>
                               hostAliases: <@ additionalinput.hostAliases | default([{"hostnames":["status.localhost"],"ip":"127.0.0.1"}]) @>
                               image:
                                 debug: <@ additionalinput.image.debug | default(false) | tojson @>
-                                pullPolicy: <@ additionalinput.image.pullPolicy | default("IfNotPresent") @>
+                                pullPolicy: <@ additionalinput.image.pullPolicy | default("IfNotPresent") | tojson @>
                                 pullSecrets: <@ additionalinput.image.pullSecrets | default(None | tojson) @>
-                                registry: <@ additionalinput.image.registry | default("docker.io") @>
-                                repository: <@ additionalinput.image.repository | default("bitnami/dokuwiki") @>
-                                tag: <@ additionalinput.image.tag | default("20200729.0.0-debian-10-r319") @>
+                                registry: <@ additionalinput.image.registry | default("docker.io") | tojson @>
+                                repository: <@ additionalinput.image.repository | default("bitnami/dokuwiki") | tojson @>
+                                tag: <@ additionalinput.image.tag | default("20200729.0.0-debian-10-r319") | tojson @>
                               ingress:
                                 annotations: {}
-                                apiVersion: <@ additionalinput.ingress.apiVersion | default("''") @>
+                                apiVersion: <@ additionalinput.ingress.apiVersion | default("") | tojson @>
                                 certManager: <@ additionalinput.ingress.certManager | default(false) | tojson @>
                                 enabled: <@ additionalinput.ingress.enabled | default(false) | tojson @>
                                 extraHosts: <@ additionalinput.ingress.extraHosts | default(None | tojson) @>
                                 extraPaths: <@ additionalinput.ingress.extraPaths | default(None | tojson) @>
                                 extraTls: <@ additionalinput.ingress.extraTls | default(None | tojson) @>
-                                hostname: <@ additionalinput.ingress.hostname | default("dokuwiki.local") @>
-                                path: <@ additionalinput.ingress.path | default("/") @>
-                                pathType: <@ additionalinput.ingress.pathType | default("ImplementationSpecific") @>
+                                hostname: <@ additionalinput.ingress.hostname | default("dokuwiki.local") | tojson @>
+                                path: <@ additionalinput.ingress.path | default("/") | tojson @>
+                                pathType: <@ additionalinput.ingress.pathType | default("ImplementationSpecific") | tojson @>
                                 secrets: <@ additionalinput.ingress.secrets | default(None | tojson) @>
                                 tls: <@ additionalinput.ingress.tls | default(false) | tojson @>
-                              kubeVersion: <@ additionalinput.kubeVersion | default("''") @>
+                              kubeVersion: <@ additionalinput.kubeVersion | default("") | tojson @>
                               lifecycleHooks: {}
                               livenessProbe:
                                 enabled: <@ additionalinput.livenessProbe.enabled | default(true) | tojson @>
@@ -180,30 +180,30 @@ spec:
                               metrics:
                                 enabled: <@ additionalinput.metrics.enabled | default(false) | tojson @>
                                 image:
-                                  pullPolicy: <@ additionalinput.metrics.image.pullPolicy | default("IfNotPresent") @>
+                                  pullPolicy: <@ additionalinput.metrics.image.pullPolicy | default("IfNotPresent") | tojson @>
                                   pullSecrets: <@ additionalinput.metrics.image.pullSecrets | default(None | tojson) @>
-                                  registry: <@ additionalinput.metrics.image.registry | default("docker.io") @>
-                                  repository: <@ additionalinput.metrics.image.repository | default("bitnami/apache-exporter") @>
-                                  tag: <@ additionalinput.metrics.image.tag | default("0.10.0-debian-10-r5") @>
+                                  registry: <@ additionalinput.metrics.image.registry | default("docker.io") | tojson @>
+                                  repository: <@ additionalinput.metrics.image.repository | default("bitnami/apache-exporter") | tojson @>
+                                  tag: <@ additionalinput.metrics.image.tag | default("0.10.0-debian-10-r5") | tojson @>
                                 podAnnotations:
-                                  prometheus.io/port: <@ additionalinput.metrics.podAnnotations["prometheus.io/port"] | default("9117") @>
-                                  prometheus.io/scrape: <@ additionalinput.metrics.podAnnotations["prometheus.io/scrape"] | default("true") @>
+                                  prometheus.io/port: <@ additionalinput.metrics.podAnnotations["prometheus.io/port"] | default("9117") | tojson @>
+                                  prometheus.io/scrape: <@ additionalinput.metrics.podAnnotations["prometheus.io/scrape"] | default("true") | tojson @>
                                 resources: {}
-                              nameOverride: <@ additionalinput.nameOverride | default("''") @>
+                              nameOverride: <@ additionalinput.nameOverride | default("") | tojson @>
                               nodeAffinityPreset:
-                                key: <@ additionalinput.nodeAffinityPreset.key | default("''") @>
-                                type: <@ additionalinput.nodeAffinityPreset.type | default("''") @>
+                                key: <@ additionalinput.nodeAffinityPreset.key | default("") | tojson @>
+                                type: <@ additionalinput.nodeAffinityPreset.type | default("") | tojson @>
                                 values: <@ additionalinput.nodeAffinityPreset.values | default(None | tojson) @>
                               nodeSelector: {}
                               persistence:
-                                accessMode: <@ additionalinput.persistence.accessMode | default("ReadWriteOnce") @>
+                                accessMode: <@ additionalinput.persistence.accessMode | default("ReadWriteOnce") | tojson @>
                                 enabled: <@ additionalinput.persistence.enabled | default(true) | tojson @>
-                                existingClaim: <@ additionalinput.persistence.existingClaim | default("''") @>
-                                size: <@ additionalinput.persistence.size | default("8Gi") @>
-                                storageClass: <@ additionalinput.persistence.storageClass | default("''") @>
-                              podAffinityPreset: <@ additionalinput.podAffinityPreset | default("''") @>
+                                existingClaim: <@ additionalinput.persistence.existingClaim | default("") | tojson @>
+                                size: <@ additionalinput.persistence.size | default("8Gi") | tojson @>
+                                storageClass: <@ additionalinput.persistence.storageClass | default("") | tojson @>
+                              podAffinityPreset: <@ additionalinput.podAffinityPreset | default("") | tojson @>
                               podAnnotations: {}
-                              podAntiAffinityPreset: <@ additionalinput.podAntiAffinityPreset | default("soft") @>
+                              podAntiAffinityPreset: <@ additionalinput.podAntiAffinityPreset | default("soft") | tojson @>
                               podLabels: {}
                               podSecurityContext:
                                 enabled: <@ additionalinput.podSecurityContext.enabled | default(true) | tojson @>
@@ -217,27 +217,27 @@ spec:
                                 timeoutSeconds: <@ additionalinput.readinessProbe.timeoutSeconds | default(5) @>
                               resources:
                                 requests:
-                                  cpu: <@ additionalinput.resources.requests.cpu | default("300m") @>
-                                  memory: <@ additionalinput.resources.requests.memory | default("512Mi") @>
+                                  cpu: <@ additionalinput.resources.requests.cpu | default("300m") | tojson @>
+                                  memory: <@ additionalinput.resources.requests.memory | default("512Mi") | tojson @>
                               service:
-                                externalTrafficPolicy: <@ additionalinput.service.externalTrafficPolicy | default("Cluster") @>
+                                externalTrafficPolicy: <@ additionalinput.service.externalTrafficPolicy | default("Cluster") | tojson @>
                                 httpsPort: <@ additionalinput.service.httpsPort | default(443) @>
-                                loadBalancerIP: <@ additionalinput.service.loadBalancerIP | default("''") @>
+                                loadBalancerIP: <@ additionalinput.service.loadBalancerIP | default("") | tojson @>
                                 nodePorts:
-                                  http: <@ additionalinput.service.nodePorts.http | default("''") @>
-                                  https: <@ additionalinput.service.nodePorts.https | default("''") @>
+                                  http: <@ additionalinput.service.nodePorts.http | default("") | tojson @>
+                                  https: <@ additionalinput.service.nodePorts.https | default("") | tojson @>
                                 port: <@ additionalinput.service.port | default(80) @>
-                                type: <@ additionalinput.service.type | default("LoadBalancer") @>
+                                type: <@ additionalinput.service.type | default("LoadBalancer") | tojson @>
                               sidecars: <@ additionalinput.sidecars | default(None | tojson) @>
                               tolerations: <@ additionalinput.tolerations | default(None | tojson) @>
                               volumePermissions:
                                 enabled: <@ additionalinput.volumePermissions.enabled | default(false) | tojson @>
                                 image:
-                                  pullPolicy: <@ additionalinput.volumePermissions.image.pullPolicy | default("Always") @>
+                                  pullPolicy: <@ additionalinput.volumePermissions.image.pullPolicy | default("Always") | tojson @>
                                   pullSecrets: <@ additionalinput.volumePermissions.image.pullSecrets | default(None | tojson) @>
-                                  registry: <@ additionalinput.volumePermissions.image.registry | default("docker.io") @>
-                                  repository: <@ additionalinput.volumePermissions.image.repository | default("bitnami/bitnami-shell") @>
-                                  tag: <@ additionalinput.volumePermissions.image.tag | default("10-debian-10-r151") @>
+                                  registry: <@ additionalinput.volumePermissions.image.registry | default("docker.io") | tojson @>
+                                  repository: <@ additionalinput.volumePermissions.image.repository | default("bitnami/bitnami-shell") | tojson @>
+                                  tag: <@ additionalinput.volumePermissions.image.tag | default("10-debian-10-r151") | tojson @>
                                 resources:
                                   limits: {}
                                   requests: {}
