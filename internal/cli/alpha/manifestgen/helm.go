@@ -9,6 +9,7 @@ import (
 
 	"github.com/alecthomas/jsonschema"
 	"github.com/iancoleman/orderedmap"
+	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 	"helm.sh/helm/v3/pkg/action"
@@ -241,7 +242,7 @@ func generateJSONSchemaForValue(value interface{}, parentKeyPath []string) *json
 	}
 
 	if len(parentKeyPath) > 0 {
-		schema.Title = parentKeyPath[len(parentKeyPath)-1]
+		schema.Title = strcase.ToCamel(parentKeyPath[len(parentKeyPath)-1])
 	}
 
 	switch v := value.(type) {
