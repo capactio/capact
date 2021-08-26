@@ -66,7 +66,7 @@ jobs:
         run: echo "::set-output ${TESTS}"
       - id: set-matrix-infra
         run: echo "::set-output ${INFRAS}"
-        
+
   build-app:
     name: Build ${{ matrix.APP }}
     runs-on: ubuntu-latest
