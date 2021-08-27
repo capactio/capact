@@ -14,6 +14,8 @@ import (
 const (
 	// K3dDefaultNodeImage defines default Kubernetes image for a new k3d cluster.
 	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.20.7-k3s1"
+	// K3dDockerNetwork defines default Docker network name for a cluster.
+	K3dDockerNetwork = "capact"
 )
 
 // K3dOptions holds configuration for creating k3d cluster.
@@ -63,7 +65,7 @@ registries:
       configs: {}
       auths: {}
 
-`, DefaultClusterName, K3dDefaultNodeImage, DefaultDockerNetwork)
+`, DefaultClusterName, K3dDefaultNodeImage, K3dDockerNetwork)
 
 // K3dSetDefaultConfig sets default values for k3d flags
 func K3dSetDefaultConfig(flags *pflag.FlagSet, opts K3dOptions) error {
