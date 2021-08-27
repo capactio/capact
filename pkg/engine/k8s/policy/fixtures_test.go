@@ -36,6 +36,14 @@ func fixPolicyWithoutTypeRef() policy.Policy {
 									},
 								},
 							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id3",
+										Name: "id-3",
+									},
+								},
+							},
 						},
 					},
 				},
@@ -76,6 +84,18 @@ func fixPolicyWithTypeRef() policy.Policy {
 									},
 								},
 							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id3",
+										Name: "name",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.sample3",
+										Revision: "0.3.0",
+									},
+								},
+							},
 						},
 					},
 				},
@@ -108,6 +128,14 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 									},
 								},
 							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id3",
+										Name: "ID3",
+									},
+								},
+							},
 						},
 					},
 					{
@@ -116,7 +144,21 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id3",
+										ID: "id4",
+									},
+								},
+							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id5",
+										Name: "ID5",
+									},
+								},
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id6",
+										Name: "ID6",
 									},
 								},
 							},
@@ -135,7 +177,15 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id4",
+										ID: "id7",
+									},
+								},
+							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id8",
+										Name: "ID8",
 									},
 								},
 							},
@@ -179,6 +229,18 @@ func fixComplexPolicyWithTypeRef() *policy.Policy {
 									},
 								},
 							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id3",
+										Name: "ID3",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.type3",
+										Revision: "0.3.0",
+									},
+								},
+							},
 						},
 					},
 					{
@@ -187,11 +249,33 @@ func fixComplexPolicyWithTypeRef() *policy.Policy {
 							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id3",
+										ID: "id4",
 									},
 									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type3",
-										Revision: "0.3.0",
+										Path:     "cap.type.type4",
+										Revision: "0.4.0",
+									},
+								},
+							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id5",
+										Name: "ID5",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.type5",
+										Revision: "0.5.0",
+									},
+								},
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id6",
+										Name: "ID6",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.type6",
+										Revision: "0.6.0",
 									},
 								},
 							},
@@ -210,11 +294,23 @@ func fixComplexPolicyWithTypeRef() *policy.Policy {
 							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
 								{
 									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id4",
+										ID: "id7",
 									},
 									TypeRef: &types.ManifestRef{
-										Path:     "cap.type.type4",
-										Revision: "0.4.0",
+										Path:     "cap.type.type7",
+										Revision: "0.7.0",
+									},
+								},
+							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id8",
+										Name: "ID8",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.type8",
+										Revision: "0.8.0",
 									},
 								},
 							},

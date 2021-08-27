@@ -35,18 +35,19 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 		{
 			Name:     "Unresolved TypeRefs",
 			Input:    fixComplexPolicyWithoutTypeRef(),
-			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 4},
+			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 8},
 			Expected: fixComplexPolicyWithTypeRef(),
 		},
 		{
 			Name:   "Partial result",
 			Input:  fixComplexPolicyWithoutTypeRef(),
-			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 4, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}}},
+			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 8, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
-				while TypeInstance metadata validation after resolving TypeRefs: while validating TypeInstance metadata for Policy: 2 errors occurred:
+				while TypeInstance metadata validation after resolving TypeRefs: while validating TypeInstance metadata for Policy: 3 errors occurred:
 					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")
-					* missing Type reference for RequiredTypeInstance "id4"`,
+					* missing Type reference for RequiredTypeInstance "id4"
+					* missing Type reference for AdditionalTypeInstance "id8" (name: "ID8")`,
 				),
 			),
 		},

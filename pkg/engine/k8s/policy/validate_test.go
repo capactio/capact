@@ -31,9 +31,10 @@ func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
 			Input: fixPolicyWithoutTypeRef(),
 			ExpectedErrMessage: ptr.String(
 				heredoc.Docf(`
-				while validating TypeInstance metadata for Policy: 2 errors occurred:
+				while validating TypeInstance metadata for Policy: 3 errors occurred:
 					* missing Type reference for RequiredTypeInstance "id"
-					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")`,
+					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")
+					* missing Type reference for AdditionalTypeInstance "id3" (name: "id-3")`,
 				),
 			),
 		},
@@ -76,9 +77,10 @@ func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
 			Input: fixPolicyWithoutTypeRef().Rules[0].OneOf[0],
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
-				while validating TypeInstance metadata for Policy: 2 errors occurred:
+				while validating TypeInstance metadata for Policy: 3 errors occurred:
 					* missing Type reference for RequiredTypeInstance "id"
-					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")`,
+					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")
+					* missing Type reference for AdditionalTypeInstance "id3" (name: "id-3")`,
 				),
 			),
 		},
