@@ -1,8 +1,9 @@
 package capact
 
 import (
-	"capact.io/capact/internal/cli/printer"
 	"context"
+
+	"capact.io/capact/internal/cli/printer"
 	"github.com/rancher/k3d/v4/pkg/client"
 	"github.com/rancher/k3d/v4/pkg/runtimes"
 	"github.com/rancher/k3d/v4/pkg/tools"

@@ -2,6 +2,7 @@ package capact
 
 import (
 	"context"
+
 	"github.com/pkg/errors"
 )
 

@@ -2,11 +2,10 @@ package create
 
 import (
 	"fmt"
-	"github.com/pkg/errors"
-	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
-	"gopkg.in/yaml.v3"
 	"os"
 	"time"
+
+	"capact.io/capact/internal/cli/config"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -24,52 +23,45 @@ type K3dOptions struct {
 }
 
 // K3dDefaultConfig returns default set of values for k3d.
-var K3dDefaultConfig = v1alpha2.SimpleConfig{
-	TypeMeta: v1alpha2.TypeMeta{
-		Kind:       "Simple",
-		APIVersion: "k3d.io/v1alpha2",
-	},
-	Name:      DefaultClusterName,
-	Servers:   1,
-	Agents:    0,
-	ExposeAPI: v1alpha2.SimpleExposureOpts{},
-	Image:     K3dDefaultNodeImage,
-	Network:   "capact",
-	Ports: []v1alpha2.PortWithNodeFilters{
-		{
-			Port:        "80:80",
-			NodeFilters: []string{"loadbalancer"},
-		},
-		{
-			Port:        "443:443",
-			NodeFilters: []string{"loadbalancer"},
-		},
-	},
-	Options: v1alpha2.SimpleConfigOptions{
-		K3sOptions: v1alpha2.SimpleConfigOptionsK3s{
-			ExtraServerArgs: []string{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
-		},
-	},
-}
+// We cannot use v1alpha2.SimpleConfig struct as tags are messed up and we are not able to marshal it properly.
+var K3dDefaultConfig = fmt.Sprintf(`
+kind: Simple
+apiVersion: k3d.io/v1alpha2
+name: %s
+servers: 1
+agents: 0
+image: %s
+network: %s
+ports:
+    - port: 80:80
+      nodeFilters:
+        - loadbalancer
+    - port: 443:443
+      nodeFilters:
+        - loadbalancer
+options:
+    k3s:
+        extraServerArgs:
+            - --no-deploy=traefik
+            - --node-label=ingress-ready=true
+`, DefaultClusterName, K3dDefaultNodeImage, DefaultDockerNetwork)
 
 // K3dSetDefaultConfig sets default values for k3d flags
 func K3dSetDefaultConfig(flags *pflag.FlagSet) error {
-	config := flags.Lookup("config")
-	if config.Changed { // do not change user settings
+	configFlag := flags.Lookup("config")
+	if configFlag.Changed { // do not change user settings
 		return nil
 	}
 
-	file, err := os.CreateTemp("", "k3d-config")
+	file, err := config.GetDefaultConfigPath("k3d-config.yaml")
 	if err != nil {
 		return err
 	}
-	out, err := yaml.Marshal(K3dDefaultConfig)
-	if _, err := file.Write(out); err != nil {
-		return errors.Wrap(err, "dup")
+	if err := os.WriteFile(file, []byte(K3dDefaultConfig), 0600); err != nil {
+		return err
 	}
-	//defer os.Remove(file.Name())
-	fmt.Println(file.Name())
-	if err := config.Value.Set(file.Name()); err != nil {
+
+	if err := configFlag.Value.Set(file); err != nil {
 		return err
 	}
 
@@ -86,5 +78,4 @@ func K3dRemoveWaitAndTimeoutFlags(k3d *cobra.Command) {
 		}
 		k3d.Flags().AddFlag(flag)
 	})
-
 }
