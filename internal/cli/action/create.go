@@ -72,9 +72,9 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 	opts.validator = action.NewValidator(hubCli)
 
 	// TODO: In the future, we can use client.PolicyEnforcedClient
-	// to get the Implementation and validate Implementation specific TypeInstances and additional input.
-	// That would require some unification and re-using exactly the same logic for the Impl resolution.
-	// For now, fetch latest - the same strategy is used by renderer.
+	// 	to get the Implementation and validate Implementation specific TypeInstances and additional input.
+	// 	That would require some unification and re-using exactly the same logic for the Impl resolution.
+	// 	For now, fetch latest - the same strategy is used by renderer.
 	iface, err := hubCli.FindInterfaceRevision(ctx, gqlpublicapi.InterfaceReference{
 		Path: opts.InterfacePath,
 	}, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
@@ -89,7 +89,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 	if err != nil {
 		return err
 	}
-	opts.isInputParamsRequired, err = opts.validator.HasRequiredProp(opts.ifaceSchemas)
+	opts.areInputParamsRequired, err = opts.validator.HasRequiredProp(opts.ifaceSchemas)
 	if err != nil {
 		return err
 	}
@@ -98,6 +98,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 	if err != nil {
 		return err
 	}
+	opts.areInputTypeInstancesRequired = len(opts.ifaceTypes) > 0
 
 	return nil
 }

@@ -36,11 +36,9 @@ type ValidateInput struct {
 	Interface            *gqlpublicapi.InterfaceRevision
 	Parameters           types.ParametersCollection
 	TypeInstances        []types.InputTypeInstanceRef
-	Implementation       gqlpublicapi.ImplementationRevision
-	AdditionalParameters types.ParametersCollection
 }
 
-// Validate validates both the required and additional input parameters and TypeInstances.
+// Validate validates required input parameters and TypeInstances against the Interface.
 func (w *InputValidator) Validate(ctx context.Context, in ValidateInput) error {
 	rs := validation.ResultAggregator{}
 
@@ -55,34 +53,13 @@ func (w *InputValidator) Validate(ctx context.Context, in ValidateInput) error {
 		return errors.Wrap(err, "while validating parameters")
 	}
 
-	// 2. Validate Implementation additional parameters only if specified
-	if len(in.AdditionalParameters) > 0 {
-		implSchemas, err := w.validator.LoadImplInputParametersSchemas(ctx, in.Implementation)
-		if err != nil {
-			return errors.Wrap(err, "while loading additional input parameters")
-		}
-
-		err = rs.Report(w.validator.ValidateParameters(ctx, implSchemas, in.AdditionalParameters))
-		if err != nil {
-			return errors.Wrap(err, "while validating additional parameters")
-		}
-	}
-
-	// 3. Validate Interface TypeInstances and additional TypeInstances from Implementation
+	// 2. Validate Interface TypeInstances
 	ifaceTypes, err := w.validator.LoadIfaceInputTypeInstanceRefs(ctx, in.Interface)
 	if err != nil {
 		return errors.Wrap(err, "while loading Interface input TypeInstance types")
 	}
-	implTypes, err := w.validator.LoadImplInputTypeInstanceRefs(ctx, in.Implementation)
-	if err != nil {
-		return errors.Wrap(err, "while loading additional input TypeInstances' TypeRefs")
-	}
 
-	allAllowedTypes, err := validation.MergeTypeRefCollection(ifaceTypes, implTypes)
-	if err != nil {
-		return errors.Wrap(err, "while merging Interface and Implementation TypeInstances' TypeRefs")
-	}
-	err = rs.Report(w.validator.ValidateTypeInstances(ctx, allAllowedTypes, in.TypeInstances))
+	err = rs.Report(w.validator.ValidateTypeInstances(ctx, ifaceTypes, in.TypeInstances))
 	if err != nil {
 		return errors.Wrap(err, "while validating TypeInstances")
 	}

@@ -201,7 +201,6 @@ func (c *InputOutputValidator) ValidateParameters(ctx context.Context, paramsSch
 }
 
 // ValidateTypeInstances validates that a given input TypeInstances has valid TypeRefs.
-// Unknown input TypeInstances are ignored, so on Interface we can pass additionalTypeInstances, e.g. existing database.
 //
 // It resolves input TypeInstances' TypeRefs by calling Hub.
 func (c *InputOutputValidator) ValidateTypeInstances(ctx context.Context, allowedTypes validation.TypeRefCollection, gotTypeInstances []types.InputTypeInstanceRef) (validation.Result, error) {

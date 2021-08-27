@@ -146,19 +146,12 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
-	// 6. Validate given input:
+	// 6. Validate workflow input against Interface:
+	// Implementation-specific input is already validated on PolicyEnforcedClient level
 	validateInput := renderer.ValidateInput{
-		Interface:  iface,
-		Parameters: ToInputParams(dedicatedRenderer.inputParametersRaw),
-		// TODO(https://github.com/capactio/capact/issues/438): This holds both the Interface TypeInstances
-		// and Implementation additional TypeInstances used in workflow, e.g. already existing database.
-		// Facade knows how to handle that.
+		Interface:            iface,
+		Parameters:           ToInputParams(dedicatedRenderer.inputParametersRaw),
 		TypeInstances:        dedicatedRenderer.inputTypeInstances,
-		Implementation:       implementation,
-		AdditionalParameters: additionalParameters,
-		// TODO(https://github.com/capactio/capact/issues/438): currently, additionalTypeInstances defined on policy level are
-		// connected only with `require` property on Implementation and it's already validated in policy enforced client.
-		//AdditionalTypeInstances: additionalTypeInstances,
 	}
 	err = r.wfValidator.Validate(ctx, validateInput)
 
