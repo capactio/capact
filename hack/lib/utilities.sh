@@ -145,27 +145,27 @@ helm::version(){
 # Capact functions
 #
 
-#  - KIND_CLUSTER_NAME
+#  - CLUSTER_NAME
+#  - CLUSTER_TYPE
 #  - REPO_DIR
 #  - MULTINODE_CLUSTER
 capact::create_cluster() {
     shout "- Creating K8s cluster..."
-    local config
+    local clusterConfig
     if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
-      config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
-    else
-      config="${REPO_DIR}/hack/cluster-config/kind/config.yaml"
+      clusterConfig=--cluster-config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
     fi
-    capact::cli env create kind \
-      --name="${KIND_CLUSTER_NAME}" \
-      --cluster-config="${config}" \
+    capact::cli env create ${CLUSTER_TYPE} \
+      --name="${CLUSTER_NAME}" \
+      ${clusterConfig} \
       --wait=5m
 }
 
-#  - KIND_CLUSTER_NAME
+#  - CLUSTER_NAME
+#  - CLUSTER_TYPE
 capact::delete_cluster() {
     shout "- Deleting K8s cluster..."
-    capact::cli env delete kind --name="${KIND_CLUSTER_NAME}"
+    capact::cli env delete ${CLUSTER_TYPE} --name="${CLUSTER_NAME}"
 }
 
 

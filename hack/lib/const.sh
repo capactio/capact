@@ -18,7 +18,7 @@ readonly STABLE_HELM_VERSION=v3.6.3
 
 readonly CAPACT_NAMESPACE="capact-system"
 readonly CAPACT_RELEASE_NAME="capact"
-readonly KIND_DEV_CLUSTER_NAME="kind-dev-capact"
+readonly DEV_CLUSTER_NAME="dev-capact"
 readonly KIND_CI_CLUSTER_NAME="kind-ci-capact"
 
 #

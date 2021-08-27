@@ -14,9 +14,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewK3D returns a cobra.Command for creating k3d environment.
-func NewK3D() *cobra.Command {
-	var name string
+// NewK3d returns a cobra.Command for creating k3d environment.
+func NewK3d() *cobra.Command {
+	var (
+		name string
+		wait time.Duration
+	)
 
 	k3d := cluster.NewCmdClusterCreate()
 	k3d.Use = "k3d"
@@ -31,29 +34,21 @@ func NewK3D() *cobra.Command {
 		// Run k3d create cmd
 		k3d.Run(cmd, []string{name})
 
-		wait, err := cmd.Flags().GetBool("wait")
-		if err != nil {
-			return err
-		}
-		if !wait {
+		if wait == time.Duration(0) {
 			return nil
 		}
-
-		timeout, err := cmd.Flags().GetDuration("timeout")
-		if err != nil {
-			return err
-		}
-		ctx, cancel := getTimeoutContext(cmd.Context(), timeout)
+		ctx, cancel := getTimeoutContext(cmd.Context(), wait)
 		defer cancel()
-		return create.WaitForK3DReadyNodes(ctx, os.Stdout, name)
+		return create.WaitForK3dReadyNodes(ctx, os.Stdout, name)
 	}
 
-	_ = k3d.Flags().Set("image", create.K3dDefaultNodeImage)
+	create.K3dRemoveWaitAndTimeoutFlags(k3d) // remove it so we use own `--wait` flag
 
 	// add `name` flag to have the same UX as we have for `kind` in the minimal scenario:
-	//   $ capact env create kind --name capact-dev
-	//   $ capact env create k3d  --name capact-dev
+	//   $ capact env create kind --name capact-dev --wait 10m
+	//   $ capact env create k3d  --name capact-dev --wait 10m
 	k3d.Flags().StringVar(&name, "name", create.DefaultClusterName, "Cluster name")
+	k3d.Flags().DurationVar(&wait, "wait", time.Duration(0), "Wait for control plane node to be ready")
 
 	return k3d
 }

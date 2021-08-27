@@ -13,7 +13,7 @@ import (
 	k3dutil "github.com/rancher/k3d/v4/pkg/util"
 )
 
-// K3d removes a given cluster. Based on
+// K3d removes a given k3d cluster.
 func K3d(ctx context.Context, name string) (err error) {
 	status := printer.NewStatus(os.Stdout, "")
 	defer func() {

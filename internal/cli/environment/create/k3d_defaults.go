@@ -1,11 +1,22 @@
 package create
 
-import "github.com/spf13/pflag"
+import (
+	"time"
+
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+)
 
 const (
 	// K3dDefaultNodeImage defines default Kubernetes image for a new k3d cluster.
 	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.19.7-k3s1"
 )
+
+// K3dOptions holds configuration for creating k3d cluster.
+type K3dOptions struct {
+	Name string
+	Wait time.Duration
+}
 
 type vals []string
 
@@ -26,13 +37,10 @@ var K3dDefaultConfig = []Flags{
 		Values: vals{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
 	},
 	{
-		Name:   "wait",
-		Values: vals{"true"},
+		Name:   "image",
+		Values: vals{K3dDefaultNodeImage},
 	},
-	{
-		Name:   "timeout",
-		Values: vals{"60s"},
-	},
+
 }
 
 // K3dSetDefaultFlags sets default values for k3d flags
@@ -49,4 +57,17 @@ func K3dSetDefaultFlags(flags *pflag.FlagSet) error {
 		}
 	}
 	return nil
+}
+
+// K3dRemoveWaitAndTimeoutFlags removes the wait and timeout flags
+func K3dRemoveWaitAndTimeoutFlags(k3d *cobra.Command) {
+	flags := k3d.Flags()
+	k3d.ResetFlags()
+	flags.VisitAll(func(flag *pflag.Flag) {
+		if flag.Name == "wait" || flag.Name == "timeout" { // we set this by ourselves
+			return
+		}
+		k3d.Flags().AddFlag(flag)
+	})
+
 }

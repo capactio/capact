@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// LoadImages loads Docker images into proper environment
 func LoadImages(ctx context.Context, images []string, opts Options) error {
 	switch opts.Environment {
 	case KindEnv:

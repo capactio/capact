@@ -15,8 +15,8 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-// WaitForK3DReadyNodes waits until nodes are in Ready state based on the role message log.
-func WaitForK3DReadyNodes(ctx context.Context, w io.Writer, clusterName string) (err error) {
+// WaitForK3dReadyNodes waits until nodes are in Ready state based on the role message log.
+func WaitForK3dReadyNodes(ctx context.Context, w io.Writer, clusterName string) (err error) {
 	status := printer.NewStatus(w, "")
 	defer func() {
 		status.End(err == nil)

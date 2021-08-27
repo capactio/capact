@@ -65,7 +65,7 @@ main() {
     export REPO_DIR=$REPO_ROOT_DIR
 
     export KUBECONFIG="${TMP_DIR}/kubeconfig"
-    export KIND_CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
+    export CLUSTER_NAME=${CLUSTER_NAME:-${KIND_CI_CLUSTER_NAME}}
     export HELM_VERSION=${STABLE_HELM_VERSION}
     capact::create_cluster
 
@@ -80,7 +80,7 @@ main() {
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
-    export CLUSTER_NAME="${KIND_CLUSTER_NAME}"
+    export CLUSTER_NAME="${CLUSTER_NAME}"
     export CLUSTER_TYPE="kind"
     export USE_TEST_SETUP="true"
     export PRINT_INSECURE_NOTES="false"
