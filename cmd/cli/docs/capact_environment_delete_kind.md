@@ -14,7 +14,7 @@ capact environment delete kind [flags]
 
 ```
   -h, --help          help for kind
-      --name string   cluster name, overrides config (default "kind-dev-capact")
+      --name string   cluster name, overrides config (default "dev-capact")
 ```
 
 ### Options inherited from parent commands

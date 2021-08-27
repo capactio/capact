@@ -17,7 +17,7 @@ capact environment create kind [flags]
   -h, --help                    help for kind
       --image string            node docker image to use for booting the cluster (default "kindest/node:v1.19.1")
       --kubeconfig string       sets kubeconfig path instead of $KUBECONFIG or $HOME/.kube/config
-      --name string             cluster name, overrides config (default "kind-dev-capact")
+      --name string             cluster name, overrides config (default "dev-capact")
       --retain                  retain nodes for debugging when cluster creation fails
       --wait duration           wait for control plane node to be ready
 ```

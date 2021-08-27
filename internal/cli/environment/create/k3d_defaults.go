@@ -13,7 +13,7 @@ import (
 
 const (
 	// K3dDefaultNodeImage defines default Kubernetes image for a new k3d cluster.
-	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.19.7-k3s1"
+	K3dDefaultNodeImage = "docker.io/rancher/k3s:v1.20.7-k3s1"
 )
 
 // K3dOptions holds configuration for creating k3d cluster.
@@ -61,11 +61,7 @@ func K3dSetDefaultConfig(flags *pflag.FlagSet) error {
 		return err
 	}
 
-	if err := configFlag.Value.Set(file); err != nil {
-		return err
-	}
-
-	return nil
+	return configFlag.Value.Set(file)
 }
 
 // K3dRemoveWaitAndTimeoutFlags removes the wait and timeout flags
@@ -75,6 +71,9 @@ func K3dRemoveWaitAndTimeoutFlags(k3d *cobra.Command) {
 	flags.VisitAll(func(flag *pflag.Flag) {
 		if flag.Name == "wait" || flag.Name == "timeout" { // we set this by ourselves
 			return
+		}
+		if flag.Name == "volume" {
+			flag.Shorthand = "" // to avoid 'unable to redefine 'v' shorthand in "k3d" flagset: it's already used for "volume" flag'
 		}
 		k3d.Flags().AddFlag(flag)
 	})

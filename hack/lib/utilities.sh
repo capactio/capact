@@ -151,13 +151,13 @@ helm::version(){
 #  - MULTINODE_CLUSTER
 capact::create_cluster() {
     shout "- Creating K8s cluster..."
-    local clusterConfig
     if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
-      clusterConfig=--cluster-config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
+      CLUSTER_CONFIG_FLAG=--cluster-config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
     fi
+    # shellcheck disable=SC2086
     capact::cli env create ${CLUSTER_TYPE} \
       --name="${CLUSTER_NAME}" \
-      ${clusterConfig} \
+      ${CLUSTER_CONFIG_FLAG:-} \
       --wait=5m
 }
 
@@ -165,6 +165,7 @@ capact::create_cluster() {
 #  - CLUSTER_TYPE
 capact::delete_cluster() {
     shout "- Deleting K8s cluster..."
+    # shellcheck disable=SC2086
     capact::cli env delete ${CLUSTER_TYPE} --name="${CLUSTER_NAME}"
 }
 
