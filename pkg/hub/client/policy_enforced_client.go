@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sync"
 
+	"capact.io/capact/internal/multierror"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	hubpublicgraphql "capact.io/capact/pkg/hub/api/graphql/public"
@@ -121,25 +123,18 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 		return nil, errors.Wrap(err, "while validating Policy rule")
 	}
 
+	// TODO(review):
+	//		- option 1: return error <-- CURRENT APPROACH
+	// 		- option 2: continue - skip injecting it, similarly to requiredTypeInstances
+	//		- other option, e.g. return error, but also support implementationConstraints based on additionalInput
+
 	var typeInstancesToInject []types.InputTypeInstanceRef
+	undefinedAdditionalTIsErr := multierror.New()
+
 	for _, typeInstance := range additionalTIs {
 		if exists := e.isAdditionalTypeInstanceDefinedInImpl(typeInstance, implRev); !exists {
-			// TODO(review):
-			//		- option 1: return error <-- CURRENT APPROACH
-			// 	- option 2: continue - skip injecting it, similarly to requiredTypeInstances
-			//		- option 3: return error, but also support implementationConstraints based on additionalInput
-			//		- we can think about other options as well
-
-			implPath := "nil"
-			if implRev.Metadata != nil {
-				implPath = implRev.Metadata.Path
-			}
-			tiTypeRef := "nil"
-			if typeInstance.TypeRef != nil {
-				tiTypeRef = fmt.Sprintf("%s:%s", typeInstance.TypeRef.Path, typeInstance.TypeRef.Revision)
-			}
-
-			return nil, fmt.Errorf(`cannot find additional TypeInstance with name %q (Type reference: %q) in Implementation %q`, typeInstance.Name, tiTypeRef, implPath)
+			undefinedAdditionalTIsErr = multierror.Append(undefinedAdditionalTIsErr, e.undefinedAdditionalTIError(typeInstance, implRev))
+			continue
 		}
 
 		typeInstanceToInject := types.InputTypeInstanceRef{
@@ -148,6 +143,10 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 		}
 
 		typeInstancesToInject = append(typeInstancesToInject, typeInstanceToInject)
+	}
+
+	if undefinedAdditionalTIsErr.Len() != 0 {
+		return nil, errors.Wrap(undefinedAdditionalTIsErr, "while checking if additional TypeInstances from Policy are defined in Implementation manifest")
 	}
 
 	return typeInstancesToInject, nil
@@ -342,6 +341,20 @@ func (e *PolicyEnforcedClient) isAdditionalTypeInstanceDefinedInImpl(typeInstanc
 	}
 
 	return false
+}
+
+func (e *PolicyEnforcedClient) undefinedAdditionalTIError(typeInstance policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) error {
+	implPath := ""
+	if implRev.Metadata != nil {
+		implPath = implRev.Metadata.Path
+	}
+
+	tiTypeRef := ""
+	if typeInstance.TypeRef != nil {
+		tiTypeRef = fmt.Sprintf("%s:%s", typeInstance.TypeRef.Path, typeInstance.TypeRef.Revision)
+	}
+
+	return fmt.Errorf(`cannot find additional TypeInstance with name %q (Type reference: %q) in Implementation %q`, typeInstance.Name, tiTypeRef, implPath)
 }
 
 func (e *PolicyEnforcedClient) hubFilterForPolicyRule(rule policy.Rule, allTypeInstances []*hubpublicgraphql.TypeInstanceValue) hubpublicgraphql.ImplementationRevisionFilter {
