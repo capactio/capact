@@ -18,8 +18,9 @@ const (
 
 // K3dOptions holds configuration for creating k3d cluster.
 type K3dOptions struct {
-	Name string
-	Wait time.Duration
+	Name            string
+	Wait            time.Duration
+	RegistryEnabled bool
 }
 
 // K3dDefaultConfig returns default set of values for k3d.
@@ -44,10 +45,28 @@ options:
         extraServerArgs:
             - --no-deploy=traefik
             - --node-label=ingress-ready=true
+registries:
+  config: |
+    mirrors:
+      capact-registry.localhost:5000:
+        endpoint:
+          - http://capact-registry.localhost:5000
+      docker.io:
+        endpoint:
+          - http://capact-registry.localhost:5000
+      gcr.io:
+        endpoint:
+          - http://capact-registry.localhost:5000
+      eu.gcr.io:
+        endpoint:
+          - http://capact-registry.localhost:5000
+      configs: {}
+      auths: {}
+
 `, DefaultClusterName, K3dDefaultNodeImage, DefaultDockerNetwork)
 
 // K3dSetDefaultConfig sets default values for k3d flags
-func K3dSetDefaultConfig(flags *pflag.FlagSet) error {
+func K3dSetDefaultConfig(flags *pflag.FlagSet, opts K3dOptions) error {
 	configFlag := flags.Lookup("config")
 	if configFlag.Changed { // do not change user settings
 		return nil

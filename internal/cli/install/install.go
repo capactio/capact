@@ -33,14 +33,25 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 	if version == "@local" {
 		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
 		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
+
+		if opts.Registry != "" {
+			registryPath = opts.Registry
+		}
+
 		// TODO can we parallelize it?
-		created, err := capact.BuildImages(ctx, w, registryPath, registryTag, opts.BuildImages)
+		created, err := capact.BuildImages(ctx, status, registryPath, registryTag, opts.BuildImages)
 		if err != nil {
 			return errors.Wrap(err, "while building images")
 		}
 
-		if err := capact.LoadImages(ctx, created, opts); err != nil {
-			return err
+		if opts.Registry != "" { // push to Docker registry
+			if err := capact.PushImages(ctx, status, created, opts.Registry); err != nil {
+				return err
+			}
+		} else { // load into a given environment
+			if err := capact.LoadImages(ctx, created, opts); err != nil {
+				return err
+			}
 		}
 	}
 

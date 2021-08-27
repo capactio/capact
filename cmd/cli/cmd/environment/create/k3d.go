@@ -25,7 +25,7 @@ func NewK3d() *cobra.Command {
 	k3d.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		spinnerFmt := printer.NewLogrusSpinnerFormatter(fmt.Sprintf("Creating cluster %s...", opts.Name))
 		logrus.SetFormatter(spinnerFmt)
-		return create.K3dSetDefaultConfig(cmd.Flags())
+		return create.K3dSetDefaultConfig(cmd.Flags(), opts)
 	}
 	k3d.RunE = func(cmd *cobra.Command, _ []string) (err error) {
 		// Run k3d create cmd
@@ -34,7 +34,7 @@ func NewK3d() *cobra.Command {
 		if opts.Wait == time.Duration(0) {
 			return nil
 		}
-		ctx, cancel := context.WithTimeout(cmd.Context(), opts.Wait)
+		ctx, cancel := getTimeoutContext(cmd.Context(), opts.Wait)
 		defer cancel()
 		return create.WaitForK3dReadyNodes(ctx, os.Stdout, opts.Name)
 	}
@@ -46,6 +46,14 @@ func NewK3d() *cobra.Command {
 	//   $ capact env create k3d  --name capact-dev --wait 10m
 	k3d.Flags().StringVar(&opts.Name, "name", create.DefaultClusterName, "Cluster name")
 	k3d.Flags().DurationVar(&opts.Wait, "wait", time.Duration(0), "Wait for control plane node to be ready")
+	k3d.Flags().BoolVar(&opts.RegistryEnabled, "registry", false, "Creates local registry and configures environment to use it")
 
 	return k3d
+}
+
+func getTimeoutContext(ctx context.Context, timeout time.Duration) (context.Context, context.CancelFunc) {
+	if timeout.Seconds() == 0 {
+		return ctx, func() {}
+	}
+	return context.WithTimeout(ctx, timeout)
 }

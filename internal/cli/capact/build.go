@@ -1,14 +1,14 @@
 package capact
 
 import (
+	"bytes"
+	"capact.io/capact/internal/cli/printer"
 	"context"
 	"fmt"
-	"io"
+	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"sort"
-
-	"github.com/pkg/errors"
 
 	"k8s.io/utils/strings/slices"
 )
@@ -71,10 +71,10 @@ var Images = images{
 	},
 }
 
-func buildImage(ctx context.Context, w io.Writer, imgName string, img image, repository, version string) (string, error) {
+func buildImage(ctx context.Context, w *printer.Status, imgName string, img image, repository, version string) (string, error) {
 	// docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
 	imageTag := fmt.Sprintf("%s/%s:%s", repository, imgName, version)
-
+	w.Step("Building image %s", imageTag)
 	// #nosec G204
 	cmd := exec.CommandContext(ctx, "docker",
 		"build",
@@ -99,8 +99,7 @@ func buildImage(ctx context.Context, w io.Writer, imgName string, img image, rep
 		}
 	}
 	cmd.Dir = img.Dir
-	cmd.Stdout = w
-	cmd.Stderr = w
+
 	err := cmd.Run()
 	if err != nil {
 		return "", err
@@ -109,17 +108,38 @@ func buildImage(ctx context.Context, w io.Writer, imgName string, img image, rep
 }
 
 // BuildImages builds passed images setting passed repository and version
-func BuildImages(ctx context.Context, w io.Writer, repository, version string, names []string) ([]string, error) {
+func BuildImages(ctx context.Context, w *printer.Status, repository, version string, names []string) ([]string, error) {
 	var created []string
 
 	for _, image := range Images.All() {
-		if slices.Contains(names, image) {
-			imageTag, err := buildImage(ctx, w, image, Images[image], repository, version)
-			if err != nil {
-				return nil, errors.Wrapf(err, "while building image %s", image)
-			}
-			created = append(created, imageTag)
+		if !slices.Contains(names, image) {
+			continue
 		}
+		imageTag, err := buildImage(ctx, w, image, Images[image], repository, version)
+		if err != nil {
+			return nil, errors.Wrapf(err, "while building image %s", image)
+		}
+		created = append(created, imageTag)
+
 	}
 	return created, nil
+}
+
+// PushImages pushes passed images to a given registry
+func PushImages(ctx context.Context, w *printer.Status, names []string, reg string) error {
+	var buff bytes.Buffer
+	for _, image := range names {
+		cmd := exec.CommandContext(ctx, "docker",
+			"push",
+			image)
+
+		w.Step("Pushing %s", image)
+		cmd.Stderr = &buff
+		err := cmd.Run()
+		if err != nil {
+			return errors.Wrapf(err, "while pushing image [stderr: %s]", buff.String())
+		}
+		buff.Reset()
+	}
+	return nil
 }

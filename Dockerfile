@@ -52,7 +52,7 @@ LABEL app=$COMPONENT
 
 CMD ["/app"]
 
-FROM builder as e2e
+FROM builder as e2e-builder
 
 # Copy common CA certificates from Builder image (installed by default with ca-certificates package)
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -64,6 +64,13 @@ RUN apk add --no-cache 'git=>2.30' && \
 
 LABEL source=git@github.com:capactio/capact.git
 LABEL app=$COMPONENT
+
+CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
+
+FROM scratch as e2e
+
+COPY --from=builder /bin/$COMPONENT /app.test
+COPY --from=e2e-builder /go/bin/ginkgo /go/bin/ginkgo
 
 CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
 
