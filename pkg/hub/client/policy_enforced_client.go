@@ -114,8 +114,8 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 // ListAdditionalTypeInstancesToInjectBasedOnPolicy returns the additional TypeInstance references,
 // which have to be injected into the Action, based on the current policy rules.
 func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) ([]types.InputTypeInstanceRef, error) {
-	additionalTIs := policyRule.AdditionalTypeInstancesToInject()
-	if len(additionalTIs) == 0 {
+	additionalTIsInPolicy := policyRule.AdditionalTypeInstancesToInject()
+	if len(additionalTIsInPolicy) == 0 {
 		return nil, nil
 	}
 
@@ -131,7 +131,7 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 	var typeInstancesToInject []types.InputTypeInstanceRef
 	undefinedAdditionalTIsErr := multierror.New()
 
-	for _, typeInstance := range additionalTIs {
+	for _, typeInstance := range additionalTIsInPolicy {
 		if exists := e.isAdditionalTypeInstanceDefinedInImpl(typeInstance, implRev); !exists {
 			undefinedAdditionalTIsErr = multierror.Append(undefinedAdditionalTIsErr, e.undefinedAdditionalTIError(typeInstance, implRev))
 			continue
@@ -327,7 +327,7 @@ func (e *PolicyEnforcedClient) isAdditionalTypeInstanceDefinedInImpl(typeInstanc
 	}
 
 	for _, additionalTi := range implRev.Spec.AdditionalInput.TypeInstances {
-		if additionalTi == nil || additionalTi.TypeRef != nil {
+		if additionalTi == nil || additionalTi.TypeRef == nil {
 			continue
 		}
 
