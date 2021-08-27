@@ -28,7 +28,7 @@ func NewK3d() *cobra.Command {
 	k3d.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		spinnerFmt := printer.NewLogrusSpinnerFormatter(fmt.Sprintf("Creating cluster %s...", name))
 		logrus.SetFormatter(spinnerFmt)
-		return create.K3dSetDefaultFlags(cmd.Flags())
+		return create.K3dSetDefaultConfig(cmd.Flags())
 	}
 	k3d.RunE = func(cmd *cobra.Command, _ []string) (err error) {
 		// Run k3d create cmd

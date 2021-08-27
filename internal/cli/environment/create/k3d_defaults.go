@@ -1,6 +1,11 @@
 package create
 
 import (
+	"fmt"
+	"github.com/pkg/errors"
+	"github.com/rancher/k3d/v4/pkg/config/v1alpha2"
+	"gopkg.in/yaml.v3"
+	"os"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -18,44 +23,56 @@ type K3dOptions struct {
 	Wait time.Duration
 }
 
-type vals []string
-
-// Flags are used to set default values for k3d.
-type Flags struct {
-	Name   string
-	Values vals
-}
-
 // K3dDefaultConfig returns default set of values for k3d.
-var K3dDefaultConfig = []Flags{
-	{
-		Name:   "port",
-		Values: vals{"80:80@loadbalancer", "443:443@loadbalancer"},
+var K3dDefaultConfig = v1alpha2.SimpleConfig{
+	TypeMeta: v1alpha2.TypeMeta{
+		Kind:       "Simple",
+		APIVersion: "k3d.io/v1alpha2",
 	},
-	{
-		Name:   "k3s-server-arg",
-		Values: vals{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
+	Name:      DefaultClusterName,
+	Servers:   1,
+	Agents:    0,
+	ExposeAPI: v1alpha2.SimpleExposureOpts{},
+	Image:     K3dDefaultNodeImage,
+	Network:   "capact",
+	Ports: []v1alpha2.PortWithNodeFilters{
+		{
+			Port:        "80:80",
+			NodeFilters: []string{"loadbalancer"},
+		},
+		{
+			Port:        "443:443",
+			NodeFilters: []string{"loadbalancer"},
+		},
 	},
-	{
-		Name:   "image",
-		Values: vals{K3dDefaultNodeImage},
+	Options: v1alpha2.SimpleConfigOptions{
+		K3sOptions: v1alpha2.SimpleConfigOptionsK3s{
+			ExtraServerArgs: []string{"--no-deploy=traefik", "--node-label=ingress-ready=true"},
+		},
 	},
-
 }
 
-// K3dSetDefaultFlags sets default values for k3d flags
-func K3dSetDefaultFlags(flags *pflag.FlagSet) error {
-	for _, cfg := range K3dDefaultConfig {
-		flag := flags.Lookup(cfg.Name)
-		if flag.Changed { // do not change user settings
-			continue
-		}
-		for _, val := range cfg.Values {
-			if err := flag.Value.Set(val); err != nil {
-				return err
-			}
-		}
+// K3dSetDefaultConfig sets default values for k3d flags
+func K3dSetDefaultConfig(flags *pflag.FlagSet) error {
+	config := flags.Lookup("config")
+	if config.Changed { // do not change user settings
+		return nil
 	}
+
+	file, err := os.CreateTemp("", "k3d-config")
+	if err != nil {
+		return err
+	}
+	out, err := yaml.Marshal(K3dDefaultConfig)
+	if _, err := file.Write(out); err != nil {
+		return errors.Wrap(err, "dup")
+	}
+	//defer os.Remove(file.Name())
+	fmt.Println(file.Name())
+	if err := config.Value.Set(file.Name()); err != nil {
+		return err
+	}
+
 	return nil
 }
 
