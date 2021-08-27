@@ -20,6 +20,7 @@ jobs:
       contents: read
       pull-requests: read
       issues: read
+      packages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -31,7 +32,7 @@ jobs:
         run: |
           git remote remove origin
           git remote add origin https://${{secrets.GH_PAT}}@github.com/${{github.repository}}.git
-          git config --global user.email "bot@capact.io"
+          git config --global user.email "contact@capact.io"
           git config --global user.name "Capact Bot"
       - name: Setup environment
         run: |
@@ -40,6 +41,8 @@ jobs:
         uses: actions/setup-go@v2
         with:
           go-version: ${{env.GO_VERSION}}
+      - name: Set up GoReleaser
+        run: go install github.com/goreleaser/goreleaser@v0.173.2
       - name: Set up GCS
         uses: google-github-actions/setup-gcloud@master
         with:
@@ -52,6 +55,7 @@ jobs:
           RELEASE_VERSION: "${{ github.event.inputs.version }}"
         run: ./hack/make-release.sh
       - name: Run GoReleaser
+        run: make release-binaries
         uses: goreleaser/goreleaser-action@v2
         with:
           distribution: goreleaser
