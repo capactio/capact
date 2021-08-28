@@ -62,11 +62,6 @@ COPY --from=builder /bin/$COMPONENT /app.test
 RUN apk add --no-cache 'git=>2.30' && \
     go install github.com/onsi/ginkgo/ginkgo@latest
 
-LABEL source=git@github.com:capactio/capact.git
-LABEL app=$COMPONENT
-
-CMD ["/go/bin/ginkgo", "-v", "-nodes=1", "/app.test" ]
-
 FROM scratch as e2e
 
 COPY --from=builder /bin/$COMPONENT /app.test

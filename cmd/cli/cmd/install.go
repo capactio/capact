@@ -35,6 +35,10 @@ func NewInstall() *cobra.Command {
 			# Install Capact from local git repository. Needs to be run from the main directory
 			<cli> install --version @local`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := opts.Validate(); err != nil {
+				return err
+			}
+
 			k8sCfg, err := config.GetConfig()
 			if err != nil {
 				return errors.Wrap(err, "while creating k8s config")
