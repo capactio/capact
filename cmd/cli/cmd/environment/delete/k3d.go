@@ -1,10 +1,11 @@
 package delete
 
 import (
+	"fmt"
+
 	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/environment/delete"
 	"capact.io/capact/internal/cli/printer"
-	"fmt"
 	"github.com/rancher/k3d/v4/cmd/util"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

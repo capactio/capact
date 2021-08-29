@@ -6,6 +6,8 @@ import (
 	"io"
 	"log"
 
+	"capact.io/capact/internal/cli/environment/create"
+
 	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/printer"
 	"github.com/pkg/errors"
@@ -31,12 +33,11 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 	version := opts.Parameters.Version
 	if version == "@local" {
+		if opts.RegistryEnabled {
+			opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path = create.ContainerRegistry
+		}
 		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
 		registryTag := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Tag
-
-		if opts.Registry != "" {
-			registryPath = opts.Registry
-		}
 
 		// TODO can we parallelize it?
 		created, err := capact.BuildImages(ctx, status, registryPath, registryTag, opts.BuildImages)
@@ -44,8 +45,8 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 			return errors.Wrap(err, "while building images")
 		}
 
-		if opts.Registry != "" { // push to Docker registry
-			if err := capact.PushImages(ctx, status, created, opts.Registry); err != nil {
+		if opts.RegistryEnabled { // push to Docker registry
+			if err := capact.PushImages(ctx, status, created); err != nil {
 				return err
 			}
 		} else { // load into a given environment

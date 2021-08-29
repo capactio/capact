@@ -12,6 +12,7 @@ import (
 	"github.com/docker/docker/client"
 )
 
+// LocalRegistry deletes the local Docker registry if there is one.
 func LocalRegistry(ctx context.Context, status *printer.Status) (err error) {
 	status.Step("Removing Docker registry (if there is one)...")
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())

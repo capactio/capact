@@ -1,11 +1,12 @@
 package create
 
 import (
-	"capact.io/capact/internal/cli/printer"
 	"context"
-	"github.com/docker/docker/api/types"
 	"io"
 	"os"
+
+	"capact.io/capact/internal/cli/printer"
+	"github.com/docker/docker/api/types"
 
 	"capact.io/capact/internal/cli/config"
 	"github.com/docker/docker/api/types/container"
@@ -14,8 +15,16 @@ import (
 	"github.com/docker/go-connections/nat"
 )
 
-const ContainerRegistryName = "capact-registry.localhost"
+const (
+	// ContainerRegistryName defines name for the container registry. It's also used as DNS for registry.
+	ContainerRegistryName = "capact-registry.localhost"
+	// ContainerRegistryPort defines port for the container registry.
+	ContainerRegistryPort = "5000"
+	// ContainerRegistry defines container DNS with port.
+	ContainerRegistry = ContainerRegistryName + ":" + ContainerRegistryPort
+)
 
+// LocalRegistry create a local Docker registry used to pushed locally build images.
 func LocalRegistry(ctx context.Context, w io.Writer) (err error) {
 	status := printer.NewStatus(w, "")
 	defer func() {
@@ -42,7 +51,7 @@ func LocalRegistry(ctx context.Context, w io.Writer) (err error) {
 	cnt := &container.Config{Image: "registry:2"}
 	host := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			"5000/tcp": {{HostIP: "", HostPort: "5000"}},
+			"5000/tcp": {{HostIP: "", HostPort: ContainerRegistryPort}},
 		},
 		RestartPolicy: container.RestartPolicy{Name: "always"},
 		Mounts: []mount.Mount{{
@@ -63,8 +72,9 @@ func LocalRegistry(ctx context.Context, w io.Writer) (err error) {
 	return nil
 }
 
+// RegistryConnWithNetwork connects container registry with a given network.
 func RegistryConnWithNetwork(ctx context.Context, networkID string) error {
-	//docker network connect networkID capact-registry.localhost
+	//docker network connect ${networkID} capact-registry.localhost
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return err

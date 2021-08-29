@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"capact.io/capact/internal/cli/capact"
 	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/printer"
 
@@ -34,7 +35,7 @@ func NewK3d() *cobra.Command {
 		}
 		return create.LocalRegistry(cmd.Context(), os.Stdout)
 	}
-	k3d.RunE = func(cmd *cobra.Command, _ []string) (err error) {
+	k3d.RunE = func(cmd *cobra.Command, _ []string) error {
 		// Run k3d create cmd
 		k3d.Run(cmd, []string{opts.Name})
 
@@ -45,11 +46,23 @@ func NewK3d() *cobra.Command {
 		defer cancel()
 		return create.WaitForK3dReadyNodes(ctx, os.Stdout, opts.Name)
 	}
-	k3d.PostRunE = func(cmd *cobra.Command, args []string) error {
+	k3d.PostRunE = func(cmd *cobra.Command, args []string) (err error) {
 		if !opts.RegistryEnabled {
 			return nil
 		}
-		return create.RegistryConnWithNetwork(cmd.Context(), create.K3dDockerNetwork)
+		status := printer.NewStatus(os.Stdout, "")
+		defer func() {
+			status.End(err == nil)
+		}()
+
+		if err := create.RegistryConnWithNetwork(cmd.Context(), create.K3dDockerNetwork); err != nil {
+			return err
+		}
+
+		if err := capact.AddRegistryToHostsFile(status); err != nil {
+			return err
+		}
+		return nil
 	}
 
 	create.K3dRemoveWaitAndTimeoutFlags(k3d) // remove it, so we use own `--wait` flag

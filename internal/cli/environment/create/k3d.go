@@ -1,15 +1,17 @@
 package create
 
 import (
-	"capact.io/capact/internal/cli/config"
 	"context"
 	"fmt"
-	"github.com/spf13/cobra"
-	"github.com/spf13/pflag"
 	"io"
 	"os"
+	"path/filepath"
 	"text/template"
 	"time"
+
+	"capact.io/capact/internal/cli/config"
+	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 
 	"capact.io/capact/internal/cli/printer"
 
@@ -25,6 +27,7 @@ type K3dOptions struct {
 	Name            string
 	Wait            time.Duration
 	RegistryEnabled bool
+	Registry        string
 }
 
 // WaitForK3dReadyNodes waits until nodes are in Ready state based on the role message log.
@@ -87,10 +90,13 @@ func K3dSetDefaultConfig(flags *pflag.FlagSet, opts K3dOptions) error {
 		"networkName": K3dDockerNetwork,
 	}
 	if opts.RegistryEnabled {
-		data["registry"] = ContainerRegistryName
+		data["registry"] = ContainerRegistry
 	}
 
-	f, err := os.OpenFile(fName, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	f, err := os.OpenFile(filepath.Clean(fName), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
 	if err := tmpl.Execute(f, data); err != nil {
 		return err
 	}

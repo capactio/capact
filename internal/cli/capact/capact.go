@@ -1,8 +1,9 @@
 package capact
 
 import (
-	"github.com/pkg/errors"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (
@@ -62,11 +63,12 @@ type Options struct {
 	Parameters         InputParameters
 	UpdateHostsFile    bool
 	UpdateTrustedCerts bool
-	Registry           string
+	RegistryEnabled    bool
 }
 
+// Validate validates capact install options.
 func (o *Options) Validate() error {
-	if o.Registry != "" && o.Environment != K3dEnv {
+	if o.RegistryEnabled && o.Environment != K3dEnv {
 		return errors.New("registry can be used only with K3d environment")
 	}
 	return nil

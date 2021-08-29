@@ -2,13 +2,14 @@ package capact
 
 import (
 	"bytes"
-	"capact.io/capact/internal/cli/printer"
 	"context"
 	"fmt"
-	"github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"sort"
+
+	"capact.io/capact/internal/cli/printer"
+	"github.com/pkg/errors"
 
 	"k8s.io/utils/strings/slices"
 )
@@ -120,15 +121,15 @@ func BuildImages(ctx context.Context, w *printer.Status, repository, version str
 			return nil, errors.Wrapf(err, "while building image %s", image)
 		}
 		created = append(created, imageTag)
-
 	}
 	return created, nil
 }
 
 // PushImages pushes passed images to a given registry
-func PushImages(ctx context.Context, w *printer.Status, names []string, reg string) error {
+func PushImages(ctx context.Context, w *printer.Status, names []string) error {
 	var buff bytes.Buffer
 	for _, image := range names {
+		// #nosec G204
 		cmd := exec.CommandContext(ctx, "docker",
 			"push",
 			image)
