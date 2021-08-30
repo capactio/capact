@@ -21,15 +21,16 @@ capact alpha manifest-gen implementation helm [MANIFEST_PATH] [HELM_CHART_NAME] 
   -i, --interface string   Path with revision of the Interface, which is implemented by this Implementation
       --repo string        URL of the Helm repository
   -r, --revision string    Revision of the Implementation manifest (default "0.1.0")
-  -v, --version string     Version of the Helm chart
+      --version string     Version of the Helm chart
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -c, --config string   Path to the YAML config file
-  -o, --output string   Path to the output directory for the generated manifests (default "generated")
-      --overwrite       Overwrite existing manifest files
+  -c, --config string                 Path to the YAML config file
+  -o, --output string                 Path to the output directory for the generated manifests (default "generated")
+      --overwrite                     Overwrite existing manifest files
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
 ```
 
 ### SEE ALSO
