@@ -11,6 +11,7 @@ import (
 	"path"
 	"time"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/maps"
 	"capact.io/capact/internal/ptr"
@@ -20,7 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
+	helmcli "helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"helm.sh/helm/v3/pkg/strvals"
@@ -144,7 +145,7 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 		location = c.Chart()
 	}
 
-	chartPath, err = upgradeCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
+	chartPath, err = upgradeCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
@@ -174,7 +175,7 @@ func (c *ComponentData) runInstall(installCli *action.Install, values map[string
 		location = c.Chart()
 	}
 
-	chartPath, err = installCli.ChartPathOptions.LocateChart(location, &cli.EnvSettings{
+	chartPath, err = installCli.ChartPathOptions.LocateChart(location, &helmcli.EnvSettings{
 		RepositoryCache: RepositoryCache,
 	})
 	if err != nil {
@@ -585,7 +586,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 
 // InstallComponents installs Helm components
 func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status *printer.Status) error {
-	if h.opts.Verbose {
+	if cli.VerboseMode.IsEnabled() {
 		status.Step("Resolving installation config")
 		status.End(true)
 		h.writeHelmDetails(w)
@@ -606,7 +607,7 @@ func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status *print
 		if err != nil {
 			return err
 		}
-		if h.opts.Verbose {
+		if cli.VerboseMode.IsEnabled() {
 			h.writeStatus(w, newRelease)
 		}
 	}

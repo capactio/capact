@@ -3,7 +3,6 @@ package client
 import (
 	"context"
 	"fmt"
-	"net/http"
 
 	"capact.io/capact/internal/k8s-engine/graphql/namespace"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
@@ -18,12 +17,9 @@ type Client struct {
 }
 
 // New returns a new Client instance.
-func New(endpoint string, httpClient *http.Client) *Client {
-	clientOpt := graphql.WithHTTPClient(httpClient)
-	client := graphql.NewClient(endpoint, clientOpt)
-
+func New(gqlClient *graphql.Client) *Client {
 	return &Client{
-		client: client,
+		client: gqlClient,
 	}
 }
 

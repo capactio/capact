@@ -59,5 +59,4 @@ type Options struct {
 	Parameters         InputParameters
 	UpdateHostsFile    bool
 	UpdateTrustedCerts bool
-	Verbose            bool
 }

@@ -3,6 +3,11 @@ package client
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+
+	"capact.io/capact/internal/cli"
+	"github.com/machinebox/graphql"
 
 	"capact.io/capact/pkg/hub/client/local"
 	"capact.io/capact/pkg/hub/client/public"
@@ -37,9 +42,19 @@ func NewHub(server string) (Hub, error) {
 		return nil, err
 	}
 
+	endpoint := fmt.Sprintf("%s/graphql", server)
 	httpClient := httputil.NewClient(
 		httputil.WithBasicAuth(creds.Username, creds.Secret),
 		httputil.WithTimeout(timeout))
 
-	return client.New(fmt.Sprintf("%s/graphql", server), httpClient), nil
+	gqlClient := graphql.NewClient(endpoint, graphql.WithHTTPClient(httpClient))
+	if cli.VerboseMode.IsTracing() {
+		logger := log.New(os.Stdout, "\nGraphQL client: ", log.LstdFlags)
+		gqlClient.Log = func(s string) { logger.Println(s) }
+	}
+
+	return &client.Client{
+		Local:  local.NewClient(gqlClient),
+		Public: public.NewClient(gqlClient),
+	}, nil
 }

@@ -1,3 +1,4 @@
+//go:build integration
 // +build integration
 
 package e2e
@@ -5,6 +6,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"github.com/machinebox/graphql"
 	"testing"
 	"time"
 
@@ -99,7 +101,8 @@ func getEngineGraphQLClient() *engineclient.Client {
 		httputil.WithTLSInsecureSkipVerify(true),
 		httputil.WithBasicAuth(cfg.Gateway.Username, cfg.Gateway.Password),
 	)
-	return engineclient.New(cfg.Gateway.Endpoint, httpClient)
+	gqlClient := graphql.NewClient(cfg.Gateway.Endpoint, graphql.WithHTTPClient(httpClient))
+	return engineclient.New(gqlClient)
 }
 
 func log(format string, args ...interface{}) {
