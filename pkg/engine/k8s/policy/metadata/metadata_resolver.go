@@ -1,10 +1,11 @@
-package policy
+package metadata
 
 import (
-	"context"
-
+	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"context"
+	"fmt"
 	"github.com/pkg/errors"
 )
 
@@ -13,17 +14,25 @@ type HubClient interface {
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
 }
 
+type Resolver struct{
+	hubCli HubClient
+}
+
+func NewResolver(hubCli HubClient) *Resolver {
+	return &Resolver{hubCli: hubCli}
+}
+
 // ResolveTypeInstanceMetadata resolves needed TypeInstance metadata based on IDs for a given Policy.
-func ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient, policy *Policy) error {
+func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *policy.Policy) error {
 	if policy == nil {
 		return errors.New("policy cannot be nil")
 	}
 
-	if hubCli == nil {
+	if r.hubCli == nil {
 		return errors.New("hub client cannot be nil")
 	}
 
-	unresolvedTIs := policy.typeInstanceIDsWithUnresolvedMetadata()
+	unresolvedTIs := TypeInstanceIDsWithUnresolvedMetadataForPolicy(*policy)
 
 	var idsToQuery []string
 	for _, ti := range unresolvedTIs {
@@ -34,23 +43,22 @@ func ResolveTypeInstanceMetadata(ctx context.Context, hubCli HubClient, policy *
 		return nil
 	}
 
-	res, err := hubCli.FindTypeInstancesTypeRef(ctx, idsToQuery)
+	res, err := r.hubCli.FindTypeInstancesTypeRef(ctx, idsToQuery)
 	if err != nil {
 		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
 	}
 
-	resolveTypeRefsForRequiredTypeInstances(policy, res)
-	resolveTypeRefsForAdditionalTypeInstances(policy, res)
-
-	err = policy.ValidateTypeInstancesMetadata()
-	if err != nil {
-		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
+	if len(res) != len(idsToQuery) {
+		return fmt.Errorf("invalid result len - expected: %d, actual: %d", len(idsToQuery), len(res))
 	}
+
+	r.resolveTypeRefsForRequiredTypeInstances(policy, res)
+	r.resolveTypeRefsForAdditionalTypeInstances(policy, res)
 
 	return nil
 }
 
-func resolveTypeRefsForRequiredTypeInstances(policy *Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
+func (r *Resolver) resolveTypeRefsForRequiredTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
 	for ruleIdx, rule := range policy.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {
@@ -71,7 +79,7 @@ func resolveTypeRefsForRequiredTypeInstances(policy *Policy, typeRefs map[string
 	}
 }
 
-func resolveTypeRefsForAdditionalTypeInstances(policy *Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
+func (r *Resolver) resolveTypeRefsForAdditionalTypeInstances(policy *policy.Policy, typeRefs map[string]hublocalgraphql.TypeInstanceTypeReference) {
 	for ruleIdx, rule := range policy.Rules {
 		for ruleItemIdx, ruleItem := range rule.OneOf {
 			if ruleItem.Inject == nil {

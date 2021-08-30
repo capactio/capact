@@ -1,6 +1,7 @@
 package client
 
 import (
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 	"capact.io/capact/pkg/sdk/validation"
 	"context"
 	"fmt"
@@ -26,27 +27,43 @@ type HubClient interface {
 }
 
 type Validator interface {
-	ValidateAdditionalTypeInstances(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result
+	AreTypeInstancesMetadataResolved(in policy.Policy) bool
+	ValidateTypeInstancesMetadata(in policy.Policy) error
+	ValidateTypeInstancesMetadataForRule(in policy.Rule) error
+	ValidateAdditionalTypeInstancesInPolicy(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result
 	IsTypeRefValidAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool
+
+	LoadAdditionalInputParametersSchemas(context.Context, hubpublicgraphql.ImplementationRevision) (validation.SchemaCollection, error)
+	ValidateParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters types.ParametersCollection) (validation.Result, error)
+}
+
+type PolicyMetadataResolver interface {
+	ResolveTypeInstanceMetadata(ctx context.Context, policy *policy.Policy) error
 }
 
 // PolicyEnforcedClient is a client, which can interact with the Local and Public Hub.
 // It can be configured with policies to filter the Implementations returned by the Hub.
 type PolicyEnforcedClient struct {
-	hubCli               HubClient
-	globalPolicy         policy.Policy
-	actionPolicy         policy.Policy
-	mergedPolicy         policy.Policy
-	policyOrder          policy.MergeOrder
-	workflowStepPolicies []policy.Policy
-	validator			 Validator
-	mu                   sync.RWMutex
+	hubCli                 HubClient
+	globalPolicy           policy.Policy
+	actionPolicy           policy.Policy
+	mergedPolicy           policy.Policy
+	policyOrder            policy.MergeOrder
+	workflowStepPolicies   []policy.Policy
+	validator              Validator
+	policyMetadataResolver PolicyMetadataResolver
+	mu                     sync.RWMutex
 }
 
 // NewPolicyEnforcedClient returns a new NewPolicyEnforcedClient.
-func NewPolicyEnforcedClient(hubCli HubClient) *PolicyEnforcedClient {
+func NewPolicyEnforcedClient(hubCli HubClient, validator Validator) *PolicyEnforcedClient {
 	defaultOrder := policy.MergeOrder{policy.Action, policy.Global, policy.Workflow}
-	return &PolicyEnforcedClient{hubCli: hubCli, policyOrder: defaultOrder}
+	return &PolicyEnforcedClient{
+		hubCli:                 hubCli,
+		validator: validator,
+		policyMetadataResolver: metadata.NewResolver(hubCli),
+		policyOrder:            defaultOrder,
+	}
 }
 
 // ListImplementationRevisionForInterface returns ImplementationRevisions
@@ -93,7 +110,7 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 		return nil, nil
 	}
 
-	if err := policyRule.ValidateTypeInstanceMetadata(); err != nil {
+	if err := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); err != nil {
 		return nil, errors.Wrap(err, "while validating Policy rule")
 	}
 
@@ -124,21 +141,15 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 		return nil, nil
 	}
 
-	if err := policyRule.ValidateTypeInstanceMetadata(); err != nil {
+	if err := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); err != nil {
 		return nil, errors.Wrap(err, "while validating Policy rule")
 	}
 
 	wrappedErrMsg := "while checking if additional TypeInstances from Policy are defined in Implementation manifest"
-	validationRes := e.validator.ValidateAdditionalTypeInstances(additionalTIsInPolicy, implRev)
+	validationRes := e.validator.ValidateAdditionalTypeInstancesInPolicy(additionalTIsInPolicy, implRev)
 	if validationRes.Len() > 0 {
 		return nil, errors.Wrap(validationRes.ErrorOrNil(), wrappedErrMsg)
 	}
-
-
-
-
-
-
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
 	for _, typeInstance := range additionalTIsInPolicy {
@@ -156,21 +167,36 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 //
 // We return all additional parameters assigned to a given Implementation. It's validated by a dedicated function if
 // implementation expects additional parameters and if they are valid against JSONSchema.
-func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error) {
+func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicgraphql.ImplementationRevision) (types.ParametersCollection, error) {
 	if policyRule.Inject == nil || len(policyRule.Inject.AdditionalParameters) == 0 {
 		return nil, nil
 	}
 
-	out := types.ParametersCollection{}
+	paramsCollection := types.ParametersCollection{}
 	for _, param := range policyRule.Inject.AdditionalParameters {
 		data, err := yaml.Marshal(param.Value)
 		if err != nil {
 			return nil, errors.Wrap(err, "while marshaling additional input parameters to YAML")
 		}
 
-		out[param.Name] = string(data)
+		paramsCollection[param.Name] = string(data)
 	}
-	return out, nil
+
+	additionalInputSchemas, err := e.validator.LoadAdditionalInputParametersSchemas(ctx, implRev)
+	if err != nil {
+		return nil, errors.Wrap(err, "while loading additional input parameters schemas")
+	}
+
+	wrappedErrMessage := "while validating additional input parameters schemas"
+	res, err := e.validator.ValidateParameters(ctx, additionalInputSchemas, paramsCollection)
+	if err != nil {
+		return nil, errors.Wrap(err, wrappedErrMessage)
+	}
+	if res.Len() > 0 {
+		return nil, errors.Wrap(res.ErrorOrNil(), wrappedErrMessage)
+	}
+
+	return paramsCollection, nil
 }
 
 // FindInterfaceRevision finds InterfaceRevision for the provided reference.
@@ -255,13 +281,18 @@ func (e *PolicyEnforcedClient) findRulesForInterface(interfaceRef hubpublicgraph
 }
 
 func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Context) error {
-	if e.mergedPolicy.AreTypeInstancesMetadataResolved() {
+	if e.validator.AreTypeInstancesMetadataResolved(e.mergedPolicy) {
 		return nil
 	}
 
-	err := policy.ResolveTypeInstanceMetadata(ctx, e.hubCli, &e.mergedPolicy)
+	err := e.policyMetadataResolver.ResolveTypeInstanceMetadata(ctx, &e.mergedPolicy)
 	if err != nil {
 		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
+	}
+
+	err = e.validator.ValidateTypeInstancesMetadata(e.mergedPolicy)
+	if err != nil {
+		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
 	}
 
 	return nil

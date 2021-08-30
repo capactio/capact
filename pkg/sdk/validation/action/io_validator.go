@@ -109,9 +109,9 @@ func (c *InputOutputValidator) LoadIfaceInputTypeInstanceRefs(_ context.Context,
 	return typeInstancesTypeRefs, nil
 }
 
-// LoadImplInputParametersSchemas returns JSONSchemas for additional parameters defined on a given Implementation.
+// LoadAdditionalInputParametersSchemas returns JSONSchemas for additional parameters defined on a given Implementation.
 // It resolves TypeRefs to a given JSONSchema by calling Hub.
-func (c *InputOutputValidator) LoadImplInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error) {
+func (c *InputOutputValidator) LoadAdditionalInputParametersSchemas(ctx context.Context, impl gqlpublicapi.ImplementationRevision) (validation.SchemaCollection, error) {
 	if c.implHasNoInputParams(impl) {
 		return nil, nil
 	}

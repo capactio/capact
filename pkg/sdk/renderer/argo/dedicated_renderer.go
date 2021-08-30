@@ -295,7 +295,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 					// 3.7.2 Additional Input
-					additionalParameters, err := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule)
+					additionalParameters, err := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(ctx, rule, implementation)
 					if err != nil {
 						return nil, errors.Wrap(err, "while converting additional input parameters")
 					}

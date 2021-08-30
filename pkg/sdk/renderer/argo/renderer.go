@@ -1,6 +1,7 @@
 package argo
 
 import (
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
 	"context"
 	"encoding/json"
 	"time"
@@ -26,7 +27,7 @@ type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
 	ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
 	ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
-	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error)
+	ListAdditionalInputToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) (types.ParametersCollection, error)
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
 	PushWorkflowStepPolicy(policy policy.WorkflowPolicy) error
@@ -140,7 +141,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
 	// 5.4 Additional Input
-	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule)
+	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(ctx, rule, implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting additional parameters")
 	}
@@ -149,9 +150,9 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	// 6. Validate workflow input against Interface:
 	// Implementation-specific input is already validated on PolicyEnforcedClient level
 	validateInput := renderer.ValidateInput{
-		Interface:            iface,
-		Parameters:           ToInputParams(dedicatedRenderer.inputParametersRaw),
-		TypeInstances:        dedicatedRenderer.inputTypeInstances,
+		Interface:     iface,
+		Parameters:    ToInputParams(dedicatedRenderer.inputParametersRaw),
+		TypeInstances: dedicatedRenderer.inputTypeInstances,
 	}
 	err = r.wfValidator.Validate(ctx, validateInput)
 

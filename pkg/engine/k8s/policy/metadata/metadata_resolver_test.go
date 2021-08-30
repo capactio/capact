@@ -1,6 +1,7 @@
-package policy_test
+package metadata_test
 
 import (
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 	"context"
 	"testing"
 
@@ -16,9 +17,9 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	// given
 	tests := []struct {
 		Name               string
-		Input              *policy.Policy
-		HubCli             policy.HubClient
-		Expected           *policy.Policy
+		Input    *policy.Policy
+		HubCli   metadata.HubClient
+		Expected *policy.Policy
 		ExpectedErrMessage *string
 	}{
 		{
@@ -62,8 +63,10 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	for _, testCase := range tests {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
+			resolver := metadata.NewMetadataResolver(tc.HubCli)
+
 			// when
-			err := policy.ResolveTypeInstanceMetadata(context.Background(), tc.HubCli, tc.Input)
+			err := resolver.ResolveTypeInstanceMetadata(context.Background(), tc.Input)
 
 			// then
 			if tc.ExpectedErrMessage != nil {

@@ -9,42 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestPolicy_AreTypeInstancesMetadataResolved(t *testing.T) {
-	// given
-	tests := []struct {
-		Name           string
-		Input          policy.Policy
-		ExpectedResult bool
-	}{
-		{
-			Name:           "Empty",
-			Input:          policy.Policy{},
-			ExpectedResult: true,
-		},
-		{
-			Name:           "False",
-			Input:          fixPolicyWithoutTypeRef(),
-			ExpectedResult: false,
-		},
-		{
-			Name:           "True",
-			Input:          fixPolicyWithTypeRef(),
-			ExpectedResult: true,
-		},
-	}
-
-	for _, testCase := range tests {
-		tc := testCase
-		t.Run(tc.Name, func(t *testing.T) {
-			// when
-			res := tc.Input.AreTypeInstancesMetadataResolved()
-
-			// then
-			assert.Equal(t, tc.ExpectedResult, res)
-		})
-	}
-}
-
 func TestRule_RequiredTypeInstancesToInject(t *testing.T) {
 	// given
 	tests := []struct {

@@ -1,18 +1,18 @@
 package policy_test
 
 import (
-	"testing"
-
 	"capact.io/capact/internal/cli/heredoc"
-
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
-func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
+func TestValidator_ValidateTypeInstancesMetadata(t *testing.T) {
 	// given
+	validator := policyvalidation.NewValidator()
 	tests := []struct {
 		Name               string
 		Input              policy.Policy
@@ -43,8 +43,10 @@ func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
 	for _, testCase := range tests {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			
 			// when
-			err := tc.Input.ValidateTypeInstancesMetadata()
+			err := validator.ValidateTypeInstancesMetadata(tc.Input)
 
 			// then
 			if tc.ExpectedErrMessage != nil {
@@ -57,8 +59,9 @@ func TestPolicy_ValidateTypeInstancesMetadata(t *testing.T) {
 	}
 }
 
-func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
+func TestValidator_ValidateTypeInstanceMetadata(t *testing.T) {
 	// given
+	validator := policyvalidation.NewValidator()
 	tests := []struct {
 		Name               string
 		Input              policy.Rule
@@ -89,8 +92,10 @@ func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
 	for _, testCase := range tests {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
 			// when
-			err := tc.Input.ValidateTypeInstanceMetadata()
+			err := validator.ValidateTypeInstancesMetadataForRule(tc.Input)
 
 			// then
 			if tc.ExpectedErrMessage != nil {
@@ -99,6 +104,44 @@ func TestRule_ValidateTypeInstanceMetadata(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
+		})
+	}
+}
+
+func TestPolicy_AreTypeInstancesMetadataResolved(t *testing.T) {
+	// given
+	validator := policyvalidation.NewValidator()
+	tests := []struct {
+		Name           string
+		Input          policy.Policy
+		ExpectedResult bool
+	}{
+		{
+			Name:           "Empty",
+			Input:          policy.Policy{},
+			ExpectedResult: true,
+		},
+		{
+			Name:           "False",
+			Input:          fixPolicyWithoutTypeRef(),
+			ExpectedResult: false,
+		},
+		{
+			Name:           "True",
+			Input:          fixPolicyWithTypeRef(),
+			ExpectedResult: true,
+		},
+	}
+
+	for _, testCase := range tests {
+		tc := testCase
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			// when
+			res := validator.AreTypeInstancesMetadataResolved(tc.Input)
+
+			// then
+			assert.Equal(t, tc.ExpectedResult, res)
 		})
 	}
 }
