@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestVerboseModeFlag(t *testing.T) {
+func TestVerboseModeFlagHappPath(t *testing.T) {
 	tests := map[string]struct {
 		givenRawOption string
 		expectedMode   cli.VerboseModeFlag
@@ -63,6 +63,44 @@ func TestVerboseModeFlag(t *testing.T) {
 
 			// then
 			assert.Equal(t, tc.expectedMode, cli.VerboseMode)
+		})
+	}
+}
+
+func TestVerboseModeFlagFailures(t *testing.T) {
+	tests := map[string]struct {
+		givenRawOption string
+		expectedErrMsg string
+	}{
+		"Should return error for unknown mode by id": {
+			givenRawOption: "-v=3",
+			expectedErrMsg: `invalid argument "3" for "-v, --verbose" flag: unknown verbose mode`,
+		},
+
+		"Should return error for unknown mode by human name": {
+			givenRawOption: "-v=none",
+			expectedErrMsg: `invalid argument "none" for "-v, --verbose" flag: unknown verbose mode`,
+		},
+	}
+	for tn, tc := range tests {
+		t.Run(tn, func(t *testing.T) {
+			// given
+			old := cli.VerboseMode
+			defer func() { cli.VerboseMode = old }()
+
+			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
+			cli.RegisterVerboseModeFlag(flags)
+
+			var args []string
+			if tc.givenRawOption != "" {
+				args = append(args, tc.givenRawOption)
+			}
+
+			// when
+			err := flags.Parse(args)
+
+			// then
+			assert.EqualError(t, err, tc.expectedErrMsg)
 		})
 	}
 }

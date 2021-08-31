@@ -73,7 +73,7 @@ func (o *VerboseModeFlag) Set(in string) error {
 	// try int ID
 	id, err := strconv.Atoi(in)
 	if err != nil {
-		return err
+		return ErrInvalidFormatType
 	}
 	*o = VerboseModeFlag(id)
 	if !o.IsValid() {
