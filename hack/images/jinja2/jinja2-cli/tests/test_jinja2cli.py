@@ -1,36 +1,90 @@
 import os
 import string
+import typing
+from dataclasses import dataclass
 
 from jinja2cli import cli, capact
+
+import pytest
 
 # change dir to tests directory to make relative paths possible
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 
-def test_relative_path():
-    path = "./files/template.j2"
-
-    title = b"\xc3\xb8".decode("utf8")
-    output = cli.render(path, {"title": title}, [])
-    assert output == title
-    assert type(output) == cli.text_type
-
-
-def test_absolute_path():
-    absolute_base_path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(absolute_base_path, "files", "template.j2")
-
-    title = b"\xc3\xb8".decode("utf8")
-    output = cli.render(path, {"title": title}, [])
-    assert output == title
-    assert type(output) == cli.text_type
+@dataclass
+class TestCase:
+    name: str
+    template: str
+    data: typing.Dict[str, typing.Any]
+    result: str
 
 
-def test_random_password():
-    absolute_base_path = os.path.dirname(os.path.realpath(__file__))
-    path = os.path.join(absolute_base_path, "files", "random_password.j2")
+render_testcases = [
+    TestCase(name="empty", template="", data={}, result=""),
+    TestCase(
+        name="simple",
+        template="<@ title @>",
+        data={"title": b"\xc3\xb8".decode("utf8")},
+        result=b"\xc3\xb8".decode("utf8"),
+    ),
+    TestCase(
+        name="prefix",
+        template="<@ input.key @>",
+        data={"input": {"key": "value"}},
+        result="value",
+    ),
+    TestCase(
+        name="two prefixes but one provided",
+        template="<@ input.key @>/<@ additionalinput.key @>",
+        data={"input": {"key": "value"}},
+        result="value/<@ additionalinput.key @>",
+    ),
+    TestCase(
+        name="missing prefix",
+        template="<@ input.key @>",
+        data={},
+        result="<@ input.key @>",
+    ),
+    TestCase(
+        name="items before attrs",
+        template="<@ input.values.key @>",
+        data={"input": {"values": {"key": "value"}}},
+        result="value",
+    ),
+    TestCase(
+        name="attrs still working",
+        template="<@ input.values() @>",
+        data={"input": {}},
+        result="dict_values([])",
+    ),
+    TestCase(
+        name="key with dot",
+        template="<@ input['foo.bar'] @>",
+        data={"input": {"foo.bar": "value"}},
+        result="value",
+    ),
+    TestCase(
+        name="missing key with dot",
+        template='<@ input["foo.bar"] @>',
+        data={},
+        result='<@ input["foo.bar"] @>',
+    ),
+]
 
-    output = cli.render(path, {}, [])
+
+@pytest.mark.parametrize("case", render_testcases)
+def test_render(tmp_path, case):
+    render_path = tmp_path / case.name
+    render_path.write_text(case.template)
+    output = cli.render(render_path, case.data, [])
+    assert output == case.result
+
+
+def test_random_password(tmp_path):
+    random_pass_path = tmp_path / "random.template"
+    random_pass_path.write_text("<@ random_password(length=4) @>")
+
+    output = cli.render(random_pass_path, {}, [])
     assert contains_character_from(output, string.ascii_lowercase)
     assert contains_character_from(output, string.ascii_uppercase)
     assert contains_character_from(output, string.digits)
