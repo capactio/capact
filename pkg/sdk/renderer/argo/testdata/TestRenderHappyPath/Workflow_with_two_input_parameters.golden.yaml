@@ -1,0 +1,121 @@
+args:
+  workflow:
+    arguments: {}
+    entrypoint: capact-root
+    templates:
+    - inputs:
+        artifacts:
+        - name: input-parameters
+        - name: second-parameters
+          optional: true
+      metadata: {}
+      name: main
+      outputs: {}
+    - inputs: {}
+      metadata: {}
+      name: capact-root
+      outputs: {}
+      steps:
+      - - arguments: {}
+          name: inject-runner-context-step
+          template: inject-runner-context
+      - - arguments: {}
+          name: populate-second-parameters-step
+          template: populate-second-parameters
+      - - arguments: {}
+          name: populate-input-parameters-step
+          template: populate-input-parameters
+      - - arguments:
+            artifacts:
+            - from: '{{steps.populate-input-parameters-step.outputs.artifacts.input-parameters}}'
+              name: input-parameters
+            - from: '{{steps.populate-second-parameters-step.outputs.artifacts.second-parameters}}'
+              name: second-parameters
+          name: start-entrypoint
+          template: main
+    - container:
+        args:
+        - cat "/input/parameters.json" | jq -r '."input-parameters"' | tee "/output"
+          && sleep 1
+        command:
+        - sh
+        - -c
+        image: ghcr.io/capactio/infra/jq:1.6
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-input-parameters
+      outputs:
+        artifacts:
+        - name: input-parameters
+          path: /output
+      volumes:
+      - name: user-secret-volume
+        secret:
+          items:
+          - key: parameters.json
+            path: parameters.json
+          optional: false
+          secretName: user-input
+    - container:
+        args:
+        - cat "/input/parameters.json" | jq -r '."second-parameters"' | tee "/output"
+          && sleep 1
+        command:
+        - sh
+        - -c
+        image: ghcr.io/capactio/infra/jq:1.6
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-second-parameters
+      outputs:
+        artifacts:
+        - name: second-parameters
+          path: /output
+      volumes:
+      - name: user-secret-volume
+        secret:
+          items:
+          - key: parameters.json
+            path: parameters.json
+          optional: false
+          secretName: user-input
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /input
+          name: runner-context
+          readOnly: true
+      inputs: {}
+      metadata: {}
+      name: inject-runner-context
+      outputs:
+        artifacts:
+        - globalName: runner-context
+          name: runner-context
+          path: /input/context.yaml
+      volumes:
+      - name: runner-context
+        secret:
+          items:
+          - key: key
+            path: context.yaml
+          optional: false
+          secretName: secret
+runnerInterface: cap.interface.runner.argo.run

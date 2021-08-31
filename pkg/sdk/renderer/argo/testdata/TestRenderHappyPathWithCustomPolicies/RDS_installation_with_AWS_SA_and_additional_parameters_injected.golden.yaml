@@ -454,11 +454,11 @@ args:
           name: inject-input-type-instances-3-0-step
           template: inject-input-type-instances-3-0
       - - arguments: {}
-          name: populate-user-input-step
-          template: populate-user-input
+          name: populate-input-parameters-step
+          template: populate-input-parameters
       - - arguments:
             artifacts:
-            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
+            - from: '{{steps.populate-input-parameters-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
             - name: additional-parameters
               raw:
@@ -519,23 +519,24 @@ args:
           template: upload-output-type-instances
     - container:
         args:
-        - sleep 1
+        - cat "/input/parameters.json" | jq -r '."input-parameters"' | tee "/output"
+          && sleep 1
         command:
         - sh
         - -c
-        image: alpine:3.7
+        image: ghcr.io/capactio/infra/jq:1.6
         name: ""
         resources: {}
         volumeMounts:
-        - mountPath: /output
+        - mountPath: /input
           name: user-secret-volume
       inputs: {}
       metadata: {}
-      name: populate-user-input
+      name: populate-input-parameters
       outputs:
         artifacts:
         - name: input-parameters
-          path: /output/parameters.json
+          path: /output
       volumes:
       - name: user-secret-volume
         secret:

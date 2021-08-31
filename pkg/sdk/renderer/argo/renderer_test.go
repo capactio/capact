@@ -68,21 +68,21 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
+			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
 		},
 		{
 			name: "Workflow with apps stack installation with user input",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.stack.install",
 			},
-			rawUserInput: []byte(`{"key": true}`),
+			rawUserInput: []byte(`{"input-parameters":{"key": true}}`),
 		},
 		{
 			name: "Mattermost workflow with user input",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
 		},
 		{
 			name: "PostgreSQL change password",
@@ -99,7 +99,7 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			rawUserInput:        []byte(`{"password": "foo"}`),
+			rawUserInput:        []byte(`{"input-parameters":{"password": "foo"}}`),
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 		{
@@ -117,7 +117,7 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			rawUserInput:        []byte(`{"key": true}`),
+			rawUserInput:        []byte(`{"input-parameters":{"key": true}}`),
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 	}
@@ -184,7 +184,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
 			policy:       fixGCPGlobalPolicy(),
 		},
 		{
@@ -192,7 +192,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
 			policy:       fixExistingDBPolicy(),
 		},
 		{
@@ -201,7 +201,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.database.postgresql.install",
 			},
 			policy:       fixGCPGlobalPolicy(),
-			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
+			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
 		},
 		{
 			name: "RDS installation with AWS SA and additional parameters injected",
@@ -209,7 +209,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.database.postgresql.install",
 			},
 			policy:       fixAWSRDSPolicy(),
-			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
+			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
 		},
 		{
 			name: "Mattermost with CloudSQL using Terraform",
@@ -217,7 +217,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.productivity.mattermost.install",
 			},
 			policy:       fixTerraformPolicy(),
-			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
 		},
 		{
 			name: "Mattermost with AWS RDS install",
@@ -225,7 +225,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.productivity.mattermost.install",
 			},
 			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
 		},
 		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
@@ -233,7 +233,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.database.postgresql.install",
 			},
 			policy:       fixGlobalPolicyForFallback(),
-			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
+			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
 		},
 		{
 			name: "Workflow policy injects additional input - reference by ManifestRef",
@@ -241,7 +241,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.app-stack.app1.install",
 			},
 			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"key": "string"}`),
+			rawUserInput: []byte(`{"input-parameters":{"key": "string"}}`),
 		},
 		{
 			name: "Workflow policy injects additional input - reference by alias",
@@ -249,7 +249,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				Path: "cap.interface.app-stack.app2.install",
 			},
 			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"key": "string"}`),
+			rawUserInput: []byte(`{"input-parameters":{"key": "string"}}`),
 		},
 	}
 	for testIdx, test := range tests {

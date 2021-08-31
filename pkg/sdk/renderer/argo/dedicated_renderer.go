@@ -450,74 +450,22 @@ func (r *dedicatedRenderer) UnmarshalWorkflowFromImplementation(prefix string, i
 	return workflow, artifactsNameMapping, nil
 }
 
-func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workflow) {
+func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workflow) error {
 	if r.inputParametersSecretRef == nil {
-		return
+		return nil
 	}
 
-	var (
-		volumeName   = "user-secret-volume"
-		mountPath    = "/output"
-		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.inputParametersSecretRef.Key)
-	)
+	inputParametersMap := make(map[string]interface{})
 
-	// 1. Create step which consumes user data from Secret and outputs it as artifact
-	container := r.sleepContainer()
-	container.VolumeMounts = []apiv1.VolumeMount{
-		{
-			Name:      volumeName,
-			MountPath: mountPath,
-		},
+	if err := json.Unmarshal(r.inputParametersRaw, &inputParametersMap); err != nil {
+		return err
 	}
 
-	userInputWfTpl := &wfv1.Template{
-		Name:      "populate-user-input",
-		Container: container,
-		Outputs: wfv1.Outputs{
-			Artifacts: wfv1.Artifacts{
-				{
-					Name: UserInputName,
-					Path: artifactPath,
-				},
-			},
-		},
-		Volumes: []apiv1.Volume{
-			{
-				Name: volumeName,
-				VolumeSource: apiv1.VolumeSource{
-					Secret: &apiv1.SecretVolumeSource{
-						SecretName: r.inputParametersSecretRef.Name,
-						Items: []apiv1.KeyToPath{
-							{
-								Key:  r.inputParametersSecretRef.Key,
-								Path: r.inputParametersSecretRef.Key,
-							},
-						},
-						Optional: ptr.Bool(false),
-					},
-				},
-			},
-		},
+	for paramName := range inputParametersMap {
+		r.addUserInputFromSecret(rootWorkflow, paramName)
 	}
-	userInputWfStep := &wfv1.WorkflowStep{
-		Name:     fmt.Sprintf("%s-step", userInputWfTpl.Name),
-		Template: userInputWfTpl.Name,
-	}
-	r.rootTemplate.Steps = append([]ParallelSteps{
-		{
-			&WorkflowStep{
-				WorkflowStep: userInputWfStep,
-			},
-		},
-	}, r.rootTemplate.Steps...)
-	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: userInputWfTpl})
 
-	// 2. Add input arguments artifacts with user data. Thanks to that Content Developer can
-	// refer to it via "{{inputs.artifacts.input-parameters}}"
-	r.entrypointStep.Arguments.Artifacts = append(r.entrypointStep.Arguments.Artifacts, wfv1.Artifact{
-		Name: UserInputName,
-		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, UserInputName),
-	})
+	return nil
 }
 
 func (r *dedicatedRenderer) AddRunnerContext(rootWorkflow *Workflow, secretRef RunnerContextSecretRef) error {
@@ -800,6 +748,7 @@ func (*dedicatedRenderer) evaluateWhenExpression(params *mapEvalParameters, expr
 
 	return result, nil
 }
+
 func (r *dedicatedRenderer) maxDepthExceeded() bool {
 	return r.currentIteration > r.maxDepth
 }
@@ -813,6 +762,85 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 		Image:   "alpine:3.7",
 		Command: []string{"sh", "-c"},
 		Args:    []string{"sleep 1"},
+	}
+}
+
+func (r *dedicatedRenderer) addUserInputFromSecret(rootWorkflow *Workflow, parameterName string) {
+	var (
+		volumeName   = "user-secret-volume"
+		mountPath    = "/input"
+		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.inputParametersSecretRef.Key)
+		outputPath   = "/output"
+	)
+
+	// 1. Create step which consumes user data from Secret and outputs it as artifact
+	container := r.jqContainer(artifactPath, fmt.Sprintf(`."%s"`, parameterName), outputPath)
+	container.VolumeMounts = []apiv1.VolumeMount{
+		{
+			Name:      volumeName,
+			MountPath: mountPath,
+		},
+	}
+
+	userInputWfTpl := &wfv1.Template{
+		Name:      fmt.Sprintf("populate-%s", parameterName),
+		Container: container,
+		Outputs: wfv1.Outputs{
+			Artifacts: wfv1.Artifacts{
+				{
+					Name: parameterName,
+					Path: outputPath,
+				},
+			},
+		},
+		Volumes: []apiv1.Volume{
+			{
+				Name: volumeName,
+				VolumeSource: apiv1.VolumeSource{
+					Secret: &apiv1.SecretVolumeSource{
+						SecretName: r.inputParametersSecretRef.Name,
+						Items: []apiv1.KeyToPath{
+							{
+								Key:  r.inputParametersSecretRef.Key,
+								Path: r.inputParametersSecretRef.Key,
+							},
+						},
+						Optional: ptr.Bool(false),
+					},
+				},
+			},
+		},
+	}
+	userInputWfStep := &wfv1.WorkflowStep{
+		Name:     fmt.Sprintf("%s-step", userInputWfTpl.Name),
+		Template: userInputWfTpl.Name,
+	}
+	r.rootTemplate.Steps = append([]ParallelSteps{
+		{
+			&WorkflowStep{
+				WorkflowStep: userInputWfStep,
+			},
+		},
+	}, r.rootTemplate.Steps...)
+	rootWorkflow.Templates = append(rootWorkflow.Templates, &Template{Template: userInputWfTpl})
+
+	// 2. Add input arguments artifacts with user data. Thanks to that Content Developer can
+	// refer to it via "{{inputs.artifacts.input-parameters}}"
+	r.entrypointStep.Arguments.Artifacts = append(r.entrypointStep.Arguments.Artifacts, wfv1.Artifact{
+		Name: parameterName,
+		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, parameterName),
+	})
+}
+
+func (r *dedicatedRenderer) jqContainer(inputFilepath, jqPath, outputFilepath string) *apiv1.Container {
+	return &apiv1.Container{
+		Image: "ghcr.io/capactio/infra/jq:1.6",
+		// Built using:
+		// FROM alpine:3.14.2
+		// RUN apk add jq=1.6-r1
+
+		Command: []string{"sh", "-c"},
+		Args:    []string{fmt.Sprintf(`cat "%s" | jq -r '%s' | tee "%s" && sleep 1`, inputFilepath, jqPath, outputFilepath)},
 	}
 }
 
