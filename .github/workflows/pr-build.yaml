@@ -18,7 +18,7 @@ on:
       - "!**.md"
       - ".goreleaser.latest.yml"
     branches:
-      - "main"
+      - "jinja2dots"
 
 jobs:
   cancel-previous-workflows:
