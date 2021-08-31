@@ -30,4 +30,6 @@ models:
     model: "capact.io/capact/pkg/engine/api/graphql.PolicyRuleInjectData"
   RequiredTypeInstanceReference:
     model: "capact.io/capact/pkg/engine/api/graphql.RequiredTypeInstanceReference"
+  AdditionalTypeInstanceReference:
+    model: "capact.io/capact/pkg/engine/api/graphql.AdditionalTypeInstanceReference"
 
