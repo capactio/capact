@@ -58,7 +58,7 @@ func NewHelm() *cobra.Command {
 	cmd.Flags().StringVarP(&helmCfg.InterfacePathWithRevision, "interface", "i", "", "Path with revision of the Interface, which is implemented by this Implementation")
 	cmd.Flags().StringVarP(&helmCfg.ManifestRevision, "revision", "r", "0.1.0", "Revision of the Implementation manifest")
 	cmd.Flags().StringVar(&helmCfg.ChartRepoURL, "repo", "", "URL of the Helm repository")
-	cmd.Flags().StringVarP(&helmCfg.ChartVersion, "version", "v", "", "Version of the Helm chart")
+	cmd.Flags().StringVar(&helmCfg.ChartVersion, "version", "", "Version of the Helm chart")
 
 	return cmd
 }

@@ -44,14 +44,14 @@ capact install --version @local
       --timeout duration                       Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h". (default 10m0s)
       --update-hosts-file                      Updates /etc/hosts with entry for Capact GraphQL Gateway. (default true)
       --update-trusted-certs                   Add Capact GraphQL Gateway certificate. (default true)
-      --verbose                                Prints more verbose output.
       --version string                         Capact version. Possible values @latest, @local, 0.3.0, ... (default "@latest")
 ```
 
 ### Options inherited from parent commands
 
 ```
-  -c, --config string   Path to the YAML config file
+  -c, --config string                 Path to the YAML config file
+  -v, --verbose int/string[=simple]   Prints more verbose output. Allowed values: 0 - disable, 1 - simple, 2 - tracing (default 0 - disable)
 ```
 
 ### SEE ALSO

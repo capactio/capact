@@ -56,7 +56,6 @@ func NewInstall() *cobra.Command {
 	flags.DurationVar(&opts.Timeout, "timeout", 10*time.Minute, `Maximum time during which the upgrade process is being watched, where "0" means "infinite". Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".`)
 	flags.BoolVar(&opts.UpdateHostsFile, "update-hosts-file", true, "Updates /etc/hosts with entry for Capact GraphQL Gateway.")
 	flags.BoolVar(&opts.UpdateTrustedCerts, "update-trusted-certs", true, "Add Capact GraphQL Gateway certificate.")
-	flags.BoolVar(&opts.Verbose, "verbose", false, "Prints more verbose output.")
 	flags.StringVar(&opts.Parameters.Override.HelmRepoURL, "helm-repo-url", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
 	flags.StringSliceVar(&opts.Parameters.Override.CapactStringOverrides, "capact-overrides", []string{}, "Overrides for Capact component.")
 	flags.StringSliceVar(&opts.Parameters.Override.IngressStringOverrides, "ingress-controller-overrides", []string{}, "Overrides for Ingress controller component.")
