@@ -6,46 +6,6 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
-func fixPolicyWithoutTypeRef() policy.Policy {
-	return policy.Policy{
-		Rules: policy.RulesList{
-			{
-				Interface: types.ManifestRefWithOptRevision{
-					Path: "cap.*",
-				},
-				OneOf: []policy.Rule{
-					{
-						ImplementationConstraints: policy.ImplementationConstraints{},
-						Inject: &policy.InjectData{
-							RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID: "id",
-									},
-								},
-								{
-									RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-										ID:          "id2",
-										Description: ptr.String("ID 2"),
-									},
-								},
-							},
-							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
-								{
-									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
-										ID:   "id3",
-										Name: "id-3",
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
 func fixPolicyWithTypeRef() policy.Policy {
 	return policy.Policy{
 		Rules: policy.RulesList{

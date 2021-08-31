@@ -1,9 +1,10 @@
 package metadata_test
 
 import (
-	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 	"context"
 	"testing"
+
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 
 	"capact.io/capact/internal/cli/heredoc"
 
@@ -17,9 +18,9 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	// given
 	tests := []struct {
 		Name               string
-		Input    *policy.Policy
-		HubCli   metadata.HubClient
-		Expected *policy.Policy
+		Input              *policy.Policy
+		HubCli             metadata.HubClient
+		Expected           *policy.Policy
 		ExpectedErrMessage *string
 	}{
 		{
@@ -45,10 +46,10 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 8, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
-				while TypeInstance metadata validation after resolving TypeRefs: while validating TypeInstance metadata for Policy: 3 errors occurred:
-					* missing Type reference for RequiredTypeInstance "id2" (description: "ID 2")
-					* missing Type reference for RequiredTypeInstance "id4"
-					* missing Type reference for AdditionalTypeInstance "id8" (name: "ID8")`,
+				3 errors occurred:
+					* missing Type reference for RequiredTypeInstance (ID: "id2", description: "ID 2")
+					* missing Type reference for RequiredTypeInstance (ID: "id4")
+					* missing Type reference for AdditionalTypeInstance (ID: "id8", name: "ID8")`,
 				),
 			),
 		},
@@ -63,7 +64,7 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	for _, testCase := range tests {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
-			resolver := metadata.NewMetadataResolver(tc.HubCli)
+			resolver := metadata.NewResolver(tc.HubCli)
 
 			// when
 			err := resolver.ResolveTypeInstanceMetadata(context.Background(), tc.Input)

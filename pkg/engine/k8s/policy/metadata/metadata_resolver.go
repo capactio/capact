@@ -1,11 +1,15 @@
 package metadata
 
 import (
+	"context"
+	"fmt"
+
+	"capact.io/capact/internal/multierror"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"context"
-	"fmt"
+	multierr "github.com/hashicorp/go-multierror"
 	"github.com/pkg/errors"
 )
 
@@ -14,10 +18,12 @@ type HubClient interface {
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
 }
 
-type Resolver struct{
+// Resolver resolves Policy metadata against Hub.
+type Resolver struct {
 	hubCli HubClient
 }
 
+// NewResolver returns new Resolver instance.
 func NewResolver(hubCli HubClient) *Resolver {
 	return &Resolver{hubCli: hubCli}
 }
@@ -49,7 +55,16 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 	}
 
 	if len(res) != len(idsToQuery) {
-		return fmt.Errorf("invalid result len - expected: %d, actual: %d", len(idsToQuery), len(res))
+		multiErr := multierror.New()
+
+		for _, ti := range unresolvedTIs {
+			if typeRef, exists := res[ti.ID]; exists && typeRef.Path != "" && typeRef.Revision != "" {
+				continue
+			}
+
+			multiErr = multierr.Append(multiErr, fmt.Errorf("missing Type reference for %s", ti.String(true)))
+		}
+		return multiErr
 	}
 
 	r.resolveTypeRefsForRequiredTypeInstances(policy, res)

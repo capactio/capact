@@ -1,7 +1,6 @@
 package argo
 
 import (
-	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
 	"context"
 	"encoding/json"
 	"time"
@@ -37,7 +36,8 @@ type PolicyEnforcedHubClient interface {
 }
 
 type workflowValidator interface {
-	Validate(context.Context, renderer.ValidateInput) error
+	ValidateInterfaceInput(context.Context, renderer.InterfaceInput) error
+	PolicyValidator() hubclient.PolicyIOValidator
 }
 
 // Renderer is used to render the Capact Action workflows.
@@ -70,7 +70,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// policyEnforcedClient cannot be global because policy is calculated from global policy, action policy and workflow step policies
-	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient)
+	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient, r.wfValidator.PolicyValidator())
 
 	// 0. Populate render options
 	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, policyEnforcedClient, r.typeInstanceHandler, input.Options...)
@@ -149,12 +149,12 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 
 	// 6. Validate workflow input against Interface:
 	// Implementation-specific input is already validated on PolicyEnforcedClient level
-	validateInput := renderer.ValidateInput{
+	validateInput := renderer.InterfaceInput{
 		Interface:     iface,
 		Parameters:    ToInputParams(dedicatedRenderer.inputParametersRaw),
 		TypeInstances: dedicatedRenderer.inputTypeInstances,
 	}
-	err = r.wfValidator.Validate(ctx, validateInput)
+	err = r.wfValidator.ValidateInterfaceInput(ctx, validateInput)
 
 	if err != nil {
 		return nil, errors.Wrap(err, "while validating required and additional input data")

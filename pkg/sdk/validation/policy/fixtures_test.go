@@ -1,8 +1,10 @@
 package policy_test
 
 import (
+	"capact.io/capact/internal/cli/heredoc"
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
+	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
@@ -97,3 +99,65 @@ func fixPolicyWithTypeRef() policy.Policy {
 		},
 	}
 }
+
+func fixAWSElasticsearchTypeRev() *gqlpublicapi.TypeRevision {
+	return &gqlpublicapi.TypeRevision{
+		Metadata: &gqlpublicapi.TypeMetadata{
+			Path: "cap.type.aws.elasticsearch.install-input",
+		},
+		Revision: "0.1.0",
+		Spec: &gqlpublicapi.TypeSpec{
+			JSONSchema: heredoc.Doc(`
+                    {
+                      "$schema": "http://json-schema.org/draft-07/schema",
+                      "type": "object",
+                      "title": "The schema for Elasticsearch input parameters.",
+                      "required": ["replicas"],
+                      "properties": {
+                        "replicas": {
+                          "type": "string",
+                          "title": "Replica count for the Elasticsearch"
+                        }
+                      },
+                      "additionalProperties": false
+                    }`),
+		},
+	}
+}
+
+func fixAWSCredsTypeRev() *gqlpublicapi.TypeRevision {
+	return &gqlpublicapi.TypeRevision{
+		Metadata: &gqlpublicapi.TypeMetadata{
+			Path: "cap.type.aws.auth.creds",
+		},
+		Revision: "0.1.0",
+		Spec: &gqlpublicapi.TypeSpec{
+			JSONSchema: heredoc.Doc(`
+                    {
+                      "$schema": "http://json-schema.org/draft-07/schema",
+                      "type": "object",
+                      "required": [ "key" ],
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        }
+                      }
+                    }`),
+		},
+	}
+}
+
+var implementationRevisionRaw = []byte(`
+revision: 0.1.0
+spec:
+  additionalInput:
+    parameters:
+    - name: additional-parameters
+      typeRef:
+        path: cap.type.aws.auth.creds
+        revision: 0.1.0
+    - name: impl-specific-config
+      typeRef:
+        path: cap.type.aws.elasticsearch.install-input
+        revision: 0.1.0
+`)

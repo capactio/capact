@@ -1,11 +1,12 @@
 package client
 
 import (
-	"capact.io/capact/pkg/engine/k8s/policy/metadata"
-	"capact.io/capact/pkg/sdk/validation"
 	"context"
 	"fmt"
 	"sync"
+
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
+	"capact.io/capact/pkg/sdk/validation"
 
 	"capact.io/capact/pkg/engine/k8s/policy"
 	hublocalgraphql "capact.io/capact/pkg/hub/api/graphql/local"
@@ -26,17 +27,18 @@ type HubClient interface {
 	FindTypeInstancesTypeRef(ctx context.Context, ids []string) (map[string]hublocalgraphql.TypeInstanceTypeReference, error)
 }
 
-type Validator interface {
+// PolicyIOValidator defines validator used for PolicyEnforcedClient.
+type PolicyIOValidator interface {
 	AreTypeInstancesMetadataResolved(in policy.Policy) bool
-	ValidateTypeInstancesMetadata(in policy.Policy) error
-	ValidateTypeInstancesMetadataForRule(in policy.Rule) error
-	ValidateAdditionalTypeInstancesInPolicy(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result
-	IsTypeRefValidAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool
-
+	ValidateTypeInstancesMetadata(in policy.Policy) validation.Result
+	ValidateTypeInstancesMetadataForRule(in policy.Rule) validation.Result
+	ValidateAdditionalTypeInstances(additionalTIsInPolicy []policy.AdditionalTypeInstanceToInject, implRev hubpublicgraphql.ImplementationRevision) validation.Result
+	IsTypeRefInjectableAndEqualToImplReq(typeRef *types.ManifestRef, reqItem *hubpublicgraphql.ImplementationRequirementItem) bool
 	LoadAdditionalInputParametersSchemas(context.Context, hubpublicgraphql.ImplementationRevision) (validation.SchemaCollection, error)
-	ValidateParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters types.ParametersCollection) (validation.Result, error)
+	ValidateAdditionalInputParameters(ctx context.Context, paramsSchemas validation.SchemaCollection, parameters types.ParametersCollection) (validation.Result, error)
 }
 
+// PolicyMetadataResolver defines interface used for resolving TypeInstance metadata for PolicyEnforcedClient.
 type PolicyMetadataResolver interface {
 	ResolveTypeInstanceMetadata(ctx context.Context, policy *policy.Policy) error
 }
@@ -50,17 +52,17 @@ type PolicyEnforcedClient struct {
 	mergedPolicy           policy.Policy
 	policyOrder            policy.MergeOrder
 	workflowStepPolicies   []policy.Policy
-	validator              Validator
+	validator              PolicyIOValidator
 	policyMetadataResolver PolicyMetadataResolver
 	mu                     sync.RWMutex
 }
 
 // NewPolicyEnforcedClient returns a new NewPolicyEnforcedClient.
-func NewPolicyEnforcedClient(hubCli HubClient, validator Validator) *PolicyEnforcedClient {
+func NewPolicyEnforcedClient(hubCli HubClient, validator PolicyIOValidator) *PolicyEnforcedClient {
 	defaultOrder := policy.MergeOrder{policy.Action, policy.Global, policy.Workflow}
 	return &PolicyEnforcedClient{
 		hubCli:                 hubCli,
-		validator: validator,
+		validator:              validator,
 		policyMetadataResolver: metadata.NewResolver(hubCli),
 		policyOrder:            defaultOrder,
 	}
@@ -110,8 +112,8 @@ func (e *PolicyEnforcedClient) ListRequiredTypeInstancesToInjectBasedOnPolicy(po
 		return nil, nil
 	}
 
-	if err := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); err != nil {
-		return nil, errors.Wrap(err, "while validating Policy rule")
+	if res := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); res.Len() > 0 {
+		return nil, e.wrapValidationResultError(res.ErrorOrNil(), "while validating Policy rule")
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
@@ -141,14 +143,14 @@ func (e *PolicyEnforcedClient) ListAdditionalTypeInstancesToInjectBasedOnPolicy(
 		return nil, nil
 	}
 
-	if err := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); err != nil {
-		return nil, errors.Wrap(err, "while validating Policy rule")
+	if res := e.validator.ValidateTypeInstancesMetadataForRule(policyRule); res.Len() > 0 {
+		return nil, e.wrapValidationResultError(res.ErrorOrNil(), "while validating Policy rule")
 	}
 
 	wrappedErrMsg := "while checking if additional TypeInstances from Policy are defined in Implementation manifest"
-	validationRes := e.validator.ValidateAdditionalTypeInstancesInPolicy(additionalTIsInPolicy, implRev)
-	if validationRes.Len() > 0 {
-		return nil, errors.Wrap(validationRes.ErrorOrNil(), wrappedErrMsg)
+	validationRes := e.validator.ValidateAdditionalTypeInstances(additionalTIsInPolicy, implRev)
+	if validationRes.ErrorOrNil() != nil {
+		return nil, e.wrapValidationResultError(validationRes.ErrorOrNil(), wrappedErrMsg)
 	}
 
 	var typeInstancesToInject []types.InputTypeInstanceRef
@@ -187,13 +189,13 @@ func (e *PolicyEnforcedClient) ListAdditionalInputToInjectBasedOnPolicy(ctx cont
 		return nil, errors.Wrap(err, "while loading additional input parameters schemas")
 	}
 
-	wrappedErrMessage := "while validating additional input parameters schemas"
-	res, err := e.validator.ValidateParameters(ctx, additionalInputSchemas, paramsCollection)
+	wrappedErrMsg := "while validating additional input parameters schemas"
+	validationRes, err := e.validator.ValidateAdditionalInputParameters(ctx, additionalInputSchemas, paramsCollection)
 	if err != nil {
-		return nil, errors.Wrap(err, wrappedErrMessage)
+		return nil, errors.Wrap(err, wrappedErrMsg)
 	}
-	if res.Len() > 0 {
-		return nil, errors.Wrap(res.ErrorOrNil(), wrappedErrMessage)
+	if validationRes.ErrorOrNil() != nil {
+		return nil, e.wrapValidationResultError(validationRes.ErrorOrNil(), wrappedErrMsg)
 	}
 
 	return paramsCollection, nil
@@ -290,9 +292,8 @@ func (e *PolicyEnforcedClient) resolvePolicyTIMetadataIfShould(ctx context.Conte
 		return errors.Wrap(err, "while resolving TypeInstance metadata for Policy")
 	}
 
-	err = e.validator.ValidateTypeInstancesMetadata(e.mergedPolicy)
-	if err != nil {
-		return errors.Wrap(err, "while TypeInstance metadata validation after resolving TypeRefs")
+	if res := e.validator.ValidateTypeInstancesMetadata(e.mergedPolicy); res.ErrorOrNil() != nil {
+		return e.wrapValidationResultError(res.ErrorOrNil(), "while TypeInstance metadata validation after resolving TypeRefs")
 	}
 
 	return nil
@@ -339,7 +340,7 @@ func (e *PolicyEnforcedClient) findAliasForTypeInstance(typeInstance policy.Requ
 		itemsToCheck = append(itemsToCheck, req.AnyOf...)
 
 		for _, req := range itemsToCheck {
-			if !e.validator.IsTypeRefValidAndEqualToImplReq(typeInstance.TypeRef, req) {
+			if !e.validator.IsTypeRefInjectableAndEqualToImplReq(typeInstance.TypeRef, req) {
 				continue
 			}
 
@@ -453,4 +454,11 @@ func (e *PolicyEnforcedClient) rulesMapForPolicy(p policy.Policy) map[string]pol
 	}
 
 	return rulesMap
+}
+
+func (e *PolicyEnforcedClient) wrapValidationResultError(err error, message string) error {
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("%s:\n%s", message, err)
 }

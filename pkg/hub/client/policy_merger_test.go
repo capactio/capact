@@ -494,7 +494,7 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			// given
-			cli := client.NewPolicyEnforcedClient(nil)
+			cli := client.NewPolicyEnforcedClient(nil, nil)
 			cli.SetPolicyOrder(tt.order)
 			cli.SetGlobalPolicy(tt.global)
 			cli.SetActionPolicy(tt.action)
@@ -515,7 +515,7 @@ func TestNestedWorkflowPolicy(t *testing.T) {
 	expected2, err := workflowPolicyWithAdditionalInput(map[string]interface{}{"a": 1, "b": 3}).ToPolicy()
 	assert.NoError(t, err)
 
-	cli := client.NewPolicyEnforcedClient(nil)
+	cli := client.NewPolicyEnforcedClient(nil, nil)
 
 	err = cli.PushWorkflowStepPolicy(w1)
 	assert.NoError(t, err)

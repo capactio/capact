@@ -10,7 +10,7 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/sdk/validation"
-	"capact.io/capact/pkg/sdk/validation/action"
+	"capact.io/capact/pkg/sdk/validation/interfaceio"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
@@ -40,7 +40,7 @@ type CreateOptions struct {
 	// validation specific fields
 	areInputParamsRequired        bool
 	areInputTypeInstancesRequired bool
-	validator                     *action.InputOutputValidator
+	validator                     *interfaceio.Validator
 	ifaceSchemas                  validation.SchemaCollection
 	ifaceTypes                    validation.TypeRefCollection
 }

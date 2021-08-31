@@ -1,14 +1,15 @@
 package metadata_test
 
 import (
+	"context"
+	"fmt"
+	"strings"
+
 	"capact.io/capact/internal/ptr"
 	"capact.io/capact/pkg/engine/k8s/policy"
 	gqllocalapi "capact.io/capact/pkg/hub/api/graphql/local"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
-	"context"
-	"fmt"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 func fixComplexPolicyWithoutTypeRef() *policy.Policy {

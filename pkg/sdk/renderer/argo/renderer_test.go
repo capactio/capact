@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	actionvalidation "capact.io/capact/pkg/sdk/validation/interfaceio"
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -38,10 +41,14 @@ func TestRenderHappyPath(t *testing.T) {
 
 	ownerID := "default/action"
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	tests := []struct {
 		name                string
@@ -277,10 +284,14 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 			typeInstanceHandler.SetGenUUID(genUUID)
 
+			interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+			policyIOValidator := policyvalidation.NewValidator(fakeCli)
+			wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
 				MaxDepth:      50,
-			}, fakeCli, typeInstanceHandler, &noopValidator{})
+			}, fakeCli, typeInstanceHandler, wfValidator)
 
 			// when
 			renderOutput, err := argoRenderer.Render(
@@ -312,10 +323,14 @@ func TestRendererMaxDepth(t *testing.T) {
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",
@@ -347,10 +362,14 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.productivity.mattermost.install",
@@ -391,12 +410,4 @@ func genUUIDFn(prefix string) func() string {
 			return uuid
 		}
 	}()
-}
-
-var _ workflowValidator = &noopValidator{}
-
-type noopValidator struct{}
-
-func (f *noopValidator) Validate(_ context.Context, _ renderer.ValidateInput) error {
-	return nil
 }

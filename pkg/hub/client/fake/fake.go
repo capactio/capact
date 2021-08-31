@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -25,6 +26,7 @@ const manifestsExtension = ".yaml"
 type FileSystemClient struct {
 	loadTypeInstances bool
 	TypeInstances     map[string]hublocalgraphql.TypeInstance
+	Types             []hubpublicgraphql.TypeRevision
 	Implementations   []hubpublicgraphql.ImplementationRevision
 	Interfaces        []hubpublicgraphql.InterfaceRevision
 }
@@ -39,6 +41,7 @@ func NewFromLocal(manifestDir string, loadTypeInstances bool) (*FileSystemClient
 		loadTypeInstances: loadTypeInstances,
 		Implementations:   []hubpublicgraphql.ImplementationRevision{},
 		Interfaces:        []hubpublicgraphql.InterfaceRevision{},
+		Types:             []hubpublicgraphql.TypeRevision{},
 		TypeInstances:     map[string]hublocalgraphql.TypeInstance{},
 	}
 
@@ -87,6 +90,41 @@ func (s *FileSystemClient) ListTypeInstancesTypeRef(ctx context.Context) ([]hubl
 	}
 
 	return typeInstanceTypeRefs, nil
+}
+
+// ListTypeRefRevisionsJSONSchemas returns the list of requested Types.
+// Only a few fields are populated.
+func (s *FileSystemClient) ListTypeRefRevisionsJSONSchemas(ctx context.Context, filter hubpublicgraphql.TypeFilter) ([]*hubpublicgraphql.TypeRevision, error) {
+	var out []*hubpublicgraphql.TypeRevision
+
+	for _, typeRev := range s.Types {
+		if typeRev.Metadata == nil || typeRev.Spec == nil {
+			continue
+		}
+
+		if filter.PathPattern != nil {
+			match, err := regexp.MatchString(*filter.PathPattern, typeRev.Metadata.Path)
+			if err != nil {
+				return nil, err
+			}
+			if !match {
+				continue
+			}
+		}
+
+		// populate only few fields as original method
+		out = append(out, &hubpublicgraphql.TypeRevision{
+			Revision: typeRev.Revision,
+			Metadata: &hubpublicgraphql.TypeMetadata{
+				Path: typeRev.Metadata.Path,
+			},
+			Spec: &hubpublicgraphql.TypeSpec{
+				JSONSchema: typeRev.Spec.JSONSchema,
+			},
+		})
+	}
+
+	return out, nil
 }
 
 // FindTypeInstancesTypeRef finds a TypeInstance's TypeRef.
@@ -212,6 +250,14 @@ func (s *FileSystemClient) loadManifest(path string) error {
 			return err
 		}
 		s.Interfaces = append(s.Interfaces, iface)
+	}
+
+	if strings.Contains(path, "type") {
+		typeRev := hubpublicgraphql.TypeRevision{}
+		if err := json.Unmarshal(jsonData, &typeRev); err != nil {
+			return err
+		}
+		s.Types = append(s.Types, typeRev)
 	}
 
 	if s.loadTypeInstances && strings.Contains(path, "typeinstance") {

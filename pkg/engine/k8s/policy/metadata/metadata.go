@@ -1,8 +1,11 @@
 package metadata
 
-import "capact.io/capact/pkg/engine/k8s/policy"
+import (
+	"fmt"
+	"strings"
 
-
+	"capact.io/capact/pkg/engine/k8s/policy"
+)
 
 type typeInstanceKind string
 
@@ -11,6 +14,7 @@ const (
 	additionalTypeInstance typeInstanceKind = "AdditionalTypeInstance"
 )
 
+// TypeInstanceMetadata defines metadata for required and additional TypeInstances defined in Policy.
 type TypeInstanceMetadata struct {
 	ID          string
 	Name        *string
@@ -18,6 +22,29 @@ type TypeInstanceMetadata struct {
 	Kind        typeInstanceKind
 }
 
+// String returns string with details of a given TypeInstanceMetadata.
+func (m TypeInstanceMetadata) String(withKind bool) string {
+	tiDetails := []string{
+		fmt.Sprintf("ID: %q", m.ID),
+	}
+
+	if m.Name != nil {
+		tiDetails = append(tiDetails, fmt.Sprintf("name: %q", *m.Name))
+	}
+
+	if m.Description != nil {
+		tiDetails = append(tiDetails, fmt.Sprintf("description: %q", *m.Description))
+	}
+
+	detailsStr := strings.Join(tiDetails, ", ")
+	if withKind {
+		return fmt.Sprintf("%s (%s)", m.Kind, detailsStr)
+	}
+
+	return detailsStr
+}
+
+// TypeInstanceIDsWithUnresolvedMetadataForPolicy filters TypeInstances that have unresolved metadata.
 func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInstanceMetadata {
 	var tis []TypeInstanceMetadata
 	for _, rule := range in.Rules {
@@ -29,6 +56,7 @@ func TypeInstanceIDsWithUnresolvedMetadataForPolicy(in policy.Policy) []TypeInst
 	return tis
 }
 
+// TypeInstanceIDsWithUnresolvedMetadataForRule filters TypeInstances that have unresolved metadata for a given rule.
 func TypeInstanceIDsWithUnresolvedMetadataForRule(in policy.Rule) []TypeInstanceMetadata {
 	if in.Inject == nil {
 		return nil

@@ -12,7 +12,7 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
-	"capact.io/capact/pkg/sdk/validation/action"
+	"capact.io/capact/pkg/sdk/validation/interfaceio"
 
 	"github.com/fatih/color"
 )
@@ -69,7 +69,7 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 }
 
 func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubCli client.Hub) error {
-	opts.validator = action.NewValidator(hubCli)
+	opts.validator = interfaceio.NewValidator(hubCli)
 
 	// TODO: In the future, we can use client.PolicyEnforcedClient
 	// 	to get the Implementation and validate Implementation specific TypeInstances and additional input.
@@ -85,7 +85,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 		return fmt.Errorf("Interface %s was not found in Hub", opts.InterfacePath)
 	}
 
-	opts.ifaceSchemas, err = opts.validator.LoadIfaceInputParametersSchemas(ctx, iface)
+	opts.ifaceSchemas, err = opts.validator.LoadInputParametersSchemas(ctx, iface)
 	if err != nil {
 		return err
 	}
@@ -94,7 +94,7 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 		return err
 	}
 
-	opts.ifaceTypes, err = opts.validator.LoadIfaceInputTypeInstanceRefs(ctx, iface)
+	opts.ifaceTypes, err = opts.validator.LoadInputTypeInstanceRefs(ctx, iface)
 	if err != nil {
 		return err
 	}
