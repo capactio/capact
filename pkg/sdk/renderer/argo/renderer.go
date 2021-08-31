@@ -150,7 +150,8 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
-	parameters, err := ToInputParams(dedicatedRenderer.inputParametersRaw)
+	// 6. Validate given input:
+	parameters, err := ToParametersCollection(dedicatedRenderer.inputParametersRaw)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting parameters collection")
 	}

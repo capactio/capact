@@ -15,6 +15,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
+	"github.com/pkg/errors"
 	"sigs.k8s.io/yaml"
 )
 
@@ -60,19 +61,19 @@ func (c *CreateOptions) setDefaults() {
 func (c *CreateOptions) validate(ctx context.Context) error {
 	r := validation.ResultAggregator{}
 
-	parameters, err := argo.ToInputParams(c.parameters)
+	parameters, err := argo.ToParametersCollection(c.parameters)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while getting parameters collection")
 	}
 
 	err = r.Report(c.validator.ValidateParameters(ctx, c.ifaceSchemas, parameters))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while validating parameters collection")
 	}
 
 	err = r.Report(c.validator.ValidateTypeInstances(ctx, c.ifaceTypes, c.typeInstances))
 	if err != nil {
-		return err
+		return errors.Wrap(err, "while validating TypeInstances")
 	}
 
 	return r.ErrorOrNil()
@@ -198,17 +199,17 @@ func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 		valid = append(valid, validatorAdapter(func(inputParams string) error {
 			jsonInputParameters, err := yaml.YAMLToJSON([]byte(inputParams))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while converting YAML to JSON")
 			}
 
-			parameters, err := argo.ToInputParams(json.RawMessage(jsonInputParameters))
+			parameters, err := argo.ToParametersCollection(json.RawMessage(jsonInputParameters))
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while getting parameters collection")
 			}
 
 			result, err := c.validator.ValidateParameters(context.Background(), c.ifaceSchemas, parameters)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "while validating parameters collection")
 			}
 			return result.ErrorOrNil()
 		}))
@@ -218,7 +219,7 @@ func (c *CreateOptions) askForInputParameters() (json.RawMessage, error) {
 		return nil, err
 	}
 
-	return []byte(rawInput), nil
+	return json.RawMessage(rawInput), nil
 }
 
 func (c *CreateOptions) askForInputTypeInstances() ([]types.InputTypeInstanceRef, error) {
