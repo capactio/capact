@@ -1,6 +1,7 @@
 package argo
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -169,20 +170,27 @@ func addPrefix(prefix, s string) string {
 //
 // It's a known bug that we accept only one input parameter for render process
 // but we allow to specify multiple in Hub manifests definition
-func ToInputParams(parameters interface{}) types.ParametersCollection {
+func ToInputParams(parameters json.RawMessage) (types.ParametersCollection, error) {
 	if parameters == nil {
-		return nil
-	}
-	str, ok := parameters.(string)
-	if !ok {
-		return nil
+		return nil, nil
 	}
 
-	if strings.TrimSpace(str) == "" {
-		return nil
+	parametersMap := make(map[string]interface{})
+	if err := json.Unmarshal(parameters, &parametersMap); err != nil {
+		return types.ParametersCollection{}, err
 	}
 
-	return types.ParametersCollection{
-		UserInputName: str,
+	result := types.ParametersCollection{}
+
+	for name := range parametersMap {
+		value := parametersMap[name]
+		valueData, err := json.Marshal(&value)
+		if err != nil {
+			return types.ParametersCollection{}, err
+		}
+
+		result[name] = string(valueData)
 	}
+
+	return result, nil
 }

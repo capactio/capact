@@ -1,6 +1,8 @@
 package argo
 
 import (
+	"encoding/json"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
@@ -16,10 +18,10 @@ func WithTypeInstances(typeInstances []types.InputTypeInstanceRef) RendererOptio
 }
 
 // WithSecretUserInput returns a RendererOption, which adds user input to the workflow.
-func WithSecretUserInput(ref *UserInputSecretRef, inputRaw []byte) RendererOption {
+func WithSecretUserInput(ref *UserInputSecretRef, inputRaw json.RawMessage) RendererOption {
 	return func(r *dedicatedRenderer) {
 		r.inputParametersSecretRef = ref
-		r.inputParametersRaw = string(inputRaw)
+		r.inputParametersRaw = inputRaw
 	}
 }
 

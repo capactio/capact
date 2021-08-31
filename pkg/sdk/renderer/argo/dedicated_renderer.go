@@ -27,7 +27,7 @@ type dedicatedRenderer struct {
 
 	// set with options
 	inputParametersSecretRef *UserInputSecretRef
-	inputParametersRaw       string
+	inputParametersRaw       json.RawMessage
 	inputTypeInstances       []types.InputTypeInstanceRef
 	ownerID                  *string
 
