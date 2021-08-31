@@ -155,10 +155,10 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		TypeInstances: dedicatedRenderer.inputTypeInstances,
 	}
 	err = r.wfValidator.ValidateInterfaceInput(ctx, validateInput)
-
 	if err != nil {
 		return nil, errors.Wrap(err, "while validating required and additional input data")
 	}
+
 	// 7. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
 		return nil, err

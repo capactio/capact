@@ -19,7 +19,7 @@ spec:
     parameters:
       - name: input-parameters
         typeRef:
-          path: cap.type.productivity.app2.install-input
+          path: cap.type.capactio.capact.validation.key-string
           revision: 0.1.0
   output:
     typeInstances:

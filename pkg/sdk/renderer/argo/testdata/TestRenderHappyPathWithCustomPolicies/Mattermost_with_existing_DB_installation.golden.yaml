@@ -1086,11 +1086,11 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-uuid-step
-          template: inject-input-type-instances-uuid
-      - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
+      - - arguments: {}
+          name: inject-input-type-instances-1-0-step
+          template: inject-input-type-instances-1-0
       - - arguments: {}
           name: populate-user-input-step
           template: populate-user-input
@@ -1098,8 +1098,6 @@ args:
             artifacts:
             - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
-            - from: '{{workflow.outputs.artifacts.gcp}}'
-              name: gcp
           name: start-entrypoint
           template: mattermost-install
       - - arguments:
@@ -1122,42 +1120,42 @@ args:
                   typeInstances:
                   - alias: mattermost-config
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.productivity.mattermost.config
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-install-db-postgresql
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.config
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-install-db-postgres-install-helm-install-helm-release
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-create-user-user
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.user
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-create-db-database
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-helm-install-helm-release
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
@@ -1207,6 +1205,23 @@ args:
           optional: false
           secretName: user-input
     - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{f2421415-b8a4-464b-be12-b617794411c5,/postgresql.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-1-0
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /postgresql.yaml
+    - container:
         args:
         - sleep 1
         command:
@@ -1235,23 +1250,6 @@ args:
             path: context.yaml
           optional: false
           secretName: secret
-    - container:
-        env:
-        - name: APP_ACTION
-          value: DownloadAction
-        - name: APP_DOWNLOAD_CONFIG
-          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp.yaml}'
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs: {}
-      metadata: {}
-      name: inject-input-type-instances-uuid
-      outputs:
-        artifacts:
-        - globalName: gcp
-          name: gcp
-          path: /gcp.yaml
     - container:
         env:
         - name: APP_ACTION
