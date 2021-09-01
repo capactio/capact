@@ -55,7 +55,20 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 												Description: ptr.String("Sample TI"),
 											},
 											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+												Path:     "cap.type.gcp.auth.service-account",
+												Revision: "0.1.0",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -95,7 +108,20 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 												Description: ptr.String("Sample TI"),
 											},
 											TypeRef: &types.ManifestRef{
-												Path: "cap.type.gcp.auth.service-account",
+												Path:     "cap.type.gcp.auth.service-account",
+												Revision: "0.1.0",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -142,6 +168,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 										},
 									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
+											},
+										},
+									},
 								},
 							},
 						},
@@ -179,6 +217,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -226,6 +276,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 										},
 									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
+											},
+										},
+									},
 								},
 							},
 						},
@@ -263,6 +325,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional-global",
+												Name: "additional-global",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -309,6 +383,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 											TypeRef: &types.ManifestRef{
 												Path: "cap.type.gcp.auth.service-account",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -413,6 +499,29 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 										},
 									},
+									RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+										{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123-111",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
+												Path: "cap.type.gcp.auth.service-account",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
+											},
+										},
+									},
 								},
 							},
 						},
@@ -439,6 +548,18 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 											},
 											TypeRef: &types.ManifestRef{
 												Path: "cap.type.x",
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional-global",
+												Name: "additional-global",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample-global",
+												Revision: "0.1.0",
 											},
 										},
 									},
@@ -470,6 +591,15 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 												Path: "cap.type.x",
 											},
 										},
+										{
+											RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+												ID:          "1314-142-123-111",
+												Description: ptr.String("Sample TI"),
+											},
+											TypeRef: &types.ManifestRef{
+												Path: "cap.type.gcp.auth.service-account",
+											},
+										},
 									},
 									AdditionalParameters: []policy.AdditionalParametersToInject{
 										{
@@ -478,6 +608,28 @@ func TestPolicyEnforcedClient_mergePolicies(t *testing.T) {
 												"additional-input": map[string]interface{}{
 													"a": 1,
 												},
+											},
+										},
+									},
+									AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional-global",
+												Name: "additional-global",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample-global",
+												Revision: "0.1.0",
+											},
+										},
+										{
+											AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+												ID:   "additional1",
+												Name: "additional",
+											},
+											TypeRef: &types.ManifestRef{
+												Path:     "cap.type.sample",
+												Revision: "0.1.0",
 											},
 										},
 									},
