@@ -39,6 +39,12 @@ func fixComplexPolicyWithoutTypeRef() *policy.Policy {
 							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
 								{
 									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id1",
+										Name: "ID1",
+									},
+								},
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
 										ID:   "id3",
 										Name: "ID3",
 									},
@@ -138,6 +144,16 @@ func fixComplexPolicyWithTypeRef() *policy.Policy {
 								},
 							},
 							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "id1",
+										Name: "ID1",
+									},
+									TypeRef: &types.ManifestRef{
+										Path:     "cap.type.type1",
+										Revision: "0.1.0",
+									},
+								},
 								{
 									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
 										ID:   "id3",

@@ -37,13 +37,13 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 		{
 			Name:     "Unresolved TypeRefs",
 			Input:    fixComplexPolicyWithoutTypeRef(),
-			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 8},
+			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 9},
 			Expected: fixComplexPolicyWithTypeRef(),
 		},
 		{
 			Name:   "Partial result",
 			Input:  fixComplexPolicyWithoutTypeRef(),
-			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 8, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
+			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 9, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
 				3 errors occurred:

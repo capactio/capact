@@ -54,16 +54,16 @@ func (r *Resolver) ResolveTypeInstanceMetadata(ctx context.Context, policy *poli
 		return errors.Wrap(err, "while finding TypeRef for TypeInstances")
 	}
 
-	if len(res) != len(idsToQuery) {
-		multiErr := multierror.New()
-
-		for _, ti := range unresolvedTIs {
-			if typeRef, exists := res[ti.ID]; exists && typeRef.Path != "" && typeRef.Revision != "" {
-				continue
-			}
-
-			multiErr = multierr.Append(multiErr, fmt.Errorf("missing Type reference for %s", ti.String(true)))
+	// verify if all TypeInstances are resolved
+	multiErr := multierror.New()
+	for _, ti := range unresolvedTIs {
+		if typeRef, exists := res[ti.ID]; exists && typeRef.Path != "" && typeRef.Revision != "" {
+			continue
 		}
+
+		multiErr = multierr.Append(multiErr, fmt.Errorf("missing Type reference for %s", ti.String(true)))
+	}
+	if multiErr.ErrorOrNil() != nil {
 		return multiErr
 	}
 
