@@ -3,7 +3,10 @@ package client
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/credstore"
 	enginegraphql "capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/client"
@@ -60,9 +63,13 @@ func NewClusterWithCreds(server string, creds *credstore.Credentials) (ClusterCl
 		httputil.WithTimeout(timeout))
 
 	gqlClient := graphql.NewClient(endpoint, graphql.WithHTTPClient(httpClient))
+	if cli.VerboseMode.IsTracing() {
+		logger := log.New(os.Stdout, "\nGraphQL client: ", log.LstdFlags)
+		gqlClient.Log = func(s string) { logger.Println(s) }
+	}
 
 	return &clusterClient{
 		TypeInstanceClient: local.NewClient(gqlClient),
-		EngineClient:       client.New(endpoint, httpClient),
+		EngineClient:       client.New(gqlClient),
 	}, nil
 }
