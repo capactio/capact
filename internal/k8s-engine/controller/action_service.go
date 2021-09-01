@@ -408,10 +408,6 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while rendering Action")
 	}
 
-	if err := a.actionValidator.Validate(renderOutput.Action, action.Namespace); err != nil {
-		return nil, errors.Wrap(err, "while validating rendered Action")
-	}
-
 	actionBytes, err := json.Marshal(renderOutput.Action)
 	if err != nil {
 		return nil, errors.Wrap(err, "while marshaling action to json")
@@ -422,6 +418,10 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	status.SetInputParameters(userInput)
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 	status.SetActionPolicy(actionPolicyData)
+
+	if err := a.actionValidator.Validate(renderOutput.Action, action.Namespace); err != nil {
+		return status, errors.Wrap(err, "while validating rendered Action")
+	}
 
 	return status, nil
 }
