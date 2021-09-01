@@ -9,11 +9,12 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-import os
-import sys
-from optparse import Option, OptionParser
+import os  # noqa: E402
+import sys  # noqa: E402
+from optparse import Option, OptionParser  # noqa: E402
 
-import jinja2cli.capact as capact
+
+import jinja2cli.capact as capact  # noqa: E402
 
 sys.path.insert(0, os.getcwd())
 
@@ -23,8 +24,8 @@ if PY3:
     text_type = str
     bytes_type = bytes
 else:
-    text_type = unicode  # NOQA
-    bytes_type = str  # NOQA
+    text_type = unicode  # noqa: F821
+    bytes_type = str
 
 
 def force_text(data):
@@ -252,7 +253,7 @@ def render(template_path, data, extensions, filters=None, strict=False):
     return env.get_template(os.path.basename(template_path)).render(capact.Dict(data))
 
 
-def cli(opts, args, config):
+def cli(opts, args, config):  # noqa: C901
     template_path, *data_files = args
     format = opts.format
     parsed_data = {}
