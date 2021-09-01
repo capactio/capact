@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 
 	"capact.io/capact/internal/ctxutil"
 
@@ -461,7 +462,16 @@ func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workfl
 		return err
 	}
 
-	for paramName := range inputParametersMap {
+	// To ensure fixed order of steps in rendered workflow,
+	// we have to iterate over the paramNames in a deterministic order.
+	// In other case tests would fail sometimes.
+	paramNames := make([]string, 0, len(inputParametersMap))
+	for name := range inputParametersMap {
+		paramNames = append(paramNames, name)
+	}
+	sort.Strings(paramNames)
+
+	for _, paramName := range paramNames {
 		r.addUserInputFromSecret(rootWorkflow, paramName)
 	}
 
