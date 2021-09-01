@@ -374,7 +374,11 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 }
 
 func mapToInputParameters(params capact.InputParameters) (gqlengine.JSON, error) {
-	marshalled, err := json.Marshal(params)
+	parameters := map[string]interface{}{
+		"input-parameters": params,
+	}
+
+	marshalled, err := json.Marshal(parameters)
 	if err != nil {
 		return "", err
 	}
