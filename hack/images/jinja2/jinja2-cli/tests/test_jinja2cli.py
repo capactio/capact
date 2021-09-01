@@ -69,6 +69,12 @@ render_testcases = [
         data={},
         result='<@ input["foo.bar"] @>',
     ),
+    TestCase(
+        name="use default value",
+        template='<@ input["foo.bar"] | default("hello") @>',
+        data={},
+        result="hello",
+    ),
 ]
 
 
