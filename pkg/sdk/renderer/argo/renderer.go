@@ -179,7 +179,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// 10. Render rootWorkflow templates
-	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, typeInstancesToInject, "")
+	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
 	if err != nil {
 		return nil, err
 	}
