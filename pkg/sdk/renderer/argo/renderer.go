@@ -134,12 +134,13 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		return nil, errors.Wrap(err, "while listing AdditionalTypeInstances based on policy for root workflow")
 	}
 
-	// 5.3 Inject TypeInstances
+	// 5.3 Inject required and additional TypeInstances
 	typeInstancesToInject := append(requiredTypeInstances, additionalTypeInstances...)
 	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
+
 	// 5.4 Additional Input
 	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(ctx, rule, implementation)
 	if err != nil {
@@ -164,7 +165,8 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 		return nil, err
 	}
 
-	// 8. Add steps to populate rootWorkflow with input TypeInstances
+	// 8. Add steps to populate rootWorkflow with both required and additional input TypeInstances
+	dedicatedRenderer.AppendAdditionalInputTypeInstances(additionalTypeInstances)
 	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
 		return nil, err
 	}
@@ -177,7 +179,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// 10. Render rootWorkflow templates
-	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, dedicatedRenderer.inputTypeInstances, "")
+	_, err = dedicatedRenderer.RenderTemplateSteps(ctxWithTimeout, rootWorkflow, implementation.Spec.Imports, typeInstancesToInject, "")
 	if err != nil {
 		return nil, err
 	}

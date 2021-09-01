@@ -97,6 +97,14 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Wor
 	return workflow, r.entrypointStep
 }
 
+func (r *dedicatedRenderer) AppendAdditionalInputTypeInstances(typeInstances []types.InputTypeInstanceRef) {
+	if len(typeInstances) == 0 {
+		return
+	}
+
+	r.inputTypeInstances = append(r.inputTypeInstances, typeInstances...)
+}
+
 func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
 	availableTypeInstances := map[argoArtifactRef]*string{}
 
