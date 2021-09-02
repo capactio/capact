@@ -19,7 +19,6 @@ source "${CURRENT_DIR}/lib/utilities.sh" || { echo 'Cannot load CI utilities.'; 
 source "${CURRENT_DIR}/lib/const.sh" || { echo 'Cannot load constant values.'; exit 1; }
 
 main() {
-
     export CLUSTER_TYPE=${CLUSTER_TYPE:-"kind"}
     export CLUSTER_NAME=${CLUSTER_NAME:-${DEV_CLUSTER_NAME}}
     export REPO_DIR=$REPO_ROOT_DIR

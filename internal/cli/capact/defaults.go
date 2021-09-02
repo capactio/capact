@@ -3,7 +3,7 @@ package capact
 // Using Yaml as a string. It's more readable than bunch map[string]interface{}
 // Not using `embed` package as it does not support `..`
 const (
-	ingressKindOverridesYaml = `
+	ingressLocalClusterOverridesYAML = `
 ingress-nginx:
   # Copied from https://github.com/kubernetes/ingress-nginx/blob/master/hack/generate-deploy-scripts.sh#L125
   controller:
@@ -31,7 +31,7 @@ ingress-nginx:
       force-ssl-redirect: "true" # To enable HTTPS redirect with default SSL certificate
 `
 
-	ingressEksOverridesYaml = `
+	ingressEksOverridesYAML = `
 ingress-nginx:
   controller:
     ingressClass: capact
@@ -48,14 +48,14 @@ ingress-nginx:
         service.beta.kubernetes.io/aws-load-balancer-internal: "true"
 `
 
-	certManagerEksOverridesYaml = `
+	certManagerEksOverridesYAML = `
 cert-manager:
   securityContext:
     enabled: true
     fsGroup: 1001
 `
 
-	capactKindOverridesYaml = `
+	capactLocalClusterOverridesYAML = `
 global:
   domainName: "capact.local"
 `

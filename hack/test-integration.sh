@@ -81,7 +81,6 @@ main() {
     fi
 
     export INCREASE_RESOURCE_LIMITS="false" # To comply with the default GitHub Actions Runner limits
-    export CLUSTER_NAME="${CLUSTER_NAME}"
     export USE_TEST_SETUP="true"
     export PRINT_INSECURE_NOTES="false"
     capact::install
