@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"capact.io/capact/internal/cli"
 	"capact.io/capact/pkg/sdk/validation/manifest"
 
 	"github.com/fatih/color"
@@ -21,7 +22,6 @@ import (
 type Options struct {
 	SchemaLocation string
 	ServerSide     bool
-	Verbose        bool
 	MaxConcurrency int
 }
 
@@ -63,7 +63,6 @@ func (r *ValidationResult) Error() string {
 type Validation struct {
 	hubCli      client.Hub
 	writer      io.Writer
-	verbose     bool
 	maxWorkers  int
 	validatorFn func() manifest.FileSystemValidator
 }
@@ -101,7 +100,6 @@ func New(writer io.Writer, opts Options) (*Validation, error) {
 		},
 		hubCli:     hubCli,
 		writer:     writer,
-		verbose:    opts.Verbose,
 		maxWorkers: opts.MaxConcurrency,
 	}, nil
 }
@@ -170,7 +168,7 @@ func (v *Validation) printPartialResult(res ValidationResult) {
 	}
 
 	// Print successes only in verbose mode
-	if !v.verbose {
+	if !cli.VerboseMode.IsEnabled() {
 		return
 	}
 	fmt.Fprintf(v.writer, "- %s %q\n", color.GreenString("✓"), res.Path)

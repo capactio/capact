@@ -16,6 +16,8 @@
 * for variables use now `<@ variable @>` instead of `{{ variable }}`,
 * for blocks use now `<% block %>` instead of `{% block %}`,
 * variables can have a prefix, so the conflicting names can be rendered correctly.
+* keys with dots are allowed but need to be accessed using braces `<@ input["key.dot"] @>`
+* if there are items and attributes with the same name, items are preferred
 
 Jinja cli is a copy of https://github.com/mattrobenolt/jinja2-cli (commit de5e8bf5132c80a8bbf37d788f4fff4af631753a)
 Docker part is a copy of https://github.com/dinuta/jinja2docker (commit 9a44ceecd83cbe195d2d2c47e969dbb5cb5dbaa2)

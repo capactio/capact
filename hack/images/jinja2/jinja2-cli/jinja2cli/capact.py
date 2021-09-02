@@ -2,7 +2,7 @@ import string
 import random
 import base64
 
-from jinja2.runtime import Undefined, missing
+from jinja2.runtime import Undefined
 
 _punctuation = r"""!#$%&()*+,-.:;<=>?@[]^_{|}~"""
 
@@ -34,10 +34,13 @@ class Undefined(Undefined):
     def __getattr__(self, attr):
         return Undefined(name=".".join([self._undefined_name, attr]))
 
+    def __getitem__(self, attr):
+        return Undefined(name=f'{self._undefined_name}["{attr}"]')
+
 
 # Dict is a special type of dict which always returns an item before checking an attribute
 class Dict(dict):
-    ## __init__ converts all nested dictionaries {} to the Dict
+    # __init__ converts all nested dictionaries {} to the Dict
     def __init__(self, *args, **kwargs):
         if len(kwargs) > 0:
             raise Exception("Dict does not support kwargs")
@@ -59,7 +62,7 @@ class Dict(dict):
     def __getattribute__(self, name):
         try:
             return Dict(self[name])
-        except Exception as e:
+        except Exception:
             return super().__getattribute__(name)
 
 
