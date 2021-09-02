@@ -14,6 +14,7 @@ require (
 	github.com/Masterminds/sprig v2.22.0+incompatible
 	github.com/alecthomas/jsonschema v0.0.0-20210526225647-edb03dcab7bc
 	github.com/argoproj/argo-workflows/v3 v3.1.0-rc1.0.20210811221840-88520891a037
+	github.com/argoproj/pkg v0.10.1
 	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/briandowns/spinner v1.12.0
@@ -57,6 +58,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
+	github.com/teivah/onecontext v1.3.0
 	github.com/theupdateframework/notary v0.7.0 // indirect
 	github.com/valyala/fastjson v1.6.3
 	github.com/vektah/gqlparser/v2 v2.1.0
@@ -68,7 +70,6 @@ require (
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210809222454-d867a43fc93e // indirect
 	google.golang.org/api v0.44.0
-	google.golang.org/grpc/examples v0.0.0-20210322221411-d26af8e39165 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	gotest.tools v2.2.0+incompatible
 	helm.sh/helm/v3 v3.6.3
