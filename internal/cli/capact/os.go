@@ -9,12 +9,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-
-	"capact.io/capact/internal/cli/printer"
 )
 
 // AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway
-func AddGatewayToHostsFile(status *printer.Status) error {
+func AddGatewayToHostsFile() error {
 	hosts := "/etc/hosts"
 	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
 
@@ -26,9 +24,9 @@ func AddGatewayToHostsFile(status *printer.Status) error {
 		return nil
 	}
 
-	status.Step("Updating /etc/hosts file")
+	fmt.Printf("   * Updating %s file. Entering sudo password may be required \n", hosts)
 	// #nosec G204
-	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a /etc/hosts >/dev/null", entry))
+	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a %s >/dev/null", entry, hosts))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Stdin = os.Stdin
@@ -37,8 +35,7 @@ func AddGatewayToHostsFile(status *printer.Status) error {
 }
 
 // TrustSelfSigned adds Capact generatd certificate to the trusted certificates
-func TrustSelfSigned(status *printer.Status) error {
-	status.Step("Trusting self-signed CA certificate if not already trusted")
+func TrustSelfSigned() error {
 	tmpFileName := "/tmp/capact-cert"
 
 	// #nosec G306
@@ -47,6 +44,7 @@ func TrustSelfSigned(status *printer.Status) error {
 		return err
 	}
 
+	fmt.Printf("   * Trusting self-signed CA certificate if not already trusted. Entering sudo password may be required \n")
 	switch os := runtime.GOOS; os {
 	case "darwin":
 		return trustSelfSignedDarwin(tmpFileName)
@@ -69,7 +67,7 @@ func trustSelfSignedDarwin(tmpCertPath string) error {
 		return nil
 	}
 
-	addCertCmd := "sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s >/dev/null"
+	addCertCmd := "sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain %s"
 	// #nosec G204
 	cmd = exec.Command("/bin/sh", "-c", fmt.Sprintf(addCertCmd, tmpCertPath))
 	cmd.Stdout = os.Stdout
@@ -102,7 +100,7 @@ func trustSelfSignedLinux(tmpCertPath string) error {
 		}
 
 		// #nosec G204
-		cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates >/dev/null")
+		cmd = exec.Command("/bin/sh", "-c", "sudo update-ca-certificates")
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		cmd.Stdin = os.Stdin

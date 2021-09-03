@@ -69,20 +69,24 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 		return err
 	}
 
+	if opts.UpdateHostsFile || opts.UpdateTrustedCerts {
+		status.Step("Preparing local changes")
+		status.End(true)
+	}
+
 	if opts.UpdateHostsFile {
-		err = capact.AddGatewayToHostsFile(status)
+		err = capact.AddGatewayToHostsFile()
 		if err != nil {
 			return err
 		}
 	}
 
 	if opts.UpdateTrustedCerts {
-		err = capact.TrustSelfSigned(status)
+		err = capact.TrustSelfSigned()
 		if err != nil {
 			return err
 		}
 	}
-	status.End(true)
 
 	welcomeMessage(w)
 
