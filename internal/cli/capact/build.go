@@ -9,10 +9,9 @@ import (
 	"sort"
 
 	"capact.io/capact/internal/cli"
-
 	"capact.io/capact/internal/cli/printer"
-	"github.com/pkg/errors"
 
+	"github.com/pkg/errors"
 	"k8s.io/utils/strings/slices"
 )
 

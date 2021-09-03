@@ -50,7 +50,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 				return err
 			}
 		} else { // load into a given environment
-			if err := capact.LoadImages(ctx, created, opts); err != nil {
+			if err := capact.LoadImages(ctx, status, created, opts); err != nil {
 				return err
 			}
 		}

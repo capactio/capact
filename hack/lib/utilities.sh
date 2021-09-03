@@ -163,7 +163,7 @@ capact::create_cluster() {
     if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
       CLUSTER_CONFIG_FLAG=--cluster-config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
     fi
-    if [[ "${ENABLE_K3D_REGISTRY:-"true"}" == "true" && "${CLUSTER_TYPE}" == "k3d" ]]; then
+    if [[ "${DISABLE_K3D_REGISTRY:-"false"}" == "false" && "${CLUSTER_TYPE}" == "k3d" ]]; then
       K3D_REGISTRY="--enable-registry"
     fi
     # shellcheck disable=SC2086
@@ -252,7 +252,7 @@ capact::install() {
       CAPACT_INSTALL_ADDITIONAL_OPTS="${CAPACT_INSTALL_ADDITIONAL_OPTS} --helm-repo-url=${CAPACT_HELM_REPO_URL}"
     fi
 
-    if [[ "${ENABLE_K3D_REGISTRY:-"true"}" == "true" && "${CLUSTER_TYPE}" == "k3d" ]]; then
+    if [[ "${DISABLE_K3D_REGISTRY:-"false"}" == "false" && "${CLUSTER_TYPE}" == "k3d" ]]; then
       CAPACT_INSTALL_ADDITIONAL_OPTS="${CAPACT_INSTALL_ADDITIONAL_OPTS} --enable-registry"
     fi
 
