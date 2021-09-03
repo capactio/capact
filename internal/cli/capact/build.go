@@ -139,7 +139,7 @@ func PushImages(ctx context.Context, status *printer.Status, names []string) err
 }
 
 func runCMD(cmd *exec.Cmd, status *printer.Status, stageFmt string, args ...interface{}) error {
-	if cli.VerboseMode.IsEnabled() {
+	if cli.VerboseMode.IsTracing() {
 		cmd.Stdout = status.Writer()
 		cmd.Stderr = status.Writer()
 		return cmd.Run()

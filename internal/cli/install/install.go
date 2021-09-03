@@ -6,10 +6,10 @@ import (
 	"io"
 	"log"
 
-	"capact.io/capact/internal/cli/environment/create"
-
 	"capact.io/capact/internal/cli/capact"
+	"capact.io/capact/internal/cli/environment/create"
 	"capact.io/capact/internal/cli/printer"
+
 	"github.com/pkg/errors"
 	"k8s.io/client-go/rest"
 )
