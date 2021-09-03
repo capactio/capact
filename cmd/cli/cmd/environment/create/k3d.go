@@ -59,10 +59,7 @@ func NewK3d() *cobra.Command {
 			return err
 		}
 
-		if err := capact.AddRegistryToHostsFile(status); err != nil {
-			return err
-		}
-		return nil
+		return capact.AddRegistryToHostsFile(status)
 	}
 
 	create.K3dRemoveWaitAndTimeoutFlags(k3d) // remove it, so we use own `--wait` flag
@@ -72,7 +69,7 @@ func NewK3d() *cobra.Command {
 	//   $ capact env create k3d  --name capact-dev --wait 10m
 	k3d.Flags().StringVar(&opts.Name, "name", create.DefaultClusterName, "Cluster name")
 	k3d.Flags().DurationVar(&opts.Wait, "wait", time.Duration(0), "Wait for control plane node to be ready")
-	k3d.Flags().BoolVar(&opts.RegistryEnabled, "enable-registry", false, "Create local Docker registry and configures k3d environment to use it")
+	k3d.Flags().BoolVar(&opts.RegistryEnabled, "enable-registry", false, "Create local Docker registry and configure k3d environment to use it")
 
 	return k3d
 }

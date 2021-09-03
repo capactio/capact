@@ -66,10 +66,7 @@ func LocalRegistry(ctx context.Context, w io.Writer) (err error) {
 		return err
 	}
 
-	if err := cli.ContainerStart(ctx, createdCnt.ID, types.ContainerStartOptions{}); err != nil {
-		return err
-	}
-	return nil
+	return cli.ContainerStart(ctx, createdCnt.ID, types.ContainerStartOptions{})
 }
 
 // RegistryConnWithNetwork connects container registry with a given network.
