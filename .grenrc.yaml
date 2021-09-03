@@ -1,0 +1,8 @@
+dataSource: prs
+groupBy:
+  "🚨 Breaking": [breaking]
+  "🔧 Bug Fixes": [bug]
+  "🚀 Enhancements": [enhancement]
+template:
+  issue: "- {{name}} [{{text}}]({{url}}) ([@{{user_login}}]({{user_url}}))"
+  group: "\n### {{heading}}\n"
