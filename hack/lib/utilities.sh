@@ -25,6 +25,11 @@ shout() {
 "
 }
 
+exitWithError() {
+ echo -e "$RED $1 $NC"
+ exit 1
+}
+
 dump_cluster_info() {
     LOGS_DIR=${ARTIFACTS:-./tmp}/logs
     mkdir -p "${LOGS_DIR}"
@@ -145,27 +150,32 @@ helm::version(){
 # Capact functions
 #
 
-#  - KIND_CLUSTER_NAME
+#  - CLUSTER_NAME
+#  - CLUSTER_TYPE
 #  - REPO_DIR
 #  - MULTINODE_CLUSTER
 capact::create_cluster() {
     shout "- Creating K8s cluster..."
-    local config
-    if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
-      config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
-    else
-      config="${REPO_DIR}/hack/cluster-config/kind/config.yaml"
+
+    if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" && "${CLUSTER_TYPE}" == "k3d" ]]; then
+      exitWithError "MULTINODE_CLUSTER is not supported on k3d yet."
     fi
-    capact::cli env create kind \
-      --name="${KIND_CLUSTER_NAME}" \
-      --cluster-config="${config}" \
+    if [[ "${MULTINODE_CLUSTER:-"false"}" == "true" ]]; then
+      CLUSTER_CONFIG_FLAG=--cluster-config="${REPO_DIR}/hack/cluster-config/kind/config-multinode.yaml"
+    fi
+    # shellcheck disable=SC2086
+    capact::cli env create ${CLUSTER_TYPE} --verbose \
+      --name="${CLUSTER_NAME}" \
+      ${CLUSTER_CONFIG_FLAG:-} \
       --wait=5m
 }
 
-#  - KIND_CLUSTER_NAME
+#  - CLUSTER_NAME
+#  - CLUSTER_TYPE
 capact::delete_cluster() {
     shout "- Deleting K8s cluster..."
-    capact::cli env delete kind --name="${KIND_CLUSTER_NAME}"
+    # shellcheck disable=SC2086
+    capact::cli env delete ${CLUSTER_TYPE} --name="${CLUSTER_NAME}" --verbose
 }
 
 

@@ -47,7 +47,7 @@ func NewInstall() *cobra.Command {
 	flags := installCmd.Flags()
 
 	flags.StringVar(&opts.Parameters.Version, "version", capact.LatestVersionTag, "Capact version. Possible values @latest, @local, 0.3.0, ...")
-	flags.StringVar(&opts.Name, "name", create.KindDefaultClusterName, "Cluster name, overrides config.")
+	flags.StringVar(&opts.Name, "name", create.DefaultClusterName, "Cluster name, overrides config.")
 	flags.StringVar(&opts.Namespace, "namespace", capact.Namespace, "Capact namespace.")
 	flags.StringVar(&opts.Environment, "environment", capact.KindEnv, "Capact environment.")
 	flags.StringSliceVar(&opts.InstallComponents, "install-component", capact.Components.All(), "Components names that should be installed. Takes comma-separated list.")
