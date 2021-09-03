@@ -77,8 +77,9 @@ func (c *Converter) policyInjectDataToGraphQL(data *policy.InjectData) *graphql.
 	}
 
 	return &graphql.PolicyRuleInjectData{
-		RequiredTypeInstances: c.typeInstancesToInjectToGraphQL(data.RequiredTypeInstances),
-		AdditionalParameters:  c.additionalParametersToInjectToGraphQL(data.AdditionalParameters),
+		RequiredTypeInstances:   c.requiredTypeInstancesToInjectToGraphQL(data.RequiredTypeInstances),
+		AdditionalParameters:    c.additionalParametersToInjectToGraphQL(data.AdditionalParameters),
+		AdditionalTypeInstances: c.additionalTypeInstancesToInjectToGraphQL(data.AdditionalTypeInstances),
 	}
 }
 
@@ -122,8 +123,9 @@ func (c *Converter) policyInjectDataFromGraphQLInput(input *graphql.PolicyRuleIn
 	}
 
 	return &policy.InjectData{
-		RequiredTypeInstances: c.typeInstancesToInjectFromGraphQLInput(input.RequiredTypeInstances),
-		AdditionalParameters:  params,
+		RequiredTypeInstances:   c.requiredTypeInstancesToInjectFromGraphQLInput(input.RequiredTypeInstances),
+		AdditionalParameters:    params,
+		AdditionalTypeInstances: c.additionalTypeInstancesToInjectFromGraphQLInput(input.AdditionalTypeInstances),
 	}, nil
 }
 
@@ -147,13 +149,26 @@ func (c *Converter) manifestRefsToGraphQL(in *[]types.ManifestRefWithOptRevision
 	return out
 }
 
-func (c *Converter) typeInstancesToInjectToGraphQL(in []policy.RequiredTypeInstanceToInject) []*graphql.RequiredTypeInstanceReference {
+func (c *Converter) requiredTypeInstancesToInjectToGraphQL(in []policy.RequiredTypeInstanceToInject) []*graphql.RequiredTypeInstanceReference {
 	var out []*graphql.RequiredTypeInstanceReference
 
 	for _, item := range in {
 		out = append(out, &graphql.RequiredTypeInstanceReference{
 			ID:          item.ID,
 			Description: item.Description,
+		})
+	}
+
+	return out
+}
+
+func (c *Converter) additionalTypeInstancesToInjectToGraphQL(in []policy.AdditionalTypeInstanceToInject) []*graphql.AdditionalTypeInstanceReference {
+	var out []*graphql.AdditionalTypeInstanceReference
+
+	for _, item := range in {
+		out = append(out, &graphql.AdditionalTypeInstanceReference{
+			ID:   item.ID,
+			Name: item.Name,
 		})
 	}
 
@@ -201,7 +216,7 @@ func (c *Converter) manifestRefsFromGraphQLInput(in []*graphql.ManifestReference
 	return &out
 }
 
-func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.RequiredTypeInstanceReferenceInput) []policy.RequiredTypeInstanceToInject {
+func (c *Converter) requiredTypeInstancesToInjectFromGraphQLInput(in []*graphql.RequiredTypeInstanceReferenceInput) []policy.RequiredTypeInstanceToInject {
 	if in == nil {
 		return nil
 	}
@@ -212,6 +227,24 @@ func (c *Converter) typeInstancesToInjectFromGraphQLInput(in []*graphql.Required
 			RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
 				ID:          item.ID,
 				Description: item.Description,
+			},
+		})
+	}
+
+	return out
+}
+
+func (c *Converter) additionalTypeInstancesToInjectFromGraphQLInput(in []*graphql.AdditionalTypeInstanceReferenceInput) []policy.AdditionalTypeInstanceToInject {
+	if in == nil {
+		return nil
+	}
+
+	var out []policy.AdditionalTypeInstanceToInject
+	for _, item := range in {
+		out = append(out, policy.AdditionalTypeInstanceToInject{
+			AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+				Name: item.Name,
+				ID:   item.ID,
 			},
 		})
 	}

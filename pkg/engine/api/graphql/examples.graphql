@@ -318,6 +318,10 @@ fragment PolicyFields on Policy {
                     name
                     value
                 }
+                additionalTypeInstances {
+                    name
+                    id
+                }
             }
         }
     }

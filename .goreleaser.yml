@@ -19,6 +19,10 @@ builds:
       - linux
       - windows
       - darwin
+    goarch: &build-arch
+      - "386"
+      - amd64
+      - arm64
     hooks: &build-hooks
       # Install upx first, https://github.com/upx/upx/releases
       post: upx -9 "{{ .Path }}"
@@ -32,6 +36,7 @@ builds:
   - id: populator
     env: *build-env
     goos: *build-goos
+    goarch: *build-arch
     hooks: *build-hooks
     main: ./cmd/populator
     binary: 'populator-{{ .Os }}-{{ .Arch }}'
@@ -73,6 +78,6 @@ blobs:
     folder: '{{ .Tag }}'
 
 release:
-  # You can disable this pipe in order to not upload any artifacts.
-  # Defaults to false.
-  disable: true
+  github:
+    owner: capactio
+    name: capact

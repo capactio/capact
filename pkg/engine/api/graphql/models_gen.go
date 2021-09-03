@@ -112,6 +112,11 @@ type AdditionalParameterInput struct {
 	Value interface{} `json:"value"`
 }
 
+type AdditionalTypeInstanceReferenceInput struct {
+	Name string `json:"name"`
+	ID   string `json:"id"`
+}
+
 // Input used for continuing Action rendering in advanced mode
 type AdvancedModeContinueRenderingInput struct {
 	// Optional TypeInstances for a given rendering iteration
@@ -179,8 +184,9 @@ type PolicyRuleImplementationConstraintsInput struct {
 }
 
 type PolicyRuleInjectDataInput struct {
-	RequiredTypeInstances []*RequiredTypeInstanceReferenceInput `json:"requiredTypeInstances"`
-	AdditionalParameters  []*AdditionalParameterInput           `json:"additionalParameters"`
+	RequiredTypeInstances   []*RequiredTypeInstanceReferenceInput   `json:"requiredTypeInstances"`
+	AdditionalParameters    []*AdditionalParameterInput             `json:"additionalParameters"`
+	AdditionalTypeInstances []*AdditionalTypeInstanceReferenceInput `json:"additionalTypeInstances"`
 }
 
 type PolicyRuleInput struct {

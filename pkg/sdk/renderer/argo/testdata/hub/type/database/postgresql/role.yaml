@@ -1,0 +1,45 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Type
+metadata:
+  name: role
+  prefix: cap.type.database.postgresql
+  path: cap.type.database.postgresql.role
+  displayName: PostgreSQL role
+  description: Defines PostgreSQL role
+  documentationURL: https://capact.io
+  supportURL: https://capact.io
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+spec:
+  jsonSchema: |-
+      {
+        "$schema": "http://json-schema.org/draft-07/schema",
+        "type": "object",
+        "title": "The schema for PostgreSQL database",
+        "examples": [
+          {
+            "name": "userName",
+            "password": "some_secret"
+          }
+        ],
+        "required": [
+          "name",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "$id": "#/properties/name",
+            "type": "string",
+            "title": "User name"
+          },
+          "password": {
+            "$id": "#/properties/password",
+            "type": "string",
+            "title": "User password"
+          }
+        },
+        "additionalProperties": false
+      }

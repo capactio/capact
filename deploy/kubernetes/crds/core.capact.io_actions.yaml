@@ -159,9 +159,8 @@ spec:
                     - secretRef
                     type: object
                   typeInstances:
-                    description: TypeInstances contains input TypeInstances passed
-                      for Action rendering. It contains both required and optional
-                      input TypeInstances.
+                    description: TypeInstances contains required input TypeInstances
+                      passed for Action rendering.
                     items:
                       description: InputTypeInstance holds input TypeInstance reference.
                       properties:

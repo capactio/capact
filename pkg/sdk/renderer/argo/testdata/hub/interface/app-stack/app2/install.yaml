@@ -18,18 +18,9 @@ spec:
   input:
     parameters:
       - name: input-parameters
-        jsonSchema:
-          value: |-
-            {
-              "$schema": "http://json-schema.org/draft-07/schema",
-              "$ocfRefs": {
-                "inputType": {
-                  "name": "cap.type.productivity.app2.install-input",
-                  "revision": "0.1.0"
-                }
-              },
-              "allOf": [ { "$ref": "#/$ocfRefs/inputType" } ]
-            }
+        typeRef:
+          path: cap.type.capactio.capact.validation.key-string
+          revision: 0.1.0
   output:
     typeInstances:
       - name: app2-config

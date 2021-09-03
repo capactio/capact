@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"capact.io/capact/internal/cli/heredoc"
 
 	"capact.io/capact/pkg/hub/client/fake"
@@ -18,9 +20,9 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 )
 
-// ListImplementationRevisionForInterface tested in pkg/sdk/renderer/argo
+// ListImplementationRevisionForInterface tested in pkg/sdk/renderer/argo/renderer_test.go
 
-func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.T) {
+func TestPolicyEnforcedClient_ListRequiredTypeInstancesToInjectBasedOnPolicy(t *testing.T) {
 	tests := []struct {
 		name string
 
@@ -32,7 +34,6 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 		{
 			name: "Empty inject in policy",
 			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
-				Prefix: "cap.core.type.platform",
 				AnyOf: []*gqlpublicapi.ImplementationRequirementItem{
 					{
 						TypeRef: &gqlpublicapi.TypeReference{
@@ -52,7 +53,6 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 		{
 			name: "Unused TypeInstance to inject",
 			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
-				Prefix: "cap.core.type.platform",
 				OneOf: []*gqlpublicapi.ImplementationRequirementItem{
 					{
 						TypeRef: &gqlpublicapi.TypeReference{
@@ -94,9 +94,40 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 			expectedTypeInstances: nil,
 		},
 		{
+			name: "No TypeRef for injected required TypeInstance",
+			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
+				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
+					{
+						Alias: ptr.String("gcp-sa"),
+						TypeRef: &gqlpublicapi.TypeReference{
+							Path:     "cap.type.gcp.auth.service-account",
+							Revision: "0.1.1",
+						},
+					},
+				},
+			}),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
+						{
+							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
+								ID:          "my-uuid",
+								Description: ptr.String("My UUID"),
+							},
+						},
+					},
+				},
+			},
+			expectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while validating Policy rule:
+				- Metadata for "RequiredTypeInstance":
+				    * missing Type reference for ID: "my-uuid", description: "My UUID"`),
+			),
+		},
+		{
 			name: "Inject GCP SA",
 			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
-				Prefix: "cap.type.gcp.auth",
 				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
 					{
 						Alias: ptr.String("gcp-sa"),
@@ -130,48 +161,18 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 				},
 			},
 		},
-		{
-			name: "No TypeRef for injected required TypeInstance",
-			implRev: fixImplementationRevisionWithRequire(gqlpublicapi.ImplementationRequirement{
-				Prefix: "cap.type.gcp.auth",
-				AllOf: []*gqlpublicapi.ImplementationRequirementItem{
-					{
-						Alias: ptr.String("gcp-sa"),
-						TypeRef: &gqlpublicapi.TypeReference{
-							Path:     "cap.type.gcp.auth.service-account",
-							Revision: "0.1.1",
-						},
-					},
-				},
-			}),
-			policyRule: policy.Rule{
-				Inject: &policy.InjectData{
-					RequiredTypeInstances: []policy.RequiredTypeInstanceToInject{
-						{
-							RequiredTypeInstanceReference: policy.RequiredTypeInstanceReference{
-								ID:          "my-uuid",
-								Description: ptr.String("My UUID"),
-							},
-						},
-					},
-				},
-			},
-			expectedErrMessage: ptr.String(
-				heredoc.Doc(`
-				while validating Policy rule: while validating TypeInstance metadata for Policy: 1 error occurred:
-					* missing Type reference for TypeInstance "my-uuid" (description: "My UUID")`),
-			),
-		},
 	}
 	for _, test := range tests {
 		tt := test
 		t.Run(tt.name, func(t *testing.T) {
 			// given
 			hubCli := &fake.FileSystemClient{}
-			cli := client.NewPolicyEnforcedClient(hubCli)
+
+			validator := policyvalidation.NewValidator(hubCli)
+			cli := client.NewPolicyEnforcedClient(hubCli, validator)
 
 			// when
-			actual, err := cli.ListRequiredTypeInstancesToInjectBasedOnPolicy(context.Background(), tt.policyRule, tt.implRev)
+			actual, err := cli.ListRequiredTypeInstancesToInjectBasedOnPolicy(tt.policyRule, tt.implRev)
 
 			// then
 			if tt.expectedErrMessage != nil {
@@ -185,10 +186,311 @@ func TestPolicyEnforcedClient_ListTypeInstancesToInjectBasedOnPolicy(t *testing.
 	}
 }
 
+func TestPolicyEnforcedClient_ListAdditionalTypeInstancesToInjectBasedOnPolicy(t *testing.T) {
+	tests := []struct {
+		name string
+
+		implRev               gqlpublicapi.ImplementationRevision
+		policyRule            policy.Rule
+		expectedTypeInstances []types.InputTypeInstanceRef
+		expectedErrMessage    *string
+	}{
+		{
+			name:    "Empty inject in policy",
+			implRev: fixImplementationRevisionWithAdditionalInputTypeInstances(nil),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{},
+				},
+			},
+			expectedTypeInstances: nil,
+		},
+		{
+			name:    "Non-existing additional TypeInstance to inject",
+			implRev: fixImplementationRevisionWithAdditionalInputTypeInstances(nil),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+						{
+							AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+								ID:   "my-uuid",
+								Name: "not-existing",
+							},
+							TypeRef: &types.ManifestRef{
+								Path:     "cap.type.sample1",
+								Revision: "0.1.0",
+							},
+						},
+						{
+							AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+								ID:   "my-uuid2",
+								Name: "not-existing2",
+							},
+							TypeRef: &types.ManifestRef{
+								Path:     "cap.type.sample2",
+								Revision: "0.1.0",
+							},
+						},
+					},
+				},
+			},
+			expectedTypeInstances: nil,
+			expectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while checking if additional TypeInstances from Policy are defined in Implementation manifest:
+				- AdditionalTypeInstance "not-existing":
+				    * cannot find such definition with exact name and Type reference "cap.type.sample1:0.1.0" in Implementation "impl"
+				- AdditionalTypeInstance "not-existing2":
+				    * cannot find such definition with exact name and Type reference "cap.type.sample2:0.1.0" in Implementation "impl"`,
+				),
+			),
+		},
+		{
+			name: "No TypeRef for injected additional TypeInstance",
+			implRev: fixImplementationRevisionWithAdditionalInputTypeInstances(
+				[]*gqlpublicapi.InputTypeInstance{
+					{
+						Name: "foo",
+						TypeRef: &gqlpublicapi.TypeReference{
+							Path:     "cap.type.sample1",
+							Revision: "0.1.0",
+						},
+						Verbs: []gqlpublicapi.TypeInstanceOperationVerb{gqlpublicapi.TypeInstanceOperationVerbGet},
+					},
+				},
+			),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+						{
+							AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+								ID:   "my-uuid",
+								Name: "foo",
+							},
+						},
+					},
+				},
+			},
+			expectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while validating Policy rule:
+				- Metadata for "AdditionalTypeInstance":
+				    * missing Type reference for ID: "my-uuid", name: "foo"`),
+			),
+		},
+		{
+			name: "Inject database",
+			implRev: fixImplementationRevisionWithAdditionalInputTypeInstances(
+				[]*gqlpublicapi.InputTypeInstance{
+					{
+						Name: "database",
+						TypeRef: &gqlpublicapi.TypeReference{
+							Path:     "cap.type.database",
+							Revision: "0.1.0",
+						},
+						Verbs: []gqlpublicapi.TypeInstanceOperationVerb{gqlpublicapi.TypeInstanceOperationVerbGet},
+					},
+				},
+			),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+						{
+							AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+								Name: "database",
+								ID:   "my-uuid",
+							},
+							TypeRef: &types.ManifestRef{
+								Path:     "cap.type.database",
+								Revision: "0.1.0",
+							},
+						},
+					},
+				},
+			},
+			expectedTypeInstances: []types.InputTypeInstanceRef{
+				{
+					Name: "database",
+					ID:   "my-uuid",
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			// given
+			hubCli := &fake.FileSystemClient{}
+			validator := policyvalidation.NewValidator(hubCli)
+			cli := client.NewPolicyEnforcedClient(hubCli, validator)
+
+			// when
+			actual, err := cli.ListAdditionalTypeInstancesToInjectBasedOnPolicy(tt.policyRule, tt.implRev)
+
+			// then
+			if tt.expectedErrMessage != nil {
+				require.Error(t, err)
+				assert.EqualError(t, err, *tt.expectedErrMessage)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedTypeInstances, actual)
+			}
+		})
+	}
+}
+
+func TestPolicyEnforcedClient_ListAdditionalInputToInjectBasedOnPolicy(t *testing.T) {
+	// given
+	tests := []struct {
+		name string
+
+		policyRule               policy.Rule
+		implRev                  gqlpublicapi.ImplementationRevision
+		expectedParamsCollection types.ParametersCollection
+		expectedErrMessage       *string
+	}{
+		{
+			name: "Empty inject in policy",
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalParameters: nil,
+				},
+			},
+			expectedParamsCollection: nil,
+		},
+		{
+			name: "Invalid and unknown parameters",
+			implRev: fixImplementationRevisionWithAdditionalInputParams([]*gqlpublicapi.ImplementationAdditionalInputParameter{
+				{
+					Name: "foo",
+					TypeRef: &gqlpublicapi.TypeReference{
+						Path:     "cap.type.capactio.capact.validation.key-bool",
+						Revision: "0.1.0",
+					},
+				},
+				{
+					Name: "bar",
+					TypeRef: &gqlpublicapi.TypeReference{
+						Path:     "cap.type.capactio.capact.validation.key-string",
+						Revision: "0.1.0",
+					},
+				},
+			}),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalParameters: []policy.AdditionalParametersToInject{
+						{
+							Name: "foo", Value: map[string]interface{}{
+								"key": "string",
+							},
+						},
+						{
+							Name: "baz", Value: map[string]interface{}{
+								"key": "string",
+							},
+						},
+					},
+				},
+			},
+			expectedErrMessage: ptr.String(
+				heredoc.Doc(`
+				while validating additional input parameters schemas:
+				- AdditionalParameters "baz":
+				    * Unknown parameter. Cannot validate it against JSONSchema.
+				- AdditionalParameters "foo":
+				    * key: Invalid type. Expected: boolean, given: string`),
+			),
+		},
+		{
+			name: "Multiple valid parameters",
+			implRev: fixImplementationRevisionWithAdditionalInputParams([]*gqlpublicapi.ImplementationAdditionalInputParameter{
+				{
+					Name: "foo",
+					TypeRef: &gqlpublicapi.TypeReference{
+						Path:     "cap.type.capactio.capact.validation.key-bool",
+						Revision: "0.1.0",
+					},
+				},
+				{
+					Name: "bar",
+					TypeRef: &gqlpublicapi.TypeReference{
+						Path:     "cap.type.capactio.capact.validation.key-string",
+						Revision: "0.1.0",
+					},
+				},
+			}),
+			policyRule: policy.Rule{
+				Inject: &policy.InjectData{
+					AdditionalParameters: []policy.AdditionalParametersToInject{
+						{
+							Name: "foo", Value: map[string]interface{}{
+								"key": true,
+							},
+						},
+						{
+							Name: "bar", Value: map[string]interface{}{
+								"key": "string",
+							},
+						},
+					},
+				},
+			},
+			expectedParamsCollection: types.ParametersCollection{
+				"foo": heredoc.Doc(`
+					key: true
+				`),
+				"bar": heredoc.Doc(`
+					key: string
+				`),
+			},
+		},
+	}
+	for _, test := range tests {
+		tt := test
+		t.Run(tt.name, func(t *testing.T) {
+			hubCli, err := fake.NewFromLocal("testdata/hub", false)
+			require.NoError(t, err)
+
+			validator := policyvalidation.NewValidator(hubCli)
+			cli := client.NewPolicyEnforcedClient(hubCli, validator)
+
+			// when
+			actual, err := cli.ListAdditionalInputToInjectBasedOnPolicy(context.Background(), tt.policyRule, tt.implRev)
+
+			// then
+			if tt.expectedErrMessage != nil {
+				require.Error(t, err)
+				assert.EqualError(t, err, *tt.expectedErrMessage)
+			} else {
+				require.NoError(t, err)
+				assert.Equal(t, tt.expectedParamsCollection, actual)
+			}
+		})
+	}
+}
+
 func fixImplementationRevisionWithRequire(req gqlpublicapi.ImplementationRequirement) gqlpublicapi.ImplementationRevision {
 	impl := fixImplementationRevision("impl", "0.0.1")
 	impl.Spec.Requires = []*gqlpublicapi.ImplementationRequirement{
 		&req,
+	}
+
+	return impl
+}
+
+func fixImplementationRevisionWithAdditionalInputTypeInstances(additionalTI []*gqlpublicapi.InputTypeInstance) gqlpublicapi.ImplementationRevision {
+	impl := fixImplementationRevision("impl", "0.0.1")
+	impl.Spec.AdditionalInput = &gqlpublicapi.ImplementationAdditionalInput{
+		TypeInstances: additionalTI,
+	}
+
+	return impl
+}
+
+func fixImplementationRevisionWithAdditionalInputParams(additionalParams []*gqlpublicapi.ImplementationAdditionalInputParameter) gqlpublicapi.ImplementationRevision {
+	impl := fixImplementationRevision("impl", "0.0.1")
+	impl.Spec.AdditionalInput = &gqlpublicapi.ImplementationAdditionalInput{
+		Parameters: additionalParams,
 	}
 
 	return impl

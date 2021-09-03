@@ -90,6 +90,14 @@ func fixValidPolicy() policy.Policy {
 									},
 								},
 							},
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										ID:   "sample-uuid",
+										Name: "sample-name",
+									},
+								},
+							},
 						},
 					},
 					{

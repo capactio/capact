@@ -423,8 +423,8 @@ args:
           name: postgresql
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-3-0-step
-          template: inject-input-type-instances-3-0
+          name: inject-input-type-instances-4-0-step
+          template: inject-input-type-instances-4-0
       - - arguments:
             artifacts:
             - from: '{{inputs.artifacts.input-parameters}}'
@@ -649,7 +649,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-3-0
+      name: inject-input-type-instances-4-0
       outputs:
         artifacts:
         - globalName: gcp-sa
@@ -1181,6 +1181,12 @@ args:
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
+          name: populate-user-input-step
+          template: populate-user-input
+      - - arguments:
+            artifacts:
+            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
+              name: input-parameters
           name: start-entrypoint
           template: mattermost-install
       - - arguments:
@@ -1271,6 +1277,33 @@ args:
                     to: mattermost-install-install-db-postgresql
           name: upload-output-type-instances-step
           template: upload-output-type-instances
+    - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /output
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-user-input
+      outputs:
+        artifacts:
+        - name: input-parameters
+          path: /output/parameters.json
+      volumes:
+      - name: user-secret-volume
+        secret:
+          items:
+          - key: parameters.json
+            path: parameters.json
+          optional: false
+          secretName: user-input
     - container:
         args:
         - sleep 1
