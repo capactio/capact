@@ -10,10 +10,9 @@ import (
 	"time"
 
 	"capact.io/capact/internal/cli/config"
+	"capact.io/capact/internal/cli/printer"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-
-	"capact.io/capact/internal/cli/printer"
 
 	"github.com/pkg/errors"
 	"github.com/rancher/k3d/v4/pkg/client"

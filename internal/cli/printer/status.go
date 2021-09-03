@@ -20,10 +20,13 @@ type Spinner interface {
 
 // Status provides functionality to display steps progress in terminal.
 type Status struct {
-	stage           string
+	w io.Writer
+
 	spinner         Spinner
-	timeStarted     time.Time
 	durationSprintf func(format string, a ...interface{}) string
+
+	timeStarted time.Time
+	stage       string
 }
 
 // NewStatus returns a new Status instance.
@@ -32,7 +35,9 @@ func NewStatus(w io.Writer, header string) *Status {
 		fmt.Fprintln(w, header)
 	}
 
-	st := &Status{}
+	st := &Status{
+		w: w,
+	}
 	if cli.IsSmartTerminal(w) {
 		st.durationSprintf = color.New(color.Faint, color.Italic).Sprintf
 		st.spinner = NewDynamicSpinner(w)
@@ -80,4 +85,9 @@ func (s *Status) End(success bool) {
 	msg := fmt.Sprintf(" %s %s%s\n",
 		icon, s.stage, dur)
 	s.spinner.Stop(msg)
+}
+
+// Writer returns underlying io.Writer
+func (s *Status) Writer() io.Writer {
+	return s.w
 }

@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"sort"
 
+	"capact.io/capact/internal/cli"
+
 	"capact.io/capact/internal/cli/printer"
 	"github.com/pkg/errors"
 
@@ -72,10 +74,9 @@ var Images = images{
 	},
 }
 
-func buildImage(ctx context.Context, w *printer.Status, imgName string, img image, repository, version string) (string, error) {
+func buildImage(ctx context.Context, status *printer.Status, imgName string, img image, repository, version string) (string, error) {
 	// docker build --build-arg COMPONENT=$(APP) --target generic -t $(DOCKER_REPOSITORY)/$(APP):$(DOCKER_TAG)
 	imageTag := fmt.Sprintf("%s/%s:%s", repository, imgName, version)
-	w.Step("Building image %s", imageTag)
 	// #nosec G204
 	cmd := exec.CommandContext(ctx, "docker",
 		"build",
@@ -100,23 +101,22 @@ func buildImage(ctx context.Context, w *printer.Status, imgName string, img imag
 		}
 	}
 	cmd.Dir = img.Dir
-
-	err := cmd.Run()
-	if err != nil {
+	if err := runCMD(cmd, status, "Building image %s", imageTag); err != nil {
 		return "", err
 	}
+
 	return imageTag, nil
 }
 
 // BuildImages builds passed images setting passed repository and version
-func BuildImages(ctx context.Context, w *printer.Status, repository, version string, names []string) ([]string, error) {
+func BuildImages(ctx context.Context, status *printer.Status, repository, version string, names []string) ([]string, error) {
 	var created []string
 
 	for _, image := range Images.All() {
 		if !slices.Contains(names, image) {
 			continue
 		}
-		imageTag, err := buildImage(ctx, w, image, Images[image], repository, version)
+		imageTag, err := buildImage(ctx, status, image, Images[image], repository, version)
 		if err != nil {
 			return nil, errors.Wrapf(err, "while building image %s", image)
 		}
@@ -126,21 +126,32 @@ func BuildImages(ctx context.Context, w *printer.Status, repository, version str
 }
 
 // PushImages pushes passed images to a given registry
-func PushImages(ctx context.Context, w *printer.Status, names []string) error {
-	var buff bytes.Buffer
+func PushImages(ctx context.Context, status *printer.Status, names []string) error {
 	for _, image := range names {
 		// #nosec G204
-		cmd := exec.CommandContext(ctx, "docker",
-			"push",
-			image)
+		cmd := exec.CommandContext(ctx, "docker", "push", image)
 
-		w.Step("Pushing %s", image)
-		cmd.Stderr = &buff
-		err := cmd.Run()
-		if err != nil {
-			return errors.Wrapf(err, "while pushing image [stderr: %s]", buff.String())
+		if err := runCMD(cmd, status, "Pushing %s", image); err != nil {
+			return err
 		}
-		buff.Reset()
 	}
+	return nil
+}
+
+func runCMD(cmd *exec.Cmd, status *printer.Status, stageFmt string, args ...interface{}) error {
+	if cli.VerboseMode.IsEnabled() {
+		cmd.Stdout = status.Writer()
+		cmd.Stderr = status.Writer()
+		return cmd.Run()
+	}
+
+	var buff bytes.Buffer
+	status.Step(stageFmt, args...)
+	cmd.Stderr = &buff
+	err := cmd.Run()
+	if err != nil {
+		return errors.Wrapf(err, "while running cmd [stderr: %s]", buff.String())
+	}
+
 	return nil
 }

@@ -72,7 +72,7 @@ func NewK3d() *cobra.Command {
 	//   $ capact env create k3d  --name capact-dev --wait 10m
 	k3d.Flags().StringVar(&opts.Name, "name", create.DefaultClusterName, "Cluster name")
 	k3d.Flags().DurationVar(&opts.Wait, "wait", time.Duration(0), "Wait for control plane node to be ready")
-	k3d.Flags().BoolVar(&opts.RegistryEnabled, "enable-registry", false, "Creates local registry and configures environment to use it")
+	k3d.Flags().BoolVar(&opts.RegistryEnabled, "enable-registry", false, "Creates local registry and configures k3d environment to use it")
 
 	return k3d
 }
