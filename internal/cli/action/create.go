@@ -12,7 +12,7 @@ import (
 	gqlengine "capact.io/capact/pkg/engine/api/graphql"
 	gqlpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
 	"capact.io/capact/pkg/hub/client/public"
-	"capact.io/capact/pkg/sdk/validation/action"
+	"capact.io/capact/pkg/sdk/validation/interfaceio"
 
 	"github.com/fatih/color"
 )
@@ -69,12 +69,12 @@ func Create(ctx context.Context, opts CreateOptions, w io.Writer) (*CreateOutput
 }
 
 func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubCli client.Hub) error {
-	opts.validator = action.NewValidator(hubCli)
+	opts.validator = interfaceio.NewValidator(hubCli)
 
 	// TODO: In the future, we can use client.PolicyEnforcedClient
-	// to get the Implementation and validate Implementation specific TypeInstances and additional input.
-	// That would require some unification and re-using exactly the same logic for the Impl resolution.
-	// For now, fetch latest - the same strategy is used by renderer.
+	// 	to get the Implementation and validate Implementation specific TypeInstances and additional input.
+	// 	That would require some unification and re-using exactly the same logic for the Impl resolution.
+	// 	For now, fetch latest - the same strategy is used by renderer.
 	iface, err := hubCli.FindInterfaceRevision(ctx, gqlpublicapi.InterfaceReference{
 		Path: opts.InterfacePath,
 	}, public.WithInterfaceRevisionFields(public.InterfaceRevisionInputFields))
@@ -85,19 +85,20 @@ func setupCreateOptsWithValidator(ctx context.Context, opts *CreateOptions, hubC
 		return fmt.Errorf("Interface %s was not found in Hub", opts.InterfacePath)
 	}
 
-	opts.ifaceSchemas, err = opts.validator.LoadIfaceInputParametersSchemas(ctx, iface)
+	opts.ifaceSchemas, err = opts.validator.LoadInputParametersSchemas(ctx, iface)
 	if err != nil {
 		return err
 	}
-	opts.isInputParamsRequired, err = opts.validator.HasRequiredProp(opts.ifaceSchemas)
+	opts.areInputParamsRequired, err = opts.validator.HasRequiredProp(opts.ifaceSchemas)
 	if err != nil {
 		return err
 	}
 
-	opts.ifaceTypes, err = opts.validator.LoadIfaceInputTypeInstanceRefs(ctx, iface)
+	opts.ifaceTypes, err = opts.validator.LoadInputTypeInstanceRefs(ctx, iface)
 	if err != nil {
 		return err
 	}
+	opts.areInputTypeInstancesRequired = len(opts.ifaceTypes) > 0
 
 	return nil
 }

@@ -174,9 +174,15 @@ args:
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: inject-input-type-instances-1-0-step
-          template: inject-input-type-instances-1-0
+          name: inject-input-type-instances-2-0-step
+          template: inject-input-type-instances-2-0
       - - arguments: {}
+          name: populate-user-input-step
+          template: populate-user-input
+      - - arguments:
+            artifacts:
+            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
+              name: input-parameters
           name: start-entrypoint
           template: postgres-install
       - - arguments:
@@ -209,6 +215,33 @@ args:
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - container:
+        args:
+        - sleep 1
+        command:
+        - sh
+        - -c
+        image: alpine:3.7
+        name: ""
+        resources: {}
+        volumeMounts:
+        - mountPath: /output
+          name: user-secret-volume
+      inputs: {}
+      metadata: {}
+      name: populate-user-input
+      outputs:
+        artifacts:
+        - name: input-parameters
+          path: /output/parameters.json
+      volumes:
+      - name: user-secret-volume
+        secret:
+          items:
+          - key: parameters.json
+            path: parameters.json
+          optional: false
+          secretName: user-input
+    - container:
         env:
         - name: APP_ACTION
           value: DownloadAction
@@ -219,7 +252,7 @@ args:
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-1-0
+      name: inject-input-type-instances-2-0
       outputs:
         artifacts:
         - globalName: gcp-sa

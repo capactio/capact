@@ -1,0 +1,10 @@
+---
+id: f2421415-b8a4-464b-be12-b617794411c5
+typeRef:
+  path: cap.type.database.postgresql.config
+  revision: 0.1.0
+latestResourceVersion:
+  resourceVersion: 1
+  spec:
+    value:
+      key: "postgresql"

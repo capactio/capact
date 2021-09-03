@@ -1,8 +1,10 @@
-package policy_test
+package metadata_test
 
 import (
 	"context"
 	"testing"
+
+	"capact.io/capact/pkg/engine/k8s/policy/metadata"
 
 	"capact.io/capact/internal/cli/heredoc"
 
@@ -17,7 +19,7 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	tests := []struct {
 		Name               string
 		Input              *policy.Policy
-		HubCli             policy.HubClient
+		HubCli             metadata.HubClient
 		Expected           *policy.Policy
 		ExpectedErrMessage *string
 	}{
@@ -35,18 +37,19 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 		{
 			Name:     "Unresolved TypeRefs",
 			Input:    fixComplexPolicyWithoutTypeRef(),
-			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 4},
+			HubCli:   &fakeHub{ShouldRun: true, ExpectedIDLen: 9},
 			Expected: fixComplexPolicyWithTypeRef(),
 		},
 		{
 			Name:   "Partial result",
 			Input:  fixComplexPolicyWithoutTypeRef(),
-			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 4, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}}},
+			HubCli: &fakeHub{ShouldRun: true, ExpectedIDLen: 9, IgnoreIDs: map[string]struct{}{"id2": {}, "id4": {}, "id8": {}}},
 			ExpectedErrMessage: ptr.String(
 				heredoc.Doc(`
-				while TypeInstance metadata validation after resolving TypeRefs: while validating TypeInstance metadata for Policy: 2 errors occurred:
-					* missing Type reference for TypeInstance "id2" (description: "ID 2")
-					* missing Type reference for TypeInstance "id4" (description: "")`,
+				3 errors occurred:
+					* missing Type reference for RequiredTypeInstance (ID: "id2", description: "ID 2")
+					* missing Type reference for RequiredTypeInstance (ID: "id4")
+					* missing Type reference for AdditionalTypeInstance (ID: "id8", name: "ID8")`,
 				),
 			),
 		},
@@ -61,8 +64,10 @@ func TestResolveTypeInstanceMetadata(t *testing.T) {
 	for _, testCase := range tests {
 		tc := testCase
 		t.Run(tc.Name, func(t *testing.T) {
+			resolver := metadata.NewResolver(tc.HubCli)
+
 			// when
-			err := policy.ResolveTypeInstanceMetadata(context.Background(), tc.HubCli, tc.Input)
+			err := resolver.ResolveTypeInstanceMetadata(context.Background(), tc.Input)
 
 			// then
 			if tc.ExpectedErrMessage != nil {

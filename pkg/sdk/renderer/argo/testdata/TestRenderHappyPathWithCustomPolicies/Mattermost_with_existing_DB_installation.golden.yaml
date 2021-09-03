@@ -17,14 +17,10 @@ args:
       steps:
       - - arguments:
             artifacts:
-            - name: input-parameters
-              raw:
-                data: |
-                  superuser:
-                    username: superuser
-                  defaultDBName: postgres
+            - from: '{{inputs.artifacts.postgresql}}'
+              name: postgresql
           name: install-db
-          template: mattermost-install-install-db-postgres-install
+          template: mock-mattermost-install-install-db
       - - arguments:
             artifacts:
             - from: '{{steps.install-db.outputs.artifacts.postgresql}}'
@@ -412,117 +408,6 @@ args:
               name: mattermost-helm-release
           name: output-mattermost-helm-release
           template: output-mattermost-helm-release
-    - inputs:
-        artifacts:
-        - name: input-parameters
-      metadata: {}
-      name: mattermost-install-install-db-postgres-install
-      outputs:
-        artifacts:
-        - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-          name: postgresql
-      steps:
-      - - arguments:
-            artifacts:
-            - from: '{{inputs.artifacts.input-parameters}}'
-              name: input-parameters
-            - name: template
-              raw:
-                data: |
-                  generateName: true
-                  chart:
-                    name: "postgresql"
-                    repo: "https://charts.bitnami.com/bitnami"
-                    version: "10.2.6"
-                  values:
-                    postgresqlDatabase: {{ defaultDBName }}
-                    postgresqlUsername: {{ superuser.username }}
-                    postgresqlPassword: {{ superuser.password }}
-                  output:{% raw %}
-                    goTemplate:
-                      host: '{{ template "common.names.fullname" . }}'
-                      port: '{{ template "postgresql.port" . }}'
-                      defaultDBName: '{{ template "postgresql.database" . }}'
-                      superuser:
-                        username: '{{ template "postgresql.username" . }}'
-                        password: '{{ template "postgresql.password" . }}'{% endraw %}
-          name: create-helm-args
-          template: mattermost-install-install-db-postgres-install-create-helm-args-template
-      - - arguments:
-            artifacts:
-            - from: '{{steps.create-helm-args.outputs.artifacts.render}}'
-              name: input-parameters
-            - from: '{{workflow.outputs.artifacts.runner-context}}'
-              name: runner-context
-          name: helm-install
-          template: mattermost-install-install-db-postgres-install-helm-install-helm
-      - - arguments:
-            artifacts:
-            - from: '{{steps.helm-install.outputs.artifacts.additional}}'
-              name: postgresql
-          name: output-postgresql
-          template: output-mattermost-install-install-db-postgresql
-      - - arguments:
-            artifacts:
-            - from: '{{steps.helm-install.outputs.artifacts.helm-release}}'
-              name: psql-helm-release
-          name: output-psql-helm-release
-          template: output-mattermost-install-install-db-psql-helm-release
-    - container:
-        args:
-        - /template.yml
-        - /values.yml
-        - --format=yaml
-        - -o
-        - /render.yml
-        image: ghcr.io/capactio/jinja2:v2.11.2
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: template
-          path: /template.yml
-        - name: input-parameters
-          path: /values.yml
-      metadata: {}
-      name: mattermost-install-install-db-postgres-install-create-helm-args-template
-      outputs:
-        artifacts:
-        - name: render
-          path: /render.yml
-    - container:
-        env:
-        - name: RUNNER_CONTEXT_PATH
-          value: '{{inputs.artifacts.runner-context.path}}'
-        - name: RUNNER_ARGS_PATH
-          value: '{{inputs.artifacts.input-parameters.path}}'
-        - name: RUNNER_LOGGER_DEV_MODE
-          value: "true"
-        - name: RUNNER_COMMAND
-          value: install
-        - name: RUNNER_OUTPUT_HELM_RELEASE_FILE_PATH
-          value: '{{outputs.artifacts.helm-release.path}}'
-        - name: RUNNER_OUTPUT_ADDITIONAL_FILE_PATH
-          value: '{{outputs.artifacts.additional.path}}'
-        image: ghcr.io/capactio/pr/helm-runner:PR-252
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: input-parameters
-          path: /runner-args
-        - name: runner-context
-          path: /runner-context
-      metadata: {}
-      name: mattermost-install-install-db-postgres-install-helm-install-helm
-      outputs:
-        artifacts:
-        - globalName: mattermost-install-install-db-postgres-install-helm-install-helm-release
-          name: helm-release
-          path: /helm-release.yaml
-        - globalName: mattermost-install-install-db-postgres-install-helm-install-additional
-          name: additional
-          path: /additional.yaml
     - container:
         args:
         - sleep 1
@@ -535,34 +420,13 @@ args:
       inputs:
         artifacts:
         - name: postgresql
-          path: /typeinstance
+          path: output/postgresql
       metadata: {}
-      name: output-mattermost-install-install-db-postgresql
+      name: mock-mattermost-install-install-db
       outputs:
         artifacts:
-        - globalName: mattermost-install-install-db-postgresql
-          name: postgresql
-          path: /typeinstance
-    - container:
-        args:
-        - sleep 1
-        command:
-        - sh
-        - -c
-        image: alpine:3.7
-        name: ""
-        resources: {}
-      inputs:
-        artifacts:
-        - name: psql-helm-release
-          path: /typeinstance
-      metadata: {}
-      name: output-mattermost-install-install-db-psql-helm-release
-      outputs:
-        artifacts:
-        - globalName: mattermost-install-install-db-psql-helm-release
-          name: psql-helm-release
-          path: /typeinstance
+        - name: postgresql
+          path: output/postgresql
     - inputs:
         artifacts:
         - name: postgresql
@@ -1086,11 +950,14 @@ args:
       outputs: {}
       steps:
       - - arguments: {}
-          name: inject-input-type-instances-uuid-step
-          template: inject-input-type-instances-uuid
+          name: inject-input-type-instances-1-1-step
+          template: inject-input-type-instances-1-1
       - - arguments: {}
           name: inject-runner-context-step
           template: inject-runner-context
+      - - arguments: {}
+          name: inject-input-type-instances-1-0-step
+          template: inject-input-type-instances-1-0
       - - arguments: {}
           name: populate-user-input-step
           template: populate-user-input
@@ -1098,18 +965,14 @@ args:
             artifacts:
             - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
-            - from: '{{workflow.outputs.artifacts.gcp}}'
-              name: gcp
+            - from: '{{workflow.outputs.artifacts.postgresql}}'
+              name: postgresql
           name: start-entrypoint
           template: mattermost-install
       - - arguments:
             artifacts:
             - from: '{{workflow.outputs.artifacts.mattermost-config}}'
               name: mattermost-config
-            - from: '{{workflow.outputs.artifacts.mattermost-install-install-db-postgresql}}'
-              name: mattermost-install-install-db-postgresql
-            - from: '{{workflow.outputs.artifacts.mattermost-install-install-db-postgres-install-helm-install-helm-release}}'
-              name: mattermost-install-install-db-postgres-install-helm-install-helm-release
             - from: '{{workflow.outputs.artifacts.mattermost-install-create-user-user}}'
               name: mattermost-install-create-user-user
             - from: '{{workflow.outputs.artifacts.mattermost-install-create-db-database}}'
@@ -1122,42 +985,28 @@ args:
                   typeInstances:
                   - alias: mattermost-config
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.productivity.mattermost.config
                       revision: 0.1.0
                     value: null
-                  - alias: mattermost-install-install-db-postgresql
-                    attributes: []
-                    createdBy: default/action
-                    typeRef:
-                      path: cap.type.database.postgresql.config
-                      revision: 0.1.0
-                    value: null
-                  - alias: mattermost-install-install-db-postgres-install-helm-install-helm-release
-                    attributes: []
-                    createdBy: default/action
-                    typeRef:
-                      path: cap.type.helm.chart.release
-                      revision: 0.1.0
-                    value: null
                   - alias: mattermost-install-create-user-user
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.user
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-create-db-database
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.database.postgresql.database
                       revision: 0.1.0
                     value: null
                   - alias: mattermost-install-helm-install-helm-release
                     attributes: []
-                    createdBy: default/action
+                    createdBy: owner
                     typeRef:
                       path: cap.type.helm.chart.release
                       revision: 0.1.0
@@ -1166,17 +1015,15 @@ args:
                   - from: mattermost-config
                     to: mattermost-install-helm-install-helm-release
                   - from: mattermost-config
-                    to: mattermost-install-install-db-postgresql
+                    to: f2421415-b8a4-464b-be12-b617794411c5
                   - from: mattermost-config
                     to: mattermost-install-create-db-database
                   - from: mattermost-config
                     to: mattermost-install-create-user-user
-                  - from: mattermost-install-install-db-postgresql
-                    to: mattermost-install-install-db-postgres-install-helm-install-helm-release
                   - from: mattermost-install-create-user-user
-                    to: mattermost-install-install-db-postgresql
+                    to: f2421415-b8a4-464b-be12-b617794411c5
                   - from: mattermost-install-create-db-database
-                    to: mattermost-install-install-db-postgresql
+                    to: f2421415-b8a4-464b-be12-b617794411c5
           name: upload-output-type-instances-step
           template: upload-output-type-instances
     - container:
@@ -1206,6 +1053,23 @@ args:
             path: parameters.json
           optional: false
           secretName: user-input
+    - container:
+        env:
+        - name: APP_ACTION
+          value: DownloadAction
+        - name: APP_DOWNLOAD_CONFIG
+          value: '{f2421415-b8a4-464b-be12-b617794411c5,/postgresql.yaml}'
+        image: alpine:3.7
+        name: ""
+        resources: {}
+      inputs: {}
+      metadata: {}
+      name: inject-input-type-instances-1-0
+      outputs:
+        artifacts:
+        - globalName: postgresql
+          name: postgresql
+          path: /postgresql.yaml
     - container:
         args:
         - sleep 1
@@ -1240,18 +1104,18 @@ args:
         - name: APP_ACTION
           value: DownloadAction
         - name: APP_DOWNLOAD_CONFIG
-          value: '{c268d3f5-8834-434b-bea2-b677793611c5,/gcp.yaml}'
+          value: '{f2421415-b8a4-464b-be12-b617794411c5,/postgresql.yaml}'
         image: alpine:3.7
         name: ""
         resources: {}
       inputs: {}
       metadata: {}
-      name: inject-input-type-instances-uuid
+      name: inject-input-type-instances-1-1
       outputs:
         artifacts:
-        - globalName: gcp
-          name: gcp
-          path: /gcp.yaml
+        - globalName: postgresql
+          name: postgresql
+          path: /postgresql.yaml
     - container:
         env:
         - name: APP_ACTION
@@ -1268,10 +1132,6 @@ args:
         artifacts:
         - name: mattermost-config
           path: /upload/typeInstances/mattermost-config
-        - name: mattermost-install-install-db-postgresql
-          path: /upload/typeInstances/mattermost-install-install-db-postgresql
-        - name: mattermost-install-install-db-postgres-install-helm-install-helm-release
-          path: /upload/typeInstances/mattermost-install-install-db-postgres-install-helm-install-helm-release
         - name: mattermost-install-create-user-user
           path: /upload/typeInstances/mattermost-install-create-user-user
         - name: mattermost-install-create-db-database

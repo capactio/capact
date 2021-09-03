@@ -63,7 +63,11 @@ func mergeRules(rule *policy.Rule, newRule policy.Rule) {
 	}
 	// merge RequiredTypeInstances
 	if newRule.Inject.RequiredTypeInstances != nil {
-		rule.Inject.RequiredTypeInstances = mergeTypeInstances(newRule.Inject.RequiredTypeInstances, rule.Inject.RequiredTypeInstances)
+		rule.Inject.RequiredTypeInstances = mergeRequiredTypeInstances(newRule.Inject.RequiredTypeInstances, rule.Inject.RequiredTypeInstances)
+	}
+	// merge AdditionalTypeInstances
+	if newRule.Inject.AdditionalTypeInstances != nil {
+		rule.Inject.AdditionalTypeInstances = mergeAdditionalTypeInstances(newRule.Inject.AdditionalTypeInstances, rule.Inject.AdditionalTypeInstances)
 	}
 }
 
@@ -105,8 +109,25 @@ func areImplementationConstraintsEqual(a, b policy.Rule) bool {
 	return reflect.DeepEqual(a.ImplementationConstraints, b.ImplementationConstraints)
 }
 
-func mergeTypeInstances(current, overwrite []policy.RequiredTypeInstanceToInject) []policy.RequiredTypeInstanceToInject {
+func mergeRequiredTypeInstances(current, overwrite []policy.RequiredTypeInstanceToInject) []policy.RequiredTypeInstanceToInject {
 	out := append([]policy.RequiredTypeInstanceToInject{}, current...)
+	for _, newTI := range overwrite {
+		found := false
+		for i, ti := range current {
+			if newTI.TypeRef.Path == ti.TypeRef.Path && newTI.TypeRef.Revision == ti.TypeRef.Revision {
+				found = true
+				out[i] = newTI
+			}
+		}
+		if !found {
+			out = append(out, newTI)
+		}
+	}
+	return out
+}
+
+func mergeAdditionalTypeInstances(current, overwrite []policy.AdditionalTypeInstanceToInject) []policy.AdditionalTypeInstanceToInject {
+	out := append([]policy.AdditionalTypeInstanceToInject{}, current...)
 	for _, newTI := range overwrite {
 		found := false
 		for i, ti := range current {

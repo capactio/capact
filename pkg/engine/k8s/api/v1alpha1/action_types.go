@@ -145,7 +145,7 @@ func (in *Action) IsCompleted() bool {
 // ActionInput describes Action input.
 type ActionInput struct {
 
-	// TypeInstances contains input TypeInstances passed for Action rendering. It contains both required and optional input TypeInstances.
+	// TypeInstances contains required input TypeInstances passed for Action rendering.
 	// +optional
 	TypeInstances *[]InputTypeInstance `json:"typeInstances,omitempty"`
 

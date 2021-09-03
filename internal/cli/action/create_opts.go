@@ -10,7 +10,7 @@ import (
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
 	"capact.io/capact/pkg/sdk/renderer/argo"
 	"capact.io/capact/pkg/sdk/validation"
-	"capact.io/capact/pkg/sdk/validation/action"
+	"capact.io/capact/pkg/sdk/validation/interfaceio"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/MakeNowJust/heredoc"
@@ -38,10 +38,11 @@ type CreateOptions struct {
 	policy        *gqlengine.PolicyInput
 
 	// validation specific fields
-	isInputParamsRequired bool
-	validator             *action.InputOutputValidator
-	ifaceSchemas          validation.SchemaCollection
-	ifaceTypes            validation.TypeRefCollection
+	areInputParamsRequired        bool
+	areInputTypeInstancesRequired bool
+	validator                     *interfaceio.Validator
+	ifaceSchemas                  validation.SchemaCollection
+	ifaceTypes                    validation.TypeRefCollection
 }
 
 // setDefaults defaults not provided options.
@@ -104,7 +105,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		return err
 	}
 
-	if c.ParametersFilePath == "" && c.isInputParamsRequired {
+	if c.ParametersFilePath == "" && c.areInputParamsRequired {
 		gqlJSON, err := c.askForInputParameters()
 		if err != nil {
 			return err
@@ -112,7 +113,7 @@ func (c *CreateOptions) resolveWithSurvey() error {
 		c.parameters = gqlJSON
 	}
 
-	if c.TypeInstancesFilePath == "" {
+	if c.TypeInstancesFilePath == "" && c.areInputTypeInstancesRequired {
 		ti, err := c.askForInputTypeInstances()
 		if err != nil {
 			return err
@@ -143,8 +144,6 @@ func (c *CreateOptions) resolveFromFiles() error {
 		}
 	}
 
-	// TODO(https://github.com/capactio/capact/issues/438): We need to allow to pass additionalTypeInstances
-	// which are not specified in a given Interface, e.g. existing database.
 	if c.TypeInstancesFilePath != "" {
 		rawInput, err := ioutil.ReadFile(c.TypeInstancesFilePath)
 		if err != nil {
@@ -261,7 +260,7 @@ func (c *CreateOptions) getTypeInstancesForEditor() (body string, required bool)
 	if len(c.ifaceTypes) == 0 {
 		return heredoc.Doc(`
                # Interface doesn't specify input TypeInstance.
-               # You can pass Implementation specific TypeInstance like already existing database. 
+
                typeInstances:
                  - name: ""
                    id: ""`), false

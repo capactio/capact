@@ -23,6 +23,9 @@ rules:
             - name: additional-parameters # Name must match one of the parameter defined under `additionalInput.parameters` in the Implementation
               value:
                 snapshot: true
+          additionalTypeInstances:
+            - name: sample-name
+              id: sample-uuid
       - implementationConstraints:
           attributes:
             - path: cap.attribute.cloud.provider.aws
