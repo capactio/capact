@@ -65,33 +65,19 @@ func (in *Rule) RequiredTypeInstancesToInject() []RequiredTypeInstanceToInject {
 	return in.Inject.RequiredTypeInstances
 }
 
-// ValidateTypeInstanceMetadata validates whether the TypeInstance injection metadata are resolved.
-func (in *Rule) ValidateTypeInstanceMetadata() error {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
-	return validateTypeInstancesMetadata(unresolvedTypeInstances)
-}
-
-func (in *Rule) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
-	if in.Inject == nil {
+// AdditionalTypeInstancesToInject returns additional TypeInstances to inject for a given rule.
+func (in *Rule) AdditionalTypeInstancesToInject() []AdditionalTypeInstanceToInject {
+	if in == nil || in.Inject == nil {
 		return nil
 	}
-
-	var typeInstances []RequiredTypeInstanceToInject
-	for _, tiToInject := range in.Inject.RequiredTypeInstances {
-		if !filterFn(tiToInject) {
-			continue
-		}
-
-		typeInstances = append(typeInstances, tiToInject)
-	}
-
-	return typeInstances
+	return in.Inject.AdditionalTypeInstances
 }
 
 // InjectData holds the data, which should be injected into the Action.
 type InjectData struct {
-	RequiredTypeInstances []RequiredTypeInstanceToInject `json:"requiredTypeInstances,omitempty"`
-	AdditionalParameters  []AdditionalParametersToInject `json:"additionalParameters,omitempty"`
+	RequiredTypeInstances   []RequiredTypeInstanceToInject   `json:"requiredTypeInstances,omitempty"`
+	AdditionalParameters    []AdditionalParametersToInject   `json:"additionalParameters,omitempty"`
+	AdditionalTypeInstances []AdditionalTypeInstanceToInject `json:"additionalTypeInstances,omitempty"`
 }
 
 // AdditionalParametersToInject holds parameters to be injected to the Action.
@@ -148,6 +134,38 @@ func (in *RequiredTypeInstanceToInject) UnmarshalJSON(bytes []byte) error {
 	return nil
 }
 
+// AdditionalTypeInstanceToInject is used to represent additional TypeInstance injection for a given Implementation.
+// +kubebuilder:object:generate=true
+type AdditionalTypeInstanceToInject struct {
+	// AdditionalTypeInstanceReference is a reference to TypeInstance provided by user.
+	AdditionalTypeInstanceReference `json:",inline"`
+
+	// TypeRef refers to a given Type.
+	TypeRef *types.ManifestRef `json:"typeRef"`
+}
+
+// AdditionalTypeInstanceReference is a reference to TypeInstance provided by user.
+// +kubebuilder:object:generate=true
+type AdditionalTypeInstanceReference struct {
+	// Name is the TypeInstance name specific for a given Implementation.
+	Name string `json:"name"`
+
+	// ID is the TypeInstance identifier.
+	ID string `json:"id"`
+}
+
+// UnmarshalJSON unmarshalls AdditionalTypeInstanceToInject from bytes. It ignores all fields apart from AdditionalTypeInstanceReference files.
+func (in *AdditionalTypeInstanceToInject) UnmarshalJSON(bytes []byte) error {
+	var out AdditionalTypeInstanceReference
+	if err := json.Unmarshal(bytes, &out); err != nil {
+		return err
+	}
+
+	in.AdditionalTypeInstanceReference = out
+
+	return nil
+}
+
 // ToYAMLString converts the Policy to a string.
 func (in Policy) ToYAMLString() (string, error) {
 	bytes, err := yaml.Marshal(&in)
@@ -156,26 +174,4 @@ func (in Policy) ToYAMLString() (string, error) {
 	}
 
 	return string(bytes), nil
-}
-
-// AreTypeInstancesMetadataResolved returns whether every TypeInstance has metadata resolved.
-func (in *Policy) AreTypeInstancesMetadataResolved() bool {
-	unresolvedTypeInstances := in.filterRequiredTypeInstances(filterTypeInstancesWithEmptyTypeRef)
-
-	return len(unresolvedTypeInstances) == 0
-}
-
-func (in *Policy) filterRequiredTypeInstances(filterFn func(ti RequiredTypeInstanceToInject) bool) []RequiredTypeInstanceToInject {
-	var typeInstances []RequiredTypeInstanceToInject
-	for _, rule := range in.Rules {
-		for _, ruleItem := range rule.OneOf {
-			typeInstances = append(typeInstances, ruleItem.filterRequiredTypeInstances(filterFn)...)
-		}
-	}
-
-	return typeInstances
-}
-
-var filterTypeInstancesWithEmptyTypeRef = func(ti RequiredTypeInstanceToInject) bool {
-	return ti.TypeRef == nil || ti.TypeRef.Path == "" || ti.TypeRef.Revision == ""
 }

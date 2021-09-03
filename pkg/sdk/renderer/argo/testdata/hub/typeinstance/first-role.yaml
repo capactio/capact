@@ -1,0 +1,10 @@
+---
+id: 6fc7dd6b-d150-4af3-a1aa-a868962b7d68
+typeRef:
+  path: cap.type.capactio.capact.validation.key-string
+  revision: 0.1.0
+latestResourceVersion:
+  resourceVersion: 1
+  spec:
+    value:
+      key: "foo"

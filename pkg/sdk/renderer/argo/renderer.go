@@ -24,8 +24,9 @@ const (
 // and enforce the policies.
 type PolicyEnforcedHubClient interface {
 	ListImplementationRevisionForInterface(ctx context.Context, interfaceRef hubpublicapi.InterfaceReference) ([]hubpublicapi.ImplementationRevision, policy.Rule, error)
-	ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
-	ListAdditionalInputToInjectBasedOnPolicy(policyRule policy.Rule) (types.ParametersCollection, error)
+	ListRequiredTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	ListAdditionalTypeInstancesToInjectBasedOnPolicy(policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) ([]types.InputTypeInstanceRef, error)
+	ListAdditionalInputToInjectBasedOnPolicy(ctx context.Context, policyRule policy.Rule, implRev hubpublicapi.ImplementationRevision) (types.ParametersCollection, error)
 	SetGlobalPolicy(policy policy.Policy)
 	SetActionPolicy(policy policy.ActionPolicy)
 	PushWorkflowStepPolicy(policy policy.WorkflowPolicy) error
@@ -35,7 +36,8 @@ type PolicyEnforcedHubClient interface {
 }
 
 type workflowValidator interface {
-	Validate(context.Context, renderer.ValidateInput) error
+	ValidateInterfaceInput(context.Context, renderer.InterfaceInput) error
+	PolicyValidator() hubclient.PolicyIOValidator
 }
 
 // Renderer is used to render the Capact Action workflows.
@@ -68,7 +70,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 
 	// policyEnforcedClient cannot be global because policy is calculated from global policy, action policy and workflow step policies
-	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient)
+	policyEnforcedClient := hubclient.NewPolicyEnforcedClient(r.hubClient, r.wfValidator.PolicyValidator())
 
 	// 0. Populate render options
 	dedicatedRenderer := newDedicatedRenderer(r.maxDepth, policyEnforcedClient, r.typeInstanceHandler, input.Options...)
@@ -121,47 +123,50 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 
 	// 5. List data based on policy and inject them if provided
 	// 5.1 Required TypeInstances
-	requiredTypeInstances, err := policyEnforcedClient.ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+	requiredTypeInstances, err := policyEnforcedClient.ListRequiredTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 	if err != nil {
 		return nil, errors.Wrapf(err, "while listing RequiredTypeInstances based on policy for root workflow")
 	}
 
-	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, requiredTypeInstances)
+	// 5.2 Additional TypeInstances
+	additionalTypeInstances, err := policyEnforcedClient.ListAdditionalTypeInstancesToInjectBasedOnPolicy(rule, implementation)
+	if err != nil {
+		return nil, errors.Wrap(err, "while listing AdditionalTypeInstances based on policy for root workflow")
+	}
+
+	// 5.3 Inject required and additional TypeInstances
+	typeInstancesToInject := append(requiredTypeInstances, additionalTypeInstances...)
+	err = dedicatedRenderer.InjectDownloadStepForTypeInstancesIfProvided(rootWorkflow, typeInstancesToInject)
 	if err != nil {
 		return nil, errors.Wrap(err, "while injecting step for downloading additional TypeInstances based on policy")
 	}
-	// 5.2 Additional Input
-	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(rule)
+
+	// 5.4 Additional Input
+	additionalParameters, err := policyEnforcedClient.ListAdditionalInputToInjectBasedOnPolicy(ctx, rule, implementation)
 	if err != nil {
 		return nil, errors.Wrap(err, "while converting additional parameters")
 	}
 	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
-	// 6. Validate given input:
-	validateInput := renderer.ValidateInput{
-		Interface:  iface,
-		Parameters: ToInputParams(dedicatedRenderer.inputParametersRaw),
-		// TODO(https://github.com/capactio/capact/issues/438): This holds both the Interface TypeInstances
-		// and Implementation additional TypeInstances used in workflow, e.g. already existing database.
-		// Facade knows how to handle that.
-		TypeInstances:        dedicatedRenderer.inputTypeInstances,
-		Implementation:       implementation,
-		AdditionalParameters: additionalParameters,
-		// TODO(https://github.com/capactio/capact/issues/438): currently, additionalTypeInstances defined on policy level are
-		// connected only with `require` property on Implementation and it's already validated in policy enforced client.
-		//AdditionalTypeInstances: additionalTypeInstances,
+	// 6. Validate workflow input against Interface:
+	// Implementation-specific input is already validated on PolicyEnforcedClient level
+	validateInput := renderer.InterfaceInput{
+		Interface:     iface,
+		Parameters:    ToInputParams(dedicatedRenderer.inputParametersRaw),
+		TypeInstances: dedicatedRenderer.inputTypeInstances,
 	}
-	err = r.wfValidator.Validate(ctx, validateInput)
-
+	err = r.wfValidator.ValidateInterfaceInput(ctx, validateInput)
 	if err != nil {
 		return nil, errors.Wrap(err, "while validating required and additional input data")
 	}
+
 	// 7. Add runner context
 	if err := dedicatedRenderer.AddRunnerContext(rootWorkflow, input.RunnerContextSecretRef); err != nil {
 		return nil, err
 	}
 
-	// 8. Add steps to populate rootWorkflow with input TypeInstances
+	// 8. Add steps to populate rootWorkflow with both required and additional input TypeInstances
+	dedicatedRenderer.AppendAdditionalInputTypeInstances(additionalTypeInstances)
 	if err := dedicatedRenderer.AddInputTypeInstances(rootWorkflow); err != nil {
 		return nil, err
 	}

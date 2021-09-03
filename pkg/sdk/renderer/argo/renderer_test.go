@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	actionvalidation "capact.io/capact/pkg/sdk/validation/interfaceio"
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"capact.io/capact/pkg/engine/k8s/policy"
 	"capact.io/capact/pkg/hub/client/fake"
 	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
@@ -28,7 +31,7 @@ import (
 //   go test ./pkg/sdk/renderer/argo/...  -v -test.update-golden
 func TestRenderHappyPath(t *testing.T) {
 	// given
-	fakeCli, err := fake.NewFromLocal("testdata/hub", false)
+	fakeCli, err := fake.NewFromLocal("testdata/hub", true)
 	require.NoError(t, err)
 
 	policy := policy.NewAllowAll()
@@ -38,22 +41,26 @@ func TestRenderHappyPath(t *testing.T) {
 
 	ownerID := "default/action"
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      20,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	tests := []struct {
 		name                string
 		ref                 types.InterfaceRef
 		inputTypeInstances  []types.InputTypeInstanceRef
-		userInput           *UserInputSecretRef
+		rawUserInput        []byte
 		typeInstancesToLock []string
 	}{
 		{
-			name: "PostgreSQL workflow without user input and TypeInstances",
+			name: "Two level nested workflow without user input and TypeInstances",
 			ref: types.InterfaceRef{
-				Path: "cap.interface.database.postgresql.install",
+				Path: "cap.interface.nested.root",
 			},
 		},
 		{
@@ -61,52 +68,21 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			userInput: &UserInputSecretRef{
-				Name: "user-input",
-				Key:  "parameters.json",
-			},
+			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
 		},
 		{
-			name: "Mattermost workflow with user input and gcp TypeInstance",
-			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.mattermost.install",
-			},
-			userInput: &UserInputSecretRef{
-				Name: "user-input",
-				Key:  "parameters.json",
-			},
-			inputTypeInstances: []types.InputTypeInstanceRef{
-				{
-					Name: "gcp",
-					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
-				},
-			},
-		},
-		{
-			name: "Mattermost workflow with user input and gcp and postgresql TypeInstances",
-			ref: types.InterfaceRef{
-				Path: "cap.interface.productivity.mattermost.install",
-			},
-			userInput: &UserInputSecretRef{
-				Name: "user-input",
-				Key:  "parameters.json",
-			},
-			inputTypeInstances: []types.InputTypeInstanceRef{
-				{
-					Name: "gcp",
-					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
-				},
-				{
-					Name: "postgresql",
-					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
-				},
-			},
-		},
-		{
-			name: "Workflow with apps stack installation without user input and TypeInstances",
+			name: "Workflow with apps stack installation with user input",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.stack.install",
 			},
+			rawUserInput: []byte(`{"key": true}`),
+		},
+		{
+			name: "Mattermost workflow with user input",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.mattermost.install",
+			},
+			rawUserInput: []byte(`{"host": "mattermost.local"}`),
 		},
 		{
 			name: "PostgreSQL change password",
@@ -123,10 +99,7 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			userInput: &UserInputSecretRef{
-				Name: "user-input",
-				Key:  "parameters.json",
-			},
+			rawUserInput:        []byte(`{"password": "foo"}`),
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 		{
@@ -144,17 +117,8 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			userInput: &UserInputSecretRef{
-				Name: "user-input",
-				Key:  "parameters.json",
-			},
+			rawUserInput:        []byte(`{"key": true}`),
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
-		},
-		{
-			name: "Two level nested workflow",
-			ref: types.InterfaceRef{
-				Path: "cap.interface.nested.root",
-			},
 		},
 	}
 	for _, test := range tests {
@@ -162,18 +126,26 @@ func TestRenderHappyPath(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
+			opts := []RendererOption{
+				WithTypeInstances(tt.inputTypeInstances),
+				WithGlobalPolicy(policy),
+				WithOwnerID(ownerID),
+			}
+
+			if len(tt.rawUserInput) > 0 {
+				opts = append(opts, WithSecretUserInput(&UserInputSecretRef{
+					Name: "user-input",
+					Key:  "parameters.json",
+				}, tt.rawUserInput))
+			}
+
 			// when
 			renderOutput, err := argoRenderer.Render(
 				context.Background(),
 				&RenderInput{
 					RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
 					InterfaceRef:           tt.ref,
-					Options: []RendererOption{
-						WithSecretUserInput(tt.userInput, []byte("key: true")),
-						WithTypeInstances(tt.inputTypeInstances),
-						WithGlobalPolicy(policy),
-						WithOwnerID(ownerID),
-					},
+					Options:                opts,
 				},
 			)
 
@@ -204,6 +176,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 		name               string
 		ref                types.InterfaceRef
 		inputTypeInstances []types.InputTypeInstanceRef
+		rawUserInput       []byte
 		policy             policy.Policy
 	}{
 		{
@@ -211,62 +184,72 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			inputTypeInstances: []types.InputTypeInstanceRef{
-				{
-					Name: "foo",
-					ID:   "c268d3f5-8834-434b-bea2-b677793611c5",
-				},
+			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			policy:       fixGCPGlobalPolicy(),
+		},
+		{
+			name: "Mattermost with existing DB installation",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy: fixGCPGlobalPolicy(),
+			rawUserInput: []byte(`{"host": "mattermost.local"}`),
+			policy:       fixExistingDBPolicy(),
 		},
 		{
 			name: "CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy: fixGCPGlobalPolicy(),
+			policy:       fixGCPGlobalPolicy(),
+			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
 		},
 		{
 			name: "RDS installation with AWS SA and additional parameters injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy: fixAWSRDSPolicy(),
+			policy:       fixAWSRDSPolicy(),
+			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
 		},
 		{
 			name: "Mattermost with CloudSQL using Terraform",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy: fixTerraformPolicy(),
+			policy:       fixTerraformPolicy(),
+			rawUserInput: []byte(`{"host": "mattermost.local"}`),
 		},
 		{
 			name: "Mattermost with AWS RDS install",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy: fixAWSGlobalPolicy(),
+			policy:       fixAWSGlobalPolicy(),
+			rawUserInput: []byte(`{"host": "mattermost.local"}`),
 		},
 		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy: fixGlobalPolicyForFallback(),
+			policy:       fixGlobalPolicyForFallback(),
+			rawUserInput: []byte(`{"superuser":{"password":"bar"}}`),
 		},
 		{
 			name: "Workflow policy injects additional input - reference by ManifestRef",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.app1.install",
 			},
-			policy: fixAWSGlobalPolicy(),
+			policy:       fixAWSGlobalPolicy(),
+			rawUserInput: []byte(`{"key": "string"}`),
 		},
 		{
 			name: "Workflow policy injects additional input - reference by alias",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.app2.install",
 			},
-			policy: fixAWSGlobalPolicy(),
+			policy:       fixAWSGlobalPolicy(),
+			rawUserInput: []byte(`{"key": "string"}`),
 		},
 	}
 	for testIdx, test := range tests {
@@ -277,10 +260,27 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 			typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 			typeInstanceHandler.SetGenUUID(genUUID)
 
+			interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+			policyIOValidator := policyvalidation.NewValidator(fakeCli)
+			wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 			argoRenderer := NewRenderer(renderer.Config{
 				RenderTimeout: time.Hour,
 				MaxDepth:      50,
-			}, fakeCli, typeInstanceHandler, &noopValidator{})
+			}, fakeCli, typeInstanceHandler, wfValidator)
+
+			opts := []RendererOption{
+				WithTypeInstances(tt.inputTypeInstances),
+				WithGlobalPolicy(tt.policy),
+				WithOwnerID("owner"),
+			}
+
+			if len(tt.rawUserInput) > 0 {
+				opts = append(opts, WithSecretUserInput(&UserInputSecretRef{
+					Name: "user-input",
+					Key:  "parameters.json",
+				}, tt.rawUserInput))
+			}
 
 			// when
 			renderOutput, err := argoRenderer.Render(
@@ -288,11 +288,7 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				&RenderInput{
 					RunnerContextSecretRef: RunnerContextSecretRef{Name: "secret", Key: "key"},
 					InterfaceRef:           tt.ref,
-					Options: []RendererOption{
-						WithTypeInstances(tt.inputTypeInstances),
-						WithGlobalPolicy(tt.policy),
-						WithOwnerID("owner"),
-					},
+					Options:                opts,
 				},
 			)
 
@@ -312,10 +308,14 @@ func TestRendererMaxDepth(t *testing.T) {
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.infinite.render.loop",
@@ -347,10 +347,14 @@ func TestRendererDenyAllPolicy(t *testing.T) {
 	typeInstanceHandler := NewTypeInstanceHandler("alpine:3.7")
 	typeInstanceHandler.SetGenUUID(genUUIDFn(""))
 
+	interfaceIOValidator := actionvalidation.NewValidator(fakeCli)
+	policyIOValidator := policyvalidation.NewValidator(fakeCli)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
+
 	argoRenderer := NewRenderer(renderer.Config{
 		RenderTimeout: time.Second,
 		MaxDepth:      3,
-	}, fakeCli, typeInstanceHandler, &noopValidator{})
+	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	interfaceRef := types.InterfaceRef{
 		Path: "cap.interface.productivity.mattermost.install",
@@ -391,12 +395,4 @@ func genUUIDFn(prefix string) func() string {
 			return uuid
 		}
 	}()
-}
-
-var _ workflowValidator = &noopValidator{}
-
-type noopValidator struct{}
-
-func (f *noopValidator) Validate(_ context.Context, _ renderer.ValidateInput) error {
-	return nil
 }

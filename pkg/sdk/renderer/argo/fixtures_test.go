@@ -265,3 +265,41 @@ func fixAWSRDSPolicy() policy.Policy {
 		},
 	}
 }
+
+func fixExistingDBPolicy() policy.Policy {
+	return policy.Policy{
+		Rules: policy.RulesList{
+			{
+				Interface: types.ManifestRefWithOptRevision{
+					Path:     "cap.interface.productivity.mattermost.install",
+					Revision: ptr.String("0.1.0"),
+				},
+				OneOf: []policy.Rule{
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{},
+						Inject: &policy.InjectData{
+							AdditionalTypeInstances: []policy.AdditionalTypeInstanceToInject{
+								{
+									AdditionalTypeInstanceReference: policy.AdditionalTypeInstanceReference{
+										Name: "postgresql",
+										ID:   "f2421415-b8a4-464b-be12-b617794411c5",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Interface: types.ManifestRefWithOptRevision{
+					Path: "cap.*",
+				},
+				OneOf: []policy.Rule{
+					{
+						ImplementationConstraints: policy.ImplementationConstraints{},
+					},
+				},
+			},
+		},
+	}
+}

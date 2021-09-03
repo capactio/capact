@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 
+	policyvalidation "capact.io/capact/pkg/sdk/validation/policy"
+
 	"capact.io/capact/internal/graphqlutil"
 	"capact.io/capact/internal/k8s-engine/controller"
 	domaingraphql "capact.io/capact/internal/k8s-engine/graphql"
@@ -17,7 +19,7 @@ import (
 	hubclient "capact.io/capact/pkg/hub/client"
 	"capact.io/capact/pkg/sdk/renderer"
 	"capact.io/capact/pkg/sdk/renderer/argo"
-	actionvalidator "capact.io/capact/pkg/sdk/validation/action"
+	actionvalidation "capact.io/capact/pkg/sdk/validation/interfaceio"
 
 	gqlgen_graphql "github.com/99designs/gqlgen/graphql"
 	wfclientset "github.com/argoproj/argo-workflows/v3/pkg/client/clientset/versioned"
@@ -106,7 +108,9 @@ func main() {
 
 	hubClient := getHubClient(&cfg)
 	typeInstanceHandler := argo.NewTypeInstanceHandler(cfg.HubActionsImage)
-	wfValidator := renderer.NewInputValidator(actionvalidator.NewValidator(hubClient))
+	interfaceIOValidator := actionvalidation.NewValidator(hubClient)
+	policyIOValidator := policyvalidation.NewValidator(hubClient)
+	wfValidator := renderer.NewWorkflowInputValidator(interfaceIOValidator, policyIOValidator)
 	argoRenderer := argo.NewRenderer(cfg.Renderer, hubClient, typeInstanceHandler, wfValidator)
 
 	wfCli, err := wfclientset.NewForConfig(k8sCfg)

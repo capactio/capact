@@ -102,6 +102,10 @@ const policyFields = `
 					name
 					value
 				}
+				additionalTypeInstances {
+					name
+					id
+				}
 			}
 		}
 	}

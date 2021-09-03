@@ -97,6 +97,14 @@ func (r *dedicatedRenderer) WrapEntrypointWithRootStep(workflow *Workflow) (*Wor
 	return workflow, r.entrypointStep
 }
 
+func (r *dedicatedRenderer) AppendAdditionalInputTypeInstances(typeInstances []types.InputTypeInstanceRef) {
+	if len(typeInstances) == 0 {
+		return
+	}
+
+	r.inputTypeInstances = append(r.inputTypeInstances, typeInstances...)
+}
+
 func (r *dedicatedRenderer) AddInputTypeInstances(workflow *Workflow) error {
 	availableTypeInstances := map[argoArtifactRef]*string{}
 
@@ -285,7 +293,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 
 					// 3.7. List data based on policy and inject them if provided
 					// 3.7.1 Required TypeInstances
-					requiredTypeInstances, err := r.policyEnforcedCli.ListRequiredTypeInstancesToInjectBasedOnPolicy(ctx, rule, implementation)
+					requiredTypeInstances, err := r.policyEnforcedCli.ListRequiredTypeInstancesToInjectBasedOnPolicy(rule, implementation)
 					if err != nil {
 						return nil, errors.Wrapf(err, "while listing RequiredTypeInstances based on policy for step: %s", step.Name)
 					}
@@ -295,7 +303,7 @@ func (r *dedicatedRenderer) RenderTemplateSteps(ctx context.Context, workflow *W
 						return nil, errors.Wrapf(err, "while injecting step for downloading TypeInstances based on policy for step: %s", step.Name)
 					}
 					// 3.7.2 Additional Input
-					additionalParameters, err := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(rule)
+					additionalParameters, err := r.policyEnforcedCli.ListAdditionalInputToInjectBasedOnPolicy(ctx, rule, implementation)
 					if err != nil {
 						return nil, errors.Wrap(err, "while converting additional input parameters")
 					}
