@@ -39,12 +39,8 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 			return errors.Wrap(err, "while building images")
 		}
 
-		status.Step("Loading Docker images")
-		for _, image := range created {
-			err = capact.LoadImage(opts.Name, image)
-			if err != nil {
-				return errors.Wrap(err, "while loading images into env")
-			}
+		if err := capact.LoadImages(ctx, created, opts); err != nil {
+			return err
 		}
 	}
 

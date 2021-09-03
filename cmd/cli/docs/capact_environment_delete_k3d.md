@@ -1,20 +1,20 @@
 ---
-title: capact environment delete kind
+title: capact environment delete k3d
 ---
 
-## capact environment delete kind
+## capact environment delete k3d
 
-Delete local kind cluster
+Delete local k3d cluster
 
 ```
-capact environment delete kind [flags]
+capact environment delete k3d [flags]
 ```
 
 ### Options
 
 ```
-  -h, --help          help for kind
-      --name string   cluster name, overrides config (default "dev-capact")
+  -h, --help          help for k3d
+      --name string   Cluster name (default "dev-capact")
 ```
 
 ### Options inherited from parent commands

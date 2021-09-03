@@ -14,9 +14,9 @@ import (
 	"sigs.k8s.io/kind/pkg/fs"
 )
 
-// LoadImage loads local docker images into a kind cluster
+// LoadKindImage loads local docker images into a kind cluster
 // Based on https://github.com/kubernetes-sigs/kind/blob/942198293a4cc7938bf759039fd6447c4b38ad1c/pkg/cmd/kind/load/docker-image/docker-image.go
-func LoadImage(envName string, image string) error {
+func LoadKindImage(envName string, image string) error {
 	provider := cluster.NewProvider(
 		cluster.ProviderWithLogger(cmd.NewLogger()),
 		cluster.ProviderWithDocker(),

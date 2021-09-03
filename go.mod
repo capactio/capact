@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go v1.37.0 // indirect
 	github.com/briandowns/spinner v1.12.0
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
-	github.com/docker/cli v20.10.5+incompatible
+	github.com/docker/cli v20.10.6+incompatible
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/color v1.12.0
@@ -41,7 +41,6 @@ require (
 	github.com/matryer/is v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.13
 	github.com/mitchellh/mapstructure v1.4.1
-	github.com/moby/sys/mount v0.2.0 // indirect
 	github.com/nautilus/gateway v0.1.16
 	github.com/nautilus/graphql v0.0.16
 	github.com/neo4j/neo4j-go-driver/v4 v4.2.2
@@ -49,9 +48,11 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.14.0
 	github.com/pkg/errors v0.9.1
+	github.com/rancher/k3d/v4 v4.4.8
 	github.com/sethvargo/go-password v0.2.0
 	github.com/shurcooL/httpfs v0.0.0-20171119174359-809beceb2371
 	github.com/shurcooL/vfsgen v0.0.0-20180121065927-ffb13db8def0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.8.1

@@ -26,8 +26,8 @@ main() {
     export DOCKER_REPOSITORY="local"
     export BUILD_IMAGES="true"
     export REPO_DIR=$REPO_ROOT_DIR
-    export CLUSTER_NAME=${KIND_CLUSTER_NAME:-${KIND_DEV_CLUSTER_NAME}}
-    export CLUSTER_TYPE="kind"
+    export CLUSTER_TYPE=${CLUSTER_TYPE:-"kind"}
+    export CLUSTER_NAME=${CLUSTER_NAME:-${DEV_CLUSTER_NAME}}
     export PRINT_INSECURE_NOTES="true"
     capact::install
 

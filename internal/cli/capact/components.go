@@ -415,14 +415,14 @@ func (i *IngressController) InstallUpgrade(ctx context.Context, version string) 
 	values := map[string]interface{}{}
 
 	switch i.opts.Environment {
-	case KindEnv:
-		values, err = ValuesFromString(ingressKindOverridesYaml)
+	case KindEnv, K3dEnv:
+		values, err = ValuesFromString(ingressLocalClusterOverridesYAML)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
 
 	case EKSEnv:
-		values, err = ValuesFromString(ingressEksOverridesYaml)
+		values, err = ValuesFromString(ingressEksOverridesYAML)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
@@ -444,7 +444,7 @@ func (c *CertManager) InstallUpgrade(ctx context.Context, version string) (*rele
 	values := map[string]interface{}{}
 	switch c.opts.Environment {
 	case EKSEnv:
-		values, err = ValuesFromString(certManagerEksOverridesYaml)
+		values, err = ValuesFromString(certManagerEksOverridesYAML)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}
@@ -461,7 +461,9 @@ func (c *CertManager) InstallUpgrade(ctx context.Context, version string) (*rele
 		return nil, errors.Wrap(err, "while installing cert-manager")
 	}
 
-	if c.opts.Environment != KindEnv {
+	switch c.opts.Environment {
+	case K3dEnv, KindEnv:
+	default:
 		return nil, nil
 	}
 
@@ -518,8 +520,8 @@ func (c *Capact) InstallUpgrade(ctx context.Context, version string) (*release.R
 	capactValues := c.opts.Parameters.Override.CapactValues.AsMap()
 
 	switch c.opts.Environment {
-	case KindEnv:
-		values, err := ValuesFromString(capactKindOverridesYaml)
+	case KindEnv, K3dEnv:
+		values, err := ValuesFromString(capactLocalClusterOverridesYAML)
 		if err != nil {
 			return nil, errors.Wrap(err, "while converting override values")
 		}

@@ -27,7 +27,7 @@ func Init(configPath string) error {
 	}
 
 	if configPath == "" {
-		configPath, err = getDefaultConfigPath()
+		configPath, err = GetDefaultConfigPath("config.yaml")
 		if err != nil {
 			return errors.Wrap(err, "while getting default config path")
 		}
@@ -56,13 +56,14 @@ func Init(configPath string) error {
 	return nil
 }
 
-func getDefaultConfigPath() (string, error) {
+// GetDefaultConfigPath returns Capact location for a given config file
+func GetDefaultConfigPath(fileName string) (string, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
 
-	return path.Join(homeDir, ".config", "capact", "config.yaml"), nil
+	return path.Join(homeDir, ".config", "capact", fileName), nil
 }
 
 // SetAsDefaultContext sets default Hub server which is used for all executed operations.
