@@ -5,11 +5,10 @@ import (
 	"io"
 	"time"
 
-	"k8s.io/apimachinery/pkg/util/duration"
-
 	"capact.io/capact/internal/cli"
 
 	"github.com/fatih/color"
+	"k8s.io/apimachinery/pkg/util/duration"
 )
 
 // Spinner defines interface for terminal spinner.
@@ -50,12 +49,14 @@ func (s *Status) Step(stageFmt string, args ...interface{}) {
 	// Finish previously started step
 	s.End(true)
 
+	started := ""
 	if cli.VerboseMode.IsEnabled() {
 		s.timeStarted = time.Now()
+		started = fmt.Sprintf(" [started %s]", s.timeStarted.Format("15:04 MST"))
 	}
 
 	s.stage = fmt.Sprintf(stageFmt, args...)
-	msg := fmt.Sprintf("%s [started %s]", s.stage, s.timeStarted.Format("15:04 MST"))
+	msg := fmt.Sprintf("%s%s", s.stage, started)
 	s.spinner.Start(msg)
 }
 
