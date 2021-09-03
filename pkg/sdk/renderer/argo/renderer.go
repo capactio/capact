@@ -150,13 +150,12 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	}
 	dedicatedRenderer.InjectAdditionalInput(entrypointStep, additionalParameters)
 
-	// 6. Validate given input:
+	// 6. Validate workflow input against Interface:
 	parameters, err := ToParametersCollection(dedicatedRenderer.inputParametersRaw)
 	if err != nil {
 		return nil, errors.Wrap(err, "while getting parameters collection")
 	}
 
-	// 6. Validate workflow input against Interface:
 	// Implementation-specific input is already validated on PolicyEnforcedClient level
 	validateInput := renderer.InterfaceInput{
 		Interface:     iface,
