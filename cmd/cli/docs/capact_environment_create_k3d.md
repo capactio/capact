@@ -27,7 +27,7 @@ capact environment create k3d [flags]
       --agents-memory string                                           Memory limit imposed on the agents nodes [From docker]
       --api-port [HOST:]HOSTPORT                                       Specify the Kubernetes API server port exposed on the LoadBalancer (Format: [HOST:]HOSTPORT)
                                                                         - Example: `k3d cluster create --servers 3 --api-port 0.0.0.0:6550`
-      --enable-registry                                                Create local Docker registry and configures k3d environment to use it
+      --enable-registry                                                Create Capact local Docker registry and configure k3d environment to use it
   -e, --env KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]                   Add environment variables to nodes (Format: KEY[=VALUE][@NODEFILTER[;NODEFILTER...]]
                                                                         - Example: `k3d cluster create --agents 2 -e "HTTP_PROXY=my.proxy.com@server[0]" -e "SOME_KEY=SOME_VAL@server[0]"`
       --gpus string                                                    GPU devices to add to the cluster node containers ('all' to pass all GPUs) [From docker]

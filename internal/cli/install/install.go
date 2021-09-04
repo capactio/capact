@@ -23,7 +23,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 
 	err = opts.Parameters.SetCapactValuesFromOverrides()
 	if err != nil {
-		return errors.Wrap(err, "while parsing capact overrides")
+		return errors.Wrap(err, "while parsing Capact overrides")
 	}
 
 	err = opts.Parameters.ResolveVersion()
@@ -32,8 +32,8 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 	}
 
 	version := opts.Parameters.Version
-	if version == "@local" {
-		if opts.RegistryEnabled {
+	if version == capact.LocalVersionTag {
+		if opts.LocalRegistryEnabled {
 			opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path = create.ContainerRegistry
 		}
 		registryPath := opts.Parameters.Override.CapactValues.Global.ContainerRegistry.Path
@@ -45,7 +45,7 @@ func Install(ctx context.Context, w io.Writer, k8sCfg *rest.Config, opts capact.
 			return errors.Wrap(err, "while building images")
 		}
 
-		if opts.RegistryEnabled { // push to Docker registry
+		if opts.LocalRegistryEnabled { // push to Docker registry
 			if err := capact.PushImages(ctx, status, created); err != nil {
 				return err
 			}

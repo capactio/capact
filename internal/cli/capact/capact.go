@@ -3,6 +3,8 @@ package capact
 import (
 	"time"
 
+	"capact.io/capact/internal/multierror"
+
 	"github.com/pkg/errors"
 )
 
@@ -53,23 +55,39 @@ const (
 
 // Options to set when interacting wit Capact
 type Options struct {
-	Name               string
-	Namespace          string
-	Environment        string
-	InstallComponents  []string
-	BuildImages        []string
-	DryRun             bool
-	Timeout            time.Duration
-	Parameters         InputParameters
-	UpdateHostsFile    bool
-	UpdateTrustedCerts bool
-	RegistryEnabled    bool
+	Name                 string
+	Namespace            string
+	Environment          string
+	InstallComponents    []string
+	BuildImages          []string
+	DryRun               bool
+	Timeout              time.Duration
+	Parameters           InputParameters
+	UpdateHostsFile      bool
+	UpdateTrustedCerts   bool
+	LocalRegistryEnabled bool
 }
 
-// Validate validates capact install options.
+// Validate validates Capact install options.
 func (o *Options) Validate() error {
-	if o.RegistryEnabled && o.Environment != K3dEnv {
-		return errors.New("registry can be used only with K3d environment")
+	if err := o.Parameters.SetCapactValuesFromOverrides(); err != nil {
+		return err
+	}
+	if o.LocalRegistryEnabled {
+		return validateLocalRegistryOpts(o)
 	}
 	return nil
+}
+
+func validateLocalRegistryOpts(o *Options) error {
+	merr := multierror.New()
+
+	if o.Environment != K3dEnv {
+		merr = multierror.Append(merr, errors.New("registry can be used only with k3d environment"))
+	}
+	if o.Parameters.Override.CapactValues.Global.ContainerRegistry.Path != "" {
+		merr = multierror.Append(merr, errors.New("cannot specify container registry path override when local registry is enabled"))
+	}
+
+	return merr.ErrorOrNil()
 }

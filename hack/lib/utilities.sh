@@ -186,13 +186,15 @@ capact::delete_cluster() {
 # Installs Capact charts. If they are already installed, it upgrades them.
 #
 # Required envs:
-#  - DOCKER_REPOSITORY
 #  - DOCKER_TAG
 #  - REPO_DIR
 #  - CAPACT_NAMESPACE
-#  - CAPACT_VERSION
 #  - CLUSTER_TYPE
 #  - CLUSTER_NAME
+# Optional envs:
+#  - CAPACT_VERSION
+#  - DOCKER_REPOSITORY
+#  - PRINT_INSECURE_NOTES
 #  - ENABLE_POPULATOR - if set to true then database populator will be enabled and it will populate database with manifests
 #  - USE_TEST_SETUP - if set to true, then a test policy is configured
 #  - INCREASE_RESOURCE_LIMITS - if set to true, then the components will use higher resource requests and limits
@@ -218,7 +220,6 @@ capact::install() {
     export CAPACT_OVERRIDES=${CAPACT_OVERRIDES:=""}
     export CAPACT_INSTALL_ADDITIONAL_OPTS=""
 
-    CAPACT_OVERRIDES+=",global.containerRegistry.path=${DOCKER_REPOSITORY}"
     CAPACT_OVERRIDES+=",global.containerRegistry.overrideTag=${DOCKER_TAG}"
     CAPACT_OVERRIDES+=",hub-public.populator.enabled=${ENABLE_POPULATOR}"
     CAPACT_OVERRIDES+=",engine.testSetup.enabled=${USE_TEST_SETUP}"
@@ -242,6 +243,10 @@ capact::install() {
 
     if [ -n "${HUB_MANIFESTS_SOURCE_REPO_URL:-}" ]; then
       CAPACT_OVERRIDES+=",hub-public.populator.manifestsLocation.repository=${HUB_MANIFESTS_SOURCE_REPO_URL}"
+    fi
+
+    if [ -n "${DOCKER_REPOSITORY:-}" ]; then
+      CAPACT_OVERRIDES+=",global.containerRegistry.path=${DOCKER_REPOSITORY}"
     fi
 
     if [[ "${BUILD_IMAGES:-"true"}" == "false" ]]; then
