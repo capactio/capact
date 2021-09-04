@@ -8,5 +8,18 @@ neo4j:
       limits:
         cpu: 400m
         memory: 2048Mi
-  imageTag: 4.2.8
+  image: "mszostok/neo4j"
+  imageTag: 4.2.8-apoc
   neo4jPassword: okon
+  readinessProbe:
+    initialDelaySeconds: 10
+    failureThreshold: 30
+    timeoutSeconds: 3
+    periodSeconds: 10
+
+  livenessProbe:
+    initialDelaySeconds: 10
+    failureThreshold: 30
+    timeoutSeconds: 3
+    periodSeconds: 10
+

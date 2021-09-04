@@ -15,8 +15,8 @@ readonly REPO_ROOT_DIR
 readonly DEPLOY_CHARTS_DIR="${REPO_ROOT_DIR}/deploy/kubernetes/charts"
 
 readonly CR_PACKAGE_PATH="${REPO_ROOT_DIR}/tmp/charts"
-readonly CAPACTIO_OFFICIAL_BUCKET="capactio-stable-charts"
-readonly CAPACTIO_LATEST_BUCKET="capactio-latest-charts"
+readonly CAPACTIO_OFFICIAL_BUCKET="capact-exp-helm-charts"
+readonly CAPACTIO_LATEST_BUCKET="capact-exp-helm-charts"
 
 readonly charts=(
   "argo"
@@ -54,7 +54,7 @@ main() {
   pushd "${CR_PACKAGE_PATH}"
 
   # Copy old index
-  gsutil cp gs://${CAPACTIO_BUCKET}/index.yaml .
+#  gsutil cp gs://${CAPACTIO_BUCKET}/index.yaml .
 
   for chart in "${charts[@]}"; do
     # Currently, we execute this method on locally and committed charts already has .tgz with dependent chart.

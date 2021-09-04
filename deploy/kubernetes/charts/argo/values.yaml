@@ -1,4 +1,7 @@
 argo-workflows:
+  images:
+    # imagePullPolicy to apply to all containers
+    pullPolicy: IfNotPresent
   controller:
     image:
       registry: ghcr.io
@@ -34,6 +37,8 @@ minio:
       cpu: 500m
 
   volumePermissions:
+    image:
+      pullPolicy: IfNotPresent
     enabled: true
 
   deployment:
