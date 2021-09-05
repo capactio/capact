@@ -18,8 +18,15 @@ type Spinner interface {
 	Stop(msg string)
 }
 
+// Status defines status printer methods. Allows us to use different status printers.
+type Status interface {
+	Step(stageFmt string, args ...interface{})
+	End(success bool)
+	Info(header, body string)
+}
+
 // Status provides functionality to display steps progress in terminal.
-type Status struct {
+type StatusPrinter struct {
 	w io.Writer
 
 	spinner         Spinner
@@ -30,12 +37,12 @@ type Status struct {
 }
 
 // NewStatus returns a new Status instance.
-func NewStatus(w io.Writer, header string) *Status {
+func NewStatus(w io.Writer, header string) *StatusPrinter {
 	if header != "" {
 		fmt.Fprintln(w, header)
 	}
 
-	st := &Status{
+	st := &StatusPrinter{
 		w: w,
 	}
 	if cli.IsSmartTerminal(w) {
@@ -50,7 +57,7 @@ func NewStatus(w io.Writer, header string) *Status {
 }
 
 // Step starts spinner for a given step.
-func (s *Status) Step(stageFmt string, args ...interface{}) {
+func (s *StatusPrinter) Step(stageFmt string, args ...interface{}) {
 	// Finish previously started step
 	s.End(true)
 
@@ -66,7 +73,7 @@ func (s *Status) Step(stageFmt string, args ...interface{}) {
 }
 
 // End marks started step as completed.
-func (s *Status) End(success bool) {
+func (s *StatusPrinter) End(success bool) {
 	if !s.spinner.Active() {
 		return
 	}
@@ -88,6 +95,14 @@ func (s *Status) End(success bool) {
 }
 
 // Writer returns underlying io.Writer
-func (s *Status) Writer() io.Writer {
+func (s *StatusPrinter) Writer() io.Writer {
 	return s.w
+}
+
+// Info prints a given info without any spinner animation.
+func (s *StatusPrinter) Info(header, body string) {
+	// Ensure that previously started step is finished. Without that we will mess-up our output.
+	s.End(true)
+
+	fmt.Fprintf(s.w, " • %s\n%s", header, body)
 }

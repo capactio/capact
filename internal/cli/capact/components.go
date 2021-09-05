@@ -124,6 +124,7 @@ func (c *ComponentData) withConfiguration(configuration *action.Configuration) {
 	c.configuration = configuration
 }
 
+// WithOptions allows setting component options.
 func (c *ComponentData) WithOptions(options *Options) {
 	c.opts = options
 }
@@ -173,6 +174,7 @@ func (c *ComponentData) runUpgrade(upgradeCli *action.Upgrade, values map[string
 	return r, nil
 }
 
+// RunInstall runs Helm install action.
 func (c *ComponentData) RunInstall(version string, values map[string]interface{}) (*release.Release, error) {
 	installCli := c.installAction(version)
 
@@ -243,55 +245,55 @@ var Components = components{
 	&Neo4j{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "neo4j",
-			LocalPath:   path.Join(LocalChartsPath, "neo4j"),
-			Wait:        true,
+			ReleaseName:   "neo4j",
+			LocalPath:     path.Join(LocalChartsPath, "neo4j"),
+			Wait:          true,
 		},
 	},
 	&IngressController{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "ingress-nginx",
-			ChartName:   "ingress-controller",
-			LocalPath:   path.Join(LocalChartsPath, "ingress-nginx"),
-			Wait:        true,
+			ReleaseName:   "ingress-nginx",
+			ChartName:     "ingress-controller",
+			LocalPath:     path.Join(LocalChartsPath, "ingress-nginx"),
+			Wait:          true,
 		},
 	},
 	&Argo{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "argo",
-			LocalPath:   path.Join(LocalChartsPath, "argo"),
+			ReleaseName:   "argo",
+			LocalPath:     path.Join(LocalChartsPath, "argo"),
 		},
 	},
 	&CertManager{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "cert-manager",
-			LocalPath:   path.Join(LocalChartsPath, "cert-manager"),
-			Wait:        true,
+			ReleaseName:   "cert-manager",
+			LocalPath:     path.Join(LocalChartsPath, "cert-manager"),
+			Wait:          true,
 		},
 	},
 	&Kubed{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "kubed",
-			LocalPath:   path.Join(LocalChartsPath, "kubed"),
+			ReleaseName:   "kubed",
+			LocalPath:     path.Join(LocalChartsPath, "kubed"),
 		},
 	},
 	&Monitoring{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "monitoring",
-			LocalPath:   path.Join(LocalChartsPath, "monitoring"),
+			ReleaseName:   "monitoring",
+			LocalPath:     path.Join(LocalChartsPath, "monitoring"),
 		},
 	},
 	&Capact{
 		ComponentData{
 			configuration: new(action.Configuration),
-			ReleaseName: "capact",
-			LocalPath:   path.Join(LocalChartsPath, "capact"),
-			Wait:        true,
+			ReleaseName:   "capact",
+			LocalPath:     path.Join(LocalChartsPath, "capact"),
+			Wait:          true,
 		},
 	},
 }
@@ -611,7 +613,7 @@ func NewHelm(configuration *action.Configuration, opts Options) *Helm {
 }
 
 // InstallComponents installs Helm components
-func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status *printer.Status) error {
+func (h *Helm) InstallComponents(ctx context.Context, w io.Writer, status printer.Status) error {
 	if cli.VerboseMode.IsEnabled() {
 		status.Step("Resolving installation config")
 		status.End(true)

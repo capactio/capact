@@ -67,9 +67,9 @@ type Options struct {
 	LocalRegistryEnabled bool
 
 	// Helm client opts
-	DryRun       bool
-	Replace      bool
-	ClientOnly   bool
+	DryRun     bool
+	Replace    bool
+	ClientOnly bool
 }
 
 // Validate validates Capact install options.
