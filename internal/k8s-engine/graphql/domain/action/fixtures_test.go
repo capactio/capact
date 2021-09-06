@@ -454,7 +454,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 	}
 
 	if paramsEnabled {
-		sec.StringData["input-parameters"] = `{"param":"one"}`
+		sec.StringData["parameter-input-parameters"] = `{"param":"one"}`
 	}
 	if policyEnabled {
 		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]}`

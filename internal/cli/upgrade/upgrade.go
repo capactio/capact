@@ -28,6 +28,8 @@ const (
 	capactTypeRefPath          = "cap.type.capactio.capact.config"
 	helmReleaseTypeRefPath     = "cap.type.helm.chart.release"
 
+	actionParametersKey = "input-parameters"
+
 	randomSuffixLength = 5
 	pollInterval       = time.Second
 )
@@ -375,7 +377,7 @@ func mapToInputTypeInstances(capactCfg gqllocalapi.TypeInstance) ([]*gqlengine.I
 
 func mapToInputParameters(params capact.InputParameters) (gqlengine.JSON, error) {
 	parameters := map[string]interface{}{
-		"input-parameters": params,
+		actionParametersKey: params,
 	}
 
 	marshalled, err := json.Marshal(parameters)

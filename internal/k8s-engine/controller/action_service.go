@@ -357,7 +357,7 @@ func (a *ActionService) UnlockTypeInstances(ctx context.Context, action *v1alpha
 
 // RenderAction returns rendered Implementation for Interface from a given Action.
 func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Action) (*v1alpha1.RenderingStatus, error) {
-	ref, userInput, err := a.getUserInputData(ctx, action)
+	ref, parametersCollection, err := a.getUserInputData(ctx, action)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	ownerID := ownerIDKey(action)
 	options := []argo.RendererOption{
-		argo.WithSecretUserInput(ref, *userInput), //TODO nil check
+		argo.WithSecretUserInput(ref, parametersCollection),
 		argo.WithPolicyOrder(a.policyOrder),
 		argo.WithGlobalPolicy(policy),
 		argo.WithTypeInstances(typeInstances),
@@ -413,9 +413,14 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
+	parametersBytes, err := json.Marshal(parametersCollection)
+	if err != nil {
+		return nil, errors.Wrap(err, "while marshaling user input to json")
+	}
+
 	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
-	//status.SetInputParameters(userInput) // TODO figure out how to marshal the parameters
+	status.SetInputParameters(parametersBytes)
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 	status.SetActionPolicy(actionPolicyData)
 
@@ -426,7 +431,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	return status, nil
 }
 
-func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, *types.ParametersCollection, error) {
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, types.ParametersCollection, error) {
 	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
 		return nil, nil, nil
 	}
@@ -439,16 +444,14 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 
 	parameters := types.ParametersCollection{}
 	for key, data := range secret.Data {
-		if key == graphqldomain.ActionPolicySecretDataKey {
-			continue
+		if ok, name := graphqldomain.IsParameterDataKey(key); ok {
+			parameters[name] = string(data)
 		}
-
-		parameters[key] = string(data)
 	}
 
 	return &argo.UserInputSecretRef{
 		Name: action.Spec.Input.Parameters.SecretRef.Name,
-	}, &parameters, nil
+	}, parameters, nil
 }
 
 func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.ActionPolicy, []byte, error) {

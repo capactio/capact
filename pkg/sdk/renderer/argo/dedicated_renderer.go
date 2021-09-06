@@ -8,6 +8,7 @@ import (
 	"sort"
 
 	"capact.io/capact/internal/ctxutil"
+	"capact.io/capact/internal/k8s-engine/graphql/domain/action"
 
 	"capact.io/capact/internal/ptr"
 	hubpublicapi "capact.io/capact/pkg/hub/api/graphql/public"
@@ -805,7 +806,7 @@ func (r *dedicatedRenderer) addUserInputFromSecret(rootWorkflow *Workflow, param
 						SecretName: r.inputParametersSecretRef.Name,
 						Items: []apiv1.KeyToPath{
 							{
-								Key:  parameterName,
+								Key:  action.GetParameterDataKey(parameterName),
 								Path: parameterName,
 							},
 						},

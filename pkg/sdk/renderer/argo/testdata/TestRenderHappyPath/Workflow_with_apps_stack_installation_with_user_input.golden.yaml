@@ -1175,7 +1175,7 @@ args:
       - name: user-secret-volume
         secret:
           items:
-          - key: input-parameters
+          - key: parameter-input-parameters
             path: input-parameters
           optional: false
           secretName: user-input
