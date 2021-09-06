@@ -24,7 +24,7 @@ func AddGatewayToHostsFile() error {
 		return nil
 	}
 
-	fmt.Printf("   * Updating %s file. Entering sudo password may be required \n", hosts)
+	fmt.Printf("   * Updating %s file. Entering sudo password may be required\n", hosts)
 	// #nosec G204
 	cmd := exec.Command("/bin/sh", "-c", fmt.Sprintf("echo \"%s\"| sudo tee -a %s >/dev/null", entry, hosts))
 	cmd.Stdout = os.Stdout
