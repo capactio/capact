@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"path"
 	"sort"
 
 	"capact.io/capact/internal/ctxutil"
@@ -27,10 +28,10 @@ type dedicatedRenderer struct {
 	typeInstanceHandler *TypeInstanceHandler
 
 	// set with options
-	inputParametersSecretRef *UserInputSecretRef
-	inputParametersRaw       json.RawMessage
-	inputTypeInstances       []types.InputTypeInstanceRef
-	ownerID                  *string
+	inputParametersSecretRef  *UserInputSecretRef
+	inputParametersCollection types.ParametersCollection
+	inputTypeInstances        []types.InputTypeInstanceRef
+	ownerID                   *string
 
 	// internal vars
 	currentIteration   int
@@ -456,17 +457,11 @@ func (r *dedicatedRenderer) AddUserInputSecretRefIfProvided(rootWorkflow *Workfl
 		return nil
 	}
 
-	inputParametersMap := make(map[string]interface{})
-
-	if err := json.Unmarshal(r.inputParametersRaw, &inputParametersMap); err != nil {
-		return err
-	}
-
 	// To ensure fixed order of steps in rendered workflow,
 	// we have to iterate over the paramNames in a deterministic order.
 	// In other case tests would fail sometimes.
-	paramNames := make([]string, 0, len(inputParametersMap))
-	for name := range inputParametersMap {
+	paramNames := make([]string, 0, len(r.inputParametersCollection))
+	for name := range r.inputParametersCollection {
 		paramNames = append(paramNames, name)
 	}
 	sort.Strings(paramNames)
@@ -777,14 +772,13 @@ func (r *dedicatedRenderer) sleepContainer() *apiv1.Container {
 
 func (r *dedicatedRenderer) addUserInputFromSecret(rootWorkflow *Workflow, parameterName string) {
 	var (
-		volumeName   = "user-secret-volume"
-		mountPath    = "/input"
-		artifactPath = fmt.Sprintf("%s/%s", mountPath, r.inputParametersSecretRef.Key)
-		outputPath   = "/output"
+		volumeName = "user-secret-volume"
+		mountPath  = "/input"
+		outputPath = path.Join(mountPath, parameterName)
 	)
 
 	// 1. Create step which consumes user data from Secret and outputs it as artifact
-	container := r.jqContainer(artifactPath, fmt.Sprintf(`."%s"`, parameterName), outputPath)
+	container := r.sleepContainer()
 	container.VolumeMounts = []apiv1.VolumeMount{
 		{
 			Name:      volumeName,
@@ -811,8 +805,8 @@ func (r *dedicatedRenderer) addUserInputFromSecret(rootWorkflow *Workflow, param
 						SecretName: r.inputParametersSecretRef.Name,
 						Items: []apiv1.KeyToPath{
 							{
-								Key:  r.inputParametersSecretRef.Key,
-								Path: r.inputParametersSecretRef.Key,
+								Key:  parameterName,
+								Path: parameterName,
 							},
 						},
 						Optional: ptr.Bool(false),
@@ -840,18 +834,6 @@ func (r *dedicatedRenderer) addUserInputFromSecret(rootWorkflow *Workflow, param
 		Name: parameterName,
 		From: fmt.Sprintf("{{steps.%s.outputs.artifacts.%s}}", userInputWfStep.Name, parameterName),
 	})
-}
-
-func (r *dedicatedRenderer) jqContainer(inputFilepath, jqPath, outputFilepath string) *apiv1.Container {
-	return &apiv1.Container{
-		Image: "ghcr.io/capactio/infra/jq:1.6",
-		// Built using:
-		// FROM alpine:3.14.2
-		// RUN apk add jq=1.6-r1
-
-		Command: []string{"sh", "-c"},
-		Args:    []string{fmt.Sprintf(`cat "%s" | jq -r '%s' | tee "%s" && sleep 1`, inputFilepath, jqPath, outputFilepath)},
-	}
 }
 
 // TODO: current limitation: we handle properly only one artifacts `capact-when: postgres == nil` but not `capact-when: postgres == nil && app-config == nil`

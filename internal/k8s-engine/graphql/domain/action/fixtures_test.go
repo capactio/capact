@@ -372,7 +372,7 @@ func fixGQLInputActionPolicy() *graphql.PolicyInput {
 }
 
 func fixGQLInputParameters() *graphql.JSON {
-	params := graphql.JSON(`{"param":"one"}`)
+	params := graphql.JSON(`{"input-parameters":{"param":"one"}}`)
 	return &params
 }
 
@@ -454,7 +454,7 @@ func fixModelInputSecret(name string, paramsEnabled, policyEnabled bool) *corev1
 	}
 
 	if paramsEnabled {
-		sec.StringData["parameters.json"] = `{"param":"one"}`
+		sec.StringData["input-parameters"] = `{"param":"one"}`
 	}
 	if policyEnabled {
 		sec.StringData["action-policy.json"] = `{"rules":[{"interface":{"path":"cap.interface.dummy","revision":null},"oneOf":[{"implementationConstraints":{"requires":null,"attributes":null,"path":"cap.implementation.dummy"},"inject":{"requiredTypeInstances":[{"id":"policy-ti-id","description":"Sample description"}],"additionalParameters":[{"name":"additional-parameters","value":{"snapshot":true}}],"additionalTypeInstances":[{"name":"additional-ti","id":"additional-ti-id"}]}}]}]}`

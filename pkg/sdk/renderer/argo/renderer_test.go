@@ -51,11 +51,11 @@ func TestRenderHappyPath(t *testing.T) {
 	}, fakeCli, typeInstanceHandler, wfValidator)
 
 	tests := []struct {
-		name                string
-		ref                 types.InterfaceRef
-		inputTypeInstances  []types.InputTypeInstanceRef
-		rawUserInput        []byte
-		typeInstancesToLock []string
+		name                    string
+		ref                     types.InterfaceRef
+		inputTypeInstances      []types.InputTypeInstanceRef
+		userParameterCollection types.ParametersCollection
+		typeInstancesToLock     []string
 	}{
 		{
 			name: "Two level nested workflow without user input and TypeInstances",
@@ -68,21 +68,27 @@ func TestRenderHappyPath(t *testing.T) {
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"superuser":{"password":"bar"}}}`,
+			},
 		},
 		{
 			name: "Workflow with apps stack installation with user input",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.stack.install",
 			},
-			rawUserInput: []byte(`{"input-parameters":{"key": true}}`),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"key":true}`,
+			},
 		},
 		{
 			name: "Mattermost workflow with user input",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
 		},
 		{
 			name: "PostgreSQL change password",
@@ -99,7 +105,9 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			rawUserInput:        []byte(`{"input-parameters":{"password": "foo"}}`),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"password":"foo"}`,
+			},
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 		{
@@ -117,7 +125,9 @@ func TestRenderHappyPath(t *testing.T) {
 					ID:   "f2421415-b8a4-464b-be12-b617794411c5",
 				},
 			},
-			rawUserInput:        []byte(`{"input-parameters":{"key": true}}`),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"key":true}`,
+			},
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
 	}
@@ -132,11 +142,10 @@ func TestRenderHappyPath(t *testing.T) {
 				WithOwnerID(ownerID),
 			}
 
-			if len(tt.rawUserInput) > 0 {
+			if len(tt.userParameterCollection) > 0 {
 				opts = append(opts, WithSecretUserInput(&UserInputSecretRef{
 					Name: "user-input",
-					Key:  "parameters.json",
-				}, tt.rawUserInput))
+				}, tt.userParameterCollection))
 			}
 
 			// when
@@ -173,83 +182,101 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name               string
-		ref                types.InterfaceRef
-		inputTypeInstances []types.InputTypeInstanceRef
-		rawUserInput       []byte
-		policy             policy.Policy
+		name                    string
+		ref                     types.InterfaceRef
+		inputTypeInstances      []types.InputTypeInstanceRef
+		userParameterCollection types.ParametersCollection
+		policy                  policy.Policy
 	}{
 		{
 			name: "Mattermost with CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
-			policy:       fixGCPGlobalPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
+			policy: fixGCPGlobalPolicy(),
 		},
 		{
 			name: "Mattermost with existing DB installation",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
-			policy:       fixExistingDBPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
+			policy: fixExistingDBPolicy(),
 		},
 		{
 			name: "CloudSQL PostgreSQL installation with GCP SA injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy:       fixGCPGlobalPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
+			policy: fixGCPGlobalPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"superuser":{"password":"bar"}}`,
+			},
 		},
 		{
 			name: "RDS installation with AWS SA and additional parameters injected",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy:       fixAWSRDSPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
+			policy: fixAWSRDSPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"superuser":{"password":"bar"}}`,
+			},
 		},
 		{
 			name: "Mattermost with CloudSQL using Terraform",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy:       fixTerraformPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
+			policy: fixTerraformPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
 		},
 		{
 			name: "Mattermost with AWS RDS install",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.productivity.mattermost.install",
 			},
-			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"host": "mattermost.local"}}`),
+			policy: fixAWSGlobalPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"host":"mattermost.local"}`,
+			},
 		},
 		{
 			name: "Unmet policy constraints - fallback to Bitnami Implementation",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.database.postgresql.install",
 			},
-			policy:       fixGlobalPolicyForFallback(),
-			rawUserInput: []byte(`{"input-parameters":{"superuser":{"password":"bar"}}}`),
+			policy: fixGlobalPolicyForFallback(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"superuser":{"password":"bar"}}`,
+			},
 		},
 		{
 			name: "Workflow policy injects additional input - reference by ManifestRef",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.app1.install",
 			},
-			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"key": "string"}}`),
+			policy: fixAWSGlobalPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"key":"string"}`,
+			},
 		},
 		{
 			name: "Workflow policy injects additional input - reference by alias",
 			ref: types.InterfaceRef{
 				Path: "cap.interface.app-stack.app2.install",
 			},
-			policy:       fixAWSGlobalPolicy(),
-			rawUserInput: []byte(`{"input-parameters":{"key": "string"}}`),
+			policy: fixAWSGlobalPolicy(),
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters": `{"key":"string"}`,
+			},
 		},
 	}
 	for testIdx, test := range tests {
@@ -275,11 +302,10 @@ func TestRenderHappyPathWithCustomPolicies(t *testing.T) {
 				WithOwnerID("owner"),
 			}
 
-			if len(tt.rawUserInput) > 0 {
+			if len(tt.userParameterCollection) > 0 {
 				opts = append(opts, WithSecretUserInput(&UserInputSecretRef{
 					Name: "user-input",
-					Key:  "parameters.json",
-				}, tt.rawUserInput))
+				}, tt.userParameterCollection))
 			}
 
 			// when

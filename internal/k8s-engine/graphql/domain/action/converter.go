@@ -7,6 +7,8 @@ import (
 	"capact.io/capact/internal/k8s-engine/graphql/model"
 	"capact.io/capact/pkg/engine/api/graphql"
 	"capact.io/capact/pkg/engine/k8s/api/v1alpha1"
+	"capact.io/capact/pkg/sdk/apis/0.0.1/types"
+	"capact.io/capact/pkg/sdk/renderer/argo"
 	"github.com/pkg/errors"
 	authv1 "k8s.io/api/authentication/v1"
 	v1 "k8s.io/api/core/v1"
@@ -15,8 +17,6 @@ import (
 )
 
 const (
-	// ParametersSecretDataKey defines key name for Action runner parameters.
-	ParametersSecretDataKey = "parameters.json"
 	// ActionPolicySecretDataKey defines key name for Action Policy.
 	ActionPolicySecretDataKey = "action-policy.json"
 	// LatestRevision defines keyword to indicate latest revision.
@@ -190,9 +190,16 @@ func (c *Converter) inputParamsFromGraphQL(in *graphql.ActionInputData, name str
 		return nil, nil
 	}
 
-	data := map[string]string{}
+	var (
+		data types.ParametersCollection = types.ParametersCollection{}
+		err  error
+	)
+
 	if in.Parameters != nil {
-		data[ParametersSecretDataKey] = string(*in.Parameters)
+		data, err = argo.ToParametersCollection(json.RawMessage(*in.Parameters))
+		if err != nil {
+			return nil, errors.Wrap(err, "while getting parameters collection")
+		}
 	}
 
 	if in.ActionPolicy != nil {

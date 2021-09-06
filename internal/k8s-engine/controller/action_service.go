@@ -385,7 +385,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	ownerID := ownerIDKey(action)
 	options := []argo.RendererOption{
-		argo.WithSecretUserInput(ref, userInput),
+		argo.WithSecretUserInput(ref, *userInput), //TODO nil check
 		argo.WithPolicyOrder(a.policyOrder),
 		argo.WithGlobalPolicy(policy),
 		argo.WithTypeInstances(typeInstances),
@@ -415,7 +415,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 
 	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
-	status.SetInputParameters(userInput)
+	//status.SetInputParameters(userInput) // TODO figure out how to marshal the parameters
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 	status.SetActionPolicy(actionPolicyData)
 
@@ -426,7 +426,7 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 	return status, nil
 }
 
-func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, []byte, error) {
+func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.Action) (*argo.UserInputSecretRef, *types.ParametersCollection, error) {
 	if action.Spec.Input == nil || action.Spec.Input.Parameters == nil {
 		return nil, nil, nil
 	}
@@ -437,10 +437,18 @@ func (a *ActionService) getUserInputData(ctx context.Context, action *v1alpha1.A
 		return nil, nil, errors.Wrap(err, "while getting K8s Secret with user input data")
 	}
 
+	parameters := types.ParametersCollection{}
+	for key, data := range secret.Data {
+		if key == graphqldomain.ActionPolicySecretDataKey {
+			continue
+		}
+
+		parameters[key] = string(data)
+	}
+
 	return &argo.UserInputSecretRef{
 		Name: action.Spec.Input.Parameters.SecretRef.Name,
-		Key:  graphqldomain.ParametersSecretDataKey,
-	}, secret.Data[graphqldomain.ParametersSecretDataKey], nil
+	}, &parameters, nil
 }
 
 func (a *ActionService) getActionPolicyData(ctx context.Context, action *v1alpha1.Action) (*policy.ActionPolicy, []byte, error) {
