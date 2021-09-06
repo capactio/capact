@@ -413,14 +413,18 @@ func (a *ActionService) RenderAction(ctx context.Context, action *v1alpha1.Actio
 		return nil, errors.Wrap(err, "while marshaling action to json")
 	}
 
-	parametersBytes, err := json.Marshal(parametersCollection)
-	if err != nil {
-		return nil, errors.Wrap(err, "while marshaling user input to json")
+	status := &v1alpha1.RenderingStatus{}
+
+	if parametersCollection != nil {
+		parametersBytes, err := json.Marshal(parametersCollection)
+		if err != nil {
+			return nil, errors.Wrap(err, "while marshaling user input to json")
+		}
+
+		status.SetInputParameters(parametersBytes)
 	}
 
-	status := &v1alpha1.RenderingStatus{}
 	status.SetAction(actionBytes)
-	status.SetInputParameters(parametersBytes)
 	status.SetTypeInstancesToLock(renderOutput.TypeInstancesToLock)
 	status.SetActionPolicy(actionPolicyData)
 
