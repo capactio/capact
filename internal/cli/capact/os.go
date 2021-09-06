@@ -44,7 +44,7 @@ func TrustSelfSigned() error {
 		return err
 	}
 
-	fmt.Printf("   * Trusting self-signed CA certificate if not already trusted. Entering sudo password may be required \n")
+	fmt.Printf("   * Trusting self-signed CA certificate if not already trusted. Entering sudo password may be required\n")
 	switch os := runtime.GOOS; os {
 	case "darwin":
 		return trustSelfSignedDarwin(tmpFileName)
