@@ -35,12 +35,11 @@ args:
           template: main
     - container:
         args:
-        - cat "/input/parameters.json" | jq -r '."input-parameters"' | tee "/output"
-          && sleep 1
+        - sleep 1
         command:
         - sh
         - -c
-        image: ghcr.io/capactio/infra/jq:1.6
+        image: alpine:3.7
         name: ""
         resources: {}
         volumeMounts:
@@ -52,23 +51,22 @@ args:
       outputs:
         artifacts:
         - name: input-parameters
-          path: /output
+          path: /input/input-parameters
       volumes:
       - name: user-secret-volume
         secret:
           items:
-          - key: parameters.json
-            path: parameters.json
+          - key: parameter-input-parameters
+            path: input-parameters
           optional: false
           secretName: user-input
     - container:
         args:
-        - cat "/input/parameters.json" | jq -r '."second-parameters"' | tee "/output"
-          && sleep 1
+        - sleep 1
         command:
         - sh
         - -c
-        image: ghcr.io/capactio/infra/jq:1.6
+        image: alpine:3.7
         name: ""
         resources: {}
         volumeMounts:
@@ -80,13 +78,13 @@ args:
       outputs:
         artifacts:
         - name: second-parameters
-          path: /output
+          path: /input/second-parameters
       volumes:
       - name: user-secret-volume
         secret:
           items:
-          - key: parameters.json
-            path: parameters.json
+          - key: parameter-second-parameters
+            path: second-parameters
           optional: false
           secretName: user-input
     - container:

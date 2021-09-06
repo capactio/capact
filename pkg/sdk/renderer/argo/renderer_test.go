@@ -130,6 +130,16 @@ func TestRenderHappyPath(t *testing.T) {
 			},
 			typeInstancesToLock: []string{"6fc7dd6b-d150-4af3-a1aa-a868962b7d68"},
 		},
+		{
+			name: "Workflow with two input parameters",
+			ref: types.InterfaceRef{
+				Path: "cap.interface.multiparam.two",
+			},
+			userParameterCollection: types.ParametersCollection{
+				"input-parameters":  `{"key":true}`,
+				"second-parameters": `{"key":false}`,
+			},
+		},
 	}
 	for _, test := range tests {
 		tt := test
