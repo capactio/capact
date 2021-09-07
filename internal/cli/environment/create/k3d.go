@@ -3,7 +3,6 @@ package create
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -26,12 +25,10 @@ type K3dOptions struct {
 	Name            string
 	Wait            time.Duration
 	RegistryEnabled bool
-	Registry        string
 }
 
 // WaitForK3dReadyNodes waits until nodes are in Ready state based on the role message log.
-func WaitForK3dReadyNodes(ctx context.Context, w io.Writer, clusterName string) (err error) {
-	status := printer.NewStatus(w, "")
+func WaitForK3dReadyNodes(ctx context.Context, status *printer.Status, clusterName string) (err error) {
 	defer func() {
 		status.End(err == nil)
 	}()

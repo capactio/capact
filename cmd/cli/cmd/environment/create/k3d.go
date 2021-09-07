@@ -19,10 +19,13 @@ import (
 func NewK3d() *cobra.Command {
 	var opts create.K3dOptions
 
+	status := printer.NewStatus(os.Stdout, "")
+
 	k3d := cluster.NewCmdClusterCreate()
 	k3d.Use = "k3d"
 	k3d.Args = cobra.NoArgs
 	k3d.Short = "Provision local k3d cluster"
+	// Needs to be `PersistentPreRunE` as the `PreRunE` is used by k3d to configure viper config.
 	k3d.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
 		spinnerFmt := printer.NewLogrusSpinnerFormatter(fmt.Sprintf("Creating cluster %s...", opts.Name))
 		logrus.SetFormatter(spinnerFmt)
@@ -33,33 +36,29 @@ func NewK3d() *cobra.Command {
 		if !opts.RegistryEnabled {
 			return nil
 		}
-		return create.LocalRegistry(cmd.Context(), os.Stdout)
+		return create.LocalRegistry(cmd.Context(), status)
 	}
 	k3d.RunE = func(cmd *cobra.Command, _ []string) error {
-		// Run k3d create cmd
+		// 1. Create k3d cluster
 		k3d.Run(cmd, []string{opts.Name})
 
 		if opts.Wait == time.Duration(0) {
 			return nil
 		}
+		// 2. Wait for k3d cluster
 		ctx, cancel := context.WithTimeout(cmd.Context(), opts.Wait)
 		defer cancel()
-		return create.WaitForK3dReadyNodes(ctx, os.Stdout, opts.Name)
+		return create.WaitForK3dReadyNodes(ctx, status, opts.Name)
 	}
 	k3d.PostRunE = func(cmd *cobra.Command, args []string) (err error) {
 		if !opts.RegistryEnabled {
 			return nil
 		}
-		status := printer.NewStatus(os.Stdout, "")
-		defer func() {
-			status.End(err == nil)
-		}()
-
 		if err := create.RegistryConnWithNetwork(cmd.Context(), create.K3dDockerNetwork); err != nil {
 			return err
 		}
 
-		return capact.AddRegistryToHostsFile(status)
+		return capact.AddRegistryToHostsFile()
 	}
 
 	create.K3dRemoveWaitAndTimeoutFlags(k3d) // remove it, so we use own `--wait` flag

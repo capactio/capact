@@ -46,7 +46,7 @@ func updateHostFile(entry string) error {
 	return cmd.Run()
 }
 
-// TrustSelfSigned adds Capact generatd certificate to the trusted certificates
+// TrustSelfSigned adds Capact generated certificate to the trusted certificates
 func TrustSelfSigned() error {
 	tmpFileName := "/tmp/capact-cert"
 
@@ -64,7 +64,7 @@ func TrustSelfSigned() error {
 		return trustSelfSignedLinux(tmpFileName)
 	default:
 		// TODO
-		// Prepeare a message with not supported OS
+		// Prepare a message with not supported OS
 		// Depending where we will store the cert the message needs to be adjusted
 	}
 	return nil
