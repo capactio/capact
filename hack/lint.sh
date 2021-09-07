@@ -74,7 +74,7 @@ dockerfile::run_checks() {
 
 shellcheck::files_to_check() {
   pushd "$REPO_ROOT_DIR" > /dev/null
-  paths=$(find . \( -path ./hub-js/node_modules -o -path ./.git -o -path ./hack/eks/terraform/.terraform -o -path ./tmp \) -prune -false -o -name '*.sh')
+  paths=$(find . \( -path ./hub-js/node_modules -o -path ./.git -o -path ./hack/eks/terraform/.terraform -o -path ./tmp -o -path ./hack/images/neo4j \) -prune -false -o -name '*.sh')
   popd > /dev/null
 
   echo "$paths"
