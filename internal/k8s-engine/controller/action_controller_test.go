@@ -14,7 +14,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	graphqldomain "capact.io/capact/internal/k8s-engine/graphql/domain/action"
 	corev1alpha1 "capact.io/capact/pkg/engine/k8s/api/v1alpha1"
 )
 
@@ -76,7 +75,7 @@ var _ = Describe("Action Controller", func() {
 					Namespace: key.Namespace,
 				},
 				StringData: map[string]string{
-					graphqldomain.ParametersSecretDataKey: `{ "message": { "pico": "bello"}}`,
+					"input-parameters": `{ "message": { "pico": "bello"}}`,
 				},
 			}
 

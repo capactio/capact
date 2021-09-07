@@ -57,7 +57,6 @@ type RunnerContextSecretRef struct {
 // in a Kubernetes Secret resource.
 type UserInputSecretRef struct {
 	Name string
-	Key  string
 }
 
 // RenderInput holds the input parameters to the Render method.

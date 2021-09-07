@@ -1,0 +1,46 @@
+ocfVersion: 0.0.1
+revision: 0.1.0
+kind: Interface
+metadata:
+  prefix: cap.interface.multiparam
+  name: two
+  path: cap.interface.multiparam.two
+  displayName: ""
+  description: ""
+  documentationURL: ""
+  supportURL: ""
+  iconURL: ""
+  maintainers:
+    - email: team-dev@capact.io
+      name: Capact Dev Team
+      url: https://capact.io
+
+spec:
+  input:
+    parameters:
+      - name: input-parameters
+        jsonSchema: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "type": "object",
+            "properties": {
+              "key": {
+                "type":"boolean"
+              }
+            },
+            "required": ["key"]
+          }
+
+      - name: second-parameters
+        jsonSchema: |-
+          {
+            "$schema": "http://json-schema.org/draft-07/schema",
+            "type": "object",
+            "properties": {
+              "key": {
+                "type":"boolean" 
+              }
+            }
+          }
+  output:
+    typeInstances: []

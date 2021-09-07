@@ -1120,11 +1120,11 @@ args:
           name: inject-runner-context-step
           template: inject-runner-context
       - - arguments: {}
-          name: populate-user-input-step
-          template: populate-user-input
+          name: populate-input-parameters-step
+          template: populate-input-parameters
       - - arguments:
             artifacts:
-            - from: '{{steps.populate-user-input-step.outputs.artifacts.input-parameters}}'
+            - from: '{{steps.populate-input-parameters-step.outputs.artifacts.input-parameters}}'
               name: input-parameters
           name: start-entrypoint
           template: mattermost-install
@@ -1215,21 +1215,21 @@ args:
         name: ""
         resources: {}
         volumeMounts:
-        - mountPath: /output
+        - mountPath: /input
           name: user-secret-volume
       inputs: {}
       metadata: {}
-      name: populate-user-input
+      name: populate-input-parameters
       outputs:
         artifacts:
         - name: input-parameters
-          path: /output/parameters.json
+          path: /input/input-parameters
       volumes:
       - name: user-secret-volume
         secret:
           items:
-          - key: parameters.json
-            path: parameters.json
+          - key: parameter-input-parameters
+            path: input-parameters
           optional: false
           secretName: user-input
     - container:

@@ -119,7 +119,9 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	rootWorkflow, entrypointStep := dedicatedRenderer.WrapEntrypointWithRootStep(rootWorkflow)
 
 	// 4. Add user input
-	dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow)
+	if err := dedicatedRenderer.AddUserInputSecretRefIfProvided(rootWorkflow); err != nil {
+		return nil, errors.Wrap(err, "while adding user input parameters to workflow")
+	}
 
 	// 5. List data based on policy and inject them if provided
 	// 5.1 Required TypeInstances
@@ -152,7 +154,7 @@ func (r *Renderer) Render(ctx context.Context, input *RenderInput) (*RenderOutpu
 	// Implementation-specific input is already validated on PolicyEnforcedClient level
 	validateInput := renderer.InterfaceInput{
 		Interface:     iface,
-		Parameters:    ToInputParams(dedicatedRenderer.inputParametersRaw),
+		Parameters:    dedicatedRenderer.inputParametersCollection,
 		TypeInstances: dedicatedRenderer.inputTypeInstances,
 	}
 	err = r.wfValidator.ValidateInterfaceInput(ctx, validateInput)
