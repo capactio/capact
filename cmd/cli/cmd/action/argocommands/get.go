@@ -221,7 +221,10 @@ func printWorkflowHelper(wf *wfv1.Workflow, getArgs getFlags) string {
 		}
 	}
 	writerBuffer := new(bytes.Buffer)
-	printer.PrintSecurityNudges(*wf, writerBuffer)
+
+	// Hide security context warning
+	// printer.PrintSecurityNudges(*wf, writerBuffer)
+
 	out += writerBuffer.String()
 	return out
 }

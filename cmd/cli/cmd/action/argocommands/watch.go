@@ -96,6 +96,9 @@ func watchWorkflow(ctx context.Context, serviceClient workflowpkg.WorkflowServic
 			wf = newWf
 		case <-ticker.C:
 			// If we don't, refresh the workflow screen every second
+		case <-ctx.Done():
+			// If the context gets canceled
+			return
 		}
 
 		printWorkflowStatus(wf, getArgs)
