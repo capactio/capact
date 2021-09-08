@@ -20,6 +20,7 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20200609044655-c4b36f998cf2
 	github.com/docker/cli v20.10.6+incompatible
 	github.com/docker/docker v20.10.8+incompatible
+	github.com/docker/go-connections v0.4.0
 	github.com/evanphx/json-patch/v5 v5.5.0 // indirect
 	github.com/fatih/color v1.12.0
 	github.com/fatih/structs v1.1.0

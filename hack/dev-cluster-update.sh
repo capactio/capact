@@ -23,7 +23,6 @@ main() {
     shout "Updating development local cluster..."
 
     export DOCKER_TAG=dev-$RANDOM
-    export DOCKER_REPOSITORY="local"
     export BUILD_IMAGES="true"
     export REPO_DIR=$REPO_ROOT_DIR
     export CLUSTER_TYPE=${CLUSTER_TYPE:-"kind"}

@@ -13,13 +13,31 @@ import (
 	k3dutil "github.com/rancher/k3d/v4/pkg/util"
 )
 
+// K3dOptions holds configuration for delete k3d cluster operation.
+type K3dOptions struct {
+	Name           string
+	RemoveRegistry bool
+}
+
 // K3d removes a given k3d cluster.
-func K3d(ctx context.Context, name string) (err error) {
+func K3d(ctx context.Context, opts K3dOptions) (err error) {
 	status := printer.NewStatus(os.Stdout, "")
 	defer func() {
 		status.End(err == nil)
 	}()
 
+	if err := ensureK3dClusterDeleted(ctx, status, opts.Name); err != nil {
+		return err
+	}
+
+	if !opts.RemoveRegistry {
+		return nil
+	}
+
+	return LocalRegistry(ctx, status)
+}
+
+func ensureK3dClusterDeleted(ctx context.Context, status *printer.Status, name string) error {
 	c, err := client.ClusterGet(ctx, runtimes.SelectedRuntime, &k3dtypes.Cluster{Name: name})
 	switch {
 	case err == nil:
@@ -29,7 +47,7 @@ func K3d(ctx context.Context, name string) (err error) {
 		return err
 	}
 
-	err = client.ClusterDelete(ctx, runtimes.SelectedRuntime, c, k3dtypes.ClusterDeleteOpts{SkipRegistryCheck: false})
+	err = client.ClusterDelete(ctx, runtimes.SelectedRuntime, c, k3dtypes.ClusterDeleteOpts{SkipRegistryCheck: true})
 	if err != nil {
 		return err
 	}

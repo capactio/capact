@@ -35,6 +35,10 @@ func NewInstall() *cobra.Command {
 			# Install Capact from local git repository. Needs to be run from the main directory
 			<cli> install --version @local`, cli.Name),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := opts.Validate(); err != nil {
+				return err
+			}
+
 			k8sCfg, err := config.GetConfig()
 			if err != nil {
 				return errors.Wrap(err, "while creating k8s config")
@@ -57,6 +61,7 @@ func NewInstall() *cobra.Command {
 	flags.BoolVar(&opts.UpdateHostsFile, "update-hosts-file", true, "Updates /etc/hosts with entry for Capact GraphQL Gateway.")
 	flags.BoolVar(&opts.UpdateTrustedCerts, "update-trusted-certs", true, "Add Capact GraphQL Gateway certificate.")
 	flags.StringVar(&opts.Parameters.Override.HelmRepoURL, "helm-repo-url", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
+	flags.BoolVar(&opts.LocalRegistryEnabled, "enable-registry", false, "If specified, Capact images are pushed to Capact local Docker registry.")
 	flags.StringSliceVar(&opts.Parameters.Override.CapactStringOverrides, "capact-overrides", []string{}, "Overrides for Capact component.")
 	flags.StringSliceVar(&opts.Parameters.Override.IngressStringOverrides, "ingress-controller-overrides", []string{}, "Overrides for Ingress controller component.")
 	flags.StringSliceVar(&opts.Parameters.Override.CertManagerStringOverrides, "cert-manager-overrides", []string{}, "Overrides for Cert Manager component.")

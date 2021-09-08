@@ -1,0 +1,39 @@
+kind: Simple
+apiVersion: k3d.io/v1alpha2
+name: {{ .name }}
+servers: 1
+agents: 0
+image: {{ .image }}
+network: {{ .networkName }}
+ports:
+  - port: 80:80
+    nodeFilters:
+      - loadbalancer
+  - port: 443:443
+    nodeFilters:
+      - loadbalancer
+options:
+  k3s:
+    extraServerArgs:
+      - --no-deploy=traefik
+      - --node-label=ingress-ready=true
+{{if .registry }}
+registries:
+  config: |
+    mirrors:
+      {{ .registry }}:
+        endpoint:
+          - http://{{ .registry }}
+      docker.io:
+        endpoint:
+          - http://{{ .registry }}
+      gcr.io:
+        endpoint:
+          - http://{{ .registry }}
+      eu.gcr.io:
+        endpoint:
+          - http://{{ .registry }}
+      configs: {}
+      auths: {}
+{{end}}
+

@@ -9,13 +9,25 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"capact.io/capact/internal/cli/environment/create"
 )
 
-// AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway
-func AddGatewayToHostsFile() error {
-	hosts := "/etc/hosts"
-	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
+const hosts = "/etc/hosts"
 
+// AddGatewayToHostsFile adds a new entry to the /etc/hosts file for Capact Gateway.
+func AddGatewayToHostsFile() error {
+	entry := fmt.Sprintf("\n127.0.0.1 gateway.%s.local", Name)
+	return updateHostFile(entry)
+}
+
+// AddRegistryToHostsFile adds a new entry to the /etc/hosts file for Capact local Docker registry.
+func AddRegistryToHostsFile() error {
+	entry := fmt.Sprintf("\n127.0.0.1 %s", create.ContainerRegistry)
+	return updateHostFile(entry)
+}
+
+func updateHostFile(entry string) error {
 	data, err := ioutil.ReadFile(hosts)
 	if err != nil {
 		return err
@@ -34,7 +46,7 @@ func AddGatewayToHostsFile() error {
 	return cmd.Run()
 }
 
-// TrustSelfSigned adds Capact generatd certificate to the trusted certificates
+// TrustSelfSigned adds Capact generated certificate to the trusted certificates
 func TrustSelfSigned() error {
 	tmpFileName := "/tmp/capact-cert"
 
@@ -52,7 +64,7 @@ func TrustSelfSigned() error {
 		return trustSelfSignedLinux(tmpFileName)
 	default:
 		// TODO
-		// Prepeare a message with not supported OS
+		// Prepare a message with not supported OS
 		// Depending where we will store the cert the message needs to be adjusted
 	}
 	return nil
