@@ -8,7 +8,7 @@ import (
 func NewCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "archive-images",
-		Short: "Creates Docker images archive file",
+		Short: "Export Capact Docker images to a tar archive",
 		Long:  "Subcommand for various manifest generation operations",
 	}
 

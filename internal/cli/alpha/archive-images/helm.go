@@ -45,7 +45,7 @@ func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchi
 	}
 	defer responseBody.Close()
 
-	out, err := selectOutputForArchive(opts)
+	out, err := selectOutputForArchive(status, opts)
 	if err != nil {
 		return err
 	}
@@ -55,10 +55,11 @@ func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchi
 	return err
 }
 
-func selectOutputForArchive(opts HelmArchiveImagesOptions) (io.Writer, error) {
+func selectOutputForArchive(status printer.Status, opts HelmArchiveImagesOptions) (io.Writer, error) {
 	if opts.Output.ToStdout {
 		return os.Stdout, nil
 	}
+	status.Info("Save output to %s", opts.Output.Path)
 	return os.Create(filepath.Clean(opts.Output.Path))
 }
 
@@ -147,7 +148,10 @@ func dockerSaveDepImages(ctx context.Context, status printer.Status, images map[
 
 	var pulled []string
 	for img := range images {
-		reader, err := dockerCli.ImagePull(ctx, img, types.ImagePullOptions{})
+		reader, err := dockerCli.ImagePull(ctx, img, types.ImagePullOptions{
+			All:      false,
+			Platform: os.Getenv("DOCKER_DEFAULT_PLATFORM"),
+		})
 		if err != nil {
 			return nil, err
 		}

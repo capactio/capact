@@ -31,7 +31,7 @@ func NewFromHelmCharts() *cobra.Command {
 			<cli> alpha archive-images helm --version 0.5.0 --output ./capact-images-0.5.0.tar
 
 			# Archive images from  Helm Chart released from the the '0fbf562' commit on the main branch
-			<cli> alpha archive-images helm --version 0.4.0-0fbf562 --helm-repo-url @latest > ./capact-images-0.4.0-0fbf562.tar
+			<cli> alpha archive-images helm --version 0.4.0-0fbf562 --helm-repo-url @latest --output-stdout > ./capact-images-0.4.0-0fbf562.tar
 
 			# You can use gzip to save the image file and make the backup smaller.
 			<cli> alpha archive-images helm --version 0.5.0 --output ./capact-images-0.5.0.tar.gz --compress gzip
@@ -65,7 +65,7 @@ func NewFromHelmCharts() *cobra.Command {
 	cmd.Flags().StringVar(&opts.CapactOpts.Parameters.Override.HelmRepoURL, "helm-repo-url", capact.HelmRepoStable, fmt.Sprintf("Capact Helm chart repository URL. Use %s tag to select repository which holds the latest Helm chart versions.", capact.LatestVersionTag))
 	cmd.Flags().StringVarP(&opts.Output.Path, "output", "o", "", "Write output to a file, instead of standard output.")
 	cmd.Flags().BoolVar(&opts.Output.ToStdout, "output-stdout", false, "Write output to a standard output, instead of file.")
-	cmd.Flags().StringVar(&opts.Compress, "compress", "", "Use a given compress algorithm. Allowed values: gzip")
+	cmd.Flags().StringVar(&opts.Compress, "compress", "", fmt.Sprintf("Use a given compress algorithm. Allowed values: %s", archiveimages.CompressGzip))
 
 	_ = cmd.RegisterFlagCompletionFunc("compress", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{archiveimages.CompressGzip}, cobra.ShellCompDirectiveNoFileComp
