@@ -1,20 +1,17 @@
 package create
 
 import (
+	"capact.io/capact/internal/cli/dockerutil"
 	"context"
-	"io/ioutil"
 	"os"
 
-	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/printer"
 
-	"github.com/docker/cli/cli/streams"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
 	"github.com/docker/go-connections/nat"
 )
 
@@ -31,7 +28,7 @@ const (
 )
 
 // LocalRegistry create a local Docker registry used to pushed locally build images.
-func LocalRegistry(ctx context.Context, status *printer.Status) (err error) {
+func LocalRegistry(ctx context.Context, status printer.Status) (err error) {
 	defer func() {
 		status.End(err == nil)
 	}()
@@ -52,7 +49,7 @@ func LocalRegistry(ctx context.Context, status *printer.Status) (err error) {
 		return err
 	}
 
-	if err := ensureRegistryImage(ctx, dockerCli, status); err != nil {
+	if err := dockerutil.EnsureImage(ctx, dockerCli, status, ContainerRegistryImage); err != nil {
 		return err
 	}
 
@@ -94,56 +91,4 @@ func RegistryConnWithNetwork(ctx context.Context, networkID string) error {
 	}
 
 	return dockerCli.NetworkConnect(ctx, networkID, ContainerRegistryName, nil)
-}
-
-func ensureRegistryImage(ctx context.Context, dockerCli *client.Client, status *printer.Status) error {
-	found, err := foundRegistryImageLocally(ctx, dockerCli)
-	if err != nil {
-		return err
-	}
-	if found {
-		return nil
-	}
-
-	return pullRegistryImage(ctx, dockerCli, status)
-}
-
-func isDockerNotFoundErr(err error) bool {
-	type notFound interface {
-		NotFound()
-	}
-	_, ok := err.(notFound)
-	return ok
-}
-
-func foundRegistryImageLocally(ctx context.Context, dockerCli *client.Client) (bool, error) {
-	_, _, err := dockerCli.ImageInspectWithRaw(ctx, ContainerRegistryImage)
-	switch {
-	case err == nil: // found
-		return true, nil
-	case isDockerNotFoundErr(err):
-		return false, nil
-	default:
-		return false, err
-	}
-}
-
-func pullRegistryImage(ctx context.Context, dockerCli *client.Client, status *printer.Status) error {
-	out := streams.NewOut(os.Stdout)
-	if !cli.VerboseMode.IsTracing() {
-		status.Step("Pulling %q image", ContainerRegistryImage)
-		out = streams.NewOut(ioutil.Discard)
-	}
-
-	reader, err := dockerCli.ImagePull(ctx, ContainerRegistryImage, types.ImagePullOptions{})
-	if err != nil {
-		return err
-	}
-
-	err = jsonmessage.DisplayJSONMessagesToStream(reader, out, nil)
-	if err != nil {
-		return err
-	}
-
-	return reader.Close()
 }

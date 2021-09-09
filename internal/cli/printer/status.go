@@ -22,10 +22,12 @@ type Spinner interface {
 type Status interface {
 	Step(stageFmt string, args ...interface{})
 	End(success bool)
-	Info(header, body string)
+	Infof(format string, a ...interface{})
+	InfoWithBody(header, body string)
+	Writer() io.Writer
 }
 
-// Status provides functionality to display steps progress in terminal.
+// StatusPrinter provides functionality to display steps progress in terminal.
 type StatusPrinter struct {
 	w io.Writer
 
@@ -99,9 +101,17 @@ func (s *StatusPrinter) Writer() io.Writer {
 	return s.w
 }
 
-// Info prints a given info without any spinner animation.
-func (s *StatusPrinter) Info(header, body string) {
-	// Ensure that previously started step is finished. Without that we will mess-up our output.
+// Infof prints a given info without spinner animation.
+func (s *StatusPrinter) Infof(format string, a ...interface{}) {
+	// Ensure that previously started step is finished. Without that we will mess up our output.
+	s.End(true)
+
+	fmt.Fprintf(s.w, " • %s\n", fmt.Sprintf(format, a...))
+}
+
+// InfoWithBody prints a given info with a given body and without spinner animation.
+func (s *StatusPrinter) InfoWithBody(header, body string) {
+	// Ensure that previously started step is finished. Without that we will mess up our output.
 	s.End(true)
 
 	fmt.Fprintf(s.w, " • %s\n%s", header, body)

@@ -10,15 +10,12 @@ import (
 	"regexp"
 	"strings"
 
-	"capact.io/capact/internal/cli"
 	"capact.io/capact/internal/cli/capact"
+	"capact.io/capact/internal/cli/dockerutil"
 	"capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/ctxutil"
 
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
-	"github.com/docker/docker/pkg/jsonmessage"
-	"github.com/pkg/errors"
 )
 
 // CompressGzip defines gzip format name
@@ -38,7 +35,7 @@ func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchi
 		return err
 	}
 
-	status.Info("Found images in Helm charts", foundImagesInfo(images))
+	status.InfoWithBody("Found images:", foundImagesInfo(images))
 	responseBody, err := dockerSaveDepImages(ctx, status, images)
 	if err != nil {
 		return err
@@ -59,7 +56,7 @@ func selectOutputForArchive(status printer.Status, opts HelmArchiveImagesOptions
 	if opts.Output.ToStdout {
 		return os.Stdout, nil
 	}
-	status.Info("Save output to %s", opts.Output.Path)
+	status.Step("Saving output to %s", opts.Output.Path)
 	return os.Create(filepath.Clean(opts.Output.Path))
 }
 
@@ -148,28 +145,9 @@ func dockerSaveDepImages(ctx context.Context, status printer.Status, images map[
 
 	var pulled []string
 	for img := range images {
-		reader, err := dockerCli.ImagePull(ctx, img, types.ImagePullOptions{
-			All:      false,
-			Platform: os.Getenv("DOCKER_DEFAULT_PLATFORM"),
-		})
-		if err != nil {
+		if err := dockerutil.EnsureImage(ctx, dockerCli, status, img); err != nil {
 			return nil, err
 		}
-
-		switch cli.VerboseMode {
-		case cli.VerboseModeTracing:
-			err = jsonmessage.DisplayJSONMessagesStream(reader, os.Stdout, os.Stdout.Fd(), cli.IsSmartTerminal(os.Stdout), nil)
-			if err != nil {
-				return nil, err
-			}
-		case cli.VerboseModeSimple:
-			status.Step("Pulling %s", img)
-		}
-
-		if err := reader.Close(); err != nil {
-			return nil, errors.Wrap(err, "while closing reader")
-		}
-
 		pulled = append(pulled, img)
 	}
 
