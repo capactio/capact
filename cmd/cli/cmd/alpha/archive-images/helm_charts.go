@@ -66,6 +66,7 @@ func NewFromHelmCharts() *cobra.Command {
 	cmd.Flags().StringVarP(&opts.Output.Path, "output", "o", "", "Write output to a file, instead of standard output.")
 	cmd.Flags().BoolVar(&opts.Output.ToStdout, "output-stdout", false, "Write output to a standard output, instead of file.")
 	cmd.Flags().StringVar(&opts.Compress, "compress", "", fmt.Sprintf("Use a given compress algorithm. Allowed values: %s", archiveimages.CompressGzip))
+	cmd.Flags().StringSliceVar(&opts.SaveComponents, "save-component", capact.Components.All(), "Components names for which Docker images should be saved. Takes comma-separated list.")
 
 	_ = cmd.RegisterFlagCompletionFunc("compress", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{archiveimages.CompressGzip}, cobra.ShellCompDirectiveNoFileComp

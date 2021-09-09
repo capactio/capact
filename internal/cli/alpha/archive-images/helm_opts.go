@@ -14,7 +14,8 @@ type HelmArchiveImagesOptions struct {
 		Path     string
 		ToStdout bool
 	}
-	Compress string
+	Compress       string
+	SaveComponents []string
 }
 
 // Resolve resolves HelmArchiveImagesOptions to final form.

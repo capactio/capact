@@ -16,6 +16,7 @@ import (
 	"capact.io/capact/internal/multierror"
 
 	"github.com/docker/docker/client"
+	"k8s.io/utils/strings/slices"
 )
 
 // CompressGzip defines gzip format name
@@ -30,7 +31,7 @@ var (
 
 // CapactHelmCharts archives images from the Capact Helm charts.
 func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchiveImagesOptions) (err error) {
-	images, err := findImagesInHelmCharts(ctx, status, opts.CapactOpts)
+	images, err := findImagesInHelmCharts(ctx, status, opts.CapactOpts, opts.SaveComponents)
 	if err != nil {
 		return err
 	}
@@ -82,11 +83,15 @@ func compressOutputIfNeeded(out io.Writer, opts HelmArchiveImagesOptions) (io.Wr
 	}
 }
 
-func findImagesInHelmCharts(ctx context.Context, status printer.Status, opts capact.Options) (map[string]struct{}, error) {
+func findImagesInHelmCharts(ctx context.Context, status printer.Status, opts capact.Options, saveComponents []string) (map[string]struct{}, error) {
 	images := map[string]struct{}{}
 	for _, component := range capact.Components {
 		if ctxutil.ShouldExit(ctx) {
 			return nil, ctx.Err()
+		}
+
+		if !slices.Contains(saveComponents, component.Name()) {
+			continue
 		}
 
 		status.Step("Resolving images for %s", component.Name())

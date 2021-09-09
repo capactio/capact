@@ -30,12 +30,13 @@ capact alpha archive-images helm --version 0.5.0 --output-stdout | gzip > myimag
 ### Options
 
 ```
-      --compress string        Use a given compress algorithm. Allowed values: gzip
-      --helm-repo-url string   Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
-  -h, --help                   help for helm
-  -o, --output string          Write output to a file, instead of standard output.
-      --output-stdout          Write output to a standard output, instead of file.
-      --version string         Capact version. Possible values @latest, @local, 0.3.0, ... (default "@latest")
+      --compress string          Use a given compress algorithm. Allowed values: gzip
+      --helm-repo-url string     Capact Helm chart repository URL. Use @latest tag to select repository which holds the latest Helm chart versions. (default "https://storage.googleapis.com/capactio-stable-charts")
+  -h, --help                     help for helm
+  -o, --output string            Write output to a file, instead of standard output.
+      --output-stdout            Write output to a standard output, instead of file.
+      --save-component strings   Components names for which Docker images should be saved. Takes comma-separated list. (default [neo4j,ingress-nginx,argo,cert-manager,kubed,monitoring,capact])
+      --version string           Capact version. Possible values @latest, @local, 0.3.0, ... (default "@latest")
 ```
 
 ### Options inherited from parent commands
