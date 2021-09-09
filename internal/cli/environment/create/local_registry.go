@@ -1,9 +1,10 @@
 package create
 
 import (
-	"capact.io/capact/internal/cli/dockerutil"
 	"context"
 	"os"
+
+	"capact.io/capact/internal/cli/dockerutil"
 
 	"capact.io/capact/internal/cli/config"
 	"capact.io/capact/internal/cli/printer"

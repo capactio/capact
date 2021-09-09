@@ -17,7 +17,7 @@ capact alpha archive-images helm [flags]
 capact alpha archive-images helm --version 0.5.0 --output ./capact-images-0.5.0.tar
 
 # Archive images from  Helm Chart released from the the '0fbf562' commit on the main branch
-capact alpha archive-images helm --version 0.4.0-0fbf562 --helm-repo-url @latest > ./capact-images-0.4.0-0fbf562.tar
+capact alpha archive-images helm --version 0.4.0-0fbf562 --helm-repo-url @latest --output-stdout > ./capact-images-0.4.0-0fbf562.tar
 
 # You can use gzip to save the image file and make the backup smaller.
 capact alpha archive-images helm --version 0.5.0 --output ./capact-images-0.5.0.tar.gz --compress gzip
@@ -47,5 +47,5 @@ capact alpha archive-images helm --version 0.5.0 --output-stdout | gzip > myimag
 
 ### SEE ALSO
 
-* [capact alpha archive-images](capact_alpha_archive-images.md)	 - Creates Docker images archive file
+* [capact alpha archive-images](capact_alpha_archive-images.md)	 - Export Capact Docker images to a tar archive
 

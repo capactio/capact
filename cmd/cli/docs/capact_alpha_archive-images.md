@@ -4,7 +4,7 @@ title: capact alpha archive-images
 
 ## capact alpha archive-images
 
-Creates Docker images archive file
+Export Capact Docker images to a tar archive
 
 ### Synopsis
 

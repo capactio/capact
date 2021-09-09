@@ -14,6 +14,7 @@ import (
 	"github.com/docker/docker/pkg/jsonmessage"
 )
 
+// EnsureImage pulls a given image only if not found locally.
 func EnsureImage(ctx context.Context, dockerCli *client.Client, status printer.Status, imageRef string) error {
 	found, err := foundImageLocally(ctx, dockerCli, imageRef)
 	if err != nil {
