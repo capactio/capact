@@ -3,7 +3,6 @@ package archiveimages
 import (
 	"compress/gzip"
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -14,6 +13,7 @@ import (
 	"capact.io/capact/internal/cli/dockerutil"
 	"capact.io/capact/internal/cli/printer"
 	"capact.io/capact/internal/ctxutil"
+	"capact.io/capact/internal/multierror"
 
 	"github.com/docker/docker/client"
 )
@@ -29,43 +29,56 @@ var (
 )
 
 // CapactHelmCharts archives images from the Capact Helm charts.
-func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchiveImagesOptions) error {
+func CapactHelmCharts(ctx context.Context, status printer.Status, opts HelmArchiveImagesOptions) (err error) {
 	images, err := findImagesInHelmCharts(ctx, status, opts.CapactOpts)
 	if err != nil {
 		return err
 	}
 
-	status.InfoWithBody("Found images:", foundImagesInfo(images))
 	responseBody, err := dockerSaveDepImages(ctx, status, images)
 	if err != nil {
 		return err
 	}
 	defer responseBody.Close()
 
-	out, err := selectOutputForArchive(status, opts)
+	out, closeOut, err := selectOutputForArchive(status, opts)
 	if err != nil {
 		return err
 	}
+	defer func() {
+		merr := multierror.Append(err, closeOut())
+		err = merr.ErrorOrNil()
+	}()
 
-	writer := compressOutputIfNeeded(out, opts)
+	writer, closeWriter := compressOutputIfNeeded(out, opts)
+	defer func() {
+		merr := multierror.Append(err, closeWriter())
+		err = merr.ErrorOrNil()
+	}()
+
 	_, err = io.Copy(writer, responseBody)
 	return err
 }
 
-func selectOutputForArchive(status printer.Status, opts HelmArchiveImagesOptions) (io.Writer, error) {
+func selectOutputForArchive(status printer.Status, opts HelmArchiveImagesOptions) (io.Writer, func() error, error) {
 	if opts.Output.ToStdout {
-		return os.Stdout, nil
+		return os.Stdout, func() error { return nil }, nil
 	}
 	status.Step("Saving output to %s", opts.Output.Path)
-	return os.Create(filepath.Clean(opts.Output.Path))
+	f, err := os.Create(filepath.Clean(opts.Output.Path))
+	if err != nil {
+		return nil, nil, err
+	}
+	return f, f.Close, nil
 }
 
-func compressOutputIfNeeded(out io.Writer, opts HelmArchiveImagesOptions) io.Writer {
+func compressOutputIfNeeded(out io.Writer, opts HelmArchiveImagesOptions) (io.Writer, func() error) {
 	switch opts.Compress {
 	case CompressGzip:
-		return gzip.NewWriter(out)
+		gzip := gzip.NewWriter(out)
+		return gzip, gzip.Close
 	default:
-		return out
+		return out, func() error { return nil }
 	}
 }
 
@@ -121,22 +134,6 @@ func sanitizeImageString(in string) string {
 	return strings.TrimSpace(s)
 }
 
-func foundImagesInfo(images map[string]struct{}) string {
-	subStep := subStepFprintfFunc(4)
-	var buff strings.Builder
-	for i := range images {
-		subStep(&buff, i)
-	}
-	return buff.String()
-}
-
-func subStepFprintfFunc(indent int) func(w io.Writer, format string, a ...interface{}) {
-	return func(w io.Writer, format string, a ...interface{}) {
-		msg := fmt.Sprintf(format, a...)
-		fmt.Fprintf(w, "%s- %s\n", strings.Repeat(" ", indent), msg)
-	}
-}
-
 func dockerSaveDepImages(ctx context.Context, status printer.Status, images map[string]struct{}) (io.ReadCloser, error) {
 	dockerCli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -151,5 +148,6 @@ func dockerSaveDepImages(ctx context.Context, status printer.Status, images map[
 		pulled = append(pulled, img)
 	}
 
+	status.Step("Triggering docker save")
 	return dockerCli.ImageSave(ctx, pulled)
 }
