@@ -137,7 +137,11 @@ func PushImages(ctx context.Context, status printer.Status, names []string) erro
 	return nil
 }
 
-func runCMD(cmd *exec.Cmd, status printer.Status, stageFmt string, args ...interface{}) error {
+func runCMD(cmd *exec.Cmd, status printer.Status, stageFmt string, args ...interface{}) (err error) {
+	defer func() {
+		status.End(err == nil)
+	}()
+
 	if cli.VerboseMode.IsTracing() {
 		cmd.Stdout = status.Writer()
 		cmd.Stderr = status.Writer()
@@ -147,7 +151,7 @@ func runCMD(cmd *exec.Cmd, status printer.Status, stageFmt string, args ...inter
 	var buff bytes.Buffer
 	status.Step(stageFmt, args...)
 	cmd.Stderr = &buff
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return errors.Wrapf(err, "while running cmd [stderr: %s]", buff.String())
 	}

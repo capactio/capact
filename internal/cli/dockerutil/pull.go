@@ -16,7 +16,7 @@ import (
 
 // EnsureImage pulls a given image only if not found locally.
 func EnsureImage(ctx context.Context, dockerCli *client.Client, status printer.Status, imageRef string) error {
-	found, err := foundImageLocally(ctx, dockerCli, imageRef)
+	found, err := findImageLocally(ctx, dockerCli, imageRef)
 	if err != nil {
 		return err
 	}
@@ -36,7 +36,7 @@ func isDockerNotFoundErr(err error) bool {
 	return ok
 }
 
-func foundImageLocally(ctx context.Context, dockerCli *client.Client, ref string) (bool, error) {
+func findImageLocally(ctx context.Context, dockerCli *client.Client, ref string) (bool, error) {
 	_, _, err := dockerCli.ImageInspectWithRaw(ctx, ref)
 	switch {
 	case err == nil: // found

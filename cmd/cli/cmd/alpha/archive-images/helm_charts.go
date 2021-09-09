@@ -46,7 +46,7 @@ func NewFromHelmCharts() *cobra.Command {
 			}
 
 			if err = opts.Validate(); err != nil {
-				return errors.Wrap(err, "while resolving version")
+				return err
 			}
 
 			var status printer.Status = printer.NewNoopStatus()
