@@ -166,11 +166,16 @@ capact::create_cluster() {
     if [[ "${DISABLE_K3D_REGISTRY:-"false"}" == "false" && "${CLUSTER_TYPE}" == "k3d" ]]; then
       K3D_REGISTRY="--enable-registry"
     fi
+    if [[ -n "${K3D_IMAGES_ARCHIVE:-}" && "${CLUSTER_TYPE}" == "k3d" ]]; then
+      # shellcheck disable=SC2086
+      K3D_VOLUME="--volume=$K3D_IMAGES_ARCHIVE:/var/lib/rancher/k3s/agent/images/$(basename $K3D_IMAGES_ARCHIVE)"
+    fi
     # shellcheck disable=SC2086
     capact::cli env create ${CLUSTER_TYPE} --verbose \
       --name="${CLUSTER_NAME}" \
       ${CLUSTER_CONFIG_FLAG:-} \
       ${K3D_REGISTRY:-} \
+      ${K3D_VOLUME:-} \
       --wait=5m
 }
 

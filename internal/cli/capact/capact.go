@@ -60,12 +60,16 @@ type Options struct {
 	Environment          string
 	InstallComponents    []string
 	BuildImages          []string
-	DryRun               bool
 	Timeout              time.Duration
 	Parameters           InputParameters
 	UpdateHostsFile      bool
 	UpdateTrustedCerts   bool
 	LocalRegistryEnabled bool
+
+	// Helm client opts
+	DryRun     bool
+	Replace    bool
+	ClientOnly bool
 }
 
 // Validate validates Capact install options.
